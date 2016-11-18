@@ -649,8 +649,8 @@ module.exports = Rpt = {
             reportRequestComplete = false,
             scheduleRequestComplete = false,
             reportData,
-            handleResults = function () {
-            "use strict";
+            handleResults = function() {
+                "use strict";
                 if (scheduled) {
                     if (scheduleRequestComplete && reportRequestComplete) {
                         reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
@@ -821,6 +821,7 @@ module.exports = Rpt = {
         });
     },
     collectFilters: function(theFilters) {
+
         var grouping = "$and",
             currentFilter,
             localSearchCriteria = {},
@@ -906,7 +907,7 @@ module.exports = Rpt = {
                         "Point Refs": {
                             $elemMatch: {
                                 "PropertyName": key,
-                                "Value": utils.converters.convertType(filter.upi, filterValueType)
+                                "Value": utils.converters.convertType(filter.upi, filter.valueType)
                             }
                         }
                     };
@@ -914,14 +915,14 @@ module.exports = Rpt = {
                     break;
                 case "NotEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $ne: utils.converters.convertType(filter.upi, filterValueType)
+                        $ne: utils.converters.convertType(filter.upi, filter.valueType)
                     };
                     searchQuery = {
                         "Point Refs": {
                             $elemMatch: {
                                 "PropertyName": key,
                                 "Value": {
-                                    $ne: utils.converters.convertType(filter.upi, filterValueType)
+                                    $ne: utils.converters.convertType(filter.upi, filter.valueType)
                                 }
                             }
                         }
@@ -942,7 +943,7 @@ module.exports = Rpt = {
                     };
                     break;
                 case "EqualTo":
-                    if (filterValueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
                         if (filterValueType !== null) {
                             searchKey = key + '.eValue';
                         } else {
@@ -950,10 +951,10 @@ module.exports = Rpt = {
                         }
                         searchQuery[searchKey] = filter.evalue;
                     } else {
-                        if (filterValueType === "Bool") {
+                        if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {
                                 searchQuery[propertyCheckForValue(key)] = {
-                                    $in: [utils.converters.convertType(filter.value, filterValueType), (filter.value === 1)]
+                                    $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                 };
                             } else {
                                 searchQuery[propertyCheckForValue(key)] = {
@@ -961,7 +962,7 @@ module.exports = Rpt = {
                                 };
                             }
                         } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                         } else if (filter.value.indexOf(",") > -1) {
                             var splitValues = filter.value.split(",");
                             //if (!searchCriteria.$or)
@@ -979,7 +980,7 @@ module.exports = Rpt = {
                             }
                         } else {
                             if (utils.converters.isNumber(filter.value))
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             else
                                 searchQuery[propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
@@ -991,7 +992,7 @@ module.exports = Rpt = {
                     //searchQuery[key] = {
                     //    $exists: true
                     //};
-                    if (filterValueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
                         if (filterValueType !== null) {
                             searchKey = key + '.eValue';
                         } else {
@@ -1001,10 +1002,10 @@ module.exports = Rpt = {
                             $ne: filter.evalue
                         };
                     } else {
-                        if (filterValueType === "Bool") {
+                        if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {
                                 searchQuery[propertyCheckForValue(key)] = {
-                                    $nin: [utils.converters.convertType(filter.value, filterValueType), (filter.value === 1)]
+                                    $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                 };
                             } else {
                                 searchQuery[propertyCheckForValue(key)] = {
@@ -1013,34 +1014,34 @@ module.exports = Rpt = {
                             }
                         } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = {
-                                $ne: utils.converters.convertType(filter.value, filterValueType)
+                                $ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         } else {
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '(?i)^(?!' + filter.value + ")"
-                                    //$ne: utils.converters.convertType(filter.value, filterValueType)
+                                    //$ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         }
                     }
                     break;
                 case "LessThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lt: utils.converters.convertType(filter.value, filterValueType)
+                        $lt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "LessThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gt: utils.converters.convertType(filter.value, filterValueType)
+                        $gt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "BeginningWith":
@@ -1058,8 +1059,8 @@ module.exports = Rpt = {
                         $exists: true
                     };
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType),
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType),
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "NotBetween":
@@ -1069,8 +1070,8 @@ module.exports = Rpt = {
                     //{$nin:{$gte:2,$lt:5}}
                     searchQuery[propertyCheckForValue(key)] = {
                         $nin: {
-                            $gte: utils.converters.convertType(filter.value, filterValueType),
-                            $lt: utils.converters.convertType(filter.value, filterValueType)
+                            $gte: utils.converters.convertType(filter.value, filter.valueType),
+                            $lt: utils.converters.convertType(filter.value, filter.valueType)
                         }
                     };
                     break;
