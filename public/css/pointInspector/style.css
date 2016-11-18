@@ -1136,6 +1136,15 @@ hr {
     .developmentTab {
         left: 225px;
     } 
+    #editScriptButton, #discardScriptButton {
+        left: 225px;
+        position: absolute;
+        z-index: 2;
+        top: 15px;
+    }
+    #discardScriptButton {
+        left: 330px;
+    }
 /* end script point */
 
 
