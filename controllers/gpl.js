@@ -26,7 +26,10 @@ router.get('/view/:upoint', function(req, res, next) {
 
 	res.locals = {};
 
-	GPL.getGplInfo(upi, processGpl);
+	GPL.getGplInfo({
+		user: req.user,
+		upi: upi
+	}, processGpl);
 });
 // Checked
 router.get('/edit/:upoint', function(req, res, next) {
@@ -49,14 +52,17 @@ router.get('/edit/:upoint', function(req, res, next) {
 			complete();
 		};
 
-	GPL.getGplInfo(upi, processGpl);
+	GPL.getGplInfo({
+		user: req.user,
+		upi: upi
+	}, processGpl);
 });
 // NOT CHECKED
 router.get('/getReferences/:upoint', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 
-	GPL.getReferences(data, function(err, result){
+	GPL.getReferences(data, function(err, result) {
 		if (err) {
 			ret = err;
 		} else {

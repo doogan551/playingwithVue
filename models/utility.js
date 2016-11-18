@@ -277,10 +277,11 @@ exports.getWithSecurity = function(criteria, cb) {
       var upis = Object.keys(permissions).map(function(upi) {
         return parseInt(upi, 10);
       });
-
-      criteria.query._id = {
-        $in: upis
-      };
+      if (!criteria.query.hasOwnProperty(_id)) {
+        criteria.query._id = {
+          $in: upis
+        };
+      }
     }
     var points = [];
 
