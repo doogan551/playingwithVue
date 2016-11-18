@@ -2318,6 +2318,9 @@ var reportsViewModel = function () {
                     push = true;
                     filter = filters[i];
                     switch (filter.valueType) {
+                        case "Bool":
+                            filter.value = (filter.value == "True" || filter.value == "true");
+                            break;
                         case "Timet":
                         case "DateTime":
                             if (moment.unix(filter.date).isValid()) {
