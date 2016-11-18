@@ -761,7 +761,7 @@ var scripts = {
                         delete duration.duration; // removing a reference
                         if (!!interval.period) {
                             interval.period = interval.text || "Day";
-                            delete interval.text;  // removing a reference
+                            delete interval.text; // removing a reference
                         }
                         updateReport(reportDoc, cb);
                     } else {
@@ -780,7 +780,7 @@ var scripts = {
         }, function processReport(err, doc, cb) {
             if (!!err) {
                 logger.info(" ERROR  err = " + err);
-                callback(err);
+                cb(err);
             } else {
                 processDoc(doc, cb);
             }
@@ -940,7 +940,7 @@ var scripts = {
         }, function processReport(err, doc, cb) {
             if (!!err) {
                 logger.info(" ERROR  err = " + err);
-                callback(err);
+                cb(err);
             } else {
                 processDoc(doc, cb);
             }
@@ -992,7 +992,10 @@ var scripts = {
             }, cb);
         }, function(err, count) {
             logger.info('Firmware 2 Version added to ', count, ' devices');
-            callback(err);
+            callback(null, {
+                fn: 'updateDevices',
+                errors: err
+            });
         });
     },
 
@@ -1020,7 +1023,10 @@ var scripts = {
         };
         utility.update(criteria, function(err, results) {
             logger.info('Point Instance removed from points');
-            callback(err);
+            callback(null, {
+                fn: 'removePointInstance',
+                errors: err
+            });
         });
     },
 
@@ -1094,7 +1100,10 @@ var scripts = {
 
             utility.update(criteria, function(err, results) {
                 logger.info('Read Only added to I/O points.');
-                callback(err);
+                callback(null, {
+                    fn: 'updateGatewayReadOnlyRouterAddress',
+                    errors: err
+                });
             });
         });
     },
@@ -1149,7 +1158,10 @@ var scripts = {
                 };
                 utility.update(criteria, function(err, results) {
                     logger.info('System Info updated.');
-                    callback(err);
+                    callback(null, {
+                        fn: 'updateNetworkProps',
+                        errors: err
+                    });
                 });
             });
         });
@@ -1189,10 +1201,15 @@ var scripts = {
                     updateControllers("add", user.username, function(err) {
                         cb(err);
                     });
-                }, callback);
+                }, function(err, result) {
+                    callback(null, {
+                        fn: 'fixDorsDB',
+                        errors: err
+                    });
+                });
             });
 
-            function updateControllers(op, username, callback) {
+            function updateControllers(op, username, cb) {
                 var criteria = {
                     collection: 'SystemInfo',
                     query: {
@@ -1237,7 +1254,7 @@ var scripts = {
                             }
                         };
                         utility.update(criteria, function(err, result) {
-                            callback(err);
+                            cb(err);
                         });
                     } else {
                         for (var j = 0; j < controllers.Entries.length; j++) {
@@ -1253,7 +1270,7 @@ var scripts = {
                         };
 
                         utility.update(criteria, function(err, result) {
-                            callback(err);
+                            cb(err);
                         });
                     }
 
