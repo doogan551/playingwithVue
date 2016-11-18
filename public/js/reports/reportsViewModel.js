@@ -4957,6 +4957,7 @@ var reportsViewModel = function () {
                         itemFinished(errors);
                     } else {
                         dtiUtility.updateWindow('updateTitle', point.Name);
+                        point._pStatus = 0;  // set report to active
                         ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
                     }
                 },

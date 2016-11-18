@@ -92,12 +92,13 @@ module.exports = Rpt = {
             },
             updateObj: {
                 $set: {
-                    'Point Refs': data["Point Refs"],
-                    'Report Config': data["Report Config"],
+                    _pStatus: (!!data._pStatus ? data._pStatus : 1),
                     name1: data.name1,
                     name2: data.name2,
                     name3: data.name3,
-                    name4: data.name4
+                    name4: data.name4,
+                    'Point Refs': data["Point Refs"],
+                    'Report Config': data["Report Config"]
                 }
             }
         };
