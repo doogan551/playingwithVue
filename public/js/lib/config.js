@@ -3669,31 +3669,10 @@ var Config = (function(obj) {
                 upPort = point["Uplink Port"],
                 port = ["Port 1", "Port 2", "Port 3", "Port 4"];
 
-            // ROB - is it possible to enter this block?
-            if (enums["Device Model Types"][point["Model Type"].Value] === undefined) {
-                point["Model Type"].Value = "Unknown";
-                point["Model Type"].eValue = enums["Device Model Types"]["Unknown"]["enum"];
-            }
-
             point["Model Type"].isDisplayable = true;
             point["Model Type"].isReadOnly = false;
-            // ROB- do we need to make sure Model Type.Value is set?
             point._devModel = point["Model Type"].eValue;
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
-
-            //------ Begin import data checks ---------------------------------------------------------------
-            // ROB- do we need to delete protocol still?
-            delete point.Protocol;
-            // ROB - is it possible to enter this block?
-            if (!point.hasOwnProperty("Firmware 2 Version")) {
-                point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
-            }
-
-            if (typeof point["Ethernet Address"].Value !== "string") {
-                point["Ethernet Address"].Value = "";
-                point["Ethernet Address"].ValueType = enums["Value Types"]["String"]["enum"];
-            }
-            //------ End import data checks -----------------------------------------------------------------
             point["Time Zone"].isReadOnly = true;
             point["Firmware 2 Version"].isDisplayable = false;
             point["Ethernet IP Port"].isReadOnly = true;

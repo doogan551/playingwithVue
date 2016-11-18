@@ -2318,6 +2318,9 @@ var reportsViewModel = function () {
                     push = true;
                     filter = filters[i];
                     switch (filter.valueType) {
+                        case "Bool":
+                            filter.value = (filter.value == "True" || filter.value == "true");
+                            break;
                         case "Timet":
                         case "DateTime":
                             if (moment.unix(filter.date).isValid()) {
@@ -4957,6 +4960,7 @@ var reportsViewModel = function () {
                         itemFinished(errors);
                     } else {
                         dtiUtility.updateWindow('updateTitle', point.Name);
+                        point._pStatus = 0;  // set report to active
                         ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
                     }
                 },

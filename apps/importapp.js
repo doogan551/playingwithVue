@@ -208,12 +208,12 @@ function importUpdate() {
 												updateTimeZones(point, function(err) {
 													if (err)
 														logger.info("updateTimeZones", err);
-													updateModels(db, point, function(err) {
+													updateDevices(point, function(err) {
 														if (err)
-															logger.info("updateModels", err);
-														updateDevices(point, function(err) {
+															logger.info("updateDevices", err);
+														updateModels(db, point, function(err) {
 															if (err)
-																logger.info("updateDevices", err);
+																logger.info("updateModels", err);
 															updateAlarmMessages(point, function(err) {
 																if (err)
 																	logger.info("updateAlarmMessages", err);
@@ -1713,7 +1713,9 @@ function updateTimeZones(point, cb) {
  * @return {String} console messages. "inside 4" is the final message.
  */
 function updateModels(db, point, cb) {
-	Config.Utility.updDevModel({point:point})
+	Config.Utility.updDevModel({
+		point: point
+	})
 	cb();
 }
 
@@ -2635,10 +2637,9 @@ function updateDevices(point, callback) {
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
 
-		if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(point['Model Type'].eValue) >= 0) {
-			point['Firmware 2 Version'].isDisplayable = true;
-		} else {
-			point['Firmware 2 Version'].isDisplayable = false;
+		if (typeof point["Ethernet Address"].Value !== "string") {
+			point["Ethernet Address"].Value = "0.0.0.0";
+			point["Ethernet Address"].ValueType = 2;
 		}
 
 		utils.updateNetworkAndAddress(point);
