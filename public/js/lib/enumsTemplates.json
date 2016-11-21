@@ -3320,6 +3320,11 @@
                 "valueType": "String",
                 "reportEnable": false
             },
+            "Security": {
+                "enum": 117,
+                "valueType": "Array",
+                "reportEnable": false
+            },
             "Select Input": {
                 "enum": 206,
                 "valueType": "UniquePID",
@@ -3832,6 +3837,7 @@
                 "Value": "",
                 "eValue": 0
             },
+            "Security": [],
             "taglist": []
         },
         "Points": {
