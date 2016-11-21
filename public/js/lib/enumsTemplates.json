@@ -4041,7 +4041,7 @@
                 },
                 "Ethernet IP Port": {
                     "isDisplayable": true,
-                    "isReadOnly": false,
+                    "isReadOnly": true,
                     "ValueType": 4,
                     "Value": 47808
                 },

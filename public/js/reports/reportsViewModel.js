@@ -2605,8 +2605,10 @@ var reportsViewModel = function () {
 
                 self.durationStartTimeOffSet(!!configObject.duration.startTimeOffSet ? configObject.duration.startTimeOffSet : "00:00");
                 self.durationEndTimeOffSet(!!configObject.duration.endTimeOffSet ? configObject.duration.endTimeOffSet : "00:00");
-                if (!!configObject.interval) {
+                if (!!configObject.interval && !!configObject.interval.period) {
                     self.intervalPeriod(configObject.interval.period);
+                }
+                if (!!configObject.interval && !!configObject.interval.value) {
                     self.intervalValue(configObject.interval.value);
                 }
             }
