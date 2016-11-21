@@ -1554,11 +1554,7 @@ var reportsViewModel = function () {
 
             if (!!appIndex || !!upi) {
                 result = point["Point Refs"].filter(function (pointRef) {
-                    if (appIndex !== undefined && upi !== undefined) {
-                        return pointRef.AppIndex === appIndex && pointRef.Value === upi && pointRef.PropertyName === referenceType;
-                    } else {
-                        return (pointRef.AppIndex === appIndex || pointRef.Value === upi) && pointRef.PropertyName === referenceType;
-                    }
+                    return (pointRef.AppIndex === appIndex || pointRef.Value === upi) && pointRef.PropertyName === referenceType;
                 });
 
                 if (result.length === 0) {
@@ -3333,7 +3329,9 @@ var reportsViewModel = function () {
                     }
 
                     if (--formattingPointRequest <= 0) {
-                        console.log("handleFormatPointRequests()  errors = " + errors);
+                        if (!!errors) {
+                            console.log("handleFormatPointRequests()  errors = " + errors);
+                        }
                         cb(errors);
                     }
                 },

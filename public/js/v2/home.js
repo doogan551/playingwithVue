@@ -21,6 +21,7 @@ var dti = {
                 iconText: 'tv',
                 iconClass: 'material-icons',
                 group: 'Display',
+                standalone: false,
                 thumbnail: true,
                 singleton: false,
                 options: {
@@ -34,6 +35,7 @@ var dti = {
                 iconText: 'device_hub',
                 iconClass: 'material-icons',
                 group: 'Sequence',
+                standalone: false,
                 thumbnail: true,
                 singleton: false,
                 options: {
@@ -45,6 +47,7 @@ var dti = {
                 iconText: 'assignment',
                 iconClass: 'material-icons',
                 group: 'Report',
+                standalone: false,
                 singleton: false,
                 options: {
                     width: 1200,
@@ -94,6 +97,7 @@ var dti = {
                 iconText: 'memory',
                 iconClass: 'material-icons',
                 group: 'Point',
+                standalone: false,
                 singleton: false,
                 mainMenu: false,
                 options: {
