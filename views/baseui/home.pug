@@ -545,12 +545,19 @@ html
             // ko if: singleton() === false
             .actionList
                 .blue-grey-text Actions
+                // ko if: standalone() === false
                 a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
                     i.material-icons folder_open
-                    span Open                
+                    span Open
                 a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
                     i.material-icons add
                     span New
+                // /ko
+                // ko if: standalone() === true
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                    i.material-icons add
+                    span New
+                // /ko
                 a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
@@ -559,7 +566,6 @@ html
             // ko if: singleton() === true && $root.openWindows[group()]().length === 0
             .actionList
                 a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
-
             // /ko
 
             .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
