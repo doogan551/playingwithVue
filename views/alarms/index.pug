@@ -86,20 +86,44 @@ html
                             a.cancel.cursorPointer.closeIt(data-bind="click: clearDateTimeFilter") Clear Filter
 
                 // ALARM CLASS FILTERS
-                .filterContainer.withBorder(data-bind="visible: filters.alarmClass.visible")
+                .filterContainer.withBorder.horizontalMenu.alarmClass(data-bind="visible: filters.alarmClass.visible")
                     .filterSetTitle Class
                     .filterSet(data-bind="foreach: filters.alarmClass.options")
                         a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }, attr: { id: id }")
                             span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
                             span.filterText(data-bind="text: text")
+                .filterContainer.verticalMenu.alarmClass(data-bind="visible: filters.alarmClass.visible")
+                    .dropdown.filterSet
+                        button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown")
+                            span.title Class
+                            span &nbsp;&nbsp;
+                            span.caret
+                        ul.dropdown-menu(data-bind="foreach: filters.alarmClass.options")
+                            li
+                                a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }, attr: { id: id }")
+                                    span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
+                                    span.filterText(data-bind="text: text")
+
 
                 // ALARM CATEGORY FILTERS
-                .filterContainer.withBorder(data-bind="visible: filters.alarmCategory.visible")
-                    .filterSetTitle(title="Category") Cat.
+                .filterContainer.withBorder.horizontalMenu.alarmCategory(data-bind="visible: filters.alarmCategory.visible")
+                    .filterSetTitle(title="Category") Category
                     .filterSet(data-bind="foreach: filters.alarmCategory.options")
                         a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }")
                             span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
                             span.filterText(data-bind="text: text")
+                .filterContainer.verticalMenu.alarmCategory(data-bind="visible: filters.alarmCategory.visible")
+                    .dropdown.filterSet
+                        button.btn.btn-default.dropdown-toggle(type="button", id="filterCategories", data-toggle="dropdown")
+                            span.title Category
+                            span &nbsp;&nbsp;
+                            span.caret
+                        ul.dropdown-menu(data-bind="foreach: filters.alarmCategory.options")
+                            li
+                                a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }")
+                                    span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
+                                    span &nbsp;
+                                    span.filterText(data-bind="text: text")
 
                 // PRINT BUTTON
                 button.btn.btn-default.btn-sm.btnPrint.pull-right(type="button" data-bind="click:printAlarms") Print

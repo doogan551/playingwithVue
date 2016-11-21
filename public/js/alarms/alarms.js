@@ -100,6 +100,15 @@ var AlarmManager = function (conf) {
         $timeTo = $("#timeTo"),
         detailWidth = $elDetail.outerWidth(),
 
+        horizontalMenu = {
+            $elAlarmClass: $('#filters .horizontalMenu.alarmClass'),
+            $elAlarmCategory: $('#filters .horizontalMenu.alarmCategory')
+        },
+        verticalMenu = {
+            $elAlarmClass: $('#filters .verticalMenu.alarmClass'),
+            $elAlarmCategory: $('#filters .verticalMenu.alarmCategory')
+        },
+
         //------ Constants definitions
         ACK_NONE = 0,
         ACK_REQUIRED = 1,
@@ -2078,6 +2087,9 @@ var AlarmManager = function (conf) {
             }
         }
         applyFilter();
+
+        // This is to keep the dropdown open (if user clicked from the dropdown)
+        event.stopPropagation();
     };
 
     self.userHasPermissionToAck = function (alarm) {
@@ -2573,6 +2585,8 @@ var AlarmManager = function (conf) {
         if (alarm) {
             deSelectAlarm(alarm);
         }
+        self.alarmDetail.visible = false;
+        self.handleResize($elContent.outerWidth() + (contentStop - detailStop));
         toggleAlarmDetail(contentStop, detailStop);
     };
 
@@ -2587,6 +2601,7 @@ var AlarmManager = function (conf) {
         }),
         gettingData: ko.observable(false).extend({throttle: 100}),
         error: ko.observable(false),
+        visible: false,
         displays: ko.observableArray([])
     };
 
@@ -2634,8 +2649,35 @@ var AlarmManager = function (conf) {
                 alarmDetail.error(true);
             });
         }
+        alarmDetail.visible = true;
+        self.handleResize($elContent.outerWidth() - (contentStop + detailStop));
         toggleAlarmDetail(contentStop, detailStop);
     };
+
+    self.handleResize = function (targetWidth) {
+        var contentWidth = targetWidth || $elContent.outerWidth();
+
+        if (contentWidth < 725) {
+            horizontalMenu.$elAlarmClass.hide();
+            verticalMenu.$elAlarmClass.show();
+
+            horizontalMenu.$elAlarmCategory.hide();
+            verticalMenu.$elAlarmCategory.show();
+        } else if (contentWidth < 1025) {
+            horizontalMenu.$elAlarmClass.show();
+            verticalMenu.$elAlarmClass.hide();
+
+            horizontalMenu.$elAlarmCategory.hide();
+            verticalMenu.$elAlarmCategory.show();
+        } else {
+            horizontalMenu.$elAlarmClass.show();
+            verticalMenu.$elAlarmClass.hide();
+
+            horizontalMenu.$elAlarmCategory.show();
+            verticalMenu.$elAlarmCategory.hide();
+        }
+    };
+
 
    //------ Debugging Helpers -------------------------------
     // TODO Remove for production
@@ -3042,6 +3084,7 @@ function initPage (manager) {
         $alarms = $('.alarms'),
         $newAlarmTop = $('.newAlarmTop'),
         $newAlarmBottom = $('.newAlarmBottom'),
+        timeoutId,
         toggleDropdown = function (id) {
             var $container = $(id),
                 $dropDown = $(id + ' .dropdown-menu'),
@@ -3157,6 +3200,11 @@ function initPage (manager) {
         $('.popOut').addClass('hidden');
         $('.popIn').removeClass('hidden');
     }
+
+    $(window).resize(function () {
+        window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(manager.handleResize, 25);
+    });
 }
 
 function applyBindings () {
@@ -3167,6 +3215,7 @@ function applyBindings () {
     } else {
         window.manager = new AlarmManager({});
         ko.applyBindings(window.manager);
+        manager.handleResize();
     }
 }
 
