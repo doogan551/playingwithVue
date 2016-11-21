@@ -3675,7 +3675,6 @@ var Config = (function(obj) {
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
             point["Time Zone"].isReadOnly = true;
             point["Firmware 2 Version"].isDisplayable = false;
-            point["Ethernet IP Port"].isReadOnly = true;
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point["Time Zone"].isReadOnly = false;
