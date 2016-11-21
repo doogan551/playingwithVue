@@ -47,7 +47,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 },
                 currentCfg = 0,
                 fieldCycle = [],
-                _currentCfgIndex = 0,
+                _currentCfgIndex = -1,
                 currentField = function(fieldIndexOrObj) {
                     var thisCfg = parseInt(_currentCfgIndex, 10);
                     if (typeof fieldIndexOrObj == 'undefined') {
@@ -95,8 +95,32 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             $element
                 .on('keydown', function(e) {
                     var $element,
+                        endpoint,
                         selectionStart = 0,
                         selectionEnd;
+
+                    // If currentField is not initialized - this happens when the user tabs or shift-tabs into an input. The result
+                    // used to be that if they shift-tabbed into the minute portion of an hr-min input, when they keyed up or down,
+                    // the hr portion incremented (because currentField was 0). So now it will operate correctly
+                    if (currentField() == -1) {
+                        currentField($(e.target)); // Init our current field
+                    }
+
+                    if (e.keyCode === 9) { // tab
+                        if (e.shiftKey) {
+                            e.keyCode = 37; // simulate arrow left
+                            endpoint = 0;
+                        } else {
+                            e.keyCode = 39; // simulate arrow right
+                            endpoint = fieldCycle.length - 1;
+                        }
+
+                        if (currentField() === endpoint) {
+                            return; // Do not process tab key here (use native tab function)
+                        } else {
+                            e.preventDefault(); // Process tab key here and stop native tab function
+                        }
+                    }
 
                     switch (e.keyCode) {
                         case 33:
