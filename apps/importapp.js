@@ -2636,6 +2636,7 @@ function updateDevices(point, callback) {
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
+        point["Ethernet IP Port"].isReadOnly = true;
 
 		if (typeof point["Ethernet Address"].Value !== "string") {
 			point["Ethernet Address"].Value = "0.0.0.0";
