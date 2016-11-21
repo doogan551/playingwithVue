@@ -1413,6 +1413,7 @@ var reportsViewModel = function () {
         reportData,
         reportChartData,
         activeDataRequests,
+        reportSocket,
         exportEventSet,
         totalizerDurationInHours = true,
         Name = "dorsett.reportUI",
@@ -1897,11 +1898,11 @@ var reportsViewModel = function () {
                     callback.call(self, data);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
-                errorRaised = textStatus + ' ' + errorThrown;
+                errorRaised = jqXHR.fail().responseText + " - " + jqXHR.status + "  " + errorThrown;
                 dti.log("Request failed: url = " + url, jqXHR, textStatus, errorThrown);
                 self.activeRequestDataDrawn(true);
                 if (callback) {
-                    callback.call(self, errorRaised);
+                    callback.call(self, {err: errorRaised});
                 }
             }).always(function () {
                 // console.log( " . .     ajax Request complete..");
@@ -2804,6 +2805,25 @@ var reportsViewModel = function () {
                         break;
                 }
             }
+        },
+        initSocket = function (cb) {
+            reportSocket = io.connect(window.location.origin);
+
+            reportSocket.on("connect", function () {
+                // console.log("SOCKETID:", reportSocket.id);
+                if (cb) {
+                    cb();
+                }
+            });
+
+            reportSocket.on("pointUpdated", function (data) {
+                if (!!data.err) {
+                    console.log("Error: " + data.err);
+                } else {
+                    point = data.point;
+                    saveManager.saveReportCallback(data);
+                }
+            });
         },
         getScreenFields = function () {
             $direports = $(document).find(".direports");
@@ -4960,8 +4980,14 @@ var reportsViewModel = function () {
                         itemFinished(errors);
                     } else {
                         dtiUtility.updateWindow('updateTitle', point.Name);
-                        point._pStatus = 0;  // set report to active
-                        ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
+                        if (point._pStatus === 1) {
+                            // call addPoint here integrate into dtiutil
+                            reportSocket.emit("addPoint", {
+                                point: point
+                            });
+                        } else {
+                            ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
+                        }
                     }
                 },
                 doSave = function () {
@@ -4986,7 +5012,7 @@ var reportsViewModel = function () {
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
-                    var err = result.err
+                    var err = result.err;
                     if (_pStatus === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
@@ -6139,6 +6165,7 @@ var reportsViewModel = function () {
 
                     if (!scheduled) {
                         dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
+                        initSocket();
                     }
 
                     if (columns) {
