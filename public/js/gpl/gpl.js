@@ -7,6 +7,7 @@ var gpl = {
     eventLog: [],
     actionLog: [],
     json: {},
+    originalSequence: {},
     eventHandlers: {},
     destroyFns: [],
     canvases: {},
@@ -6854,17 +6855,21 @@ gpl.Manager = function () {
                     gpl.blockManager.useEditVersion();
                 });
 
-                managerSelf.confirmEditVersion();
+                managerSelf.confirmEditVersion(false);
             };
 
             managerSelf.discardEditVersion = function () {
-                managerSelf.confirmEditVersion();
+                managerSelf.confirmEditVersion(true);
             };
 
-            managerSelf.confirmEditVersion = function () {
+            managerSelf.confirmEditVersion = function (discardAnyUpdates) {
                 managerSelf.hideEditVersionModal();
-                delete gpl.json.editVersion;
-
+                if (discardAnyUpdates) {
+                    if (!!gpl.originalSequence.editVersion) {
+                        delete gpl.originalSequence.editVersion;
+                    }
+                    gpl.json = gpl.originalSequence;
+                }
                 doNextInit();
             };
 
@@ -6881,6 +6886,7 @@ gpl.Manager = function () {
                 gpl.showMessage('Sequence data not found');
             } else {
                 gpl.json = gpl.point.SequenceData.sequence;
+                gpl.originalSequence = $.extend(true, {}, gpl.point.SequenceData.sequence);
 
                 //forces new (hex) format, if flag exists it's already been converted/defaulted
                 if (!gpl.json._convertedBG) {
@@ -7117,7 +7123,7 @@ gpl.Manager = function () {
                     //     // }
                     //     //check if stale.  if not, block changes.  if so, ask if they want to use it?
                     } else {
-                        managerSelf.confirmEditVersion();
+                        managerSelf.confirmEditVersion(false);
                     }
                 } else {
                     doNextInit();
@@ -7549,7 +7555,8 @@ gpl.Manager = function () {
     };
 
     managerSelf.doSaveForLater = function () {
-        var continueEditingCb = function () {
+        var currentChanges,
+            continueEditingCb = function () {
             gpl.hideMessage();
             gpl.unblockUI();
             gpl.$saveForLaterConfirmModal.modal('show');
@@ -7563,6 +7570,10 @@ gpl.Manager = function () {
 
         offsetPositions(true, gpl.json.editVersion);
         offsetPositions(true);
+
+        currentChanges = $.extend(true, {}, gpl.json.editVersion);
+        gpl.json = $.extend(true, {}, gpl.originalSequence);
+        gpl.json.editVersion = currentChanges;
 
         gpl.saveSequence();
 
@@ -8429,9 +8440,10 @@ gpl.Manager = function () {
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
 
+            gpl.json = $.extend(true, {}, gpl.originalSequence);
             delete gpl.json.editVersion;
 
-            offsetPositions(true);
+            offsetPositions(false);
 
             gpl.saveSequence();
 
