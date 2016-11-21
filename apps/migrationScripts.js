@@ -759,10 +759,11 @@ var scripts = {
                     interval = reportConfig.interval;
                     if (!!duration && !!interval) {
                         delete duration.duration; // removing a reference
-                        if (!!interval.period) {
-                            interval.period = interval.text || "Day";
+                        interval.period = interval.period || interval.text || "Day";
+                        if (!!interval.text) {
                             delete interval.text; // removing a reference
                         }
+
                         updateReport(reportDoc, cb);
                     } else {
                         logger.info("- - - - - No 'duration' and/or No 'interval'  reportDoc._id = " + reportDoc._id);
@@ -1500,7 +1501,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.updateSecurity];
+    tasks = [scripts.updateReportsDurationInterval];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
