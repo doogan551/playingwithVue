@@ -1075,7 +1075,7 @@ var AlarmManager = function (conf) {
             var storeData = store.get(storeKey),
                 viewData = ko.toJS(view);
             
-            if (storeData === undefined) {
+            if (!storeData) {
                 storeData = {};
                 storeData.sessionId = sessionId;
             }
