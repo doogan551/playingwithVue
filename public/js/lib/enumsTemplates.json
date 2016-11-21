@@ -1619,12 +1619,12 @@
             },
             "Channel": {
                 "enum": 161,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Close Channel": {
                 "enum": 162,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Close On Complete": {
@@ -2124,7 +2124,7 @@
             },
             "Feedback Channel": {
                 "enum": 228,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Feedback Point": {
@@ -2839,7 +2839,7 @@
             },
             "Off Channel": {
                 "enum": 218,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Off Control Data Type": {
@@ -2876,7 +2876,7 @@
             },
             "On Channel": {
                 "enum": 223,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "On Control Data Type": {
@@ -2903,7 +2903,7 @@
             },
             "Open Channel": {
                 "enum": 168,
-                "valueType": "Unsigned",
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Open Polarity": {
