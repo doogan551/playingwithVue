@@ -5676,7 +5676,7 @@ gpl.BlockManager = function (manager) {
                     prop;
 
                 if (editBlock.hasReferenceType) { //is monitor/control block
-                    if (bmSelf.editBlockUpi !== editBlock.upi) { //new point
+                    if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
                             var refBlock = ref.block;
 
@@ -5718,9 +5718,13 @@ gpl.BlockManager = function (manager) {
                         }
 
                         editBlock.pointName = pointName;
+                        if (isNaN(editBlock.upi)) {  // new block with new reference to point
+                            editBlock.setLabel(pointName.split('_').pop());
+                        } else {
+                            editBlock.setLabel(bmSelf.bindings.editPointLabel());
+                        }
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
-                        editBlock.setLabel(pointName.split('_').pop());
                         editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
 
                         newReferences.push({
@@ -5741,9 +5745,12 @@ gpl.BlockManager = function (manager) {
 
                         gpl.fire('editedblock', bmSelf.editBlock); //capture changes on currently referenced point
 
+                    } else {  // reference to point did NOT change
+                        editBlock.setLabel(bmSelf.bindings.editPointLabel());
                     }
                 } else { //constant
                     editBlock.setValue(+bmSelf.bindings.editPointValue());
+                    editBlock.setLabel(bmSelf.bindings.editPointLabel());
                 }
 
                 // if(editBlock.isNonPoint === true && editBlock.referenceType !== 'External' && editBlock.blockType !== 'Constant') {
@@ -5909,6 +5916,7 @@ gpl.BlockManager = function (manager) {
                     devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
 
                 bmSelf.bindings.editPointName(name);
+                bmSelf.bindings.editPointLabel(name.split('_').pop());
                 bmSelf.editBlockUpi = upi;
                 bmSelf.editBlockPointType = pointType;
                 pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
