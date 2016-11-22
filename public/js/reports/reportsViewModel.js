@@ -5841,7 +5841,7 @@ var reportsViewModel = function () {
             var defaults = {
                     runTime: '0 8 * * *',
                     type: 1, // TODO this should come from enumsTemplate - 1 means reports
-                    referencePointUpi: point._id,
+                    upi: point._id,
                     optionalParameters: {
                         duration: ko.observable({
                             startDate: null,
