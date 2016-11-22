@@ -205,31 +205,35 @@ function importUpdate() {
 												// needs to be done after point refs is added to point
 												utils.setupNonFieldPoints(point);
 
-												updateTimeZones(point, function(err) {
+												setChannelOptions(point, function(err) {
 													if (err)
-														logger.info("updateTimeZones", err);
-													updateDevices(point, function(err) {
+														logger.info("setChannelOptions", err);
+													updateTimeZones(point, function(err) {
 														if (err)
-															logger.info("updateDevices", err);
-														updateModels(db, point, function(err) {
+															logger.info("updateTimeZones", err);
+														updateDevices(point, function(err) {
 															if (err)
-																logger.info("updateModels", err);
-															updateAlarmMessages(point, function(err) {
+																logger.info("updateDevices", err);
+															updateModels(db, point, function(err) {
 																if (err)
-																	logger.info("updateAlarmMessages", err);
-																addBroadcastPeriod(point, function(err) {
+																	logger.info("updateModels", err);
+																updateAlarmMessages(point, function(err) {
 																	if (err)
-																		logger.info("addBroadcastPeriod", err);
-																	updateTrend(point, function(err) {
+																		logger.info("updateAlarmMessages", err);
+																	addBroadcastPeriod(point, function(err) {
 																		if (err)
-																			logger.info("updateTrend", err);
-																		rearrangeProperties(point, function(err) {
+																			logger.info("addBroadcastPeriod", err);
+																		updateTrend(point, function(err) {
 																			if (err)
-																				logger.info("rearrangeProperties", err);
-																			updatePoint(db, point, function(err) {
+																				logger.info("updateTrend", err);
+																			rearrangeProperties(point, function(err) {
 																				if (err)
-																					logger.info("updatePoint", err);
-																				cb(null);
+																					logger.info("rearrangeProperties", err);
+																				updatePoint(db, point, function(err) {
+																					if (err)
+																						logger.info("updatePoint", err);
+																					cb(null);
+																				});
 																			});
 																		});
 																	});
@@ -797,7 +801,6 @@ function fixUpisCollection(db, baseCollection, callback) {
 					collection: 'points',
 					field: '_id'
 				}, function(err, results) {
-					console.log('-----', results.length);
 					var criteria = {
 						collection: 'upis',
 						query: {
@@ -1697,6 +1700,22 @@ function updateTimeZones(point, cb) {
 		}
 	}
 	cb(null);
+}
+
+function setChannelOptions(point, cb) {
+	var pointTypes = ['Analog Input', 'Analog Output', 'Binary Input', 'Binary Output', 'Accumulator'];
+	var properties = ['Channel', 'Close Channel', 'Feedback Channel', 'Open Channel', 'On Channel', 'Off Channel'];
+
+	if (!!~pointTypes.indexOf(point['Point Type'].Value)) {
+		properties.forEach(function(prop) {
+			if (point.hasOwnProperty(prop) && !point[prop].hasOwnProperty('ValueOptions')) {
+				point[prop].ValueOptions = {
+					'1': 1
+				};
+			}
+		});
+	}
+	cb();
 }
 
 /**
@@ -2634,7 +2653,7 @@ function updateDevices(point, callback) {
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
-        point["Ethernet IP Port"].isReadOnly = true;
+		point["Ethernet IP Port"].isReadOnly = true;
 
 		if (typeof point["Ethernet Address"].Value !== "string") {
 			point["Ethernet Address"].Value = "0.0.0.0";
