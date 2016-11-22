@@ -30,7 +30,7 @@ var Scheduler = {
       cb);
   },
   buildCron: function(schedule, cb) {
-    var upi = schedule.referencePointUpi;
+    var upi = schedule.upi;
     var emails = [];
     Utility.getOne({
       collection: 'points',
