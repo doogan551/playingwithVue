@@ -5033,6 +5033,9 @@ $(function initWorkspaceV2 () {
             if (newpw !== newpwConfirm) {
                 $authenticateError.text('The passwords you typed do not match. Please try again.');
                 return;
+            } else if (newpw === oldpw) {
+                $authenticateError.text("You can't use your old password.");
+                return;
             }
             dti.$resetPasswordBtn.attr('disabled', 'disabled');
             dti.authentication.resetPassword(user, oldpw, newpw);
