@@ -1117,11 +1117,6 @@ var telemetryViewModel = function() {
             }
         },
         fieldList = [{
-                name: 'Public IP',
-                validation: {
-                    ipAddress: true
-                }
-            }, {
                 name: 'APDU Timeout',
                 validation: {
                     required: true,
