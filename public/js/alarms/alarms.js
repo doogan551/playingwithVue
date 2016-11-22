@@ -2900,7 +2900,7 @@ var AlarmManager = function (conf) {
             alarm = alarms[i];
             ackStatus = alarm.ackStatus();
 
-            if (alarm.isSelected() && (ackStatus !== ACK_NONE) && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK)) {
+            if (alarm.isSelected() && (ackStatus !== ACK_NONE) && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK) && self.userHasPermissionToAck(alarm)) {
                 return true;
             }
         }
