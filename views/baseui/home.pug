@@ -54,8 +54,8 @@ html
 
                             li.taskbarItem
                                 .userInfo.valign-wrapper.dropdown-button(data-activates='userDropdownMenu', data-beloworigin='true', data-hover='true', data-alignment='right')
-                                    img.userAvatar(src='/img/test/avatar.png')
-                                    span.userName.valign John Doe
+                                    img.userAvatar(data-bind='attr: { src: "img/users/" + user().photo || "userLarge.png" } ')
+                                    span.userName.valign #[span(data-bind='text: user().firstName')]&nbsp;#[span(data-bind='text: user().lastName')]
 
             #searchNavbar.navbar-fixed.taskbar.animates
                 nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
