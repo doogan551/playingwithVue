@@ -822,70 +822,9 @@ define([
                 }
             });
         };
-        // This function is used to hydrate point properties (add key-value pairs to the property if they are not on it) after
-        // data is received from the server (model data), and before it is made into view-model data
-        // At the time of this comment, it is only used for the Channel property. It was necessary for the SCADA IO device
-        // because its channel property can be a numeric input or a drop-down selection based on the 'Input Type' property value,
-        // but ko's viewmodel plugin doesn't support dynamic adding or removal of the view-model key-value pairs. So the hydrate
-        // makes sure all possible key-value pairs are present on the model before creating the view-model.
-        self.hydrate = function (data) {
-            var hydrateProps = ['Channel'],
-                doHydrate = {
-                    'Channel': function (dataProp) {
-                        var obj = {
-                                'Min': 1,
-                                'Max': 8,
-                                'eValue': 1,
-                                'ValueOptions': {
-                                    1: 1
-                                }
-                            },
-                            key;
-
-                        for (key in obj) {
-                            if (!dataProp.hasOwnProperty[key]) {
-                                dataProp[key] = obj[key];
-                            }
-                        }
-                    }
-                };
-
-            hydrateProps.forEach(function (prop) {
-                if (data.hasOwnProperty(prop)) {
-                    doHydrate[prop](data[prop]);
-                }
-            });
-
-            return data;
-        };
-        // This function is the complement to the hydrate - it removes any extra key-value pairs that are not needed on a property,
-        // and is called before data is sent to the server for committing to the database.
-        self.sanitize = function (data) {
-            var sanitizeProps = ['Channel'],
-                doSanitize = {
-                    'Channel': function (dataProp) {
-                        var valueTypeEnums = pointInspector.utility.config.Enums["Value Types"];
-
-                        if (dataProp.ValueType === valueTypeEnums.Enum.enum) {
-                            delete dataProp.Min;
-                            delete dataProp.Max;
-                        } else if (dataProp.ValueType === valueTypeEnums.Unsigned.enum) {
-                            delete dataProp.ValueOptions;
-                            delete dataProp.eValue;
-                        }
-                    }
-                };
-
-            sanitizeProps.forEach(function (prop) {
-                if (data.hasOwnProperty(prop)) {
-                    doSanitize[prop](data[prop]);
-                }
-            });
-
-            return data;
-        };
+        
         self.originalData = data;
-        self.data = ko.viewmodel.fromModel(self.hydrate(data), options);
+        self.data = ko.viewmodel.fromModel(data, options);
         //throttle point refs for model switch when toggling edit mode
         self.data['Point Refs'].extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
         self.status = ko.observable('saved'); // Options: saved, saving, error
@@ -898,7 +837,7 @@ define([
             //    value.
             if (self.status() === 'saving' || ((new Date().getTime() - formatPointErrorTimestamp) < 1000))
                 return;
-            var newPointData = self.sanitize(ko.viewmodel.toModel(self.data)),
+            var newPointData = ko.viewmodel.toModel(self.data),
                 emitData    = { newPoint: newPointData, oldPoint: self.originalData },
                 emitString  = 'updatePoint',
                 spinClass   = 'fa-spinner fa-spin',
