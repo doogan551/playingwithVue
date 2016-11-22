@@ -49,7 +49,7 @@ var Utils = {
 			}
 			propertyChange.property = data.prop;
 			propertyChange.newValue = data.newValue;
-			propertyChange.valueType = data.point[prop].ValueType;
+			propertyChange.valueType = data.point[data.prop].ValueType;
 			log.propertyChanges = propertyChange;
 		}
 
@@ -96,11 +96,14 @@ var Utils = {
 			"ALARMSCOLLECTION": "Alarms",
 			"CALENDARCOLLECTION": "Holiday",
 			"SYSTEMINFOPROPERTIES": "SystemInfo",
+			"SCHEDULESCOLLECTION": "Schedules",
 			"HISTORYCOLLECTION": "historydata",
 			"USERGROUPSCOLLECTION": "User Groups",
 			"ACTIVITYLOGCOLLECTION": "Activity Logs",
 			"UPIS": "upis"
 		};
+
+		constants.UPISCOLLECTIONS = [constants.ACTIVITYLOGCOLLECTION, constants.ALARMSCOLLECTION, constants.HISTORYCOLLECTION, constants.SCHEDULESCOLLECTION];
 
 		return constants[constant];
 	},

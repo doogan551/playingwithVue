@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var db = require('../helpers/db');
+var utils = require('../helpers/utils');
 var logger = require("../helpers/logger")(module);
 
 exports.get = function(criteria, cb) {
@@ -263,7 +264,8 @@ exports.iterateCursor = function(criteria, fx, done) {
 exports.getWithSecurity = function(criteria, cb) {
   var skip = criteria._skip || 0;
   var limit = criteria._limit || 200;
-  var identifier = null;
+
+  var identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
   var Security = require('../models/security');
 
   Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
@@ -278,7 +280,7 @@ exports.getWithSecurity = function(criteria, cb) {
         return parseInt(upi, 10);
       });
       if (!criteria.query.hasOwnProperty('_id')) {
-        criteria.query._id = {
+        criteria.query[identifier] = {
           $in: upis
         };
       }
@@ -286,7 +288,6 @@ exports.getWithSecurity = function(criteria, cb) {
     var points = [];
 
     exports.iterateCursor(criteria, function(err, doc, next) {
-      identifier = (doc.hasOwnProperty('upi')) ? 'upi' : '_id';
       if (permissions !== true) {
         if (permissions.hasOwnProperty(doc[identifier])) {
           doc._pAccess = permissions[doc[identifier]];

@@ -3,7 +3,7 @@
     <div class="dataField">
         <label data-bind="text: propertyName"></label>
         <!-- ko if: isInEditMode -->
-        <input type="text" data-bind="value: data.Value, validateOnBlur: propertyName" class="form-control input-sm">
+        <input type="text" data-bind="value: data.Value, validateOnBlur: propertyName, disable: data.isReadOnly" class="form-control input-sm">
         <!-- /ko -->
         <!-- ko ifnot: isInEditMode -->
         <span class="lh30" data-bind="text: data.Value"></span>
