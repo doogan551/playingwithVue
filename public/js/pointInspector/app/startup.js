@@ -840,15 +840,7 @@ define([
             var newPointData = ko.viewmodel.toModel(self.data),
                 emitData    = { newPoint: newPointData, oldPoint: self.originalData },
                 emitString  = 'updatePoint',
-                spinClass   = 'fa-spinner fa-spin',
-                $saveIcon   = $('.btnSave i'),
                 close;
-
-            // Allow 200ms for the point to save before showing the spinner
-            window.setTimeout(function () {
-                if (self.status() === 'saving')
-                    $saveIcon.addClass(spinClass);
-            }, 200);
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
@@ -946,7 +938,6 @@ define([
                 }
                 close = (typeof data.close === 'boolean' && data.close) && !rxData.err;
                 bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
-                $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
                     setTimeout(dtiUtility.closeWindow, 1000);
@@ -972,6 +963,8 @@ define([
     function initialize(data) {
         var condition = '.permissionDenied',
             $noAccess = $('.noAccess'),
+            pointStatuses = pointInspector.utility.config.Enums['Point Statuses'],
+            pointInactive = (data._pStatus === pointStatuses.Inactive.enum),
             denyAccess = false;
         //check security
         if (!!data.err) {
@@ -986,7 +979,8 @@ define([
             }
             denyAccess = true;
         }
-        if (!denyAccess && !pointInspector.authorize(data, pointInspector.permissionLevels.READ)) {
+        // Allow access if point is inactive #180
+        if (!denyAccess && !pointInactive && !pointInspector.authorize(data, pointInspector.permissionLevels.READ)) {
             denyAccess = true;
         }
         if (denyAccess) {
@@ -994,10 +988,11 @@ define([
             pointInspector.initDOM();
             return;
         }
-        //if new and external, open directly in edit mode
-        // if (data._pStatus === 1 && pointInspector.isExternal) {
-        //     pointInspector.isInEditMode(true);
-        // }
+        // Automatically enable edit mode if point is inactive (#180) OR if user has sufficient access & point is not deleted
+        if (pointInactive || (pointInspector.authorize(data, pointInspector.permissionLevels.WRITE) && (data._pStatus !== pointStatuses.Deleted.enum))) {
+            pointInspector.isInEditMode(true);
+        }
+
         pointInspector.point = new Point(data);
         pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
@@ -1005,7 +1000,7 @@ define([
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time
             // Delay the bannerJS animation for another 500ms to let things settle down
             window.setTimeout(function () {
-                if (data._pStatus === 2) {
+                if (data._pStatus === pointStatuses.Deleted.enum) {
                     bannerJS.showBanner({
                         msg: 'This point has been deleted. Click the restore button to undelete it.',
                         color: 'black',
