@@ -1289,7 +1289,7 @@ var Config = (function(obj) {
                 val = data.propertyObject.Value, // Property value
                 type = point["Point Type"].Value; // Point type
 
-            data.point = obj.EditChanges.applyDeviceTypePortNProtocol(data);
+            data.point = obj.EditChanges.applyDevicePortNProtocol(data);
             return data;
         },
 
@@ -2228,7 +2228,7 @@ var Config = (function(obj) {
         },
 
         "Ethernet Protocol": function(data) {
-            data.point = obj.EditChanges.applyDeviceTypeEthernetProtocol(data);
+            data.point = obj.EditChanges.applyDeviceEthernetProtocol(data);
             return data;
         },
 
@@ -2243,7 +2243,7 @@ var Config = (function(obj) {
                 if (point["Point Type"].Value === "Device") {
                     point = obj.EditChanges.applyDeviceDevModel(data);
                 } else {
-                    point = obj.EditChanges.applyRemoteUnitTypeModelType(data);
+                    point = obj.EditChanges.applyRemoteUnitDevModel(data);
                 }
             }
             return data;
@@ -2314,7 +2314,7 @@ var Config = (function(obj) {
         },
 
         "Uplink Port": function(data) {
-            data.point = obj.EditChanges.applyDeviceTypeUplinkPort(data);
+            data.point = obj.EditChanges.applyDeviceUplinkPort(data);
             return data;
         },
 
@@ -2333,12 +2333,12 @@ var Config = (function(obj) {
         },
 
         "Gateway": function(data) {
-            obj.EditChanges.applyRemoteUnitTypeNetworkType(data.point);
+            obj.EditChanges.applyRemoteUnitNetworkType(data.point);
             return data;
         },
 
         "Network Type": function(data) {
-            obj.EditChanges.applyRemoteUnitTypeNetworkType(data.point);
+            obj.EditChanges.applyRemoteUnitNetworkType(data.point);
             return data;
         },
 
@@ -2499,7 +2499,7 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Analog Input") {
-                data.point = obj.EditChanges.applyAnalogInputTypeSensorPoint(data);
+                data.point = obj.EditChanges.applyAnalogInputSensorPoint(data);
             } else if (type === "Analog Output") {
                 data.point = obj.EditChanges.applyAnalogOutputSensorPoint(data);
             }
@@ -3181,7 +3181,7 @@ var Config = (function(obj) {
                     break;
                 case 'Network Segment':
                     if (point["Gateway"].isDisplayable && point["Gateway"].Value) {
-                        this.applyRemoteUnitTypeNetworkType(point);
+                        this.applyRemoteUnitNetworkType(point);
                     } else if (networkValue !== 0) {
                         point['Ethernet IP Port'].Value = findNetwork(networkValue);
                         point['Ethernet IP Port'].isReadOnly = true;
