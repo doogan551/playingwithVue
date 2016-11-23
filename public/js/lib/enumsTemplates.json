@@ -505,6 +505,9 @@
             },
             "SCADA IO": {
                 "enum": 21
+            },
+            "None": {
+                "enum": 256
             }
         },
         "Device Ports": {
@@ -1018,6 +1021,9 @@
             },
             "ASE Remote Unit": {
                 "enum": 19
+            },
+            "None": {
+                "enum": 256
             }
         },
         "Reset Intervals": {
@@ -1496,12 +1502,12 @@
             "Alarm Repeat Enable": {
                 "enum": 8,
                 "valueType": "Bool",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Alarm Repeat Time": {
                 "enum": 105,
                 "valueType": "HourMin",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Alarm State": {
                 "enum": 34,
@@ -3189,7 +3195,7 @@
             "Remarks": {
                 "enum": 134,
                 "valueType": "String",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Remote Unit Model": {
                 "enum": 448,
@@ -3711,6 +3717,9 @@
             "_id": {
                 "enum": 1
             },
+            "_pAccess": {
+                "enum": 2
+            },
             "_relDevice": {
                 "enum": 3
             },
@@ -3737,9 +3746,6 @@
             },
             "_parentUpi": {
                 "enum": 11
-            },
-            "_pAccess": {
-                "enum": 117
             },
             "_pollTime": {
                 "enum": 12
@@ -3809,8 +3815,8 @@
             "_relDevice": 0,
             "_relRMU": 0,
             "_relPoint": 0,
-            "_devModel": 19,
-            "_rmuModel": 0,
+            "_devModel": 256,
+            "_rmuModel": 256,
             "_cfgDevice": false,
             "_forceAllCOV": false,
             "_parentUpi": 0,
@@ -3940,13 +3946,13 @@
                     "Value": 60
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -3962,8 +3968,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Failed",
-                    "eValue": 0
+                    "Value": "Normal",
+                    "eValue": 1
                 },
                 "Alarms Off": {
                     "isDisplayable": true,
@@ -4005,7 +4011,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
-                    "Value": "0"
+                    "Value": "0.0.0.0"
                 },
                 "Device Status": {
                     "isDisplayable": true,
@@ -4015,25 +4021,25 @@
                     "eValue": 0
                 },
                 "Downlink Broadcast Delay": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
                 },
                 "Downlink IP Port": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 47816
                 },
                 "Downlink Network": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
                 },
                 "Downlink Protocol": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
@@ -4055,7 +4061,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 65534
+                    "Value": 1
                 },
                 "Ethernet Protocol": {
                     "isDisplayable": true,
@@ -4068,10 +4074,10 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
-                    "Value": "V1.93"
+                    "Value": "V0.00"
                 },
                 "Firmware 2 Version": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": true,
                     "ValueType": 2,
                     "Value": "N/A"
@@ -4092,14 +4098,14 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Unknown",
-                    "eValue": 0
+                    "Value": "None",
+                    "eValue": 256
                 },
                 "Network Segment": {
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 4,
-                    "Value": 0
+                    "Value": 1
                 },
                 "Notify Policies": [],
                 "Point Refs": [{
@@ -4133,7 +4139,7 @@
                     "Value": 0
                 },
                 "Port 1 Protocol": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
@@ -4158,7 +4164,7 @@
                     "Value": 0
                 },
                 "Port 2 Protocol": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
@@ -4183,7 +4189,7 @@
                     "Value": 0
                 },
                 "Port 3 Protocol": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
@@ -4208,7 +4214,7 @@
                     "Value": 0
                 },
                 "Port 4 Protocol": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
@@ -4224,17 +4230,17 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
                 },
                 "Serial Number": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": true,
                     "ValueType": 2,
                     "Value": "Unknown"
@@ -4255,8 +4261,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Central Time Zone",
-                    "eValue": 6
+                    "Value": "Eastern Time Zone",
+                    "eValue": 5
                 },
                 "Trend Interval": {
                     "isDisplayable": true,
@@ -4271,11 +4277,7 @@
                     "Value": "Ethernet",
                     "eValue": 0,
                     "ValueOptions": {
-                        "Ethernet": 0,
-                        "Port 1": 1,
-                        "Port 2": 2,
-                        "Port 3": 3,
-                        "Port 4": 4
+                        "Ethernet": 0
                     }
                 },
                 "Value": {
@@ -4358,13 +4360,13 @@
                     "Value": 60
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -4411,7 +4413,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": "0"
+                    "Value": "127"
                 },
                 "Device Port": {
                     "isDisplayable": true,
@@ -4420,11 +4422,7 @@
                     "Value": "Port 1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "Ethernet": 0,
-                        "Port 1": 1,
-                        "Port 2": 2,
-                        "Port 3": 3,
-                        "Port 4": 4
+                        "Port 1": 1
                     }
                 },
                 "Device Status": {
@@ -4435,16 +4433,16 @@
                     "eValue": 0
                 },
                 "Ethernet IP Port": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 47808
                 },
                 "Firmware Version": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": true,
                     "ValueType": 2,
-                    "Value": "V2.04"
+                    "Value": "V0.00"
                 },
                 "Gateway": {
                     "isDisplayable": false,
@@ -4480,8 +4478,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Unknown",
-                    "eValue": 0
+                    "Value": "None",
+                    "eValue": 256
                 },
                 "Network Segment": {
                     "isDisplayable": false,
@@ -4548,11 +4546,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -4918,13 +4916,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -4955,28 +4953,13 @@
                     "Value": 15
                 },
                 "Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "Conversion Adjustment": {
@@ -5050,7 +5033,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Filter Weight": {
                     "isDisplayable": true,
@@ -5249,11 +5232,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -5262,7 +5245,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -5379,13 +5362,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -5416,20 +5399,13 @@
                     "Value": 15
                 },
                 "Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "Close Channel": {
@@ -5439,14 +5415,7 @@
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "Control Array": [],
@@ -5536,7 +5505,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "High Alarm Limit": {
                     "isDisplayable": true,
@@ -5612,14 +5581,7 @@
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "Out of Service": {
@@ -5752,11 +5714,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -5765,7 +5727,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -5875,13 +5837,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -5978,7 +5940,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Fail Action": {
                     "isDisplayable": true,
@@ -6136,11 +6098,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -6149,7 +6111,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -6248,13 +6210,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -6292,28 +6254,13 @@
                     "Value": 15
                 },
                 "Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "COV Enable": {
@@ -6342,15 +6289,13 @@
                     "Value": "Off"
                 },
                 "Input Type": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Latch",
                     "eValue": 0,
                     "ValueOptions": {
-                        "Latch": 0,
-                        "Momentary": 1,
-                        "Pulse": 2
+                        "Latch": 0
                     }
                 },
                 "Instance": {
@@ -6513,11 +6458,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -6562,7 +6507,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Supervised Input": {
                     "isDisplayable": false,
@@ -6672,13 +6617,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -6716,45 +6661,23 @@
                     "Value": 15
                 },
                 "Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "Close Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "Close Polarity": {
@@ -6805,28 +6728,13 @@
                     "Value": ""
                 },
                 "Feedback Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "Feedback Polarity": {
@@ -6843,10 +6751,7 @@
                     "Value": "None",
                     "eValue": 0,
                     "ValueOptions": {
-                        "None": 0,
-                        "Single": 1,
-                        "Dual": 2,
-                        "Point": 3
+                        "None": 0
                     }
                 },
                 "Inactive Text": {
@@ -6923,20 +6828,13 @@
                     "Value": 0
                 },
                 "Off Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "Off Control Data Type": {
@@ -6966,20 +6864,13 @@
                     "Value": 0
                 },
                 "On Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8
+                        "1": 1
                     }
                 },
                 "On Control Data Type": {
@@ -7009,28 +6900,13 @@
                     "Value": 0
                 },
                 "Open Channel": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "Open Polarity": {
@@ -7156,11 +7032,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -7211,7 +7087,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Supervised Input": {
                     "isDisplayable": false,
@@ -7306,13 +7182,13 @@
                     "Value": 0
                 },
                 "Alarm Repeat Enable": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
                 },
                 "Alarm Repeat Time": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
@@ -7546,11 +7422,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -7559,7 +7435,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -7643,22 +7519,7 @@
                     "Value": "1",
                     "eValue": 1,
                     "ValueOptions": {
-                        "1": 1,
-                        "2": 2,
-                        "3": 3,
-                        "4": 4,
-                        "5": 5,
-                        "6": 6,
-                        "7": 7,
-                        "8": 8,
-                        "9": 9,
-                        "10": 10,
-                        "11": 11,
-                        "12": 12,
-                        "13": 13,
-                        "14": 14,
-                        "15": 15,
-                        "16": 16
+                        "1": 1
                     }
                 },
                 "COV Enable": {
@@ -7683,10 +7544,10 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "Pulses"
                 },
                 "Fast Pulse": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
@@ -7794,11 +7655,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -7807,7 +7668,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -8013,11 +7874,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -8037,7 +7898,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -8214,7 +8075,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "DegF"
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -8324,11 +8185,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -8384,7 +8245,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -8504,7 +8365,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -8625,11 +8486,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -8685,7 +8546,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -8816,7 +8677,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -8959,11 +8820,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -9019,7 +8880,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -9150,7 +9011,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Filter": {
                     "isDisplayable": true,
@@ -9299,11 +9160,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -9365,7 +9226,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -9620,11 +9481,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -9652,7 +9513,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Stop Gain": {
                     "isDisplayable": true,
@@ -9790,7 +9651,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Fall Time": {
                     "isDisplayable": true,
@@ -9929,11 +9790,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -10013,7 +9874,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -10133,7 +9994,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Input High Limit": {
                     "isDisplayable": true,
@@ -10244,11 +10105,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -10310,7 +10171,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -10443,7 +10304,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Input 1 Constant": {
                     "isDisplayable": true,
@@ -10571,11 +10432,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -10637,7 +10498,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Total": {
                     "isDisplayable": true,
@@ -10763,7 +10624,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Input 1 Constant": {
                     "isDisplayable": true,
@@ -10896,11 +10757,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -10967,7 +10828,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -11093,7 +10954,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -11192,11 +11053,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -11252,7 +11113,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -11313,7 +11174,7 @@
                     "Value": ""
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -11432,7 +11293,7 @@
                     "DevInst": 0
                 }],
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -11999,7 +11860,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Input Rate": {
                     "isDisplayable": true,
@@ -12105,11 +11966,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -12178,7 +12039,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend COV Increment": {
                     "isDisplayable": true,
@@ -12328,7 +12189,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
-                    "Value": ""
+                    "Value": "%"
                 },
                 "Heating Setpoint": {
                     "isDisplayable": false,
@@ -12474,11 +12335,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -12540,7 +12401,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -12789,11 +12650,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -12861,7 +12722,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -13164,11 +13025,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -13242,7 +13103,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -13687,11 +13548,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -13759,7 +13620,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -14010,11 +13871,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -14082,7 +13943,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -14346,11 +14207,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -14418,7 +14279,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
@@ -14668,11 +14529,11 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
+                    "Value": "No Fault",
+                    "eValue": 0
                 },
                 "Remarks": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
@@ -14740,7 +14601,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 18,
-                    "Value": 4
+                    "Value": 0
                 },
                 "Trend Enable": {
                     "isDisplayable": true,
