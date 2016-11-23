@@ -2210,7 +2210,7 @@ var Config = (function(obj) {
         },
 
         "Downlink Protocol": function(data) {
-            data.point = obj.EditChanges.applyDeviceTypeDownlinkProtocol(data);
+            data.point = obj.EditChanges.applyDeviceDownlinkProtocol(data);
             return data;
         },
 
