@@ -3,6 +3,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
     function ViewModel(params) {
         var self = this;
+
+        apiEndpoint = params.rootContext.apiEndpoint;
+
         this.actingUser = window.top.workspaceManager.user();
         this.root = params.rootContext;
         this.security = this.root.point.data.Security;
@@ -45,6 +48,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
         this.userCanEditPermissions = ko.computed(function() {
             if (this.isSystemAdmin) return true;
+            // Allow any user to edit permissions if point is inactive #180
+            if (this.root.point.data._pStatus() === this.root.utility.config.Enums['Point Statuses'].Inactive.enum) return true;
             // Only system administrators and group adminstrators can edit permissions
             var self = this,
                 filteredUsersOnPoint = ko.utils.arrayFilter(this.usersOnPoint(), function(user) {
@@ -195,8 +200,6 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 });
             }
         }, self);
-
-        apiEndpoint = params.rootContext.apiEndpoint;
     }
 
     // Use prototype to declare any public methods
@@ -204,6 +207,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var self = this,
             failAction = function(jqXHR, textStatus) {
                 self.networkError(true);
+                self.gettingData(false);
                 console.log('failed: ', textStatus, ' jqXHR: ', jqXHR);
             },
             sortFn = function(a, b) {
@@ -239,7 +243,6 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
         // Get all groups and users defined in the system
         self.gettingData(true);
-
         $.ajax({
                 url: apiEndpoint + 'security/groups/getallgroups',
                 contentType: 'application/json',
