@@ -442,7 +442,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
     ViewModel.prototype.dispose = function() {
-        this.trendDataSorted.dispose();
     };
 
     // Return component definition
