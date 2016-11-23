@@ -3674,7 +3674,8 @@ var Config = (function(obj) {
             point._devModel = point["Model Type"].eValue;
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
             point["Time Zone"].isReadOnly = true;
-            point["Firmware 2 Version"].isDisplayable = false;
+            point[""].isDisplayable = false;
+            setDisp(point, ["Firmware 2 Version", "Serial Number"], false);
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point["Time Zone"].isReadOnly = false;
@@ -3686,7 +3687,7 @@ var Config = (function(obj) {
                     "Port 3": enums["Device Ports"]["Port 3"]["enum"],
                     "Port 4": enums["Device Ports"]["Port 4"]["enum"]
                 });
-                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], true);
+                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol", "Serial Number"], true);
 
             } else if (obj.Utility.checkMicroScan4Device(point)) {
                 setValOpt(upPort, {
@@ -3705,7 +3706,6 @@ var Config = (function(obj) {
                 point["Ethernet Network"].isReadOnly = true;
 				point._cfgRequired = false;
             } else {
-                // ROB- create a function that can do setValOpts and control isDisp based on VO
                 setValOpt(upPort, {
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
                 });
@@ -3778,7 +3778,7 @@ var Config = (function(obj) {
             point["Model Type"].eValue = enums["Remote Unit Model Types"][modelType]["enum"];
             point._rmuModel = point["Model Type"].eValue;
 
-            obj.Utility.setPropsDisplayable(point, ["Device Port", "Poll Function", "Poll Register", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
+            obj.Utility.setPropsDisplayable(point, ["Firmware Version", "Device Port", "Poll Function", "Poll Register", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
             rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
 
             if ((point._devModel === enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enums["Device Model Types"]["Unknown"]["enum"])) {
@@ -3825,7 +3825,10 @@ var Config = (function(obj) {
                 }
                 point["Device Address"].isDisplayable = true;
 
-                if (obj.Utility.checkMicroScanRMU(point) || (modelType === "IFC Remote Unit")) {
+                if (obj.Utility.checkMicroScanRMU(point)) {
+                    point["Configure Device"].isDisplayable = true;
+                    point["Firmware Version"].isDisplayable = true;
+                } else if (modelType === "IFC Remote Unit") {
                     point["Configure Device"].isDisplayable = true;
                 } else {
                     point["Configure Device"].isDisplayable = false;
