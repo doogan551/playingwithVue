@@ -33,18 +33,18 @@ module.exports = {
     };*/
     Security.Utility.getPermissions(data.user, function(err, permissions) {
 
-      if (permissions === true || permissions.hasOwnProperty(upi)) {
-        Utility.get({
-          query: searchCriteria,
-          collection: 'points',
-          limit: 1
-        }, function(err, points) {
+      Utility.get({
+        query: searchCriteria,
+        collection: 'points',
+        limit: 1
+      }, function(err, points) {
 
-          if (err) {
-            return cb(err, null, null);
-          }
+        if (err) {
+          return cb(err, null, null);
+        }
 
-          var point = points[0];
+        var point = points[0];
+        if (permissions === true || permissions.hasOwnProperty(upi) || point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
 
           if (!point) {
             return cb(null, "No Point Found", null);
@@ -56,11 +56,11 @@ module.exports = {
             }
             return cb(null, null, point);
           }
+        } else {
+          return cb("Permission Denied", null, null);
+        }
 
-        });
-      } else {
-        return cb("Permission Denied", null, null);
-      }
+      });
     });
   },
 

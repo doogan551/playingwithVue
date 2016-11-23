@@ -239,6 +239,23 @@ var Utils = {
 
 		return res.json(data);
 	},
+	setChannelOptions: function(point) {
+		var pointTypes = ['Analog Input', 'Analog Output', 'Binary Input', 'Binary Output', 'Accumulator'];
+		var properties = ['Channel', 'Close Channel', 'Feedback Channel', 'Open Channel', 'On Channel', 'Off Channel'];
+
+		if (!!~pointTypes.indexOf(point['Point Type'].Value)) {
+			properties.forEach(function(prop) {
+				if (point.hasOwnProperty(prop) && !point[prop].hasOwnProperty('ValueOptions')) {
+					point[prop].ValueOptions = {
+						'1': 1
+					};
+				}
+				if (point.hasOwnProperty(prop) && !point[prop].hasOwnProperty('eValue')) {
+					point[prop].eValue = 1;
+				}
+			});
+		}
+	},
 	setupNonFieldPoints: function(point) {
 		if (Config.Utility.getPropertyObject('Device Point', point) === null) {
 			point._cfgRequired = false;

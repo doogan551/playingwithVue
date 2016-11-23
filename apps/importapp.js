@@ -205,35 +205,32 @@ function importUpdate() {
 												// needs to be done after point refs is added to point
 												utils.setupNonFieldPoints(point);
 
-												setChannelOptions(point, function(err) {
+												utils.setChannelOptions(point);
+												updateTimeZones(point, function(err) {
 													if (err)
-														logger.info("setChannelOptions", err);
-													updateTimeZones(point, function(err) {
+														logger.info("updateTimeZones", err);
+													updateDevices(point, function(err) {
 														if (err)
-															logger.info("updateTimeZones", err);
-														updateDevices(point, function(err) {
+															logger.info("updateDevices", err);
+														updateModels(db, point, function(err) {
 															if (err)
-																logger.info("updateDevices", err);
-															updateModels(db, point, function(err) {
+																logger.info("updateModels", err);
+															updateAlarmMessages(point, function(err) {
 																if (err)
-																	logger.info("updateModels", err);
-																updateAlarmMessages(point, function(err) {
+																	logger.info("updateAlarmMessages", err);
+																addBroadcastPeriod(point, function(err) {
 																	if (err)
-																		logger.info("updateAlarmMessages", err);
-																	addBroadcastPeriod(point, function(err) {
+																		logger.info("addBroadcastPeriod", err);
+																	updateTrend(point, function(err) {
 																		if (err)
-																			logger.info("addBroadcastPeriod", err);
-																		updateTrend(point, function(err) {
+																			logger.info("updateTrend", err);
+																		rearrangeProperties(point, function(err) {
 																			if (err)
-																				logger.info("updateTrend", err);
-																			rearrangeProperties(point, function(err) {
+																				logger.info("rearrangeProperties", err);
+																			updatePoint(db, point, function(err) {
 																				if (err)
-																					logger.info("rearrangeProperties", err);
-																				updatePoint(db, point, function(err) {
-																					if (err)
-																						logger.info("updatePoint", err);
-																					cb(null);
-																				});
+																					logger.info("updatePoint", err);
+																				cb(null);
 																			});
 																		});
 																	});
@@ -417,7 +414,7 @@ function setupCfgRequired(db, callback) {
 }
 
 function createEmptyCollections(db, callback) {
-	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions'];
+	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'dev'];
 	async.forEach(collections, function(coll, cb) {
 		db.createCollection(coll, function(err, result) {
 			cb(err);
@@ -425,6 +422,16 @@ function createEmptyCollections(db, callback) {
 	}, function(err) {
 		callback(err);
 	});
+}
+
+function setupDevCollection(callback) {
+	Utility.insert({
+		collection: 'dev',
+		insertObj: {
+			"item": "distinct",
+			"values": []
+		}
+	}, callback);
 }
 
 function setupReportsCollections(db, callback) {
@@ -918,7 +925,6 @@ function convertHistoryReports(db, callback) {
 								refPoint: ref
 							}, index);
 							report._actvAlmId = ObjectID("000000000000000000000000");
-							report._curAlmId = ObjectID("000000000000000000000000");
 							index++;
 						}
 						cb(null);
@@ -1042,7 +1048,6 @@ function convertTotalizerReports(callback) {
 						refPoint: ref
 					}, refIds.indexOf(ref._id));
 					report._actvAlmId = ObjectID("000000000000000000000000");
-					report._curAlmId = ObjectID("000000000000000000000000");
 				}
 				cb2(null);
 
@@ -1292,14 +1297,16 @@ function initImport(db, callback) {
 	// remove VAV
 	// model type property set isreadonly to false
 	createEmptyCollections(db, function(err) {
-		// setupReportsCollections(db, function(err) {
-		setupSystemInfo(db, function(err) {
-			setupPointRefsArray(db, function(err) {
-				addDefaultUser(db, function(err) {
-					// setupCurAlmIds(db, function(err) {
-					setupCfgRequired(db, function(err) {
-						setupProgramPoints(db, function(err) {
-							callback(null);
+		setupDevCollection(function(err) {
+			// setupReportsCollections(db, function(err) {
+			setupSystemInfo(db, function(err) {
+				setupPointRefsArray(db, function(err) {
+					addDefaultUser(db, function(err) {
+						// setupCurAlmIds(db, function(err) {
+						setupCfgRequired(db, function(err) {
+							setupProgramPoints(db, function(err) {
+								callback(null);
+							});
 						});
 					});
 					// });
@@ -1702,22 +1709,6 @@ function updateTimeZones(point, cb) {
 	cb(null);
 }
 
-function setChannelOptions(point, cb) {
-	var pointTypes = ['Analog Input', 'Analog Output', 'Binary Input', 'Binary Output', 'Accumulator'];
-	var properties = ['Channel', 'Close Channel', 'Feedback Channel', 'Open Channel', 'On Channel', 'Off Channel'];
-
-	if (!!~pointTypes.indexOf(point['Point Type'].Value)) {
-		properties.forEach(function(prop) {
-			if (point.hasOwnProperty(prop) && !point[prop].hasOwnProperty('ValueOptions')) {
-				point[prop].ValueOptions = {
-					'1': 1
-				};
-			}
-		});
-	}
-	cb();
-}
-
 /**
  * Subfunction ran by devModelLogic that updates the db.
  *
@@ -1732,7 +1723,7 @@ function setChannelOptions(point, cb) {
 function updateModels(db, point, cb) {
 	Config.Utility.updDevModel({
 		point: point
-	})
+	});
 	cb();
 }
 

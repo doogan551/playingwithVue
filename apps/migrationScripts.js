@@ -2,8 +2,9 @@
 // if you do not wish to update the version in the DB, pass -n from command prompt
 process.setMaxListeners(0);
 var async = require('async');
-var utility = require('../models/utility');
+var Utility = require('../models/Utility');
 var db = require('../helpers/db');
+var utils = require('../helpers/utils');
 var config = require('config');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -135,7 +136,7 @@ var scripts = {
                 });
             };
 
-        utility.get({
+        Utility.get({
             collection: 'Utilities'
         }, function(err, utilities) {
             if (err) {
@@ -162,7 +163,7 @@ var scripts = {
                     processRateTable(touUtility.PreviousRateTables[year], touUtility);
                 }
                 processRateTable(touUtility.RateTables, touUtility);
-                utility.update(criteria, cb);
+                Utility.update(criteria, cb);
             }, function allDone(err) {
                 return doCallback(err, results);
             });
@@ -179,7 +180,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: 'points',
             query: {
                 'Point Type.Value': 'Sequence'
@@ -195,7 +196,7 @@ var scripts = {
 
             // logger.info('updating sequence:', doc._id);
 
-            utility.update({
+            Utility.update({
                 collection: 'points',
                 query: {
                     _id: doc._id
@@ -227,7 +228,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: "points",
             query: {
                 // "_id" : 67275,
@@ -249,7 +250,7 @@ var scripts = {
                             // logger.info("   ___ sequenceNeedsSaving ___");
                             sequenceNeedsSaving = false;
 
-                            utility.update({
+                            Utility.update({
                                 collection: "points",
                                 query: {
                                     _id: sequence._id
@@ -332,9 +333,9 @@ var scripts = {
                         };
 
                         // logger.info("criteria = " + criteria);
-                        utility.getOne(criteria, function(err, referencedObj) {
+                        Utility.getOne(criteria, function(err, referencedObj) {
                             if (err) {
-                                logger.info("utility.getOne err = " + err);
+                                logger.info("Utility.getOne err = " + err);
                                 return cb2(err);
                             } else {
                                 // logger.info("getGplBlockObject()  referencedObj = " + referencedObj);
@@ -342,7 +343,7 @@ var scripts = {
                                     // logger.info("        - - UPI Not Found: " + upi);
                                     cb2(null, referencedObj);
                                 } else {
-                                    // logger.info("utility.getOne found it = " + referencedObj);
+                                    // logger.info("Utility.getOne found it = " + referencedObj);
                                     cb2(null, referencedObj);
                                 }
                             }
@@ -469,7 +470,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: "points",
             query: {
                 // "_id" : 54349,
@@ -530,7 +531,7 @@ var scripts = {
                             // logger.info("   ___ displayNeedsSaving ___");
                             displayNeedsSaving = false;
 
-                            utility.update({
+                            Utility.update({
                                 collection: "points",
                                 query: {
                                     _id: display._id
@@ -590,9 +591,9 @@ var scripts = {
                         };
 
                         // logger.info("criteria = " + criteria);
-                        utility.getOne(criteria, function(err, referencedObj) {
+                        Utility.getOne(criteria, function(err, referencedObj) {
                             if (err) {
-                                logger.info("utility.getOne err = " + err);
+                                logger.info("Utility.getOne err = " + err);
                                 return cb2(err);
                             } else {
                                 // logger.info("getDisplayReferencedObject()  referencedObj = " + referencedObj);
@@ -600,7 +601,7 @@ var scripts = {
                                     // logger.info("        - - UPI Not Found: " + upi);
                                     cb2(null, referencedObj);
                                 } else {
-                                    // logger.info("utility.getOne found it = " + referencedObj);
+                                    // logger.info("Utility.getOne found it = " + referencedObj);
                                     cb2(null, referencedObj);
                                 }
                             }
@@ -736,7 +737,7 @@ var scripts = {
                     interval,
                     updateReport = function(docToUpdate, cb) {
                         // logger.info("Updating report ._id = " + docToUpdate._id);
-                        utility.update({
+                        Utility.update({
                             collection: 'points',
                             query: {
                                 _id: docToUpdate._id
@@ -775,7 +776,7 @@ var scripts = {
                 }
             };
 
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: collectionName,
             query: query
         }, function processReport(err, doc, cb) {
@@ -817,7 +818,7 @@ var scripts = {
                     updateDoc = false,
                     updateReport = function(docToUpdate, cb) {
                         // logger.info("Updating report ._id = " + docToUpdate._id);
-                        utility.update({
+                        Utility.update({
                             collection: 'points',
                             query: {
                                 _id: docToUpdate._id
@@ -935,7 +936,7 @@ var scripts = {
                 }
             };
 
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: collectionName,
             query: query
         }, function processReport(err, doc, cb) {
@@ -971,7 +972,7 @@ var scripts = {
                 'Point Type.Value': 'Device'
             }
         };
-        utility.iterateCursor(criteria, function(err, doc, cb) {
+        Utility.iterateCursor(criteria, function(err, doc, cb) {
             doc['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
             if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(doc['Model Type'].eValue) >= 0) {
                 doc['Firmware 2 Version'].isDisplayable = true;
@@ -984,7 +985,7 @@ var scripts = {
             doc['Downlink IP Port'].isReadOnly = false;
             doc['Downlink IP Port'].isDisplayable = false;
 
-            utility.update({
+            Utility.update({
                 collection: 'points',
                 query: {
                     _id: doc._id
@@ -1022,7 +1023,7 @@ var scripts = {
                 multi: true
             }
         };
-        utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function(err, results) {
             logger.info('Point Instance removed from points');
             callback(null, {
                 fn: 'removePointInstance',
@@ -1072,7 +1073,7 @@ var scripts = {
             }
         };
 
-        utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function(err, results) {
             logger.info('Gateway and Router Address added to Remote Units.');
             criteria = {
                 collection: 'points',
@@ -1099,7 +1100,7 @@ var scripts = {
                 }
             };
 
-            utility.update(criteria, function(err, results) {
+            Utility.update(criteria, function(err, results) {
                 logger.info('Read Only added to I/O points.');
                 callback(null, {
                     fn: 'updateGatewayReadOnlyRouterAddress',
@@ -1138,7 +1139,7 @@ var scripts = {
                 multi: true
             }
         };
-        utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function(err, results) {
             logger.info('Network Properties updated.');
             criteria = {
                 collection: 'SystemInfo',
@@ -1146,7 +1147,7 @@ var scripts = {
                     'Name': 'Preferences'
                 }
             };
-            utility.getOne(criteria, function(err, prefs) {
+            Utility.getOne(criteria, function(err, prefs) {
                 var netConfig = [{
                     isDefault: true,
                     'IP Network Segment': prefs['IP Network Segment'],
@@ -1157,7 +1158,7 @@ var scripts = {
                         'Network Configuration': netConfig
                     }
                 };
-                utility.update(criteria, function(err, results) {
+                Utility.update(criteria, function(err, results) {
                     logger.info('System Info updated.');
                     callback(null, {
                         fn: 'updateNetworkProps',
@@ -1191,13 +1192,13 @@ var scripts = {
                 multi: true
             }
         };
-        utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function(err, results) {
             logger.info('Network Properties updated.');
             criteria = {
                 collection: 'Users',
                 query: {}
             }
-            utility.get(criteria, function(err, users) {
+            Utility.get(criteria, function(err, users) {
                 async.eachSeries(users, function(user, cb) {
                     updateControllers("add", user.username, function(err) {
                         cb(err);
@@ -1217,7 +1218,7 @@ var scripts = {
                         Name: "Controllers"
                     }
                 };
-                utility.getOne(criteria, function(err, controllers) {
+                Utility.getOne(criteria, function(err, controllers) {
                     if (op === "add") {
                         var id = 0,
                             ids = [],
@@ -1254,7 +1255,7 @@ var scripts = {
                                 Entries: controllers.Entries
                             }
                         };
-                        utility.update(criteria, function(err, result) {
+                        Utility.update(criteria, function(err, result) {
                             cb(err);
                         });
                     } else {
@@ -1270,7 +1271,7 @@ var scripts = {
                             }
                         };
 
-                        utility.update(criteria, function(err, result) {
+                        Utility.update(criteria, function(err, result) {
                             cb(err);
                         });
                     }
@@ -1290,7 +1291,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: 'points',
             query: {
                 'Point Type.Value': 'Sequence',
@@ -1307,7 +1308,7 @@ var scripts = {
 
             // logger.info('updating sequence:', doc._id);
 
-            utility.update({
+            Utility.update({
                 collection: 'points',
                 query: {
                     _id: doc._id
@@ -1339,7 +1340,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.iterateCursor({
+        Utility.iterateCursor({
             collection: 'points',
             query: {
                 'Point Type.Value': 'Device'
@@ -1351,7 +1352,7 @@ var scripts = {
                 doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
             }
 
-            utility.update({
+            Utility.update({
                 collection: 'points',
                 query: {
                     _id: doc._id
@@ -1383,7 +1384,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.update({
+        Utility.update({
             collection: 'points',
             query: {
                 'Point Type.Value': {
@@ -1405,7 +1406,7 @@ var scripts = {
                 multi: true
             }
         }, function(err, results) {
-            utility.update({
+            Utility.update({
                 collection: 'points',
                 query: {
                     $or: [{
@@ -1435,7 +1436,7 @@ var scripts = {
                     multi: true
                 }
             }, function(err, results) {
-                utility.update({
+                Utility.update({
                     collection: 'points',
                     query: {
                         'Point Type.Value': 'Remote Unit'
@@ -1471,7 +1472,7 @@ var scripts = {
                 results: null
             });
         }
-        utility.update({
+        Utility.update({
             collection: 'points',
             query: {},
             updateObj: {
@@ -1484,6 +1485,140 @@ var scripts = {
             logger.info('Finished with updateSecurity');
             callback(null, {
                 fn: 'updateSecurity',
+                errors: err
+            });
+        });
+    },
+
+    addMissingProperties: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'addMissingProperties',
+                errors: null,
+                results: null
+            });
+        }
+
+        var properties = [{
+            key: '_pAccess',
+            val: 0
+        }];
+        async.eachSeries(properties, function(property, cb) {
+            var query = {};
+            var updateObj = {
+                $set: {}
+            };
+
+            query[property.key] = {
+                $exists: 0
+            };
+            updateObj['$set'][property.key] = property.val;
+
+            Utility.update({
+                collection: 'points',
+                query: query,
+                updateObj: updateObj,
+                options: {
+                    multi: true
+                }
+            }, cb);
+        }, function(err) {
+            logger.info('Finished with addMissingProperties');
+            callback(null, {
+                fn: 'addMissingProperties',
+                errors: err
+            });
+        });
+    },
+
+    removeProperties: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'removeProperties',
+                errors: null,
+                results: null
+            });
+        }
+
+        var properties = ['VAV Channel', 'Port 1 Timeout', 'Port 2 Timeout', 'Port 3 Timeout', 'Port 4 Timeout', 'Channel.Min', 'Channel.Max',
+            'Close Channel.Min', 'Close Channel.Max', 'Open Channel.Min', 'Open Channel.Max', 'Feedback Channel.Min', 'Feedback Channel.Max',
+            'On Channel.Min', 'On Channel.Max', 'Off Channel.Min', 'Off Channel.Max', 'Device Address.Min', 'Device Address.Max', 'Repeat Count.Min', 'Repeat Count.Max',
+            'Modbus Order.ValueOptions', {
+                pointType: 'Remote Unit',
+                prop: 'Modbus Order'
+            }
+        ];
+        async.eachSeries(properties, function(property, cb) {
+            var query = {};
+            var updateObj = {
+                $unset: {}
+            };
+            if (typeof property === 'string') {
+                query[property] = {
+                    $exists: 1
+                };
+                updateObj['$unset'][property] = 1;
+            } else {
+                query[property.prop] = {
+                    $exists: 1
+                };
+                query['Point Type.Value'] = property.pointType;
+                updateObj['$unset'][property.prop] = 1;
+            }
+
+            Utility.update({
+                collection: 'points',
+                query: query,
+                updateObj: updateObj,
+                options: {
+                    multi: true
+                }
+            }, cb);
+        }, function(err) {
+            logger.info('Finished with removeProperties');
+            callback(null, {
+                fn: 'removeProperties',
+                errors: err
+            });
+        });
+    },
+
+    applyDevModel: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'applyDevModel',
+                errors: null,
+                results: null
+            });
+        }
+        Utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': {
+                    $in: ['Analog Input', 'Analog Output', 'Binary Input', 'Binary Output', 'Accumulator']
+                }
+            }
+        }, function(err, doc, cb) {
+            Config.Utility.updDevModel({
+                point: doc
+            });
+            utils.setChannelOptions(doc);
+            Utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function(err, result) {
+                cb(err);
+            });
+        }, function(err, count) {
+            logger.info('Finished with applyDevModel');
+            callback(null, {
+                fn: 'applyDevModel',
                 errors: err
             });
         });
@@ -1501,7 +1636,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.updateReportsDurationInterval];
+    tasks = [ scripts.addMissingProperties, scripts.removeProperties, scripts.applyDevModel];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1516,7 +1651,7 @@ db.connect(connectionString, function(err) {
     //	errors: null or error(s),
     //	results: null or result(s)
     // }
-    utility.getOne({
+    Utility.getOne({
         collection: 'SystemInfo',
         query: {
             "Name": "Preferences"
@@ -1537,7 +1672,7 @@ db.connect(connectionString, function(err) {
                 //added a clean exit for when scripts are done
                 process.exit(0);
             } else {
-                utility.update({
+                Utility.update({
                     collection: 'SystemInfo',
                     query: {
                         "Name": "Preferences"
