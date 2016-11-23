@@ -3674,7 +3674,6 @@ var Config = (function(obj) {
             point._devModel = point["Model Type"].eValue;
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
             point["Time Zone"].isReadOnly = true;
-            point[""].isDisplayable = false;
             setDisp(point, ["Firmware 2 Version", "Serial Number"], false);
 
             if (obj.Utility.checkMicroScan5Device(point)) {

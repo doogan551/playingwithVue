@@ -354,6 +354,10 @@ body {
     line-height: 50px;
 }
 
+.titleBar .actions .dropdown-menu {
+    min-width: 0px;
+}
+
 .pointUpi {
     background-color: transparent;
     color: transparent;

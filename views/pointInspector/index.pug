@@ -63,16 +63,25 @@ html(lang="en")
                     .btn.btn-info.btn-sm(data-bind="click: toggleEditMode")  Edit
                     // /ko
                     // /ko
-                    .btn.btn-default.btn-sm(data-bind="click: close") Close
+                    //- Removing in favor of the window's 'X' close button
+                    //- .btn.btn-default.btn-sm(data-bind="click: close") Close
                     // /ko
                     // ko if: isInEditMode
-                    .btn.btn-link.btn-sm(data-bind="click: toggleEditMode")  Cancel
+                    //- Removing cancel based on DT Utah feedback https://basecamp.com/1781223/projects/13083930/todos/282404793
+                    //- .btn.btn-link.btn-sm(data-bind="click: toggleEditMode")  Cancel
                     .btn-group
-                        button.btn.btn-success.btn-sm.btnSave(data-bind="click: point.saveAndClose")
-                            | Save & Close
-                        button.btn.btn-success.btn-sm.dropdown-toggle(data-bind="click:point.save")
+                        //- Hidden feature - right-click 'Save & Close' to perform just a 'Save'
+                        //- The 'disable' binding was not compatible with our Bootstrap button (disabled was set properly, but was never removed)
+                        button.btn.btn-success.btn-sm.btnSave(data-bind='click: point.saveAndClose, event: { contextmenu: point.save }, attr: { "disabled": point.status() === "saving" }')
+                            i.fa.fa-spin.fa-spinner(data-bind='visible: point.status() === "saving" ')
+                            span Save & Close
+                        //- button.btn.btn-success.btn-sm.dropdown-toggle(data-bind="click:point.save")
                             | Save
-                            
+                        button.btn.btn-success.btn-sm.dropdown-toggle(data-toggle='dropdown', data-bind='attr: { "disabled": point.status() === "saving" }')
+                            span.caret
+                        ul.dropdown-menu.dropdown-menu-right
+                            li
+                                a(href='javascript://', data-bind='click:point.save') Save
                     // /ko
             .chassis(data-bind="component: { name: baseComponent, params: $data }")
             .statusBar(data-bind="component: { name: 'ctl-statusBar', params: $data }")

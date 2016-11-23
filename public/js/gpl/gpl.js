@@ -5718,11 +5718,6 @@ gpl.BlockManager = function (manager) {
                         }
 
                         editBlock.pointName = pointName;
-                        if (isNaN(editBlock.upi)) {  // new block with new reference to point
-                            editBlock.setLabel(pointName.split('_').pop());
-                        } else {
-                            editBlock.setLabel(bmSelf.bindings.editPointLabel());
-                        }
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
                         editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
@@ -5742,16 +5737,12 @@ gpl.BlockManager = function (manager) {
                         } else {
                             editBlock.setReferenceType('External');
                         }
-
-                        gpl.fire('editedblock', bmSelf.editBlock); //capture changes on currently referenced point
-
-                    } else {  // reference to point did NOT change
-                        editBlock.setLabel(bmSelf.bindings.editPointLabel());
                     }
                 } else { //constant
                     editBlock.setValue(+bmSelf.bindings.editPointValue());
-                    editBlock.setLabel(bmSelf.bindings.editPointLabel());
                 }
+
+                editBlock.setLabel(bmSelf.bindings.editPointLabel());
 
                 // if(editBlock.isNonPoint === true && editBlock.referenceType !== 'External' && editBlock.blockType !== 'Constant') {
                 //     labelId = bmSelf.bindings.selectedReference();
@@ -6418,6 +6409,7 @@ gpl.BlockManager = function (manager) {
 
                     if (refBlock.hasReferenceType) { //is control/monitor block
                         refBlock.setReferenceType('Internal');
+                        refBlock.setLabel(block.label);
                     }
                 });
             }

@@ -57,7 +57,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.doValidate = (params.hasOwnProperty('doValidate')) ? params.doValidate : true;
         this.isSystemAdmin = params.rootContext.isSystemAdmin();
         this.isDisabled = ko.computed(function() {
-            var isDisabled = !this.isInEditMode() || this.data.isReadOnly();
+            var isDisabled = !this.isInEditMode() || (!!this.data && this.data.isReadOnly());
             // Only system administrators can edit the Broadcast Enable property
             if ((this.propertyName === "Broadcast Enable") && (this.isSystemAdmin === false)) {
                 isDisabled = true;

@@ -317,6 +317,11 @@ html
                                     .col-md-12
                                         button.btn.btn-xs.btn-primary(data-bind="click: editPointReference") Data Point
                                         span(data-bind="text: editPointName")
+                                .row.blockLabel
+                                    .col-md-6.editSection
+                                        .input-row.dataField
+                                            label(for="blocklabel") Label
+                                            input#blocklabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
 
                             .subtitle.col-xs-5 Numeric Format
                                 .input-row  # of Characters
