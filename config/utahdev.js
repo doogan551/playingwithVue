@@ -20,9 +20,9 @@ var utahdev = {
       }
     },
     'letsencrypt': {
-      'enabled': false
+      'enabled': true
     },
-    'domains': ['']
+    'domains': ['utdev.dtscada.com']
   },
   runNotifications: false,
   minifyFiles: false
