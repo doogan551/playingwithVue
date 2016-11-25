@@ -199,6 +199,7 @@ module.exports = {
         };
         var updates = [{
           query: {
+            'Point Type.Value': 'Device',
             'Network Segment.Value': network['IP Network Segment']
           },
           updateObj: {
@@ -208,11 +209,22 @@ module.exports = {
           }
         }, {
           query: {
+            'Point Type.Value': 'Device',
             'Downlink Network.Value': network['IP Network Segment']
           },
           updateObj: {
             $set: {
               'Downlink IP Port.Value': network['IP Port']
+            }
+          }
+        }, {
+          query: {
+            'Point Type.Value': 'Remote Unit',
+            'Network Segment.Value': network['IP Network Segment']
+          },
+          updateObj: {
+            $set: {
+              'Ethernet IP Port.Value': network['IP Port']
             }
           }
         }];
