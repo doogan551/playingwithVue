@@ -5997,7 +5997,7 @@ gpl.BlockManager = function (manager) {
 
             for (c = 0; c < gpl.convertProperties.length; c++) {
                 prop = gpl.convertProperties[c];
-                if (block[prop]) {
+                if (block[prop] !== undefined) {
                     ret[prop] = block[prop];
                 }
             }
@@ -7446,7 +7446,7 @@ gpl.Manager = function () {
                 block.formatPointFromData(obj, obj, 'Device Point', gpl.devicePoint);
                 obj = block.getPointData();
 
-                if (obj['Calculation Type']) {
+                if (obj['Calculation Type'] && block.iconMatrix) {
                     obj['Calculation Type'].Value = block.getIconKey();
                     obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.getIconKey()];
                     // block.formatPointFromData(obj, obj, 'Calculation Type');
