@@ -187,6 +187,43 @@ module.exports = {
     var ipPort = parseInt(data["IP Port"], 10);
     var netConfig = data['Network Configuration'];
 
+    var updateNetworks = function(networks, callback) {
+      async.eachSeries(networks, function(network, acb) {
+        var criteria = {
+          collection: 'points',
+          query: {},
+          updateObj: {},
+          options: {
+            multi: true
+          }
+        };
+        var updates = [{
+          query: {
+            'Network Segment.Value': network['IP Network Segment']
+          },
+          updateObj: {
+            $set: {
+              'Ethernet IP Port.Value': network['IP Port']
+            }
+          }
+        }, {
+          query: {
+            'Downlink Network.Value': network['IP Network Segment']
+          },
+          updateObj: {
+            $set: {
+              'Downlink IP Port.Value': network['IP Port']
+            }
+          }
+        }];
+        async.eachSeries(updates, function(update, acb2) {
+          criteria.query = update.query;
+          criteria.updateObj = update.updateObj;
+          Utility.update(criteria, acb2);
+        }, acb);
+      }, callback);
+    };
+
     for (var n = 0; n < netConfig.length; n++) {
       netConfig[n]['IP Network Segment'] = parseInt(netConfig[n]['IP Network Segment'], 10);
       netConfig[n]['IP Port'] = parseInt(netConfig[n]['IP Port'], 10);
@@ -238,8 +275,7 @@ module.exports = {
           if (err) {
             return cb(err.message);
           }
-
-          return cb();
+          updateNetworks(netConfig, cb);
 
         });
       });
