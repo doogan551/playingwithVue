@@ -6482,23 +6482,27 @@ gpl.BlockManager = function (manager) {
         var upi,
             pointType,
             pointName,
-            pointData,
+            pointDataBefore,
             saveCallback = function (point) {
                 var pt = point;
                 if (typeof pt === 'string') {
                     pt = JSON.parse(point);
                 }
+                if (JSON.stringify(pointDataBefore) !== JSON.stringify(pt)) { // TODO needs work
+                    console.log("points dont match...........");
+                }
+
                 block.setPointData(pt, true);
                 gpl.fire('editedblock', block);
             },
-            doOpenWindow = function () {
+            doOpenWindow = function () { // TODO callback not firing - does passing the entire point get used??
                 gpl.openWindow({
                     pointName: pointName,
                     pointType: pointType,
                     upi: upi,
                     options: {
                         callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        pointData: pointData || null
+                        point: pointDataBefore || null
                     }
                 });
             };
@@ -6506,7 +6510,7 @@ gpl.BlockManager = function (manager) {
         if (block) {
             if (block instanceof gpl.Block) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
-                    pointData = block.getPointData();
+                    pointDataBefore = block.getPointData();
                     bmSelf.deselect();
                     upi = block.upi;
                     pointType = block.pointType;
@@ -6518,6 +6522,7 @@ gpl.BlockManager = function (manager) {
                     }
                 }
             } else { //open device point
+                // pointDataBefore = ?????  // TODO
                 upi = gpl.devicePoint._id;
                 pointType = 'Device';
                 doOpenWindow();
