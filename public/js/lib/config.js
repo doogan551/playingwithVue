@@ -2743,17 +2743,17 @@ var Config = (function(obj) {
 
         "Device Port": function(data) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
-            var point = data.point;
+            var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable;
 
             if (point["Device Port"].isDisplayable && (point["Device Port"].Value === "Ethernet")) {
-                point["Ethernet IP Port"].isDisplayable = true;
-                if (obj.Utility.checkModbusRMU(point)) {
-                    point["Ethernet IP Port"].isReadOnly = false;
-                    point["Modbus Unit Id"].isDisplayable = true;
+                if (point["Network Type"].isDisplayable) {
+                    obj.EditChanges.applyRemoteUnitNetworkType(point);
+                } else {
+                    setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], true);
                 }
             } else {
-                point["Ethernet IP Port"].isDisplayable = false;
-                point["Modbus Unit Id"].isDisplayable = false;
+                setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], false);
             }
             return point;
         },
@@ -3727,7 +3727,7 @@ var Config = (function(obj) {
                 point["Network Segment"].isDisplayable = true;
                 point["Ethernet IP Port"].isDisplayable = (nt === "IP") ? true : false;
 
-                if (point["Gateway"].isDisplayable && point["Gateway"].Value) {
+                if (point.Gateway.isDisplayable && point.Gateway.Value) {
                     point["Ethernet IP Port"].isReadOnly = false;
                     point["Router Address"].isDisplayable = (point["Network Segment"].Value !== 0) ? true : false;
                 } else {
@@ -3837,6 +3837,7 @@ var Config = (function(obj) {
                     point["Configure Device"].Value = false;
 
                     if (obj.Utility.checkModbusRMU(point)) {
+                        point["Ethernet IP Port"].isReadOnly = false;
                         if (modelType === "Programmable Modbus") {
                             point["Poll Function"].isDisplayable = true;
                             point["Poll Register"].isDisplayable = true;
@@ -3845,7 +3846,6 @@ var Config = (function(obj) {
                         point.Instance.isDisplayable = true;
                         point.Gateway.isDisplayable = ms5Dev;
                         point["Network Type"].isDisplayable = true;
-                        obj.EditChanges.applyRemoteUnitNetworkType(point);
                     }
                 }
             }
