@@ -35,6 +35,7 @@ var dtiUtility =  {
     },
     store: window.store,
     getConfigCallbacks: {},
+    openWindowCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
     },
@@ -61,6 +62,23 @@ var dtiUtility =  {
     processMessage: function (newValue) {
         var action = newValue.message,
             callbacks = {
+                gotTemplate: function () {
+                    if (dtiUtility._getTemplateCb) {
+                        dtiUtility._getTemplateCb(newValue);
+                    }
+                },
+                gotTemplates: function () {
+                    if (dtiUtility._getTemplatesCb) {
+                        dtiUtility._getTemplatesCb(newValue);
+                    }
+                },
+                openWindowCallback: function () {
+                    var cb = dtiUtility.openWindowCallbacks[newValue._openWindowID];
+
+                    if (cb) {
+                        cb(newValue.value);
+                    }
+                },
                 getConfig: function () {
                     var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID];
 
@@ -170,7 +188,8 @@ var dtiUtility =  {
     },
 
     openWindow: function (url, title, type, target, upi, options) {
-        var config;
+        var config,
+            newID = dtiUtility.makeId();
 
         if (typeof url === 'object') {
             config = url;
@@ -183,6 +202,12 @@ var dtiUtility =  {
                 upi: upi,
                 options: options
             };
+        }
+
+        if (config.options && config.options.callback) {
+            dtiUtility.openWindowCallbacks[newID] = config.options.callback;
+            config.messageID = newID;
+            config._openWindowID = newID;
         }
 
         dtiUtility.sendMessage('openWindow', config);
