@@ -6483,11 +6483,15 @@ gpl.BlockManager = function (manager) {
             pointType,
             pointName,
             pointDataBefore,
-            saveCallback = function (point) {
-                var pt = point;
+            saveCallback = function (data) {
+                //data = {newPoint, oldPoint}
+                var pt = data.newPoint;
+                
+                //dtiMessaging should take care of this
                 if (typeof pt === 'string') {
-                    pt = JSON.parse(point);
+                    pt = JSON.parse(pt);
                 }
+                
                 if (JSON.stringify(pointDataBefore) !== JSON.stringify(pt)) { // TODO needs work
                     console.log("points dont match...........");
                 }
