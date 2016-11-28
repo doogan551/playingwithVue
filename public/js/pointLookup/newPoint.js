@@ -9,10 +9,10 @@ window.newPoint = (function(module, ko, $) {
         workspace = window.top.workspaceManager,
         config = workspace.config,
         urlParams = $.getAllQueryStrings(),
-        sensorTypes = config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor').filter(function(item) {
+        sensorTypes = config.Utility.pointTypes.getEnums('Sensor Type', 'Sensor').filter(function(item) {
             return !item.noninitializable
         }),
-        reportTypes = config.Utility.pointTypes.getEnums('Report Types', 'Report').filter(function(item) {
+        reportTypes = config.Utility.pointTypes.getEnums('Report Type', 'Report').filter(function(item) {
             return !item.noninitializable
         });
 
