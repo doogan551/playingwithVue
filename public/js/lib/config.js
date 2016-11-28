@@ -489,7 +489,7 @@ var Config = (function(obj) {
 
                     return endPoint;
                 },
-                _getEnums = function(property, pointType) {
+                _getEnums = function(property, pointType, options) {
                     var workspace = (typeof window != 'undefined') && window.workspaceManager,
                         set = [],
                         _hasPointType = !!pointType;
@@ -518,7 +518,7 @@ var Config = (function(obj) {
                                 return _getEnumFromTemplate('Device Model Types');
                             }
                             if (pointType === 'Remote Unit') {
-                                return _getEnumFromTemplate('Remote Unit Model Types');
+                                return _getEnumFromFunction(pointType, options);
                             }
                             set.push.apply(set, _getEnumFromTemplate('Device Model Types'));
                             set.push.apply(set, _getEnumFromTemplate('Remote Unit Model Types'));
@@ -558,16 +558,40 @@ var Config = (function(obj) {
                             return _getEnumFromTemplate(property);
                     }
 
-                    function _getEnumFromTemplate(property) {
-                        var enums = enumsTemplatesJson.Enums[property],
-                            enumsProperty = enumsTemplatesJson.Enums.Properties[property],
-                            keys = !!enums && Object.keys(enums),
-                            enumArray = [],
-                            item,
-                            enumsSetKey,
-                            enumsSet;
+                    function _getEnumFromFunction(pointType, options) {
+                        var valueOptions = {};
+                        switch (pointType) {
+                            case 'Remote Unit':
+                                valueOptions = Config.Utility.getRmuValueOptions(options.devModel);
+                                break;
+                        }
 
-                        for (var i = 0, last = keys.length; i < last; i++) {
+                        return _buildOptionsArray(valueOptions);
+                    }
+
+                    function _buildOptionsArray(options) {
+                        var optionsArray = [];
+                        for (var key in options) {
+                            optionsArray.push({
+                                name: key,
+                                value: options[key].enum,
+                                noninitializable: false
+                            });
+                        }
+                        return optionsArray;
+                    }
+
+                    function _getEnumFromTemplate(property) {
+                        var enums = enumsTemplatesJson.Enums[property];
+                        enumsProperty = enumsTemplatesJson.Enums.Properties[property],
+                            enumArray = [];
+
+                        var enumArray = _buildOptionsArray(enums);
+                        if (!enumArray.length && !!enumsProperty && !!enumsProperty["enumsSet"]) {
+                            var enumArray = _buildOptionsArray(enumsTemplatesJson.Enums[enumsProperty["enumsSet"]]);
+                        }
+
+                        /*for (var i = 0, last = keys.length; i < last; i++) {
                             if (_hasPointType) {
                                 item = {
                                     name: keys[i],
@@ -598,7 +622,7 @@ var Config = (function(obj) {
                                     }
                                 }
                             }
-                        }
+                        }*/
 
                         if (!enums && enumArray.length === 0) enumArray = null;
 
@@ -2408,7 +2432,7 @@ var Config = (function(obj) {
                     data.ok = false;
                     data.result = data.property + " must be greater than 0.0";
                 }
-			} else if (val <= point["Minimum Value"].Value) {
+            } else if (val <= point["Minimum Value"].Value) {
                 data.ok = false;
                 data.result = data.property + " must be greater than the Minimum Value (" + point["Minimum Value"].Value + ").";
             }
@@ -3706,7 +3730,7 @@ var Config = (function(obj) {
                 point["Ethernet Protocol"].isDisplayable = true;
                 point["Ethernet Address"].isReadOnly = true;
                 point["Ethernet Network"].isReadOnly = true;
-				point._cfgRequired = false;
+                point._cfgRequired = false;
             } else {
                 setValOpt(upPort, {
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
