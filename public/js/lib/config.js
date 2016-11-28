@@ -3869,13 +3869,6 @@ var Config = (function(obj) {
                         point.Instance.isDisplayable = true;
                         point.Gateway.isDisplayable = ms5Dev;
                         point["Network Type"].isDisplayable = true;
-                        temp = point["Network Type"].ValueOptions[point["Network Type"].Value];
-                        if (temp !== undefined) {
-                            point["Network Type"].eValue = temp;
-                        } else {
-                            point["Network Type"].Value = "Unknown";
-                            point["Network Type"].eValue = enums["Network Type"]["Unknown"]["enum"];
-                        }
                         obj.EditChanges.applyRemoteUnitNetworkType(point);
                     }
                 }
