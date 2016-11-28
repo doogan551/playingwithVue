@@ -4107,14 +4107,14 @@ var dti = {
                         var id = config._openWindowID,
                             ret,
                             winId = config._windowId,
-                            cb = function() {
+                            cb = function(data) {
                                 dti.messaging.sendMessage({
                                     messageID: messageID,
                                     key: winId,
                                     value: {
                                         _openWindowID: id,
                                         message: 'openWindowCallback',
-                                        value: arguments
+                                        value: data
                                     }
                                 });
                             };
@@ -4177,12 +4177,15 @@ var dti = {
             if (!ignoredProps[e.key]) {
                 if (callbacks[e.key]) { 
                     config = e.newValue;
-                    if (typeof config === 'string') {
-                        config = JSON.parse(config);
+                    if (config) {
+                        if (typeof config === 'string') {
+                            config = JSON.parse(config);
+                        }
+                        // store previous call
+                        messageID = config.messageID;
+                        dti.navigator._prevMessage = config;
                     }
-                    // store previous call
-                    messageID = config.messageID;
-                    dti.navigator._prevMessage = config;
+                    
                     callbacks[e.key]();
                 }
             }

@@ -6491,8 +6491,8 @@ gpl.BlockManager = function (manager) {
             pointName,
             pointDataBefore,
             saveCallback = function (results) {
-                var newPoint = results[0].newPoint,
-                    oldPoint = results[0].oldPoint;
+                var newPoint = results.newPoint,
+                    oldPoint = results.oldPoint;
 
                 if (JSON.stringify(oldPoint) !== JSON.stringify(newPoint)) {
                     console.log("points do not match...........");
