@@ -4492,12 +4492,7 @@
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Unknown",
-                    "eValue": 0,
-                    "ValueOptions": {
-                        "Unknown": 0,
-                        "MS/TP": 3,
-                        "IP": 4
-                    }
+                    "eValue": 0
                 },
                 "Notify Policies": [],
                 "Point Refs": [{
