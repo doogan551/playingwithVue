@@ -3464,7 +3464,8 @@ gpl.blocks.Comparator = fabric.util.createClass(gpl.Block, {
         '>': 'GT',
         '<=': 'LTEqual',
         '>=': 'GTEqual',
-        '=': 'Equal'
+        '=': 'Equal',
+        '<>': 'NEqual'
     },
 
     leftAnchors: [{
@@ -6211,9 +6212,15 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.deselect = function () {
-        var obj = bmSelf.highlightedObject;
+        var obj = bmSelf.highlightedObject,
+            data = bmSelf.getActiveBlock(),
+            activeBlock = data.block;
+
         if (obj) {
             obj.set('fill', obj._origFill);
+            if (activeBlock) {
+                bmSelf.canvas.discardActiveObject();
+            }
         }
         bmSelf.highlightedObject = null;
     };
@@ -6483,19 +6490,18 @@ gpl.BlockManager = function (manager) {
             pointType,
             pointName,
             pointDataBefore,
-            saveCallback = function (point) {
-                var pt = point;
-                if (typeof pt === 'string') {
-                    pt = JSON.parse(point);
-                }
-                if (JSON.stringify(pointDataBefore) !== JSON.stringify(pt)) { // TODO needs work
-                    console.log("points dont match...........");
-                }
+            saveCallback = function (results) {
+                var newPoint = results[0].newPoint,
+                    oldPoint = results[0].oldPoint;
 
-                block.setPointData(pt, true);
-                gpl.fire('editedblock', block);
+                if (JSON.stringify(oldPoint) !== JSON.stringify(newPoint)) {
+                    console.log("points do not match...........");
+                    block.setPointData(newPoint, true);
+                    bmSelf.canvas.setActiveObject(block, null);
+                    gpl.fire('editedblock', block);
+                }
             },
-            doOpenWindow = function () { // TODO callback not firing - does passing the entire point get used??
+            doOpenWindow = function () {
                 gpl.openWindow({
                     pointName: pointName,
                     pointType: pointType,
@@ -8413,7 +8419,6 @@ gpl.Manager = function () {
         managerSelf.bindings.deviceShowLabel.subscribe(function (newValue) {
             formatSequencePoint('Show Label', newValue);
         });
-
 
         managerSelf.bindings.backgroundColorHex = ko.computed(function () {
             var color = '#' + managerSelf.bindings.backgroundColor();
