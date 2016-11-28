@@ -56,7 +56,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         } else */if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
-            options = this.config.Utility.pointTypes.getEnums(this.propertyName, this.root.point.data['Point Type'].Value(), {devModel: this.root.point.data._devModel});
+            options = this.config.Utility.pointTypes.getEnums(this.propertyName, this.root.point.data['Point Type'].Value(), {devModel: this.root.point.data._devModel()});
         }
 
         if (!options) {
