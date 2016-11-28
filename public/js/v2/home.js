@@ -4104,6 +4104,25 @@ var dti = {
                         dti.windows.sendMessage(config);
                     },
                     openWindow: function () {
+                        var id = config._openWindowID,
+                            ret,
+                            winId = config._windowId,
+                            cb = function() {
+                                dti.messaging.sendMessage({
+                                    messageID: messageID,
+                                    key: winId,
+                                    value: {
+                                        _openWindowID: id,
+                                        message: 'openWindowCallback',
+                                        value: arguments
+                                    }
+                                });
+                            };
+
+                        if (config._openWindowID) {
+                            config.callback = cb;
+                        }
+                        
                         dti.workspaceManager.openWindow(config);
                     },
                     closeWindow: function () {
