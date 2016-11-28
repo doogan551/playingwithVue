@@ -2745,9 +2745,12 @@ var Config = (function(obj) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
             var point = data.point;
 
-            if ((point["Device Port"].isDisplayable) && (point["Device Port"].Value === "Ethernet")) {
+            if (point["Device Port"].isDisplayable && (point["Device Port"].Value === "Ethernet")) {
                 point["Ethernet IP Port"].isDisplayable = true;
-                point["Modbus Unit Id"].isDisplayable = true;
+                if (obj.Utility.checkModbusRMU(point)) {
+                    point["Ethernet IP Port"].isReadOnly = false;
+                    point["Modbus Unit Id"].isDisplayable = true;
+                }
             } else {
                 point["Ethernet IP Port"].isDisplayable = false;
                 point["Modbus Unit Id"].isDisplayable = false;
@@ -3777,7 +3780,7 @@ var Config = (function(obj) {
             point["Model Type"].eValue = enums["Remote Unit Model Types"][modelType]["enum"];
             point._rmuModel = point["Model Type"].eValue;
 
-            obj.Utility.setPropsDisplayable(point, ["Firmware Version", "Device Port", "Poll Function", "Poll Register", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
+            obj.Utility.setPropsDisplayable(point, ["Firmware Version", "Device Port", "Poll Function", "Poll Register", "Modbus Unit Id", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
             rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
 
             if ((point._devModel === enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enums["Device Model Types"]["Unknown"]["enum"])) {
@@ -3849,7 +3852,7 @@ var Config = (function(obj) {
                             point["Network Type"].Value = "Unknown";
                             point["Network Type"].eValue = enums["Network Type"]["Unknown"]["enum"];
                         }
-                        this.applyRemoteUnitNetworkType(point);
+                        obj.EditChanges.applyRemoteUnitNetworkType(point);
                     }
                 }
             }
