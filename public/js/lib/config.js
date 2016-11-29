@@ -3804,7 +3804,7 @@ var Config = (function(obj) {
             point["Model Type"].eValue = enums["Remote Unit Model Types"][modelType]["enum"];
             point._rmuModel = point["Model Type"].eValue;
 
-            obj.Utility.setPropsDisplayable(point, ["Firmware Version", "Device Port", "Poll Function", "Poll Register", "Modbus Unit Id", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
+            obj.Utility.setPropsDisplayable(point, ["Configure Device", "Firmware Version", "Device Port", "Poll Function", "Poll Register", "Modbus Unit Id", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
             rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
 
             if ((point._devModel === enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enums["Device Model Types"]["Unknown"]["enum"])) {
@@ -3857,7 +3857,6 @@ var Config = (function(obj) {
                 } else if (modelType === "IFC Remote Unit") {
                     point["Configure Device"].isDisplayable = true;
                 } else {
-                    point["Configure Device"].isDisplayable = false;
                     point["Configure Device"].Value = false;
 
                     if (obj.Utility.checkModbusRMU(point)) {
