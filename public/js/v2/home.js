@@ -4126,9 +4126,11 @@ var dti = {
                         dti.workspaceManager.openWindow(config);
                     },
                     closeWindow: function () {
-                        var windowId = config._windowId;
+                        if (config) {
+                            var windowId = config._windowId;
 
-                        dti.windows.closeWindow(windowId);
+                            dti.windows.closeWindow(windowId);
+                        }
                     },
                     getConfig: function () {
                         var path = config.path,

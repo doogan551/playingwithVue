@@ -1895,41 +1895,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     processPointData: function (point) {
         var self = this,
             bindings = ko.toJS(gpl.manager.bindings),
-            props = {
-                iconType: function () {
-                    var calcType = point['Calculation Type'] || {},
-                        reverseAction = point['Reverse Action'] || {};
+            calcType = point['Calculation Type'] || {},
+            reverseAction = point['Reverse Action'] || {};
 
-                    // if(calcType) {
-                    calcType = calcType.Value;
-                    reverseAction = reverseAction.Value;
-
-                    if (self.setIconName) {
-                        self.setIconName();
-                    } else {
-                        if (calcType) {//} && self.iconType !== calcType) {
-                            self.config.iconType = calcType;
-
-                            if (self.iconPrefix && calcType.indexOf("DigLogic") === -1) {
-                                self.config.iconType = self.iconPrefix + calcType;
-                            }
-
-                            self.icon = self.config.iconType + self.iconExtension;
-                        }
-                    }
-
-                    self.setIcon();
-                    // }
-
-                    // if(reverseAction !== undefined) {
-
-                    // }
-                }
-            };
-
-        gpl.forEach(props, function (fn, property) {
-            fn(property);
-        });
+        self.setIconType(calcType, reverseAction);
 
         point['Update Interval'].Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
         point['Show Label'].Value = bindings.deviceShowLabel;
@@ -2491,6 +2460,38 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         return answer;
+    },
+
+    setIconType: function (calcType, reverseAction) {
+        "use strict";
+        var self = this;
+
+        // if(calcType) {
+        calcType = calcType.Value;
+        reverseAction = reverseAction.Value;
+
+        if (self.setIconName) {
+            self.setIconName();
+            self.blockType = (self.icons && self.icons[calcType] ? self.icons[calcType] : self.blockType);
+        } else {
+            if (calcType) {
+                self.config.iconType = calcType;
+
+                if (self.iconPrefix && calcType.indexOf("DigLogic") === -1) {
+                    self.config.iconType = self.iconPrefix + calcType;
+                }
+
+                self.blockType = (self.iconMatrix ? self.iconMatrix[calcType] : self.config.iconType);
+                self.icon = self.config.iconType + self.iconExtension;
+            }
+        }
+
+        self.setIcon();
+        // }
+
+        // if(reverseAction !== undefined) {
+
+        // }
     },
 
     setIcon: function (icon) {
@@ -6212,15 +6213,10 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.deselect = function () {
-        var obj = bmSelf.highlightedObject,
-            data = bmSelf.getActiveBlock(),
-            activeBlock = data.block;
+        var obj = bmSelf.highlightedObject;
 
         if (obj) {
             obj.set('fill', obj._origFill);
-            if (activeBlock) {
-                bmSelf.canvas.discardActiveObject();
-            }
         }
         bmSelf.highlightedObject = null;
     };
@@ -6489,14 +6485,10 @@ gpl.BlockManager = function (manager) {
         var upi,
             pointType,
             pointName,
-            pointDataBefore,
+            pointData,
             saveCallback = function (results) {
-                var newPoint = results.newPoint,
-                    oldPoint = results.oldPoint;
-
-                if (JSON.stringify(oldPoint) !== JSON.stringify(newPoint)) {
-                    console.log("points do not match...........");
-                    block.setPointData(newPoint, true);
+                if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
+                    block.setPointData(results, true);
                     bmSelf.canvas.setActiveObject(block, null);
                     gpl.fire('editedblock', block);
                 }
@@ -6508,7 +6500,7 @@ gpl.BlockManager = function (manager) {
                     upi: upi,
                     options: {
                         callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        point: pointDataBefore || null
+                        point: (gpl.isEdit ? pointData : null) || null
                     }
                 });
             };
@@ -6516,7 +6508,7 @@ gpl.BlockManager = function (manager) {
         if (block) {
             if (block instanceof gpl.Block) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
-                    pointDataBefore = block.getPointData();
+                    pointData = block.getPointData();
                     bmSelf.deselect();
                     upi = block.upi;
                     pointType = block.pointType;
@@ -6528,7 +6520,7 @@ gpl.BlockManager = function (manager) {
                     }
                 }
             } else { //open device point
-                // pointDataBefore = ?????  // TODO
+                // pointData = ?????  // TODO
                 upi = gpl.devicePoint._id;
                 pointType = 'Device';
                 doOpenWindow();
@@ -7984,7 +7976,7 @@ gpl.Manager = function () {
             getter,
             gplObj;
 
-        if (managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
+        if (gpl.isEdit && managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
             managerSelf.$contextMenuList.removeClass('block line default nonPoint text');
 
             if (obj) {
@@ -8808,6 +8800,9 @@ gpl.Manager = function () {
             dynamics = sequence.dynamic || [],
             found = false,
             pointRef,
+            referencedPoint,
+            calcType,
+            reverseAction,
             dynamic,
             block,
             blocktype,
@@ -8843,6 +8838,15 @@ gpl.Manager = function () {
 
         for (c = 0; c < blocks.length; c++) {
             block = blocks[c];
+            referencedPoint = null;
+            calcType = {};
+            reverseAction = {};
+            pointRef = gpl.getBlockPointRef(block);
+            if (pointRef && gpl.pointData[pointRef.Value]) {
+                referencedPoint = gpl.pointData[pointRef.Value];
+                calcType = referencedPoint['Calculation Type'] || {};
+                reverseAction = referencedPoint['Reverse Action'] || {};
+            }
             block._idx = c;
             blockCfg = managerSelf.blockTypes[block.blockType || block.type];
 
@@ -8869,6 +8873,9 @@ gpl.Manager = function () {
                             cfg: config
                         });
 
+                        if (referencedPoint && newBlock.type !== 'ControlBlock' && newBlock.type !== 'MonitorBlock') {
+                            newBlock.setIconType(calcType, reverseAction);  // this handles 'calculation type' changes outside GPL
+                        }
                         block.gplId = newBlock.gplId;
                     }
                 }
