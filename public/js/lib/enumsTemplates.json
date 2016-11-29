@@ -14386,7 +14386,7 @@
                     "ValueOptions": {
                         "And": 0,
                         "Or": 1,
-                        "X-Or": 2
+                        "XOr": 2
                     }
                 },
                 "Control Priority": {
