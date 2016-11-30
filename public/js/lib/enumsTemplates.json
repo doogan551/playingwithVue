@@ -1026,20 +1026,6 @@
                 "enum": 256
             }
         },
-        "Reset Intervals": {
-            "Hour": {
-                "enum": 0
-            },
-            "Day": {
-                "enum": 1
-            },
-            "Manual": {
-                "enum": 2
-            },
-            "Minute": {
-                "enum": 3
-            }
-        },
         "Report Intervals": {
             "Minute": {
                 "enum": 0
@@ -1058,6 +1044,28 @@
             },
             "Year": {
                 "enum": 5
+            }
+        },
+        "Reset Intervals": {
+            "Hour": {
+                "enum": 0
+            },
+            "Day": {
+                "enum": 1
+            },
+            "Manual": {
+                "enum": 2
+            },
+            "Minute": {
+                "enum": 3
+            }
+        },
+        "Reset States": {
+            "Remain Idle": {
+                "enum": 0
+            },
+            "Run": {
+                "enum": 2
             }
         },
         "Report Types": {
@@ -3239,7 +3247,7 @@
                 "enum": 274,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Reset States"
             },
             "Reset Time": {
                 "enum": 208,
@@ -11201,13 +11209,6 @@
                     "ack": false,
                     "notify": false
                 }],
-                "Program State": {
-                    "isDisplayable": true,
-                    "isReadOnly": true,
-                    "ValueType": 5,
-                    "Value": "Idle",
-                    "eValue": 0
-                },
                 "Controller": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -11246,7 +11247,14 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Ready",
+                    "Value": "None",
+                    "eValue": 0
+                },
+                "Program State": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "Idle",
                     "eValue": 0
                 },
                 "Reset State": {
