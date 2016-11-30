@@ -47,14 +47,14 @@ var Scheduler = {
         return ObjectID(id);
       });
       var time = schedule.runTime;
-      var date = moment().format('YYYYMMDD');
+      var date = moment().format('YYYYMMDDhhmm');
 
       Scheduler.stopSchedule(schedule);
 
       if (!!schedule.enabled) {
         scheduleContainer[schedule._id] = new CronJob(time, function() {
           var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
-          var uri = [domain, '/scheduleloader/report/scheduled/', upi, '/', schedule._id].join('');
+          var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
           pageRender.renderPage(uri, path, function(err) {
             fs.readFile(path, function(err, data) {
               Utility.iterateCursor({
@@ -85,7 +85,7 @@ var Scheduler = {
                     content: data
                   }]
                 }, function(err, info) {
-                  console.log(err && err.code, info);
+                  console.log(err, info);
                 });
               });
             });

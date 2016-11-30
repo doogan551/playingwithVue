@@ -334,7 +334,8 @@ module.exports = function(_common) {
                 }
             }
         } else if (doc.ns === dbName + '.Schedules') {
-            scheduler.stopSchedule(doc);
+            console.log('deleting schedule', doc);
+            scheduler.stopSchedule(doc.o);
         }
     });
 };
