@@ -28,7 +28,7 @@ module.exports = self = {
         var criteria = {
                 collection: 'Schedules',
                 query: {
-                    referencePointUpi: data.upi
+                    upi: data.upi
                 }
             };
 
