@@ -51,9 +51,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             data = this.data,
             valueIsInOptions;
 
-        /*if (this.propertyName === 'Model Type' && this.root.point.data['Point Type'].Value() === 'Remote Unit') {
-            options = this.config.Utility.getRmuValueOptions(this.root.point.data._devModel);
-        } else */if (typeof data.ValueOptions == 'function') {
+        if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
             options = this.config.Utility.pointTypes.getEnums(this.propertyName, this.root.point.data['Point Type'].Value(), {devModel: this.root.point.data._devModel()});

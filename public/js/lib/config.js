@@ -574,7 +574,7 @@ var Config = (function(obj) {
                         for (var key in options) {
                             optionsArray.push({
                                 name: key,
-                                value: options[key].enum,
+                                value: options[key].hasOwnProperty('enum') ? options[key].enum : options[key],
                                 noninitializable: false
                             });
                         }

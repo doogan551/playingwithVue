@@ -200,7 +200,7 @@ module.exports = {
         var updates = [{
           query: {
             'Point Type.Value': 'Device',
-            'Network Segment.Value': network['IP Network Segment']
+            'Ethernet Network.Value': network['IP Network Segment']
           },
           updateObj: {
             $set: {
@@ -220,7 +220,13 @@ module.exports = {
         }, {
           query: {
             'Point Type.Value': 'Remote Unit',
-            'Network Segment.Value': network['IP Network Segment']
+            'Model Type.Value': 'BACnet',
+            'Network Segment.Value': network['IP Network Segment'],
+            $or: [{
+              'Gateway.isDisplayable': false
+            }, {
+              'Gateway.Value': false
+            }]
           },
           updateObj: {
             $set: {
