@@ -2347,7 +2347,7 @@ var Config = (function(obj) {
                 min;
 
             if (point["Point Type"].Value === "Remote Unit") {
-                min = (point["Gateway"].isDisplayable && point["Gateway"].Value) ? 0 : 1;
+                min = (point.Gateway.isDisplayable && point.Gateway.Value) ? 0 : 1;
                 this.validateUsingTheseLimits(data, min, 65534);
                 if (data.ok === true) {
                     data.point = obj.EditChanges.applyNetworkNumber(data);
@@ -2767,19 +2767,9 @@ var Config = (function(obj) {
 
         "Device Port": function(data) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
-            var point = data.point,
-                setDisp = obj.Utility.setPropsDisplayable;
+            var point = data.point;
 
-            if (point["Device Port"].isDisplayable && (point["Device Port"].Value === "Ethernet")) {
-                if (point["Network Type"].isDisplayable) {
-                    obj.EditChanges.applyRemoteUnitNetworkType(point);
-                } else {
-                    setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], true);
-                }
-            } else {
-                setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], false);
-            }
-            return point;
+            return obj.EditChanges.applyRemoteUnitNetworkType(point);
         },
 
         "Fan Control Point": function(data) {
@@ -3207,13 +3197,10 @@ var Config = (function(obj) {
                     }
                     break;
                 case 'Network Segment':
-                    if (point["Gateway"].isDisplayable && point["Gateway"].Value) {
-                        this.applyRemoteUnitNetworkType(point);
+                    if (point.Gateway.isDisplayable && point.Gateway.Value) {
+                        obj.EditChanges.applyRemoteUnitNetworkType(point);
                     } else if (networkValue !== 0) {
                         point['Ethernet IP Port'].Value = findNetwork(networkValue);
-                        point['Ethernet IP Port'].isReadOnly = true;
-                    } else {
-                        point['Ethernet IP Port'].isReadOnly = false;
                     }
                     break;
             }
@@ -3742,21 +3729,34 @@ var Config = (function(obj) {
         },
 
         applyRemoteUnitNetworkType: function(point) {
-            var nt = point["Network Type"].Value;
+            var nt,
+                setDisp = obj.Utility.setPropsDisplayable;
 
-            if (nt === "Unknown") {
-                obj.Utility.setPropsDisplayable(point, ["Device Address", "Network Segment", "Ethernet IP Port", "Router Address"], false);
+            if (point.Instance.isDisplayable) {
+                point["Modbus Unit Id"].isDisplayable = false;
+                nt = point["Network Type"].Value;
+                if (nt === "Unknown") {
+                    setDisp(point, ["Device Address", "Network Segment", "Ethernet IP Port", "Router Address"], false);
+                } else {
+                    setDisp(point, ["Device Address", "Network Segment"], true);
+                    point["Ethernet IP Port"].isDisplayable = (nt === "IP") ? true : false;
+
+                    if (point.Gateway.isDisplayable && point.Gateway.Value) {
+                        point["Ethernet IP Port"].isReadOnly = false;
+                        point["Router Address"].isDisplayable = (point["Network Segment"].Value !== 0) ? true : false;
+                    } else {
+                        point["Ethernet IP Port"].isReadOnly = true;
+                        point["Router Address"].isDisplayable = false;
+                    }
+                }
+
             } else {
                 point["Device Address"].isDisplayable = true;
-                point["Network Segment"].isDisplayable = true;
-                point["Ethernet IP Port"].isDisplayable = (nt === "IP") ? true : false;
-
-                if (point.Gateway.isDisplayable && point.Gateway.Value) {
-                    point["Ethernet IP Port"].isReadOnly = false;
-                    point["Router Address"].isDisplayable = (point["Network Segment"].Value !== 0) ? true : false;
+                setDisp(point, ["Network Segment", "Router Address"], false);
+                if (point["Device Port"].Value === "Ethernet") {
+                    setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], true);
                 } else {
-                    point["Ethernet IP Port"].isReadOnly = true;
-                    point["Router Address"].isDisplayable = false;
+                    setDisp(point, ["Modbus Unit Id", "Ethernet IP Port"], false);
                 }
             }
             return point;
@@ -3765,6 +3765,7 @@ var Config = (function(obj) {
         applyRemoteUnitDevModel: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
+                setDisp = obj.Utility.setPropsDisplayable,
                 modelType,
                 temp,
                 ms5Dev,
@@ -3800,11 +3801,10 @@ var Config = (function(obj) {
             }
             modelType = point["Model Type"].Value;
             point["Model Type"].isDisplayable = true;
-            point["Model Type"].isReadOnly = false;
             point["Model Type"].eValue = enums["Remote Unit Model Types"][modelType]["enum"];
             point._rmuModel = point["Model Type"].eValue;
 
-            obj.Utility.setPropsDisplayable(point, ["Configure Device", "Firmware Version", "Device Port", "Poll Function", "Poll Register", "Modbus Unit Id", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
+            setDisp(point, ["Configure Device", "Firmware Version", "Device Port", "Poll Function", "Poll Register", "Instance", "Network Type", "Gateway"], false);
             rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
 
             if ((point._devModel === enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enums["Device Model Types"]["Unknown"]["enum"])) {
@@ -3849,11 +3849,8 @@ var Config = (function(obj) {
                     point["Device Port"].Value = "Port 2";
                     point["Device Port"].eValue = enums["Device Ports"]["Port 2"]["enum"];
                 }
-                point["Device Address"].isDisplayable = true;
-
                 if (obj.Utility.checkMicroScanRMU(point)) {
-                    point["Configure Device"].isDisplayable = true;
-                    point["Firmware Version"].isDisplayable = true;
+                    setDisp(point, ["Configure Device", "Firmware Version"], true);
                 } else if (modelType === "IFC Remote Unit") {
                     point["Configure Device"].isDisplayable = true;
                 } else {
@@ -3862,17 +3859,15 @@ var Config = (function(obj) {
                     if (obj.Utility.checkModbusRMU(point)) {
                         point["Ethernet IP Port"].isReadOnly = false;
                         if (modelType === "Programmable Modbus") {
-                            point["Poll Function"].isDisplayable = true;
-                            point["Poll Register"].isDisplayable = true;
+                            setDisp(point, ["Poll Function", "Poll Register"], true);
                         }
                     } else if (modelType === "BACnet") {
-                        point.Instance.isDisplayable = true;
+                        setDisp(point, ["Instance", "Network Type"], true);
                         point.Gateway.isDisplayable = ms5Dev;
-                        point["Network Type"].isDisplayable = true;
                     }
                 }
             }
-            return obj.EditChanges["Device Port"](data);
+            return obj.EditChanges.applyRemoteUnitNetworkType(point);
         },
 
         applyConversionTypeProperty: function(data) {
