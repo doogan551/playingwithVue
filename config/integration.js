@@ -21,8 +21,7 @@ var integration = {
     },
     'letsencrypt': {
       'enabled': false
-    },
-    'domains': ['']
+    }
   },
   runNotifications: false,
   minifyFiles: false

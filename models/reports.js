@@ -662,26 +662,8 @@ module.exports = Rpt = {
                 }
             };
 
-
-        Utility.getWithSecurity(reportCriteria, function(err, result, count) {
-            if (err) {
-                return cb(err);
-            } else {
-                result = result[0];
-                if (result === null) {
-                    return cb();
-                } else {
-                    reportResults.id = data.id;
-                    reportResults.point = JSON.stringify(result);
-                }
-                reportData = result;
-                reportRequestComplete = true;
-                handleResults();
-            }
-        });
-
         if (scheduled) {
-            Utility.getWithSecurity(scheduleCriteria, function(err, scheduleData, count) {
+            Utility.get(scheduleCriteria, function(err, scheduleData, count) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -695,6 +677,24 @@ module.exports = Rpt = {
                         reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
                     }
                     scheduleRequestComplete = true;
+                    handleResults();
+                }
+            });
+        } else {
+
+            Utility.get(reportCriteria, function(err, result, count) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    result = result[0];
+                    if (result === null) {
+                        return cb();
+                    } else {
+                        reportResults.id = data.id;
+                        reportResults.point = JSON.stringify(result);
+                    }
+                    reportData = result;
+                    reportRequestComplete = true;
                     handleResults();
                 }
             });
