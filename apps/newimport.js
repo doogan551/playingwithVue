@@ -1,26 +1,24 @@
 process.setMaxListeners(0);
 var mongo = require('mongodb');
 var async = require('async');
+var Config = require('../public/js/lib/config.js');
+var ObjectID = mongo.ObjectID;
 var util = require('util');
 var lodash = require('lodash');
 var moment = require('moment');
 var config = require('config');
-
-var Config = require('../public/js/lib/config.js');
-var modelUtil = require('../public/js/modelUtil.js');
 var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
+var utils = require('../helpers/utils');
 var dbModel = require('../helpers/db');
 var Utility = require('../models/utility');
 var localTZ = config.get('Infoscan.location').timezone;
 var dbConfig = config.get('Infoscan.dbConfig');
-
-var ObjectID = mongo.ObjectID;
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+
 var conn = connectionString.join('');
 var xmlPath = importconfig.xmlPath;
-console.log(conn, xmlPath);
-
+logger.info(conn, xmlPath);
 var pointsCollection = "points";
 var systemInfoCollection = "SystemInfo";
 
@@ -69,11 +67,11 @@ var options = cli.parse();
 dbModel.connect(connectionString.join(''), function(err) {
 
   if (!!options.default) {
-    console.log('default');
+    logger.info('default');
     importProcess.start();
   } else if (!!options.gpl) {
     doGplImport(function() {
-      console.log('done with doGplImport');
+      logger.info('done with doGplImport');
     });
   } else if (!!options.updategpl) {
     updateGPLRefs(function(err) {
@@ -102,67 +100,36 @@ dbModel.connect(connectionString.join(''), function(err) {
 function importUpdate() {
   this.start = function() {
     var self = this;
-    logger.info("starting");
+    var start = new Date(),
+      limit = 2000,
+      skip = 0;
+    logger.info("starting", new Date());
+    doGplImport(xmlPath, function(err) {
+      initImport(function(err) {
+        updateIndexes(function(err) {
+          fixUpisCollection(pointsCollection, function(err) {
+            convertHistoryReports(function(err) {
+              convertTotalizerReports(function(err) {
+                convertScheduleEntries(function(err) {
+                  updateAllProgramPoints(function(err) {
+                    updateAllSensorPoints(function(err) {
 
-    var functions = [
-      function(cb) {
-        doGplImport(cb);
-      },
-      function(cb) {
-        initImport(cb);
-      },
-      function(cb) {
-        updateIndexes(cb);
-      },
-      function(cb) {
-        fixUpisCollection(pointsCollection, cb);
-      },
-      function(cb) {
-        convertHistoryReports(cb);
-      },
-      function(cb) {
-        convertTotalizerReports(cb);
-      },
-      function(cb) {
-        convertScheduleEntries(cb);
-      },
-      function(cb) {
-        updateAllProgramPoints(cb);
-      },
-      function(cb) {
-        updateAllSensorPoints(cb);
-      },
-      function(cb) {
-        self.innerLoop(false, cb);
-      },
-
-      function(cb) {
-        updateGPLReferences(cb);
-      },
-      function(cb) {
-        fixPowerMeters(cb);
-      },
-      function(cb) {
-        changeUpis(cb);
-      },
-      function(cb) {
-        fixUpisCollection('new_points', cb);
-      },
-      function(cb) {
-        updateHistory(cb);
-      },
-      function(cb) {
-        cleanupDB(cb);
-      }
-    ];
-
-    async.series(functions, function(err, results) {
-      logger.info("import done", err, new Date());
-      process.exit(0);
+                      self.innerLoop(limit, skip);
+                      // logger.info('done');
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     });
   };
 
-  this.innerLoop = function(limits, cb) {
+
+
+  this.innerLoop = function(limit, skip) {
     logger.info("innerLoop");
     var count = 0;
     var criteria = {
@@ -175,6 +142,8 @@ function importUpdate() {
     };
 
     Utility.iterateCursor(criteria, function(err, doc, cb) {
+      // logger.info("retrieved", err);
+      // logger.info("doc.id = " + doc._id);
       importPoint(doc, function(err) {
         count++;
         if (count % 10000 === 0) {
@@ -184,53 +153,102 @@ function importUpdate() {
       });
     }, function(err) {
       logger.info('innerLoop cursor done', err);
-      return cb(err);
+      updateGPLReferences(function(err) {
+        fixPowerMeters(function(err, count) {
+          logger.info('number of powermeters changed:', count);
+          logger.info("before changeUpis", err, new Date());
+          // changeUpis(function(err) {
+          fixUpisCollection('new_points', function(err) {
+            // updateHistory(function(err) {
+            // logger.info('finished updateHistory', err);
+            // cleanupDB(function(err) {
+            if (err) {
+              logger.info("updateGPLReferences err:", err);
+            }
+            logger.info("done", err, new Date());
+            process.exit(0);
+            // });
+          });
+          // });
+          // });
+        });
+      });
     });
 
   };
 
 
-  var importPoint = function(point, callback) {
-
-
+  var importPoint = function(point, cb) {
     updateNameSegments(point, function(err) {
+      if (err)
+        logger.info("updateNameSegments", err);
+      updateSequences(point, function(err) {
+        if (err)
+          logger.info("updateSequences", err);
+        updateTaglist(point, function(err) {
+          if (err)
+            logger.info('updateTaglist', err);
+          updateCfgRequired(point, function(err) {
+            if (err)
+              logger.info("updateCfgRequired", err);
+            updateOOSValue(point, function(err) {
+              if (err)
+                logger.info("updateOOSValue", err);
+              addTrendProperties(point, function(err) {
+                if (err)
+                  logger.info("addTrendProperties", err);
+                updateScriptPoint(point, function(err) {
+                  if (err)
+                    logger.info("updateScriptPoint", err);
+                  /*updateProgramPoints(point, db, function(err) {
+                      if (err)
+                        logger.info("updateProgramPoints", err);*/
+                  updateMultiplexer(point, function(err) {
+                    if (err)
+                      logger.info("updateMultiplexer", err);
+                    updateGPLBlocks(point, function(err) {
+                      if (err)
+                        logger.info("updateGPLBlocks", err);
+                      /*updateSensorPoints(point, function(err) {
+                        if (err)
+                          logger.info("updateSensorPoints", err);*/
+                      updateReferences(point, function(err) {
+                        if (err)
+                          logger.info("updateReferences", err);
+                        // needs to be done after point refs is added to point
+                        utils.setupNonFieldPoints(point);
 
-      updateSequences(function(err) {
+                        utils.setChannelOptions(point);
+                        updateTimeZones(point, function(err) {
+                          if (err)
+                            logger.info("updateTimeZones", err);
+                          updateDevices(point, function(err) {
+                            if (err)
+                              logger.info("updateDevices", err);
+                            updateModels(point, function(err) {
+                              if (err)
+                                logger.info("updateModels", err);
+                              updateAlarmMessages(point, function(err) {
+                                if (err)
+                                  logger.info("updateAlarmMessages", err);
+                                addBroadcastPeriod(point, function(err) {
+                                  if (err)
+                                    logger.info("addBroadcastPeriod", err);
+                                  updateTrend(point, function(err) {
+                                    if (err)
+                                      logger.info("updateTrend", err);
+                                    rearrangeProperties(point, function(err) {
+                                      if (err)
+                                        logger.info("rearrangeProperties", err);
+                                      if (point._id === 85161) {
+                                        logger.info(point['Point Refs'][2]);
+                                      }
+                                      updatePoint(point, function(err) {
 
-        updateTaglist(function(err) {
-
-          updateCfgRequired(function(err) {
-
-            updateOOSValue(function(err) {
-
-              addTrendProperties(function(err) {
-
-                updateScriptPoint(function(err) {
-
-                  // updateProgramPoints(function(err){
-
-                  updateMultiplexer(function(err) {
-
-                    updateGPLBlocks(function(err) {
-
-                      // updateSensorPoints(function(err){
-
-                      updateReferences(function(err) {
-
-                        updateTimeZones(function(err) {
-
-                          updateModels(function(err) {
-
-                            updateDevices(function(err) {
-
-                              updateAlarmMessages(function(err) {
-
-                                addBroadcastPeriod(function(err) {
-
-                                  updateTrend(function(err) {
-
-                                    rearrangeProperties(function(err) {
-                                      updatePoint(callback);
+                                        if (err)
+                                          logger.info("updatePoint", err);
+                                        cb(null);
+                                      });
                                     });
                                   });
                                 });
@@ -238,10 +256,8 @@ function importUpdate() {
                             });
                           });
                         });
-                        // });
                       });
                     });
-                    // });
                   });
                 });
               });
@@ -249,834 +265,25 @@ function importUpdate() {
           });
         });
       });
+      // });
+      //});
     });
-
-    function updatePoint(cb) {
-      Utility.update({
-        collection: pointsCollection,
-        query: {
-          _id: point._id
-        },
-        updateObj: point
-      }, cb);
-    }
-
-    function devModelLogic(cb) {
-      logger.info("starting devModelLogic");
-      var currentModel = null;
-
-      var models = [{
-        value: "Device",
-        model: "Device"
-      }, {
-        value: "Remote Unit",
-        model: "Remote"
-      }, {
-        value: "Analog Input",
-        model: "AIPoint"
-      }, {
-        value: "Analog Output",
-        model: "AOPoint"
-      }, {
-        value: "Analog Value",
-        model: "AVPoint"
-      }, {
-        value: "Binary Input",
-        model: "BIPoint"
-      }, {
-        value: "Binary Output",
-        model: "BOPoint"
-      }, {
-        value: "Binary Value",
-        model: "BVPoint"
-      }, {
-        value: "Accumulator",
-        model: "ACCPoint"
-      }, {
-        value: "MultiState Value",
-        model: "MSVPoint"
-      }];
-
-      async.forEachSeries(models, function(model, asyncNext) {
-        var count = 0;
-        logger.info("working on", model.value);
-        updateModels(model.value, model.model, function(err, result) {
-          if (result)
-            asyncNext(err);
-        });
-      }, function(err) {
-        if (err)
-          logger.info("err", err);
-
-        cb(null);
-      });
-    }
-
-    function updateMultiplexer(cb) {
-      if (point['Point Type'].Value === 'Multiplexer') {
-        point['Select State'].eValue = 1;
-        point['Select State'].Value = 'On';
-      }
-      return cb(null);
-    }
-
-    function updateGPLBlocks(cb) {
-      var parentUpi = point._parentUpi;
-      var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
-      if (pointTypes.indexOf(point["Point Type"].Value) !== -1) {
-
-        for (var prop in point) {
-          if (point[prop].ValueType == 8) {
-            if (parentUpi !== 0)
-              point[prop].isReadOnly = true;
-            else
-              point[prop].isReadOnly = false;
-          }
-        }
-
-        if (point['Shutdown Point'].Value === 0) {
-          point['Shutdown Control'].Value = true;
-        }
-
-        switch (point["Point Type"].Value) {
-          case 'Proportional':
-          case 'Binary Selector':
-          case 'Analog Selector':
-            point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
-            break;
-          case 'Math':
-          case 'Multiplexer':
-            point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-            point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-            break;
-          case 'Delay':
-            point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-            break;
-          case 'Comparator':
-            point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-            break;
-          case 'Totalizer':
-            point['Reset Time'].Value *= 60;
-            break;
-        }
-      }
-      return cb();
-    }
-
-    function updateTimeZones(cb) {
-      if (!point.hasOwnProperty("Time Zone") && point['Point Type'].Value === 'Device') {
-        var timezones = Config.Enums['Time Zones'];
-
-        point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
-        point['Time Zone'].eValue = localTZ;
-
-        for (var prop in timezones) {
-          if (timezones[prop].enum === localTZ) {
-            point['Time Zone'].Value = prop;
-          }
-        }
-      }
-      cb(null);
-    }
-
-    function updateModels(cb) {
-      var models = ["Device", "Remote Unit", "Analog Input", "Analog Output", "Analog Value", "Binary Input", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"];
-
-      if (models.indexOf(point["Point Type"].Value) !== -1) {
-        modelUtil[point["Point Type"].Value].updateAll({ // change
-          point: point
-        }, function(err, point) {
-          if (err) cb(err);
-
-          cb(null);
-        });
-      } else {
-        cb(null);
-      }
-    }
-
-    function updateCfgRequired(cb) {
-      if (["Schedule", "Schedule Entry"].indexOf(point["Point Type"].Value) > -1) {
-        point._cfgRequired = false;
-      }
-      cb(null);
-    }
-
-    function updateOOSValue(cb) {
-      var pointTemplate = Config.Templates.getTemplate(point["Point Type"].Value);
-      if (pointTemplate.Value !== undefined && pointTemplate.Value.oosValue !== undefined)
-        point.Value.oosValue = (point.Value.eValue !== undefined) ? point.Value.eValue : point.Value.Value;
-      cb(null);
-    }
-
-    function addTrendProperties(cb) {
-      var pt = point['Point Type'].Value;
-      if (pt === 'Optimum Start') {
-        point['Trend Enable'] = Config.Templates.getTemplate(pt)['Trend Enable'];
-        point['Trend Interval'] = Config.Templates.getTemplate(pt)['Trend Interval'];
-        point['Trend Last Status'] = Config.Templates.getTemplate(pt)['Trend Last Status'];
-        point['Trend Last Value'] = Config.Templates.getTemplate(pt)['Trend Last Value'];
-        point['Trend Samples'] = Config.Templates.getTemplate(pt)['Trend Samples'];
-      }
-      cb(null);
-    }
-
-    function updateScriptPoint(cb) {
-      if (point["Point Type"].Value === "Script") {
-        point._cfgRequired = false;
-        if (!point.hasOwnProperty("Development Source File")) {
-          point["Development Source File"] = "";
-        }
-        delete point["Script Filename"];
-      }
-      cb(null);
-    }
-
-    function addReferencesToSlideShowPointRefs(cb) {
-      var referencedSlides = point.Slides,
-        upiList = [],
-        c,
-        pRefAppIndex = 1, // skipping 0 for "Device Point"
-        matchUpisToPointRefs = function() {
-          var setPointRefIndex = function(slides) {
-            var slide;
-            var pRef;
-            var filterPointRefs = function(pointRef) {
-              return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
-            };
-
-            if (!!slides) {
-              for (c = 0; c < slides.length; c++) {
-                slide = slides[c];
-                if (!!slide.display) {
-                  pRef = point["Point Refs"].filter(filterPointRefs);
-
-                  pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
-
-                  if (!!pRef) {
-                    slide.pointRefIndex = pRef.AppIndex;
-                    // delete slide.display; // TODO to clear out duplicate data (point ref contains the UPI)
-                  }
-                }
-              }
-            }
-          };
-
-          setPointRefIndex(referencedSlides);
-          cb();
-        },
-        makePointRef = function(refPoint) {
-          var pointType = refPoint["Point Type"].Value,
-            baseRef = {
-              "PropertyName": "Slide Display",
-              "PropertyEnum": Config.Enums.Properties["Slide Display"].enum,
-              "Value": refPoint._id,
-              "AppIndex": pRefAppIndex++,
-              "isDisplayable": true,
-              "isReadOnly": false,
-              "PointName": refPoint.Name,
-              "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
-              "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
-              "PointType": Config.Enums['Point Types'][pointType].enum || 0
-            };
-
-          return baseRef;
-        },
-        setPointData = function() {
-          var pushPointObjectsUPIs = function(slides) {
-            var slide;
-
-            if (!!slides) {
-              for (c = 0; c < slides.length; c++) {
-                slide = slides[c];
-
-                if (!!slide.display && slide.display > 0) {
-                  if (upiList.indexOf(slide.display) === -1) {
-                    upiList.push(slide.display);
-                  }
-                }
-              }
-            }
-          };
-
-          pushPointObjectsUPIs(referencedSlides);
-
-          if (!!upiList && upiList.length > 0) {
-            Utility.get({
-              collection: pointsCollection,
-              query: {
-                _id: {
-                  $in: upiList
-                }
-              }
-            }, function(err, points) {
-              var referencedPoint;
-              if (!!points) {
-                for (c = 0; c < points.length; c++) {
-                  referencedPoint = points[c];
-                  point["Point Refs"].push(makePointRef(referencedPoint));
-                }
-              }
-              matchUpisToPointRefs();
-            });
-          } else {
-            cb();
-          }
-        };
-
-      setPointData();
-    }
-
-    function addReferencesToDisplayPointRefs(cb) {
-      var screenObjectsCollection = point["Screen Objects"],
-        upiList = [],
-        upiCrossRef = [],
-        c,
-        pRefAppIndex = 0,
-        getScreenObjectType = function(screenObjectType) {
-          var propEnum = 0,
-            propName = "";
-
-          switch (screenObjectType) {
-            case 0:
-              propEnum = Config.Enums.Properties["Display Dynamic"].enum;
-              propName = "Display Dynamic";
-              break;
-            case 1:
-              propEnum = Config.Enums.Properties["Display Button"].enum;
-              propName = "Display Button";
-              break;
-            case 3:
-              propEnum = Config.Enums.Properties["Display Animation"].enum;
-              propName = "Display Animation";
-              break;
-            case 7:
-              propEnum = Config.Enums.Properties["Display Trend"].enum;
-              propName = "Display Trend";
-              break;
-            default:
-              propEnum = 0;
-              propName = "";
-              break;
-          }
-
-          return {
-            name: propName,
-            enum: propEnum
-          };
-        },
-        getCrossRefByUPIandName = function(upi, propertyName) {
-          return upiCrossRef.filter(function(ref) {
-            return ref.upi === upi && ref.PropertyName === propertyName;
-          });
-        },
-        getCrossRefByUPI = function(upi) {
-          return upiCrossRef.filter(function(ref) {
-            return ref.upi === upi;
-          });
-        },
-        matchUpisToPointRefs = function() {
-          var setPointRefIndex = function(screenObjects) {
-            var screenObject;
-            var prop;
-            var pRef;
-            var filterPointRefs = function(pointRef) {
-              return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
-            };
-
-            if (!!screenObjects) {
-              for (c = 0; c < screenObjects.length; c++) {
-                screenObject = screenObjects[c];
-                if (!!screenObject.upi) {
-                  prop = getScreenObjectType(screenObject["Screen Object"]);
-                  pRef = point["Point Refs"].filter(filterPointRefs);
-
-                  pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
-
-                  if (!!pRef) {
-                    screenObject.pointRefIndex = pRef.AppIndex;
-                    // delete screenObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
-                  }
-                }
-              }
-            }
-          };
-
-          setPointRefIndex(screenObjectsCollection);
-          cb();
-        },
-        makePointRef = function(refPoint, propName, propType) {
-          var pointType = refPoint["Point Type"].Value,
-            //pointRef.DevInst =
-            baseRef = {
-              "PropertyName": propName,
-              "PropertyEnum": propType,
-              "Value": refPoint._id,
-              "AppIndex": pRefAppIndex++,
-              "isDisplayable": true,
-              "isReadOnly": false,
-              "PointName": refPoint.Name,
-              "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
-              "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
-              "PointType": Config.Enums['Point Types'][pointType].enum || 0
-            };
-
-          return baseRef;
-        },
-        setDisplayPointData = function() {
-          var pushScreenObjectsUPIs = function(screenObjects) {
-            var screenObject,
-              prop;
-
-            if (!!screenObjects) {
-              for (c = 0; c < screenObjects.length; c++) {
-                screenObject = screenObjects[c];
-                prop = getScreenObjectType(screenObject["Screen Object"]);
-
-                if (!!screenObject.upi && screenObject.upi > 0) {
-                  if (upiList.indexOf(screenObject.upi) === -1) {
-                    upiList.push(screenObject.upi);
-                  }
-
-                  if (getCrossRefByUPIandName(screenObject.upi, prop.name).length === 0) {
-                    upiCrossRef.push({
-                      upi: screenObject.upi,
-                      name: prop.name,
-                      type: prop.enum
-                    });
-                  }
-                }
-              }
-            }
-          };
-
-          pushScreenObjectsUPIs(screenObjectsCollection);
-
-          if (!!upiList && upiList.length > 0) {
-            Utility.get({
-              collection: pointsCollection,
-              query: {
-                _id: {
-                  $in: upiList
-                }
-              }
-            }, function(err, points) {
-              var referencedPoint,
-                neededRefs,
-                i;
-              if (!!points) {
-                for (c = 0; c < points.length; c++) {
-                  referencedPoint = points[c];
-                  neededRefs = getCrossRefByUPI(referencedPoint._id); // all types of screen objects
-                  for (i = 0; i < neededRefs.length; i++) {
-                    point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].enum));
-                  }
-                }
-              }
-              matchUpisToPointRefs();
-            });
-          } else {
-            cb();
-          }
-        };
-
-      setDisplayPointData();
-    }
-
-    function updateReferences(cb) {
-
-      var uniquePID = function(pointRefs) {
-        var index = 0;
-        var prop;
-
-        async.eachSeries(pointRefs, function(pointRef, seriesCB) {
-          if (pointRef.Value !== 0) {
-            Utility.getOne({
-              collection: pointsCollection,
-              query: {
-                _id: pointRef.Value
-              }
-            }, function(err, refPoint) {
-              if (err)
-                return seriesCB(err);
-
-              if (pointRef.PropertyName === 'GPLBlock') {
-                prop = index;
-              } else {
-                prop = pointRef.PropertyName;
-              }
-              prop = index;
-              refPoint = Config.EditChanges.applyUniquePIDLogic({
-                point: point,
-                refPoint: refPoint
-              }, prop);
-
-              index++;
-
-              seriesCB(null);
-            });
-          } else {
-            seriesCB(null);
-          }
-        }, function(err) {
-          cb(err);
-        });
-      };
-      if (point["Point Refs"].length === 0) {
-
-        var properties = [],
-          pointTemplate = Config.Templates.getTemplate(point["Point Type"].Value);
-
-        for (var i = 0; i < pointTemplate["Point Refs"].length; i++) {
-          properties.push(pointTemplate["Point Refs"][i].PropertyName);
-        }
-
-        if (point["Point Type"].Value === "Slide Show") {
-          addReferencesToSlideShowPointRefs(point, function() {
-            uniquePID(point["Point Refs"]);
-          });
-        }
-        /*else if (point["Point Type"].Value === "Sensor") {
-
-          var pointRef = {
-            "PropertyName": "Sensor Point",
-            "PropertyEnum": 154,
-            "AppIndex": 0,
-            "isDisplayable": true,
-            "isReadOnly": false,
-            "Value": 0,
-            "PointName": "",
-            "PointType": 0,
-            "PointInst": 0,
-            "DevInst": 0
-          };
-
-          point["Point Refs"].push(pointRef);
-
-          uniquePID(point["Point Refs"]);
-
-        }*/
-        else if (point["Point Type"].Value === "Display") {
-          if (point["Screen Objects"] !== undefined) {
-            addReferencesToDisplayPointRefs(point, function() {
-              uniquePID(point["Point Refs"]);
-            });
-          } else {
-            point["Screen Objects"] = [];
-            /*db.collection(pointsCollection).update({
-                _id: point._id
-              }, {
-                $set: {
-                  "Screen Objects": []
-                }
-              }, function(err, result) {*/
-            uniquePID(point["Point Refs"]);
-            //});
-          }
-        } else if (point["Point Type"].Value === "Program") {
-          async.waterfall([
-
-            function(wfcb) {
-              async.forEachSeries(properties, function(prop, callback) {
-
-                if (point[prop] !== null && (point[prop].ValueType === 8)) {
-
-                  var propName = prop;
-                  var propEnum = Config.Enums.Properties[prop].enum;
-                  var appIndex = 0;
-
-                  var pointRef = {
-                    PropertyName: propName,
-                    PropertyEnum: propEnum,
-                    Value: point[prop].Value,
-                    AppIndex: appIndex,
-                    isDisplayable: point[prop].isDisplayable,
-                    isReadOnly: point[prop].isReadOnly,
-                    PointName: point[prop].PointName,
-                    PointInst: point[prop].PointInst,
-                    DevInst: point[prop].DevInst,
-                    PointType: point[prop].PointType
-                  };
-
-                  point["Point Refs"].push(pointRef);
-                  delete point[prop];
-                  callback(null);
-
-                } else {
-                  callback(null);
-                }
-              }, function(err) {
-                wfcb(err);
-              });
-            },
-            function(wfcb) {
-              var tempAppIndex = 0,
-                tempRefsArray = [],
-                index, appIndexes = {};
-
-              for (var i = 0; i < point["Point Registers"].length; i++) {
-                appIndexes[point["Point Registers"][i]] = [];
-              }
-
-              for (var prop in appIndexes) {
-                index = point["Point Registers"].indexOf(parseInt(prop, 10));
-                while (index !== -1) {
-                  appIndexes[prop].push(index + 1);
-                  index = point["Point Registers"].indexOf(parseInt(prop, 10), index + 1);
-                }
-              }
-
-              async.forEachSeries(point["Point Registers"], function(register, propCb) {
-                Utility.getOne({
-                  collection: pointsCollection,
-                  query: {
-                    _id: register
-                  }
-                }, function(err, registerPoint) {
-                  if (err)
-                    propCb(err);
-                  var pointRef = {};
-
-                  pointRef.PropertyEnum = Config.Enums.Properties["Point Register"].enum;
-                  pointRef.PropertyName = "Point Register";
-                  pointRef.isDisplayable = true;
-                  pointRef.AppIndex = appIndexes[register].shift();
-                  pointRef.isReadOnly = false;
-                  pointRef.DevInst = (Config.Utility.getPropertyObject("Device Point", registerPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", registerPoint).Value : 0;
-
-                  if (registerPoint !== null) {
-                    pointRef.Value = registerPoint._id;
-                    pointRef.PointName = registerPoint.Name;
-                    pointRef.PointType = registerPoint["Point Type"].eValue;
-                    pointRef.PointInst = (registerPoint._pStatus !== 2) ? registerPoint._id : 0;
-                  } else {
-                    pointRef.Value = 0;
-                    pointRef.PointName = "";
-                    pointRef.PointType = 0;
-                    pointRef.PointInst = 0;
-                  }
-                  tempRefsArray.push(pointRef);
-                  propCb(null);
-                });
-
-              }, function(err) {
-                tempRefsArray.sort(function(a, b) {
-                  return (a.AppIndex > b.AppIndex) ? 1 : ((b.AppIndex > a.AppIndex) ? -1 : 0);
-                });
-                for (var a = 0; a < tempRefsArray.length; a++) {
-                  point["Point Refs"].push(tempRefsArray[a]);
-                }
-                wfcb(err);
-              });
-            }
-          ], function(err) {
-            /*db.collection(pointsCollection).update({
-                _id: point._id
-              }, point, function(err, result) {*/
-            uniquePID(point["Point Refs"]);
-            //});
-          });
-
-        } else {
-
-          async.forEachSeries(properties, function(prop, callback) {
-            /*if (prop === "Sequence Device")
-              prop = "Device Point";*/
-
-            if (point[prop] !== null && (point[prop].ValueType === 8)) {
-              var propName = prop;
-              var propEnum = Config.Enums.Properties[prop].enum;
-              var appIndex = 0;
-
-              if ((prop === "Device Point" || prop === "Remote Unit Point") && point._parentUpi === 0)
-                point[prop].isReadOnly = false;
-
-              /*if (point["Point Type"].Value === "Sequence" && prop === "Device Point") {
-                propName = "Sequence Device";
-                propEnum = Config.Enums.Properties[propName].enum;
-              }*/
-
-              var pointRef = {
-                PropertyName: propName,
-                PropertyEnum: propEnum,
-                Value: point[prop].Value,
-                AppIndex: appIndex,
-                isDisplayable: point[prop].isDisplayable,
-                isReadOnly: point[prop].isReadOnly,
-                PointName: point[prop].PointName,
-                PointInst: point[prop].PointInst,
-                DevInst: point[prop].DevInst,
-                PointType: point[prop].PointType
-              };
-
-              point["Point Refs"].push(pointRef);
-              delete point[prop];
-              callback(null);
-
-            } else {
-              callback(null);
-            }
-          }, function(err) {
-            // compare size of point register's name array to the number of point registers in the points ref array and add any Value
-            /*db.collection(pointsCollection).update({
-                _id: point._id
-              }, point, function(err, result) {*/
-
-            if (point['Point Type'].Value === 'Sequence') {
-              addReferencesToSequencePointRefs(point, function() {
-                uniquePID(point["Point Refs"]);
-              });
-            } else {
-              uniquePID(point["Point Refs"]);
-            }
-            //});
-          });
-        }
-      } else {
-        uniquePID(point["Point Refs"]);
-      }
-    }
-
-    function updateDevices(cb) {
-      if (point["Point Type"].Value === "Device") {
-
-        point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
-        point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
-        point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
-        point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
-
-        if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(point['Model Type'].eValue) >= 0) {
-          point['Firmware 2 Version'].isDisplayable = true;
-        } else {
-          point['Firmware 2 Version'].isDisplayable = false;
-        }
-
-        var propertyNetwork = point["Uplink Port"].Value + " Network",
-          propertyAddress = point["Uplink Port"].Value + " Address";
-        point["Network Segment"].Value = point[propertyNetwork].Value;
-        point["Device Address"].Value = point[propertyAddress].Value.toString();
-
-        point["Device Status"].Value = "Stop Scan";
-        point["Device Status"].eValue = 66;
-
-      } else if (point["Point Type"].Value === "Remote Unit") {
-        point["Device Address"].ValueType = 2;
-        point["Device Address"].Value = point["Device Address"].Value.toString();
-
-        point["Device Status"].Value = "Stop Scan";
-        point["Device Status"].eValue = 66;
-
-      }
-      cb(null);
-    }
-
-    function updateAlarmMessages(cb) {
-      var alarmClasses = ["Emergency", "Critical"];
-      if (point.hasOwnProperty('Alarm Messages')) {
-        point['Notify Policies'] = [];
-      }
-
-      if (point["Alarm Class"] !== undefined && alarmClasses.indexOf(point["Alarm Class"].Value) !== -1) {
-
-        for (var i = 0; i < point["Alarm Messages"].length; i++) {
-          point["Alarm Messages"][i].ack = true;
-        }
-        /*db.collection(pointsCollection).update({
-          _id: point._id
-        }, {
-          $set: {
-            "Alarm Messages": point["Alarm Messages"]
-          }
-        }, function(err, result) {*/
-
-        cb(null);
-        //});
-      } else {
-        cb(null);
-      }
-    }
-
-    function addBroadcastPeriod(cb) {
-      if (point["Broadcast Enable"] !== undefined) {
-        point["Broadcast Period"] = {
-          "isDisplayable": point["Broadcast Enable"].Value,
-          "isReadOnly": false,
-          "ValueType": 13,
-          "Value": 15
-        };
-      }
-      cb(null);
-    }
-
-    function updateTrend(cb) {
-      if (point.hasOwnProperty('Trend Enable')) {
-        point["Trend Last Status"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Status"];
-        point["Trend Last Value"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Value"];
-      }
-      cb(null);
-    }
-
-    function rearrangeProperties(cb) {
-      var compare = function(a, b) {
-        var _a = a.toLowerCase();
-        var _b = b.toLowerCase();
-        if (_a === '_id') {
-          return -1;
-        } else if (_b === '_id') {
-          return 1;
-        }
-        if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
-          if (_a > _b) {
-            return -1;
-          } else if (a < _b) {
-            return 1;
-          }
-        } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
-          if (_a > _b) {
-            return 1;
-          } else if (a < _b) {
-            return -1;
-          }
-        } else if (_a.match(/^name|^_/)) {
-          return -1;
-        } else if (_b.match(/^name|^_/)) {
-          return 1;
-        }
-        return 0;
-      };
-
-      var arr = [];
-      var o = {};
-      for (var prop in point) {
-        arr.push(prop);
-      }
-      arr.sort(compare);
-      for (var i = 0; i < arr.length; i++) {
-        o[arr[i]] = point[arr[i]];
-      }
-      point = o;
-      cb(null);
-    }
-
-    function updateSequences(cb) {
-      if (point['Point Type.Value'] === 'Sequence') {
-        point._parentUpi = 0;
-      }
-      cb();
-    }
-
-    function updateTaglist(cb) {
-      for (var i = 0; i < point.taglist.length; i++) {
-        point.taglist[i] = point.taglist[i].toLowerCase();
-      }
-      cb();
-    }
-
   };
 }
 
 
+function updatePoint(point, cb) {
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      _id: point._id
+    },
+    updateObj: point
+  }, cb);
+}
+
 function addDefaultUser(cb) {
+
   Utility.get({
     collection: 'Users',
     query: {}
@@ -1092,6 +299,7 @@ function addDefaultUser(cb) {
     var searchCriteria = {
       Name: "Controllers"
     };
+
     Utility.getOne({
       collection: systemInfoCollection,
       query: searchCriteria
@@ -1143,6 +351,7 @@ function addDefaultUser(cb) {
             break;
           }
         }
+
         Utility.update({
           collection: systemInfoCollection,
           query: searchCriteria,
@@ -1156,29 +365,6 @@ function addDefaultUser(cb) {
 
     });
   }
-}
-
-function setupCurAlmIds(callback) {
-  logger.info("setupCurAlmIds");
-  Utility.update({
-    collection: pointsCollection,
-    query: {
-      "Point Type.Value": {
-        $nin: ["Imux"]
-      },
-      _curAlmId: {
-        $exists: false
-      }
-    },
-    updateObj: {
-      $set: {
-        _curAlmId: new ObjectID("000000000000000000000000")
-      }
-    },
-    options: {
-      multi: true
-    }
-  }, callback);
 }
 
 function setupCfgRequired(callback) {
@@ -1204,11 +390,21 @@ function setupCfgRequired(callback) {
 }
 
 function createEmptyCollections(callback) {
-  var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions'];
+  var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'dev'];
   async.forEach(collections, function(coll, cb) {
     Utility.createCollection({
       collection: coll
     }, cb);
+  }, callback);
+}
+
+function setupDevCollection(callback) {
+  Utility.insert({
+    collection: 'dev',
+    insertObj: {
+      "item": "distinct",
+      "values": []
+    }
   }, callback);
 }
 
@@ -1408,15 +604,19 @@ function changeUpis(callback) {
         var refs = dep['Point Refs'];
         for (var i = 0; i < refs.length; i++) {
           if (refs[i].Value === oldId) {
+            // logger.info('changing Value', oldId, collection);
             refs[i].Value = newId;
           }
           if (refs[i].PointInst === oldId) {
+            // logger.info('changing PointInst', oldId, collection);
             refs[i].PointInst = newId;
           }
           if (refs[i].DevInst === oldId) {
+            // logger.info('changing DevInst', oldId, collection);
             refs[i].DevInst = newId;
           }
         }
+        // logger.info(dep['Point Refs']);
         Utility.update({
           collection: collection,
           updateObj: dep,
@@ -1492,7 +692,7 @@ function changeUpis(callback) {
             });
           }, function(err, count) {
 
-            console.log('count', count);
+            logger.info('count', count);
             Utility.iterateCursor({
               collection: newPoints,
               query: {}
@@ -1581,20 +781,11 @@ function fixUpisCollection(baseCollection, callback) {
       });
     });
   });
-
 }
 
-function testHistory() {
-  logger.info('testing history');
-  mongo.connect(conn, function(err, db) {
-    convertHistoryReports(function(err) {
-      logger.info("testHistory err", err);
-    });
-  });
-}
 
 function convertHistoryReports(callback) {
-  console.log('converting history reports');
+  logger.info('converting history reports');
   Utility.iterateCursor({
     collection: 'OldHistLogs',
     query: {}
@@ -1622,7 +813,7 @@ function convertHistoryReports(callback) {
     }
     report["Report Config"].reportTitle = report.Name;
 
-    report['Report Config'].interval.text = 'Minute';
+    report['Report Config'].interval.period = 'Minute';
     report['Report Config'].interval.value = Math.floor(point.Interval / 60);
     report['Report Config'].duration.selectedRange = 'Today';
 
@@ -1646,13 +837,12 @@ function convertHistoryReports(callback) {
             "colDisplayName": ref.Name,
             "valueType": "None",
             "operator": "",
-            "calculation": "Mean",
+            "calculation": [],
             "canCalculate": true,
             "includeInReport": true,
             "includeInChart": true,
             "multiplier": 1,
             "precision": 5,
-            "upi": ref._id,
             "pointType": ref['Point Type'].Value,
             "units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
             "canBeCharted": true,
@@ -1676,7 +866,6 @@ function convertHistoryReports(callback) {
             refPoint: ref
           }, index);
           report._actvAlmId = ObjectID("000000000000000000000000");
-          report._curAlmId = ObjectID("000000000000000000000000");
           index++;
         }
         cb(null);
@@ -1692,7 +881,7 @@ function convertHistoryReports(callback) {
 }
 
 function convertTotalizerReports(callback) {
-  console.log('converting totalizer reports');
+  logger.info('converting totalizer reports');
   var criteria = {
     collection: 'Totalizers',
     query: {}
@@ -1723,19 +912,19 @@ function convertTotalizerReports(callback) {
 
     switch (doc['Reset Interval']) {
       case 'Year':
-        report['Report Config'].interval.text = 'Month';
+        report['Report Config'].interval.period = 'Month';
         report['Report Config'].interval.value = 1;
         report['Report Config'].duration.selectedRange = 'This Year';
         break;
       case 'Month':
-        report['Report Config'].interval.text = 'Day';
+        report['Report Config'].interval.period = 'Day';
         report['Report Config'].interval.value = 1;
         report['Report Config'].duration.selectedRange = 'This Month';
         break;
       case 'Day':
       case 'Hour':
       case 'None':
-        report['Report Config'].interval.text = 'Hour';
+        report['Report Config'].interval.period = 'Hour';
         report['Report Config'].interval.value = 1;
         report['Report Config'].duration.selectedRange = 'Last 7 Days';
         break;
@@ -1779,13 +968,12 @@ function convertTotalizerReports(callback) {
             "colDisplayName": ref.Name,
             "valueType": "None",
             "operator": monitor['Monitor Property'],
-            "calculation": "",
+            "calculation": [],
             "canCalculate": true,
             "includeInReport": true,
             "includeInChart": true,
             "multiplier": 1,
             "precision": 3,
-            "upi": ref._id,
             "pointType": ref['Point Type'].Value,
             "units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
             "canBeCharted": true,
@@ -1797,7 +985,6 @@ function convertTotalizerReports(callback) {
             refPoint: ref
           }, refIds.indexOf(ref._id));
           report._actvAlmId = ObjectID("000000000000000000000000");
-          report._curAlmId = ObjectID("000000000000000000000000");
         }
         cb2(null);
 
@@ -1829,16 +1016,8 @@ function convertTotalizerReports(callback) {
       });
     });
   }, function(err, count) {
-    console.log('convertTotalizerReports', err, count);
+    logger.info('convertTotalizerReports', err, count);
     callback(err);
-  });
-}
-
-function testSchedules() {
-  mongo.connect(conn, function(err, db) {
-    convertScheduleEntries(function(err) {
-      logger.info("convertScheduleEntries err", err);
-    });
   });
 }
 
@@ -1908,9 +1087,11 @@ function convertScheduleEntries(callback) {
 
         delete scheduleEntryTemplate._Name;
         if (scheduleEntryTemplate["Control Point"].Value !== scheduleEntryTemplate._parentUpi) {
-          insertScheduleEntry(scheduleEntryTemplate, forEachCallback);
+          insertScheduleEntry(scheduleEntryTemplate, function(err) {
+            forEachCallback(err);
+          });
         } else {
-          console.log('not inserting SE', scheduleEntryTemplate._id);
+          logger.info('not inserting SE', scheduleEntryTemplate._id);
           forEachCallback();
         }
       });
@@ -1997,7 +1178,7 @@ function updateGPLReferences(callback) {
     }
   }, function(err, gplBlocks) {
     logger.info("gplBlocks.length = " + gplBlocks.length);
-    async.forEachSeries(gplBlocks, function(gplBlock, cb) {
+    async.eachSeries(gplBlocks, function(gplBlock, cb) {
       gplBlock.name4 = gplBlock.gplLabel;
       gplBlock.Name = gplBlock.name1 + "_" + gplBlock.name2 + "_" + gplBlock.name3 + "_" + gplBlock.name4;
 
@@ -2013,10 +1194,12 @@ function updateGPLReferences(callback) {
       }, function(err, result) {
         if (err)
           logger.info('updateGPLReferences1 err', err);
+
         Utility.get({
           collection: pointsCollection,
           query: {
-            "Point Refs.Value": gplBlock._id
+            "Point Refs.Value": gplBlock._id,
+            'Point Type.Value': 'Sequence'
           },
           fields: {
             "Point Refs": 1
@@ -2028,6 +1211,7 @@ function updateGPLReferences(callback) {
                 gplRef["Point Refs"][m].PointName = gplBlock.Name;
               }
             }
+            logger.info(1, gplRef["Point Refs"]);
             Utility.update({
               collection: pointsCollection,
               query: {
@@ -2056,129 +1240,6 @@ function updateGPLReferences(callback) {
   });
 }
 
-function addReferencesToSequencePointRefs(point, cb) {
-  var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
-    dynamics = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.dynamic,
-    upiList = [],
-    upiCrossRef = [],
-    skipTypes = ['Constant'],
-    c,
-    pRefAppIndex = 1,
-    getCrossRefByUPIandName = function(upi, propertyName) {
-      return upiCrossRef.filter(function(ref) {
-        return ref.upi === upi && ref.PropertyName === propertyName;
-      });
-    },
-    getCrossRefByUPI = function(upi) {
-      return upiCrossRef.filter(function(ref) {
-        return ref.upi === upi;
-      });
-    },
-    matchUpisToPointRefs = function() {
-      var setPointRefIndex = function(gplObjects, propertyName) {
-        var gplObject;
-        var pRef;
-        var filterPointRefs = function(pointRef) {
-          return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
-        };
-
-        if (!!gplObjects) {
-          for (c = 0; c < gplObjects.length; c++) {
-            gplObject = gplObjects[c];
-            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
-              if (!!gplObject.upi) {
-                pRef = point["Point Refs"].filter(filterPointRefs);
-
-                pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
-
-                if (!!pRef) {
-                  gplObject.pointRefIndex = pRef.AppIndex;
-                  // delete gplObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
-                }
-              }
-            }
-          }
-        }
-      };
-
-      setPointRefIndex(blocks, "GPLBlock");
-      setPointRefIndex(dynamics, "GPLDynamic");
-      cb();
-    },
-    makePointRef = function(refPoint, propName, propType) {
-      var pointType = refPoint["Point Type"].Value;
-      var baseRef = {
-        "PropertyName": propName,
-        "PropertyEnum": propType,
-        "Value": refPoint._id,
-        "AppIndex": pRefAppIndex++,
-        "isDisplayable": true,
-        "isReadOnly": true,
-        "PointName": refPoint.Name,
-        "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
-        "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
-        "PointType": Config.Enums['Point Types'][pointType].enum || 0
-      };
-
-      return baseRef;
-    },
-    setGPLPointData = function() {
-      var pushGPLObjectUPIs = function(gplObjects, propName, propType) {
-        var gplObject;
-        if (!!gplObjects) {
-          for (c = 0; c < gplObjects.length; c++) {
-            gplObject = gplObjects[c];
-            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
-              if (upiList.indexOf(gplObject.upi) === -1) {
-                upiList.push(gplObject.upi);
-              }
-
-              if (getCrossRefByUPIandName(gplObject.upi, propName).length === 0) {
-                upiCrossRef.push({
-                  upi: gplObject.upi,
-                  name: propName,
-                  type: propType
-                });
-              }
-            }
-          }
-        }
-      };
-
-      pushGPLObjectUPIs(blocks, "GPLBlock", 439);
-      pushGPLObjectUPIs(dynamics, "GPLDynamic", 440);
-
-      if (!!upiList && upiList.length > 0) {
-        Utility.get({
-          collection: pointsCollection,
-          query: {
-            _id: {
-              $in: upiList
-            }
-          }
-        }, function(err, points) {
-          var referencedPoint,
-            neededRefs,
-            i;
-          if (!!points) {
-            for (c = 0; c < points.length; c++) {
-              referencedPoint = points[c];
-              neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
-              for (i = 0; i < neededRefs.length; i++) {
-                point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
-              }
-            }
-          }
-          matchUpisToPointRefs();
-        });
-      } else {
-        cb();
-      }
-    };
-
-  setGPLPointData();
-}
-
 function updateGPLRefs(callback) {
   Utility.get({
     collection: pointsCollection,
@@ -2204,18 +1265,20 @@ function updateGPLRefs(callback) {
 }
 
 function initImport(callback) {
-  console.log('init import');
+  // remove name
+  // remove VAV
+  // model type property set isreadonly to false
   createEmptyCollections(function(err) {
-    setupSystemInfo(function(err) {
-      setupPointRefsArray(function(err) {
-        addDefaultUser(function(err) {
-          // setupCurAlmIds(function(err) {
-          setupCfgRequired(function(err) {
-            setupProgramPoints(function(err) {
-              callback(null);
+    setupDevCollection(function(err) {
+      setupSystemInfo(function(err) {
+        setupPointRefsArray(function(err) {
+          addDefaultUser(function(err) {
+            setupCfgRequired(function(err) {
+              setupProgramPoints(function(err) {
+                callback(null);
+              });
             });
           });
-          // });
         });
       });
     });
@@ -2533,122 +1596,133 @@ function updateIndexes(callback) {
   });
 }
 
-function setUpCollections(callback) {
-  logger.info("setUpCollections");
-  setupAlarms(function(err) {
-    setUserGroups(function(err) {
-      setupHistoryData(function(err) {
-        setupVersions(function(err) {
-          callback();
-        });
-      });
-    });
-  });
+function updateMultiplexer(point, callback) {
+  if (point['Point Type'].Value === 'Multiplexer') {
+    point['Select State'].eValue = 1;
+    point['Select State'].Value = 'On';
+  }
+  return callback(null);
 }
 
-function setupProgramPoints(callback) {
-  Utility.update({
-    collection: pointsCollection,
-    query: {
-      "Point Type.Value": "Program"
-    },
-    updateObj: {
-      $set: {
-        /*"Boolean Register Names": [],
-        "Integer Register Names": [],
-        "Point Register Names": [],
-        "Real Register Names": [],*/
-        "Last Report Time": {
-          "isDisplayable": true,
-          "isReadOnly": true,
-          "ValueType": 11,
-          "Value": 0
-        }
+function updateGPLBlocks(point, callback) {
+  var parentUpi = point._parentUpi;
+  var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
+  if (pointTypes.indexOf(point["Point Type"].Value) !== -1) {
+
+    for (var prop in point) {
+      if (point[prop].ValueType == 8) {
+        if (parentUpi !== 0)
+          point[prop].isReadOnly = true;
+        else
+          point[prop].isReadOnly = false;
       }
-    },
-    options: {
-      multi: true
     }
-  }, function(err, result) {
-    callback(err);
-  });
-}
 
+    if (point['Shutdown Point'].Value === 0) {
+      point['Shutdown Control'].Value = true;
+    }
 
-function updateProgramPoints(point, cb) {
-  if (point["Point Type"].Value === "Script") {
-    Utility.update({
-      collection: pointsCollection,
-      query: {
-        "Point Type.Value": "Program",
-        $or: [{
-          "Script Point.Value": point._id
-        }, {
-          "Point Refs": {
-            $elemMatch: {
-              Value: point._id,
-              PropertyEnum: 270
-            }
-          }
-        }]
-      },
-      updateObj: {
-        $set: {
-          "Boolean Register Names": point["Boolean Register Names"],
-          "Integer Register Names": point["Integer Register Names"],
-          "Point Register Names": point["Point Register Names"],
-          "Real Register Names": point["Real Register Names"]
-        }
-      },
-      options: {
-        multi: true
-      }
-    }, cb);
+    switch (point["Point Type"].Value) {
+      case 'Proportional':
+      case 'Binary Selector':
+      case 'Analog Selector':
+        point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
+        break;
+      case 'Math':
+      case 'Multiplexer':
+        point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+        point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+        break;
+      case 'Delay':
+        point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+        break;
+      case 'Comparator':
+        point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+        break;
+      case 'Totalizer':
+        point['Reset Time'].Value *= 60;
+        break;
+    }
+
+    /*point.name4 = point.gplNameSegment;
+    point.Name = point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4;
+    point._name4 = point.name4.toLowerCase();
+    point._Name = point.Name.toLowerCase();
+    delete point.gplNameSegment;*/
+
+    /*db.collection(pointsCollection).update({
+      _id: point._id
+    }, point, function(err, result) {*/
+
+    callback(null);
+    // });
   } else {
-    cb(null);
+    callback(null);
   }
 }
 
-function updateAllProgramPoints(callback) {
-  Utility.get({
-    collection: pointsCollection,
-    query: {
-      "Point Type.Value": "Script"
+function updateTimeZones(point, cb) {
+  if (!point.hasOwnProperty("Time Zone") && point['Point Type'].Value === 'Device') {
+    var timezones = Config.Enums['Time Zones'];
+
+    point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
+    point['Time Zone'].eValue = localTZ;
+
+    for (var prop in timezones) {
+      if (timezones[prop].enum === localTZ) {
+        point['Time Zone'].Value = prop;
+      }
     }
-  }, function(err, scripts) {
-    async.forEachSeries(scripts, function(script, cb) {
-      updateProgramPoints(script, function(err) {
-        if (err)
-          logger.info("updateProgramPoints", err);
-        cb(err);
-      });
-    }, function(err) {
-      callback(err);
-    });
-
-  });
-}
-
-
-function updateNameSegments(point, cb) {
-  //var updObj = {};
-
-  point._name1 = point.name1.toLowerCase();
-  point._name2 = point.name2.toString().toLowerCase();
-  point._name3 = point.name3.toLowerCase();
-  point._name4 = point.name4.toLowerCase();
-  point._Name = point.Name.toLowerCase();
-  /*db.collection(pointsCollection).update({
-    _id: point._id
-  }, {
-    $set: updObj
-  }, function(err, result) {*/
-
-  // });
+  }
   cb(null);
 }
 
-function updateSensorPoints(point, cb) {
+function updateModels(point, cb) {
+  Config.Utility.updDevModel({
+    point: point
+  });
+  cb();
+}
+
+function updateCfgRequired(point, callback) {
+  if (["Schedule", "Schedule Entry"].indexOf(point["Point Type"].Value) > -1) {
+    point._cfgRequired = false;
+  }
+  callback(null);
+}
+
+function updateOOSValue(point, callback) {
+  var pointTemplate = Config.Templates.getTemplate(point["Point Type"].Value);
+  //logger.info(point["Point Type"].Value, pointTemplate["Point Type"].Value);
+  if (pointTemplate.Value !== undefined && pointTemplate.Value.oosValue !== undefined)
+    point.Value.oosValue = (point.Value.eValue !== undefined) ? point.Value.eValue : point.Value.Value;
+  callback(null);
+}
+
+function addTrendProperties(point, callback) {
+  var pt = point['Point Type'].Value;
+  if (pt === 'Optimum Start') {
+    point['Trend Enable'] = Config.Templates.getTemplate(pt)['Trend Enable'];
+    point['Trend Interval'] = Config.Templates.getTemplate(pt)['Trend Interval'];
+    point['Trend Last Status'] = Config.Templates.getTemplate(pt)['Trend Last Status'];
+    point['Trend Last Value'] = Config.Templates.getTemplate(pt)['Trend Last Value'];
+    point['Trend Samples'] = Config.Templates.getTemplate(pt)['Trend Samples'];
+  }
+  callback(null);
+}
+
+function updateScriptPoint(point, callback) {
+  if (point["Point Type"].Value === "Script") {
+    point._cfgRequired = false;
+    if (!point.hasOwnProperty("Development Source File")) {
+      point["Development Source File"] = "";
+    }
+    delete point["Script Filename"];
+  }
+  callback(null);
+}
+
+function updateSensorPoints(point, callback) {
 
   if (point["Point Type"].Value === "Sensor") {
 
@@ -2710,7 +1784,7 @@ function updateSensorPoints(point, cb) {
                 _id: point._id
               },
               updateObj: point
-            }, cb);
+            }, callback);
           });
         });
 
@@ -2723,12 +1797,890 @@ function updateSensorPoints(point, cb) {
           _id: point._id
         },
         updateObj: point
-      }, cb);
+      }, callback);
     }
 
   } else {
+    callback(null);
+  }
+}
+
+function updateProgramPoints(point, cb) {
+  if (point["Point Type"].Value === "Script") {
+    Utility.update({
+      collection: pointsCollection,
+      query: {
+        "Point Type.Value": "Program",
+        $or: [{
+          "Script Point.Value": point._id
+        }, {
+          "Point Refs": {
+            $elemMatch: {
+              Value: point._id,
+              PropertyEnum: 270
+            }
+          }
+        }]
+      },
+      updateObj: {
+        $set: {
+          "Boolean Register Names": point["Boolean Register Names"],
+          "Integer Register Names": point["Integer Register Names"],
+          "Point Register Names": point["Point Register Names"],
+          "Real Register Names": point["Real Register Names"]
+        }
+      },
+      options: {
+        multi: true
+      }
+    }, cb);
+  } else {
     cb(null);
   }
+}
+
+function addReferencesToSlideShowPointRefs(point, cb) {
+  var referencedSlides = point.Slides,
+    upiList = [],
+    c,
+    pRefAppIndex = 1, // skipping 0 for "Device Point"
+    matchUpisToPointRefs = function() {
+      var setPointRefIndex = function(slides) {
+        var slide;
+        var pRef;
+        var filterPointRefs = function(pointRef) {
+          return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
+        };
+
+        if (!!slides) {
+          for (c = 0; c < slides.length; c++) {
+            slide = slides[c];
+            if (!!slide.display) {
+              pRef = point["Point Refs"].filter(filterPointRefs);
+
+              pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+              if (!!pRef) {
+                slide.pointRefIndex = pRef.AppIndex;
+                // delete slide.display; // TODO to clear out duplicate data (point ref contains the UPI)
+              }
+            }
+          }
+        }
+      };
+
+      setPointRefIndex(referencedSlides);
+      cb();
+    },
+    makePointRef = function(refPoint) {
+      var pointType = refPoint["Point Type"].Value,
+        baseRef = {
+          "PropertyName": "Slide Display",
+          "PropertyEnum": Config.Enums.Properties["Slide Display"].enum,
+          "Value": refPoint._id,
+          "AppIndex": pRefAppIndex++,
+          "isDisplayable": true,
+          "isReadOnly": false,
+          "PointName": refPoint.Name,
+          "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+          "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+          "PointType": Config.Enums['Point Types'][pointType].enum || 0
+        };
+
+      return baseRef;
+    },
+    setPointData = function() {
+      var pushPointObjectsUPIs = function(slides) {
+        var slide;
+
+        if (!!slides) {
+          for (c = 0; c < slides.length; c++) {
+            slide = slides[c];
+
+            if (!!slide.display && slide.display > 0) {
+              if (upiList.indexOf(slide.display) === -1) {
+                upiList.push(slide.display);
+              }
+            }
+          }
+        }
+      };
+
+      pushPointObjectsUPIs(referencedSlides);
+
+      if (!!upiList && upiList.length > 0) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            _id: {
+              $in: upiList
+            }
+          }
+        }, function(err, points) {
+          var referencedPoint;
+          if (!!points) {
+            for (c = 0; c < points.length; c++) {
+              referencedPoint = points[c];
+              point["Point Refs"].push(makePointRef(referencedPoint));
+            }
+          }
+          matchUpisToPointRefs();
+        });
+      } else {
+        cb();
+      }
+    };
+
+  setPointData();
+}
+
+function addReferencesToDisplayPointRefs(point, cb) {
+  var screenObjectsCollection = point["Screen Objects"],
+    upiList = [],
+    upiCrossRef = [],
+    c,
+    pRefAppIndex = 0,
+    getScreenObjectType = function(screenObjectType) {
+      var propEnum = 0,
+        propName = "";
+
+      switch (screenObjectType) {
+        case 0:
+          propEnum = Config.Enums.Properties["Display Dynamic"].enum;
+          propName = "Display Dynamic";
+          break;
+        case 1:
+          propEnum = Config.Enums.Properties["Display Button"].enum;
+          propName = "Display Button";
+          break;
+        case 3:
+          propEnum = Config.Enums.Properties["Display Animation"].enum;
+          propName = "Display Animation";
+          break;
+        case 7:
+          propEnum = Config.Enums.Properties["Display Trend"].enum;
+          propName = "Display Trend";
+          break;
+        default:
+          propEnum = 0;
+          propName = "";
+          break;
+      }
+
+      return {
+        name: propName,
+        enum: propEnum
+      };
+    },
+    getCrossRefByUPIandName = function(upi, propertyName) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi && ref.PropertyName === propertyName;
+      });
+    },
+    getCrossRefByUPI = function(upi) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi;
+      });
+    },
+    matchUpisToPointRefs = function() {
+      var setPointRefIndex = function(screenObjects) {
+        var screenObject;
+        var prop;
+        var pRef;
+        var filterPointRefs = function(pointRef) {
+          return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
+        };
+
+        if (!!screenObjects) {
+          for (c = 0; c < screenObjects.length; c++) {
+            screenObject = screenObjects[c];
+            if (!!screenObject.upi) {
+              prop = getScreenObjectType(screenObject["Screen Object"]);
+              pRef = point["Point Refs"].filter(filterPointRefs);
+
+              pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+              if (!!pRef) {
+                screenObject.pointRefIndex = pRef.AppIndex;
+                // delete screenObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
+              }
+            }
+          }
+        }
+      };
+
+      setPointRefIndex(screenObjectsCollection);
+      cb();
+    },
+    makePointRef = function(refPoint, propName, propType) {
+      var pointType = refPoint["Point Type"].Value,
+        //pointRef.DevInst =
+        baseRef = {
+          "PropertyName": propName,
+          "PropertyEnum": propType,
+          "Value": refPoint._id,
+          "AppIndex": pRefAppIndex++,
+          "isDisplayable": true,
+          "isReadOnly": false,
+          "PointName": refPoint.Name,
+          "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+          "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+          "PointType": Config.Enums['Point Types'][pointType].enum || 0
+        };
+
+      return baseRef;
+    },
+    setDisplayPointData = function() {
+      var pushScreenObjectsUPIs = function(screenObjects) {
+        var screenObject,
+          prop;
+
+        if (!!screenObjects) {
+          for (c = 0; c < screenObjects.length; c++) {
+            screenObject = screenObjects[c];
+            prop = getScreenObjectType(screenObject["Screen Object"]);
+
+            if (!!screenObject.upi && screenObject.upi > 0) {
+              if (upiList.indexOf(screenObject.upi) === -1) {
+                upiList.push(screenObject.upi);
+              }
+
+              if (getCrossRefByUPIandName(screenObject.upi, prop.name).length === 0) {
+                upiCrossRef.push({
+                  upi: screenObject.upi,
+                  name: prop.name,
+                  type: prop.enum
+                });
+              }
+            }
+          }
+        }
+      };
+
+      pushScreenObjectsUPIs(screenObjectsCollection);
+
+      if (!!upiList && upiList.length > 0) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            _id: {
+              $in: upiList
+            }
+          }
+        }, function(err, points) {
+          var referencedPoint,
+            neededRefs,
+            i;
+          if (!!points) {
+            for (c = 0; c < points.length; c++) {
+              referencedPoint = points[c];
+              neededRefs = getCrossRefByUPI(referencedPoint._id); // all types of screen objects
+              for (i = 0; i < neededRefs.length; i++) {
+                point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].enum));
+              }
+            }
+          }
+          matchUpisToPointRefs();
+        });
+      } else {
+        cb();
+      }
+    };
+
+  setDisplayPointData();
+}
+
+function addReferencesToSequencePointRefs(point, cb) {
+  var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
+    dynamics = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.dynamic,
+    upiList = [],
+    upiCrossRef = [],
+    skipTypes = ['Constant'],
+    c,
+    pRefAppIndex = 1,
+    getCrossRefByUPIandName = function(upi, propertyName) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi && ref.PropertyName === propertyName;
+      });
+    },
+    getCrossRefByUPI = function(upi) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi;
+      });
+    },
+    matchUpisToPointRefs = function() {
+      var setPointRefIndex = function(gplObjects, propertyName) {
+        var gplObject;
+        var pRef;
+        var filterPointRefs = function(pointRef) {
+          return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
+        };
+
+        if (!!gplObjects) {
+          for (c = 0; c < gplObjects.length; c++) {
+            gplObject = gplObjects[c];
+            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+              if (!!gplObject.upi) {
+                pRef = point["Point Refs"].filter(filterPointRefs);
+
+                pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+                if (!!pRef) {
+                  gplObject.pointRefIndex = pRef.AppIndex;
+                  // delete gplObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
+                }
+              }
+            }
+          }
+        }
+      };
+
+      setPointRefIndex(blocks, "GPLBlock");
+      setPointRefIndex(dynamics, "GPLDynamic");
+      cb();
+    },
+
+    makePointRef = function(refPoint, propName, propType) {
+      var pointType = refPoint["Point Type"].Value;
+      var baseRef = {
+        "PropertyName": propName,
+        "PropertyEnum": propType,
+        "Value": refPoint._id,
+        "AppIndex": pRefAppIndex++,
+        "isDisplayable": true,
+        "isReadOnly": true,
+        "PointName": refPoint.Name,
+        "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+        "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+        "PointType": Config.Enums['Point Types'][pointType].enum || 0
+      };
+
+      return baseRef;
+    },
+    setGPLPointData = function() {
+      var pushGPLObjectUPIs = function(gplObjects, propName, propType) {
+        var gplObject;
+        if (!!gplObjects) {
+          for (c = 0; c < gplObjects.length; c++) {
+            gplObject = gplObjects[c];
+            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+              if (upiList.indexOf(gplObject.upi) === -1) {
+                upiList.push(gplObject.upi);
+              }
+
+              if (getCrossRefByUPIandName(gplObject.upi, propName).length === 0) {
+                upiCrossRef.push({
+                  upi: gplObject.upi,
+                  name: propName,
+                  type: propType
+                });
+              }
+            }
+          }
+        }
+      };
+
+      pushGPLObjectUPIs(blocks, "GPLBlock", 439);
+      pushGPLObjectUPIs(dynamics, "GPLDynamic", 440);
+
+      if (!!upiList && upiList.length > 0) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            _id: /*{
+              $in: upiList
+            }*/85161
+          }
+        }, function(err, points) {
+          var referencedPoint,
+            neededRefs,
+            i;
+          if (!!points) {
+            for (c = 0; c < points.length; c++) {
+              referencedPoint = points[c];
+              neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
+              console.log(pointneededRefs);
+              for (i = 0; i < neededRefs.length; i++) {
+                point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
+                logger.info(4, point["Point Refs"]);
+              }
+            }
+          }
+          matchUpisToPointRefs();
+        });
+      } else {
+        cb();
+      }
+    };
+
+  setGPLPointData();
+}
+
+function updateReferences(point, mainCallback) {
+
+  var uniquePID = function(pointRefs) {
+    var index = 0;
+    var prop;
+
+    async.forEachSeries(pointRefs, function(pointRef, cb) {
+      if (pointRef.Value !== 0) {
+        Utility.getOne({
+          collection: pointsCollection,
+          query: {
+            _id: pointRef.Value
+          }
+        }, function(err, refPoint) {
+          if (err)
+            return cb(err);
+
+          if (pointRef.PropertyName === 'GPLBlock') {
+            prop = index;
+          } else {
+            prop = pointRef.PropertyName;
+          }
+          prop = index;
+          refPoint = Config.EditChanges.applyUniquePIDLogic({
+            point: point,
+            refPoint: refPoint
+          }, prop);
+
+          index++;
+
+          cb(null);
+        });
+      } else {
+        cb(null);
+      }
+    }, function(err) {
+      mainCallback(err);
+    });
+  };
+  if (point["Point Refs"].length === 0) {
+
+    var properties = [],
+      pointTemplate = Config.Templates.getTemplate(point["Point Type"].Value);
+
+    for (var i = 0; i < pointTemplate["Point Refs"].length; i++) {
+      properties.push(pointTemplate["Point Refs"][i].PropertyName);
+    }
+
+    if (point["Point Type"].Value === "Slide Show") {
+      addReferencesToSlideShowPointRefs(point, function() {
+        uniquePID(point["Point Refs"]);
+      });
+    }
+    /*else if (point["Point Type"].Value === "Sensor") {
+
+      var pointRef = {
+        "PropertyName": "Sensor Point",
+        "PropertyEnum": 154,
+        "AppIndex": 0,
+        "isDisplayable": true,
+        "isReadOnly": false,
+        "Value": 0,
+        "PointName": "",
+        "PointType": 0,
+        "PointInst": 0,
+        "DevInst": 0
+      };
+
+      point["Point Refs"].push(pointRef);
+
+      uniquePID(point["Point Refs"]);
+
+    }*/
+    else if (point["Point Type"].Value === "Display") {
+      if (point["Screen Objects"] !== undefined) {
+        addReferencesToDisplayPointRefs(point, function() {
+          uniquePID(point["Point Refs"]);
+        });
+      } else {
+        point["Screen Objects"] = [];
+        /*db.collection(pointsCollection).update({
+            _id: point._id
+          }, {
+            $set: {
+              "Screen Objects": []
+            }
+          }, function(err, result) {*/
+        uniquePID(point["Point Refs"]);
+        //});
+      }
+    } else if (point["Point Type"].Value === "Program") {
+      async.waterfall([
+
+        function(wfcb) {
+          async.forEachSeries(properties, function(prop, callback) {
+
+            if (point[prop] !== null && (point[prop].ValueType === 8)) {
+
+              var propName = prop;
+              var propEnum = Config.Enums.Properties[prop].enum;
+              var appIndex = 0;
+
+              var pointRef = {
+                PropertyName: propName,
+                PropertyEnum: propEnum,
+                Value: point[prop].Value,
+                AppIndex: appIndex,
+                isDisplayable: point[prop].isDisplayable,
+                isReadOnly: point[prop].isReadOnly,
+                PointName: point[prop].PointName,
+                PointInst: point[prop].PointInst,
+                DevInst: point[prop].DevInst,
+                PointType: point[prop].PointType
+              };
+
+              point["Point Refs"].push(pointRef);
+              delete point[prop];
+              callback(null);
+
+            } else {
+              callback(null);
+            }
+          }, function(err) {
+            wfcb(err);
+          });
+        },
+        function(wfcb) {
+          var tempAppIndex = 0,
+            tempRefsArray = [],
+            index, appIndexes = {};
+
+          for (var i = 0; i < point["Point Registers"].length; i++) {
+            appIndexes[point["Point Registers"][i]] = [];
+          }
+
+          for (var prop in appIndexes) {
+            index = point["Point Registers"].indexOf(parseInt(prop, 10));
+            while (index !== -1) {
+              appIndexes[prop].push(index + 1);
+              index = point["Point Registers"].indexOf(parseInt(prop, 10), index + 1);
+            }
+          }
+
+          async.forEachSeries(point["Point Registers"], function(register, propCb) {
+            Utility.getOne({
+              collection: pointsCollection,
+              query: {
+                _id: register
+              }
+            }, function(err, registerPoint) {
+              if (err)
+                propCb(err);
+              var pointRef = {};
+
+              pointRef.PropertyEnum = Config.Enums.Properties["Point Register"].enum;
+              pointRef.PropertyName = "Point Register";
+              pointRef.isDisplayable = true;
+              pointRef.AppIndex = appIndexes[register].shift();
+              pointRef.isReadOnly = false;
+              pointRef.DevInst = (Config.Utility.getPropertyObject("Device Point", registerPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", registerPoint).Value : 0;
+
+              if (registerPoint !== null) {
+                pointRef.Value = registerPoint._id;
+                pointRef.PointName = registerPoint.Name;
+                pointRef.PointType = registerPoint["Point Type"].eValue;
+                pointRef.PointInst = (registerPoint._pStatus !== 2) ? registerPoint._id : 0;
+              } else {
+                pointRef.Value = 0;
+                pointRef.PointName = "";
+                pointRef.PointType = 0;
+                pointRef.PointInst = 0;
+              }
+              tempRefsArray.push(pointRef);
+              propCb(null);
+            });
+
+          }, function(err) {
+            tempRefsArray.sort(function(a, b) {
+              return (a.AppIndex > b.AppIndex) ? 1 : ((b.AppIndex > a.AppIndex) ? -1 : 0);
+            });
+            for (var a = 0; a < tempRefsArray.length; a++) {
+              point["Point Refs"].push(tempRefsArray[a]);
+            }
+            wfcb(err);
+          });
+        }
+      ], function(err) {
+        /*db.collection(pointsCollection).update({
+            _id: point._id
+          }, point, function(err, result) {*/
+        uniquePID(point["Point Refs"]);
+        //});
+      });
+
+    } else {
+
+      async.forEachSeries(properties, function(prop, callback) {
+        /*if (prop === "Sequence Device")
+          prop = "Device Point";*/
+
+        if (point[prop] !== null && (point[prop].ValueType === 8)) {
+          var propName = prop;
+          var propEnum = Config.Enums.Properties[prop].enum;
+          var appIndex = 0;
+
+          if ((prop === "Device Point" || prop === "Remote Unit Point") && point._parentUpi === 0)
+            point[prop].isReadOnly = false;
+
+          /*if (point["Point Type"].Value === "Sequence" && prop === "Device Point") {
+            propName = "Sequence Device";
+            propEnum = Config.Enums.Properties[propName].enum;
+          }*/
+
+          var pointRef = {
+            PropertyName: propName,
+            PropertyEnum: propEnum,
+            Value: point[prop].Value,
+            AppIndex: appIndex,
+            isDisplayable: point[prop].isDisplayable,
+            isReadOnly: point[prop].isReadOnly,
+            PointName: point[prop].PointName,
+            PointInst: point[prop].PointInst,
+            DevInst: point[prop].DevInst,
+            PointType: point[prop].PointType
+          };
+
+          //logger.info("pushing", pointRef);
+          point["Point Refs"].push(pointRef);
+          delete point[prop];
+          callback(null);
+
+        } else {
+          callback(null);
+        }
+      }, function(err) {
+        // compare size of point register's name array to the number of point registers in the points ref array and add any Value
+        /*db.collection(pointsCollection).update({
+            _id: point._id
+          }, point, function(err, result) {*/
+
+        if (point['Point Type'].Value === 'Sequence') {
+          addReferencesToSequencePointRefs(point, function() {
+            uniquePID(point["Point Refs"]);
+          });
+        } else {
+          uniquePID(point["Point Refs"]);
+        }
+        //});
+      });
+    }
+  } else {
+    uniquePID(point["Point Refs"]);
+  }
+}
+
+function updateDevices(point, callback) {
+  if (point["Point Type"].Value === "Device") {
+
+    point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
+    point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
+    point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
+    point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
+    point["Ethernet IP Port"].isReadOnly = true;
+
+    if (typeof point["Ethernet Address"].Value !== "string") {
+      point["Ethernet Address"].Value = "0.0.0.0";
+      point["Ethernet Address"].ValueType = 2;
+    }
+
+    utils.updateNetworkAndAddress(point);
+
+    point["Device Status"].Value = "Stop Scan";
+    point["Device Status"].eValue = 66;
+
+  } else if (point["Point Type"].Value === "Remote Unit") {
+    point["Device Address"].ValueType = 2;
+    point["Device Address"].Value = point["Device Address"].Value.toString();
+
+    point["Device Status"].Value = "Stop Scan";
+    point["Device Status"].eValue = 66;
+
+  }
+  callback(null);
+}
+
+function updateAlarmMessages(point, callback) {
+  //logger.info("updateAlarmMessages");
+  var alarmClasses = ["Emergency", "Critical"];
+  if (point.hasOwnProperty('Alarm Messages')) {
+    point['Notify Policies'] = [];
+  }
+
+  if (point["Alarm Class"] !== undefined && alarmClasses.indexOf(point["Alarm Class"].Value) !== -1) {
+
+    for (var i = 0; i < point["Alarm Messages"].length; i++) {
+      point["Alarm Messages"][i].ack = true;
+    }
+    /*db.collection(pointsCollection).update({
+      _id: point._id
+    }, {
+      $set: {
+        "Alarm Messages": point["Alarm Messages"]
+      }
+    }, function(err, result) {*/
+
+    callback(null);
+    //});
+  } else {
+    callback(null);
+  }
+}
+
+function addBroadcastPeriod(point, callback) {
+  if (point["Broadcast Enable"] !== undefined) {
+    point["Broadcast Period"] = {
+      "isDisplayable": point["Broadcast Enable"].Value,
+      "isReadOnly": false,
+      "ValueType": 13,
+      "Value": 15
+    };
+  }
+  callback(null);
+}
+
+function updateTrend(point, callback) {
+  if (point.hasOwnProperty('Trend Enable')) {
+    point["Trend Last Status"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Status"];
+    point["Trend Last Value"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Value"];
+  }
+  callback(null);
+}
+
+function rearrangeProperties(point, callback) {
+  var compare = function(a, b) {
+    var _a = a.toLowerCase();
+    var _b = b.toLowerCase();
+    if (_a === '_id') {
+      return -1;
+    } else if (_b === '_id') {
+      return 1;
+    }
+    if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
+      if (_a > _b) {
+        return -1;
+      } else if (a < _b) {
+        return 1;
+      }
+    } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
+      if (_a > _b) {
+        return 1;
+      } else if (a < _b) {
+        return -1;
+      }
+    } else if (_a.match(/^name|^_/)) {
+      return -1;
+    } else if (_b.match(/^name|^_/)) {
+      return 1;
+    }
+    return 0;
+  };
+  var arr = [];
+  var o = {};
+  for (var prop in point) {
+    arr.push(prop);
+  }
+  arr.sort(compare);
+  for (var i = 0; i < arr.length; i++) {
+    o[arr[i]] = point[arr[i]];
+  }
+  point = o;
+  callback(null);
+}
+
+function updateNameSegments(point, callback) {
+  //logger.info("updateNameSegments");
+  //var updObj = {};
+
+  point._name1 = point.name1.toLowerCase();
+  point._name2 = point.name2.toString().toLowerCase();
+  point._name3 = point.name3.toLowerCase();
+  point._name4 = point.name4.toLowerCase();
+  point._Name = point.Name.toLowerCase();
+  /*db.collection(pointsCollection).update({
+    _id: point._id
+  }, {
+    $set: updObj
+  }, function(err, result) {*/
+
+  // });
+  callback(null);
+}
+
+function updateSequences(point, callback) {
+  if (point['Point Type'].Value === 'Sequence') {
+    point._parentUpi = 0;
+  }
+  callback();
+}
+
+function updateTaglist(point, callback) {
+  for (var i = 0; i < point.taglist.length; i++) {
+    point.taglist[i] = point.taglist[i].toLowerCase();
+  }
+  callback();
+}
+
+function setUpCollections(callback) {
+  logger.info("setUpCollections");
+  setupAlarms(function(err) {
+    setUserGroups(function(err) {
+      setupHistoryData(function(err) {
+        setupVersions(function(err) {
+          callback();
+        });
+      });
+    });
+  });
+}
+
+function setupProgramPoints(callback) {
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Program"
+    },
+    updateObj: {
+      $set: {
+        /*"Boolean Register Names": [],
+        "Integer Register Names": [],
+        "Point Register Names": [],
+        "Real Register Names": [],*/
+        "Last Report Time": {
+          "isDisplayable": true,
+          "isReadOnly": true,
+          "ValueType": 11,
+          "Value": 0
+        }
+      }
+    },
+    options: {
+      multi: true
+    }
+  }, function(err, result) {
+    callback(err);
+  });
+}
+
+function updateAllProgramPoints(callback) {
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Script"
+    }
+  }, function(err, scripts) {
+    async.forEachSeries(scripts, function(script, cb) {
+      updateProgramPoints(script, function(err) {
+        if (err)
+          logger.info("updateProgramPoints", err);
+        cb(err);
+      });
+    }, function(err) {
+      callback(err);
+    });
+
+  });
 }
 
 function updateAllSensorPoints(callback) {
@@ -2776,8 +2728,7 @@ function setupVersions(callback) {
   }, callback);
 }
 
-function doGplImport(cb) {
-  console.log(xmlPath);
+function doGplImport(xmlPath, cb) {
   var fs = require('fs'),
     upiMap = {},
     count = 0,
@@ -2868,6 +2819,7 @@ function doGplImport(cb) {
     },
     complete = function(cb) {
       count++;
+      // logger.info('count:', count, 'max:', max);
       if (count === max) {
         logger.info('GPLIMPORT: complete');
         // socket.emit('gplImportComplete', {});
@@ -2883,6 +2835,7 @@ function doGplImport(cb) {
         c,
         upi,
         saveSequence = function() {
+          //logger.info('GPLIMPORT: saving sequence', name);
           Utility.getOne({
             collection: pointsCollection,
             query: {
@@ -2958,6 +2911,7 @@ function doGplImport(cb) {
           if (row) {
             upi = row.upi;
             label = row.label;
+
             Utility.update({
               collection: pointsCollection,
               query: {
@@ -3018,7 +2972,10 @@ function doGplImport(cb) {
       c,
       cleanup = function(str) {
         if (str.sequence['xd:Dynamics']) {
+          // logger.info('copying dynamics');
           str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
+          // logger.info(str.sequence['xd:Dynamics']['xd:Dynamic']);
+          // logger.info(str.sequence.dynamic);
           delete str.sequence['xd:Dynamics'];
         }
         var st = JSON.stringify(str);
@@ -3057,6 +3014,7 @@ function doGplImport(cb) {
           json = convertStrings(json);
 
           // json = convertSequence(json);
+          // logger.info('GPLIMPORT: sending', name, 'to update');
           update(json, newName, function() {
             c++;
             doNext();

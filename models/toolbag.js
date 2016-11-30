@@ -182,10 +182,7 @@ module.exports = {
 			"Program Change Requests": {
 				name: "ProgramRequest",
 				prepend: "pgr",
-				keyMap: {
-					"None": "Ready",
-					"Pause": "Halt"
-				},
+				keyMap: {},
 				extraKeys: {}
 			},
 			"Program States": {
@@ -199,6 +196,12 @@ module.exports = {
 			"Reset Intervals": {
 				name: "ResetInterval",
 				prepend: "ri",
+				keyMap: {},
+				extraKeys: {}
+			},
+			"Reset States": {
+				name: "ResetStates",
+				prepend: "rs",
 				keyMap: {},
 				extraKeys: {}
 			},

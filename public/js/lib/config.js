@@ -5050,7 +5050,7 @@ var Config = (function(obj) {
                     "=": 1
                 };
             }
-            for (i = 0; i <= 5; i++) {
+            for (i = 1; i <= 5; i++) {
                 obj.Utility.setupPropValueOptions(point["If Compare " + i], opts);
             }
             return point;
