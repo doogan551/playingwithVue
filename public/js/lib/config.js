@@ -3863,7 +3863,11 @@ var Config = (function(obj) {
                         }
                     } else if (modelType === "BACnet") {
                         setDisp(point, ["Instance", "Network Type"], true);
-                        point.Gateway.isDisplayable = ms5Dev;
+                        if (ms5Dev) {
+                            point.Gateway.isDisplayable = true;
+                        } else {
+                            point.Gateway.Value = false;
+                        }
                     }
                 }
             }
