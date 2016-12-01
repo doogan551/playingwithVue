@@ -2116,7 +2116,7 @@ var AlarmManager = function (conf) {
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
             
-            if (alarm.isSelected() && self.ackRequired(alarm)) {
+            if (alarm.isSelected() && self.ackRequired(alarm) && self.userHasPermissionToAck(alarm)) {
                 alarm.ackStatus(ACK_IN_PROGRESS);
                 updateAckStatus(alarm, self.alarms().name);
                 ackList.push(alarm._id);
