@@ -1527,7 +1527,7 @@
                 "enum": 35,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Default Active States"
+                "enumsSet": ""
             },
             "Alarms Off": {
                 "enum": 9,
@@ -1548,7 +1548,7 @@
                 "enum": 231,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Default Active States"
+                "enumsSet": ""
             },
             "Auxiliary Control Point": {
                 "enum": 423,

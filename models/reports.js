@@ -663,7 +663,7 @@ module.exports = Rpt = {
             };
 
         if (scheduled) {
-            Utility.get(scheduleCriteria, function(err, scheduleData, count) {
+            Utility.get(scheduleCriteria, function(err, scheduleData) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -682,7 +682,7 @@ module.exports = Rpt = {
             });
         } else {
 
-            Utility.get(reportCriteria, function(err, result, count) {
+            Utility.get(reportCriteria, function(err, result) {
                 if (err) {
                     return cb(err);
                 } else {
