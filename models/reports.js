@@ -687,6 +687,22 @@ module.exports = Rpt = {
                     handleResults();
                 }
             });
+            Utility.get(reportCriteria, function(err, result) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    result = result[0];
+                    if (result === null) {
+                        return cb();
+                    } else {
+                        reportResults.id = data.id;
+                        reportResults.point = JSON.stringify(result);
+                    }
+                    reportData = result;
+                    reportRequestComplete = true;
+                    handleResults();
+                }
+            });
         } else {
             Utility.getWithSecurity(reportCriteria, function(err, result) {
                 if (err) {
