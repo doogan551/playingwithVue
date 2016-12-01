@@ -1,12 +1,19 @@
+var fs = require('fs');
+
 var async = require('async');
 var moment = require('moment');
+var ObjectID = require('mongodb').ObjectID;
+var config = require('config');
+
 var Utility = require('../models/utility');
 var History = require('../models/history');
 var utils = require('../helpers/utils.js');
 var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
-var ObjectID = require('mongodb').ObjectID;
+var pageRender = require('../models/pagerender');
+var mailer = require('../models/mailer');
+
 
 module.exports = Rpt = {
 
@@ -1382,7 +1389,69 @@ module.exports = Rpt = {
         }, function(err) {
             return cb(err, points);
         });
+    },
+    scheduledReport: function(data, cb) {
+        var domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
+        var schedule = data.schedule;
+        var upi = schedule.upi;
+        var emails = [];
 
+        Utility.getOne({
+            collection: 'points',
+            query: {
+                _id: upi
+            },
+            fields: {
+                Name: 1
+            }
+        }, function(err, point) {
+
+            var reportName = point.Name;
+            var users = schedule.users.map(function(id) {
+                return ObjectID(id);
+            });
+            var date = moment().format('YYYYMMDDhhmm');
+            var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
+            var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
+            console.log(uri, path);
+            pageRender.renderPage(uri, path, function(err) {
+                console.log(1, err);
+                fs.readFile(path, function(err, data) {
+                    console.log(2, err);
+                    Utility.iterateCursor({
+                        collection: 'Users',
+                        query: {
+                            _id: {
+                                $in: users
+                            }
+                        }
+                    }, function(err, user, nextUser) {
+                        // figure out date/time
+                        emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                            return info.Type === 'Email';
+                        }).map(function(email) {
+                            return email.Value;
+                        }));
+
+                        nextUser();
+                    }, function(err, count) {
+                        emails = emails.concat(schedule.emails).join(',');
+                        mailer.sendEmail({
+                            to: emails,
+                            fromAccount: 'infoscan',
+                            subject: [reportName, ' for ', date].join(''),
+                            attachments: [{
+                                path: path,
+                                contentType: 'application/pdf',
+                                content: data
+                            }]
+                        }, function(err, info) {
+                            console.log(err, info);
+                        });
+                    });
+                });
+            });
+        });
     }
 };
 
