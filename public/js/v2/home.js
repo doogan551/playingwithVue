@@ -3610,6 +3610,15 @@ var dti = {
                                 method: 'hard'
                             });
                         },
+                        'Restore': function() {
+                            self.contextPoint = data;
+
+                            dti.socket.once('pointUpdated', self.processPointUpdate.bind(self));
+
+                            dti.socket.emit('restorePoint', {
+                                upi: data._id
+                            });
+                        },
                         'Clone': function () {
                             dti.windows.openWindow({
                                 url: '/api/points/newPoint/' + data._id,
@@ -3634,25 +3643,33 @@ var dti = {
                             name: 'Delete',
                             visible: function (key, opt) {
                                 var pStatus = ko.dataFor(this[0])._pStatus;
-                                return (pStatus === 0 || pStatus === 1);
+                                return (pStatus === 0);
                             }
-                                // icon: 'delete'
+                            // icon: 'delete'
                         },
                         'Destroy': {
                             name: 'Destroy',
                             visible: function (key, opt) {
                                 var pStatus = ko.dataFor(this[0])._pStatus;
-                                return (pStatus === 2);
+                                return (pStatus === 1 || pStatus === 2);  // inactive or deleted
                             }
                             // icon: 'delete'
+                        },
+                        'Restore': {
+                            name: 'Restore',
+                            visible: function (key, opt) {
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 2);
+                            }
+                            // icon: 'restore'
                         },
                         'Clone': {
                             name: 'Clone',
                             visible: function (key, opt) {
-                                // var data = ko.dataFor(this[0]);
+                                //var pStatus = ko.dataFor(this[0])._pStatus;
                                 return true;
                             }
-                                // icon: 'copy'
+                            // icon: 'copy'
                         }
                     },
                     events: {
