@@ -505,9 +505,6 @@
             },
             "SCADA IO": {
                 "enum": 21
-            },
-            "None": {
-                "enum": 256
             }
         },
         "Device Ports": {
@@ -1021,9 +1018,6 @@
             },
             "ASE Remote Unit": {
                 "enum": 19
-            },
-            "None": {
-                "enum": 256
             }
         },
         "Report Intervals": {
@@ -3823,8 +3817,8 @@
             "_relDevice": 0,
             "_relRMU": 0,
             "_relPoint": 0,
-            "_devModel": 256,
-            "_rmuModel": 256,
+            "_devModel": 0,
+            "_rmuModel": 0,
             "_cfgDevice": false,
             "_forceAllCOV": false,
             "_parentUpi": 0,
@@ -4106,8 +4100,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
-                    "eValue": 256
+                    "Value": "Unknown",
+                    "eValue": 0
                 },
                 "Network Segment": {
                     "isDisplayable": true,
@@ -4486,8 +4480,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
-                    "eValue": 256
+                    "Value": "Unknown",
+                    "eValue": 0
                 },
                 "Network Segment": {
                     "isDisplayable": false,
