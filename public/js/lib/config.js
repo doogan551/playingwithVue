@@ -3926,19 +3926,17 @@ var Config = (function(obj) {
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
                 setValOpt = obj.Utility.setupPropValueOptions,
                 setCh = obj.Utility.setChannelOptions,
+                setDisp = obj.Utility.setPropsDisplayable,
                 inType = point["Input Type"],
                 ch = point.Channel,
                 sensorPoint = obj.Utility.getPropertyObject("Sensor Point", point);
 
-            obj.Utility.setPropsDisplayable(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function"], false);
+            setDisp(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        point["Poll Function"].isDisplayable = true;
-                        point["Poll Register"].isDisplayable = true;
-                        point["Modbus Order"].isDisplayable = true;
-                        point["Poll Data Type"].isDisplayable = true;
+                        setDisp(point, ["Poll Function", "Poll Register", "Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["Liebert"]["enum"]:
@@ -3948,8 +3946,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        point["Modbus Order"].isDisplayable = true;
-                        point["Poll Data Type"].isDisplayable = true;
+                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4103,18 +4100,16 @@ var Config = (function(obj) {
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
                 setValOpt = obj.Utility.setupPropValueOptions,
                 setCh = obj.Utility.setChannelOptions,
+                setDisp = obj.Utility.setPropsDisplayable,
                 ch = point.Channel,
                 type = point["Input Type"];
 
-            obj.Utility.setPropsDisplayable(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Supervised Input"], false);
+            setDisp(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Supervised Input"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        point["Poll Function"].isDisplayable = true;
-                        point["Poll Register"].isDisplayable = true;
-                        point["Modbus Order"].isDisplayable = true;
-                        point["Poll Data Type"].isDisplayable = true;
+                        setDisp(point, ["Poll Function", "Poll Register", "Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["Liebert"]["enum"]:
@@ -4124,8 +4119,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        point["Modbus Order"].isDisplayable = true;
-                        point["Poll Data Type"].isDisplayable = true;
+                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
