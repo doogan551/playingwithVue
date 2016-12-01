@@ -670,7 +670,7 @@ module.exports = Rpt = {
             };
 
         if (scheduled) {
-            Utility.get(scheduleCriteria, function(err, scheduleData) {
+            Utility.getWithSecurity(scheduleCriteria, function(err, scheduleData) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -688,8 +688,7 @@ module.exports = Rpt = {
                 }
             });
         } else {
-
-            Utility.get(reportCriteria, function(err, result) {
+            Utility.getWithSecurity(reportCriteria, function(err, result) {
                 if (err) {
                     return cb(err);
                 } else {
