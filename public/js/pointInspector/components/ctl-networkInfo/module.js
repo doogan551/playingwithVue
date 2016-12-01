@@ -44,7 +44,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         self.errorText = ko.observable('');
         self.isInitialized = ko.observable(false);
 
-        self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'MAC Address']);
+        self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Gateway', 'Read Property Only', 'No Priority Array', 'MAC Address']);
         self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
         self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
 
@@ -177,6 +177,13 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 };
             };
             this['Change Count'] = function() {
+                this.val = ko.observable(-1);
+                this.Value = function() {
+                    var val = this.val();
+                    return val;
+                };
+            };
+            this.Gateway = function() {
                 this.val = ko.observable(-1);
                 this.Value = function() {
                     var val = this.val();
