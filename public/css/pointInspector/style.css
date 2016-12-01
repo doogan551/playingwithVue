@@ -1472,6 +1472,7 @@ div.scheduleBox {
 .deviceheaders .vendorID,
 .deviceheaders .apduLength,
 .deviceheaders .changeCount,
+.deviceheaders .gateway,
 .deviceheaders .noPriority {
     width: 60px;
 }
