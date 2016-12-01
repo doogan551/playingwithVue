@@ -1,10 +1,13 @@
 var async = require('async');
-var Utility = require('../models/utility');
 var ObjectID = require('mongodb').ObjectID;
+
+var Utility = require('../models/utility');
+var Reports = require('../models/reports');
+
 var self;
 
 module.exports = self = {
-    getSchedules: function (data, callback) {
+    getSchedules: function(data, callback) {
         // data = {
         //     user: user,
         //     upi: int
@@ -26,15 +29,15 @@ module.exports = self = {
         // }
 
         var criteria = {
-                collection: 'Schedules',
-                query: {
-                    upi: data.upi
-                }
-            };
+            collection: 'Schedules',
+            query: {
+                upi: data.upi
+            }
+        };
 
         Utility.get(criteria, callback);
     },
-    saveSchedules: function (data, callback) {
+    saveSchedules: function(data, callback) {
         // data = {
         //     user: user,
         //     schedules: [] (array of schedule objects)
@@ -43,13 +46,13 @@ module.exports = self = {
                 collection: 'Schedules',
                 query: {}
             },
-            getOldSchedule = function (idata, cb) { // idata...'data' was already taken =/
+            getOldSchedule = function(idata, cb) { // idata...'data' was already taken =/
                 if (idata.schedule._id) { // If this is an existing point
                     idata.schedule._id = ObjectID(idata.schedule._id);
                     criteria.query._id = idata.schedule._id;
 
                     if (!idata.schedule.deleteMe) {
-                        Utility.get(criteria, function (err, oldSchedule) {
+                        Utility.get(criteria, function(err, oldSchedule) {
                             idata.oldSchedule = oldSchedule;
                             cb(err, idata);
                         });
@@ -59,7 +62,7 @@ module.exports = self = {
 
                 cb(null, idata);
             },
-            doSave = function (idata, cb) {
+            doSave = function(idata, cb) {
                 var fn;
 
                 if (idata.schedule.deleteMe) {
@@ -71,11 +74,11 @@ module.exports = self = {
                     fn = 'insert';
                     criteria.insertObj = idata.schedule;
                 }
-                Utility[fn](criteria, function (err) {
+                Utility[fn](criteria, function(err) {
                     cb(err, idata);
                 });
             },
-            doCronMaintenance = function (idata, cb) {
+            doCronMaintenance = function(idata, cb) {
                 var createCron = false,
                     deleteCron = false,
                     modifyCron = false;
@@ -104,25 +107,29 @@ module.exports = self = {
 
                 cb(null, idata);
             },
-            processSchedule = function (schedule, cb) {
-                var start = function (cb) {
-                        cb(null, {
-                            schedule: schedule
-                        });
-                    };
+            processSchedule = function(schedule, cb) {
+                var start = function(cb) {
+                    cb(null, {
+                        schedule: schedule
+                    });
+                };
 
                 async.waterfall([start, getOldSchedule, doSave, doCronMaintenance], cb);
             };
 
         async.eachSeries(data.schedules, processSchedule, callback);
     },
-    runSchedule: function (data, callback) {
+    runSchedule: function(data, callback) {
         // data = {
         //     user: user,
         //     schedule: {} (schedule object)
         // }
 
-        // TODO
-        callback(null);
+        switch (data.schedule.type) {
+            case 1:
+                return Reports.scheduledReport(data, callback);
+            default:
+                return callback();
+        }
     }
 };
