@@ -6067,8 +6067,10 @@ var reportsViewModel = function () {
             );
         },
         init: function () {
-            self.scheduler.getScheduleEntries();
-            self.scheduler.getUsers();
+            if (!scheduled) {
+                self.scheduler.getScheduleEntries();
+                self.scheduler.getUsers();
+            }
         }
     };
 
