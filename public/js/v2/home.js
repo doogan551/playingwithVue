@@ -3591,15 +3591,23 @@ var dti = {
                     data = ko.dataFor($target[0]),
                     actions = {
                         'Delete': function() {
-                            var method = data._pStatus === 1 ? 'hard' : 'soft';
-
                             self.contextPoint = data;
 
                             dti.socket.once('pointUpdated', self.processPointUpdate.bind(self));
 
                             dti.socket.emit('deletePoint', {
                                 upi: data._id,
-                                method: method
+                                method: 'soft'
+                            });
+                        },
+                        'Destroy': function() {
+                            self.contextPoint = data;
+
+                            dti.socket.once('pointUpdated', self.processPointUpdate.bind(self));
+
+                            dti.socket.emit('deletePoint', {
+                                upi: data._id,
+                                method: 'hard'
                             });
                         },
                         'Clone': function () {
@@ -3623,11 +3631,27 @@ var dti = {
                     //callback:
                     items: {
                         'Delete': {
-                            name: 'Delete'
+                            name: 'Delete',
+                            visible: function (key, opt) {
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 0 || pStatus === 1);
+                            }
                                 // icon: 'delete'
                         },
+                        'Destroy': {
+                            name: 'Destroy',
+                            visible: function (key, opt) {
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 2);
+                            }
+                            // icon: 'delete'
+                        },
                         'Clone': {
-                            name: 'Clone'
+                            name: 'Clone',
+                            visible: function (key, opt) {
+                                // var data = ko.dataFor(this[0]);
+                                return true;
+                            }
                                 // icon: 'copy'
                         }
                     },

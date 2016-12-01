@@ -2457,6 +2457,14 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     answer = key;
                 }
             }
+        } else if (self.icons) {
+            for (key in self.icons) {
+                if (self.icons[key] === currIconName) {
+                    answer = key;
+                }
+            }
+        } else {
+            answer = self.blockType;
         }
 
         return answer;
@@ -2475,7 +2483,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             self.blockType = (self.icons && self.icons[calcType] ? self.icons[calcType] : self.blockType);
         } else {
             if (calcType) {
-                self.config.iconType = calcType;
+                self.config.iconType = (self.icons && self.icons[calcType] ? self.icons[calcType] : calcType);
 
                 if (self.iconPrefix && calcType.indexOf("DigLogic") === -1) {
                     self.config.iconType = self.iconPrefix + calcType;
@@ -2483,6 +2491,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                 self.blockType = (self.iconMatrix ? self.iconMatrix[calcType] : self.config.iconType);
                 self.icon = self.config.iconType + self.iconExtension;
+                self.iconType = self.config.iconType
             }
         }
 
@@ -6500,7 +6509,7 @@ gpl.BlockManager = function (manager) {
                     upi: upi,
                     options: {
                         callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        point: (gpl.isEdit ? pointData : null) || null
+                        pointData: (gpl.isEdit ? pointData : null) || null
                     }
                 });
             };
@@ -7418,6 +7427,7 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
+                var calcType;
                 if (obj === false) {
                     log('New Point canceled, deleting block');
                     gpl.fire('deleteblock', block, true);
@@ -7449,10 +7459,12 @@ gpl.Manager = function () {
                 block.formatPointFromData(obj, obj, 'Device Point', gpl.devicePoint);
                 obj = block.getPointData();
 
-                if (obj['Calculation Type'] && block.iconMatrix) {
-                    obj['Calculation Type'].Value = block.getIconKey();
-                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.getIconKey()];
+                if (obj['Calculation Type']) {
+                    calcType = block.getIconKey();
+                    obj['Calculation Type'].Value = calcType;
+                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[calcType];
                     // block.formatPointFromData(obj, obj, 'Calculation Type');
+                    block.setIconType(calcType, {});
                 }
 
                 block.setPointData(obj, true);
