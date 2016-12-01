@@ -187,7 +187,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.val = ko.observable(-1);
                 this.Value = function() {
                     var val = this.val();
-                    return val;
+                    return (!!val) ? 'Yes' : 'No';
                 };
             };
             this['Read Property Only'] = function() {
