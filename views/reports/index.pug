@@ -620,7 +620,9 @@ html.direports
                             select#selectInterval(data-bind='options: selectedReportRange().intervals, value: selectedReportIntervalPeriod')
                 .chips
             .modal-footer
-                a.btn.waves-effect.blue-grey(data-bind="click: update") Update
+                a.btn.waves-effect.blue-grey(data-bind="click: update")
+                    span(data-bind="visible: isNew") Add
+                    span(data-bind="visible: !isNew") Update
                 a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
                 a.btn.wafes-effect.red.darken-4.left(data-bind="visible: !isNew, click: deleteScheduleEntry") Delete
 
