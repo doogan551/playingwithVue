@@ -4535,7 +4535,7 @@ var reportsViewModel = function () {
                         // console.log("------ ALL DONE ------  (I think)  ");
                     }
 
-                    dataIndex.columnStopIdx = (columnsArray.length - 1);
+                    dataIndex.columnStopIdx = (columnsArray.length);
                     dataIndex.rowStopIdx = (reportData.length - 1);
                 },
                 nextPageHasData = function () {
@@ -4686,7 +4686,7 @@ var reportsViewModel = function () {
 
             if (reportData !== undefined) {
                 dataIndex.columnStartIdx = 1;  // set indexes to full data set
-                dataIndex.columnStopIdx = (columnsArray.length - 1);
+                dataIndex.columnStopIdx = (columnsArray.length);
                 dataIndex.rowStartIdx = 0;
                 dataIndex.rowStopIdx = (reportData.length - 1);
 
