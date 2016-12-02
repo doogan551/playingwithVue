@@ -4974,7 +4974,7 @@ var reportsViewModel = function () {
         saveManager = (function () {
             var remainingResponses = 0,
                 errList = [],
-                _pStatus,
+                reportpStatusBeforeSave,
                 submitSaveReportRequest = function (errors) {
                     if (!!errors) {
                         itemFinished(errors);
@@ -4991,7 +4991,7 @@ var reportsViewModel = function () {
                     }
                 },
                 doSave = function () {
-                    _pStatus = point._pStatus;
+                    reportpStatusBeforeSave = point._pStatus;
 
                     self.activeSaveRequest(true);
 
@@ -5006,14 +5006,14 @@ var reportsViewModel = function () {
                     remainingResponses++;
                     setReportConfig(submitSaveReportRequest);
 
-                    if (_pStatus === 0) { // If report point status is Active
+                    if (reportpStatusBeforeSave === 0) { // If report point status is Active
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished); // Save schedule entries
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
                     var err = result.err;
-                    if (_pStatus === 1 && !err) { // If report point status was previously inactive & it saved without error
+                    if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
                     }
