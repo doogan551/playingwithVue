@@ -750,6 +750,24 @@ var Config = (function(obj) {
             }
         },
 
+        setModbusPropsDisp: function(point) {
+            var props = ["Control Data Type", "Control Function", "Control Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value"];
+
+            point["Poll Register"].isDisplayable = true;
+            point["Poll Data Type"].isDisplayable = true;
+            if (obj.Utility.checkMicroScan5Device(point)) {
+                point["Modbus Order"].isDisplayable = true;
+            }
+            if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"]) {
+                point["Poll Function"].isDisplayable = true;
+                props.forEach(function(prop) {
+                    if (point.hasOwnProperty(prop)) {
+                        point[prop].isDisplayable = true;
+                    }
+                });
+            }
+        },
+
         checkValueOptions: function(prop) {
             var opts = prop.ValueOptions,
                 key = Object.keys(opts)[0],
@@ -3936,9 +3954,6 @@ var Config = (function(obj) {
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Poll Function", "Poll Register", "Modbus Order", "Poll Data Type"], true);
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -3946,10 +3961,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4112,9 +4124,6 @@ var Config = (function(obj) {
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Poll Function", "Poll Register", "Modbus Order", "Poll Data Type"], true);
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -4122,10 +4131,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4373,9 +4379,6 @@ var Config = (function(obj) {
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -4383,10 +4386,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4553,13 +4553,6 @@ var Config = (function(obj) {
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value"], true);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Point": 3
-                        });
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -4567,10 +4560,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         setValOpt(fbType, {
                             "None": 0,
                             "Point": 3
@@ -4774,9 +4764,6 @@ var Config = (function(obj) {
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -4784,10 +4771,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4822,14 +4806,11 @@ var Config = (function(obj) {
                 setCh = obj.Utility.setChannelOptions,
                 ch = point.Channel;
 
-            setDisp(point, ["Pulse Weight", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Fast Pulse", "Rate Period"], false);
+            setDisp(point, ["Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Fast Pulse", "Rate Period"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function"], true);
-                        break;
-
                     case eRmu["Liebert"]["enum"]:
                     case eRmu["Sierra Steam Meter"]["enum"]:
                     case eRmu["Siemens Power Meter"]["enum"]:
@@ -4837,14 +4818,11 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Poll Data Type", "Poll Register"], true);
-                        if (obj.Utility.checkMicroScan5Device(point)) {
-                            point["Modbus Order"].isDisplayable = true;
-                        }
+                        obj.Utility.setModbusPropsDisp(point);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Instance"], true);
+                        point.Instance.isDisplayable = true;
                         if (obj.Utility.checkMicroScan5Device(point)) {
                             point["Read Only"].isDisplayable = true;
                         }
@@ -4853,36 +4831,34 @@ var Config = (function(obj) {
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Rate Period"], true);
+                        point["Rate Period"].isDisplayable = true;
                         setCh(ch, 0, 7);
                         break;
 
                     case eRmu["N2 Device"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Instance"], true);
+                        point.Instance.isDisplayable = true;
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
-                        point["Pulse Weight"].isDisplayable = true;
                         setCh(ch, 0, 15);
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
-                        point["Pulse Weight"].isDisplayable = true;
                         setCh(ch, 0, 7);
                         break;
 
                     default: // Unknown, no RMU
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
-                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
                                 setCh(ch, 1, 16);
                                 break;
                             case eDev["SCADA Vio"]["enum"]:
-                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
                                 setCh(ch, 6, 9);
                                 break;
                             case eDev["SCADA IO"]["enum"]:
-                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
                                 setValOpt(ch, {
                                     "I/O 1": 1,
                                     "I/O 2": 2,
@@ -4895,11 +4871,11 @@ var Config = (function(obj) {
                                 });
                                 break;
                             case eDev["MicroScan 4 UNV"]["enum"]:
-                                setDisp(point, ["Pulse Weight", "Channel", "Rate Period"], true);
+                                setDisp(point, ["Channel", "Rate Period"], true);
                                 setCh(ch, 1, 16);
                                 break;
                             default: // MicroScan 4 Digital
-                                setDisp(point, ["Pulse Weight", "Channel", "Rate Period"], true);
+                                setDisp(point, ["Channel", "Rate Period"], true);
                                 setCh(ch, 1, 32);
                                 break;
                         }
