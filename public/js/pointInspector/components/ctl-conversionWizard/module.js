@@ -30,7 +30,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     })
                     .done(function(response) {
                         self.rtdRanges(response);
-                        for(var prop in response){
+                        for (var prop in response) {
                             console.log(prop);
                         }
                     });
@@ -134,7 +134,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 enum: 2,
                 option: "100 Ohm 385 Platinum RTD",
                 visible: ko.observable(true)
-            },{
+            }, {
                 enum: 3,
                 option: "JCI AB99",
                 visible: ko.observable(true)
@@ -764,18 +764,22 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.updatePoint = function() {
             self.data["Conversion Coefficient 1"].Value((self.conversionCoef1() !== undefined) ? self.conversionCoef1() : 0);
             self.data["Conversion Coefficient 2"].Value((self.conversionCoef2() !== undefined) ? self.conversionCoef2() : 0);
-            self.data["Conversion Coefficient 3"].Value((self.conversionCoef3() !== undefined) ? self.conversionCoef3() : 0);
-            self.data["Conversion Coefficient 4"].Value((self.conversionCoef4() !== undefined) ? self.conversionCoef4() : 0);
             self.data["Conversion Coefficient 1"].isDisplayable(true);
             self.data["Conversion Coefficient 2"].isDisplayable(true);
-            self.data["Conversion Coefficient 3"].isDisplayable(false);
-            self.data["Conversion Coefficient 4"].isDisplayable(false);
             self.data["Conversion Coefficient 1"].isReadOnly(true);
             self.data["Conversion Coefficient 2"].isReadOnly(true);
-            self.data["Conversion Coefficient 3"].isReadOnly(true);
-            self.data["Conversion Coefficient 4"].isReadOnly(true);
-            self.data["Conversion Type"].Value(_newConversionType);
-            self.data["Conversion Type"].eValue(self.enums["Conversion Types"][_newConversionType].enum);
+
+            if (self.data["Point Type"].Value() !== 'Analog Output') {
+                self.data["Conversion Coefficient 3"].Value((self.conversionCoef3() !== undefined) ? self.conversionCoef3() : 0);
+                self.data["Conversion Coefficient 4"].Value((self.conversionCoef4() !== undefined) ? self.conversionCoef4() : 0);
+                self.data["Conversion Coefficient 3"].isDisplayable(false);
+                self.data["Conversion Coefficient 4"].isDisplayable(false);
+                self.data["Conversion Coefficient 3"].isReadOnly(true);
+                self.data["Conversion Coefficient 4"].isReadOnly(true);
+                self.data["Conversion Type"].Value(_newConversionType);
+                self.data["Conversion Type"].eValue(self.enums["Conversion Types"][_newConversionType].enum);
+            }
+
             if (["Analog Input", "Analog Output"].indexOf(self.data["Point Type"].Value()) === -1) {
                 self.data["Duct Area"].Value(self.ductAreaValue());
                 self.data["Maximum Sensor Value"].Value(self.maxSensorValue());
@@ -834,19 +838,25 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 case 7:
                 case 8:
                 case 9:
-                    self.data["Conversion Type"].isDisplayable(false);
-                    self.data["Conversion Coefficient 3"].isDisplayable(false);
-                    self.data["Conversion Coefficient 4"].isDisplayable(false);
+                    if (self.data["Point Type"].Value() !== 'Analog Output') {
+                        self.data["Conversion Type"].isDisplayable(false);
+                        self.data["Conversion Coefficient 3"].isDisplayable(false);
+                        self.data["Conversion Coefficient 4"].isDisplayable(false);
+                    }
                     break;
                 case 4:
-                    self.data["Conversion Type"].isDisplayable(false);
-                    self.data["Conversion Coefficient 3"].isDisplayable(true);
-                    self.data["Conversion Coefficient 4"].isDisplayable(false);
+                    if (self.data["Point Type"].Value() !== 'Analog Output') {
+                        self.data["Conversion Type"].isDisplayable(false);
+                        self.data["Conversion Coefficient 3"].isDisplayable(true);
+                        self.data["Conversion Coefficient 4"].isDisplayable(false);
+                    }
                     break;
                 case 5:
-                    self.data["Conversion Type"].isDisplayable(false);
-                    self.data["Conversion Coefficient 3"].isDisplayable(true);
-                    self.data["Conversion Coefficient 4"].isDisplayable(true);
+                    if (self.data["Point Type"].Value() !== 'Analog Output') {
+                        self.data["Conversion Type"].isDisplayable(false);
+                        self.data["Conversion Coefficient 3"].isDisplayable(true);
+                        self.data["Conversion Coefficient 4"].isDisplayable(true);
+                    }
                     break;
             }
         };
