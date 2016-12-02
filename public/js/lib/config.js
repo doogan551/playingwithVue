@@ -3946,7 +3946,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Poll Register", "Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4119,7 +4119,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Poll Register", "Modbus Order", "Poll Data Type"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4352,6 +4352,7 @@ var Config = (function(obj) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setDisp = obj.Utility.setPropsDisplayable,
                 setValOpt = obj.Utility.setupPropValueOptions,
                 opts = {
                     "Analog": 0,
@@ -4361,12 +4362,12 @@ var Config = (function(obj) {
                 outType = point["Output Type"],
                 sensorPoint = obj.Utility.getPropertyObject("Sensor Point", point);
 
-            obj.Utility.setPropsDisplayable(point, ["Instance", "Read Only", "Output Type", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register", "Open Channel", "Channel", "Close Channel", "Polarity"], false);
+            setDisp(point, ["Instance", "Read Only", "Output Type", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register", "Open Channel", "Channel", "Close Channel", "Polarity"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
                     case eRmu["Programmable Modbus"]["enum"]:
-                        obj.Utility.setPropsDisplayable(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
                         break;
 
                     case eRmu["Liebert"]["enum"]:
@@ -4376,8 +4377,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        point["Modbus Order"].isDisplayable = true;
-                        point["Poll Data Type"].isDisplayable = true;
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4448,12 +4448,8 @@ var Config = (function(obj) {
                 }
                 if (point.Instance.isDisplayable) {
                     sensorPoint.isDisplayable = false;
-                    point["Conversion Coefficient 1"].isDisplayable = false;
-                    point["Conversion Coefficient 2"].isDisplayable = false;
                 } else {
                     sensorPoint.isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
                     if (sensorPoint.PointInst !== 0) {
                         point["Conversion Coefficient 1"].isReadOnly = true;
                         point["Conversion Coefficient 2"].isReadOnly = true;
@@ -4465,6 +4461,7 @@ var Config = (function(obj) {
                         obj.EditChanges.applyAnalogOutputOutputType(data);
                     }
                 }
+                setDisp(point, ["Conversion Coefficient 1", "Conversion Coefficient 2"], sensorPoint.isDisplayable);
             }
             return point;
         },
@@ -4561,7 +4558,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
                         setValOpt(fbType, {
                             "None": 0,
                             "Point": 3
@@ -4775,7 +4772,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4825,7 +4822,7 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Data Type", "Poll Register"], true);
                         break;
 
                     case eRmu["BACnet"]["enum"]:
