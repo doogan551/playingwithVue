@@ -3946,7 +3946,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4119,7 +4122,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Poll Register", "Modbus Order", "Poll Data Type"], true);
+                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4377,7 +4383,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
+                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4558,7 +4567,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
+                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         setValOpt(fbType, {
                             "None": 0,
                             "Point": 3
@@ -4772,7 +4784,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Register"], true);
+                        setDisp(point, ["Poll Register", "Poll Data Type"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         break;
 
                     case eRmu["BACnet"]["enum"]:
@@ -4822,7 +4837,10 @@ var Config = (function(obj) {
                     case eRmu["PowerLogic 3000 Meter"]["enum"]:
                     case eRmu["Generic Modbus"]["enum"]:
                     case eRmu["PowerTraks 9000"]["enum"]:
-                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Data Type", "Poll Register"], true);
+                        setDisp(point, ["Pulse Weight", "Poll Data Type", "Poll Register"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Modbus Order"].isDisplayable = true;
+                        }
                         break;
 
                     case eRmu["BACnet"]["enum"]:
