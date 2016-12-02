@@ -718,16 +718,16 @@
             }
         },
         "Modbus Orders": {
-            "None": {
+            "Swap None": {
                 "enum": 0
             },
-            "Registers": {
+            "Swap Registers": {
                 "enum": 1
             },
-            "Bytes": {
+            "Swap Bytes": {
                 "enum": 2
             },
-            "Both": {
+            "Swap Both": {
                 "enum": 3
             }
         },
