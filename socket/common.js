@@ -306,7 +306,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Value":
                 var propName = "";
 
-                if (!_.isEqual(newPoint[prop].ValueOptions, oldPoint[prop].valueOptions)) {
+                if (!_.isEqual(newPoint[prop].ValueOptions, oldPoint[prop].ValueOptions)) {
                   updateReferences = true;
                   propName = "Value.ValueOptions";
                   updateObject[propName] = newPoint[prop].ValueOptions;
