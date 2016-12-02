@@ -99,7 +99,7 @@ module.exports = Rpt = {
             },
             updateObj: {
                 $set: {
-                    _pStatus: (!!data._pStatus ? data._pStatus : 1),
+                    _pStatus: (!!data._pStatus ? data._pStatus : 0),
                     name1: data.name1,
                     name2: data.name2,
                     name3: data.name3,
