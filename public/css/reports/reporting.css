@@ -698,6 +698,13 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 35px;
     padding: 6px 2px;
 }
+a.btn.dropdown-button {
+    text-transform: none;
+}
+a.btn.dropdown-button.propertySelect {
+    padding: 0px 0px 0px 0px !important;
+    width: 240px;
+}
 .precision {
     width: 60px;
 }
