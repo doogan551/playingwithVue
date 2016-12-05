@@ -5665,7 +5665,6 @@ gpl.BlockManager = function (manager) {
             },
             updatePoint: function () {
                 var label = bmSelf.bindings.editPointLabel(),
-                    // labelId,
                     showValue = bmSelf.bindings.editPointShowValue(),
                     showLabel = bmSelf.bindings.editPointShowLabel(),
                     props = {
@@ -5749,17 +5748,14 @@ gpl.BlockManager = function (manager) {
                     editBlock.setValue(+bmSelf.bindings.editPointValue());
                 }
 
-                editBlock.setLabel(bmSelf.bindings.editPointLabel());
+                editBlock.setLabel(label);
 
-                // if(editBlock.isNonPoint === true && editBlock.referenceType !== 'External' && editBlock.blockType !== 'Constant') {
-                //     labelId = bmSelf.bindings.selectedReference();
-                //     label = bmSelf.getBlock(labelId).label;
-
-                //     if(label !== editBlock.label) {
-                //         editBlock.setLabel(label);
-                //         bmSelf.bindings.editPointLabel(label);
-                //     }
-                // }
+                if (!!props[editBlock.blockType.toLowerCase()]) {
+                    gpl.forEachArray(newReferences, function (ref, c) {
+                        ref.block.setLabel(label);  // sync up related labels
+                        ref.block.setShowLabel(true);
+                    });
+                }
 
                 editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
                 editBlock.setPlaceholderText();
