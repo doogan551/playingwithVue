@@ -93,7 +93,15 @@ var gpl = {
             sequenceData: {
                 sequence: gpl.json
             },
-            pointRefs: gpl.point['Point Refs']
+            pointRefs: gpl.point['Point Refs'],
+            point: {
+                name1: gpl.point.name1,
+                name2: gpl.point.name2,
+                name3: gpl.point.name3,
+                name4: gpl.point.name4,
+                "Point Type": gpl.point["Point Type"],
+                upi: gpl.upi
+            }
         });
     },
     isCyclic: function (obj) {
