@@ -99,6 +99,7 @@ var gpl = {
                 name2: gpl.point.name2,
                 name3: gpl.point.name3,
                 name4: gpl.point.name4,
+                Name: gpl.point.Name,
                 "Point Type": gpl.point["Point Type"],
                 upi: gpl.upi
             }
