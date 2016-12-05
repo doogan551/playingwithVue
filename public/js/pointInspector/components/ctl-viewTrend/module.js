@@ -1,5 +1,5 @@
 /*jslint white: true*/
-define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.html'], function(ko, moment, bootstrap, datetimepicker, view) {
+define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko, moment, datetimepicker, view) {
     var ASC = -1,
         DESC = 1,
         $sortIcon,
@@ -78,7 +78,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         self.errorText = ko.observable('');
         self.reButton = ko.observable('');
         self.reqType = ko.observable('');
-        self.startTime = ko.observable(Math.floor(Date.now() / 1000));
+        self.startTime = ko.observable(Math.ceil(Date.now() / 1000));
         self.page = ko.observable(0);
         self.lastPage = ko.observable(0);
         self.direction = ko.observable('next');

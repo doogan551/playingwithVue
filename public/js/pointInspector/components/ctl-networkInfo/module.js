@@ -1,5 +1,5 @@
 /*jslint white: true*/
-define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstrap, view) {
+define(['knockout', 'text!./view.html'], function(ko, view) {
     var ASC = -1,
         DESC = 1;
 

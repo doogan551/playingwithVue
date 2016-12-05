@@ -120,16 +120,19 @@ module.exports = self = {
         async.eachSeries(data.schedules, processSchedule, callback);
     },
     runSchedule: function(data, callback) {
-        // data = {
-        //     user: user,
-        //     schedule: {} (schedule object)
-        // }
-
-        switch (data.schedule.type) {
-            case 1:
-                return Reports.scheduledReport(data, callback);
-            default:
-                return callback();
-        }
+        Utility.getOne({
+            collection: 'Schedules',
+            query: {
+                _id: ObjectID(data._id)
+            }
+        }, function(err, schedule) {
+            data.schedule = schedule;
+            switch (data.schedule.type) {
+                case 1:
+                    return Reports.scheduledReport(data, callback);
+                default:
+                    return callback();
+            }
+        });
     }
 };

@@ -1447,6 +1447,7 @@ module.exports = Rpt = {
                             }]
                         }, function(err, info) {
                             console.log(err, info);
+                            cb(err);
                         });
                     });
                 });
