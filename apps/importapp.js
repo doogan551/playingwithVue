@@ -224,20 +224,20 @@ function importUpdate() {
 																	updateTrend(point, function(err) {
 																		if (err)
 																			logger.info("updateTrend", err);
-																	updateAlarmRepeat(point, function(err) {
-																		if (err)
-																			logger.info("updateAlarmRepeat", err);
-																		rearrangeProperties(point, function(err) {
+																		updateAlarmRepeat(point, function(err) {
 																			if (err)
-																				logger.info("rearrangeProperties", err);
-																			updatePoint(db, point, function(err) {
+																				logger.info("updateAlarmRepeat", err);
+																			rearrangeProperties(point, function(err) {
 																				if (err)
-																					logger.info("updatePoint", err);
-																				cb(null);
+																					logger.info("rearrangeProperties", err);
+																				updatePoint(db, point, function(err) {
+																					if (err)
+																						logger.info("updatePoint", err);
+																					cb(null);
+																				});
 																			});
 																		});
-																		});
-																		});
+																	});
 																});
 															});
 														});
@@ -2718,7 +2718,7 @@ function updateTrend(point, callback) {
 	callback(null);
 }
 
-function updateAlarmRepeat(point, callback){
+function updateAlarmRepeat(point, callback) {
 	if (point.hasOwnProperty('Alarm Repeat Time')) {
 		point["Alarm Repeat Time"].isDisplayable = false;
 	}
