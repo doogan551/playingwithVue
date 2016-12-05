@@ -474,10 +474,6 @@ var gpl = {
             }
 
             pRef.DevInst = gpl.deviceId;
-
-            // if (!!dynamic.upi && !isNaN(dynamic.upi)) {  // TODO to clear out duplicate data (point ref contains the UPI)
-            //     delete dynamic.upi;
-            // }
         }
     },
     getDynamicPointRef: function (dynamic) {
@@ -495,10 +491,6 @@ var gpl = {
             } else {
                 pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
             }
-
-            // if (!!block.upi && !isNaN(block.upi)) {  // TODO to clear out duplicate data (point ref contains the UPI)
-            //     delete block.upi;
-            // }
         }
     },
     getBlockPointRef: function (block) {
@@ -1835,9 +1827,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (processChanges) {
             this.processPointData(this._pointData);
-            if (this.setIconName) {
-                this.setIconName();
-            }
+            // if (this.setIconName) {
+            //     this.setIconName();
+            // }
             this.setLabel(this._pointData.name4);
         }
 
@@ -2470,33 +2462,28 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         return answer;
     },
 
-    setIconType: function (calcType, reverseAction) {
+    setIconType: function (calcType, revAction) {
         "use strict";
-        var self = this;
-
-        // if(calcType) {
-        calcType = calcType.Value;
-        reverseAction = reverseAction.Value;
+        let self = this,
+            calculationType = calcType.Value,
+            reverseAction = revAction.Value;
 
         if (self.setIconName) {
             self.setIconName();
-            self.blockType = (self.icons && self.icons[calcType] ? self.icons[calcType] : self.blockType);
         } else {
-            if (calcType) {
-                self.config.iconType = (self.icons && self.icons[calcType] ? self.icons[calcType] : calcType);
+            if (calculationType) {
+                self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
 
-                if (self.iconPrefix && calcType.indexOf("DigLogic") === -1) {
-                    self.config.iconType = self.iconPrefix + calcType;
+                if (self.iconPrefix) {
+                    self.config.iconType = self.iconPrefix + calculationType;
                 }
 
-                self.blockType = (self.iconMatrix ? self.iconMatrix[calcType] : self.config.iconType);
                 self.icon = self.config.iconType + self.iconExtension;
                 self.iconType = self.config.iconType
             }
         }
 
         self.setIcon();
-        // }
 
         // if(reverseAction !== undefined) {
 
@@ -3161,6 +3148,11 @@ gpl.blocks.SelectValue = fabric.util.createClass(gpl.Block, {
     toolbarOffsetTop: -30,
     numInputs: 5,
 
+    icons: {
+        'High Value': 'FindLargest',
+        'Low Value': 'FindSmallest'
+    },
+
     type: 'SelectValue',
     pointType: 'Select Value',
     valueType: 'float',
@@ -3313,7 +3305,11 @@ gpl.blocks.DigLogic = fabric.util.createClass(gpl.Block, {
     pointType: 'Digital Logic',
     valueType: 'enum',
 
-    iconPrefix: 'DigLogic',
+    icons: {
+        'And': 'DigLogicAnd',
+        'Or': 'DigLogicOr',
+        'XOr': 'DigLogicXOr'
+    },
 
     iconScale: 0.80,
     iconOffsetLeft: 3,
@@ -6498,7 +6494,7 @@ gpl.BlockManager = function (manager) {
             saveCallback = function (results) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
-                    bmSelf.canvas.setActiveObject(block, null);
+                    // bmSelf.canvas.setActiveObject(block, null);  // is this causing multiple updates??
                     gpl.fire('editedblock', block);
                 }
             },
@@ -7463,8 +7459,6 @@ gpl.Manager = function () {
                     calcType = block.getIconKey();
                     obj['Calculation Type'].Value = calcType;
                     obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[calcType];
-                    // block.formatPointFromData(obj, obj, 'Calculation Type');
-                    block.setIconType(calcType, {});
                 }
 
                 block.setPointData(obj, true);

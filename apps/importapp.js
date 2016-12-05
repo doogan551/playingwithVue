@@ -2657,13 +2657,20 @@ function updateDevices(point, callback) {
 
 		utils.updateNetworkAndAddress(point);
 
+		point._cfgDevice = true;
+		point["Stop Scan"].Value = true;
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
 
 	} else if (point["Point Type"].Value === "Remote Unit") {
 		point["Device Address"].ValueType = 2;
-		point["Device Address"].Value = point["Device Address"].Value.toString();
-
+		if (typeof point["Device Address"].Value !== "string") {
+			point["Device Address"].Value = point["Device Address"].Value.toString();
+		}
+		point["Router Address"].ValueType = 2;
+		if (typeof point["Router Address"].Value !== "string") {
+			point["Router Address"].Value = point["Router Address"].Value.toString();
+		}
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
 
