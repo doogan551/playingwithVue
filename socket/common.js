@@ -223,10 +223,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             activity: actLogsEnums["Point Soft Delete"].enum
           })));
         }
+      } else if (newPoint.Name !== oldPoint.Name) {
+        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+          log: "Point renamed from " + oldPoint.Name + " to " + newPoint.Name,
+          activity: actLogsEnums["Point Restore"].enum
+        })));
       }
-      /*else if (newPoint.Name !== oldPoint.Name && flags.method === "rename") {
-        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {log:"Point renamed from " + oldPoint.Name + " to " + newPoint.Name, activity: actLogsEnums["Point Restore"].enum})));
-      }*/
     }
 
     if (newPoint["Point Type"].Value === "Script" && newPoint["Script Source File"] !== oldPoint["Script Source File"] && !!flags.path) {

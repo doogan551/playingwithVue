@@ -161,6 +161,17 @@ var Users = {
           };
 
           Utility.insert(criteria, function(err, userArray) {
+            var logData = {
+              user: data.user,
+              timestamp: Date.now(),
+              activity: actLogsEnums["User Add"].enum,
+              log: "User: " + username + " added."
+            };
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {});
 
             if (err) {
               return cb(err);
@@ -306,6 +317,7 @@ var Users = {
   updateUser: function(data, cb) {
     var updateData = data["Update Data"];
     var groups = (updateData["User Groups"] !== undefined) ? updateData["User Groups"] : [];
+    var username = '';
 
     var userid = data.userid;
 
@@ -363,6 +375,7 @@ var Users = {
           updateCriteria.$set.alerts = alerts;
         }
         if (key == "username") {
+          username = updateData[key];
           updateCriteria.$set[key] = updateData[key];
           updateCriteria.$set["Username.Value"] = updateData[key];
         } else if (key == "Password") {
@@ -388,6 +401,18 @@ var Users = {
         if (err) {
           return cb(err);
         }
+
+        var logData = {
+          user: data.user,
+          timestamp: Date.now(),
+          activity: actLogsEnums["User Edit"].enum,
+          log: "User: " + username + " edited."
+        };
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {});
 
         var deleteSearch = {};
         deleteSearch["Point Type"] = {};
@@ -966,6 +991,18 @@ module.exports = {
           if (err) {
             return cb(err);
           }
+
+          var logData = {
+            user: data.user,
+            timestamp: Date.now(),
+            activity: actLogsEnums["User Delete"].enum,
+            log: "User: " + username.username + " deleted."
+          };
+          logData = utils.buildActivityLog(logData);
+          Utility.insert({
+            collection: activityLogCollection,
+            insertObj: logData
+          }, function(err, result) {});
 
           async.waterfall([
 
