@@ -32,6 +32,10 @@ module.exports = {
 		Utility.get(criteria, cb);
 	},
 	generateCppHeaderFile: function(data, cb) {
+		// Override Config so we get the latest version - this allows us to generate a new C++ header file after making
+		// changes to enumsTemplates.json without having to restart the server
+		var Config = require(utils.FileLocationsForControllers("Config"));
+
 		var buffer = ""; // This is our string buffer that we'll write out to a file when complete
 		var oneTab = "   "; // This is one tab and controls the key indent from the beginning of the line
 		var padding = "  "; // This is the padding between the key name and the '=' sign

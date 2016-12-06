@@ -198,7 +198,7 @@ function buildView() {
         nav = navTemplate.replace(new RegExp("{i}", "g"), i).replace(new RegExp("{pointType}", "g"), point.pointType).replace(new RegExp("{_pointType}", "g"), point._pointType);
         navContainer.append(nav);
 
-        $("#All").append("<br /><div data-bind='visible:points()[" + i + "].n_prob() != \"(0)\"'><span style='font-weight:bold; font-size:larger'> " + point.pointType + "</span><div class='" + point._pointType + "'></div></div>");
+        $("#All").append("<div data-bind='visible:points()[" + i + "].n_prob() != \"(0)\"'><span style='font-weight:bold; font-size:larger'> " + point.pointType + "</span><div class='" + point._pointType + "'></div></div>");
 
         // We only show 7 tabs.  We put the rest in a 'More' drop down tab.
         if (i === 5) {

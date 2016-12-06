@@ -5,12 +5,18 @@ html
 		style.
 			body {
 				padding: 20px;
+				padding-top: 75px;
 			}
-			input[type=text] {
-				margin-left: 10px;
-				padding-left: 5px;
-			}
+			nav {font-family: Consolas;}
 			.propertyContainer {
+				position: absolute;
+				top: 125px;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				overflow-y: scroll;
+			}
+			.propertyList {
 				display: inline-block;
 				padding: 10px;
 				margin: 20px;
@@ -27,17 +33,34 @@ html
 			}
 
 	body
-		input(type="text", data-bind="value: propertyFilter, valueUpdate: 'input'", placeholder="Filter Properties")
-		br
-		br
+		nav(class='navbar navbar-default navbar-fixed-top', role='navigation')
+			div(class='navbar-header')
+				span(class='navbar-brand')
+					img(src='/img/InfoScanLogoBlue.png', height='30', style='position:absolute; top:11px;')
+					span(style='padding-left:85px; color:#3887c1;') Toolbag
+			div(class='collapse navbar-collapse')
+				ul(class='nav navbar-nav')
+					li
+						a(href='/toolbag/dbMonitor') dbMonitor
+					li
+						a(href='/toolbag/dbTemplate') dbTemplate
+					li
+						a(href='/toolbag/dbValidation') dbValidation
+					li
+						a(href='/toolbag/enums') Enums Manager
+					li.active
+						a(href='/toolbag/propertyUsage') Property Usage
 
-		// ko foreach: propertyList
+		input.form-control(type="text", data-bind="value: propertyFilter, valueUpdate: 'input'", placeholder="Filter Properties")
+
 		.propertyContainer
-			.propName(data-bind="text: propName")
-			// ko foreach: points
-			div(data-bind="text: $data")
+			// ko foreach: propertyList
+			.propertyList
+				.propName(data-bind="text: propName")
+				// ko foreach: points
+				div(data-bind="text: $data")
+				// /ko
 			// /ko
-		// /ko
 
 		script(type='text/javascript', src="/js/lib/jquery.min.js")
 		script(type='text/javascript', src="/js/lib/knockout-2.2.0.js")

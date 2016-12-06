@@ -1088,6 +1088,9 @@ function getScheduleEntries(data, callback) {
 }
 
 function checkProperties(data, callback) {
+  // Override Config so we get the latest version - this allows us to see the affects of changes to our enumsTemplates.json file
+  // without having to restart the server
+  var Config = require('../public/js/lib/config.js');
   var template = Config.Templates.getTemplate(data.pointType), // Template object
     dbResult,
     skipProperties = {
