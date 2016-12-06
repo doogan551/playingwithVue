@@ -1,0 +1,57 @@
+html
+    head
+        link(rel='stylesheet', type='text/css', href="/css/lib/bootstrap-3.0.3.min.css")
+        link(rel='stylesheet', type='text/css', href='/css/lib/font-awesome.4.6.1.min.css')
+
+        style(type='text/css').
+            body {padding: 40px; padding-top: 75px; font-family: Consolas;}
+            i {margin-right: 10px;}
+            .bg-info {background-color: #d9edf7; padding: 10px;}
+            .bg-error{background-color: #f2dede; padding: 10px;}
+            .bg-success{background-color: #dff0d8; padding: 10px;}
+            .results{margin-top: 30px;}
+            .pointName{font-weight: bold;}
+            .pointName:not(:first-child){margin-top: 20px;}
+            .problem:hover{background-color: #ffb4b4}
+            .withPadding{padding: 5px 10px;}
+
+    body
+        nav(class='navbar navbar-default navbar-fixed-top', role='navigation')
+            div(class='navbar-header')
+                span(class='navbar-brand')
+                    img(src='/img/InfoScanLogoBlue.png', height='30', style='position:absolute; top:11px;')
+                    span(style='padding-left:85px; color:#3887c1;') Toolbag
+            div(class='collapse navbar-collapse')
+                ul(class='nav navbar-nav')
+                    li
+                        a(href='/toolbag/dbMonitor') dbMonitor
+                    li
+                        a(href='/toolbag/dbTemplate') dbTemplate
+                    li(class='active')
+                        a(href='/toolbag/dbValidation') dbValidation
+
+        p Choose a validation template:
+        p
+            select.form-control(data-bind='options: templateNames, value: selectedTemplate, disable: gettingData')
+        p
+            button.btn.btn-primary(type='button', data-bind='click: validate, disable: gettingData')
+                i.fa.fa-spinner.fa-spin(data-bind='visible: gettingData')
+                span Run now
+
+        .results(data-bind='visible: showResults, foreach: results')
+            .pointName(data-bind='text: pointName, css: problems.length ? "bg-error":"bg-success"')
+            .problems(data-bind='foreach: problems')
+                .problem.withPadding(data-bind='text: $data')
+            .problems(data-bind='visible: problems.length == 0')
+                .withPadding No problems found
+
+        p.bg-error(data-bind='visible: error, text: error')
+
+        script(type='text/javascript').
+            var templateNames = !{JSON.stringify(templateNames)}
+
+        script(type='text/javascript', src="/js/lib/jquery.min.js")
+        script(type='text/javascript', src="/js/lib/knockout-3.4.0.min.js")
+        script(type='text/javascript', src="/js/lib/date.js")
+        script(type='text/javascript', src="/js/lib/bootstrap-3.0.3.min.js")
+        script(type='text/javascript', src="/js/toolbag/dbValidation.js")
