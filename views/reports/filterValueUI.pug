@@ -24,14 +24,23 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
 // /ko
 // ko if: (valueType === "UniquePID")
 div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
-    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
-        i.material-icons.tiny.center.blue-grey-text delete
-    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
-        i.material-icons.tiny.center.blue-grey-text edit
-    // ko if: (!!$data.softDeleted)
-    span [Deleted]&nbsp;
-    // /ko
-    .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
+    .preloader-wrapper.tiny.active.buildPointSelectorSpinner(data-bind="css: {displayDiv: $parent.activePointSelectorRequest(), hideDiv: !$parent.activePointSelectorRequest()} ")
+        .spinner-layer
+            .circle-clipper.left
+                .circle
+            .gap-patch
+                .circle
+            .circle-clipper
+                .circle
+    div.theButtons(data-bind="css: {displayDiv: !$parent.activePointSelectorRequest(), hideDiv: $parent.activePointSelectorRequest()} ")
+        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
+            i.material-icons.tiny.center.blue-grey-text delete
+        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
+            i.material-icons.tiny.center.blue-grey-text edit
+        // ko if: (!!$data.softDeleted)
+        span [Deleted]&nbsp;
+        // /ko
+        .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
 .availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")

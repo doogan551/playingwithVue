@@ -804,7 +804,7 @@ module.exports = Rpt = {
             searchCriteria = {};
         }
 
-        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
+        logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         var criteria = {
             query: searchCriteria,
             collection: 'points',
@@ -966,13 +966,19 @@ module.exports = Rpt = {
                     };
                     break;
                 case "EqualTo":
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        if (filterValueType !== null) {
-                            searchKey = key + '.eValue';
+                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                        if (filter.evalue === -1) {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $eq: ''
+                            };
                         } else {
-                            searchKey = key;
+                            if (filterValueType !== null) {
+                                searchKey = key + '.eValue';
+                            } else {
+                                searchKey = key;
+                            }
+                            searchQuery[searchKey] = filter.evalue;
                         }
-                        searchQuery[searchKey] = filter.evalue;
                     } else {
                         if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {
@@ -1002,12 +1008,13 @@ module.exports = Rpt = {
                                 new$or.$or.push(ppp);
                             }
                         } else {
-                            if (utils.converters.isNumber(filter.value))
+                            if (utils.converters.isNumber(filter.value)) {
                                 searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                            else
+                            } else {
                                 searchQuery[propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
                                 };
+                            }
                         }
                     }
                     break;
@@ -1015,15 +1022,21 @@ module.exports = Rpt = {
                     //searchQuery[key] = {
                     //    $exists: true
                     //};
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        if (filterValueType !== null) {
-                            searchKey = key + '.eValue';
+                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                        if (filter.evalue === -1) {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $ne: ''
+                            };
                         } else {
-                            searchKey = key;
+                            if (filterValueType !== null) {
+                                searchKey = key + '.eValue';
+                            } else {
+                                searchKey = key;
+                            }
+                            searchQuery[searchKey] = {
+                                $ne: filter.evalue
+                            };
                         }
-                        searchQuery[searchKey] = {
-                            $ne: filter.evalue
-                        };
                     } else {
                         if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {

@@ -582,13 +582,13 @@ var Config = (function(obj) {
                     }
 
                     function _getEnumFromTemplate(property) {
-                        var enums = enumsTemplatesJson.Enums[property];
-                        enumsProperty = enumsTemplatesJson.Enums.Properties[property],
-                            enumArray = [];
+                        var enums = enumsTemplatesJson.Enums[property],
+                            enumsProperty = enumsTemplatesJson.Enums.Properties[property],
+                            enumArray;
 
-                        var enumArray = _buildOptionsArray(enums);
+                        enumArray = _buildOptionsArray(enums);
                         if (!enumArray.length && !!enumsProperty && !!enumsProperty["enumsSet"]) {
-                            var enumArray = _buildOptionsArray(enumsTemplatesJson.Enums[enumsProperty["enumsSet"]]);
+                            enumArray = _buildOptionsArray(enumsTemplatesJson.Enums[enumsProperty["enumsSet"]]);
                         }
 
                         /*for (var i = 0, last = keys.length; i < last; i++) {

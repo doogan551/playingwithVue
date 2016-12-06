@@ -705,6 +705,10 @@ a.btn.dropdown-button.propertySelect {
     padding: 0px 0px 0px 0px !important;
     width: 240px;
 }
+a.btn.dropdown-button.propertySelectForColumn {
+    padding: 0px 0px 0px 0px !important;
+    width: 260px;
+}
 .precision {
     width: 60px;
 }
@@ -979,6 +983,9 @@ input.filled-in[type=number]:focus:not([readonly]) {
 }
 .gridColumnConfigTable th a.addColumnGridButton {
     background-color: white;
+}
+.columnsGrid thead tr {
+    height: 58px !important;
 }
 .columnsGrid th label {
     font-size: medium;
@@ -1277,4 +1284,8 @@ button {
 .preloader-wrapper .spinner-layer {
     /*border-color: $blue-grey-lighten-1;*/
     border-color: #78909c;
+}
+.preloader-wrapper.tiny {
+    width: 20px;
+    height: 20px;
 }
