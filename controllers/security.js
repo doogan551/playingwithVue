@@ -105,6 +105,19 @@ router.post('/groups/getpoints', function(req, res, next) {
     return utils.sendResponse(res, points);
   });
 });
+router.post('/groups/updatePermissions', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  Security.Groups.updatePermissions(data, function(err, results) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    }
+    return utils.sendResponse(res, {message:'success'});
+  });
+});
 // NOT CHECKED
 router.post('/users/getgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
@@ -209,6 +222,7 @@ router.post('/points/removeusers', function(req, res, next) {
     return utils.sendResponse(res, {});
   });
 });
+
 // NOT CHECKED
 router.post('/users/createpassword', function(req, res, next) {
   var data = _.merge(req.params, req.body);

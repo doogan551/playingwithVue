@@ -1,0 +1,23 @@
+div(class='topBar',style='position: absolute; width: 100%;bottom:0px;z-index:', data-role='header', data-theme='c')
+      div(style='float: left;')
+        //- a#minDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-min', data-inline='true') Pop In
+        //- a#maxDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-max', data-inline='true') Pop Out
+        a#editDisplay(href="/displays/edit/{{display._id}}",data-ajax="false", data-mini='true', data-role='button', data-icon='edit', data-inline='true') Edit
+        #editSaveCancelBtns.displayGroup.hide(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
+          a#viewDisplay(href="#",ng-click="checkChanges()",data-ajax="false", data-mini='true', data-role='button', data-icon='delete',  data-inline='true') Cancel
+          a#saveDisplay(ng-click="saveDisplay()",data-position-to='window', href='#confirmSave', data-rel='popup', data-mini='true', data-role='button', data-icon='d-save',  data-inline='true') Save
+      h1 {{display.Name|displayName}}
+
+      #zslide
+        a.autoZoom(data-role='button', data-icon='autofocus', data-iconpos='notext', data-theme='c', data-iconshadow='true', data-inline='true') Auto Zoom
+        a.resetZoom(data-role='button', data-icon='search', data-iconpos='notext', data-theme='c', data-iconshadow='true', data-inline='true') Reset Zoom
+        input(type="range", name="slider-fill-mini", id="zoom-slider", value="100", min="25", max="400", ng-model='zoom', data-highlight="true", data-mini="true")
+        span.percentZoom(style="position: absolute; top: 14px; left: 64px; font-size: 14px;color: #333;") %
+
+        div(style="display:none;float:right;width:300px;position:relative;")
+          a.resetZoom(style='left:0px;margin-left:0px;',class="ui-icon-nodisc", data-role='button', data-icon='d-panh', data-iconpos='notext', data-theme='c', data-iconshadow='false', data-inline='true') Reset Pan
+          input#panh-slider(class='ui-btn-corner-all',type='range',ng-change="updatePanh()",ng-model='panH', value='0', min='-800', max='800', data-mini='true', data-highlight='false')
+        div(style="display:none;float:right;width:300px;position:relative;")
+          a.resetZoom(class="ui-icon-nodisc", data-role='button', data-icon='d-panw', data-iconpos='notext', data-theme='c', data-iconshadow='false', data-inline='true') Reset Pan
+          input#panw-slider(class='ui-btn-corner-all',type='range',ng-change="updatePanw()",ng-model='panW', value='0', min='-800', max='800', data-mini='true', data-highlight='false')
+        h3 &nbsp;

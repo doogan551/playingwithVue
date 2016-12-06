@@ -14,7 +14,7 @@ router.get('/', function(req, res, next) {
 				err: err
 			});
 		}else{
-			res.render('dashboard/index.jade', result);
+			res.render('dashboard/index.pug', result);
 		}
 	});
 });

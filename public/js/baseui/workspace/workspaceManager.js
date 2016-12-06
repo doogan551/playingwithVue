@@ -407,8 +407,8 @@ window.workspaceManager = (function($) {
         };
 
         //are we in the top frame
-        if (!!window.opener) {
-            window.opener.location.replace(window.location);
+        if (!!window.top) {
+            window.top.location.replace(window.location);
             window.close();
         } else if (window.top !== window.self) {
             window.top.location.replace(window.location);
@@ -451,7 +451,6 @@ window.workspaceManager = (function($) {
             thumbnailTemp = {
                 showThumbnailLink: ko.computed(function() {
                     var user = _local.user();
-
                     return (user['System Admin'] && user['System Admin'].Value === true);
                 }),
                 openThumbnailBatch: function() {
@@ -485,7 +484,6 @@ window.workspaceManager = (function($) {
             }
         };
         _local.socket.on('updatedSystemInfo', function(data) {
-            console.log(data);
             if (data.name === 'controllers') {
                 _local.getSystemEnum('controllers', _local.refreshUserCtlr);
             } else if (data.name === 'Preferences') {
@@ -494,6 +492,48 @@ window.workspaceManager = (function($) {
                 _local.getSystemEnum(data.name);
             }
         });
+
+        _local.hasUnackedAlarms = false;
+        _local.unackAlarms = [];
+        _local.checkAlarms = function() {
+            _local.hasUnackedAlarms = !!_local.unackAlarms.length;
+        };
+
+        _local.loadUnack = ko.computed(function() {
+            var user = _local.user();
+            if (!!user) {
+                _local.socket.emit('getUnacknowledged', {
+                    user: user,
+                    currentPage: 1,
+                    itemsPerPage: 1
+                });
+            }
+        });
+
+        _local.socket.on('unacknowledged', function(data) {
+            _local.unackAlarms = data.alarms;
+        });
+
+        _local.socket.on('newUnackAlarm', function(data) {
+            _local.unackAlarms.push(data.newAlarm);
+        });
+
+        _local.socket.on('removingUnackAlarm', function(data) {
+            for (var u = 0; u < _local.unackAlarms.length; u++) {
+                if (data._id === _local.unackAlarms[u]._id) {
+                    _local.unackAlarms.splice(u, 1);
+                    u--;
+                }
+            }
+        });
+        _local.alertForUnack = (function() {
+            setInterval(function() {
+                _local.checkAlarms();
+                if (!!_local.hasUnackedAlarms) {
+                    _local.playSound('beep');
+                }
+            }, 10000);
+        }());
 
         //load system enums
         _local.getSystemEnum('controlpriorities');
@@ -934,7 +974,7 @@ window.workspaceManager = (function($) {
             if (_target === 'mainWindow') {
                 _local.addEvent(frame || _newWindowRef, 'load', function() {
                     var frameWindow = this.contentWindow;
-                    frameWindow.opener = window;
+                    framewindow.top = window;
                     frameWindow.upi = upi;
                     _callback.call(_newWindowRef);
                 });
@@ -1879,7 +1919,6 @@ window.workspaceManager = (function($) {
             'decode': decode
         };
     }());
-
 
     return {
         init: _local.init,

@@ -1,11 +1,11 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88',
+      'host': 'info-int',
       'dbName': 'infoscan'
     },
     'zmqConfig': {
-      'server': '192.168.1.88',
+      'server': 'info-int',
     },
     'files': {
       'driveLetter': 'C'
@@ -16,7 +16,7 @@ var rob = {
     'email': {
       'onError': {
         'to': 'rkendall@dorsett-tech.com',
-        'enabled': true
+        'enabled': false
       }
     },
     'processes': {

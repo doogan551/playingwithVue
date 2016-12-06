@@ -4,6 +4,8 @@ var fs = require('fs');
 // NPM MODULES
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
+var rimraf = require('rimraf');
+var _ = require('lodash');
 
 // OTHERS
 var Utility = require('../models/utility');
@@ -133,7 +135,7 @@ module.exports = {
 
 (function loop() {
   setTimeout(function() {
-    logger.info('@@@@@@@ Server still active');
+    // logger.info('@@@@@@@ Server still active');
     autoAcknowledgeAlarms(function(result) {
       loop();
     });
@@ -144,9 +146,10 @@ module.exports = {
 function newUpdate(oldPoint, newPoint, flags, user, callback) {
   var generateActivityLog = false,
     updateReferences = false,
+    updateModelType = false,
+    updateCfgReq = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
-    updateEthernetNetwk = false,
     configRequired,
     updateObject = {},
     //activityLogObject = {},
@@ -160,7 +163,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       timestamp: Date.now(),
       point: newPoint
     };
-  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
+  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime", "_pAccess",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Type", "Reliability"
   ];
@@ -220,10 +223,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             activity: actLogsEnums["Point Soft Delete"].enum
           })));
         }
+      } else if (newPoint.Name !== oldPoint.Name) {
+        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+          log: "Point renamed from " + oldPoint.Name + " to " + newPoint.Name,
+          activity: actLogsEnums["Point Restore"].enum
+        })));
       }
-      /*else if (newPoint.Name !== oldPoint.Name && flags.method === "rename") {
-        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {log:"Point renamed from " + oldPoint.Name + " to " + newPoint.Name, activity: actLogsEnums["Point Restore"].enum})));
-      }*/
     }
 
     if (newPoint["Point Type"].Value === "Script" && newPoint["Script Source File"] !== oldPoint["Script Source File"] && !!flags.path) {
@@ -303,7 +308,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Value":
                 var propName = "";
 
-                if (!_.isEqual(newPoint[prop].ValueOptions, oldPoint[prop].valueOptions)) {
+                if (!_.isEqual(newPoint[prop].ValueOptions, oldPoint[prop].ValueOptions)) {
                   updateReferences = true;
                   propName = "Value.ValueOptions";
                   updateObject[propName] = newPoint[prop].ValueOptions;
@@ -362,6 +367,11 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
 
               case "Model Type":
+                updateReferences = true;
+                configRequired = true;
+                updateModelType = true;
+                break;
+
               case "Firmware Version":
                 updateReferences = true;
                 configRequired = true;
@@ -566,34 +576,18 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 
               case "Channel":
               case "Close Channel":
-              case "Control Data Type":
-              case "Control Function":
-              case "Control Register":
               case "Device Address":
               case "Device Port":
               case "Downlink IP Port":
-              case "Ethernet IP Port":
               case "Feedback Channel":
               case "Feedback Type":
               case "Input Type":
-              case "Instance":
               case "Network Segment":
               case "Network Type":
               case "Off Channel":
-              case "Off Control Data Type":
-              case "Off Control Function":
-              case "Off Control Register":
-              case "Off Control Value":
               case "On Channel":
-              case "On Control Data Type":
-              case "On Control Function":
-              case "On Control Register":
-              case "On Control Value":
               case "Open Channel":
               case "Output Type":
-              case "Poll Data Type":
-              case "Poll Function":
-              case "Poll Register":
               case "Port 1 Address":
               case "Port 1 Maximum Address":
               case "Port 1 Network":
@@ -648,10 +642,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                   configRequired = true;
                 break;
 
-              case 'Ethernet Network':
-              case 'Downlink Network':
-
-
               case "Point Refs":
                 var pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                 for (var r = 0; r < pointRefProps.length; r++) {
@@ -699,6 +689,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                       case "Device Point":
                         updateReferences = true;
                         configRequired = true;
+                        updateCfgReq = true;
                         break;
 
                       case "Remote Unit Point":
@@ -721,9 +712,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
               case "Downlink Network":
                 downloadPoint = true;
-                if (newPoint["Point Type"].Value === "Device") {
-                  updateEthernetNetwk = true;
-                }
                 break;
               default:
                 break;
@@ -845,7 +833,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 if (newPoint["Point Type"].Value === "Slide Show") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Slide Show edited",
-                    activity: actLogsEnums["Slide Show Edit"].enum
+                    activity: actLogsEnums["Slideshow Edit"].enum
+                  })));
+                } else if (newPoint["Point Type"].Value === "Program") {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                    log: "Program edited",
+                    activity: actLogsEnums["Program Edit"].enum
                   })));
                 } else {
                   compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
@@ -891,10 +884,10 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           downloadPoint = false;
           updateReferences = false;
         } else if (newPoint["Point Type"].Value === "Device") {
-          var propertyNetwork = newPoint["Uplink Port"].Value + " Network",
-            propertyAddress = newPoint["Uplink Port"].Value + " Address";
-          updateObject["Network Segment.Value"] = newPoint[propertyNetwork].Value;
-          updateObject["Device Address.Value"] = newPoint[propertyAddress].Value.toString();
+          utils.updateNetworkAndAddress(newPoint);
+
+          updateObject["Network Segment.Value"] = newPoint['Network Segment'].Value;
+          updateObject["Device Address.Value"] = newPoint['Device Address'].Value.toString();
         }
 
         if (configRequired === true) {
@@ -917,29 +910,26 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           updateObject._updPoint = true;
           downloadPoint = false;
         }
-        Utility.findAndModify({
-          collection: 'points',
-          query: {
-            _id: newPoint._id
-          },
-          sort: [],
-          updateObj: {
-            $set: updateObject
-          },
-          options: {
-            new: true
-          }
-        }, function(err, result) {
-          if (err) return callback({
-            err: err
-          }, null);
-          var error = null;
-          updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
-            if (err)
-              return callback({
-                err: err
-              }, result);
-            updEthernetNetwk(updateEthernetNetwk, newPoint, function(err) {
+
+        updSecurity(newPoint, function(err) {
+          Utility.findAndModify({
+            collection: 'points',
+            query: {
+              _id: newPoint._id
+            },
+            sort: [],
+            updateObj: {
+              $set: updateObject
+            },
+            options: {
+              new: true
+            }
+          }, function(err, result) {
+            if (err) return callback({
+              err: err
+            }, null);
+            var error = null;
+            updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
               if (err)
                 return callback({
                   err: err
@@ -955,23 +945,34 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                       return callback({
                         err: err
                       }, result);
-                    updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                    update_Model(updateModelType, newPoint, function(err) {
                       if (err)
                         return callback({
                           err: err
                         }, result);
-                      else if (error)
-                        return callback({
-                          err: error
-                        }, result);
-                      else {
-                        msg = (msg !== undefined && msg !== null) ? msg : "success";
-                        return callback({
-                          message: msg
-                        }, result);
-                      }
+                      fixCfgRequired(updateCfgReq, oldPoint, newPoint, function(err) {
+                        if (err)
+                          return callback({
+                            err: err
+                          }, result);
+                        updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                          if (err)
+                            return callback({
+                              err: err
+                            }, result);
+                          else if (error)
+                            return callback({
+                              err: error
+                            }, result);
+                          else {
+                            msg = (msg !== undefined && msg !== null) ? msg : "success";
+                            return callback({
+                              message: msg
+                            }, result);
+                          }
+                        });
+                      });
                     });
-
                   });
                 });
               });
@@ -1025,7 +1026,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 function commitScript(data, callback) {
   var upi, fileName, path, csv, updateObj, markObsolete;
 
-  script = data.point;
+  var script = data.point;
   fileName = script._id;
   path = data.path;
   markObsolete = false;
@@ -1134,6 +1135,121 @@ function doActivityLogs(generateActivityLog, logs, callback) {
     return callback(null);
   }
 }
+
+function updSecurity(point, callback) {
+  // if (!point.hasOwnProperty('Security')) {
+  return callback();
+  // }
+  point.Security = point.Security.map(function(groupId) {
+    return ObjectID(groupId);
+  });
+
+  var updateObj = {
+    $set: {}
+  };
+  updateObj.$set['Points.' + point._id] = true;
+
+  Utility.update({
+    collection: 'User Groups',
+    query: {
+      _id: {
+        $in: point.Security
+      }
+    },
+    updateObj: updateObj
+  }, function(err, group) {
+    var updateObj = {
+      $unset: {}
+    };
+    updateObj.$unset['Points.' + point._id] = 1;
+    Utility.update({
+      collection: 'User Groups',
+      query: {
+        _id: {
+          $nin: point.Security
+        }
+      },
+      updateObj: updateObj
+    }, function(err, group) {
+      point.Security = [];
+      return callback(err);
+    });
+  });
+}
+//newupdate
+function fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
+  if (!!updateCfgReq) {
+    var oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
+    var newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
+    // 0 > 0 - no change
+    // N > 0 - cfg old
+    // 0 > N - cfg new
+    // N > M - cfg both
+    var areBothZero = oldDevPoint === 0 && newDevPoint === 0;
+    var isNowOffDevice = oldDevPoint !== 0 && newDevPoint === 0;
+    var isNowOnDevice = oldDevPoint === 0 && newDevPoint !== 0;
+    var didChangeDevice = oldDevPoint !== 0 && newDevPoint !== 0 && oldDevPoint !== newDevPoint;
+
+    if (!areBothZero && (!!isNowOffDevice || !!isNowOnDevice || !!didChangeDevice)) {
+      var upis = [];
+      if (isNowOffDevice || didChangeDevice) {
+        upis.push(oldDevPoint);
+      }
+      if (isNowOnDevice || didChangeDevice) {
+        upis.push(newDevPoint);
+      }
+
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: {
+            $in: upis
+          }
+        },
+        updateObj: {
+          $set: {
+            _cfgRequired: true
+          }
+        }
+      }, callback);
+    } else {
+      callback();
+    }
+  } else {
+    callback();
+  }
+}
+//newupdate
+function update_Model(updateModelType, newPoint, callback) {
+  if (!!updateModelType) {
+    var criteria = {
+      collection: 'points',
+      query: {
+        'Point Refs.Value': newPoint._id
+      }
+    };
+    Utility.iterateCursor(criteria, function(err, doc, next) {
+      if (newPoint['Point Type'].Value === 'Device') {
+        doc._devModel = newPoint['Model Type'].eValue;
+      } else if (newPoint['Point Type'].Value === 'Remote Unit') {
+        doc._rmuModel = newPoint['Model Type'].eValue;
+      }
+      Config.Utility.updDevModel({
+        point: doc
+      });
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, next);
+    }, callback);
+  } else {
+    callback();
+  }
+}
+
 // newupdate
 function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
   if (updateDownlinkNetwk) {
@@ -1146,36 +1262,17 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
           "Downlink Network.Value": {
             $ne: 0
           }
-        }, {$or: [{
-          'Downlink Network.Value': newPoint["Ethernet Network"].Value
         }, {
-          'Downlink Network.Value': oldPoint["Ethernet Network"].Value
-        }]}]
+          $or: [{
+            'Downlink Network.Value': newPoint["Ethernet Network"].Value
+          }, {
+            'Downlink Network.Value': oldPoint["Ethernet Network"].Value
+          }]
+        }]
       },
       updateObj: {
         $set: {
           _updPoint: true
-        }
-      }
-    }, function(err, result) {
-      callback(err);
-    });
-  } else {
-    callback(null);
-  }
-}
-
-function updEthernetNetwk(updateEthernetNetwk, newPoint, callback) {
-  if (updateEthernetNetwk) {
-    Utility.update({
-      collection: constants('pointsCollection'),
-      query: {
-        'Point Type.Value': 'Device',
-        'Network Segment.Value': newPoint['Downlink Network'].Value
-      },
-      updateObj: {
-        $set: {
-          'Ethernet IP Port.Value': newPoint['Downlink IP Port'].Value
         }
       }
     }, function(err, result) {
@@ -1298,7 +1395,7 @@ function updateDependencies(refPoint, flags, user, callback) {
         }
       }, function(err, dependency) {
         // TODO Check for errors
-        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method)
+        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method);
         async.waterfall([
           function(cb1) {
             if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "hard") {
@@ -1462,7 +1559,7 @@ function restorePoint(upi, user, callback) {
           return callback({
             message: "success"
           });
-        })
+        });
       } else {
         restoreScheduleEntries(point, user, function() {
           common.updateDependencies(point, {
@@ -1854,7 +1951,7 @@ function updateCfgRequired(point, callback) {
 }
 
 function getRecentAlarms(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, query, sort, groups = [];
 
   if (typeof data === "string")
     data = JSON.parse(data);
@@ -1873,8 +1970,6 @@ function getRecentAlarms(data, callback) {
   }
 
   numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
 
   query = {
     $and: [{
@@ -1934,33 +2029,18 @@ function getRecentAlarms(data, callback) {
     };
   }
 
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  Utility.get({
+  Utility.getWithSecurity({
     collection: alarmsCollection,
     query: query,
     sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: alarmsCollection,
-      query: query
-    }, function(err, count) {
-
-      callback(err, alarms, count);
-    });
+    _skip: (currentPage - 1) * itemsPerPage,
+    _limit: numberItems,
+    data: data
+  }, function(err, alarms, count) {
+    callback(err, alarms, count);
   });
 }
 
@@ -2018,6 +2098,7 @@ function getUnacknowledged(data, callback) {
       query.Name4 = "";
     }
   }
+
   if (data.msgCat) {
     query.msgCat = {
       $in: data.msgCat
@@ -2036,32 +2117,18 @@ function getUnacknowledged(data, callback) {
     };
   }
 
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
   var start = new Date();
-  Utility.get({
+  Utility.getWithSecurity({
     collection: alarmsCollection,
     query: query,
     sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: alarmsCollection,
-      query: query
-    }, function(err, count) {
-      if (err) callback(err, null, null);
-      callback(err, alarms, count);
-    });
+    _skip: (currentPage - 1) * itemsPerPage,
+    _limit: numberItems,
+    data: data
+  }, function(err, alarms, count) {
+    if (err) callback(err, null, null);
+    callback(err, alarms, count);
   });
 }
 
@@ -2146,33 +2213,18 @@ function getActiveAlarmsNew(data, callback) {
     };
   }
 
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  Utility.get({
+  Utility.getWithSecurity({
     collection: "ActiveAlarms",
     query: query,
     sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: "ActiveAlarms",
-      query: query
-    }, function(err, count) {
-
-      callback(err, alarms, count);
-    });
+    _skip: (currentPage - 1) * itemsPerPage,
+    _limit: numberItems,
+    data: data
+  }, function(err, alarms, count) {
+    callback(err, alarms, count);
   });
 }
 
@@ -2267,7 +2319,7 @@ function acknowledgePointAlarms(alarm) {
         $set: {
           ackUser: "System",
           ackTime: now,
-          ackStatus: Config.Enums['Acknowledge Statuses']['Acknowledged'].enum
+          ackStatus: Config.Enums['Acknowledge Statuses'].Acknowledged.enum
         }
       },
       options: {

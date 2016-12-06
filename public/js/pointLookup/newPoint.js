@@ -6,13 +6,13 @@ window.newPoint = (function(module, ko, $) {
         $pointTypesListBox,
         $createPointBtn,
         $cancelBtn,
-        workspace = window.opener.workspaceManager,
+        workspace = window.top.workspaceManager,
         config = workspace.config,
         urlParams = $.getAllQueryStrings(),
-        sensorTypes = config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor').filter(function(item) {
+        sensorTypes = config.Utility.pointTypes.getEnums('Sensor Type', 'Sensor').filter(function(item) {
             return !item.noninitializable
         }),
-        reportTypes = config.Utility.pointTypes.getEnums('Report Types', 'Report').filter(function(item) {
+        reportTypes = config.Utility.pointTypes.getEnums('Report Type', 'Report').filter(function(item) {
             return !item.noninitializable
         });
 
@@ -135,7 +135,7 @@ window.newPoint = (function(module, ko, $) {
                 params = {},
                 hasValue = 0,
                 msg = '',
-                workspaceManager = window.opener.workspaceManager;
+                workspaceManager = window.top.workspaceManager;
 
             $createPointBtn.attr('disabled', 'disabled');
 
@@ -221,25 +221,24 @@ window.newPoint = (function(module, ko, $) {
                     //if we have a save callback
                     if (!!window.attach && typeof window.attach.saveCallback == 'function') {
                         window.attach.saveCallback.call(undefined, data);
-                        return window.close();
+                        return dtiUtility.closeWindow();
+                        // return dtiUtility.closeWindow();
                     }
 
                     endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id);
                     handoffMode = endPoint.edit || endPoint.review;
-                    workspaceManager.openWindowPositioned(handoffMode.url, data.Name, params.pointType, handoffMode.target, data._id, {
-                        width: 1250,
-                        height: 750,
-                        callback: function() {
-                            if (window) {
-                                window.close();
-                            }
-                        }
+                    dtiUtility.openWindow({
+                        url: handoffMode.url, 
+                        title: data.Name, 
+                        pointType: params.pointType,
+                        upi: data._id
                     });
+                    dtiUtility.closeWindow();
                 });
         });
 
         $cancelBtn.on('click', function() {
-            window.close();
+            dtiUtility.closeWindow();
         });
 
 
@@ -252,7 +251,7 @@ window.newPoint = (function(module, ko, $) {
 
         $splitter = $('#splitter');
 
-        if (!window.opener) {
+        if (!window.top) {
             $splitter.hide();
             alert('The Infoscan Point Navigator cannot be opened directly. You will now be redirected to the workspace.');
             window.location.replace('/');
@@ -275,7 +274,7 @@ window.newPoint = (function(module, ko, $) {
                 } else {
                     if (window.attach.point.hasValue) {
                         alert('The point name is incorrect. Blank name segments are not allowed');
-                        window.close();
+                        dtiUtility.closeWindow();
                     }
                 }
             }
@@ -302,7 +301,7 @@ window.newPoint = (function(module, ko, $) {
                 messageTop = offset.top + height + 3,
                 messageLeft = offset.left,
                 messageWidth = $element.outerWidth(),
-                config = window.opener.workspaceManager.config,
+                config = window.top.workspaceManager.config,
                 timer;
             $element
                 .on("keypress", function (event) {

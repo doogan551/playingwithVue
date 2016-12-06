@@ -1,6 +1,6 @@
 "use strict";
 window.pointLookup = (function(module, ko, $) {
-    var workspaceManager = (window.opener || window.top).workspaceManager,
+    var workspaceManager = window.top.workspaceManager,
         socket = workspaceManager.socket(),
         socketHistory = {},
         dataAdapters,
@@ -714,6 +714,13 @@ window.pointLookup = (function(module, ko, $) {
         refreshPointTypes();
     };
 
+    module.hidePointTypes = function () {
+        $splitter.jqxSplitter('collapse');
+    };
+
+    module.showPointTypes = function () {
+        $splitter.jqxSplitter('expand');
+    };
 
     module.getCheckedPointTypes = function () {
         return getSelectedPointTypes();
@@ -1054,10 +1061,7 @@ window.pointLookup = (function(module, ko, $) {
                 window.close();
             } else {
                 if (!deletedDisplay) {
-                    workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
-                        width: 1250,
-                        height: 750
-                    });
+                    dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id);
                 }
             }
         });
@@ -1165,22 +1169,13 @@ window.pointLookup = (function(module, ko, $) {
 
             switch (command) {
                 case 'open':
-                    workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, id, {
-                        width: 1250,
-                        height: 750
-                    });
+                    dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, id);
                     break;
                 case 'clone':
-                    workspaceManager.openWindowPositioned('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
-                        width: 960,
-                        height: 560
-                    });
+                    dtiUtility.openWindow('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint');
                     break;
                 case 'edit':
-                    workspaceManager.openWindowPositioned(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id, {
-                        width: 1250,
-                        height: 750
-                    });
+                    dtiUtility.openWindow(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id);
                     break;
                 case 'delete':
                 case 'destroy':
@@ -1188,7 +1183,7 @@ window.pointLookup = (function(module, ko, $) {
                     // Disallowed if the point is on a GPL sequence (it must be deleted from within the sequence)
                     if (itemData._parentUpi !== 0) {
                         var _endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', itemData._parentUpi),
-                            link = '<a href="javascript: void(0)" onclick="workspaceManager.openWindowPositioned(\'' + _endPoint.review.url + '\', \'\', \'Sequence\', \'' + _endPoint.review.target + '\', ' + itemData._parentUpi + ', {width: 1250,height: 750});">Sequence</a>',
+                            link = '<a href="javascript: void(0)" onclick="dtiUtility.openWindow(\'' + _endPoint.review.url + '\', \'\', \'Sequence\', \'' + _endPoint.review.target + '\', ' + itemData._parentUpi + ');">Sequence</a>',
                             message = '<h4>This point cannot be deleted here. It must be deleted from the ' + link + '</h4>';
                         workspaceManager.showConfirmation({
                             message: message
@@ -1311,17 +1306,13 @@ window.pointLookup = (function(module, ko, $) {
 
         $newPointBtn.on('click', function() {
             var selectedPointType = '',
-                selectedpointTypes = getCheckedPointTypeItems(),
-                win;
+                selectedpointTypes = getCheckedPointTypeItems();
 
             if (selectedpointTypes.length === 1) {
                 selectedPointType = window.encodeURI(selectedpointTypes[0].originalItem.key);
             }
 
-            win = workspaceManager.openWindowPositioned('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
-                width: 960,
-                height: 560
-            });
+            dtiUtility.openWindow('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint');
         });
 
         function browseListSelect(segmentNumber) {
@@ -1448,10 +1439,7 @@ window.pointLookup = (function(module, ko, $) {
                             case 'filter':
                                 return;
                             default:
-                                workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
-                                    width: 1250,
-                                    height: 750
-                                });
+                                dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id);
                         }
                     } else {
                         //Just in case the menu is still open

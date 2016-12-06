@@ -1,7 +1,7 @@
 <div class="nav">
     <ul>
         <li><span>Overview</span></li>
-        <!-- ko if: $root.isSystemAdmin() -->
+        <!-- ko if: $root.isSystemAdmin() || (data._pStatus() === $root.utility.config.Enums["Point Statuses"].Inactive.enum)-->
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
@@ -59,6 +59,8 @@
                 <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Firmware Version', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
                 <!-- /ko -->
                 <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Firmware 2 Version', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Serial Number', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
                 <!-- /ko -->
                 <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Time Zone', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Time Zones', rootContext: $root } } -->
                 <!-- /ko -->
@@ -158,6 +160,8 @@
             <!-- /ko -->
         </div>
         <div class="row">
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Downlink Protocol', data: data, columnClasses: 'col col-sm-3 col-xs-6', enumSetName: 'Ethernet Protocols', rootContext: $root } } -->
+            <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink Network', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 1000, rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink Broadcast Delay', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 1000, rootContext: $root } } -->

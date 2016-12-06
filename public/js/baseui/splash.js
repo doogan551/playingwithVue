@@ -1,5 +1,5 @@
 window.splash = (function(module, ko, $) {
-    var workspace = window.opener && window.opener.workspaceManager,
+    var workspace = window.top && window.top.workspaceManager,
         socket = workspace.socket;
 
     function ViewModel() {
@@ -113,22 +113,15 @@ window.splash = (function(module, ko, $) {
     };
 
     ViewModel.prototype.openPoint = function(data) {
-        var endPoint, win, width, height, pointType;
+        var endPoint, win, pointType;
         //console.log(data);
         if (data.pointType !== 'Schedule Entry' && data.pointType !== 'Schedule') {
             pointType = data.pointType;
-            width = 820;
-            height = 542;
         } else {
             pointType = 'Schedule';
-            width = 1250;
-            height = 750;
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);
-        win = workspace.openWindowPositioned(endPoint.review.url, data.Name, pointType, '', data._id, {
-            width: width,
-            height: height
-        });
+        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id );
         $('.searchBar').typeahead('val', '');
     };
 

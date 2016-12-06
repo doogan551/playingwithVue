@@ -1,0 +1,679 @@
+// Global Modals
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'addUtility'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Add Utility
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+
+                .row
+                    .col-xs-8
+                        .title 1. Choose Utility
+                        .row.bm15px
+                            .col-xs-12
+                                select.selectSm.form-control.input-sm.input-full(data-bind="options: $root.utilityTypes, value: utilityType")
+
+                        .title 2. Choose Utility Name
+                        .row.bm15px
+                            .col-xs-12
+                                input.input-sm.form-control(type="text", data-bind="value: utilityName")
+                        .infoMessage.infoMessage-small
+                            i.fa.fa-info-circle
+                            span *Only letters, numbers, and spaces allowed
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $root.saveUtility") Add
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'editUtility'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Edit Utility
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+                .title Utility Name
+                .row.bm15px
+                    .col-xs-12
+                        input.input-sm.form-control(type="text", data-bind="value: utilityName")
+                .infoMessage.infoMessage-small
+                    i.fa.fa-info-circle
+                    span *Only letters, numbers, and spaces allowed
+            .modal-footer.commitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $root.updateUtility") Update
+                button.btn.btn-danger.btn-sm(data-bind="click: $root.deleteUtility") Delete
+
+// Electricity Modals----------------------------------------------
+// Utility Modals--------------------------
+// ko if: loadModals
+.modal.modal-plain.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'touConfirm'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Are you sure?
+            .modal-body(data-bind="visible: showBody, text: message")
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal", data-bind="click: tou.cancelConfirm") Cancel
+                button.btn.btn-success.btn-sm(data-dismiss="modal", data-bind="click: tou.submitConfirm") Ok
+
+.modal.modal-plain.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'touAlert'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Alert
+            .modal-body(data-bind="text: message")
+            .modal-footer
+                button.btn.btn-success.btn-sm(data-dismiss="modal", data-bind="visible: !hideOK()") Ok
+
+// Dashboard Modals-------------------------
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityEditDashboardItem', touPage: 'Electricity-Dashboard'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title(data-bind="text: titleText")
+            .modal-body.modal-body-scroll
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+
+                .row(data-bind="if: type() === 'Trend' || type() === 'Statistic'")
+                    .col-xs-8
+                        .title 1. Choose Data Source
+                        .row.bm15px
+                            .col-xs-12(data-bind="if: type() === 'Trend'")
+                                select.selectSm.form-control.input-sm.input-full(data-bind="value: dataSource")
+                                    option Consumption
+                                    option Highest Demand
+                                    // ko if: showOAT
+                                    option Outside Air Temperature
+                                    // /ko
+
+                            .col-xs-12(data-bind="if: type() === 'Statistic'")
+                                select.selectSm.form-control.input-sm.input-full(data-bind="value: dataSource")
+                                    option Consumption
+                                    option Highest Demand
+                                    option Highest On Peak Demand
+                                    option Highest Off Peak Demand
+                                    option Current Demand
+                                    option Current On Peak Demand
+                                    option Current Off Peak Demand
+                                    // ko if: showOAT
+                                    option Outside Air Temperature
+                                    // /ko
+                                    // ko if: showCDD
+                                    option Cooling Degree Days
+                                    // /ko
+                                    // ko if: showHDD
+                                    option Heating Degree Days
+                                    // /ko
+
+                            .col-xs-12(data-bind="if: type() === 'Trend', visible: withDataOptions().length > 1")
+                                span With:
+                                select.selectSm.form-control.input-sm.input-full(data-bind="value: withDataSource, options: withDataOptions")
+
+                        .title(data-bind="visible: type() !== 'Statistic' || (type() === 'Statistic' && !dataSource().match('Current') && !dataSource().match('Temperature'))") 2. Choose Period
+                        .row.form-inline.bm15px(data-bind="visible: type() !== 'Statistic' || (type() === 'Statistic' && !dataSource().match('Current') && !dataSource().match('Temperature'))")
+                            .col-xs-12.dashboardPeriod
+                                .radio
+                                    label Year
+                                        input(type="radio", name="statisticPeriod", value="year", data-bind="checked: period")
+                                .radio
+                                    label Month
+                                        input(type="radio", name="statisticPeriod", value="month", data-bind="checked: period")
+                                .radio
+                                    label Week
+                                        input(type="radio", name="statisticPeriod", value="week", data-bind="checked: period")
+                                .radio
+                                    label Day
+                                        input(type="radio", name="statisticPeriod", value="day", data-bind="checked: period")
+                            .col-xs-12(data-bind="visible: period() === 'year'")
+                                .checkbox
+                                    input#useFiscalYear(type="checkbox", data-bind="checked: useFiscalYear")
+                                    label(for="useFiscalYear") Use Fiscal Year
+
+                        .title 3. Choose Widget Title
+                        .row
+                            .col-xs-8
+                                input.input-sm.input-full.form-control(type="text", data-bind="value: title")
+
+                .row(data-bind="if: type() === 'Gauge'")
+                    .col-xs-12
+                        .title 1. Choose Gauge Style
+                        .row.bm15px.form-inline
+                            .col-xs-6.spacedRadioList
+                                .radio
+                                    label 180&deg; gauge
+                                        input(type="radio", name="statisticGaugeStyle", value="180", data-bind="checked: style")
+                                .radio
+                                    label 360&deg; gauge
+                                        input(type="radio", name="statisticGaugeStyle", value="360", data-bind="checked: style")
+
+                        .title 2. Choose data source
+                        .row.form-inline.bm15px
+                            .col-xs-6
+                                select.selectSm.form-control.input-sm.input-full(data-bind="value: dataSource")
+                                    option Current Demand
+                                    option Current Off Peak Demand
+                                    option Current On Peak Demand
+                        .title 3. Choose the period used to find the peak value
+                        .row.bm15px
+                            .col-xs-8
+                                 select.selectSm.form-control.input-sm.input-full(data-bind="value: period")
+                                    option(value="day") Day
+                                    option(value="month") Month
+
+                        .title 4. Choose gauge color thresholds (optional)
+                        .row.bm15px.form-inline
+                            .col-xs-12.spacedRadioList.bm15px
+                                .radio
+                                    label Use fixed threshold values
+                                        input(type="radio", name="statisticGaugeThreshold", value="fixed", data-bind="checked: colorStopsType")
+                                .radio
+                                    label Use percent of peak value
+                                        input(type="radio", name="statisticGaugeThreshold", value="percent", data-bind="checked: colorStopsType")
+                            // ko foreach: colorStops
+                            .col-xs-12.form-inline.thresholdRow
+
+                                span From:
+                                input.input-sm.input-tiny.form-control.rm10px(type="number", data-bind="value: from")
+                                span To:
+                                input.input-sm.input-tiny.form-control.rm10px(type="number", data-bind="value: to")
+                                span Color:
+                                div.colorPickerInline
+                                    div
+                                        div(data-usedropdown="true", data-insertpalette="false", data-bind="diColorpicker: color")
+                            // /ko
+                            .col-xs-12
+                                a.addThreshold(href="javascript://", data-bind="click: addColorStop") Add Threshold
+
+                        .title 5. Choose Widget Title
+                        .row
+                            .col-xs-8
+                                input.input-sm.input-full.form-control(type="text", data-bind="value: title")
+
+                .sizeGrid(data-bind="visible: type() !== 'Statistic'")
+                    div
+                        span Width (in grid cells):
+                        select.pull-right(data-bind="value: width")
+                            option(value="singleCol") 1
+                            option(value="doubleCol") 2
+                            option(value="tripleCol") 3
+                    div
+                        span Height (in grid cells):
+                        select.pull-right(data-bind="value: height")
+                            option(value="singleRow") 1
+                            option(value="doubleRow") 2
+                            option(value="tripleRow") 3
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.updateDashboardItem.bind($page)") Update
+                button.btn.btn-danger.btn-sm(data-bind="click: $page.bindings.deleteDashboardItem.bind($page)") Delete
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityDashboardSelectBackground', touPage: 'Electricity-Dashboard'")
+    .modal-dialog.modal-lg
+        .modal-content
+            .modal-header.dashboardHeader.modal-header-white
+                .topRow.form-inline
+                    //- button.btn.btn-default.btn-sm Upload
+                    .dropdown
+                        .btn-group
+                            button.btn.btn-primary.btn-sm(data-toggle="dropdown") Choose Color
+                            button.btn.btn-primary.btn-sm.dropdown-toggle(data-toggle="dropdown")
+                                span.caret
+                            ul.dropdown-menu(aria-labelledby='dashboardBackgroundColor')
+                                li
+                                    div
+                                        div.test(data-usedropdown="false", data-insertpalette="false", data-bind="diColorpicker: bgColor")
+                    .backgroundPreview(data-bind="style: { backgroundColor: '#' + bgColor() }")
+
+                    .checkbox
+                        input(type="checkbox", data-bind="checked: useColor")
+                        label Use Color
+
+                    .pull-right
+                        button.btn.btn-primary.btn-sm(data-target="dashboardBackgroundUpload", data-bind="hiddenUpload: newBackgroundHandler") Upload Image
+                        input#dashboardBackgroundUpload.hidden(type="file")
+            .modal-body.modal-body-scroll
+                .backgroundImages(data-bind="foreach: backgroundImages")
+                    .col-xs-4
+                        a(href="javascript://", data-bind="click: $parent.selectBackground")
+                            img(data-bind="css: { selected: $data === $parent.background() && !$parent.useColor() }, attr: { src: tou.backgroundFolder + $data }")
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-success.btn-sm(data-bind="click: $page.bindings.updateDashboardBackground.bind($page)") Update
+
+// End Dashboard Modals
+
+// Rate Table Modals------------------------
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityRateFiscalYear', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Set Fiscal Year
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+
+                .row
+                    .col-xs-8
+                        .title 1. Choose Fiscal Year
+                        .row.bm15px
+                            .col-xs-12
+                                input.input-sm.form-control(type="number", data-bind="value: fiscalYear", required)
+
+            .modal-footer
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.setFiscalYear.bind($page)") Save
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityRatePeriod', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title(data-bind="text:title")
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+                .row
+                    .col-sm-6
+                        .title 1. Choose season
+                        .radio
+                            label Winter
+                                input(type="radio", name="rateTableSeason", value="winter", data-bind="checked: season")
+                        .radio
+                            label Summer
+                                input(type="radio", name="rateTableSeason", value="summer", data-bind="checked: season")
+                        .radio
+                            label Transition
+                                input(type="radio", name="rateTableSeason", value="transition", data-bind="checked: season")
+                    .col-sm-6
+                        .form-inline
+                            .title 2. Choose date ranges
+                            .row
+                                .col-xs-3 From
+                                .col-xs-6
+                                    input.input-sm.form-control(type="text", data-bind="datepicker: dateFrom", required)
+                            .row
+                                .col-xs-3 To
+                                .col-xs-6
+                                    input.input-sm.form-control(type="text", data-bind="datepicker: dateTo", required)
+                .row
+                    .col-sm-6
+                        .form-inline.days
+                            .checkbox(data-bind="visible: season() === 'transition'")
+                                input#enablePeakSelection(type="checkbox", data-bind="checked: enablePeakSelection")
+                                label(for="enablePeakSelection") Enable Peak Selection
+                            span(data-bind="visible: season() !== 'transition' || (season() === 'transition' && enablePeakSelection() === true)")
+                                .title 3. Choose peak days
+                                .day S
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: daySunday")
+                                .day M
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayMonday")
+                                .day T
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayTuesday")
+                                .day W
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayWednesday")
+                                .day TH
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayThursday")
+                                .day F
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayFriday")
+                                .day S
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: daySaturday")
+                    .col-sm-6(data-bind="visible: season() !== 'transition' || (season() === 'transition' && enablePeakSelection() === true)")
+                        .form-inline
+                            .title 4. Choose peak time
+                            .row
+                                .col-xs-3 From
+                                .col-xs-6.clockpicker
+                                    input.input-sm.form-control(type="text", data-bind="timepicker: timeFrom")
+                            .row
+                                .col-xs-3 To
+                                .col-xs-6.clockpicker
+                                    input.input-sm.form-control(type="text", data-bind="timepicker: timeTo")
+                .row.form-inline
+                    .col-sm-12
+                        .title Last Step.  Choose season name (optional)
+                        input.form-control.seasonName(type="text", data-bind="value: seasonName")
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.addNewRatePeriod.bind($page), text: saveText")
+                button.btn.btn-danger.btn-sm(data-bind="visible: isUpdate, click: $page.bindings.deletePeriod.bind($page)") Delete
+
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityAddFiscalYearRateTable', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Add Fiscal Year Rate Table
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+                .title 1. Choose Year
+                .row.bm15px
+                    .col-xs-3
+                        input.input-sm.form-control(type="number", data-bind="value: year")
+                .title 2. Choose Option
+                .checkbox
+                    label
+                        input(type="checkbox", data-bind="checked: copyData")
+                        |Copy Data from Previous Year?
+
+                select.selectSm.bm15px.form-control.input-sm(data-bind="options: previousYears, value: yearToCopy, visible: copyData")
+
+                .infoMessage.infoMessage-small
+                    i.fa.fa-info-circle
+                    span The current rate table (Fiscal Year #[span(data-bind="text: currFiscalYear")]) cannot be changed after adding a new rate table
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.addNewFiscalYear.bind($page)") Save
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityEditRateTable', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Update Table
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+                .title Table Name
+                .row.bm15px
+                    .col-xs-6
+                        input.input-sm.form-control(type="text", data-bind="value: title")
+                        .checkbox
+                            label
+                                input(type="checkbox", data-bind="checked: hidePeakInfo")
+                                | Do not show peak information
+                //- .checkbox(data-bind="visible: isChild")
+                //-     label
+                //-         input(type="checkbox", data-bind="checked: unlink")
+                //-         | Unlink this table's rate periods from "#[span(data-bind="text: parentTableName")]"?
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.updateRateTable.bind($page)") Save
+                button.btn.btn-danger.btn-sm(data-bind="click: $page.bindings.deleteRateTable.bind($page)") Delete
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityAddOffPeakDay', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title(data-bind="text: title")
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="text: $data")
+                    // /ko
+                .title 1. Choose Date
+                .row.bm15px
+                    .col-xs-3
+                        input.input-sm.form-control(type="text", data-bind="datepicker: date")
+                .title 2. Choose Name
+                .row
+                    .col-xs-6
+                        input.input-sm.form-control(type="text", data-bind="value: name")
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.addNewHoliday.bind($page), text: saveText")
+                button.btn.btn-danger.btn-sm(data-bind="visible: isUpdate, click: $page.bindings.deleteHoliday.bind($page)") Delete
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityAddRateElement', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title(data-bind="text:title")
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="html: $data")
+                    // /ko
+                .row.bm15px
+                    .col-xs-6
+                        .title 1. Choose rate type
+                        .radio
+                            label TOU Demand Charge
+                                input(type="radio", name="rateElementType", value="demand", data-bind="checked: type")
+                        .radio
+                            label TOU Consumption Charge
+                                input(type="radio", name="rateElementType", value="consumption", data-bind="checked: type")
+                        .radio
+                            label Reactive Power Charge
+                                input(type="radio", name="rateElementType", value="reactive", data-bind="checked: type")
+                        .radio
+                            label Rate Modifier
+                                input(type="radio", name="rateElementType", value="ratemodifier", data-bind="checked: type")
+                        .radio
+                            label Flat Rate Charge
+                                input(type="radio", name="rateElementType", value="flatrate", data-bind="checked: type")
+
+                    .col-xs-6(data-bind="visible: type() === 'demand' || type() === 'consumption'")
+                        .title 2. Choose on/off peak
+                        .radio
+                            label On Peak
+                                input(type="radio", name="rateElementPeak", value="on", data-bind="checked: peak")
+                        .radio
+                            label Off Peak
+                                input(type="radio", name="rateElementPeak", value="off", data-bind="checked: peak")
+                        .radio
+                            label Both
+                                input(type="radio", name="rateElementPeak", value="both", data-bind="checked: peak")
+
+                    .col-xs-6(data-bind="visible: type() === 'reactive'")
+                        .title 2. Choose threshold
+                        input.input-tiny.input-sm.form-control(type="number", data-bind="value: threshold")
+                        | %
+
+                    .col-xs-6(data-bind="visible: type() === 'ratemodifier'")
+                        .title 2. Choose modifier
+                        select.selectSm.input-sm.form-control
+                            option % Multiplier
+
+                .row.bm15px.form-inline(data-bind="visible: type().match('consumption') && peak() === 'off'")
+                    .col-xs-6
+                        .title 3. Choose Qualifier (optional)
+                    .col-xs-6
+                        .title(data-bind="visible: rateQualifier() === '' || rateQualifier() === null") &nbsp;
+                        .title(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null") 4. Choose Qualifier Demand
+                    .col-xs-6
+                        input.input-sm.rateQualifier.form-control(type="text", data-bind="value: rateQualifier")
+                        select.selectSm.form-control
+                            option hrs
+                        .flexrow.flexaround
+                            button(data-val="<=", data-bind="click: addQualifier") &le;
+                            button(data-val="<", data-bind="click: addQualifier") &lt;
+                            button(data-val="AND", data-bind="click: addQualifier") AND
+                            button(data-val=">=", data-bind="click: addQualifier") &ge;
+                            button(data-val=">", data-bind="click: addQualifier") &gt;
+                    .col-xs-6(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null")
+                        select.selectSm.form-control(data-bind="value: qualifierDemand")
+                            option Max Demand
+                            option On Peak Demand
+
+                .title Final Step.  Choose rate element name.
+                .row
+                    .col-xs-8
+                        input.form-control(type="text", data-bind="value: rateName")
+                .col-xs-12.placeholderHelp
+                    span You can use the following variables. The '{' and '}' characters are required.
+                    ul
+                        li {Season}
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.addNewRateElement.bind($page), text: saveText")
+                button.btn.btn-danger.btn-sm(data-bind="visible: isUpdate, click: $page.bindings.deleteRate.bind($page)") Delete
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityAddRateTable', touPage: 'Electricity-Rate Table'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Add Table
+            .modal-body
+                .alert.alert-danger(data-bind="visible: errorMessages().length > 0")
+                    // ko foreach: errorMessages
+                    div(data-bind="html: $data")
+                    // /ko
+                .title 1. Choose Table Name
+                .row.bm15px
+                    .col-xs-6
+                        input.input-sm.form-control(type="text", data-bind="value: tableName")
+                        .checkbox
+                            label
+                                input(type="checkbox", data-bind="checked: hidePeakInfo")
+                                | Do not show peak information
+                // ko if: rateTablesUsable().length > 0
+                // ko onlyOneCheck: true
+                .title 2. Rate Periods
+                .checkbox
+                    label
+                        input(type="checkbox", data-bind="checked: copyPeriods")
+                        | Copy rate periods from an existing table to this table?
+                //- .checkbox
+                //-     label
+                //-         input(type="checkbox", data-bind="checked: linkPeriods")
+                //-         | Link rate periods from an existing table?
+                select.selectSm.input-sm.form-control(data-bind="options: rateTablesUsable, optionsText: 'title', value: linkedTable")
+                // /ko
+                // /ko
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.addNewRateTable.bind($page)") Add
+// End Rate Table Modals
+
+// Billing Modals
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingDefaultTitle', touPage: 'Electricity-Billing'")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-header
+                h3.panel-title Update Bill Title Template
+            .modal-body
+                .title Bill Title Template
+                input.input.form-control(type="text", data-bind="textInput: title", placeholder="Enter Value")
+                .billing.placeholderHelp
+                    span You can use the following variables. The '{' and '}' characters are required.
+                    ul
+                        li {Season}
+                        li {Month}
+                        li {Year}
+                        li {Fiscal Year}
+                .billing.titleHelp
+                    i.fa.fa-info-circle
+                    span This sets the template for the title of all bills that haven't been committed (usually this bill and future bills). The title for committed bills is not affected.
+
+            .modal-footer
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.updateBillTitle.bind($page)") Update
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingUncommitBill', touPage: 'Electricity-Billing'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header(style="background-color: #000")
+                h3.panel-title Uncommit Bill
+            .modal-body
+                span Select 'Uncommit' to remove this committment and recreate the bill&nbsp;
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Month'") using data from the data store.
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Year'") using data from committed monthly bills and/or data from the data store when the monthly bills have not been committed.
+
+                .warning
+                    i.fa.fa-exclamation-triangle
+                    span Warning: this cannot be undone.
+
+            .modal-footer.uncommitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.uncommitBill.bind($page)") Uncommit
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingCommitBill', touPage: 'Electricity-Billing'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header
+                h3.panel-title Commit Bill
+            .modal-body
+                span Are you sure you want to commit this bill?
+                .info
+                    i.fa.fa-info-circle
+                    span This can be undone in the future.
+
+            .modal-footer.commitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.commitBill.bind($page)")
+                    i.fa.fa-spin.fa-spinner
+                    span Commit
+
+// End Billing Modals
+
+// Report Modals
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingUncommitReport', touPage: 'Electricity-Reports'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header(style="background-color: #000")
+                h3.panel-title Uncommit Report
+            .modal-body
+                span Select 'Uncommit' to remove this commitment and recreate the report using data from the data store.
+                .warning
+                    i.fa.fa-exclamation-triangle
+                    span Warning: this cannot be undone.
+
+            .modal-footer.uncommitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.uncommitReport.bind($page)") Uncommit
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingCommitReport', touPage: 'Electricity-Reports'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header
+                h3.panel-title Commit Report
+            .modal-body
+                span Are you sure you want to commit this report?
+                .info
+                    i.fa.fa-info-circle
+                    span This can be undone in the future.
+
+            .modal-footer.commitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.commitReport.bind($page)")
+                    i.fa.fa-spin.fa-spinner
+                    span Commit
+// End Report Modals
+
+
+//- Template.  touModal: modalName/property.
+
+//- .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'electricityAddRateTable'")
+//-     .modal-dialog.modal-sm
+//-         .modal-content
+//-             .modal-header
+//-                 h3.panel-title Title
+//-             .modal-body
+
+//-             .modal-footer
+//-                 button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+//-                 button.btn.btn-primary.btn-sm Add
+// /ko

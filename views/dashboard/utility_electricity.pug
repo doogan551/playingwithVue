@@ -1,0 +1,18 @@
+// ko if:loaded
+.page.dashboard(data-bind="with: dashboardBindings")
+    include electricity_dashboard.pug
+.page.billing(data-bind="with: billingBindings")
+    include electricity_billing.pug
+.page.reports(data-bind="with: reportsBindings")
+    include electricity_reports.pug
+.page.ratetable(data-bind="with: ratetableBindings")
+    include electricity_ratetable.pug
+.page.datastore(data-bind="with: datastoreBindings")
+    include electricity_datastore.pug
+.page.meters(data-bind="with: metersBindings")
+    include electricity_meters.pug
+.page.export(data-bind="with: exportBindings")
+    include electricity_export.pug
+.page.security(data-bind="with: securityBindings")
+    include electricity_security.pug
+// /ko

@@ -342,7 +342,7 @@ img {
     width: auto !important;
 }*/
 
-.controllerDelete {
+.controllerDelete, .networkDelete {
     width: 17px !important;
 }
 
@@ -472,6 +472,20 @@ tr:hover .showOnHover {
     width: 30px;
 }
 /* control codes */
+
+/* Telemetry */
+tr th:first-child,
+tr td:first-child{
+    width: 150px;
+}
+tr th:nth-child(3),
+tr td:nth-child(3){
+    width: 250px;
+}
+#telemetryActionBar{
+    padding-top: 10px;
+}
+/* end Telemetry*/
 
 /* weather info */
 .weatherTitle {
@@ -1119,4 +1133,4 @@ tr:hover .showOnHover {
     width: auto;
 }*/
 
-/* notifications */
+/* notifications 

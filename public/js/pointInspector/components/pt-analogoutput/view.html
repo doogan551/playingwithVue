@@ -1,7 +1,7 @@
 <div class="nav">
     <ul>
         <li><span>Overview</span></li>
-        <!-- ko if: $root.isSystemAdmin() -->
+        <!-- ko if: $root.isSystemAdmin() || (data._pStatus() === $root.utility.config.Enums["Point Statuses"].Inactive.enum)-->
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
@@ -126,9 +126,9 @@
         </div>
         <hr>
         <div class="row">
-            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Alarm Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
-            <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Alarm Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Alarm Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Alarm Deadband', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
@@ -137,9 +137,9 @@
         <div class="row">
             <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Enable Warning Alarms', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
-            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Warning Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
-            <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Warning Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Warning Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <hr>
@@ -176,13 +176,11 @@
             <!-- /ko -->
         </div>
         <div class="row">
-            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
-            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Open Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Open Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
-            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Close Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
-            <!-- /ko -->
-            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'VAV Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Close Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Polarity', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Polarities', rootContext: $root } } -->
             <!-- /ko -->
@@ -193,6 +191,8 @@
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Poll Register', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Poll Data Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Data Types', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Modbus Order', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Instance', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 4194303, rootContext: $root } } -->
             <!-- /ko -->
@@ -226,6 +226,8 @@
             <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Broadcast Enable', data: data, columnClasses: 'col col-sm-3 col-xs-4', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Broadcast Period', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: '0:0:15', max: '0:59:59', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Read Only', data: data, columnClasses: 'col col-sm-3 col-xs-4', rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <hr>

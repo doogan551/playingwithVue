@@ -1,66 +1,68 @@
 .leftBar {
     z-index: 5;
-    padding: 15px 0px 10px 5px;
+    padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 100px;
+    width: 86px;
     height: 100%;
     color: #ffffff;
-    background-color: rgb(65, 105, 51);
-    border-right: 2px solid #696969;
+    border-right: 1px solid #ccc;
+}
+.leftBar a {
+    /*padding-top: 0px;*/
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 0px 5px 96px;
-    position: relative;
-    width: 100%;
+    position: absolute;
+    left: 86px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: #fff;
+    /*overflow-x: auto;*/
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
-    padding-left: 4px;
+    padding-left: 0px;
 }
 .reportDisplayFooter {
     display: inline-block;
     margin-right: 21px;
     vertical-align: super;
 }
-.durationCtrl {
-    background-color: white;
-    border: 1px solid #D0D0D0;
-    border-radius: 3px;
-    padding: 2px 8px 2px 2px;
-    width: 130px;
-    /*width: 100%;*/
-    text-align: right;
+td .durationCtrl {
+    /*display: inline-flex;*/
+    /*padding: 2px 8px 2px 2px;*/
+    /*width: 150px;*/
+    /*text-align: right;*/
 }
-.durationCtrl > input {
+td .durationCtrl > input {
     width: 25px;
     text-align: right;
     padding: 3px;
     border: none;
     outline: none;
 }
-.durationCtrl > .timeSeg {
+td .durationCtrl > .timeSeg {
     font-size: x-small;
 }
-.durationCtrl.durationDisplay {
+td .durationCtrl.durationDisplay {
     text-align: right;
     padding: 3px 10px 3px 3px;
-    /*border: none;*/
     outline: none;
 }
-.durationCtrl.durationDisplay > .timeSeg {
+td .durationCtrl.durationDisplay > .timeSeg {
     padding-right: 4px;
 }
-.durationCtrl > input::-webkit-inner-spin-button,
-.durationCtrl > input::-webkit-outer-spin-button {
+td .durationCtrl > input::-webkit-inner-spin-button,
+td .durationCtrl > input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     -moz-appearance: textfield;
 }
-.durationDateRange {
+input.input.form-control.durationDateRange {
     width: 200px;
     padding-left: 26px;
 }
-.durationDateRangeTime {
+input.input.form-control.durationDateRangeTime {
     width: 65px;
 }
 .durationError {
@@ -68,13 +70,8 @@
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
 }
-.reportDateRangePicker {
-    display: inline-flex;
-    margin-left: 50px;
-}
-.workingPane {
-    /*min-width: 1120px;*/
-    /*margin-left: 1px;*/
+.reportRangePicker {
+    width: 150px;
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -86,16 +83,41 @@
     cursor: pointer;
     text-decoration: underline;
 }
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-rendering: optimizeLegibility;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+.viewReportNav {
+    width: 400px !important;
+    /*height: 53px !important;*/
+    /*margin-left: 8px !important;*/
+}
+.viewReportNav li {
+    margin-right: 5px;
+}
 .runReportTabSpinner {
-    margin-left: 5px;
+    margin-left: 20px;
 }
 .runReportCheckMark {
-    margin-left: 5px;
+    margin-left: 34px;
 }
 .reportDisplayTitle {
     margin-top: 2px;
+    text-align: center;
 }
-
 .direports > body > ul.dt-button-collection.dropdown-menu {
     width: 100px;
     min-width: 90px;
@@ -120,76 +142,79 @@
 .removerow {
     cursor: pointer;
 }
-.availablePropertiesContainer {
+.availablePropertiesContainer .dropdown-content {
     cursor: pointer;
 }
-.availableOperatorsContainer {
+.availableOperatorsContainer .dropdown-content {
     cursor: pointer;
+    padding-left: 10px;
+    width: 68px;
+    min-width: 50px;
 }
 .availableIntervalsContainer {
+    padding-left: 15px;
+}
+.availableIntervalsContainer .dropdown-content {
     cursor: pointer;
     margin-right: 7px;
+    margin-top: 26px;
 }
-.availableDurationsContainer {
+.availableIntervalsContainer a.dropdown-button {
+    margin-top: 26px;
+}
+.availableDurationsContainer .dropdown-content {
     cursor: pointer;
     display: inline-block;
     margin-left: 7px;
     margin-right: 7px;
 }
-.intervalDurationSettings {
-    display: -webkit-box;
-    color: black;
+div.reportAttribs.tab-pane {
+    padding-left: 1%;
+    padding-top: 20px;
 }
-span.durationSettings {
-    margin-left: 292px;
-    color: black;
-}
-span.durationLabel {
-    color: black;
-}
-.durationSettings .checkbox input {
-    margin-left: 5px;
-}
-input.durationCheckbox {
-    margin-left: 8px;
-    vertical-align: middle;
-}
-.hideDurationDropdown {
-    display: none;
+div.additionalFilters.tab-pane {
+    padding-left: 5%;
+    padding-top: 20px;
 }
 .durationCalendarIcon {
-    left: 80px;
-    top: 8px;
+    left: -222px;
+    top: 12px;
 }
 .timePickers {
     display: flex;
-    margin-left: 112px;
 }
 span.timePickerLabel {
     display: flex;
     align-items: center;
     color: black;
 }
-
+.reportDatePickers {
+    display: inline-flex;
+}
+.reportTimePickers {
+    display: inline-flex;
+}
+span.reportEndDatePicker, span.endTimepicker {
+    padding-left: 20px;
+}
+.reportDatePickers .input-field {
+    width: 150px;
+}
+.reportTimePickers .input-field {
+    width: 150px;
+}
 span.reportDateRangeLabel {
     display: flex;
     align-items: center;
     color: black;
     padding: 0px 3px 0px 3px;
 }
-.intervalValue {
-    width: 80px;
-    margin-left: 7px;
+input.intervalValue {
+    padding-left: 5px;
+    width: 65px;
 }
-span.intervalLabel {
-    display: flex;
-    align-items: center;
-    color: black;
-}
-
 .intervalSettings {
     display: inline-flex;
-    margin-left: 65px;
 }
 .emptyColumn {
     width: 10px;
@@ -220,40 +245,61 @@ span.intervalLabel {
     margin-top: -2px;
 }
 .totalizerOperator {
+    width: 95px;
+}
+.totalizerOperators.dropdown-content {
+    width: 80px !important;
+}
+.calculations {
+    list-style-type: none;
     width: 115px;
+    -webkit-appearance: none;
+    padding: 15px 0px 0px 8px;
 }
-.totalizerOperators.dropdown-menu {
-    width: 80px;
-    min-width: 80px;
-    text-indent: -13px;
-    margin-left: 15px;
-    margin-top: -2px;
+.globalCalculations {
+    list-style-type: none;
 }
-.calculations.dropdown-menu {
-    width: 65px;
-    min-width: 50px;
-    text-indent: -13px;
-    margin-left: 24px;
-    margin-top: -2px;
+.entries.dropdown-content {
+    width: 130px;
+    min-width: 70px;
+    text-indent: 7px;
+    padding-top: 10px;
 }
-.chartTypes.dropdown-menu {
+.calculations.dropdown-content {
+    width: 110px !important;
+    padding-bottom: 12px;
+}
+.calculations.dropdown-content li {
+    min-height: 10px;
+}
+.availableAxisGroupsContainer .dropdown-content li {
+    min-height: 10px;
+}
+.chartTypeSelection {
+    padding-left: 100px;
+}
+.chartTypes.dropdown-content {
     width: 65px;
     min-width: 65px;
     text-indent: -13px;
-    margin-left: 24px;
-    margin-top: -2px;
 }
-.childCondition > .dropdown > .operators.dropdown-menu {
+.childCondition > .dropdown > .operators.dropdown-content {
     min-width: 45px;
     width: 45px;
     text-indent: -13px;
     margin-left: 22px;
     margin-top: -2px;
 }
-.intervals.dropdown-menu {
+.intervals.dropdown-content {
     min-width: 85px;
     width: 85px;
     text-indent: 0px;
+}
+.addColumnGridButton {
+    cursor: pointer;
+}
+.dropdown-content li>a, .dropdown-content li>span {
+    color: #607d8b !important;
 }
 .operator {
     cursor: pointer;
@@ -264,6 +310,24 @@ span.intervalLabel {
 .condition {
     cursor: pointer;
 }
+.globallyChangedField {
+    border: 2px solid lightskyblue;
+}
+.footerCalc:hover {
+    color: #00B04F;
+}
+.footerCalc:hover:after {
+    content: attr(data-title);
+    border: 1px solid #cccccc;
+    background-color: #efefef;
+    position: relative;
+    padding: 3px 8px;
+    font-size: 14px;
+    z-index: 9999;
+    margin-left: 40px;
+    margin-top: -30px;
+    width: 130px;
+}
 td.filterName {
     width: 275px;
     padding-left: 20px !important;
@@ -271,22 +335,26 @@ td.filterName {
 .filterName.open:focus {
     border-color: #d5e1f2;
 }
+.nav-tabs > li > a:hover {
+    background-color: #eceff1 !important;
+}
+.nav-tabs > li.active > a {
+    background: none;
+}
 .tabConfiguration{
+    width: 100%;
+    height: 95%;
     padding-top: 0px;
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
-    background-color: rgb(65, 105, 51);
     border-bottom: none;
 }
 .tabConfiguration ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
-}
-.tabConfiguration ul.nav.nav-tabs li a {
-    background-color: #B1B1B1;
+    background-color: #fff !important;
 }
 .tabConfiguration .tab-content {
-    background-color: #dddddd;
+    background-color: #fff;
     border-radius: 0px 0px 7px 7px;
     margin-top: 0px;
     margin-left: 0px;
@@ -294,55 +362,66 @@ td.filterName {
     padding-left: 20px;
     padding-right: 20px;
 }
-.tabConfiguration .tab-pane {
-    /*height: 70vh;*/
-}
 .tabViewReport {
+    width: 100%;
+    height: 100%;
     padding-top: 0px;
     min-width: 850px;
 }
 .tabViewReport ul.nav.nav-tabs {
-    /*background-color: rgb(65, 105, 51);*/
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
-    /*background-color: #B1B1B1;*/
     padding: 1px 3px 1px 3px;
     border-radius: 4px 4px 4px 4px;
 }
 .tabViewReport .tab-content {
+    width: 100%;
+    height: 100%;
     background-color: #F5F5F5;
     border-radius: 0px 0px 7px 7px;
     margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
-    padding-right: 20px;
+    padding-left: 5px;
+    padding-right: 10px;
 }
 .tabViewReport div.dataTables_filter {
-    display: inline-block;
-    margin-left: 50px;
+    float: right;
+    margin-top: -50px;
+    height: 65px;
+}
+.tabViewReport div.dataTables_paginate {
+    margin-top: -21px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-left: 50px;
-    margin-top: -6px;
+    margin-top: -45px;
+    float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
-    padding: 4px 6px 0px 6px;
-    margin-left: -6px;
+    padding: 0px 7px 0px 9px;
     border-radius: 0px 4px 4px 0px;
-    height: 30px;
+    height: 33px;
     margin-top: 2px;
 }
 .tabViewReport .chartButtons i.fa-print {
     padding-right: 3px;
 }
+#reportAttribs {
+    overflow-y: auto;
+}
 #reportColumns {
+    overflow-y: auto;
+}
+#gridColumnConfig {
+    overflow-x: auto;
+}
+#filterByPoint {
     overflow-y: auto;
 }
 #additionalFilters {
@@ -351,39 +430,39 @@ td.filterName {
 #chartSettings {
     overflow-y: auto;
 }
-ul.filterValues.dropdown-menu {
+ul.filterValues.dropdown-content {
     min-width: 60px;
 }
-ul.enumproperties.dropdown-menu li a:hover {
+ul.enumproperties.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.filterValues.dropdown-menu li a:hover {
+ul.filterValues.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.operators.dropdown-menu li a:hover {
+ul.operators.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.totalizerOperators.dropdown-menu li a:hover {
-    background-color: #d5e1f2;
-    cursor: pointer;
-}
-ul.calculations.dropdown-menu li a:hover {
+ul.totalizerOperators.dropdown-content li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.yaxisGroups.dropdown-menu li a:hover {
+ul.calculations.dropdown-content li:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+}
+ul.yaxisGroups.dropdown-content li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
     width: 30px;
 }
-ul.chartTypes.dropdown-menu li a:hover {
+.yaxisChartGroup li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.intervals.dropdown-menu li a:hover {
+ul.intervals.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.durations.dropdown-menu li a:hover {
+ul.durations.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
 input.input.form-control.filterContainer:enabled {
@@ -393,18 +472,18 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-default.dropdown-toggle.operatorButton {
+.btn.dropdown-button.operatorButton {
     border: none;
 }
-.btn-default.dropdown-toggle.conditionButton {
+.btn.dropdown-button.conditionButton {
     border: none;
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 0px 18px 18px 0px;
     margin-left: 4px;
 }
-.btn-default.dropdown-toggle.conditionButton.orCondition {
-    border-radius: 18px;
+.btn.dropdown-button.conditionButton.orCondition {
+    border-radius: 0px 9px 9px 0px;
 }
 span.caret.lm10px {
     margin-left: 3px;
@@ -414,26 +493,66 @@ span.caret.lm10px {
     text-decoration: #00B04F;
 }
 .btn:hover, .btn:focus, .btn.focus {
-    color: #397714;
+    color: #23527c;
     text-decoration: none;
 }
 a.tab {
     color: #ffffff;
 }
+.pointTypesFilter {
+    padding-top: 12px;
+}
+.adjustPointTypesFilterButton {
+    margin-top: 30px;
+    margin-bottom: 50px;
+    color: #fff !important;
+}
+.adjustPointTypesFilterButton:hover {
+    color: #23527c !important;
+}
+.pointTypesFilter ul {
+    display: flex;
+    flex-wrap: wrap;
+    width: 80vw !important;
+    right: 30px;
+    padding-top: 10px;
+}
+.pointTypesFilter ul li {
+    clear: none;
+    width: 20%;
+    float: left;
+}
+.filled-in[type="checkbox"].filled-in:checked + label:after {
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
+}
+.selectorNames .form-control {
+    color: #607d8b;
+}
+.selectorNames label {
+    color: #607d8b;
+}
+.selectorNames .input-field.col label.active{
+    color: #607d8b;
+    /*border-bottom: 1px solid #607d8b;*/
+}
+.selectorNames .form-control.readOnly {
+    color: #607d8b;
+    background-color: #fff;
+}
+div.input-field.col {
+    padding-right: 10px;
+}
+
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
-    background-color: rgb(65, 105, 51);
-}
-body {
-    padding-top: 5px;
-    padding-right: 5px;
 }
 .displayDiv {
     display: inline-block;
 }
 .hideDiv {
-    display: none;
+    display: none !important;
 }
 .runReportSpinner {
     left: 45%;
@@ -456,9 +575,16 @@ i.iconLink:hover {
     cursor: hand;
     cursor: pointer;
 }
-.dataTables_length {
-    display: inline-block;
-    margin-left: 50px;
+div.dt-button-collection {
+    width: 117px !important;
+}
+div.dt-button-collection a div:hover {
+    background-color: #d5e1f2 !important;
+}
+.tabViewReport .dataTables_length {
+    margin-left: 260px;
+    margin-top: -30px;
+    font-weight: bold;
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
@@ -472,20 +598,86 @@ div.dataTables_wrapper div.dataTables_length select {
 }
 .columnName {
     display: inline-block;
+    padding-left: 5px;
+    padding-bottom: 22px;
 }
 .columnNameContainer {
     min-width: 310px;
 }
 .columnTotals {
-    width: 137px;
-    min-width: 135px;
+    width: 91px;
+    min-width: 91px;
 }
 .columnTotals span {
-    color: #565656;
+    /*color: #565656;*/
 }
 .availableCalculations {
     display: inline-block;
+    padding-bottom: 15px;
 }
+.availableCalculations a {
+    width: 70px;
+    padding: 0px;
+    height: 25px;
+    line-height: 26px;
+}
+.availableCalculations a .text {
+}
+.availableTotalizerOperatorsContainer a {
+    width: 80px;
+    padding: 0px;
+}
+.availableTotalizerOperatorsContainer li a {
+    width: 78px;
+}
+.availableTotalizerOperatorsContainer a .text {
+}
+.availableAxisGroupsContainer a {
+    width: 31px;
+    padding: 0px;
+    height: 25px;
+    line-height: 26px;
+}
+.availableAxisGroupsContainer a .text {
+    margin-left: 2px;
+}
+.availableAxisGroupsContainer ul.dropdown-content {
+    cursor: pointer;
+    width: 50px !important;
+    min-width: 30px !important;
+}
+.globalAvailableAxisGroupsContainer a {
+    width: 31px;
+    padding: 0px;
+}
+.globalAvailableAxisGroupsContainer a .text {
+    margin-left: 2px;
+}
+.globalAvailableAxisGroupsContainer ul.dropdown-content {
+    cursor: pointer;
+    width: 30px;
+    min-width: 34px;
+    text-indent: 0px;
+    margin-left: 11px;
+    margin-top: -10px;
+}
+.availableGlobalAxisGroupsContainer {
+}
+.availableGlobalAxisGroupsContainer a.dropdown-button {
+    width: 30px;
+    padding-left: 10px;
+    border-radius: 8px;
+}
+.availableGlobalAxisGroupsContainer ul.dropdown-content {
+    width: 33px;
+    min-width: 8px;
+    margin-left: 7px;
+    margin-top: -5px;
+}
+.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
+    padding: 0px;
+}
+
 .filterPointName {
     display: inline-block;
     margin-left: 4px;
@@ -502,15 +694,22 @@ div.dataTables_wrapper div.dataTables_length select {
 .availablePropertiesContainer {
     display: inline-block;
 }
-.availableAxisGroupsContainer button.btn.btn-default.dropdown-toggle {
+.availableAxisGroupsContainer button.btn.btn-default.dropdown-button {
     width: 35px;
     padding: 6px 2px;
+}
+a.btn.dropdown-button {
+    text-transform: none;
+}
+a.btn.dropdown-button.propertySelect {
+    padding: 0px 0px 0px 0px !important;
+    width: 240px;
 }
 .precision {
     width: 60px;
 }
 .inputMultiplier {
-    width: 50px;
+    width: 50px !important;
     -webkit-appearance: none;
     padding: 2px 5px 2px 5px;
 }
@@ -529,14 +728,26 @@ input.form-control.inputPrecision {
 .precisionColumn {
     width: 70px;
 }
+th .precisionColumn:focus {
+    outline: none;
+}
 .includeInChart {
     width: 40px;
+}
+th .calculateColumn:hover {
+    cursor: pointer;
+}
+th .calculateColumn:focus {
+    outline: none;
 }
 .includeInChartColumn {
     width: 30px;
 }
 .includeInChartColumn:hover {
     cursor: pointer;
+}
+th .includeInChartColumn:hover {
+    outline: none;
 }
 .includeInChartColumn.hideCheckbox {
     width: 40px;
@@ -552,17 +763,15 @@ input.form-control.inputPrecision {
     /*margin-left: 9px;*/
     margin-bottom: 10px;
 }
+th .includeInChartColumn {
+    height: 34px;
+}
 .yaxisChartGroup {
     width: 32px;
+    min-width: 20px;
     text-align: center;
 }
-.yaxisGroups.dropdown-menu {
-    width: 32px;
-    min-width: 8px;
-    margin-left: 15px;
-    margin-top: -2px;
-}
-ul.yaxisGroups.dropdown-menu li a {
+ul.yaxisGroups.dropdown-content li a {
     padding: 3px 1px 3px 1px;
     text-align: -webkit-center;
 }
@@ -570,7 +779,7 @@ input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-input.form-control.globalChartCheckbox {
+input.form-control.globalIncludeInChart {
     width: 14px;
     margin-left: 7px;
 }
@@ -578,9 +787,92 @@ input.form-control.globalChartCheckbox {
     margin-left: 6px;
     width: 215px;
 }
-.columnDisplayName {
+input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
+    padding-top: 7px;
+    padding-bottom: 4px;
+    height: 1rem;
+}
+input.form-control.columnDisplayName:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.inputMultiplier {
+    padding-top: 7px;
+    padding-bottom: 4px;
+    height: 1rem;
+}
+input.form-control.inputMultiplier:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.inputPrecision {
+    padding-top: 7px;
+    padding-bottom: 4px;
+    height: 1rem;
+}
+input.form-control.inputPrecision:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.globalPrecisionInput {
+    height: 1rem;
+    width: 35px;
+}
+input.form-control.globalPrecisionInput:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input[type=text]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input[type=search]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName1:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName1:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName2:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName2:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName3:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName3:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName4:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName4:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#reportTitleInput {
+    width: 670px;
+}
+#reportTitleInput:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.filled-in[type=number]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#reportTitleInput:focus:not([readonly])+label {
+    color: #607d8b;
 }
 .columnsGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
@@ -600,6 +892,97 @@ input.form-control.globalChartCheckbox {
     cursor: move;
     margin-right: 5px;
 }
+.gridColumnConfigTable .handle {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
+    width: 10px;
+    vertical-align: middle;
+    cursor: move;
+    padding-right: 8px;
+    margin-right: 2px;
+}
+.gridColumnConfigTable .columnItem {
+    /*display: inline-flex;*/
+}
+.gridColumnConfigTable .displayName {
+    position: relative;
+    vertical-align: top;
+}
+.gridColumnConfigTable .displayName .deleteColumnLink{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+.gridColumnConfigTable .displayName div.cellContent {
+    display: inline-flex;
+}
+.gridColumnConfigTable .columnItem.globalConfigCell {
+    display: block;
+}
+#editColumnModal .headerInfo {
+    background-color: #f1f1f1;
+    padding: 6px;
+    border-radius: 4px;
+}
+#globalEditColumnModal .headerInfo {
+    background-color: #f1f1f1;
+    padding: 6px;
+    border-radius: 4px;
+}
+.gridColumnConfigTable > thead > tr > th {
+    border-top: 1px solid #CCC !important;
+    border-left: 1px solid #CCC;
+}
+.gridColumnConfigTable > tbody > tr > td {
+    border-left: 1px solid #CCC;
+}
+.gridColumnConfigTable > tfoot > tr > td {
+    border-left: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+}
+.gridColumnConfigTable th div.columnGlobalConfig {
+    background-color: #607d8b;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 10px;
+}
+.gridColumnConfigTable th div.columnGlobalConfig:hover {
+    cursor: pointer;
+}
+.gridColumnConfigTable th div.columnGlobalConfig:hover label {
+    cursor: pointer;
+    color: #23527c;
+}
+.gridColumnConfigTable th div.columnGlobalConfig label {
+    font-size: 1rem;
+    color: white;
+    white-space: normal;
+}
+.gridColumnConfigTable th div.columnNames {
+    background-color: #607d8b;
+    padding: 4px;
+    border-radius: 3px;
+    color: white;
+}
+.gridColumnConfigTable th div.columnNames:hover {
+    cursor: pointer;
+}
+.gridColumnConfigTable th div.columnNames:hover label {
+    cursor: pointer;
+    color: #23527c;
+}
+.gridColumnConfigTable th div.columnNames label{
+    font-size: 1rem;
+    color: white;
+    white-space: normal;
+}
+.gridColumnConfigTable th a.addColumnGridButton {
+    background-color: white;
+}
+.columnsGrid th label {
+    font-size: medium;
+}
 .columnsGrid tr.ui-sortable-helper {
     border: 2px solid #33B171 !important;
 }
@@ -615,18 +998,40 @@ input.form-control.globalChartCheckbox {
 .viewReport.table > tbody > tr > td  {
     padding: 3px;
 }
+.page-break {
+    page-break-before: always;
+    page-break-after: always;
+}
+.popover-title {
+    background-color: #f5f5f5;
+    /*color: #FFFFFF;*/
+    /*font-size: 28px;*/
+    text-align:center;
+}
+/* Popover Body */
+.popover-content {
+    /*background-color: coral;*/
+    /*color: #FFFFFF;*/
+    padding: 15px;
+    white-space: pre-line;
+}
 .columnsGrid.table > thead > tr > th {
     border-bottom: 2px solid #CCC;
     padding: 4px;
     line-height: 34px;
 }
-
 .columnsGrid.table > tbody > tr > td {
-    border-top: 1px solid #CCC;
-    padding: 4px;
+    /*border-top: 1px solid #CCC;*/
+    padding: 2px;
 }
 .columnsGrid.table > tbody.sortablecolums {
     border-bottom: 2px solid #CCC;
+}
+tbody.sortablecolumns .select-wrapper input.select-dropdown {
+    height: 15px;
+}
+tbody.sortablecolumns .select-wrapper span.caret {
+    top: 0px;
 }
 .filtersGrid.table > thead > tr > th {
     border-bottom: 2px solid #CCC;
@@ -649,24 +1054,14 @@ input.form-control.globalChartCheckbox {
 .filtersGrid tr.ui-sortable-helper a.span.removerow {
     display: none;
 }
-.chartSettingsGrid.table > thead > tr > th {
-    border-bottom: 2px solid #CCC;
-    padding: 4px;
-}
-.chartSettingsGrid.table > tbody > tr > td {
-    border-top: 1px solid #CCC;
-    padding: 4px;
-}
-.chartSettingsGrid.table > tbody {
-    border-bottom: 2px solid #CCC;
-}
 .availableChartTypes.chartTab {
     padding: 0px;
+    height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
-    padding: 4px;
-    margin-top: 2px;
+    padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
+    height: 36px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
@@ -685,15 +1080,21 @@ input.form-control.globalChartCheckbox {
     height: 300px;
     overflow: hidden;
     overflow-y: auto;
+    padding-left: 7px;
 }
 .enumproperties li:hover{
     cursor: pointer;
 }
 .reporttype {
-    margin-top: 8px;
+    margin-top: 23px;
+    padding-bottom: 20px;
+}
+.reporttype label {
+    margin-top: -35px;
+    font-size: 12px;
 }
 .reportTitle {
-    background-color: #dddddd;
+    background-color: #fff;
     border-top-right-radius: 7px;
     margin-top: 0px;
     text-align: center;
@@ -706,6 +1107,11 @@ input.form-control.globalChartCheckbox {
 .hideCell {
     display: none;
 }
+.gridData {
+}
+.chartData {
+    /*margin-top: -18px;*/
+}
 td.filterCondition {
     width: 50px;
     background: #ECECEC;
@@ -714,9 +1120,7 @@ td.filterCondition {
     border-bottom: none !important;
 }
 td.filterCondition.childCondition {
-    text-indent: 15px;
-    padding-left: 12px;
-    padding-right: 10px;
+    padding-left: 25px !important;
 }
 td.filterCondition.firstConditionInGroup {
     -webkit-border-top-left-radius: 22px;
@@ -751,17 +1155,10 @@ td.filterCondition.lastConditionInGroup {
 button {
     margin-right: 5px;
 }
-.cursorPointer {
-    cursor: pointer;
-}
 .reportButtons {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -1px;
-    margin-bottom: 46px;
-    width: 320px;
-    /*border: 1px solid #73AD21;*/
-    padding: 1px;
+    margin: -1px auto 46px auto;
+    width: 325px;
+    padding: 10px 1px 1px 1px;
 }
 .reportButtons .btn.btn-primary {
     margin: 1px;
@@ -769,30 +1166,115 @@ button {
 .btn.btn-sm.btn-success {
     background-color: #08c;
 }
-.popInOutDiv {
-    width: 75px;
-}
-.pop {
-    display: -webkit-box;
-    margin-top: -65px;
-    margin-left: 6px;
-}
-.pop .fa {
-    margin-right: 5px;
-}
-.pop .fa-arrow-circle-up {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-}
-.pop .fa-arrow-circle-down {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-}
 .strikethrough {
     text-decoration:line-through
 }
 .softDeleted {
     color: red;
+}
+
+#schedule i {
+    color: #607d8b;
+    cursor: pointer;
+}
+#scheduleModal .inlineInputs .input-field {
+    white-space: nowrap;
+    margin-right: 20px;
+}
+#scheduleModal .input-field:last-child {
+    margin-right: 0px;
+}
+#scheduleModal .modal-footer .btn:not(:last-child) {
+    margin-left: 10px;
+}
+.flex {
+    display: flex;
+}
+.flex-center {
+    align-items: center;
+}
+.flex-start {
+    justify-content: flex-start;
+}
+.padleft-20 {
+    padding-left: 20px;
+}
+.marginleft-20 {
+    margin-left: 20px;
+}
+
+.autosuggestContainer {
+    position: absolute;
+    top: 100px; /* todo this won't work */
+    left: 0;
+    z-index: 2;
+    max-height: 400px;
+    min-width: 200px;
+    overflow: auto;
+    margin-top: 10px;
+    background-color: #FFF;
+}
+.autosuggestContainer .autosuggestHeader {
+    /*background-color: $blue-grey-lighten-5;*/
+    background-color: #eceff1;
+    padding: 5px;
+    font-weight: bold;
+    font-size: smaller;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestMatch {
+    padding-left: 5px;
+    padding-right: 10px;
+}
+        
+.autosuggestContainer .autosuggestContent .autosuggestSelected {
+    /*background-color: $blue-grey-lighten-1;*/
+    background-color: #78909c;
+    color: #FFF;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestMatch:hover {
+    /*@extend .autosuggestSelected;*/
+    background-color: #78909c;
+    color: #FFF;
+
+    cursor: pointer;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestHighlight {
+    font-weight: bold;
+}
+
+/* Materialize overrides */
+.chips input {
+    margin: 0;
+}
+.chips.focus {
+    /*border-bottom: 1px solid $blue-grey-lighten-2;*/
+    border-bottom: 1px solid #90a4ae;
+    /*box-shadow: 0 1px 0 0 $blue-grey-lighten-2;*/
+    box-shadow: 0 1px 0 0 #90a4ae;
+}
+.chips .chip.selected {
+    /*background-color: $blue-grey-lighten-1;*/
+    background-color: #78909c;
+}
+#scheduleModal input:focus {
+    /*$blue-grey-lighten-1;*/
+    border-bottom: 1px solid #78909c;
+    box-shadow: 0 1px 0 0 #78909c;
+}
+
+/* Materialize addons */
+.chips .chip.err {
+    /*background-color: $red-lighten-3;*/
+    background-color: #ef9a9a;
+}
+#toast-container .toast i {
+    cursor: pointer;
+    padding-left: 10px;
+}
+.preloader-wrapper .spinner-layer {
+    /*border-color: $blue-grey-lighten-1;*/
+    border-color: #78909c;
 }

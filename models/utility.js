@@ -1,4 +1,6 @@
+var _ = require('lodash');
 var db = require('../helpers/db');
+var utils = require('../helpers/utils');
 var logger = require("../helpers/logger")(module);
 
 exports.get = function(criteria, cb) {
@@ -132,16 +134,12 @@ exports.count = function(criteria, cb) {
 };
 
 exports.findAndCount = function(criteria, cb) {
-  var _points;
-
   exports.get(criteria, function(err, points) {
     if (err) {
       return cb(err);
     } else {
-      _points = points;
-
       exports.count(criteria, function(err, count) {
-        cb(err, _points, count);
+        cb(err, points, count);
       });
     }
   });
@@ -168,20 +166,38 @@ exports.remove = function(criteria, cb) {
 };
 
 exports.distinct = function(criteria, cb) {
-  var query = criteria.query;
+  var query = criteria.query || {};
   var coll = criteria.collection;
   var field = criteria.field;
-  var options = criteria.options;
+  var options = criteria.options || {};
 
   var collection = db.get().collection(coll);
 
   collection.distinct(field, query, options, cb);
 };
 
+exports.createCollection = function(criteria, cb) {
+  var coll = criteria.collection;
+
+  db.get().createCollection(coll, cb);
+};
+
+exports.rename = function(criteria, cb) {
+  var from = criteria.from;
+  var to = criteria.to;
+
+  var collection = db.get().collection(from);
+  collection.rename(to, cb);
+};
+
 exports.dropCollection = function(criteria, cb) {
   var coll = criteria.collection;
 
   db.get().dropCollection(coll, cb);
+};
+
+exports.dropDatabase = function(cb) {
+  db.get().dropDatabase({}, cb);
 };
 
 exports.ensureIndex = function(criteria, cb) {
@@ -230,13 +246,85 @@ exports.iterateCursor = function(criteria, fx, done) {
         done(err, count);
       } else {
         ++count;
-        fx(err, doc, function(err) {
-          cursor.nextObject(processDoc);
+        fx(err, doc, function(err, stop) {
+          if (!!err || !!stop) {
+            done(err, count);
+          } else {
+            cursor.nextObject(processDoc);
+          }
         });
       }
     }
 
     cursor.nextObject(processDoc);
 
+  });
+};
+
+exports.getWithSecurity = function(criteria, cb) {
+  var skip = criteria._skip || 0;
+  var limit = criteria._limit || 200;
+
+  var identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
+  var Security = require('../models/security');
+
+  Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
+    if (err || permissions === false) {
+      cb(err || permissions);
+    }
+
+    // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
+    // if permissions couldn't actually exceed the returned limit, search with upis as well
+    if (permissions !== true && _.size(permissions) <= limit) {
+      var upis = Object.keys(permissions).map(function(upi) {
+        return parseInt(upi, 10);
+      });
+      if (!criteria.query.hasOwnProperty('_id')) {
+        criteria.query[identifier] = {
+          $in: upis
+        };
+      }
+    }
+    var points = [];
+
+    exports.iterateCursor(criteria, function(err, doc, next) {
+      if (permissions !== true) {
+        if (permissions.hasOwnProperty(doc[identifier])) {
+          doc._pAccess = permissions[doc[identifier]];
+          if (skip > 0) {
+            skip--;
+          } else {
+            points.push(doc);
+          }
+        }
+      } else {
+        doc._pAccess = 15;
+        if (skip > 0) {
+          skip--;
+        } else {
+          points.push(doc);
+        }
+      }
+      next(err, points.length >= (limit || 50) || false);
+
+    }, function(err, count) {
+
+      if (permissions !== true && permissions !== false) {
+        var upis = [];
+        for (var key in permissions) {
+          upis.push(parseInt(key, 10));
+        }
+        criteria.query[identifier] = {
+          $in: upis
+        };
+        exports.count(criteria, function(err, count) {
+          cb(err, points, count);
+        });
+      } else {
+        exports.count(criteria, function(err, count) {
+          cb(err, points, count);
+        });
+      }
+    });
   });
 };

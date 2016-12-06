@@ -1,0 +1,660 @@
+doctype html
+html.direports
+    head
+        meta(charset="utf-8")
+        link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.semanticui.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.semanticui.min.css')
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        link(rel='stylesheet', href='/css/reports/reporting.css')
+    body.blue-grey.lighten-5
+        block content
+    #window
+        #wrapper(style="display:none")
+            #sidebar-wrapper.leftBar
+                div
+                    ul
+                        li.configurationButton
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
+                                //| Configuration
+                                i.material-icons.center settings
+                        li(data-bind='if: $root.canEdit()')
+                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='attr: {disabled: activeSaveRequest}', style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Save report")
+                                i.mdi.mdi-content-save.center
+                        li.viewReportButton
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
+                                //| Run Report
+                                i.material-icons.center play_arrow
+
+
+                .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+                    .spinner-layer
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper
+                            .circle
+                .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+                    i.material-icons.center thumb_up
+            #page-content-wrapper.rightPanel
+                .container-fluid
+                    .runReportSpinner.blue-grey-text(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.blue-grey-text Getting Data
+                    .runReportChartSpinner.blue-grey-text(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
+                        div.preloader-wrapper.small.blue-grey-text.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.blue-grey-text(data-bind="text: chartSpinnerTitle")
+                    .tabConfiguration
+                        .row
+                            .reportTabs.col.s12
+                                ul.tabs
+                                    li.tab.col.attribs(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                        a.strong.toggleTab.blue-grey-text.active(href="#reportAttribs", data-toggle="tab") Attributes
+                                    li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                        a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
+                                    //- li.tab.col.s1.columns2(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
+                                    // ko if: (reportType() === 'Property')
+                                    li.tab.col.s4.filterByPoint(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                    // /ko
+                                    li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                        a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                                    li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                        a.strong.toggleTab.blue-grey-text(href="#schedule") Scheduled Actions
+                        .configurationContent
+                            .hideDiv
+                                h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                                .reporttype.tiny.center-align(data-bind="text: reportType")
+                            .tab-content
+                                .tab-pane.reportAttribs#reportAttribs
+                                    .form-inline.blue-grey-text(style="display: inline-flex")
+                                        .input-field.col
+                                            input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName1, attr: {for: 'pointName1'}") Name 1
+                                        .input-field.col
+                                            input.pointName2.form-control.input-md#pointName2(data-bind="enable: $root.canEdit(), textInput: $root.pointName2", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName2, attr: {for: 'pointName2'}") Name 2
+                                        .input-field.col
+                                            input.pointName3.form-control.input-md#pointName3(data-bind="enable: $root.canEdit(), textInput: $root.pointName3", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Name 3
+                                        .input-field.col
+                                            input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
+                                    .form-inline.blue-grey-text
+                                        .input-field.col
+                                            input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
+                                    .form-inline.blue-grey-text
+                                        .input-field.col.reporttype
+                                            label.tiny Report Type
+                                            span.reporttype(data-bind="text: reportType")
+                                    .form-group.clearfix(style="display: inline-flex")
+                                        .numberOfEnteriesPerPage
+                                            label # of entries per Page
+                                            .col.s1.entries
+                                                .availableEntries
+                                                    // ko if: ($root.listOfEntriesPerPage().length > 1)
+                                                    ul#enteriesDropdown.entries.dropdown-content(data-bind="foreach: $root.listOfEntriesPerPage()")
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
+                                                    // /ko
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="enteriesDropdown")
+                                                        span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                        // ko if: (chartable())
+                                        .chartTypeSelection
+                                            label Chart Type
+                                            .col.s1.chartTypes
+                                                .availableChartTypes
+                                                    // ko if: ($root.listOfChartTypes().length > 1)
+                                                    ul#chartTypesAttribsDropdown.chartTypes.dropdown-content
+                                                        // ko foreach: $root.listOfChartTypes()
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
+                                                        // /ko
+                                                    // /ko
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
+                                                        span(data-bind="text: selectedChartType()")
+                                        // /ko
+                                .tab-pane#reportColumns
+                                    h6.strong.panel-title
+                                    table.columnsGrid.small.grid.table
+                                        thead
+                                            tr.strong(style="height:44px")
+                                                th.medium.strong
+                                                    label Column Key
+                                                // ko if: (reportType() !== 'Property')
+                                                th.medium.strong
+                                                    label Display Name
+                                                // ko if: (calculatable() === true)
+                                                th.medium.strong
+                                                    label.multiplierColumn Multiplier
+                                                th.medium.strong
+                                                    .calculateColumn(tabindex="910")
+                                                        label.columnText Calculate
+                                                        .globalCalculate.availableCalculations.hideDiv
+                                                            // ko if: ($root.listOfCalculations().length > 1)
+                                                            ul#globalCalculationsDropdown.calculations.dropdown-content(data-bind="foreach: $root.listOfCalculations", multiple=true)
+                                                                li
+                                                                    input.medium.filled-in(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
+                                                            // /ko
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="dtiReportsMaterializeDropdown", data-activates ='globalCalculationsDropdown') Calcs
+                                                // ko if: (reportType() === 'Totalizer')
+                                                th.medium.strong.typeColumn
+                                                    label Type
+                                                // /ko
+                                                th.medium.strong
+                                                    .precisionColumn(tabindex="920")
+                                                        label.columnText Precision
+                                                        .globalPrecision.hideDiv
+                                                            input.form-control.globalPrecisionInput(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+                                                th.medium.strong
+                                                    .includeInChartColumn(tabindex="930")
+                                                        label.columnText Chart
+                                                        .globalIncludeInChart.hideDiv
+                                                            input.form-control.filled-in(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
+                                                            label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
+                                                th.medium.strong
+                                                    label.yaxisChartGroupColumn
+                                                // /ko
+                                                // /ko
+                                                th.medium.strong
+                                        tbody.sortablecolumns(data-bind="foreach: listOfColumns()")
+                                            tr.columnRowData(data-bind="css: {hideDiv: ($index() === 0), fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
+                                                td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
+                                                    .handle
+                                                    // ko if: ($parent.reportType() !== 'Property')
+                                                    // ko if: ($root.canEdit())
+                                                    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
+                                                        i.material-icons.prefix.center.blue-grey-text delete
+                                                    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
+                                                        i.material-icons.prefix.center.blue-grey-text edit
+                                                    // /ko
+                                                    // ko if: (!!$data.softDeleted)
+                                                    span [Deleted]&nbsp;
+                                                    // /ko
+                                                    .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
+                                                    // /ko
+                                                    // ko if: ($parent.reportType() === 'Property')
+                                                    .availablePropertiesContainer
+                                                        ul.enumproperties.dropdown-content(data-bind="attr: { id: 'columnspropertiesDropdown'+ $index() }")
+                                                            input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                            li(role="separator", class="divider")
+                                                            li(data-bind="foreach: $parent.columnFilteredProps()")
+                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'columnspropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
+                                                            span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                                    // /ko
+                                                // ko if: ($parent.reportType() !== 'Property')
+                                                td.displayName
+                                                    input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
+                                                td.columnMultiplier
+                                                    // ko if: ($data.canCalculate)
+                                                    input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+                                                    // /ko
+                                                td.columnTotals
+                                                    // ko if: ($data.canCalculate)
+                                                    .availableCalculations
+                                                        // ko if: ($parent.listOfCalculations().length > 1)
+                                                        ul.calculations.dropdown-content(multiple=true, data-bind="foreach: $parent.listOfCalculations, attr: { 'id': 'calculationsDropdown' + $index() }")
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
+                                                        // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, dtiReportsMaterializeDropdown") Calcs
+                                                        //-main-container
+                                                        //-    select-container
+                                                        //-        select.multiple.calculations(data-bind="options: calculation, dtiReportsMaterializeSelect")
+                                                        //-    options-container
+                                                        //-        options(data-bind="foreach: $parent.listOfCalculations")
+                                                        //-            input(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}", type="checkbox")
+                                                        //-            label(data-bind="text: $data")
+                                                    // /ko
+                                                // ko if: ($parent.reportType() === 'Totalizer' && valueList.length > 0)
+                                                td.totalizerOperator
+                                                    .availableTotalizerOperatorsContainer
+                                                        // ko if: (valueList.length > 1)
+                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect")
+                                                        label
+                                                        //select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
+                                                        //    option(data-bind="attr: { selected: ($parent.operator === $data) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data, text: $data")
+                                                        // /ko
+                                                        // ko if: (valueList.length === 1)
+                                                        span(data-bind="text: operator")
+                                                        // /ko
+                                                // /ko
+                                                td.precision
+                                                    // ko if: ($data.canCalculate)
+                                                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
+                                                    // /ko
+                                                td.includeInChart
+                                                    // ko if: ($root.canEdit() && $data.canCalculate)
+                                                    input.includeInChartColumn.tooltipped.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", data-position='bottom', data-tooltip='Include in chart', data-delay='50', type="checkbox")
+                                                    label(data-bind="attr: { for: 'includeInChart' + $index()}")
+                                                    // /ko
+                                                td.yaxisChartGroup
+                                                    // ko if: ($data.canCalculate && !!$data.yaxisGroup)
+                                                    .availableAxisGroupsContainer
+                                                        .input-field
+                                                            select(data-bind="options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
+                                                            label
+                                                    // /ko
+                                                // /ko
+                                                // ko if: ($root.canEdit())
+                                                td.removecolumn
+                                                    i.removerow.blue-grey-text.material-icons.center(data-bind="click: function () { $parent.deleteReportColumn($index()) }") clear
+                                                // /ko
+                                        tbody
+                                            tr
+                                                // ko if: ($root.canEdit())
+                                                td(colspan="4")
+                                                    a.addColumnButton(href="#") Add Column
+                                                // /ko
+                                div.tab-pane#gridColumnConfig(style="display: none")
+                                    h6.strong.panel-title
+                                    table.gridColumnConfigTable.small.grid.table
+                                        thead
+                                            tr.sortablecolumns(data-bind="foreach: listOfColumns()")
+                                                th.displayName(data-bind="css: { fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
+                                                    .cellContent
+                                                        // ko if: $index() > 0
+                                                        .handle
+                                                        // /ko
+                                                        .columnItem(data-bind="css: { globalConfigCell: ($index() === 0)}")
+                                                            // ko if: $index() === 0
+                                                            // ko if: ($root.reportType() !== 'Property')
+                                                            div.columnGlobalConfig(data-bind="click: function () { $root.globalEditColumnFields() }")
+                                                                label.globalConfigColumnItem Global Config
+                                                            // /ko
+                                                            // /ko
+                                                            // ko if: $index() > 0
+                                                            // ko if: ($parent.reportType() !== 'Property')
+                                                            div.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
+                                                                // ko if: ($parent.reportType() === 'Totalizer')
+                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
+                                                                // /ko
+                                                                // ko if: ($parent.reportType() === 'History')
+                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
+                                                                // /ko
+                                                            // /ko
+                                                            // ko if: ($parent.reportType() === 'Property')
+                                                            div.columnPropertyNames
+                                                                .availablePropertiesContainer
+                                                                    ul.enumproperties.dropdown-content(data-bind="attr: { id: 'gridColumnsPropertiesDropdown'+ $index() }")
+                                                                        input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                                        li(role="separator", class="divider")
+                                                                        li(data-bind="foreach: $parent.columnFilteredProps()")
+                                                                            a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'gridColumnsPropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
+                                                                        span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                                            // /ko
+                                                            // /ko
+                                                    // ko if: $index() > 0
+                                                    .deleteColumnLink
+                                                        a.btn-mini.tiny.waves-effect.waves-light.removeColumn(data-bind="click: function() { $root.deleteReportColumn($index()) }")
+                                                            i.material-icons.center delete
+                                                    // /ko
+                                                    .blankspot
+                                                        | &nbsp;
+                                                    .addColumnContainer
+                                                        // ko if: $index() === 0
+                                                        a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element, 1) }")
+                                                        // /ko
+                                                        // ko if: $index() === ($root.listOfColumns().length - 1)
+                                                        a.addColumnGridButton.rightSideAddButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element) }")
+                                                        // /ko
+                                        tbody(style="border-bottom: 1px solid #d0d0d0;")
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                        // ko if: ($root.reportType() !== 'Property')
+                                        tfoot
+                                            tr.calculationFooter(data-bind="foreach: listOfColumns()")
+                                                // ko if: $index() === 0
+                                                td
+                                                    .globalCalculationsCell
+                                                        ul.globalCalculations(data-bind="$root.listOfCalculations")
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $root.globalcalculateColumnSelectedvalue().indexOf($data) !== -1, click: function () { return $root.globalCalculationClick($element, $data) }, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                // /ko
+                                                // ko if: $index() > 0
+                                                // ko if: ($root.listOfCalculations().length > 0)
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    .calculationsCell
+                                                        // ko if: ($data.canCalculate)
+                                                        ul.calculations
+                                                            // ko foreach: $root.listOfCalculations
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index()) }, attr: { id: 'columnCalc_' + $parentContext.$index() + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'columnCalc_' + $parentContext.$index() + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                            // /ko
+                                                        // /ko
+                                                // /ko
+                                                // /ko
+                                        // /ko
+                                div.tab-pane#filterByPoint
+                                    // ko if: ($root.reportType() === 'Property')
+                                    h6.strong.panel-title
+                                    .selectorNames
+                                        .form-inline.black-text(style="display: inline-flex")
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}, css: { active: ($root.name1Filter() !== '') }") Name 1
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}, css: { active: ($root.name2Filter() !== '') }") Name 2
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}, css: { active: ($root.name3Filter() !== '') }") Name 3
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}, css: { active: ($root.name4Filter() !== '') }") Name 4
+                                    div.pointTypesFilter
+                                        span.title Filtered Point Types
+                                        ul
+                                            // ko foreach: $root.selectedPointTypesFilter
+                                            li
+                                                label.blue-grey-text.label-tight(data-bind="text: $data")
+                                            // /ko
+                                    a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
+                                    // /ko
+                                div.tab-pane.additionalFilters#additionalFilters
+                                    table.filtersGrid.small.grid.table
+                                        tbody.sortableFilters(data-bind="foreach: listOfFilters()")
+                                            tr.filterdata
+                                                td.sorthandle
+                                                    .handle
+                                                td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
+                                                    .availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
+                                                        ul.operators.dropdown-content(data-bind="foreach: $root.conditions(), attr: { 'id': 'availableConditions'+ $index() }")
+                                                            li
+                                                                a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}, attr: { 'data-activates': 'availableConditions'+ $index() }, dtiReportsMaterializeDropdown")
+                                                            span(data-bind="text: $root.displayCondition(condition)")
+                                                td.filterName
+                                                    // ko if: ($parent.reportType() !== 'Property')
+                                                    span(data-bind="text: filterName.replace(/_/g, ' ')")
+                                                    // /ko
+                                                    .availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                        ul.enumproperties.dropdown-content(data-bind="attr: { 'id': 'enumProperties'+ $index() }")
+                                                            input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                            li(role="separator", class="divider")
+                                                            li(data-bind="foreach: $parent.filterFilteredProps()")
+                                                                a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                        a.btn.truncate.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, dtiReportsMaterializeDropdown")
+                                                            span(data-bind="text: (filterName !== '' ? filterName : 'Select property (' + $root.listOfFilterPropertiesLength + ')  ')")
+                                                td.filterOperator
+                                                    .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                        ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
+                                                            li
+                                                                a.operator.center-text(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, dtiReportsMaterializeDropdown")
+                                                            span(data-bind="text: $root.displayOperator(operator)")
+                                                td.emptyColumn
+                                                td.filterValue
+                                                    div.col-md-9
+                                                        include filterValueUI
+                                                // ko if: ($root.canEdit())
+                                                td.removecolumn
+                                                    i.removerow.blue-grey-text.material-icons.center(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") clear
+                                                // /ko
+                                    // ko if: ($root.reportType() === 'Property' && $root.canEdit())
+                                    a.small.addFilterbutton(href="#") Add Filter
+                                    // /ko
+                                    // ko if: (reportType() !== 'Property')
+                                    .reportRangePicker
+                                        label(data-bind="attr: { for: 'reportRangePicker'}") Date Range
+                                        select(data-bind="attr: { 'id': 'reportRangePicker'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
+                                    .reportDatePickers
+                                        span.reportStartDatePicker
+                                            .input-field
+                                                label(data-bind="attr: { for: 'reportStartDate' }") Start Date
+                                                input.datepicker(data-bind="attr: { 'id': 'reportStartDate' }, select: $root.startDate, dtiReportsMaterializePickadate", type="date")
+                                        span.reportEndDatePicker
+                                            .input-field
+                                                label(data-bind="attr: { for: 'reportEndDate' }") End Date
+                                                input.datepicker(data-bind="attr: { 'id': 'reportEndDate' }, select: $root.endDate, dtiReportsMaterializePickadate", type="date")
+                                    br
+                                    .reportTimePickers
+                                        span.startTimepicker
+                                            .input-field
+                                                label(data-bind="attr: { for: 'startTimepicker' }") Start Time
+                                                input.timepicker(data-bind="attr: { 'id': 'startTimepicker' }, value: $root.durationStartTimeOffSet, dtiReportsMaterializePickatime", type='time')
+                                        span.endTimepicker
+                                            .input-field
+                                                label(data-bind="attr: { for: 'endTimepicker' }") End Time
+                                                input.timepicker(data-bind="attr: { 'id': 'endTimepicker' }, value: $root.durationEndTimeOffSet, dtiReportsMaterializePickatime", type='time')
+                                    br
+                                    span.intervalSettings
+                                        div.intervalsContainer.input-field
+                                            label(data-bind="attr: {for: 'intervalValue'}") Interval
+                                            input.intervalValue.form-control.input-md.filled-in#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
+                                        .availableIntervalsContainer
+                                            ul#intervals.intervals.dropdown-content(data-bind="foreach: $root.listOfIntervalsComputed()")
+                                                li
+                                                    a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
+                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.intervalPeriod, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
+                                    // /ko
+                                div#schedule.tab-pane
+                                    .row
+                                        h5 Scheduled Actions
+                                    // ko if: scheduler.gettingDataSemaphore.value() === 0
+                                    // ko foreach: scheduler.scheduleEntries
+                                    // ko if: !$data.deleteMe()
+                                    .row.flex.flex-center
+                                        input.filled-in(type='checkbox', data-bind='checked: enabled, click: $root.scheduler.setDirty, attr: { "id": $root.makeId() }')
+                                        label(data-bind='attr: { "for": $root.getLastId() }') Enable
+                                        .padleft-20
+                                            span(data-bind='html: parsed.plainEnglish')
+                                            span , email this report to&nbsp;
+                                            span(data-bind='text: $root.scheduler.buildRecipients($data)')
+                                        i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
+                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: $data.hasOwnProperty("_id"), click: $root.scheduler.runNow') Run Now
+                                    // /ko
+                                    // /ko
+                                    a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action
+                                    // /ko
+
+                                    // ko ifnot: scheduler.gettingDataSemaphore.value() === 0
+                                    .preloader-wrapper.small.active
+                                      .spinner-layer
+                                        .circle-clipper.left
+                                          .circle
+                                        .gap-patch
+                                          .circle
+                                        .circle-clipper.right
+                                          .circle
+                                    // /ko
+
+                                .reportButtons
+                                    // ko if: ($root.canEdit())
+                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
+                                        //| Save
+                                        i.material-icons.tiny.center done
+                                    // /ko
+                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
+                                        //| Run
+                                        i.material-icons.center play_arrow
+                                    .screenMessages
+                                        .row.well-sm
+                                            .errorMessage.red.lighten-4
+                                            .successMessage.green.lighten-4
+                    .tabViewReport.well.tab-pane
+                        // ko if: (reportType() !== 'Property')
+                        .row(data-bind="css: { hideDiv: (chartable() !== true)}")
+                            .viewReportNav.col.s12
+                                ul.tabs
+                                    li.tab.col.gridData(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text.active(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab") Grid
+                                            //i.material-icons.center view_list
+                                    li.tab.col.reportChart(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab") Chart
+                                            //i.material-icons.center insert_chart
+                        // /ko
+                        div.tab-content
+                            div.gridData#gridData.tab-pane
+                                h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
+                                table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
+                                    tfoot.tableFooter
+                                        tr(data-bind="foreach: listOfColumns()")
+                                            td.strong(data-bind="attr: { colindex:  $index() }")
+                            div.chartData#chartData.tab-pane
+                                .chartButtons
+                                    .availableChartTypes.chartTab(tabindex="990")
+                                        ul#chartTypesChartdataDropdown.chartTypes.dropdown-content(data-bind="foreach: $root.listOfChartTypes()")
+                                            li
+                                                a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
+                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="dtiReportsMaterializeDropdown", data-activates="chartTypesChartdataDropdown")
+                                            span(data-bind="text: selectedChartType()")
+                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printChartDiv() }", href="#")
+                                        i.material-icons print
+                                        span.printButton Print
+                                .reportChartDiv
+    include footer
+    include popoverColumnSettings
+    include modals/dialogScreens
+    include modals/dialogEditColumn
+    include modals/dialogViewColumn
+    include modals/dialogGlobalFieldsEditColumn
+
+    script#scheduleModalTemplate(type='text/html')
+        #scheduleModal.modal.modal-fixed-footer
+            .modal-content
+                form
+                    .row.flex.flex-center.flex-start.inlineInputs
+                        .input-field
+                            select(data-bind='options: availableIntervals, value: selectedInterval')
+                            label Action Interval
+                        .input-field(data-bind='visible: selectedInterval() === "Advanced"')
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='timepicker') Time
+                            input#timepicker2.timepicker(type='time', data-bind='value: selectedTime')
+                        .flex.flex-center.flex-start(data-bind='visible: selectedInterval() !== "Advanced"')
+                            .input-field.center(data-bind='visible: selectedInterval() !== "Daily"')
+                                span On 
+                                span(data-bind='visible: selectedInterval() === "Monthly"') The
+                            .input-field(data-bind='visible: selectedInterval() === "Weekly"')
+                                select(data-bind='options: availableDaysOfWeek, optionsText: "text", optionsValue: "value", value: selectedDayOfWeek')
+                                label Day of Week
+                            .input-field(data-bind='visible: selectedInterval() === "Monthly"')
+                                select(data-bind='options: availableDates, optionsText: "text", optionsValue: "value", value: selectedDate')
+                                label Date
+                            .input-field(data-bind='visible: selectedInterval() === "Yearly"')
+                                select(data-bind='options: availableMonths, optionsText: "text", optionsValue: "value", value: selectedMonth')
+                                label Month
+                            .input-field(data-bind='visible: selectedInterval() === "Yearly"')
+                                select(data-bind='options: availableDates, optionsText: "text", optionsValue: "value", value: selectedDate')
+                                label Date
+                            .input-field.center At
+                            .input-field
+                                //- The active class on our label resolves the conflict of label overlapping initial value
+                                label.active(for='timepicker') Time
+                                input#timepicker.timepicker(type='time', data-bind='value: selectedTime')
+                    .row(data-bind='visible: selectedInterval() === "Advanced"')
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedDaysOfWeek', multiple)
+                                option(disabled, selected) Every day of the week
+                                // ko foreach: availableDaysOfWeek
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedDaysOfWeek.indexOf($data.value) }')
+                                // /ko
+                            label Days of Week
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedDates', multiple)
+                                option(disabled) Every day of the month
+                                // ko foreach: availableDates
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedDates.indexOf($data.value) }')
+                                // /ko
+                            label Dates
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedMonths', multiple)
+                                option(disabled) Every month of the  year
+                                // ko foreach: availableMonths
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedMonths.indexOf($data.value) }')
+                                // /ko
+                            label Months
+                    .row.flex.flex-center.flex-start.inlineInputs
+                        .input-field
+                            select#reportDuration(data-bind='options: availableReportRanges, optionsText: "text", value: selectedReportRange, event: { "change": handleDurationChange }')
+                            label(for='reportDuration') Report Duration
+                        .input-field
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='reportStartTimeOffset') Report Start Time
+                            input#reportStartTimeOffset.timepicker(type='time', data-bind='value: selectedReportStartTimeOffset')
+                        .input-field
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='reportEndTimeOffset') Report End Time
+                            input#reportEndTimeOffset.timepicker(type='time', data-bind='value: selectedReportEndTimeOffset')
+                    .row.flex.flex-center.flex-start.inlineInputs
+                        .input-field
+                            label.active(for='inputInterval') Report Interval
+                            input#inputInterval.active(type='number', data-bind='value: selectedReportIntervalValue')
+                        .input-field
+                            label.active(for='selectInterval') Report Period
+                            select#selectInterval(data-bind='options: selectedReportRange().intervals, value: selectedReportIntervalPeriod')
+                .chips
+            .modal-footer
+                a.btn.waves-effect.blue-grey(data-bind="click: update")
+                    span(data-bind="visible: isNew") Add
+                    span(data-bind="visible: !isNew") Update
+                a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
+                a.btn.wafes-effect.red.darken-4.left(data-bind="visible: !isNew, click: deleteScheduleEntry") Delete
+
+    script#autosuggestTemplate(type='text/html')
+        //- autosuggestMOD (the data-bind in .autosuggestContainer)
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown')
+            // ko foreach: sources
+            .autosuggestHeader(data-bind='visibile: nameShown, text: name')
+            .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')
+                .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
+            // /ko
+
+    script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
+    script(type="text/javascript" src="/js/lib/jquery-ui.js")
+    script(type="text/javascript" src='/js/lib/moment.js')
+    script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
+    script(type="text/javascript" src='/js/lib/ko.validation.js')
+    script(type="text/javascript" src='/js/lib/socket.io.js')
+    script(type="text/javascript" src='/js/lib/store.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.material.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/ColReorder/js/dataTables.colReorder.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/dataTables.buttons.min.js')
+    script(type="text/javascript" src='/js/lib/jszip.min.js')
+    script(type="text/javascript" src='/js/lib/pdfmake.min.js')
+    script(type="text/javascript" src='/js/lib/vfs_fonts.js')
+    script(type="text/javascript" src='/js/lib/highcharts.src.js')
+    script(type="text/javascript" src='/js/trendPlots/trendplot.js')
+    script(type="text/javascript" src='/js/lib/jquery.printarea.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.print.min.js')
+    script(type="text/javascript" src='/js/lib/materialize.js')
+    script(type="text/javascript" src='/js/lib/materialize.clockpicker.js')
+    script(type="text/javascript" src="/js/v2/dorsettUtility.js")
+    script(type="text/javascript" src="/js/reports/reportsViewModel.js")

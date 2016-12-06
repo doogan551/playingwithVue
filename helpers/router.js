@@ -10,6 +10,7 @@ module.exports = function(controllers) {
     /*for (var prop in req.body) {
         req.body[prop] = (typeof req.body[prop] === 'object') ? JSON.stringify(req.body[prop]) : req.body[prop];
     }*/
+
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.header("Access-Control-Allow-Headers", "Content-Type");
@@ -22,6 +23,9 @@ module.exports = function(controllers) {
   router.use('/', controllers.workspace);
   // Our inbound route is a random id so it's not guessable
   router.use('/' + inboundId, controllers.inbound);
+
+  router.use('/sass', controllers.sass);
+  router.use('/scheduleloader/report', controllers.reports);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
@@ -50,12 +54,12 @@ module.exports = function(controllers) {
   router.use('/api/system', controllers.system);
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
+  router.use('/api/schedules', controllers.schedules);
 
   router.use('/dashboard', controllers.dashboard);
   router.use('/displays', controllers.display);
   router.use('/gpl', controllers.gpl);
   router.use('/pointlookup', controllers.pointlookup);
-  router.use('/reports1', controllers.reports);
   router.use('/report', controllers.reports);
   router.use('/thumbnail', controllers.thumbnails);
   router.use('/toolbag', controllers.toolbag);

@@ -13,8 +13,6 @@ var logger = require('../helpers/logger')(module);
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-var conn = 'mongodb://localhost/infoscan';
-
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
 var History = require('../models/history.js');
@@ -44,11 +42,15 @@ var upis = {
     wS: [lowTempUpi, hiTempUpi, hddUpi, cddUpi, oatUpi]
 };
 
-function getMeterUpis(mdb, cb) {
-    mdb.collection('Utilities').find({}, {
-        'Meters': 1,
-        _id: 0
-    }).toArray(function(err, meters) {
+function getMeterUpis(cb) {
+    Utility.get({
+        collection: 'Utilities',
+        query: {},
+        fields: {
+            Meters: 1,
+            _id: 0
+        }
+    }, function(err, meters) {
         for (var i = 0; i < meters.length; i++) {
             for (var m = 0; m < meters[i].Meters.length; m++) {
                 var meter = meters[i].Meters[m];
@@ -65,25 +67,33 @@ function getMeterUpis(mdb, cb) {
     });
 }
 
-function calculateWeather(mdb, cb) {
+function calculateWeather(cb) {
     var removals = [lowTempUpi, hiTempUpi, hddUpi, cddUpi];
     var results = [];
 
-    mdb.collection('historydata').remove({
-        upi: {
-            $in: removals
+    Utility.remove({
+        collection: 'historydata',
+        query: {
+            upi: {
+                $in: removals
+            }
         }
     }, function(err, _result) {
         if (err) {
             return cb(err);
         }
-        mdb.collection('historydata').find({
-            upi: oatUpi
-        }, {
-            _id: 0
-        }).sort({
-            timestamp: 1
-        }).toArray(function(err, data) {
+        Utility.get({
+            collection: 'historydata',
+            query: {
+                upi: oatUpi
+            },
+            fields: {
+                _id: 0
+            },
+            sort: {
+                timestamp: 1
+            }
+        }, function(err, data) {
             if (err) {
                 return cb(err);
             }
@@ -150,7 +160,10 @@ function calculateWeather(mdb, cb) {
                 callback();
             }, function(err) {
                 console.log(results.length);
-                mdb.collection('historydata').insert(results, function(err, result) {
+                Utility.insert({
+                    collection: 'historydata',
+                    insertObj: results
+                }, function(err, result) {
                     return cb(err);
                 });
             });
@@ -159,41 +172,55 @@ function calculateWeather(mdb, cb) {
 }
 
 function backUp() {
-    mongo.connect(conn, function(err, mdb) {
-        calculateWeather(mdb, function(err) {
+    db.connect(connectionString.join(''), function(err) {
+        calculateWeather(function(err) {
             if (err) {
-                logToFile('getMeterUpis Error: ' + err);
+                logToFile('calculateWeather Error: ' + err);
             }
-            getMeterUpis(mdb, function(err) {
+            getMeterUpis(function(err) {
                 if (err) {
                     logToFile('getMeterUpis Error: ' + err);
                 }
-                history.setupDB(mdb, null);
                 logToFile('Starting SQLite backup.');
-                history.doBackUp(mdb, upis.all, false, function(err) {
+                History.doBackUp(upis.all, false, function(err) {
                     if (err) {
                         logToFile('doBackUp Error: ' + err);
                     }
                     logToFile('Finished with SQLite backup');
-                    setTimeout(function() {
-                        mdb.dropCollection('historydata', function(err, result) {
+                    /*setTimeout(function() {
+                        Utility.dropCollection({
+                            collection: 'historydata'
+                        }, function(err, result) {
                             if (err) {
                                 logToFile('dropCollection Error: ' + err);
                             }
-                            mdb.collection('historydata').ensureIndex({
-                                upi: 1,
-                                timestamp: 1
-                            }, {
-                                unique: true
-                            }, function(err, result) {
-                                if (err) {
-                                    logToFile('ensureIndex Error: ' + err);
-                                }
-                                logToFile('backupHistory completed. Exiting.');
-                                process.exit(0);
-                            });
+                            Utility.ensureIndex({
+                                    collection: 'historydata',
+                                    index: {
+                                        upi: 1,
+                                        timestamp: 1
+                                    },
+                                    options: {
+                                        unique: true
+                                    }
+                                },
+                                function(err, result) {
+                                    Utility.ensureIndex({
+                                            collection: 'historydata',
+                                            index: {
+                                                timestamp: -1
+                                            }
+                                        },
+                                        function(err, result) {
+                                            if (err) {
+                                                logToFile('ensureIndex Error: ' + err);
+                                            }
+                                            logToFile('backupHistory completed. Exiting.');
+                                        });
+                                });
                         });
-                    }, 2000);
+                    }, 2000);*/
+                    process.exit(0);
                 });
             });
         });
@@ -247,3 +274,10 @@ function newBackup() {
     });
 }
 newBackup();
+
+function test() {
+    db.connect(connectionString.join(''), function(err) {
+        calculateWeather(function(err) {});
+    });
+}
+// test();

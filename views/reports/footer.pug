@@ -1,0 +1,7 @@
+script.
+    var scheduled, scheduledConfig, scheduledIncludeChart, dataUrl, point;
+    scheduledConfig = !!('!{scheduledConfig}') ? JSON.parse('!{scheduledConfig}') : undefined;
+    scheduledIncludeChart = (!!scheduledConfig) ? scheduledConfig.scheduledIncludeChart : false;
+    scheduled = (!!scheduledConfig);
+    dataUrl = '!{dataUrl}';
+    point = JSON.parse('!{point}');

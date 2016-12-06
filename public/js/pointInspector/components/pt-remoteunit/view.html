@@ -1,7 +1,7 @@
 <div class="nav">
     <ul>
         <li><span>Overview</span></li>
-        <!-- ko if: $root.isSystemAdmin() -->
+        <!-- ko if: $root.isSystemAdmin() || (data._pStatus() === $root.utility.config.Enums["Point Statuses"].Inactive.enum)-->
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
@@ -52,12 +52,8 @@
             <div class="row">
                 <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-4 col-xs-6', enumSetName: 'Remote Unit Model Types', rootContext: $root } } -->
                 <!-- /ko -->
-                <div class="col col-sm-4 col-xs-6">
-                    <div class="dataField">
-                        <label>Firmware Version</label>
-                        <span class="lh30" data-bind="text: data['Firmware Version'].Value()"></span>
-                    </div>
-                </div>
+                <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Firmware Version', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
             </div>
             <hr>
             <div class="row">
@@ -120,6 +116,8 @@
             <!-- /ko -->
         </div>
         <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Gateway', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
             <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Network Type', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Instance', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 4194303, rootContext: $root } } -->
@@ -129,11 +127,16 @@
         <div class="row">
             <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Device Port', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
-            <!-- ko component: { name: 'ctl-text', params: { propertyName: 'Device Address', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
-            <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Network Segment', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 65534, rootContext: $root } } -->
             <!-- /ko -->
+            <!-- ko component: { name: 'ctl-text', params: { propertyName: 'Device Address', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Ethernet IP Port', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 1, max: 65535, rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-text', params: { propertyName: 'Router Address', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <hr>
@@ -142,7 +145,7 @@
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Poll Register', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
-            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Modbus Order', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Orders', rootContext: $root, help: { title: 'When <b>Filter</b> is enabled, <b>Scale Factor</b> is a filter value.<br>When <b>Filter</b> is disabled, <b>Scale Factor</b> is a multiplier.', placement: 'left' } } } -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Modbus Unit Id', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
         </div>
     </div>

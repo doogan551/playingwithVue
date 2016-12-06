@@ -777,12 +777,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
 
             });
         }
-        item.openPointReview = function() {
-            var workspace = window.opener.workspaceManager,
-                win = workspace.openWindowPositioned(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi(), {
-                    width: 1250,
-                    height: 750
-                });
+        item.openPointReview = function () {
+            dtiUtility.openWindow(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi());
         };
 
         item.refPoint = null;
@@ -882,14 +878,16 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         indiv["Control Property"].Value.subscribe(function(property) {
             if (item.refPoint !== null) {
                 var pointtypePropertyTemplate = config.Templates.getTemplate(item.refPoint["Point Type"].Value)[property];
-                var valueTypeInt = pointtypePropertyTemplate.ValueType;
+                var valueTypeInt;
 
-
-                item.valueTypeSelector(valueTypeInt);
-                indiv["Control Value"].ValueType(valueTypeInt);
-                indiv["Control Value"].ValueType.valueHasMutated();
-                indiv["Control Property"].eValue(config.Enums.Properties[property].enum);
-                //indiv["Active Release"].Value(false); If this is added back, go through all entries after load and set to db value
+                if (!!pointtypePropertyTemplate) {
+                    valueTypeInt = pointtypePropertyTemplate.ValueType;
+                    item.valueTypeSelector(valueTypeInt);
+                    indiv["Control Value"].ValueType(valueTypeInt);
+                    indiv["Control Value"].ValueType.valueHasMutated();
+                    indiv["Control Property"].eValue(config.Enums.Properties[property].enum);
+                    //indiv["Active Release"].Value(false); If this is added back, go through all entries after load and set to db value
+                }
             }
         });
         indiv["Control Value"].ValueType.subscribe(function(value) {
@@ -1099,14 +1097,14 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         initDOM();
     };
 
-    ViewModel.prototype.openPointReview = function(data) {
+    ViewModel.prototype.openPointReview = function (data) {
+        var workspace = window.top.workspaceManager,
+            endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(data.ref.PointType, data.ref.Value);
 
-        var workspace = window.opener.workspaceManager,
-            endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(data.ref.PointType, data.ref.Value),
-            win = workspace.openWindowPositioned(endPoint.review.url, data.ref.PointName, data.ref.PointType, '', data.ref.Value, {
-                width: 820,
-                height: 542
-            });
+        dtiUtility.openWindow(endPoint.review.url, data.ref.PointName, data.ref.PointType, '', data.ref.Value, {
+            width: 820,
+            height: 542
+        });
     };
 
     ViewModel.prototype.sortTable = function(property, viewModel, e) {

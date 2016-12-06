@@ -2,7 +2,7 @@ var integration = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'integration'
+      'dbName': 'infoscan'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -21,8 +21,7 @@ var integration = {
     },
     'letsencrypt': {
       'enabled': false
-    },
-    'domains': ['']
+    }
   },
   runNotifications: false,
   minifyFiles: false

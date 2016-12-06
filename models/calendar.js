@@ -1,5 +1,9 @@
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
+var Config = require('../public/js/lib/config');
+var utils = require('../helpers/utils');
+var activityLogCollection = utils.CONSTANTS("activityLogCollection");
+var actLogsEnums = Config.Enums["Activity Logs"];
 
 module.exports = {
 
@@ -33,6 +37,10 @@ module.exports = {
         Utility.get(criteria, cb);
     },
     updateSeason: function(data, cb) {
+        var logData = {
+            user: data.user,
+            timestamp: Date.now()
+        };
         var season = data["Current Season"];
         var criteria = {
             query: {
@@ -51,7 +59,15 @@ module.exports = {
         };
 
         Utility.update(criteria, function(err, result) {
-            return cb(err, 'success');
+            logData.activity = actLogsEnums["Season Change"].enum;
+            logData.log = "Season changed to " + season + ".";
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+                collection: activityLogCollection,
+                insertObj: logData
+            }, function(err, result) {
+                return cb(null, 'success');
+            });
         });
 
     },
@@ -89,6 +105,17 @@ module.exports = {
 
         Utility.findAndModify(criteria, function(err, yearResult) {
             if (err) return cb(err);
+            var logData = {
+                user: data.user,
+                timestamp: Date.now(),
+                activity: actLogsEnums["Calendar Year Edit"].enum,
+                log: "Calendar for year " + year + " updated."
+            };
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+                collection: activityLogCollection,
+                insertObj: logData
+            }, function(err, result) {});
 
             if (new Date().getFullYear() === year) {
 

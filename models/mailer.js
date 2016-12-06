@@ -33,30 +33,31 @@ var transportStatus = CLOSED;
 var smtpTransport;
 var timeoutObj;
 var smtpConfig = {
-    host: "smtp.sparkpostmail.com", // hostname
-    secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
-    port: 587, // port for secure SMTP
-    auth: smtpAuth
-  };
+  transport: 'SMTP',
+  host: "smtp.sparkpostmail.com", // hostname
+  secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
+  port: 587, // port for secure SMTP
+  auth: smtpAuth
+};
 
-function closeTransport () {
+function closeTransport() {
   smtpTransport.close();
   transportStatus = CLOSED;
 }
 
-function getTransport () {
+function getTransport() {
   clearTimeout(timeoutObj); // Clear the timeout
   timeoutObj = setTimeout(closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
 
   if (transportStatus === CLOSED) {
-    smtpTransport = nodemailer.createTransport("SMTP", smtpConfig);
+    smtpTransport = nodemailer.createTransport(smtpConfig);
     transportStatus = OPEN;
   }
 }
 
-function sendEmail (options, cb) {
+function sendEmail(options, cb) {
   var fromName = '"' + (options.fromName || 'InfoScan') + '"',
-      fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
+    fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
 
   getTransport();
   options.from = fromName + ' <' + fromAddr + '>';
@@ -73,7 +74,7 @@ module.exports = {
         subject: 'Error: ' + serverName + ' (Site: ' + siteName + ')',
         text: ['Site: ' + siteName, 'Time: ' + new Date().toString(), '', msg].join('\n')
       };
-      sendEmail(options, function () {});
+      sendEmail(options, function() {});
     }
   },
   sendEmail: function(options, cb) {

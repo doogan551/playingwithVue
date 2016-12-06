@@ -348,8 +348,8 @@ var runBackUp = function(upis, limitRange, cb) {
 				limit: 1
 			}, function(_err, last) {
 				callback(err, {
-					start: first[0].timestamp,
-					end: last[0].timestamp
+					start: !!first.length && first[0].timestamp || 0,
+					end: !!last.length && last[0].timestamp || 0
 				});
 			});
 		});
@@ -372,7 +372,6 @@ var runBackUp = function(upis, limitRange, cb) {
 		buildDates(range);
 		console.log(dates.length);
 		async.eachSeries(dates, function(date, callback) {
-
 
 			query = {
 				$and: [{
@@ -777,7 +776,7 @@ var buildRanges = function(periods, holidays, op, _range, callback) {
 			peakStart = period.start.peak;
 			peakEnd = period.end.peak;
 
-			if (peakStart !== null && peakStart !== undefined && (period.rangeType !== 'transition' || (period.rangeType === 'transition' && !!period.enablePeakSelection)) ) {
+			if (peakStart !== null && peakStart !== undefined && (period.rangeType !== 'transition' || (period.rangeType === 'transition' && !!period.enablePeakSelection))) {
 				var minutes = peakStart % 100;
 				var hours = peakStart / 100;
 				currentRangeStart.hour(hours).minute(minutes);
@@ -1047,15 +1046,26 @@ var getMinAndMax = function(values, op, option, callback) {
 	for (var i = 0; i < periods.length; i++) {
 		var min = 'start';
 		var max = 'start';
+		var minDate = null;
+		var maxDate = null;
+		
 		for (var r = 0; r < values.length; r++) {
 			if (values[r].timestamp >= periods[i].start && values[r].timestamp <= periods[i].end) {
-				min = (isNaN(min) || min > values[r].value) ? values[r].value : min;
-				max = (isNaN(max) || max < values[r].value) ? values[r].value : max;
+				if (isNaN(min) || min > values[r].value) {
+					min = values[r].value;
+					minDate = values[r].timestamp;
+				}
+				if (isNaN(max) || max < values[r].value) {
+					max = values[r].value;
+					maxDate = values[r].timestamp;
+				}
 			}
 		}
 		minsAndMaxes.push({
 			min: min,
+			minDate: minDate,
 			max: max,
+			maxDate: maxDate,
 			range: periods[i]
 		});
 	}
@@ -1169,7 +1179,7 @@ var findInSql = function(options, tables, callback) {
 				statement.push(options.range.start);
 				if (options.ops[0].fx === 'latest history') {
 					statement.push('AND TIMESTAMP <');
-				} else{
+				} else {
 					statement.push('AND TIMESTAMP <=');
 				}
 				statement.push(options.range.end);
@@ -1928,8 +1938,12 @@ module.exports = historyModel = {
 		self.findEarliest(options, function(err, earliest) {
 			options.range.end = moment().unix();
 			self.findLatest(options, function(err2, latest) {
-				min = earliest[0] || {timestamp:0};
-				max = latest[0] || {timestamp:0};
+				min = earliest[0] || {
+					timestamp: 0
+				};
+				max = latest[0] || {
+					timestamp: 0
+				};
 
 				callback(err || err2, {
 					min: min.timestamp,

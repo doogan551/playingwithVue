@@ -51,32 +51,24 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     // Use prototype to declare any public methods
 
     ViewModel.prototype.editPointRef = function(vm, propertyName, AppIndex) {
-        var self = this,
-            endPoint,
+        var endPoint,
+            parameters,
             point = vm.utility.getPointRefPropertyByAppIndex(propertyName, AppIndex).data,
-            pointSelectorEndPoint = ['/pointlookup/', 'Program', '/', 'Point Register', '?mode=select'].join(''),
-            callback = function (id, name, pointType) {
-                if (!!id) {
-                    getRefData(id).done(
+            callback = function (pointInfo) {
+                if (!!pointInfo) {
+                    getRefData(pointInfo._id).done(
                         function (data) {
-                            endPoint = vm.utility.config.Utility.pointTypes.getUIEndpoint(pointType, id);
-                            point.PointName(name);
-                            point.Value(id);
-                            point.PointType(pointType);
+                            endPoint = vm.utility.config.Utility.pointTypes.getUIEndpoint(pointInfo.pointType, pointInfo._id);
+                            point.PointName(pointInfo.name);
+                            point.Value(pointInfo._id);
+                            point.PointType(pointInfo.pointType);
                         }
                     );
                 }
-            },
-            workspaceManager = vm.utility.workspace,
-            win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType,
-                {
-                    width: 1250,
-                    height: 750,
-                    callback: function() {
-                        win.pointLookup.init(callback);
-                    }
-                }
-            );
+            };
+
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(callback);
     };
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds

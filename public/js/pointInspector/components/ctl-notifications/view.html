@@ -37,21 +37,18 @@
     <div class="dataField">
         <label>Returns</label>
     </div>
-    <div class="row returnAlarmChecks">
-        <div class="col col-xs-12 col-sm-4">
-            <input type="checkbox" data-bind="checked: ackAll, enable: $parent.isInEditMode"><label>Acknowledge All Returns</label>
-        </div>
-        <div class="col col-xs-12 col-sm-4">
-            <input type="checkbox" data-bind="checked: notifyAll, enable: $parent.isInEditMode"><label>Notify On All Returns</label>
-        </div>
-    </div>
-    
     <div class="table-responsive">
         <table class="grid table table-condensed notifications-table">
             <thead>
                 <tr>
-                    <th>Ack</th>
-                    <th>Notify</th>
+                    <th title='Auto-Acknowledge the alarm on return-to-normal'>
+                        <input id="autoAckR2nInput" type="checkbox" data-bind="checked: ackAll, enable: $parent.isInEditMode">
+                        <label for="autoAckR2nInput">Auto-Ack</label>
+                    </th>
+                    <th title='Notify On Return To Normal'>
+                        <input id="notifyR2nInput" type="checkbox" data-bind="checked: notifyAll, enable: $parent.isInEditMode">
+                        <label for="notifyR2nInput">Notify</label>
+                    </th>
                     <th>Type</th>
                     <th>Message</th>
                 </tr>

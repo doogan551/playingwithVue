@@ -1,4 +1,4 @@
-var workspace = window.opener && window.opener.workspaceManager
+var workspace = window.top && window.top.workspaceManager
 var qualityCodes = workspace.systemEnums.qualityCodes;
 var socket = workspace.socket();
 
@@ -255,10 +255,7 @@ function TreeViewModel() {
 
     self.openDevice = function(t, e) {
         var endPoint = workspace.config.Utility.pointTypes.getUIEndpoint("Device", t.upi());
-        var win = workspace.openWindowPositioned(endPoint.review.url, t.text(), 'Device', '', t.upi(), {
-            width: 1250,
-            height: 750
-        });
+        dtiUtility.openWindow(endPoint.review.url, t.text(), 'Device', '', t.upi());
     };
 
     self.searchNext = function() {

@@ -4,30 +4,37 @@ var _ = require('lodash');
 var Point = require('../models/point');
 var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
-// Checked - slow?
-router.post('/browse', function(req, res) {
+// Checked
+router.post('/globalSearch', function (req, res) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Point.browse(data, function(err, points) {
+  Point.globalSearch(data, function (err, points, count) {
     if (err) return utils.sendResponse(res, {
-      err: err
+      err: err,
+      reqID: data.reqID
     });
-    return utils.sendResponse(res, points);
+    return utils.sendResponse(res, {
+      points: points,
+      count: count,
+      reqID: data.reqID
+    });
   });
 });
-// NOT CHECKED
-router.post('/togglegroup', function(req, res) {
-  var data = _.merge(req.params, req.body, req.query);
+
+// Checked (JDR)
+router.post('/getDistinctValues', function (req, res) {
+  var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Point.toggleGroup(data, function(err, points) {
+  Point.getDistinctValuesTemp(data, function (err, distinctValues) {
     if (err) return utils.sendResponse(res, {
       err: err
     });
-    return utils.sendResponse(res, points);
+    return utils.sendResponse(res, distinctValues);
   });
 });
+
 // Checked
 router.get('/newpoint', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
@@ -81,11 +88,11 @@ router.post('/search', function(req, res) {
 });
 // Checked
 // TODO - change routes to remove '2'
-router.get('/searchdependencies2/:upi', function(req, res) {
+router.get('/searchdependencies/:upi', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
 
-  Point.searchDependencies2(data, function(err, result) {
+  Point.searchDependencies(data, function(err, result) {
     if (err) return utils.sendResponse(res, {
       err: err
     });
@@ -184,6 +191,18 @@ router.post('/findalarmdisplays', function(req, res) {
       displays: displays,
       reqID: reqId
     });
+  });
+});
+
+router.post('/getcontrols', function(req, res) {
+  var data = _.merge(req.params, req.body, req.query);
+  data.user = req.user;
+
+  Point.getControls(data, function(err, data) {
+    if (err) return utils.sendResponse(res, {
+      err: err
+    });
+    return utils.sendResponse(res, data);
   });
 });
 // Checked

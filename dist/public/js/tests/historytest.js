@@ -1,1 +1,0 @@
-$(document).ready(function(){testUpi=function(a,b){$.ajax({url:"/api/history/"+a,type:"post",dataType:"json",success:function(a){return b(a.err?!1:a.length>0?!0:!1)}})},testHistorySearch=function(a,b){$.ajax({url:"/api/history/search",type:"post",dataType:"json",success:function(a){return a.err?b(!1):a?(console.log(a),b(!0)):b(!1)},data:a})}});

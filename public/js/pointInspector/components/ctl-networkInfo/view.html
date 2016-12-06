@@ -43,6 +43,7 @@
                                         <th class="vendorID" data-bind="click: sortDevices"><div>Vendor ID<i class="fa"></i></div></th>
                                         <th class="apduLength" data-bind="click: sortDevices"><div>Max APDU Length<i class="fa"></i></div></th>
                                         <th class="changeCount" data-bind="click: sortDevices"><div>Change Count<i class="fa"></i></div></th>
+                                        <th class="gateway" data-bind="click: sortDevices"><div>Gateway<i class="fa"></i></div></th>
                                         <th class="readProp" data-bind="click: sortDevices"><div>Read Property Only<i class="fa"></i></div></th>
                                         <th class="noPriority" data-bind="click: sortDevices"><div>No Priority Array<i class="fa"></i></div></th>
                                     </tr>
@@ -55,6 +56,7 @@
                                         <td data-bind="text: $data['Vendor ID'].Value()"></td>
                                         <td data-bind="text: $data['Max APDU Length'].Value()"></td>
                                         <td data-bind="text: $data['Change Count'].Value()"></td>
+                                        <td data-bind="text: $data.Gateway.Value()"></td>
                                         <td data-bind="text: $data['Read Property Only'].Value()"></td>
                                         <td data-bind="text: $data['No Priority Array'].Value()"></td>
                                     </tr>

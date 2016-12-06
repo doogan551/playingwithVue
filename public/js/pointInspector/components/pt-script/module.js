@@ -138,8 +138,9 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
     }
 
     function ViewModel (params) {
-        window.script = this;
-        var self = this;
+        var self = this,
+            _developmentSourceFile = params.point.data['Development Source File']();
+
         apiEndpoint = params.apiEndpoint;
         this.root = params;
         this.point = params.point;
@@ -147,6 +148,8 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         this.utility = params.utility;
         this.isInEditMode = params.isInEditMode;
 
+        this.showEditScriptButton = ko.observable(false);
+        this.showDiscardScriptButton = ko.observable(false);
         this.buildStatus = ko.observable('changed');
         this.selectedScript = ko.observable({});
 
@@ -158,6 +161,39 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             involvement: ko.observable(false)
         };
         params.tabTriggers = this.tabTriggers;
+
+        this.showEditScript = function () {
+            var developmentScript = self.developmentScript;
+            
+            self.showEditScriptButton(false);
+
+            if (self.productionScript.len()) {
+                self.showDiscardScriptButton(true);
+            }
+
+            if (!developmentScript.len()) {
+                developmentScript.editor.setValue(self.productionScript.source()); // This also updates the self.data['Development Source File'] observable
+            }
+            developmentScript.$tab.show();
+            developmentScript.selectTab();
+        };
+        this.discardScript = function () {
+            var developmentScript = self.developmentScript,
+                productionScript  = self.productionScript;
+
+            // If we want to keep the script editor tab, do this:
+            // developmentScript.editor.setValue(productionScript.source());
+
+            // If we want to hide the script editor tab, we need to do all of the following:
+            self.showDiscardScriptButton(false);
+            developmentScript.editor.setValue(''); // This also updates the self.data['Development Source File'] 
+            
+            if (productionScript.len()) {
+                developmentScript.$tab.hide();
+                productionScript.selectTab();
+                self.showEditScriptButton(true);
+            }
+        };
 
         this.sourceTabSubscription = this.tabTriggers.source.subscribe(function (value) {
             var script = self.selectedScript();
@@ -177,14 +213,19 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             developmentEditor.setOption('matchBrackets', isInEditMode);
             
             if (isInEditMode) {
-                // If no development script is in progress, then its default it to the production code
+                // If no development script is in progress, then default it to the production code
                 if (!developmentScript.len()) {
+                    self.showEditScriptButton(true);
                     developmentEditor.setValue(productionScript.source()); // This also updates the self.data['Development Source File'] observable
+                } else {
+                    developmentScript.$tab.show();
+                    developmentScript.selectTab();
+                    self.showDiscardScriptButton(true);
                 }
-                developmentScript.$tab.show();
-                developmentScript.selectTab();
             } else {
-                developmentEditor.setValue(developmentScript.source()); // Roll back development script source
+                self.showDiscardScriptButton(false)
+                self.showEditScriptButton(false);
+                developmentEditor.setValue(_developmentSourceFile); // Roll back development script source
                 if (!developmentScript.len() && productionScript.len()) {
                     developmentScript.$tab.hide();
                     productionScript.selectTab();
@@ -192,27 +233,19 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             }
         });
 
-        this.buildStatusSubscription = this.buildStatus.subscribe(function (status) {
-            // If the 'Save and Activate' action menu option hasn't been created, then create it
-            if (!$saveAndActivate) {
-                var $el = $("<li class='saveAndActivate' style='display: none;'><a href='javascript:void(0)'><i class='glyphicon glyphicon-floppy-open'></i> Save and Activate</a></li>");
-                $el.insertAfter('.actions li:first');
-                $el.click(function (e) { self.saveAndActivate(); });
-                $saveAndActivate = $('.saveAndActivate');
-            }
-
-            if (status === 'compiled') {
-                $saveAndActivate.show();
-            } else {
-                $saveAndActivate.hide();
-            }
-        });
-
         this.saveStatusSubscription = this.point.status.subscribe(function (saveStatus) {
             console.log('saveStatus: ', saveStatus);
-            if (self.buildStatus() !== 'activating' || saveStatus === 'saving') {
+
+            if (saveStatus === 'saving') {
+                return;
+            } else if (saveStatus === 'saved') {
+                _developmentSourceFile = self.developmentScript.source();
+            }
+
+            if (self.buildStatus() !== 'activating') {
                 return;
             }
+
             // If point was saved successfully
             if (saveStatus === 'saved') {
                 // We activated successfully, so the development code is now production, and we have no development code
@@ -292,9 +325,8 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             return;
         var self = this,
             data = {
-                close: false,
-                extendData: { path: self.exePath },
-                exitEditModeOnSave: true // Only applies if save is successful
+                close: true,
+                extendData: { path: self.exePath }
             };
         self.productionScript.source(self.developmentScript.source());
         self.developmentScript.source("");

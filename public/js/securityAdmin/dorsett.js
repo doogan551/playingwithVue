@@ -175,7 +175,7 @@ var dorsett = (function() {
                 type: 'post'
             }).done(
                 function(data) {
-                    console.log(data.Users);
+                    // console.log(data.Users);
                     var users = data.Users,
                         i = 0,
                         recordCount = users.length;
@@ -768,21 +768,9 @@ var dorsett = (function() {
             }
         },
         viewPointAccess: function(type) {
-            var groupid = dorsett.editData._id,
-                groupname = dorsett.editData['User Group Name'](),
-                workspaceManager = (window.opener || window.top).workspaceManager,
-                pointWindow;
+            var groupid = dorsett.editData._id;
 
-            pointWindow = workspaceManager.openWindowPositioned([_pointSelector, '/security/', groupid].join(''), 'Group Permissions', 'groupPermissions', 'groupPermissions', 'groupPermissions', {
-                width: 960,
-                height: 600,
-                callback: function() {
-                    pointWindow.pointLookup.init(null, {
-                        groupid: groupid,
-                        groupname: groupname
-                    })
-                }
-            });
+            dtiUtility.openWindow([_pointSelector, '/security/', groupid].join(''), 'Group Permissions', 'groupPermissions', 'groupPermissions', 'groupPermissions');
             //            var $permissionsDialog = $('.permissionsDialog'),
             //                //open socket connection
             //                socket = null,

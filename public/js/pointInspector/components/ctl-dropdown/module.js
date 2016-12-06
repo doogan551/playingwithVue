@@ -41,6 +41,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.data = params.data[this.propertyName];
         this.enumSetName = params.enumSetName;
         this.utility = params.rootContext.utility;
+        this.config = this.utility.config;
         this.isInEditMode = params.rootContext.isInEditMode;
     }
 
@@ -53,7 +54,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
-            options = this.utility.config.Utility.pointTypes.getEnums(this.enumSetName, this.propertyName);
+            options = this.config.Utility.pointTypes.getEnums(this.propertyName, this.root.point.data['Point Type'].Value(), {devModel: this.root.point.data._devModel()});
         }
 
         if (!options) {

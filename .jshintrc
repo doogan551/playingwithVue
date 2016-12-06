@@ -1,0 +1,22 @@
+{
+    "undef": true,
+    "browser": true,
+    "jquery": true,
+    "node": true,
+    "mocha": true,
+    "globals": {
+        "moment": true,
+        "ko": true,
+        "store": true,
+        "Materialize": true,
+        "io": true,
+        "dtiUtility": true,
+        "_": true,
+        "expect": true,
+        "comparePoints": true,
+        "fabric": true,
+        "define": true,
+        "CustomColorsPicker": true,
+        "checkValues": true
+    }
+}

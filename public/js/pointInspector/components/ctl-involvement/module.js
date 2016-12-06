@@ -52,7 +52,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     function getData(id) {
         return $.ajax(
             {
-                url        : apiEndpoint + 'points/searchdependencies2/' + id,
+                url        : apiEndpoint + 'points/searchdependencies/' + id,
                 contentType: 'application/json',
                 dataType   : 'json',
                 type       : 'get'
@@ -120,32 +120,21 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         initDOM();
     };
     ViewModel.prototype.openPointReview = function(data, e) {
-        var workspace = window.opener.workspaceManager,
-            endPoint, win, width, height, pointType,
+        var workspace = window.top.workspaceManager,
+            endPoint, pointType,
             $e = $(e.currentTarget),
             col = $e.data('col');
 
-        if(!!col){
+        if (!!col) {
             pointType = col;
             data = data.Device;
-            width = 1250;
-            height = 750;
-        } else if(data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule'){
+        } else if (data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule') {
             pointType = data['Point Type'];
-            width = 1250;
-            height = 750;
-        }else{
+        } else {
             pointType = 'Schedule';
-            width = 1250;
-            height = 750;
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);
-        win = workspace.openWindowPositioned(endPoint.review.url, data.Name, pointType, '', data._id,
-            {
-                width: width,
-                height: height
-            }
-        );
+        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id);
     };
 
     ViewModel.prototype.sortTable = function (property, viewModel, e) {

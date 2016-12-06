@@ -47,3 +47,25 @@ _ fs-extra
 - needs work
 - GET /trendtest/trendTest2.js 404
 - setup server logs page view
+
+letsencrypt certonly --standalone --agree-tos --domains utdev.dtscada.com --email engineering@dorsett-tech.com --config-dir D:/letsencrypt/etc --server https://acme-v01.api.letsencrypt.org/directory
+
+sc.exe create MongoDB binPath= "\"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe\" --service --config=\"C:\Program Files\MongoDB\Server\3.2\bin\mongod.cfg\" --replSet 'rs0'" DisplayName= "MongoDB" start= "auto"
+
+
+{ 
+    "_id" : ObjectId("5808dedec873fe9bb6a5b886"), 
+    "runTime" : "0 12 9 * * 0-5", 
+    "type" : NumberInt(1), 
+    "referencePointUpi" : NumberInt(65715), 
+    "optionalParameters" : {
+        "duration" : "Last 7 Days", 
+        "interval" : "1 Hour"
+    }, 
+    "users" : [
+    ], 
+    "emails" : [
+        "rkendall@dorsett-tech.com"
+    ], 
+    "enabled" : true
+}

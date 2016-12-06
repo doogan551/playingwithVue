@@ -3,38 +3,38 @@ var router = express.Router();
 var passport = require('passport');
 // 
 router.get('/pointinspector/:id', function(req, res, next) {
-  res.render('pointInspector/index.jade');
+  res.render('pointInspector/index.pug');
 });
 // 
 router.get('/splash', function(req, res, next) {
-  res.render('baseui/splash.jade');
+  res.render('baseui/splash.pug');
 });
 // 
 router.get('/activitylogs', function(req, res) {
-  res.render('activityLogs/index.jade');
+  res.render('activityLogs/index.pug');
 });
 // 
 router.get('/alarms', function(req, res) {
-  res.render('alarms/index.jade');
+  res.render('alarms/index.pug');
 });
 // 
 router.get('/alarms/print', function(req, res) {
-  res.render('alarms/print.jade');
+  res.render('alarms/print.pug');
 });
 // 
 router.get('/syspref', function(req, res) {
-  res.render("baseui/syspref.jade", {
+  res.render("baseui/syspref.pug", {
     title: 'InfoScan System Preferences',
     user: req.user
   });
 });
 // 
 router.get('/devicetree', function(req, res) {
-  res.render("devicetree/devicetree.jade");
+  res.render("devicetree/devicetree.pug");
 });
 // 
 router.get('/displays', function(req, res) {
-  res.render("displays/index.jade");
+  res.render("displays/index.pug");
 });
 // 
 router.get('/report', function(req, res) {
@@ -42,39 +42,39 @@ router.get('/report', function(req, res) {
 });
 // 
 router.get('/securityadmin', function(req, res) {
-  res.render('securityAdmin/securityAdmin.jade');
+  res.render('securityAdmin/securityAdmin.pug');
 });
 
 router.get('/slideShows/', function(req, res) {
-  res.render('slideShows/index.jade');
+  res.render('slideShows/index.pug');
 });
 // 
 router.get('/slideShows/viewer', function(req, res) {
-  res.render('slideShows/viewer.jade');
+  res.render('slideShows/viewer.pug');
 });
 
 router.get('/thumbnail/capture', function(req, res) {
-  res.render("thumbnailGenerator/capture.jade");
+  res.render("thumbnailGenerator/capture.pug");
 });
 // 
 router.get('/toolbag', function(req, res) {
-  res.render('toolbag/dbMonitor.jade');
+  res.render('toolbag/dbMonitor.pug');
 });
 // 
 router.get('/toolbag/dbTemplate', function(req, res) {
-  res.render('toolbag/dbTemplate.jade');
+  res.render('toolbag/dbTemplate.pug');
 });
 // 
 router.get('/toolbag/dbMonitor', function(req, res) {
-  res.render('toolbag/dbMonitor.jade');
+  res.render('toolbag/dbMonitor.pug');
 });
 // 
 router.get('/toolbag/propertyUsage', function(req, res) {
-  res.render("toolbag/propertyUsage.jade");
+  res.render("toolbag/propertyUsage.pug");
 });
 // 
 router.get('/toolbag/enums', function(req, res) {
-  res.render("toolbag/enums.jade");
+  res.render("toolbag/enums.pug");
 });
 
 router.get('/trendplots', function(req, res) {
@@ -83,12 +83,12 @@ router.get('/trendplots', function(req, res) {
     res.locals = {
       pointData: JSON.stringify(data)
     };
-    res.render('trendPlots/index.jade');
+    res.render('trendPlots/index.pug');
   });
 });
 
 router.get('/logs', function(req, res) {
-  res.render("logs/index.jade");
+  res.render("logs/index.pug");
 });
 
 

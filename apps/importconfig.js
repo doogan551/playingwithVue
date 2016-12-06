@@ -6,66 +6,11 @@ module.exports = {
 	//var conn = 'mongodb://10.250.0.10/infoscan';
 	//var conn = 'mongodb://ROBERT4/infoscan';
 	// conn: 'mongodb://localhost/infoscan',
-	xmlPath: "C:/import/msfc/GPLConvert",
-	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
+	xmlPath: "c:/",
+	// xmlPath: "//192.168.1.88/d$/InfoAdmin/MSFC GPL/XML",
 	ctrlrs: {
 		"Name": "Controllers",
-		"Entries": [{
-			"Controller ID": 2,
-			"Controller Name": "OSS",
-			"Description": "Optimized Start / Stop",
-			"isUser": false
-		}, {
-			"Controller ID": 3,
-			"Controller Name": "HostTOD",
-			"Description": "Host Based Time of Day",
-			"isUser": false
-		}, {
-			"Controller ID": 4,
-			"Controller Name": "CPC",
-			"Description": "Continuous Process Control",
-			"isUser": false
-		}, {
-			"Controller ID": 5,
-			"Controller Name": "NWS",
-			"Description": "Night / Weekend Setback",
-			"isUser": false
-		}, {
-			"Controller ID": 6,
-			"Controller Name": "RemTOD",
-			"Description": "Remote Time-of-Day controller",
-			"isUser": false
-		}, {
-			"Controller ID": 12,
-			"Controller Name": "TempTOD",
-			"Description": "Temporary Time of Day",
-			"isUser": false
-		}, {
-			"Controller ID": 18,
-			"Controller Name": "VAV",
-			"Description": "Variable Air Volume Control",
-			"isUser": false
-		}, {
-			"Controller ID": 19,
-			"Controller Name": "D-CYCLE",
-			"Description": "DUTY CYCLE",
-			"isUser": false
-		}, {
-			"Controller ID": 20,
-			"Controller Name": "DSL",
-			"Description": "Dorsett Script Language",
-			"isUser": false
-		}, {
-			"Controller ID": 29,
-			"Controller Name": "OSS/NWS",
-			"Description": "Optimized Start Stop / Night Weekend Setback",
-			"isUser": false
-		}, {
-			"Controller ID": 33,
-			"Controller Name": "GPL",
-			"Description": "Graphical Programming Language",
-			"isUser": false
-		}]
+		"Entries": []
 	},
 	cannedReports: [{
 		"_id": 1,

@@ -77,15 +77,16 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                 slide,
                 displayId;
             for (var i = 0; i < pointRefsModel.length; i++) {
-                pointRefsModel[i].AppIndex = i+1;
-                displayId = pointRefsModel[i].Value;
-                slide = self.getSlideById(displayId);
+                // pointRefsModel[i].AppIndex = i + 1;
+                // displayId = pointRefsModel[i].Value;
+                // slide = self.getSlideById(displayId);
+                slide = self.getSlideByPointRefIndex(pointRefsModel[i].AppIndex);
                 if (slide) {
                     slide.order(i);
+                    slide.pointRefIndex = pointRefsModel[i].AppIndex;
                 }
             }
             ko.viewmodel.updateFromModel(point, pointModel);
-            
         }
 
         //define any tab triggers here
@@ -117,7 +118,8 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
             slides = vm.data.Slides(),
             pointRef = pointRefs[itemIndex],
             displayId = pointRefs[itemIndex].Value(),
-            slide = vm.getSlideById(displayId);
+            // slide = vm.getSlideById(displayId);
+            slide = self.getSlideByPointRefIndex(pointRefs[itemIndex].AppIndex);
         vm.data.Slides.remove(slide);
         vm.data['Point Refs'].remove(pointRef);
     };
@@ -126,10 +128,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
         var workspace = ko.contextFor(event.target).$root.utility.workspace,
             displayId = data.Value(),
             endPoint = workspace.config.Utility.pointTypes.getUIEndpoint('Display', displayId);
-        workspace.openWindowPositioned(endPoint.review.url, data.PointName(), 'Display', '', displayId, {
-            width: 1000,
-            height: 800
-        })
+        dtiUtility.openWindow(endPoint.review.url, data.PointName(), 'Display', '', displayId);
     };
 
     ViewModel.prototype.showPreview = function(data, event) {
@@ -155,12 +154,22 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
         return null;
     };
 
-    ViewModel.prototype.addPointRef = function(vm, event) {
+    ViewModel.prototype.getSlideByPointRefIndex = function(idx) {
         var self = this,
-            pointSelectorEndPoint = ['/pointlookup/', 'Slide Show', '/Slide Display', '?mode=select'].join(''),
-            callback = function (id, name, pointType) {
-                if (!!id) {
-                    getRefData(id).done(
+            slides = self.data.Slides();
+        for (var j = 0; j < slides.length; j++) {
+            if (slides[j].pointRefIndex == idx) {
+                return slides[j];
+            }
+        }
+        return null;
+    };
+
+    ViewModel.prototype.addPointRef = function(vm, event) {
+        var parameters,
+            callback = function (pointInfo) {
+                if (!!pointInfo) {
+                    getRefData(pointInfo._id).done(
                         function (data) {
                             var pointRefs = vm.data['Point Refs'](),
                                 slides = vm.data.Slides(),
@@ -179,6 +188,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                             });
                             slides.push({
                                 order: ko.observable(displayCount + 1),
+                                pointRefIndex: (displayCount + 1),
                                 display: ko.observable(data._id),
                                 duration: ko.observable(10)
                             });
@@ -187,17 +197,10 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                         }
                     );
                 }
-            },
-            workspaceManager = vm.utility.workspace,
-            win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + vm.data._id(),
-                {
-                    width: 980,
-                    height: 550,
-                    callback: function() {
-                        win.pointLookup.init(callback);
-                    }
-                }
-            );
+            };
+
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(callback);
     };
 
     //knockout calls this when component is removed from view

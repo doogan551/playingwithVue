@@ -1,0 +1,40 @@
+extends layout
+block script
+	script(type='text/javascript', src='/js/lib/screenfull.min.js')
+	script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+	script(type='text/javascript', src='/js/slideShows/slideShowViewModel.js')
+block content
+	#case.maximize
+		span.glyphicon.glyphicon-cog.diconfig
+		.navbar.slideShowNavbar
+			.container-fluid
+				.navbar-header
+					.btn-group
+						button.btn.glyphicon.glyphicon-pause(data-bind='visible: !isPaused(), click: pause, attr {title: "Pause"}')
+							span
+						button.btn.glyphicon.glyphicon-play(data-bind='visible: isPaused(), click: play, attr {title: "Play"}')
+							span
+						button.btn.glyphicon.glyphicon-step-backward(data-bind='enable:canSkip(), click: moveCarouselBackward(), attr {title: "Back"}')
+						button.btn.glyphicon.glyphicon-step-forward(data-bind='enable:canSkip(), click: moveCarouselForward(), attr {title: "Forward"}')
+						button.btn.glyphicon.glyphicon-resize-full(data-bind='visible: (!inFullScreenMode()), click: setFullScreen(), attr {title: "Fullscreen"}')
+							span
+						button.btn.glyphicon.glyphicon-resize-small(data-bind='visible: (inFullScreenMode()), click: setNonFullScreen(), attr {title: "Exit Fullscreen"}')
+							span
+						button.btn.glyphicon.glyphicon-edit(data-bind='click: openPointInspector, attr {title: "PointInspector"}')
+							span
+						button.btn.glyphicon.glyphicon-remove-circle(data-bind='click: close, attr {title: "Close"}')
+							span
+						button.btn.glyphicon(data-bind='if:currentSlide')
+							span#left(data-bind='text: (currentSlide().order + 1) + " of " + numberOfSlides')
+						button.btn.glyphicon(data-bind='')
+							span#seconds(data-bind='text: timeRemaining')
+	.slidescontainer
+		div.frame1container(style='height: 100%; width: 100%;')
+			iframe.frame1(id='frame1', webkitAllowFullScreen mozAllowFullScreen allowFullScreen)
+		div.frame2container(style='height: 100%; width: 100%;')
+			iframe.frame2(id='frame2', webkitAllowFullScreen mozAllowFullScreen allowFullScreen)
+		div.frame3container(style='height: 100%; width: 100%;')
+			iframe.frame3(id='frame3', webkitAllowFullScreen mozAllowFullScreen allowFullScreen)
+		#errorSlide.slide.hidden.bg-danger
+			.jumbotron
+				h1 An Error Occurred Loading The Slide Show

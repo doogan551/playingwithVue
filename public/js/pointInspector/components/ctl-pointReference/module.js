@@ -1,4 +1,4 @@
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view) {
     var apiEndpoint;
 
     // this ko binding hander swiped from http://blog.craigsworks.com/knockout-bootstrap-3-buttons-and-the-enable-binding/
@@ -60,9 +60,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             var point;
             if (params.hasOwnProperty('point')) {
                 point = self.utility.getPointRefProperty(self.refType, this.point);
-            } else if(self.appIndex === 0){
+            } else if (self.appIndex === 0) {
                 point = self.utility.getPointRefProperty(self.refType);
-            }else{
+            } else {
                 point = self.utility.getPointRefPropertyByAppIndex(self.refType, self.appIndex);
             }
             self.arrayIndex = point.arrayIndex;
@@ -93,8 +93,6 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     ViewModel.prototype.openWindow = function() {
         var self = this,
             proposedCoords = {
-                width: 1250,
-                height: 750,
                 left: (typeof window.screenLeft == 'undefined' ? screen.left : window.screenLeft) + 20,
                 top: (typeof window.screenTop == 'undefined' ? screen.top : window.screenTop) + 20
             };
@@ -106,9 +104,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         }
         console.log(proposedCoords.width + proposedCoords.left, proposedCoords.height + proposedCoords.top);
         console.log(screen.availWidth, screen.availHeight);
-        self.utility.workspace.openWindowPositioned(self.url(), self.data.PointName(), self.refPointType, self.target, self.data.Value(), {
-            width: proposedCoords.width,
-            height: proposedCoords.height,
+        dtiUtility.openWindow(self.url(), self.data.PointName(), self.refPointType, self.target, self.data.Value(), {
             left: proposedCoords.left,
             top: proposedCoords.top
         });
@@ -122,26 +118,55 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 var devicePoint,
                     rmuPoint,
                     propertyName = point.PropertyName(),
-                    path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
+                    allowedPointTypes = self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
+                    parameters = {
+                        pointType: self.parentType,
+                        pointTypes: allowedPointTypes,
+                        restrictPointTypes: allowedPointTypes.length > 0,
+                        property: propertyName,
+                        deviceId: null,
+                        remoteUnitId: null
+                    },
+                    // path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
                     props = ['Control Point', 'Occupied Point', 'Remote Unit Point', 'Damper Control Point', 'Digital Heat 1 Control Point', 'Digital Heat 2 Control Point', 'Digital Heat 3 Control Point', 'Fan Control Point', 'Heat 1 Control Point', 'Lights Control Point'];
+                
                 // If Control Point or RMU property, we need to restrict our selection to points on the same device
                 if (props.indexOf(propertyName) > -1) {
                     rmuPoint = self.utility.getPointRefProperty('Remote Unit Point');
                     devicePoint = self.utility.getPointRefProperty('Device Point');
+
                     // If Device Point prop exists and the device point is assigned
                     if (devicePoint && devicePoint.data.Value() !== 0) {
-                        path += '/' + devicePoint.data.Value();
+                        parameters.deviceId = devicePoint.data.Value();
+                        // path += '/' + devicePoint.data.Value();
                         // If Remote Unit Point prop exists and the remote unit point is assigned
                         if (propertyName !== "Remote Unit Point" && rmuPoint && rmuPoint.data.Value() !== 0) {
-                            path += '/' + rmuPoint.data.Value();
+                            parameters.remoteUnitId = rmuPoint.data.Value();
+                            // path += '/' + rmuPoint.data.Value();
                         }
                     }
                 }
-                return path;
+
+                // console.log(parameters, JSON.stringify(parameters, null, 3));
+                // console.log(path);
+                return parameters;
+                // return path;
             },
-            pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
-            callback = function(id, name, pointType) {
-                if (!!id) {
+            // pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
+            callback = function (selectedPoint) {
+                var id = selectedPoint._id, 
+                    name = selectedPoint.name, 
+                    pointType = selectedPoint.pointType;
+                // Schedule entry point ref changes don't go through normal validation in configjs
+                // this is the first point that the returned id can be checked for a recursive loop.
+                if (!!self.point['Point Type'] && self.point['Point Type'].Value() === 'Schedule Entry' && id === self.point._parentUpi()) {
+                    bannerJS.showBanner({
+                        msg: 'Unable to control Schedule from same schedule.',
+                        dismissText: 'Dismiss',
+                        color: '#D50000',
+                    });
+                    return false;
+                } else if (!!id) {
                     getRefData(id).done(
                         function(data) {
                             endPoint = self.utility.config.Utility.pointTypes.getUIEndpoint(pointType, id);
@@ -162,19 +187,18 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                                     refPoint: self.refPoint
                                 });
                             }
+
                         }
                     );
                 }
             },
-            workspaceManager = self.utility.workspace,
-            win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType, {
-                width: 1250,
-                height: 750,
-                callback: function() {
-                    win.pointLookup.init(callback);
-                }
-            });
+            parameters = getPath();
+
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(callback);
     };
+
+
     ViewModel.prototype.removePointRef = function() {
         var self = this,
             point = self.getPointRef(),

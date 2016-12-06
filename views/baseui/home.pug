@@ -1,0 +1,605 @@
+doctype html
+html
+    head
+        title
+            | Infoscan by Dorsett Technologies
+        //- link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/sass/v2/home')
+        //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
+        link(rel='stylesheet', href='/css/lib/jstree.themes/default/style.min.css')
+        link(rel='stylesheet', href='/css/lib/jquery-ui.css')
+        link(rel='stylesheet', href='/css/lib/jquery.contextMenu.min.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='//cdn.bri.io/mbox/dist/mbox-0.0.1.min.css')
+
+    body.grey.lighten-3
+
+        header.animates
+            .navbar-fixed.taskbar(data-bind='visible: taskbarShown')
+                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                    .nav-wrapper
+                        ul.left
+                            li.taskbarItem
+                                .startButtonContainer(data-menu="startmenu")
+                                    a#startButton.dropdown-button(href="javascript://", data-position='bottom', data-tooltip='New Window')
+                                        i.material-icons apps
+
+                            li.taskbarItem
+                                a#globalSearch.waves-effect(href='javascript://', data-bind="click: globalSearch.show")
+                                    i.material-icons search
+                            //- li.taskbarItem
+                            //-     a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                            //-         i.mdi.mdi-compass
+                            li.taskbarItem
+                                a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
+                                    i.material-icons filter_none
+
+                            // ko foreach: windowGroups
+                            span(data-bind="template: { name: 'taskbarButtonTemplate', data: $data }")
+                            // /ko
+
+                        ul.right
+                            li.taskbarItem(data-bind='visible: system.status() !== "ok" ')
+                                a#systemErrorsIcon(href='javascript://', data-menu='systemErrorLogDropdown')
+                                    i.mdi.mdi-alert
+                            li.taskbarItem
+                                a#alarmIcon.waves-effect(href='javascript://', data-menu='alarmDropdown')
+                                    i.material-icons(data-bind='visible: !alarms.isMuted()') notifications_active
+                                    i.material-icons(data-bind='visible: alarms.isMuted') notifications
+                                    span.badge.alarmCount(data-bind='visible: alarms.unacknowledged.count() !== 0, text: alarms.unacknowledged.count()')
+                            li.taskbarItem
+                                a#showDesktop.waves-effect.tooltipped(data-bind="click: showDesktop", href='javascript://', data-position='bottom', data-tooltip='Show Desktop')
+                                    i.material-icons home
+
+                            li.taskbarItem
+                                .userInfo.valign-wrapper.dropdown-button(data-activates='userDropdownMenu', data-beloworigin='true', data-hover='true', data-alignment='right')
+                                    img.userAvatar(data-bind='attr: { src: "img/users/" + (user().photo || "userLarge.png") } ')
+                                    span.userName.valign #[span(data-bind='text: user().firstName')]&nbsp;#[span(data-bind='text: user().lastName')]
+
+            #searchNavbar.navbar-fixed.taskbar.animates
+                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                    .nav-wrapper
+                        .taskbarItem
+                            i.material-icons search
+                        //- .taskbarItem.flex.flex-row.flex-center
+                            .input-field
+                                input#globalSearchInput(type='search')
+                        .taskbarItem
+                            .chipsAndSearchContainer.thinScroll.flex.flex-row.flex-center
+                                // globalSearch.init() attaches a click handler to our 'Clear All' chip, and handles adding/removing the '.hide' class as search terms are added and removed
+                                .clearAllChip.hide Clear All
+                                .chips.chips-placeholder
+                        .taskbarItem
+                            i.material-icons.tooltipped(data-bind='click: globalSearch.hide', data-position='left', data-tooltip='Close Search', data-delay='10') close
+
+        main.animates
+            #globalSearchResults.animates
+                .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
+                    .row.center
+                        .col.s12 Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
+                .globalSearchResultsList
+                    .row(data-bind='foreach: globalSearch.searchResults')
+                        .col.s12.m6.l3
+                            .card.horizontal.hoverable
+                                .card-image.flex.flex-center
+                                    // ko if: $data["Point Type"].Value === "Display"
+                                    img(data-bind='visible: thumbnailFound, thumbnail: $data._id')
+                                    i(data-bind='visible: !thumbnailFound(), css: iconClass, text: iconText')
+                                    // /ko
+                                    // ko ifnot: $data["Point Type"].Value === "Display"
+                                    i(data-bind='css: iconClass, text: iconText')
+                                    // /ko
+                                .card-content
+                                    a.card-title.truncate(data-bind='html: NameWithHighlight, attr: { title: Name }, click: $parent.globalSearch.openPoint')
+                                    p(data-bind='text: $data["Point Type"].Value')
+
+                .globalSearchError(data-bind='visible: globalSearch.showError')
+                    .row
+                        .col.s12.center
+                            h5 Ouch. Something went wrong.
+                            p.red-text.text-darken-4(data-bind='html: globalSearch.errorMessage')
+                            p #[a(href='javascript://', data-bind='click: globalSearch.doSearch') Click here to try again.]
+
+                .globalSearchFooter
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.showSummary() && globalSearch.searchResults().length > 25') Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.gettingData')
+                            .preloader-wrapper.active
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper.right
+                                        .circle
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.showLoadMoreResultsButton')
+                            a.waves-effect.btn(href='javascript://', data-bind='click: function () { globalSearch.doSearch(true) }') Load More Results
+
+
+            #searchBox.white.z-depth-1
+                .input-field
+                    i.material-icons.prefix search
+                    input#searchPopup(type='text', required='')
+                    //- label(for='searchPopup') Search
+                    //- i.material-icons close
+
+            #alarmDropdown.white.z-depth-1
+                .alarmHeader
+                    span Unacknowledged Alarms
+                    .right
+                        a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
+                            i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
+                            i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
+                        //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
+                            i.material-icons notifications_active
+                    .alarmBody
+                .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
+                    .alarmList
+                        .row
+                            .date Date
+                            .messageContainer Alarm
+                            .type Class
+                            .ackContainer
+                        // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
+                        .row
+                            .date(data-bind="text: dateTime")
+                            .messageContainer
+                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }')
+                            .type(data-bind='text: almClassText, css: cssClass')
+                            .ackContainer
+                                a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
+                                .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
+                                    .progress
+                                        .indeterminate
+                        // /ko
+                        // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
+                        .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
+                        // /ko
+                .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
+
+            #systemErrorLogDropdown.white.z-depth-1
+                .errorLogHeader System Error Log
+                .errorLogBody(data-bind='foreach: system.eventLog.errors')
+                    .row
+                        .errorDate(data-bind='text: dateTime')
+                        .errorMessageContainer
+                            .errorMessage(data-bind='text: message')
+
+            #startmenu.z-depth-3.white.lighten-3.white-text
+                .startmenuBody
+                    .tileList(data-bind="foreachprop: startMenuItems")
+                        // ko if: $root.hasAccess($data)
+                        // ko with: value
+                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
+                            i.center-align(data-bind="css: iconClass, text: iconText")
+                            span(data-bind="text: title")             
+                        // /ko
+                        // /ko
+
+                    //- .recentItems
+                        .col.s12.blue-grey-text Recent Items
+                            //- .recentHeader.collection-item.blue-grey-text
+                            //-     .center-align Recent Items
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title 4200 PARKING LOT LIGHTS
+                                i.left.material-icons device_hub
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title 4200 CRU1 DISP
+                                i.left.material-icons tv
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title DEVICE ADDRESS REPORT
+                                i.left.material-icons assignment
+                    //- .settings.blue-grey-text
+                        //- a.branding(href='javascript://')
+                        //-     i.material-icons.blue-grey-text settings
+                        .left
+                            a.tooltipped.blue-grey-text(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(); }", style="font-size: 1.4em;", data-position='right', data-tooltip='Navigator', data-delay='10')
+                                i.mdi.mdi-compass
+                        //- span &copy; Dorsett Technologies
+
+            ul#userDropdownMenu.dropdown-content
+                //- li
+                //-     a.blue-grey-text(href='javascript://') Preferences
+                li
+                    a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
+
+            //- #pointID.modal.modal-fixed-footer
+                .modal-content
+                    h4.blue-grey-text Point Identification
+
+                    .row.sectionHeader
+                        .col.s3.blue-grey-text Attribute
+                        .col.s9.blue-grey-text Value
+                    .row
+                        .col.s3 Address
+                        .col.s9.input-field
+                            input#inputAddress(type='text')
+                            label(for='inputAddress') Address
+
+                    .row
+
+                    .row.sectionHeader
+                        .col.s3.blue-grey-text Class
+                        .col.s9.blue-grey-text Tag
+                    .row
+                        .col.s3 Building
+                        .col.s9.input-field
+                            select(value='4194')
+                                option 4194
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Equipment
+                        .col.s9.input-field
+                            input#inputEquipment(type='text')
+                            label(for='inputEquipment') Equipment
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Equipment Type
+                        .col.s9.input-field
+                            input#inputEquipmentType(type='text')
+                            label(for='inputEquipmentType') Equipment Type
+                    .row
+                        .col.s3.userDefined 
+                           a(href='javascript://')
+                                 i.material-icons highlight_off
+                            span Floor
+                        .col.s9.input-field
+                            input#inputFloor(type='text')
+                            label(for='inputFloor') Floor
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Zone
+                        .col.s9.input-field
+                            input#inputZone(type='text')
+                            label(for='inputZone') Zone
+
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
+
+            #openItemsModal.modal.modal-large
+                .modal-content
+                    .center-align.flex.flex-column.flex-center.openItemsHeader
+                        h4 Open Items
+                        a.flex.flex-center.blue-grey-text.action(href="javascript://", data-bind="click: closeAllWindows")
+                            i.material-icons close
+                            span Close All
+                    #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
+                        // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                        // /ko
+
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
+
+            //- #desktop
+                .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
+                img.desktop-background(src="/img/test/nasa.png", style="height: 200px; position: absolute; top: 130px; left: 50px;")
+                //- .dti-desktop-item
+                //-     .item-content
+                //-     .item-text Test
+                img.z-depth-1(src='/img/test/chart2.png', style="position: absolute; left: 15px; bottom:20px; height: 250px; width: 800px;")
+
+                img.z-depth-1(src='/img/test/alarms.png', style="position: absolute; right: 15px; top: 63px;")
+
+                img.z-depth-1(src='/img/test/sequence2.png', style="position: absolute; right: 15px; bottom: 20px;")
+
+                .dynamicList
+                    .groupingBody
+                    table
+                        tr
+                            td Outside Air Temp
+                            td 78&deg;
+                        tr
+                            td Outside Air Humidity
+                            td 45.50
+                        tr
+                            td
+                        tr
+                            td Wet Bulb
+                            td 55.28
+                        tr
+                            td Enthalpy
+                            td 23.28
+                        tr
+                            td Dew Point
+                            td 47.02
+                        tr
+                            td Test Link
+                            td
+                                a#testLink(href='/', target='_blank') Infoscan
+
+
+                .buttonBar
+                    a.blue-grey.waves-effect.btn(href="javascript://") Master Menu Disp
+                    a.blue-grey.waves-effect.btn(href="javascript://") Active Alarms
+                    a.blue-grey.waves-effect.btn(href="javascript://") Monthly Report
+
+        #login.animates.blue-grey
+            .container
+                .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; border-radius: 3px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
+                    .col.s12
+                        .row
+                            .col.s12
+                                img(src='/img/Dorsett_logo.png')
+                        form#loginForm
+                            .row
+                                .input-field.col.s12
+                                    input#username(type='text', name='username', autocomplete='off')
+                                    label(for='username') Username
+                            .row
+                                .input-field.col.s12
+                                    input#password(type='password', name='password', autocomplete='off')
+                                    label(for='password') Password
+                            center
+                                .row.authenticateError(style='color: red;')
+                                .row
+                                    button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
+
+                        form#resetPasswordForm.hide
+                            .row
+                                .col.s12
+                                    h6.center Looks like it's time to change your password:
+                            .row
+                                .input-field.col.s12
+                                    input#newPassword(type='password', name='newPassword', autocomplete='off')
+                                    label(for='newPassword') New Password
+                            .row
+                                .input-field.col.s12
+                                    input#newPasswordConfirm(type='password', name='newPasswordConfirm', autocomplete='off')
+                                    label(for='newPasswordConfirm') Retype New Password
+                            center
+                                .row.authenticateError(style='color: red;')
+                                .row
+                                    button#resetPasswordBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_resetPassword') Continue
+
+        #loading.animates
+            .loadingMask
+                .absCenter
+                    .cssload-container
+                        .cssload-whirlpool
+
+        iframe#thumbnailGen.hide
+    script#miniWindowTemplate(type='text/html')
+        // ko if: !exempt()
+        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
+            .itemTitle.white-text
+                i.right.material-icons.closeIcon close
+                div(data-bind="text: title")
+            .itemBody
+                //ko if: thumbnail() === true
+                img(data-bind="thumbnail: upi, visible: thumbnailFound")
+                // /ko
+
+                // ko if: thumbnail() === false || thumbnailFound() === false
+                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                // /ko
+        // /ko
+
+    script#windowTemplate(type='text/html')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
+            .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
+                .card-title.center-align.white-text
+                    div
+                        a.white-text(href="javascript://")
+                            i.material-icons.popInOutIcon call_made
+                        | #[span(data-bind="text: title")]
+                a.white-text(href="javascript://", data-bind="click: refresh, visible: hasUrl")
+                    i.material-icons refresh
+                //- a.white-text(href="javascript://")
+                //-     i.material-icons skip_previous
+                //- a.white-text(href="javascript://")
+                //-     i.material-icons skip_next
+                .right
+                    a.white-text(href="javascript://", data-bind="click: minimize, clickBubble: false")
+                        i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 24px;") remove
+                    //- a.white-text(href="javascript://")
+                    //-     i.material-icons zoom_out_map
+                    a.white-text(href="javascript://", data-bind="click: close")
+                        i.material-icons close
+            iframe.card-body(data-bind="attr: {src: url}, visible: hasUrl() === true")
+
+
+            .card-body(data-bind="visible: hasUrl() === false, stopBindings: true")
+                .markupContent
+
+            .windowMask
+                .iframeFull
+                    .absCenter
+                        .cssload-container
+                            .cssload-whirlpool
+
+    script#navigatorModalTemplate(type='text/html')
+        .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
+            .modal-header(data-bind="text: modalText")
+            .modal-content.modal-content-no-padding
+            .modal-footer(data-bind="css: mode")
+                span.modalControls.filterActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: doAcceptFilter") Accept Filter
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                span.modalControls.createActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
+
+    script#navigatorTemplate(type='text/html')
+        .iframeFull.blue-grey-form.flex.flex-row.row
+            // ko if:loading
+            .iframeFull.navigatorLoading
+                .absCenter
+                    .cssload-container
+                        .cssload-whirlpool
+            // /ko
+            // ko ifnot: loading
+            .navigatorBody.flex.flex-column(data-bind="css: mode")
+                .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
+                    p.pointType
+                        input.filled-in(type='checkbox', data-bind="checked: showInactive, attr: { id: id() + '_showInactive' }")
+                        label.label-tight(data-bind="attr: { for: id() + '_showInactive' }") Show Inactive
+                    p.pointType
+                        input.filled-in(type='checkbox', data-bind="checked: showDeleted, attr: { id: id() + '_showDeleted' }")
+                        label.label-tight(data-bind="attr: { for: id() + '_showDeleted' }") Show Deleted                                    
+                    a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
+                        i.material-icons.left clear
+                        | Clear Names
+                    a.waves-effect.waves-light.btn.blue-grey(data-bind="click: createPoint, css: { disabled: mode() === 'create' }")
+                        i.material-icons.left add
+                        | New Point
+                .selectorNames
+                    .name1.input-field.col
+                        input(type='text', data-bind="hasFocus: focus, textInput: name1, attr: { id: id() + '_name1' }")
+                        label(data-bind="updateLabel: name1, attr: { for: id() + '_name1' }") Name 1
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }")
+                            i.material-icons.suffix clear
+                    .name2.input-field.col
+                        input(type='text', data-bind="textInput: name2, attr: { id: id() + '_name2' }")
+                        label(data-bind="updateLabel: name2, attr: { for: id() + '_name2' }") Name 2
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }")
+                            i.material-icons.suffix clear                                    
+                    .name3.input-field.col
+                        input(type='text', data-bind="textInput: name3, attr: { id: id() + '_name3' }")
+                        label(data-bind="updateLabel: name3, attr: { for: id() + '_name3' }") Name 3
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }")
+                            i.material-icons.suffix clear                                    
+                    .name4.input-field.col
+                        input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
+                        label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }")
+                            i.material-icons.suffix clear                                                                                                                                       
+                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
+                    .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
+
+                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }, css: { disabled: restrictCreate }")
+                            span(data-bind="text: pointTypeText")
+                            i.material-icons.dropdownCaret arrow_drop_down
+                        .dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }, style: { 'column-count': dropdownColumnCount }")
+                            // ko if: (mode() === 'default' || mode() === 'filter')
+                            // ko if: restrictPointTypes() !== true
+                            span
+                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes'}")
+                                label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // /ko
+                            // ko foreach: pointTypes
+                            // ko if: visible() === true
+                            span(data-bind="click: function () { $parent.togglePointType($index()) } ")
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
+                                label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
+                            // /ko
+                            // /ko
+
+                            // ko if: mode() === 'create'
+                            // ko foreach: explodedPointTypes
+                            // ko if: visible() === true
+                            span(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); return false; }")
+                                input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
+                                label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
+                            // /ko
+                            // /ko
+                            // /ko
+                        //- select(data-beloworigin="true")
+                            //- // ko foreach: pointTypes
+                            //- option(data-bind="value: key, text: key")
+                            //- // /ko
+                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
+
+                .selectorList(data-bind="click: handleNavigatorRowClick")
+                    .fetching(data-bind="visible: fetchingPoints")
+                        .progress
+                            .indeterminate
+                    // ko foreach: points
+                    .listRow
+                        .listEntry(data-bind="text: name1")
+                        .listEntry(data-bind="text: name2")
+                        .listEntry(data-bind="text: name3")
+                        .listEntry(data-bind="text: name4")
+                        .listEntry(data-bind="text: pointType")
+
+                    // /ko
+
+                // ko if: !isModal() && mode() === 'create'
+                .selectorFooter
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
+                // /ko
+            // /ko
+
+
+    script#taskbarButtonTemplate(type='text/html')
+        li.taskbarItem(data-bind="taskbarMenu: $data, css: { active: $root.openWindows[group()]().length > 0 }")
+            //- div
+            a.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-bind="click: $root.taskbarButtonClick")
+                i(data-bind="text: iconText, css: iconClass")
+                span(data-bind="text: title")
+
+    script#taskbarMenuTemplate(type='text/html')                    
+        // ko stopBindings: true
+        .slideDownMenu.white.z-depth-1
+            // ko if: singleton() === false
+            .actionList
+                .blue-grey-text Actions
+                // ko if: standalone() === false
+                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                    i.material-icons folder_open
+                    span Open
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
+                    i.material-icons add
+                    span New
+                // /ko
+                // ko if: standalone() === true
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                    i.material-icons add
+                    span New
+                // /ko
+                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
+                    i.material-icons close
+                    span Close All
+            // /ko
+
+            // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+            .actionList
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+            // /ko
+
+            .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
+                .itemsHeader.blue-grey-text Open Items
+                // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                // /ko
+        // /ko
+
+    script#autosuggestTemplate(type='text/html')
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown, style: { left: position.left }')
+            // ko foreach: sources
+            .autosuggestHeader(data-bind='visibile: nameShown, text: name')
+            .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')
+                .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
+            // /ko
+
+    script.
+        var isAuthenticated = !{isAuthenticated};
+        var userData = !{user};
+    script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
+    script(type='text/javascript', src='/js/lib/jquery-ui.js')
+    script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
+    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    script(type='text/javascript', src='/js/lib/lodash.min.js')
+    script(type='text/javascript', src='/js/lib/config.js')
+    script(type='text/javascript', src='/js/lib/moment.js')
+    script(type='text/javascript', src='/js/lib/store2.min.js')
+    script(type='text/javascript', src='/js/lib/jstree.js')
+    script(type='text/javascript', src='/js/lib/jquery.hotkeys.js')
+    //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
+    script(type='text/javascript', src='/js/lib/knockout-3.2.0.debug.js')
+    script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
+    script(type='text/javascript', src='/js/lib/socket.io.js')
+    script(type='text/javascript', src='/js/lib/materialize.js')
+    script(type='text/javascript', src='//cdn.bri.io/mbox/dist/mbox-0.0.1.min.js')
+    script(type='text/javascript', src='/js/v2/home.js')
+    script(type='text/javascript', src='/js/v2/dorsettUtility.js')        

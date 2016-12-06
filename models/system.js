@@ -1,10 +1,13 @@
 var async = require('async');
+var ObjectId = require('mongodb').ObjectID;
 
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
-var ObjectId = require('mongodb').ObjectID;
+var utils = require('../helpers/utils');
+var activityLogCollection = utils.CONSTANTS("activityLogCollection");
+var actLogsEnums = Config.Enums["Activity Logs"];
 
 module.exports = {
   getSystemInfoByName: function(name, cb) {
@@ -57,7 +60,21 @@ module.exports = {
       updateObj: updateCriteria
     };
 
-    Utility.update(criteria, cb);
+    Utility.update(criteria, function(err, result) {
+
+      var logData = {
+        user: data.user,
+        timestamp: Date.now(),
+        activity: actLogsEnums["Control Priority Labels Edit"].enum,
+        log: "Control priorities edited."
+      };
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {});
+      return cb(err, result);
+    });
   },
   getQualityCodes: function(data, cb) {
     var criteria = {
@@ -115,7 +132,7 @@ module.exports = {
 
     var maskUpdate = 0;
 
-    maskUpdate = (qualityMask["Override"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"].Override["enum"] : maskUpdate;
+    maskUpdate = (qualityMask.Override * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"].Override["enum"] : maskUpdate;
     maskUpdate = (qualityMask["COV Enable"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["COV Enable"]["enum"] : maskUpdate;
     maskUpdate = (qualityMask["Alarms Off"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["Alarms Off"]["enum"] : maskUpdate;
     maskUpdate = (qualityMask["Command Pending"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["Command Pending"]["enum"] : maskUpdate;
@@ -144,7 +161,21 @@ module.exports = {
         collection: 'SystemInfo',
         updateObj: prefUpdate
       };
-      Utility.update(criteria, cb);
+      Utility.update(criteria, function(err, result) {
+
+        var logData = {
+          user: data.user,
+          timestamp: Date.now(),
+          activity: actLogsEnums["Quality Code Edit"].enum,
+          log: "Quality Codes edited."
+        };
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {});
+        return cb(err, result);
+      });
     });
   },
   updateControllers: function(data, cb) {
@@ -179,13 +210,88 @@ module.exports = {
       updateObj: updateCriteria
     };
 
-    Utility.update(criteria, cb);
+    Utility.update(criteria, function(err, result) {
+
+      var logData = {
+        user: data.user,
+        timestamp: Date.now(),
+        activity: actLogsEnums["Controllers Edit"].enum,
+        log: "Controllers edited."
+      };
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {});
+      return cb(err, result);
+    });
   },
+
   updateTelemetry: function(data, cb) {
     var ipSegment = parseInt(data["IP Network Segment"], 10);
     var ipPort = parseInt(data["IP Port"], 10);
-    var ipPortChanged = (typeof data.ipPortChanged === 'string') ? ((data.ipPortChanged === 'true') ? true : false) : data.ipPortChanged;
-    var origVals = data.originalValues;
+    var netConfig = data['Network Configuration'];
+
+    var updateNetworks = function(networks, callback) {
+      async.eachSeries(networks, function(network, acb) {
+        var criteria = {
+          collection: 'points',
+          query: {},
+          updateObj: {},
+          options: {
+            multi: true
+          }
+        };
+        var updates = [{
+          query: {
+            'Point Type.Value': 'Device',
+            'Ethernet Network.Value': network['IP Network Segment']
+          },
+          updateObj: {
+            $set: {
+              'Ethernet IP Port.Value': network['IP Port']
+            }
+          }
+        }, {
+          query: {
+            'Point Type.Value': 'Device',
+            'Downlink Network.Value': network['IP Network Segment']
+          },
+          updateObj: {
+            $set: {
+              'Downlink IP Port.Value': network['IP Port']
+            }
+          }
+        }, {
+          query: {
+            'Point Type.Value': 'Remote Unit',
+            'Model Type.Value': 'BACnet',
+            'Network Segment.Value': network['IP Network Segment'],
+            $or: [{
+              'Gateway.isDisplayable': false
+            }, {
+              'Gateway.Value': false
+            }]
+          },
+          updateObj: {
+            $set: {
+              'Ethernet IP Port.Value': network['IP Port']
+            }
+          }
+        }];
+        async.eachSeries(updates, function(update, acb2) {
+          criteria.query = update.query;
+          criteria.updateObj = update.updateObj;
+          Utility.update(criteria, acb2);
+        }, acb);
+      }, callback);
+    };
+
+    for (var n = 0; n < netConfig.length; n++) {
+      netConfig[n]['IP Network Segment'] = parseInt(netConfig[n]['IP Network Segment'], 10);
+      netConfig[n]['IP Port'] = parseInt(netConfig[n]['IP Port'], 10);
+      netConfig[n].isDefault = (netConfig[n].isDefault === 'true');
+    }
 
     var searchCriteria = {
       "Name": "Preferences"
@@ -199,6 +305,7 @@ module.exports = {
         "Public IP": data["Public IP"],
         "IP Port": ipPort,
         "Time Zone": parseInt(data["Time Zone"], 10),
+        "Network Configuration": netConfig
       }
     };
 
@@ -207,61 +314,48 @@ module.exports = {
       updateObj: updateCriteria,
       collection: 'SystemInfo'
     };
-
-    Utility.update(criteria, function(err, data) {
-
-      if (err) {
-        return cb(err.message);
+    Utility.getOne({
+      collection: 'SystemInfo',
+      query: {
+        Name: 'Preferences'
       }
+    }, function(err, data) {
+      var centralUpi = data['Central Device UPI'];
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: centralUpi
+        },
+        updateObj: {
+          $set: {
+            'Ethernet IP Port.Value': ipPort
+          }
+        }
+      }, function(err, results) {
 
-      if (ipPortChanged === true) {
-        criteria = {
-          query: {
-            $or: [{
-              "Point Type.Value": "Device"
-            }, {
-              "Point Type.Value": "Remote Unit",
-              'Model Type.Value': 'BACnet',
-              'Network Type.eValue': 4
-            }],
-            'Network Segment.Value': origVals['IP Network Segment']
-          },
-          updateObj: {
-            $set: {
-              "Ethernet IP Port.Value": ipPort,
-              "Ethernet IP Port.isReadOnly": true
-            }
-          },
-          options: {
-            multi: true
-          },
-          collection: 'points'
-        };
-        Utility.update(criteria, function(err, result) {
-          criteria = {
-            query: {
-              "Point Type.Value": "Remote Unit",
-              "Model Type.eValue": {
-                $nin: [5, 9, 10, 11, 12, 13, 14, 16]
-              }
-            },
-            updateObj: {
-              $set: {
-                "Ethernet IP Port.Value": ipPort,
-                _cfgRequired: true
-              }
-            },
-            options: {
-              multi: true
-            },
-            collection: 'points'
-          };
-          Utility.update(criteria, cb);
+        Utility.update(criteria, function(err, data) {
+
+          if (err) {
+            return cb(err.message);
+          }
+          updateNetworks(netConfig, function(err, result) {
+
+            var logData = {
+              user: data.user,
+              timestamp: Date.now(),
+              activity: actLogsEnums["Telemetry Settings Edit"].enum,
+              log: "Telemetry Settings edited."
+            };
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {});
+            return cb(err, result);
+          });
+
         });
-      } else {
-        return cb();
-      }
-
+      });
     });
   },
   getStatus: function(data, cb) {
@@ -345,13 +439,17 @@ module.exports = {
   updateAlarmTemplate: function(data, cb) {
     var searchCriteria,
       criteria;
+    var logData = {
+      user: data.user,
+      timestamp: Date.now()
+    };
 
     if (!!data.newObject) {
       var alarmTemplateNew = {
         "_id": new ObjectId(),
         "isSystemMessage": false,
-        "msgType": data.newObject.msgType,
-        "msgCat": data.newObject.msgCat,
+        "msgType": parseInt(data.newObject.msgType, 10),
+        "msgCat": parseInt(data.newObject.msgCat, 10),
         "msgTextColor": data.newObject.msgTextColor,
         "msgBackColor": data.newObject.msgBackColor,
         "msgName": data.newObject.msgName,
@@ -363,8 +461,15 @@ module.exports = {
         saveObj: alarmTemplateNew
       };
 
-      console.log("new criteria = " + JSON.stringify(criteria));
-      Utility.save(criteria, cb);
+      Utility.save(criteria, function(err, result) {
+        logData.activity = actLogsEnums["Alarm Message Add"].enum;
+        logData.log = "Alarm Message with text \"" + data.newObject.msgFormat + "\" added to the system.";
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, cb);
+      });
 
     } else if (!!data.updatedObject) {
       searchCriteria = {
@@ -374,8 +479,8 @@ module.exports = {
       var alarmTemplateUpdate = {
         $set: {
           "isSystemMessage": (data.updatedObject.isSystemMessage == "true"),
-          "msgType": data.updatedObject.msgType,
-          "msgCat": data.updatedObject.msgCat,
+          "msgType": parseInt(data.updatedObject.msgType, 10),
+          "msgCat": parseInt(data.updatedObject.msgCat, 10),
           "msgTextColor": data.updatedObject.msgTextColor,
           "msgBackColor": data.updatedObject.msgBackColor,
           "msgName": data.updatedObject.msgName,
@@ -389,11 +494,22 @@ module.exports = {
         updateObj: alarmTemplateUpdate
       };
 
-      console.log("updated criteria = " + JSON.stringify(criteria));
-      Utility.update(criteria, cb);
+      Utility.update(criteria, function(err, result) {
+        logData.activity = actLogsEnums["Alarm Message Edit"].enum;
+        logData.log = "Alarm Message with text \"" + data.updatedObject.msgFormat + "\" updated.";
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, cb);
+      });
     }
   },
   deleteAlarmTemplate: function(data, cb) {
+    var logData = {
+      user: data.user,
+      timestamp: Date.now()
+    };
     var searchCriteria = {
       "_id": ObjectId(data.deleteObject._id)
     };
@@ -408,7 +524,16 @@ module.exports = {
       }
 
       var entries = data;
-      return cb(null, entries);
+      logData.activity = actLogsEnums["Alarm Message Delete"].enum;
+      logData.log = "Alarm Message with text \"" + data.updatedObject.msgFormat + "\" remvoed from the system.";
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {
+        return cb(null, entries);
+      });
+
     });
   },
   weather: function(cb) {
@@ -538,6 +663,6 @@ module.exports = {
         versions.Processes = result['Server Version'];
         return cb(null, versions);
       }
-    })
+    });
   }
 };

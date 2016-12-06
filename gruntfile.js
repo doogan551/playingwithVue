@@ -48,8 +48,7 @@ module.exports = function (grunt) {
                     expand: true,
                     cwd: 'public/',
                     src: ['css/**/*.css'],
-                    dest: 'dist/public/',
-                    ext: '.css'
+                    dest: 'dist/public/'
                 }]
             }
         },

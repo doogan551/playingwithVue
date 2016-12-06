@@ -1,7 +1,7 @@
 <div class="nav">
     <ul>
         <li><span>Overview</span></li>
-        <!-- ko if: $root.isSystemAdmin() -->
+        <!-- ko if: $root.isSystemAdmin() || (data._pStatus() === $root.utility.config.Enums["Point Statuses"].Inactive.enum)-->
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>

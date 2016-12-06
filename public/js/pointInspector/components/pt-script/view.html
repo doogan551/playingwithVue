@@ -1,7 +1,7 @@
 <div class="nav">
     <ul>
         <li><span>Overview</span></li>
-        <!-- ko if: $root.isSystemAdmin() -->
+        <!-- ko if: $root.isSystemAdmin() || (data._pStatus() === $root.utility.config.Enums["Point Statuses"].Inactive.enum)-->
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
@@ -72,8 +72,10 @@
     </div>
 
     <div id="source" class="content">
-        <div class="scriptTab productionTab active"><i class="fa fa-lock"></i>Production</div>
-        <div class="scriptTab developmentTab"><i class="fa" data-bind="css: { 'fa-lock' : !isInEditMode() }"></i>Development</div>
+        <div class="scriptTab productionTab active"><i class="fa fa-lock"></i>Live Script</div>
+        <div class="scriptTab developmentTab"><i class="fa" data-bind="css: { 'fa-lock' : !isInEditMode() }"></i>Script Editor</div>
+        <button id="editScriptButton" class="btn btn-default btn-xs" data-bind='visible: showEditScriptButton, click: showEditScript'>Edit Script</button>
+        <button id="discardScriptButton" class="btn btn-default btn-xs" data-bind='visible: showDiscardScriptButton, click: discardScript'>Discard Script Changes</button>
 
         <div class="scriptEditor productionEditor">
             <textarea data-bind="editor: data['Script Source File'], name: 'productionEditor', isReadOnly: true"></textarea>
@@ -84,6 +86,7 @@
 
         <!-- ko if: isInEditMode() && selectedScript().name == 'development' -->
         <div id="buildActions">
+            <button class="btn btn-default btn-xs btnCompile btn-success" data-bind="click: saveAndActivate, visible: buildStatus() == 'compiled' || buildStatus() == 'activating', disable: buildStatus() == 'activating' "><i class="fa" data-bind="css: buildStatus() === 'activating' ? 'fa-spinner fa-spin': 'fa-check' "></i> Apply, Save & Close</button>
             <button class="btn btn-default btn-xs btnCompile" data-bind="click: compile"><i class="fa fa-refresh"></i> Compile</button>
         </div>
         <!-- /ko -->

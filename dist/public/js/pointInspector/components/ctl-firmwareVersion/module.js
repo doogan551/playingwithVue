@@ -1,1 +1,0 @@
-define(["knockout","text!./view.html"],function(a,b){function c(a){this.firmwareVersion=a.firmwareVersion,this.isInEditMode=a.rootContext.isInEditMode}return c.prototype.doSomething=function(){},c.prototype.dispose=function(){},{viewModel:c,template:b}});

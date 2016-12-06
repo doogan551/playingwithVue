@@ -1,4 +1,5 @@
 /*jslint white: true*/
+
 //register ko components and binding handlers
 require(['knockout'], function (ko) {
     //manually set the global ko property
@@ -92,9 +93,26 @@ define([
     'bootstrap-switch'
 ], function($, ko, io, moment, Big, bannerJS) {
     var pointInspector = {},
-        workspace = window.opener && window.opener.workspaceManager,
+        workspace = window.top.workspaceManager,
         uniqueIdRegister = [],
         formatPointErrorTimestamp = 0;
+
+    //for workspace 'give me point data' function
+    (function checkParameters() {
+        if (window.getWindowParameters) {
+            var cfg = window.getWindowParameters();
+
+            window.attach = {};
+
+            if (cfg.pointData) {
+                window.attach.point = $.extend(true, {}, cfg.pointData);
+            }
+
+            if (cfg.callback) {
+                window.attach.saveCallback = cfg.callback;
+            }
+        }
+    })();
 
     //adjust default calendar config to show time
     moment.locale('en', {
@@ -334,10 +352,14 @@ define([
                 method: 'hard'
             },
             emitString = 'deletePoint';
-        if (newPointData._pStatus === 1)
+
+        //if new and from external (gpl), don't delete it on close
+        if (newPointData._pStatus === 1 && !pointInspector.isExternal) {
             pointInspector.socket.emit(emitString, emitData);
+        }
             
-        window.close();
+        dtiUtility.closeWindow();
+        // window.close();
     };
     pointInspector.tabTriggers = {};
     pointInspector.events ={
@@ -417,8 +439,7 @@ define([
                     property: e.property,
                     refPoint: e.refPoint,
                     oldPoint: pointInspector.point.originalData,
-                    systemNetwork: window.opener.workspaceManager.systemEnumObjects.telemetry['IP Network Segment'],
-                    systemIPPort: window.opener.workspaceManager.systemEnumObjects.telemetry['IP Port']
+                    networkConfig: pointInspector.utility.workspace.systemEnumObjects.telemetry['Network Configuration']
                 };
                 updatedPoint = config.Update.formatPoint(point);
                 console.log('SEND', point);
@@ -594,17 +615,8 @@ define([
         }
     };
     pointInspector.authorize = function(data, requestedAccessLevel) {
-        var cumulativePermissions = 0,
-            user = workspace.user(),
-            groups = user.groups.filter(function(item) { return !!~data.Security.indexOf(item._id); }),
-            isSystemAdmin = user['System Admin'].Value;
-
-        if (isSystemAdmin) return true;
-
-        for(var i = 0, last = groups.length; i < last; i++) {
-            cumulativePermissions |= groups[i]._pAccess;
-        }
-        return !!(cumulativePermissions & requestedAccessLevel);
+        var pAccess = (ko.isObservable(data._pAccess)) ? data._pAccess() : data._pAccess;
+        return !!(pAccess & requestedAccessLevel);
     };
 
     pointInspector.isSystemAdmin = function() {
@@ -810,6 +822,7 @@ define([
                 }
             });
         };
+        
         self.originalData = data;
         self.data = ko.viewmodel.fromModel(data, options);
         //throttle point refs for model switch when toggling edit mode
@@ -827,19 +840,12 @@ define([
             var newPointData = ko.viewmodel.toModel(self.data),
                 emitData    = { newPoint: newPointData, oldPoint: self.originalData },
                 emitString  = 'updatePoint',
-                spinClass   = 'fa-spinner fa-spin',
-                $saveIcon   = $('.btnSave i'),
                 close;
-
-            // Allow 200ms for the point to save before showing the spinner
-            window.setTimeout(function () {
-                if (self.status() === 'saving')
-                    $saveIcon.addClass(spinClass);
-            }, 200);
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
-                return window.close();
+                // return window.close();
+                return dtiUtility.closeWindow();
             }
             $('body').css('overflow', 'hidden');
             data = data || {};
@@ -878,6 +884,7 @@ define([
                             slide = slides[getSlideIndexById(pointRefs[i].PointInst)];
                             if (slide) {
                                 slide.order = i;
+                                slide.pointRefIndex = pointRefs[i].AppIndex;
                             }
                         }
                     };
@@ -902,7 +909,8 @@ define([
             pointInspector.socket.once('pointUpdated', function(rxData) {
                 var hideAfter = 3000,
                     bgColor,
-                    dismissText;
+                    dismissText,
+                    msg;
 
                 if (rxData.message && rxData.message === 'success') {
                     msg = 'Point was successfully saved.';
@@ -930,10 +938,9 @@ define([
                 }
                 close = (typeof data.close === 'boolean' && data.close) && !rxData.err;
                 bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
-                $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(window.close, 1000);
+                    setTimeout(dtiUtility.closeWindow, 1000);
                 }
             });
         };
@@ -956,6 +963,8 @@ define([
     function initialize(data) {
         var condition = '.permissionDenied',
             $noAccess = $('.noAccess'),
+            pointStatuses = pointInspector.utility.config.Enums['Point Statuses'],
+            pointInactive = (data._pStatus === pointStatuses.Inactive.enum),
             denyAccess = false;
         //check security
         if (!!data.err) {
@@ -970,7 +979,8 @@ define([
             }
             denyAccess = true;
         }
-        if (!denyAccess && !pointInspector.authorize(data, pointInspector.permissionLevels.READ)) {
+        // Allow access if point is inactive #180
+        if (!denyAccess && !pointInactive && !pointInspector.authorize(data, pointInspector.permissionLevels.READ)) {
             denyAccess = true;
         }
         if (denyAccess) {
@@ -978,6 +988,11 @@ define([
             pointInspector.initDOM();
             return;
         }
+        // Automatically enable edit mode if point is inactive (#180) OR if user has sufficient access & point is not deleted
+        if (pointInactive || (pointInspector.authorize(data, pointInspector.permissionLevels.WRITE) && (data._pStatus !== pointStatuses.Deleted.enum))) {
+            pointInspector.isInEditMode(true);
+        }
+
         pointInspector.point = new Point(data);
         pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
@@ -985,7 +1000,7 @@ define([
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time
             // Delay the bannerJS animation for another 500ms to let things settle down
             window.setTimeout(function () {
-                if (data._pStatus === 2) {
+                if (data._pStatus === pointStatuses.Deleted.enum) {
                     bannerJS.showBanner({
                         msg: 'This point has been deleted. Click the restore button to undelete it.',
                         color: 'black',
@@ -1002,7 +1017,9 @@ define([
     }
 
     if (!!window.attach && !!window.attach.point) {
-        initialize(JSON.parse(window.attach.point));
+        //flag for external/parameter points (mainly gpl)
+        pointInspector.isExternal = true;
+        initialize(window.attach.point);
     } else {
         getData(pointInspector.id).done(function (data) {
             initialize(data);
@@ -1115,6 +1132,7 @@ define([
     ko.bindingHandlers.numeric = {
         init: function (element, valueAccessor, allBindingsAccessor) {
             var utility                 = pointInspector.utility,
+                valueTypeEnums          = utility.config.Enums["Value Types"],
                 $element                = $(element),
                 underlyingObservable    = valueAccessor(),
                 valueType               = ko.unwrap(allBindingsAccessor().valueType),
@@ -1125,9 +1143,28 @@ define([
                 doValidate              = allBindingsAccessor().doValidate,
                 noConfigValidation      = ko.unwrap(allBindingsAccessor().noValidation),
                 method,
-                interceptor             = ko.computed({
-                    read: function() {
-                        if ($element.is(':focus') && $element.is('input')) {
+                interceptor = ko.computed({
+                    read: function () {
+                        var val,
+                            valIsPureNumber,
+                            valueType;
+
+                        if (underlyingObservable.peek() !== undefined) {
+                            val = ko.unwrap(underlyingObservable());
+                            valIsPureNumber = /^([0-9]*)$/.test(val);
+
+                            // SCADA IO device type added support for AI channel numbers that are numeric entry OR drop down selection,
+                            // determined by another property selection (up to the point of this comment, the 'Channel' property was
+                            // always a numeric input). Dynamically changing this property to a drop-down was causing this numeric binding
+                            // to throw errors because the drop-down values are not numbers. So we'll check the value type and value
+                            // before calling formatNumber...
+
+                            if (valueType === valueTypeEnums.Enum.enum) {
+                                return val;
+                            } else if ((valueType === valueTypeEnums.Unsigned.enum) && !valIsPureNumber) {
+                                return min;
+                            }
+                        } else if ($element.is(':focus') && $element.is('input')) {
                             return ko.unwrap(underlyingObservable);
                         }
                         return utility.formatNumber(ko.unwrap(underlyingObservable), valueType, noTruncate, noComma);

@@ -354,6 +354,20 @@ body {
     line-height: 50px;
 }
 
+.titleBar .actions .dropdown-menu {
+    min-width: 0px;
+}
+
+.pointUpi {
+    background-color: transparent;
+    color: transparent;
+    border: none;
+}
+
+.pointUpi:hover {
+    color: black;
+}
+
 .btnSave i {
     margin-right: 5px;
 }
@@ -1126,6 +1140,15 @@ hr {
     .developmentTab {
         left: 225px;
     } 
+    #editScriptButton, #discardScriptButton {
+        left: 225px;
+        position: absolute;
+        z-index: 2;
+        top: 15px;
+    }
+    #discardScriptButton {
+        left: 330px;
+    }
 /* end script point */
 
 
@@ -1404,15 +1427,14 @@ div.scheduleBox {
   }
 }*/
 /*Notifications and Policies*/
-.returnAlarmChecks, .policyChecks {
-    color: #777;
-}
-
 .notifications-table th:first-child, .notifications-table th:nth-child(2) {
     width: 7%;
 }
 .notifications-table th:nth-child(3) {
     width: 20%;
+}
+.notifications-table thead tr th {
+    vertical-align: middle;
 }
 /*end Notifications*/
 
@@ -1450,6 +1472,7 @@ div.scheduleBox {
 .deviceheaders .vendorID,
 .deviceheaders .apduLength,
 .deviceheaders .changeCount,
+.deviceheaders .gateway,
 .deviceheaders .noPriority {
     width: 60px;
 }

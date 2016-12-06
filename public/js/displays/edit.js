@@ -172,29 +172,29 @@ displays = $.extend(displays, {
 
         for (i = 0; i < len; i++) {
             pointRef = displayJson["Point Refs"][i];
-            if (pointRef.Value === pid) {
+            if (pointRef.Value === pid && pointRef.PropertyName === propertyName) {
                 alreadyExists = true;
                 break;
-            } else {
-                pointRef = {};
             }
         }
 
-        propertyObj = displays.workspaceManager.config.Utility.getPropertyObject("Device Point", displays.getEditItem());
-        pointRef.PropertyEnum = displays.workspaceManager.config.Enums.Properties[propertyName].enum;
-        pointRef.PropertyName = propertyName;
-        pointRef.Value = pid;
-        pointRef.AppIndex = displayJson["Point Refs"].length;
-        pointRef.isDisplayable = true;
-        pointRef.isReadOnly = false;
-        pointRef.PointName = name;
-        pointRef.PointType = displays.workspaceManager.config.Enums["Point Types"][pointType].enum;
-        pointRef.PointInst = pid;
-        pointRef.DevInst = (propertyObj !== null) ? propertyObj.Value : 0;
-
         if (!alreadyExists) {
+            propertyObj = displays.workspaceManager.config.Utility.getPropertyObject("Device Point", displays.getEditItem());
+            pointRef.PropertyEnum = displays.workspaceManager.config.Enums.Properties[propertyName].enum;
+            pointRef.PropertyName = propertyName;
+            pointRef.Value = pid;
+            pointRef.AppIndex = displays.getNextAppIndex();
+            pointRef.isDisplayable = true;
+            pointRef.isReadOnly = false;
+            pointRef.PointName = name;
+            pointRef.PointType = displays.workspaceManager.config.Enums["Point Types"][pointType].enum;
+            pointRef.PointInst = pid;
+            pointRef.DevInst = (propertyObj !== null) ? propertyObj.Value : 0;
+
             displayJson["Point Refs"].push(pointRef);
         }
+
+        return pointRef;
     },
     verifyPointReferences: function (localDisplay) {
         var i,
@@ -342,21 +342,31 @@ displays = $.extend(displays, {
             $backgroundCustomColorPicker = $("#backgroundCustomColorPicker"),
             initEditDisplay = function(display) {
                 var objs = display['Screen Objects'],
+                    screenObject,
+                    pointRef,
                     upiList = [],
                     c;
 
                 displays.upiNames = window.upiNames;
+                window.displayJson = display;
 
                 for (c = 0; c < objs.length; c++) {
-                    if (objs[c].upi) {
-                        upiList.push(objs[c].upi);
-                        if (objs[c].Precision) {
-                            objs[c].uiPrecision = parseInt(displays.getEditItemPrecision(objs[c].Precision), 10);
+                    screenObject = objs[c];
+                    if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
+                        pointRef = displays.getScreenObjectPointRef(screenObject);
+
+                        if (!!pointRef) {
+                            screenObject.upi = pointRef.Value;
+                            screenObject.pointRefIndex = pointRef.AppIndex;
+                        }
+
+                        upiList.push(screenObject.upi);
+                        if (screenObject.Precision) {
+                            screenObject.uiPrecision = parseInt(displays.getEditItemPrecision(screenObject.Precision), 10);
                         }
                     }
                 }
 
-                window.displayJson = display;
                 $.ajax({
                     url: '/displays/getDisplayInfo/',
                     method: 'POST',
@@ -438,6 +448,35 @@ displays = $.extend(displays, {
             return false;
         }
 
+        function doPointSelect() {
+            var parameters = {},
+                pointTypes = displays.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes('Dynamic'),
+                editItem = displays.EditItemCtrl.editItem,
+                screenObject = editItem['Screen Object'],
+                propertyName = displays.resolveDisplayObjectPropertyName(screenObject),
+                pointSelectedCallback = function(pointInfo) {
+                    var pointRef,
+                        pid;
+
+                    if (!!pointInfo) {
+                        //here you can apply the selected point's pid and/or name
+                        pid = pointInfo._id;
+                        editItem.upi = pid;
+                        pointRef = displays.pushPointRef(pid, pointInfo.name, pointInfo.pointType, propertyName);
+                        editItem.pointRefIndex = pointRef.AppIndex;
+                        editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointInfo.pointType].enum;
+                        displays.upiNames[pid] = displays.upiNames[pid] || pointInfo.name;
+                        displays.updateEditItem(editItem);
+                        displays.EditItemCtrl.$apply();
+                    }
+                };
+
+            parameters.pointTypes = pointTypes;
+
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
+        }
+
         btn = document.getElementById('btn');
         btn.addEventListener('dragstart', handleDragStart, false);
         btn.addEventListener('dragend', handleDragEnd, false);
@@ -505,40 +544,11 @@ displays = $.extend(displays, {
             });
 
         $('.popSelector').click(function() { //for trend plot
-            displays.openWindow('/pointLookup', 'Choose Display Dynamic', '', '', '');
+            doPointSelect();
         });
 
         $('#choosePoint').click(function() {
-            var pointTypes = displays.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes('Dynamic'),
-                editItem = displays.EditItemCtrl.editItem,
-                screenObject = editItem['Screen Object'],
-                propertyName = displays.resolveDisplayObjectPropertyName(screenObject),
-                pointSelectedCallback = function(pid, name, pointType) {
-                    if (!!pid) {
-                        //here you can apply the selected point's pid and/or name
-
-                        editItem.upi = pid;
-                        displays.pushPointRef(pid, name, pointType, propertyName);
-                        editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointType].enum;
-                        displays.upiNames[pid] = displays.upiNames[pid] || name;
-                        displays.updateEditItem(editItem);
-                        displays.EditItemCtrl.$apply();
-                    }
-                },
-                windowOpenedCallback = function() {
-                    this.pointLookup.MODE = 'select';
-                    if (screenObject === 0) { //dynamic
-                        this.pointLookup.POINTTYPES = pointTypes;
-                        pointNameFilterObj.pointTypes = pointTypes;
-                    }
-                    this.pointLookup.init(pointSelectedCallback, pointNameFilterObj);
-                };
-            displays.selectMode = 'point';
-
-            displays.openWindow('/pointLookup', 'Select Point', '', '', 'Select Dynamic Point', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            doPointSelect();
         });
 
         $('#browseBg').click(function() {
@@ -1357,7 +1367,12 @@ displays = $.extend(displays, {
                 if (angular.equals($scope.oDisplay, nDisplay)) {
                     //window.location = '/displays/view/' + $scope.display._id;
                     _title = window.displayJson.Name;
-                    $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, parseInt(window.displayJson.Width, 10) + 50, parseInt(window.displayJson.Height, 10) + 100, window.screenX, window.screenY);
+                    $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, {
+                        width: parseInt(window.displayJson.Width, 10) + 50, 
+                        height: parseInt(window.displayJson.Height, 10) + 100,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                     //window.close();
                 } else {
                     $("#confirmChanges").popup("open", {
@@ -1369,7 +1384,12 @@ displays = $.extend(displays, {
             $scope.anyway = function() {
                 //window.location = '/displays/view/' + $scope.display._id;
                 var _title = window.displayJson.Name;
-                $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, parseInt(window.displayJson.Width, 10) + 50, parseInt(window.displayJson.Height, 10) + 100, window.screenX, window.screenY);
+                $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, {
+                        width: parseInt(window.displayJson.Width, 10) + 50, 
+                        height: parseInt(window.displayJson.Height, 10) + 100,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 //window.close();
             };
 
@@ -1595,7 +1615,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/view/' + saveObj._id, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/view/' + saveObj._id, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 });
             };
 
@@ -1613,6 +1638,10 @@ displays = $.extend(displays, {
 
                 $scope.cleanActionButtons(saveObj);
 
+                displays.setDisplayPrecision(saveObj);
+                displays.verifyPointReferences(saveObj);
+                displays.verifyScreenObjects(saveObj);
+
                 saveObj.vid = saveObj._id;
                 $scope.blur();
                 delete saveObj.version;
@@ -1628,7 +1657,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/view/' + window.upi, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/view/' + window.upi, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 });
             };
 
@@ -1807,7 +1841,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/edit/' + upi, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/edit/' + upi, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                     // }
                     // console.log(data);
                     // window.location = '/displays/edit/' + displayJson.vid;

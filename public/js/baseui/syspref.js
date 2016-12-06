@@ -202,7 +202,7 @@ ko.validation.registerExtenders();
 var calendarViewModel = function() {
     var viewModel = {
 
-        $calendarData : "",
+        $calendarData: "",
 
         displayName: 'Calendar',
 
@@ -445,7 +445,8 @@ var calendarViewModel = function() {
             }
 
             // Loop through each holiday in the modified collection until we find a difference
-            for (i = 0;  (i < mlen) && (diff === false); i++) {
+            for (i = 0;
+                (i < mlen) && (diff === false); i++) {
                 found = false; // Initialize difference found flag
 
                 // Try to find a match in the original holiday collection
@@ -1096,19 +1097,17 @@ var telemetryViewModel = function() {
         originalValues = {},
         dataUrl = '/api/system/telemetry',
         saveUrl = '/api/system/updateTelemetry',
-        tzEnums = window.opener.workspaceManager.config.Enums["Time Zones"],
-        fieldList = [{
-            name: 'Public IP',
-            validation: {
-                ipAddress: true
-            }
-        }, {
+        tzEnums = window.top.workspaceManager.config.Enums["Time Zones"],
+        ipNetSegTemplate = {
             name: 'IP Network Segment',
             validation: {
                 required: true,
-                number: true
+                number: true,
+                min: 1,
+                max: 65534
             }
-        }, {
+        },
+        ipPortTemplate = {
             name: 'IP Port',
             validation: {
                 required: true,
@@ -1116,30 +1115,44 @@ var telemetryViewModel = function() {
                 min: 47808,
                 max: 47823
             }
-        }, {
-            name: 'APDU Timeout',
-            validation: {
-                required: true,
-                number: true
-            }
-        }, {
-            name: 'APDU Retries',
-            validation: {
-                required: true,
-                number: true
-            }
-        }, {
-            name: 'Time Zone',
-            validation: {
-                required: true
-            }
-        }],
+        },
+        fieldList = [{
+                name: 'APDU Timeout',
+                validation: {
+                    required: true,
+                    number: true
+                }
+            }, {
+                name: 'APDU Retries',
+                validation: {
+                    required: true,
+                    number: true
+                }
+            }, {
+                name: 'Time Zone',
+                validation: {
+                    required: true
+                }
+            }, ipPortTemplate,
+            ipNetSegTemplate
+        ],
         makeDirty = function() {
+            if (!self.dirty() && !!self.initialized()) {
+                $.toast({
+                    heading: 'Warning',
+                    text: 'A system restart will be required after saving any changes to these settings.',
+                    position: 'top-center',
+                    stack: false,
+                    hideAfter: false,
+                    bgColor: 'yellow',
+                    textColor: 'black'
+                });
+            }
             self.dirty(true);
         },
         checkForErrors = function() {
             makeDirty();
-            self.hasError(errors().length > 0);
+            // self.hasError(errors().length > 0);
         },
         initObservables = function() {
             var c, len = fieldList.length,
@@ -1161,29 +1174,57 @@ var telemetryViewModel = function() {
                     self[name].subscribe(checkForErrors);
                 }
             }
-            errors = ko.validation.group(self);
+            self.networks.subscribe(makeDirty);
+            errors = ko.validatedObservable(self);
         },
         getDataToSave = function() {
             var c, len = fieldList.length,
                 field,
-                ret = {};
+                ret = {},
+                networks = self.networks();
 
+            var fixLeadingZeros = function(value) {
+                // var matched = value.match(/^0*/);
+                // if (!!matched) {
+                //     return value.substr(matched[0].length);
+                // }
+
+                return parseInt(value, 10);
+            };
+
+            for (var n = 0; n < networks.length; n++) {
+                var net = networks[n];
+                if (net['IP Network Segment']() === 0 || net['IP Port']() < 47808 || net["IP Port"]() > 47823) {
+                    networks.splice(n, 1);
+                    self.networks.splice(n, 1);
+                    n--;
+                } else {
+                    net['IP Network Segment'](fixLeadingZeros(net['IP Network Segment']()));
+                    net['IP Port'](fixLeadingZeros(net['IP Port']()));
+                    if (!!net.isDefault()) {
+                        self['IP Network Segment'](net['IP Network Segment']());
+                        self['IP Port'](net['IP Port']());
+                    }
+                }
+            }
+            self.updateDefault();
             for (c = 0; c < len; c++) {
                 field = fieldList[c].name;
                 ret[field] = self[field]();
             }
-            ret.ipPortChanged = (self['IP Port']() === originalValues['IP Port']) ? false : true;
-            ret.originalValues = originalValues;
+            networks = ko.viewmodel.toModel(self.networks());
+            ret['Network Configuration'] = networks;
             console.log(ret);
 
             return ret;
         },
         setData = function() {
             var c, len = fieldList.length,
+                networks = fullData['Network Configuration'],
                 item,
                 name,
                 value;
-
+            self.initialized(false);
             for (c = 0; c < len; c++) {
                 item = fieldList[c];
                 name = item.name;
@@ -1198,6 +1239,18 @@ var telemetryViewModel = function() {
 
                 self.dirty(false);
             }
+            self.networks([]);
+            if (!!networks) {
+                for (var n = 0; n < networks.length; n++) {
+                    // self.networks.push(ko.viewmodel.fromModel(networks[n]));
+                    if (!!networks[n].isDefault) {
+                        self.systemDefault(networks[n]['IP Network Segment']);
+                    }
+                    self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
+                    self.dirty(false);
+                }
+            }
+            self.initialized(true);
             // console.log("setdata originalValues", originalValues);
         },
         updateData = function() {
@@ -1229,9 +1282,26 @@ var telemetryViewModel = function() {
     self.displayName = 'Telemetry';
 
     self.dirty = ko.observable(false);
+    self.initialized = ko.observable(false);
     self.hasError = ko.observable(false);
     self.selectedTimeZone = ko.observable('');
     self.selectedTimeZoneText = ko.observable('');
+    self.networks = ko.observableArray([]);
+    self.systemDefault = ko.observable();
+    self.originalSegment = ko.observable();
+    /*{
+        isDefault: ko.observable(true),
+        'IP Port': ko.observable(47808),
+        ['IP Network Segment']: ko.observable(100)
+    }, {
+        isDefault: ko.observable(false),
+        'IP Port': ko.observable(47808),
+        ['IP Network Segment']: ko.observable(200)
+    }, {
+        isDefault: ko.observable(false),
+        'IP Port': ko.observable(47809),
+        ['IP Network Segment']: ko.observable(300)
+    }*/
 
     initObservables();
 
@@ -1270,23 +1340,23 @@ var telemetryViewModel = function() {
             len = valErrors.length,
             saveObj;
 
-        if (len === 0) {
-            //no errors, save
-            saveObj = getDataToSave();
-            self.hasError(false);
+        // if (len === 0) {
+        //no errors, save
+        saveObj = getDataToSave();
+        self.hasError(false);
 
-            $.ajax({
-                url: saveUrl,
-                data: saveObj,
-                dataType: 'json',
-                type: 'post'
-            }).done(function(response) {
-                updateData();
-            });
-        } else {
-            self.dirty(true);
-            self.hasError(true);
-        }
+        $.ajax({
+            url: saveUrl,
+            data: saveObj,
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            updateData();
+        });
+        // } else {
+        // self.dirty(true);
+        // self.hasError(true);
+        // }
     };
 
     self.cancel = function() {
@@ -1301,12 +1371,101 @@ var telemetryViewModel = function() {
             }
         }
     };
+    self.addNetwork = function(vm, e, network) {
+        var newNetwork = {};
+        if (!!network) {
+            newNetwork = network;
+        } else {
+            newNetwork = ko.viewmodel.fromModel({
+                isDefault: false,
+                'IP Port': 0,
+                'IP Network Segment': 0
+            });
+        }
+        newNetwork['IP Port'].extend(ipPortTemplate.validation);
+        newNetwork['IP Port'].subscribe(checkForErrors);
+        newNetwork['IP Network Segment'].extend(ipNetSegTemplate.validation);
+        newNetwork['IP Network Segment'].subscribe(checkForErrors);
+        if (!!newNetwork.isDefault()) {
+            self.networks.unshift(newNetwork);
+        } else {
+            self.networks.push(newNetwork);
+        }
+    };
+    self.removeNetwork = function() {
+        var networks = self.networks();
+        var toRemove = parseInt(this['IP Network Segment']());
+        var portCheck = parseInt(this['IP Port']());
+        var temp = [];
+        for (var i = 0; i < networks.length; i++) {
+            var net = networks[i];
+            if (toRemove === parseInt(net['IP Network Segment']()) && portCheck === parseInt(net['IP Port']())) {
+                networks.splice(i, 1);
+                break;
+            }
+        }
+        // self.networks(temp);
+        self.networks.valueHasMutated();
+        self.updateDefault();
+    };
+    self.setSegment = function() {
+        self.originalSegment(this['IP Network Segment']());
+    };
+    self.checkUniqueSegment = function(obj, e) {
+        var values = [];
+        var networks = self.networks();
+        $('.networkSegmentUnique').remove();
+        for (var index = 0; index < networks.length; index++) {
+            var prop = networks[index]['IP Network Segment'];
+            var value = parseInt(prop(), 10);
+
+            if (values.indexOf(value) != -1) {
+                $('#uniqueSegmentError').show();
+                $(e.target).after('<span class="validationMessage networkSegmentUnique">Please enter a unique Network Segment. It has been reset to original value.</span>')
+                this['IP Network Segment'](self.originalSegment());
+                return false;
+            } else {
+                values.push(value);
+            }
+        }
+        $('#uniqueSegmentError').hide();
+    };
+    self.changeDefault = function() {
+        console.log(this['IP Network Segment'](), this.isDefault());
+        var networks = self.networks();
+        networks.forEach(function(net) {
+            net.isDefault(false);
+        });
+        this.isDefault(true);
+        self.dirty(true);
+        return true;
+    };
+    self.allowDefault = function() {
+        console.log(this);
+        return true;
+    };
+    self.updateDefault = function() {
+        var hasDefault = false;
+        var networks = self.networks();
+        networks.forEach(function(net) {
+            if (!!net.isDefault()) {
+                hasDefault = true;
+            }
+        });
+        if (!hasDefault) {
+            self.changeDefault.apply(networks[0]);
+
+            self.systemDefault(networks[0]['IP Network Segment']())
+            self['IP Network Segment'](networks[0]['IP Network Segment']());
+            self['IP Port'](networks[0]['IP Port']());
+        }
+    }
 };
 
 // Backup Screen --------------------------------------------------------------
 var backupViewModel = function() {
     var self = this,
-        socket = window.opener && window.opener.workspaceManager.socket(),
+        socket = window.top && window.top.workspaceManager.socket(),
         initObservables = function() {
 
         };
@@ -1369,8 +1528,8 @@ var versionsViewModel = function() {
 // Alarm Messages Screen ---------------------------------------------------------
 var alarmMessageViewModel = function() {
     var self = this,
-        alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
-        alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
+        alarmTemplateCategories = window.top.workspaceManager.config.Enums["Alarm Categories"],
+        alarmTemplateTypes = window.top.workspaceManager.config.Enums["Alarm Types"],
         $alarmTemplateModal,
         $alarmTokens,
         $alarmToken,
@@ -1384,7 +1543,7 @@ var alarmMessageViewModel = function() {
         deleteUrl = '/api/system/deleteAlarmTemplate',
         alarmTemplateData,
         columnsArray,
-        blockUI = function ($control, state) {
+        blockUI = function($control, state) {
             if (state === true) {
                 $control.hide();
             } else {
@@ -1392,17 +1551,17 @@ var alarmMessageViewModel = function() {
             }
             $control.attr('disabled', state);
         },
-        getRawHexColor = function (theColor) {
-            return theColor.replace(/#/g , "");
+        getRawHexColor = function(theColor) {
+            return theColor.replace(/#/g, "");
         },
-        getColumnByRenderIndex = function (index) {
+        getColumnByRenderIndex = function(index) {
             var result;
-            result = columnsArray.filter(function (col) {
+            result = columnsArray.filter(function(col) {
                 return (col.renderedIndex === index);
             });
             return result[0];
         },
-        getKeyBasedOnEnumValue = function (obj, value) {
+        getKeyBasedOnEnumValue = function(obj, value) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
                     if (obj[key].enum === parseInt(value, 10)) {
@@ -1412,7 +1571,7 @@ var alarmMessageViewModel = function() {
             }
             return "System Message";
         },
-        getColumns = function () {
+        getColumns = function() {
             var cols = [];
             cols.push({
                 columnKey: "_id",
@@ -1477,13 +1636,13 @@ var alarmMessageViewModel = function() {
             });
             return cols;
         },
-        configureDataTable = function (destroy, clearData, columns) {
+        configureDataTable = function(destroy, clearData, columns) {
             var $cloneButton = "<div class='btn-group' title='Clone'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
                 $deleteButton = "<div class='btn-group' title='Delete'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
                 aoColumns = [],
                 i,
                 renderedIndex = 0,
-                setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
+                setTdAttribs = function(tdField, columnConfig, data, columnIndex) {
                     switch (columnConfig.columnKey) {
                         case "msgFormat":
                             $(tdField).css('background-color', data.msgBackColor.Value);
@@ -1514,7 +1673,7 @@ var alarmMessageViewModel = function() {
                             break;
                     }
                 },
-                setColumnClasses = function (columnKey) {
+                setColumnClasses = function(columnKey) {
                     var result = "";
                     switch (columnKey) {
                         case "msgCat":
@@ -1538,7 +1697,7 @@ var alarmMessageViewModel = function() {
                     }
                     return result;
                 },
-                buildColumnObject = function (columnConfig, columnIndex) {
+                buildColumnObject = function(columnConfig, columnIndex) {
                     var result,
                         columnTitle = columnConfig.columnName,
                         sortAbleColumn = columnConfig.sortable;
@@ -1547,11 +1706,11 @@ var alarmMessageViewModel = function() {
                         title: columnTitle,
                         data: columnConfig.columnKey,
                         //className: setColumnClasses(columnConfig.columnKey),
-                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
+                        width: (!!columnConfig.width ? columnConfig.width + "px" : "auto"),
                         render: {
                             _: "Value"
                         },
-                        fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                        fnCreatedCell: function(nTd, sData, oData, iRow, iCol) {
                             setTdAttribs(nTd, getColumnByRenderIndex(iCol), oData, iCol);
                         },
                         bSortable: sortAbleColumn
@@ -1572,24 +1731,30 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable({
                     data: alarmTemplateData,
                     columns: aoColumns,
-                    headerCallback: function (thead, data, start, end, display) {
+                    headerCallback: function(thead, data, start, end, display) {
                         for (i = 0; i < aoColumns.length; i++) {
                             $(thead).find('th').eq(i).css("background-color", "rgb(234, 234, 234)");
                             $(thead).find('th').eq(i).addClass("strong");
                         }
                     },
-                    order: [[1, "asc"]], // always default sort by 2nd column
+                    order: [
+                        [1, "asc"]
+                    ], // always default sort by 2nd column
                     scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
+                    autoWidth: true,
                     lengthChange: true,
-                    lengthMenu: [[10, 18, 30, 50, 75, 100, -1], [10, 18, 30, 50, 75, 100, "All"]],
+                    lengthMenu: [
+                        [10, 18, 30, 50, 75, 100, -1],
+                        [10, 18, 30, 50, 75, 100, "All"]
+                    ],
                     //bFiler: false,  // search box
                     pageLength: 100
                 });
             }
         },
-        renderAlarmTemplates = function () {
+        renderAlarmTemplates = function() {
             self.activeDataRequest(false);
             if (alarmTemplateData) {
                 blockUI($alarmMessagesData, false);
@@ -1597,18 +1762,19 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable().clear();
                 $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
                 $alarmTemplateDataTable.DataTable().draw();
+                // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             }
         },
-        buildAlarmTemplate = function (row, cloneRow) {
+        buildAlarmTemplate = function(row, cloneRow) {
             var editLevel = 0,
                 result;
 
             if (getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat) === "Event") {
-                editLevel = 0;  // Events can't be cloned or deleted
+                editLevel = 0; // Events can't be cloned or deleted
             } else if (row.isSystemMessage) {
-                editLevel = 1;  // non Events that are System messages can be cloned
+                editLevel = 1; // non Events that are System messages can be cloned
             } else {
-                editLevel = 2;  // this is user generated content.  cloneable and deletable
+                editLevel = 2; // this is user generated content.  cloneable and deletable
             }
 
             if (typeof row._id !== 'object') { // if it's not an object then reading raw data from DB
@@ -1623,11 +1789,11 @@ var alarmMessageViewModel = function() {
                     },
                     msgCat: {
                         Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
-                        rawValue: row.msgCat
+                        rawValue: parseInt(row.msgCat, 10)
                     },
                     msgType: {
                         Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
-                        rawValue: row.msgType
+                        rawValue: parseInt(row.msgType, 10)
                     },
                     msgName: {
                         Value: row.msgName,
@@ -1690,12 +1856,13 @@ var alarmMessageViewModel = function() {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             console.log("save message = " + message);
         },
-        promptDelete = function (row) {
+        promptDelete = function(row) {
             self.alarmTemplate(buildAlarmTemplate(row, false));
             $alarmTemplateDeleteConfirm.modal("show");
         };
 
     self.displayName = 'Alarm Messages';
+    self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
     self.activeDataRequest = ko.observable(true);
     self.alarmTemplate = ko.observable("");
@@ -1732,10 +1899,10 @@ var alarmMessageViewModel = function() {
     self.showEntryForm = ko.observable(false);
     self.init = function() {
         columnsArray = getColumns();
-        self.alarmTemplateBackgroundColor.subscribe(function (newValue) {
+        self.alarmTemplateBackgroundColor.subscribe(function(newValue) {
             $msgFormat.css('background-color', "#" + newValue);
         });
-        self.alarmTemplateTextColor.subscribe(function (newValue) {
+        self.alarmTemplateTextColor.subscribe(function(newValue) {
             $msgFormat.css('color', "#" + newValue);
         });
         $alarmTemplateContainer = $("#alarmTemplateContainer");
@@ -1749,24 +1916,24 @@ var alarmMessageViewModel = function() {
         blockUI($alarmMessagesData, true);
         configureDataTable(true, true, columnsArray);
 
-        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function(e) {
             self.alarmTemplate($alarmTemplateDataTable.DataTable().row(this).data());
             self.displayPopupEditor();
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function(e) {
             e.preventDefault();
             e.stopPropagation();
             self.clone($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function(e) {
             e.preventDefault();
             e.stopPropagation();
             promptDelete($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.on('draw.dt', function (e, settings) {
+        $alarmTemplateDataTable.on('draw.dt', function(e, settings) {
             var numberOfPages = $alarmTemplateDataTable.DataTable().page.info().pages,
                 $tablePagination,
                 $pagination,
@@ -1796,13 +1963,10 @@ var alarmMessageViewModel = function() {
                 alarmTemplate.msgTextColor.rawValue = getRawHexColor(self.alarmTemplateTextColor());
                 alarmTemplate.msgBackColor.rawValue = getRawHexColor(self.alarmTemplateBackgroundColor());
                 alarmTemplate.msgName.rawValue = $alarmTemplateContainer.find(".msgName").val();
-                if (alarmTemplate.isSystemMessage.rawValue) {
-                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").text();
-                } else {
+                if (!alarmTemplate.isSystemMessage.rawValue) {
                     alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").val();
+                    alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
                 }
-
-                alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
 
                 for (key in alarmTemplate) {
                     if (alarmTemplate.hasOwnProperty(key)) {
@@ -1884,7 +2048,7 @@ var alarmMessageViewModel = function() {
         });
         $alarmTemplateDeleteConfirm.modal("hide");
     };
-    self.clone = function (row) {
+    self.clone = function(row) {
         self.alarmTemplate(buildAlarmTemplate(row, true));
         self.displayPopupEditor();
     };
@@ -1895,26 +2059,18 @@ var weatherViewModel = function() {
     var self = this,
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
-        workspaceManager = window.opener && window.opener.workspaceManager,
-        openWindow = workspaceManager && window.opener.workspaceManager.openWindowPositioned,
+        workspaceManager = window.top && window.top.workspaceManager,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
         openPointSelector = function(callback) {
-            var windowRef,
-                pointSelectedCallback = function(pid, name, type) {
-                    if (!!pid) {
-                        callback(pid, name, type);
+            var parameters,
+                pointSelectedCallback = function(pointInfo) {
+                    if (!!pointInfo) {
+                        callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                     }
-                },
-                windowOpenedCallback = function() {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback);
                 };
-
-            windowRef = openWindow('/pointLookup', 'Select Point', '', '', 'Select Weather Point', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
         setData = function(data) {
             var newData = [];
@@ -2020,12 +2176,8 @@ var weatherViewModel = function() {
             upi = point._id,
             pointType = point['Point Type'].Value,
             pointTypesUtility = workspaceManager && workspaceManager.config.Utility.pointTypes,
-            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi),
-            options = {
-                width: 850,
-                height: 600
-            };
-        openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
+            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
+        dtiUtility.openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi);
     };
 };
 
@@ -3360,7 +3512,7 @@ $(function() {
 
         // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
         // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-        if (window.opener === undefined) {
+        if (window.top === undefined) {
             window.setTimeout(postInit, 10);
         } else {
             sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');

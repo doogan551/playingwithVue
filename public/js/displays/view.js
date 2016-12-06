@@ -2,7 +2,7 @@ var displays = window.displays || {};
 
 
 displays = $.extend(displays, {
-    workspaceManager: (window.opener || window.top).workspaceManager,
+    workspaceManager: window.top.workspaceManager,
     resize: false,
     pageX: 0,
     pageY: 0,
@@ -29,13 +29,13 @@ $(document).on('pageinit', function() {
     var user = (displays.workspaceManager.user && displays.workspaceManager.user()) || displays.defaultUser,
         upiList = [],
         userPermissions = {
-            systemAdmin : user['System Admin'].Value,
-            groups      : user.groups
+            systemAdmin: user['System Admin'].Value,
+            groups: user.groups
         },
         permissionLevels = {
-            CONTROL     : 2,
-            ACKNOWLEDGE : 4,
-            WRITE       : 8
+            CONTROL: 2,
+            ACKNOWLEDGE: 4,
+            WRITE: 8
         },
         processQualityCodes = function(data) {
             var codes = {},
@@ -46,7 +46,7 @@ $(document).on('pageinit', function() {
                 code,
                 c, len = entries.length;
 
-            for(c=0; c<len; c++) {
+            for (c = 0; c < len; c++) {
                 row = entries[c];
                 codes[row['Quality Code Label']] = {
                     color: row['Quality Code Font HTML Color'],
@@ -56,7 +56,7 @@ $(document).on('pageinit', function() {
             displays.qualityCodes = codes;
 
             len = displays.qualityCodeQueue.length;
-            for(c=0; c<len; c++) {
+            for (c = 0; c < len; c++) {
                 row = displays.qualityCodeQueue[c];
                 el = row.el;
                 code = row.code;
@@ -65,23 +65,13 @@ $(document).on('pageinit', function() {
                 el.html(newVal + ' ' + displays.qualityCodes[code].label);
             }
         },
-        userHasPermission = function (pointGroups, requestedAccessLevel) {
-            var cumulativePermissions = 0,
-                i,
-                last,
-                groups = userPermissions.groups.filter(function(item) {
-                    return !!~pointGroups.indexOf(item._id);
-                });
-
-            for(i = 0, last = groups.length; i < last; i++) {
-                cumulativePermissions |= groups[i]._pAccess;
-            }
-            return !!(cumulativePermissions & requestedAccessLevel);
+        userHasPermission = function(point, requestedAccessLevel) {
+            return !!(point._pAccess & requestedAccessLevel);
         },
-        userHasPermissionToEdit = function (security) {
-            return userPermissions.systemAdmin || userHasPermission(security, permissionLevels.WRITE);
+        userHasPermissionToEdit = function(point) {
+            return userHasPermission(point, permissionLevels.WRITE);
         },
-        finish = function () {
+        finish = function() {
             displays.initAngularFilters();
             displays.initSocket();
             if (window.onLoaded) {
@@ -111,9 +101,17 @@ $(document).on('pageinit', function() {
             width = parseInt(window.displayJson.Width, 10) + 400,
             height = parseInt(window.displayJson.Height, 10) + 100;
 
+        dtiUtility.openWindow($(this).attr('href'), _title, pointType, '', _id, {
+            width: width,
+            height: height,
+            sameWindow: true
+        });
+
         displays.openWindow($(this).attr('href'), _title, pointType, '', _id, {
             width: width,
-            height: height
+            height: height,
+            sameWindow: true,
+            windowId: window.windowId
         });
         //window.close();
     });
@@ -139,17 +137,31 @@ $(document).on('pageinit', function() {
         processQualityCodes(data);
     });
 
-    if(!window.isPreview) {
+    if (!window.isPreview) {
         $.ajax({
             url: '/api/points/' + window.upi
         }).done(function(response) {
             var list = response['Screen Objects'] || [],
+                screenObject,
+                pointRef,
                 c;
 
             window.displayJson = response;
+            window.pointType = response['Point Type'].Value;
+            window.point = response;
 
-            for(c=0; c<list.length; c++) {
-                upiList.push(list[c].upi);
+            for (c = 0; c < list.length; c++) {
+                screenObject = list[c];
+                if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
+                    pointRef = displays.getScreenObjectPointRef(screenObject);
+
+                    if (!!pointRef) {
+                        screenObject.upi = pointRef.Value;
+                        screenObject.pointRefIndex = pointRef.AppIndex;
+                    }
+
+                    upiList.push(screenObject.upi);
+                }
             }
 
             $.ajax({
@@ -163,7 +175,7 @@ $(document).on('pageinit', function() {
                 displays.upiNames = data.upiNames;
                 displays.pointTypes = data.pointTypes;
 
-                if(userHasPermissionToEdit(response.Security)) {
+                if (userHasPermissionToEdit(response)) {
                     $('#editDisplay').show();
                 }
 

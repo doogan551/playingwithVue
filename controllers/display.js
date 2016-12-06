@@ -29,7 +29,7 @@ router.get('/edit/:upoint', function(req, res, next) {
 				err: err
 			});
 		} else {
-			res.render('displays/edit.jade', result);
+			res.render('displays/edit.pug', result);
 		}
 	});
 });
@@ -61,7 +61,7 @@ router.get('/gifs/:fname/:frame', function(req, res, next) {
 });
 // Checked
 router.get('/view/:upoint', function(req, res, next) {
-	res.render('displays/view.jade', {
+	res.render('displays/view.pug', {
 		upi: req.params.upoint
 	});
 });
@@ -74,7 +74,7 @@ router.get('/preview/:upoint', function(req, res, next) {
 		if (err) {
 			return res.send(err);
 		} else {
-			return res.render('displays/preview.jade', result);
+			return res.render('displays/preview.pug', result);
 		}
 	});
 });
@@ -136,7 +136,7 @@ router.get('/browse', function(req, res, next) {
 		if (err) {
 			return res.send(err);
 		} else {
-			return res.render('displays/browse.jade', result);
+			return res.render('displays/browse.pug', result);
 		}
 	});
 });
@@ -149,7 +149,7 @@ router.get('/browse2', function(req, res, next) {
 		if (err) {
 			return res.send(err);
 		} else {
-			return res.render('displays/browse2.jade', result);
+			return res.render('displays/browse2.pug', result);
 		}
 	});
 });
@@ -175,7 +175,7 @@ router.get('/listassets', function(req, res, next) {
 // NOT CHECKED
 router.get('/trend', function(req, res, next) {
 	var pars = req.query;
-	res.render('displays/plot.jade',
+	res.render('displays/plot.pug',
 		pars
 	);
 });

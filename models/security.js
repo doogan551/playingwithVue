@@ -29,9 +29,9 @@ var Users = {
     var username = data.username;
     var password;
 
-    if(!!data.oldPassword){
+    if (!!data.oldPassword) {
       password = data.Password;
-    }else{
+    } else {
       password = utils.encrypt(data.Password);
     }
 
@@ -161,6 +161,17 @@ var Users = {
           };
 
           Utility.insert(criteria, function(err, userArray) {
+            var logData = {
+              user: data.user,
+              timestamp: Date.now(),
+              activity: actLogsEnums["User Add"].enum,
+              log: "User: " + username + " added."
+            };
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {});
 
             if (err) {
               return cb(err);
@@ -306,6 +317,7 @@ var Users = {
   updateUser: function(data, cb) {
     var updateData = data["Update Data"];
     var groups = (updateData["User Groups"] !== undefined) ? updateData["User Groups"] : [];
+    var username = '';
 
     var userid = data.userid;
 
@@ -330,8 +342,8 @@ var Users = {
       for (var key in updateData) {
         if (key === 'Contact Info') {
           var contact = updateData[key];
-          for(var c = 0; c<contact.length; c++){
-            if(['SMS','Voice'].indexOf(contact[c].Type) >= 0){
+          for (var c = 0; c < contact.length; c++) {
+            if (['SMS', 'Voice'].indexOf(contact[c].Type) >= 0) {
               contact[c].Value = contact[c].Value.match(/\d+/g).join('');
             }
           }
@@ -363,6 +375,7 @@ var Users = {
           updateCriteria.$set.alerts = alerts;
         }
         if (key == "username") {
+          username = updateData[key];
           updateCriteria.$set[key] = updateData[key];
           updateCriteria.$set["Username.Value"] = updateData[key];
         } else if (key == "Password") {
@@ -388,6 +401,18 @@ var Users = {
         if (err) {
           return cb(err);
         }
+
+        var logData = {
+          user: data.user,
+          timestamp: Date.now(),
+          activity: actLogsEnums["User Edit"].enum,
+          log: "User: " + username + " edited."
+        };
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {});
 
         var deleteSearch = {};
         deleteSearch["Point Type"] = {};
@@ -671,7 +696,8 @@ var Groups = {
       _pAccess: parseInt(data._pAccess, 10) | READ,
       "Photo": {
         Value: ''
-      }
+      },
+      Points: {}
     };
 
     var criteria = {
@@ -707,7 +733,6 @@ var Groups = {
     });
   },
   updateGroup: function(data, cb) {
-    var groupName = data["User Group Name"];
     var groupUpi = data["User Group Upi"];
     var updateData = data["Update Data"];
     var users = (updateData.Users !== undefined) ? updateData.Users : [];
@@ -966,6 +991,18 @@ module.exports = {
           if (err) {
             return cb(err);
           }
+
+          var logData = {
+            user: data.user,
+            timestamp: Date.now(),
+            activity: actLogsEnums["User Delete"].enum,
+            log: "User: " + username.username + " deleted."
+          };
+          logData = utils.buildActivityLog(logData);
+          Utility.insert({
+            collection: activityLogCollection,
+            insertObj: logData
+          }, function(err, result) {});
 
           async.waterfall([
 
@@ -1573,6 +1610,23 @@ module.exports = {
         }
       });
     },
+    updatePermissions: function(data, cb) {
+      var groups = data.groups;
+
+      async.each(groups, function(group, callback) {
+        Utility.update({
+          collection: 'User Groups',
+          query: {
+            _id: ObjectID(group._id)
+          },
+          updateObj: {
+            $set: {
+              Points: group.points
+            }
+          }
+        }, callback);
+      }, cb);
+    },
     saveGroup: Groups.saveGroup,
     newGroup: Groups.newGroup,
     updateGroup: Groups.updateGroup
@@ -1947,6 +2001,47 @@ module.exports = {
           message: "success"
         });
       });*/
+    }
+  },
+  Utility: {
+    getPermissions: function(user, cb) {
+      if (!!user["System Admin"].Value) {
+        return cb(null, true);
+      }
+      var userId = ObjectID(user._id);
+      var points = [];
+
+      var calcPermissions = function(groups) {
+        var points = {};
+        for (var g = 0; g < groups.length; g++) {
+          var pAccess = groups[g]._pAccess;
+          var gPoints = groups[g].Points;
+          for (var gPoint in gPoints) {
+            points[gPoint] = points[gPoint] | pAccess;
+          }
+        }
+        return points;
+      };
+
+      var queryStr = 'Users.' + userId;
+      var query = {};
+      query[queryStr] = {
+        $exists: 1
+      };
+
+      Utility.get({
+        collection: 'User Groups',
+        query: query
+      }, function(err, groups) {
+        if (err || !groups.length) {
+          console.log(err || 'no groups');
+          return cb(err, false);
+        } else {
+          var pointPerm = calcPermissions(groups);
+          return cb(err, pointPerm);
+        }
+      });
+
     }
   }
 };

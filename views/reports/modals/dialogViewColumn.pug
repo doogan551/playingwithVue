@@ -1,0 +1,60 @@
+.modal-editColumn.modal.fade#viewColumnModal(data-bind="with: $root.currentColumnEdit")
+    .modal-dialog.modal-sm
+        .modal-content
+            //.modal-header
+            // ko if: $root.currentColumnEdit() !== undefined
+            .modal-body.small
+                .panel.panel-default
+                    .panel-heading
+                        h3.panel-title
+                            | View Column
+                    .panel-body
+                        form.form-horizontal(role="form")
+                            .form-group
+                                label.control-label.col-sm-4 Column Name:
+                                // ko if: ($root.reportType() !== 'Property')
+                                .col-sm-2
+                                    .columnName(data-bind="text: $data.colName, click: function(){ $root.showPointReview($data) }")
+                                // /ko
+                                // ko if: ($root.reportType() === 'Property')
+                                .col-sm-2
+                                    span(data-bind="text: ($data.colName !== 'Choose Point' ? $data.colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                // /ko
+                            // ko if: ($root.reportType() !== 'Property')
+                            .form-group
+                                label.control-label.col-sm-4 Column Display Name:
+                                .col-sm-2
+                                    span.columnDisplayName(data-bind="text: $data.colDisplayName")
+                            // ko if: ($data.canCalculate)
+                            .form-group
+                                label.control-label.col-sm-4 Multiplier:
+                                .col-sm-8
+                                    span.inputMultiplier(data-bind="text: multiplier")
+                            // /ko
+                            // ko if: ($root.reportType() === 'Totalizer')
+                            .form-group
+                                label.control-label.col-sm-4 Type:
+                                .col-sm-2
+                                    span(data-bind="text: $data.operator")
+                            // /ko
+                            // ko if: ($data.canCalculate)
+                            .form-group
+                                label.control-label.col-sm-4 Precision:
+                                .col-sm-2
+                                    span.inputPrecision(data-bind="text: precision")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
+                            .form-group
+                                label.col-sm-4(style="text-align: right;") Chart:
+                                .col-sm-2
+                                    input.includeInChartColumn(data-bind="checked: $data.includeInChart, enable: false", type="checkbox")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
+                            .form-group
+                                label.control-label.col-sm-4 Group:
+                                .col-sm-2
+                                    span(data-bind="text: $data.yaxisGroup")
+                            // /ko
+                            // /ko
+            // /ko
+

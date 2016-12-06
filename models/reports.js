@@ -1,11 +1,19 @@
+var fs = require('fs');
+
 var async = require('async');
 var moment = require('moment');
+var ObjectID = require('mongodb').ObjectID;
+var config = require('config');
+
 var Utility = require('../models/utility');
 var History = require('../models/history');
 var utils = require('../helpers/utils.js');
 var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
+var pageRender = require('../models/pagerender');
+var mailer = require('../models/mailer');
+
 
 module.exports = Rpt = {
 
@@ -87,22 +95,30 @@ module.exports = Rpt = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data._id)
             },
             updateObj: {
                 $set: {
-                    'SVGData': data.SVGData
+                    _pStatus: (!!data._pStatus ? data._pStatus : 0),
+                    name1: data.name1,
+                    name2: data.name2,
+                    name3: data.name3,
+                    name4: data.name4,
+                    'Point Refs': data["Point Refs"],
+                    'Report Config': data["Report Config"]
                 }
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.update(criteria, function(err, result) {
             if (!err) {
                 return cb(null, {
-                    data: "Data has been saved successfully!!!"
+                    data: "Report has been saved successfully!!!"
                 });
             } else {
-                return cb(err);
+                return cb(null, {
+                    err: err
+                });
             }
         });
     },
@@ -377,7 +393,6 @@ module.exports = Rpt = {
                     },
                     timestamps: timestamps
                 }, function(err, results) {
-                    console.log(results, histPoints);
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -392,7 +407,6 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-                    console.log(histPoints);
                     async.eachSeries(timestamps.reverse(), function(ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
@@ -622,39 +636,102 @@ module.exports = Rpt = {
         }
     },
     reportMain: function(data, cb) {
-        var criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
+        var reportCriteria = {
+                query: {
+                    _id: utils.converters.convertType(data.id)
+                },
+                collection: 'points',
+                data: data,
+                limit: 1
             },
-            collection: 'points'
-        };
-
-        Utility.getOne(criteria, function(err, result) {
-            if (err) {
-                return cb(err);
-            } else {
-                if (result === null) {
-                    return cb();
+            scheduleCriteria = {
+                query: {
+                    _id: new ObjectID(data.scheduleID)
+                },
+                collection: 'Schedules',
+                data: data,
+                limit: 1
+            },
+            scheduled = (!!data.scheduleID),
+            reportResults = {},
+            reportRequestComplete = false,
+            scheduleRequestComplete = false,
+            reportData,
+            handleResults = function() {
+                "use strict";
+                if (scheduled) {
+                    if (scheduleRequestComplete && reportRequestComplete) {
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
+                        return cb(null, reportResults, reportData);
+                    }
                 } else {
-                    return cb(null, {
-                        id: data.id,
-                        isOld: result["Report Config"] !== undefined,
-                        point: JSON.stringify(result),
-                        title: result.Name
-                    }, result);
+                    return cb(null, reportResults, reportData);
                 }
-            }
-        });
+            };
+
+        if (scheduled) {
+            Utility.get(scheduleCriteria, function(err, scheduleData) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    scheduleData = scheduleData[0];
+                    if (scheduleData === null) {
+                        return cb();
+                    } else {
+                        reportResults.scheduledConfig = {};
+                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
+                    }
+                    scheduleRequestComplete = true;
+                    handleResults();
+                }
+            });
+            Utility.get(reportCriteria, function(err, result) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    result = result[0];
+                    if (result === null) {
+                        return cb();
+                    } else {
+                        reportResults.id = data.id;
+                        reportResults.point = JSON.stringify(result);
+                    }
+                    reportData = result;
+                    reportRequestComplete = true;
+                    handleResults();
+                }
+            });
+        } else {
+            Utility.getWithSecurity(reportCriteria, function(err, result) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    result = result[0];
+                    if (result === null) {
+                        return cb();
+                    } else {
+                        reportResults.id = data.id;
+                        reportResults.point = JSON.stringify(result);
+                    }
+                    reportData = result;
+                    reportRequestComplete = true;
+                    handleResults();
+                }
+            });
+        }
     },
     reportSearch: function(data, cb) {
-        logger.info("- - - reportSearch() called");
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             filters = reportConfig.filters,
             pointFilter = reportConfig.pointFilter,
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = pointFilter.selectedPointTypes,
+            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
+                return type.key;
+            }),
             uniquePIDs = [],
             properties = reportConfig.columns,
             sort = data.Sort,
@@ -682,17 +759,17 @@ module.exports = Rpt = {
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
-                var p = properties[k].colName;
+                // var p = properties[k].colName;
+                var p = utils.getDBProperty(properties[k].colName)
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    fields["Point Refs"] = 1;
+                    fields["Point Refs"] = true;
                     uniquePIDs.push(p);
                     getPointRefs = true;
-
                 } else {
-                    fields[propertyCheckForValue(p)] = 1;
+                    fields[propertyCheckForValue(p)] = true;
                 }
             }
-            fields["Point Type.Value"] = 1;
+            fields["Point Type.Value"] = true;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {
@@ -726,9 +803,8 @@ module.exports = Rpt = {
         if (searchCriteria["$and"].length === 0) {
             searchCriteria = {};
         }
-        //logger.info(JSON.stringify(searchCriteria));
-        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 
+        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         var criteria = {
             query: searchCriteria,
             collection: 'points',
@@ -736,6 +812,7 @@ module.exports = Rpt = {
             fields: fields
         };
 
+        // logger.info("--- Report criteria = " + JSON.stringify(criteria));
         Utility.get(criteria, function(err, docs) {
 
             if (err) {
@@ -752,10 +829,22 @@ module.exports = Rpt = {
                     delete docs[i]["Point Refs"];
                 }
             }
+            docs.forEach(function(doc) {
+                for (var prop in doc) {
+                    var newPropertyName = utils.getHumanProperty(prop);
+                    if (prop !== newPropertyName) {
+                        doc[newPropertyName] = utils.getHumanPropertyObj(prop, doc[prop]);
+                        if (prop !== '_id') {
+                            delete doc[prop];
+                        }
+                    }
+                }
+            });
             return cb(null, docs);
         });
     },
     collectFilters: function(theFilters) {
+
         var grouping = "$and",
             currentFilter,
             localSearchCriteria = {},
@@ -805,13 +894,13 @@ module.exports = Rpt = {
             //logger.info(" - - orExpressions = " + orExpressions);
         }
 
-        if (expressions.length > 0) {
-            if (grouping === "$or") {
-                orExpressions.push(Rpt.groupOrExpression(expressions));
-            } else if (grouping === "$and") {
-                andExpressions = andExpressions.concat(expressions);
-            }
-        }
+        // if (expressions.length > 0) {
+        //     if (grouping === "$or") {
+        //         orExpressions.push(Rpt.groupOrExpression(expressions));
+        //     } else if (grouping === "$and") {
+        //         andExpressions = andExpressions.concat(expressions);
+        //     }
+        // }
 
         if (andExpressions.length > 0) {
             localSearchCriteria.$or = localSearchCriteria.$or.concat({
@@ -828,8 +917,11 @@ module.exports = Rpt = {
     },
     collectFilter: function(filter) {
         var searchQuery = {},
-            key = filter.filterName,
-            filterValueType = Config.Enums["Properties"][key].valueType;
+            // change key to internal property if possible.
+            key = utils.getDBProperty(filter.filterName),
+            searchKey = key,
+            filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
+
 
         if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
             switch (filter.operator) {
@@ -875,14 +967,25 @@ module.exports = Rpt = {
                     break;
                 case "EqualTo":
                     if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        searchQuery[key + ".eValue"] = filter.evalue;
+                        if (filterValueType !== null) {
+                            searchKey = key + '.eValue';
+                        } else {
+                            searchKey = key;
+                        }
+                        searchQuery[searchKey] = filter.evalue;
                     } else {
-                        if (filter.value === "False") {
-                            searchQuery[propertyCheckForValue(key)] = false;
-                        } else if (filter.value === "True") {
-                            searchQuery[propertyCheckForValue(key)] = true;
+                        if (filter.valueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $eq: filter.value
+                                };
+                            }
                         } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                         } else if (filter.value.indexOf(",") > -1) {
                             var splitValues = filter.value.split(",");
                             //if (!searchCriteria.$or)
@@ -900,7 +1003,7 @@ module.exports = Rpt = {
                             }
                         } else {
                             if (utils.converters.isNumber(filter.value))
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             else
                                 searchQuery[propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
@@ -913,40 +1016,55 @@ module.exports = Rpt = {
                     //    $exists: true
                     //};
                     if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        searchQuery[key + ".eValue"] = {
+                        if (filterValueType !== null) {
+                            searchKey = key + '.eValue';
+                        } else {
+                            searchKey = key;
+                        }
+                        searchQuery[searchKey] = {
                             $ne: filter.evalue
                         };
                     } else {
-                        if (utils.converters.isNumber(filter.value)) {
+                        if (filter.valueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $ne: filter.value
+                                };
+                            }
+                        } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = {
-                                $ne: utils.converters.convertType(filter.value, filterValueType)
+                                $ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         } else {
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '(?i)^(?!' + filter.value + ")"
-                                    //$ne: utils.converters.convertType(filter.value, filterValueType)
+                                    //$ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         }
                     }
                     break;
                 case "LessThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lt: utils.converters.convertType(filter.value, filterValueType)
+                        $lt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "LessThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gt: utils.converters.convertType(filter.value, filterValueType)
+                        $gt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "BeginningWith":
@@ -964,8 +1082,8 @@ module.exports = Rpt = {
                         $exists: true
                     };
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType),
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType),
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "NotBetween":
@@ -975,8 +1093,8 @@ module.exports = Rpt = {
                     //{$nin:{$gte:2,$lt:5}}
                     searchQuery[propertyCheckForValue(key)] = {
                         $nin: {
-                            $gte: utils.converters.convertType(filter.value, filterValueType),
-                            $lt: utils.converters.convertType(filter.value, filterValueType)
+                            $gte: utils.converters.convertType(filter.value, filter.valueType),
+                            $lt: utils.converters.convertType(filter.value, filter.valueType)
                         }
                     };
                     break;
@@ -1271,12 +1389,75 @@ module.exports = Rpt = {
         }, function(err) {
             return cb(err, points);
         });
+    },
+    scheduledReport: function(data, cb) {
+        var domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
+        var schedule = data.schedule;
+        var upi = schedule.upi;
+        var emails = [];
 
+        Utility.getOne({
+            collection: 'points',
+            query: {
+                _id: upi
+            },
+            fields: {
+                Name: 1
+            }
+        }, function(err, point) {
+
+            var reportName = point.Name;
+            var users = schedule.users.map(function(id) {
+                return ObjectID(id);
+            });
+            var date = moment().format('YYYYMMDDhhmm');
+            var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
+            var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
+            console.log(uri, path);
+            pageRender.renderPage(uri, path, function(err) {
+                console.log(1, err);
+                fs.readFile(path, function(err, data) {
+                    console.log(2, err);
+                    Utility.iterateCursor({
+                        collection: 'Users',
+                        query: {
+                            _id: {
+                                $in: users
+                            }
+                        }
+                    }, function(err, user, nextUser) {
+                        // figure out date/time
+                        emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                            return info.Type === 'Email';
+                        }).map(function(email) {
+                            return email.Value;
+                        }));
+
+                        nextUser();
+                    }, function(err, count) {
+                        emails = emails.concat(schedule.emails).join(',');
+                        mailer.sendEmail({
+                            to: emails,
+                            fromAccount: 'infoscan',
+                            subject: [reportName, ' for ', date].join(''),
+                            attachments: [{
+                                path: path,
+                                contentType: 'application/pdf',
+                                content: data
+                            }]
+                        }, function(err, info) {
+                            console.log(err, info);
+                            cb(err);
+                        });
+                    });
+                });
+            });
+        });
     }
 };
 
 var buildIntervals = function(range, interval) {
-    var intervalType = interval.text;
+    var intervalPeriod = interval.period;
     var intervalValue = interval.value;
     var intervalRanges = [];
     var intervalStart;
@@ -1288,15 +1469,15 @@ var buildIntervals = function(range, interval) {
     };
 
     intervalStart = moment.unix(range.start).unix();
-    intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
+    intervalEnd = moment.unix(range.start).add(intervalValue, intervalPeriod).unix();
     fixLongerInterval();
-    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalType).startOf(intervalType).unix()) {
+    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalPeriod).startOf(intervalPeriod).unix()) {
         intervalRanges.push({
             start: intervalStart,
             end: intervalEnd
         });
-        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalType).unix();
-        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalType).unix();
+        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalPeriod).unix();
+        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalPeriod).unix();
         fixLongerInterval();
     }
 
@@ -1315,7 +1496,7 @@ var buildPointRef = function(key, regex) {
 };
 
 var propertyCheckForValue = function(prop) {
-    if (prop.match(/^name/i) !== null) {
+    if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
         return prop;
     } else {
         return prop + ".Value";

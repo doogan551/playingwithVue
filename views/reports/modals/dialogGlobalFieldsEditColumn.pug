@@ -1,0 +1,40 @@
+#globalEditColumnModal.modal.fade.modal-fixed-footer(style="width: 400px;height: 500px;")
+    .modal-content
+        .headerInfo
+            h6 Set all columns
+        br
+        form.form-horizontal(role="form")
+            .form-group
+                label.control-label.col-sm-3 Multiplier:
+                .col-sm-8
+                    input.form-control.inputMultiplier(data-bind="value: $root.globalColumnMultiplier, enable: $root.canEdit(), css: { globallyChangedField: ($root.globalColumnMultiplier() != $root.globalFieldsColumnEditBefore().multiplier) }", type="number")
+            .form-group
+                label.control-label.col-sm-3 Precision:
+                .col-sm-8
+                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: $root.globalColumnPrecision, css: { globallyChangedField: ($root.globalColumnPrecision() != $root.globalFieldsColumnEditBefore().precision) }", type="text", min="0", max="20", viewModelField="$root.globalColumnPrecision")
+            .form-group
+                label.col-sm-3(style="text-align: right;") Chart:
+                .col-sm-8
+                    input.includeInChartColumn.form-control.input-md.filled-in#globalIncludeInchart(data-bind="click: function () { return $root.globalColumnIncludeInChartClick()}", type="checkbox")
+                    label(data-bind="attr: {for: 'globalIncludeInchart'}")
+            .form-group
+                label.control-label.col-sm-3 Group:
+                .col-sm-8
+                    .availableGlobalAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="css: {disabled: !$root.canEdit(), globallyChangedField: ($root.globalColumnYaxisGroup() != $root.globalFieldsColumnEditBefore().yaxisGroup)}", data-toggle="dropdown")
+                            span(data-bind="text: $root.globalColumnYaxisGroup")
+                            // ko if: ($root.yaxisGroups.length > 1)
+                            span.caret.lm10px
+                            // /ko
+                        // ko if: ($root.yaxisGroups.length > 1)
+                        ul.yaxisGroups.dropdown-menu
+                            li
+                                a(data-bind="click: function(){ $root.globalColumnYaxisGroup('') }, text: '-'")
+                            // ko foreach: $root.yaxisGroups
+                            li
+                                a(data-bind="click: function(){ $root.globalColumnYaxisGroup($data) }, text: $data")
+                            // /ko
+                        // /ko
+    .modal-footer
+        a.btn.waves-effect.waves-light.blue-grey.cancelGlobalChange.modal-action.modal-close Cancel
+        a.btn.waves-effect.waves-light.blue-grey.setData.modal-action.modal-close(data-bind="click: $root.setGlobalEditedColumnData, enable: $root.pendingGlobalColumnChange()") OK

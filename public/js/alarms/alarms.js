@@ -81,15 +81,10 @@ ko.bindingHandlers.dataSrc = {
 var AlarmManager = function (conf) {
     var self = this,
         socket = io.connect(window.location.origin),
-        workspaceManager = window.opener.workspaceManager,
+        workspaceManager = window.top.workspaceManager,
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),
-        userPermissions     = {
-            systemAdmin : user['System Admin'].Value,
-            groups      : user.groups
-        },
         storeKey = 'alarms_' + user._id,
-        openWindow = workspaceManager.openWindowPositioned,
         windowUpi = "alarm" + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
 
         $elAlarms = $('.alarms'),
@@ -99,12 +94,20 @@ var AlarmManager = function (conf) {
         
         $elContent = $('.content'),
         $elDetail = $('.detailContainer'),
-        $elDetailContent = $('.detailContent'),
         $dateFrom = $("#dateFrom"),
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
         detailWidth = $elDetail.outerWidth(),
+
+        horizontalMenu = {
+            $elAlarmClass: $('#filters .horizontalMenu.alarmClass'),
+            $elAlarmCategory: $('#filters .horizontalMenu.alarmCategory')
+        },
+        verticalMenu = {
+            $elAlarmClass: $('#filters .verticalMenu.alarmClass'),
+            $elAlarmCategory: $('#filters .verticalMenu.alarmCategory')
+        },
 
         //------ Constants definitions
         ACK_NONE = 0,
@@ -130,8 +133,6 @@ var AlarmManager = function (conf) {
         isReconnecting = false,
         filterChange = new Date().getTime(),
 
-        startDate = 0,
-        endDate = 0,
         dateErrors = false,
 
         clickHistory = {},
@@ -163,7 +164,6 @@ var AlarmManager = function (conf) {
             3: 'Maintenance'
         },
 
-        filterWindow,
         nameFilterObj = {
             name1: '',
             name2: '',
@@ -197,14 +197,8 @@ var AlarmManager = function (conf) {
             }
             return temp;
         },
-        userHasPermission = function (pointGroups, requestedAccessLevel) {
-            var cumulativePermissions = 0,
-                groups = userPermissions.groups.filter(function(item) { return !!~pointGroups.indexOf(item._id); });
-
-            for(var i = 0, last = groups.length; i < last; i++) {
-                cumulativePermissions |= groups[i]._pAccess;
-            }
-            return !!(cumulativePermissions & requestedAccessLevel);
+        userHasPermission = function (alarm, requestedAccessLevel) {
+            return !!(alarm._pAccess & requestedAccessLevel);
         },
         // Simple routine to compare two values. Values are assumed to be numbers, strings, or flat arrays of numbers or strings.
         valuesAreDifferent = function (v1, v2) {
@@ -273,10 +267,10 @@ var AlarmManager = function (conf) {
                 val = (typeof data[Name] === 'function') ? data[Name]() : data[Name];
 
                 nameSegments[name].value(val.length ? val : undefined);
+                nameFilterObj[name] = nameSegments[name].value();
             }
             self.nameFilterPaused(false);
             applyFilter(true);
-            filterWindowCallback(self.currentView());
         },
         //------ Workspace routine
         updateWorkspaceWindowTitle = function (view) {
@@ -304,29 +298,20 @@ var AlarmManager = function (conf) {
             }
         },
         //------ Point selector routines
-        filterCallback = function(_filterObj) {
-            // filterCallback() is called anytime a change is made in the point selector
+        filterCallback = function(filterObj) {
             var i,
                 key;
 
             for (i = 1; i < 5; i++) {
                 key = "name" + i;
-                nameFilterObj[key] = _filterObj.hasOwnProperty(key) ? _filterObj[key] : undefined;
+                nameFilterObj[key] = filterObj.hasOwnProperty(key) ? filterObj[key] : undefined;
             }
-            if (_filterObj.pointTypes.length === numberPointTypes)
-                _filterObj.pointTypes = [];
+            if (filterObj.pointTypes.length === numberPointTypes) {
+                filterObj.pointTypes = [];
+            }
 
-            nameFilterObj.pointTypes = _filterObj.pointTypes;
-        },
-        filterWindowCallback = function(view) {
-            view = view || self.currentView();
-
-            // filterWindowCallback() is called after the iframe is loaded
-            filterWindow.pointLookup.init(filterCallback, view.filters.nameSegment.options);
-        },
-        initFilterWindow = function () {
-            // initFilterWindow() is called once to initialize our iframe with the point selector
-            filterWindow = openWindow('/pointLookup?mode=filter', 'filter', 'filter', 'filter', 'filter', { callback: filterWindowCallback });
+            nameFilterObj.pointTypes = filterObj.pointTypes;
+            self.applyNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var alm = new Date(timestamp * 1000),
@@ -392,9 +377,9 @@ var AlarmManager = function (conf) {
             // object is empty, the stringified result is "{}", not "[]" as expected. This was causing a js error on the server
             // Not sure why, but if we overwrite the empty array with an empty array it works fine.
             // ** IE behaves as expected if the groups array is non-empty
-            if (reqObj.user.groups.length === 0) {
-                reqObj.user.groups = [];
-            }
+            // if (reqObj.user.groups.length === 0) {
+            //     reqObj.user.groups = [];
+            // }
 
             socket.emit(emitString[name], JSON.stringify(reqObj));
         },
@@ -457,11 +442,13 @@ var AlarmManager = function (conf) {
                         alarm = alarmList[i];
 
                         if (alarm._id === data._id) {
-                            if (ackStatus)
+                            if (ackStatus) {
                                 alarm.ackStatus(ackStatus);
+                            }
                             
-                            if (ackUser)
+                            if (ackUser) {
                                 alarm.ackUser(ackUser);
+                            }
 
                             if (ackStatus === ACK_DONE) {
                                 if (ackTime) {
@@ -479,8 +466,10 @@ var AlarmManager = function (conf) {
             // We ignore all updates when the view is paused, with one excpetion: we need to always process 'DELETE' updates for the
             // unacknowledged view. This way the ACK status of an alarm (on any view) will always be updated, regardless if the Unacknowledged
             // view is paused or not.
-            if (alarmTable.view.paused() && (alarmTable.name !== 'Unacknowledged' || action === 'ADD'))
+            if (alarmTable.view.paused() && (alarmTable.name !== 'Unacknowledged' || action === 'ADD')) {
                 return;
+            }
+
             // 'reqID' is created when alarms are requested, so it represents a specific filter criteria. If this
             // request ID is different, i.e. the filter criteria has changed), this alarm update is trash
             if (data.reqID !== alarmTable.reqID) {
@@ -524,11 +513,12 @@ var AlarmManager = function (conf) {
                 alarmTableInView = (view.id === self.currentView().id),
                 findAlarm = function (key, keyValue) {
                     for (var j = 0, jlen = alarms.length; j < jlen; j++) {
-                        if (alarms[j][key] === keyValue)
+                        if (alarms[j][key] === keyValue) {
                             return {
                                 index: j,
                                 alarm: alarms[j]
                             };
+                        }
                     }
                     return null;
                 },
@@ -562,8 +552,9 @@ var AlarmManager = function (conf) {
                             $elnewAlarmBot.fadeOut(ALARM_NOTICE_FADEOUT);
                         }
                     }
-                    if (doScroll)
+                    if (doScroll) {
                         $elAlarms.scrollTop(scrollPosition);
+                    }
                 },
                 sortAlarmsByDate = function () {
                     return alarms.sort(function (a, b) {return sortAsc ? (b.msgTime - a.msgTime) : (a.msgTime - b.msgTime);});
@@ -578,8 +569,9 @@ var AlarmManager = function (conf) {
                 // this alarm may or may not already be in the alarms list). See the next block of comments for an explanation
                 // on why we're checking against the 'Active' table
                 if (addingFromQueue && tableName !== 'Active') {
-                    if (findAlarm('_id', data.newAlarm._id))
+                    if (findAlarm('_id', data.newAlarm._id)) {
                         discardAlarm = true;
+                    }
                 }
 
                 // Also, if we're adding an active alarm, there exists a possibility that this alarm could be a duplicate
@@ -629,10 +621,14 @@ var AlarmManager = function (conf) {
                     }
 
                     // Adjust the scroll position to keep the alarm table from shifting around
-                    if (alarmTableInView) updateScrollPosition();
+                    if (alarmTableInView) {
+                        updateScrollPosition();
+                    }
 
                     // If our buffer is full, delete the oldest entry without notifying subscribers
-                    if (alarms.length > BUFFER_SIZE) alarms[operator.del]();
+                    if (alarms.length > BUFFER_SIZE) {
+                        alarms[operator.del]();
+                    }
 
                     // Notify subscribers to let them know our list has been updated
                     alarmTable.list.valueHasMutated();
@@ -647,10 +643,14 @@ var AlarmManager = function (conf) {
                     return alarm[key] === data[key];
                 })[0];
 
-                if (removedItem !== undefined) modifier = -1;
+                if (removedItem !== undefined) {
+                    modifier = -1;
+                }
 
                 // If we're removing an unacknowledged alarm, we also have to update the ackStatus across all our alarm lists
-                if (tableName === "Unacknowledged") updateAckStatus(data, alarmTable.name);
+                if (tableName === "Unacknowledged") {
+                    updateAckStatus(data, alarmTable.name);
+                }
             }
 
             // If our count modifier is non-zero
@@ -661,7 +661,9 @@ var AlarmManager = function (conf) {
                 // If we removed an alarm, see if we've emptied our buffer. If so and we have more alarms from the server
                 if ((modifier === -1) && (alarms.length < PAGE_SIZE) && (alarmTable.count() - ((view.pageNumber()-1)*PAGE_SIZE) >= PAGE_SIZE)) {
                     // We don't want the scroll bar to move for this request (keep the user's view from shifting)
-                    if (alarmTableInView) alarmTable.stickyScrollBar = true;
+                    if (alarmTableInView) {
+                        alarmTable.stickyScrollBar = true;
+                    }
                     // Request more alarms (this will replace the alarms in view as well as our buffer area)
                     alarmTable.refresh(true);
                 }
@@ -676,8 +678,12 @@ var AlarmManager = function (conf) {
                 curNumberPages = alarmTable.numberOfPages(),
                 newNumberPages = parseInt(count / PAGE_SIZE, 10);
 
-            if (count % PAGE_SIZE) newNumberPages++;
-            if (newNumberPages === 0) newNumberPages = 1;
+            if (count % PAGE_SIZE) {
+                newNumberPages++;
+            }
+            if (newNumberPages === 0) {
+                newNumberPages = 1;
+            }
 
             alarmTable.numberOfPages(newNumberPages);
 
@@ -1063,7 +1069,7 @@ var AlarmManager = function (conf) {
 
             userObj['System Admin'] = user['System Admin'];
             userObj._id = user._id;
-            userObj.groups = user.groups;
+            // userObj.groups = user.groups;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
@@ -1078,7 +1084,7 @@ var AlarmManager = function (conf) {
             var storeData = store.get(storeKey),
                 viewData = ko.toJS(view);
             
-            if (storeData === undefined) {
+            if (!storeData) {
                 storeData = {};
                 storeData.sessionId = sessionId;
             }
@@ -1224,10 +1230,11 @@ var AlarmManager = function (conf) {
             this.id = obj.text;
 
             if (cat === 'dateTime' || cat === 'nameSegment') {
-                if (typeof obj.value === 'object')
+                if (typeof obj.value === 'object') {
                     this.value = ko.observableArray(obj.value);
-                else
+                } else {
                     this.value = ko.observable(obj.value);
+                }
             } else {
                 testFn = obj.test;
 
@@ -1428,13 +1435,6 @@ var AlarmManager = function (conf) {
                 }
             }
 
-            // Init the name segment window. This routine is called @ startup before filterWindow is initialized,
-            // so we need to make sure it exists before we call it here
-            // IE Fix: Also check for init (in IE11, filterWindow.pointLookup existed, but not filterWindow.pointLookup.init)
-            if (filterWindow.pointLookup && filterWindow.pointLookup.init) {
-                filterWindowCallback(targetView);
-            }
-
             // Save our scroll position before we change views
             curView.scrollPosition = $elAlarms.scrollTop();
 
@@ -1445,8 +1445,11 @@ var AlarmManager = function (conf) {
             self.currentView(targetView);
 
             // Reset the scroll bar
-            if (targetView.sortAscending()) scrollPosition = targetView.scrollPosition || 0;
-            else scrollPosition = targetView.scrollPosition || 99999;
+            if (targetView.sortAscending()) {
+                scrollPosition = targetView.scrollPosition || 0;
+            } else {
+                scrollPosition = targetView.scrollPosition || 99999;
+            }
 
             $elAlarms.scrollTop(scrollPosition);
 
@@ -1457,8 +1460,9 @@ var AlarmManager = function (conf) {
             if (forceRefresh || (curGroup !== targetGroup) || (targetGroup === 'customViews') || (curTableName === targetTableName)) {
                 self.alarms().refresh(true);
                 
-                if (forceRefresh)
+                if (forceRefresh) {
                     targetView.forceRefresh = false;
+                }
             } else {
                 // We're not refreshing the page but we still have to build the isSelected state based on the selectedRows array
                 // (because the user could have selected one of these alarms in another view). isSelected is always determined when alarms 
@@ -1507,8 +1511,9 @@ var AlarmManager = function (conf) {
             }
         },
         refreshAlarmLists = function () {
-            for (var key in alarmTables)
+            for (var key in alarmTables) {
                 alarmTables[key].refresh(true);
+            }
         },
         reformatPrintedDates = function () {
             var i,
@@ -1539,12 +1544,8 @@ var AlarmManager = function (conf) {
         showPointReview = function (data) {
             var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
                 pointType = pointTypesUtility.getPointTypeNameFromEnum(data.PointType),
-                endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi),
-                options = {
-                    width: 850,
-                    height: 600
-                };
-            openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi, options);
+                endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi);
+            dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi);
         },
         findView = function (key, keyValue) {
             var i,
@@ -1577,14 +1578,16 @@ var AlarmManager = function (conf) {
                 numPages = self.alarms().numberOfPages(),
                 paused = false;
 
-            if (curPage > 1 && curPage < numPages)
+            if (curPage > 1 && curPage < numPages) {
                 paused = true;
-            else if (curPage === 1) {
-                if (!sortAsc)
+            } else if (curPage === 1) {
+                if (!sortAsc) {
                     paused = true;
+                }
             } else {
-                if (sortAsc)
+                if (sortAsc) {
                     paused = true;
+                }
             }
             view.paused(paused);
             storeViewFilters(view);
@@ -1876,8 +1879,12 @@ var AlarmManager = function (conf) {
     if (true) {
         var view = null, // Very important we init to null in case findView isn't called
             storeData = getStoreData();
-        if (storeData.hasOwnProperty(windowUpi)) view = findView('id', storeData[windowUpi].currentViewId);
-        if (view === null) view = self.defaultViews[0];
+        if (storeData.hasOwnProperty(windowUpi)) {
+            view = findView('id', storeData[windowUpi].currentViewId);
+        }
+        if (view === null) {
+            view = self.defaultViews[0];
+        }
         self.currentView = ko.observable(view);
     }
     
@@ -2006,19 +2013,13 @@ var AlarmManager = function (conf) {
 
     //------ Misc. interactivity functions-------------------------
     self.togglePop = function () {
-        var title = self.alarms().name + ' Alarms',
-            options = {
-                width: 1024,
-                heigth: 768
-            };
+        var title = self.alarms().name + ' Alarms';
 
         // If we're a pop-out; pop back in
-        if (window.top.location.href === window.location.href)
-            openWindow(window.location.href, title, 'alarm', 'mainWindow', windowUpi);
-        // We're docked in the workspace; pop out
-        else {
-            // Open the window
-            openWindow(window.location.href, title, 'alarm', '', windowUpi, options);
+        if (window.top.location.href === window.location.href) {
+            dtiUtility.openWindow(window.location.href, title, 'alarm', 'mainWindow', windowUpi);
+        } else {
+            dtiUtility.openWindow(window.location.href, title, 'alarm', '', windowUpi);
         }
     };
 
@@ -2080,15 +2081,19 @@ var AlarmManager = function (conf) {
             // Finally we're ready to set the state of all the other options
             for (i = 0; i < len; i++) {
                 option = options[i];
-                if (option.text !== data.text)
+                if (option.text !== data.text) {
                     option.active(active);
+                }
             }
         }
         applyFilter();
+
+        // This is to keep the dropdown open (if user clicked from the dropdown)
+        event.stopPropagation();
     };
 
     self.userHasPermissionToAck = function (alarm) {
-        var hasAckPermission = userPermissions.systemAdmin || userHasPermission(alarm.Security, permissionLevels.ACKNOWLEDGE);
+        var hasAckPermission = userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
         return hasAckPermission;
     };
 
@@ -2111,7 +2116,7 @@ var AlarmManager = function (conf) {
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
             
-            if (alarm.isSelected() && self.ackRequired(alarm)) {
+            if (alarm.isSelected() && self.ackRequired(alarm) && self.userHasPermissionToAck(alarm)) {
                 alarm.ackStatus(ACK_IN_PROGRESS);
                 updateAckStatus(alarm, self.alarms().name);
                 ackList.push(alarm._id);
@@ -2132,21 +2137,8 @@ var AlarmManager = function (conf) {
 
     self.openDisplay = function (data) {
         var endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", data._id),
-            name = data.Name || '',
-            options = {
-                width: 850,
-                height: 600
-            };
-        openWindow(endPoint.review.url, name, 'Display', '', data._id, options);
-
-        // var id = data._id,
-        //     name = data.Name || '',
-        //     url = '/displays/view/' + id,
-        //     options = {
-        //         width: 800,
-        //         heigth: 600
-        //     };
-        // openWindow(url, name, 'Display', '', id, options);
+            name = data.Name || '';
+        dtiUtility.openWindow(endPoint.review.url, name, 'Display', '', data._id);
     };
 
     self.refreshAlarms = function () {
@@ -2162,7 +2154,9 @@ var AlarmManager = function (conf) {
             // have the indexOf function so we're rolling our own
             elHasClass = function(className) {
                 for (var i = 0, len = srcClass.length; i < len; i++) {
-                    if (srcClass[i] === className) return true;
+                    if (srcClass[i] === className) {
+                        return true;
+                    }
                 } return false;
             };
 
@@ -2179,8 +2173,9 @@ var AlarmManager = function (conf) {
             self.openDisplay(data);
             return;
         }
-        if (elHasClass("tableButton"))
+        if (elHasClass("tableButton")) {
             return;
+        }
         
         var i,
             alarmTable = self.alarms(),
@@ -2191,15 +2186,17 @@ var AlarmManager = function (conf) {
             selectedRows = self.selectedRows,
             clicks,
             isBetween = function (val, end1, end2) {
-                if (end1 > end2)
+                if (end1 > end2) {
                     return (val < end1) && (val > end2);
-                else
+                } else {
                     return (val < end2) && (val > end1);
+                }
             },
             getIndexOf = function (_id) {
                 for (i = 0; i < len; i++) {
-                    if (alarms[i]._id === _id)
+                    if (alarms[i]._id === _id) {
                         return i;
+                    }
                 }
                 return null;
             },
@@ -2241,8 +2238,9 @@ var AlarmManager = function (conf) {
         // is opposite the current state.
         if (event.srcElement.tagName === 'INPUT') {
             selected = !data.isSelected();
-            if (!event.shiftKey)
+            if (!event.shiftKey) {
                 event.ctrlKey = true;
+            }
         } else {
             selected = data.isSelected();
         }
@@ -2311,8 +2309,9 @@ var AlarmManager = function (conf) {
         if (self.allSelected() === true) {
             // This routine may be triggered by clicking an input checkbox, or a 'select all' link
             // We only want to deselect all rows if the input was clicked
-            if (event.srcElement.tagName === 'INPUT')
+            if (event.srcElement.tagName === 'INPUT') {
                 self.selectNone();
+            }
         } else {
             // All alarms are not selected; make them selected!
             for (i = 0; i < len; i++) {
@@ -2353,8 +2352,9 @@ var AlarmManager = function (conf) {
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
-            if (self.ackRequired(alarm) && !alarm.isSelected())
+            if (self.ackRequired(alarm) && !alarm.isSelected()) {
                 selectAlarm(alarm);
+            }
         }
     };
     
@@ -2382,10 +2382,13 @@ var AlarmManager = function (conf) {
     self.changeView = function (view) {
         var currentView = self.currentView();
         // If the requested view is the current view, we have nothing to do
-        if (view.id === currentView.id)
+        if (view.id === currentView.id) {
             return;
+        }
 
-        updateWorkspaceWindowTitle(view);
+        // TODO
+        // Disable until this is supported in v2
+        // updateWorkspaceWindowTitle(view);
 
         // Update local storage with the name of the new view we're looking at
         storeViewFilters(view);
@@ -2417,6 +2420,24 @@ var AlarmManager = function (conf) {
         applyFilter(withoutDelay);
     };
 
+    self.showPointFilter = function () {
+        var parameters = {
+            name1: nameFilterObj.name1,
+            name2: nameFilterObj.name2,
+            name3: nameFilterObj.name3,
+            name4: nameFilterObj.name4,
+            pointTypes: nameFilterObj.pointTypes
+        };
+
+        dtiUtility.showPointFilter(parameters);
+        dtiUtility.onPointSelect(filterCallback);
+    };
+
+    dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
+        filterCallback(cfg);
+        self.applyNameFilter();
+    });
+
     self.changePage = function (modifier) {
         var alarms = self.alarms(),
             view = self.currentView(),
@@ -2426,10 +2447,11 @@ var AlarmManager = function (conf) {
             sortAsc = view.sortAscending(),
             newPage;
 
-        if (modifier === 'begin')
+        if (modifier === 'begin') {
             modifier = 1 - curPage;
-        else if (modifier === 'end')
+        } else if (modifier === 'end') {
             modifier = alarms.numberOfPages() - curPage;
+        }
 
         newPage = curPage + modifier;
         page(newPage);
@@ -2439,8 +2461,17 @@ var AlarmManager = function (conf) {
     };
 
     self.resetFilters = function() {
-        if (!self.dirty())
+        if (!self.dirty()) {
             return;
+        }
+
+        nameFilterObj = {
+            name1: '',
+            name2: '',
+            name3: '',
+            name4: '',
+            pointTypes: []
+        };
 
         var view = self.currentView();
 
@@ -2449,8 +2480,6 @@ var AlarmManager = function (conf) {
         resetViewFilters(view);
 
         storeViewFilters(view);
-
-        filterWindowCallback(view);
 
         applyView(view);
     };
@@ -2471,8 +2500,9 @@ var AlarmManager = function (conf) {
             optionId = option.id;
 
             // If the options is not blank, set our dirty flag
-            if (option.value() !== '')
+            if (option.value() !== '') {
                 dirty = true;
+            }
 
             option.value('');
             placeholderDateFilters[optionId].value = '';
@@ -2530,16 +2560,18 @@ var AlarmManager = function (conf) {
             curVal = option.value();
             newVal = nameFilterObj[option.text];
 
-            if (!doApplyFilter && valuesAreDifferent(curVal, newVal))
+            if (!doApplyFilter && valuesAreDifferent(curVal, newVal)) {
                 doApplyFilter = true;
+            }
 
             option.value(nameFilterObj[option.text]);
         }
 
         self.nameFilterPaused(false);
 
-        if (doApplyFilter)
+        if (doApplyFilter) {
             nsFilters.name1.value.valueHasMutated();
+        }
     };
 
     self.callChangeNameFilter = function (endSegment) {
@@ -2550,7 +2582,11 @@ var AlarmManager = function (conf) {
         var contentStop = 20,
             detailStop = -(detailWidth + 2);
 
-        if (alarm) deSelectAlarm(alarm);
+        if (alarm) {
+            deSelectAlarm(alarm);
+        }
+        self.alarmDetail.visible = false;
+        self.handleResize($elContent.outerWidth() + (contentStop - detailStop));
         toggleAlarmDetail(contentStop, detailStop);
     };
 
@@ -2565,6 +2601,7 @@ var AlarmManager = function (conf) {
         }),
         gettingData: ko.observable(false).extend({throttle: 100}),
         error: ko.observable(false),
+        visible: false,
         displays: ko.observableArray([])
     };
 
@@ -2612,8 +2649,35 @@ var AlarmManager = function (conf) {
                 alarmDetail.error(true);
             });
         }
+        alarmDetail.visible = true;
+        self.handleResize($elContent.outerWidth() - (contentStop + detailStop));
         toggleAlarmDetail(contentStop, detailStop);
     };
+
+    self.handleResize = function (targetWidth) {
+        var contentWidth = targetWidth || $elContent.outerWidth();
+
+        if (contentWidth < 725) {
+            horizontalMenu.$elAlarmClass.hide();
+            verticalMenu.$elAlarmClass.show();
+
+            horizontalMenu.$elAlarmCategory.hide();
+            verticalMenu.$elAlarmCategory.show();
+        } else if (contentWidth < 1025) {
+            horizontalMenu.$elAlarmClass.show();
+            verticalMenu.$elAlarmClass.hide();
+
+            horizontalMenu.$elAlarmCategory.hide();
+            verticalMenu.$elAlarmCategory.show();
+        } else {
+            horizontalMenu.$elAlarmClass.show();
+            verticalMenu.$elAlarmClass.hide();
+
+            horizontalMenu.$elAlarmCategory.show();
+            verticalMenu.$elAlarmCategory.hide();
+        }
+    };
+
 
    //------ Debugging Helpers -------------------------------
     // TODO Remove for production
@@ -2686,7 +2750,9 @@ var AlarmManager = function (conf) {
                 };
             
             n = n || 1;
-            if (deleteFromTop === undefined) deleteFromTop = true;
+            if (deleteFromTop === undefined) {
+                deleteFromTop = true;
+            }
 
             for (var i = 0; i < n; i++) {
                 var len = alarmList.length,
@@ -2723,8 +2789,10 @@ var AlarmManager = function (conf) {
             view;
         
         view = findView('title', filterName);
-        if (view === null)
+        if (view === null) {
             view = self.defaultViews[0];
+        }
+
         self.changeView(view);
     });
 
@@ -2786,11 +2854,14 @@ var AlarmManager = function (conf) {
             n = alarms.length,
             len = (n > 200) ? 200:n;
 
-        if (len === 0) return false;
+        if (len === 0) {
+            return false;
+        }
 
         for (i = 0; i < len; i++) {
-            if (alarms[i].isSelected() === false)
+            if (alarms[i].isSelected() === false) {
                 return false;
+            }
         }
         return true;
     }, self).extend(computedThrottle);
@@ -2829,7 +2900,7 @@ var AlarmManager = function (conf) {
             alarm = alarms[i];
             ackStatus = alarm.ackStatus();
 
-            if (alarm.isSelected() && (ackStatus !== ACK_NONE) && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK)) {
+            if (alarm.isSelected() && (ackStatus !== ACK_NONE) && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK) && self.userHasPermissionToAck(alarm)) {
                 return true;
             }
         }
@@ -2871,8 +2942,9 @@ var AlarmManager = function (conf) {
             option = options[i];
             val = option.value();
             if (typeof val === 'object') {
-                if (val.length)
+                if (val.length) {
                     active = true;
+                }
             } else if (val !== '') {
                 active = true;
             }
@@ -2880,10 +2952,11 @@ var AlarmManager = function (conf) {
             // continue so that this computed maintains a dependency with all name segments.
         }
         
-        if (active)
+        if (active) {
             $filterIcon.addClass('filterActive');
-        else
+        } else {
             $filterIcon.removeClass('filterActive');
+        }
 
         if (!paused) {
             applyFilter();
@@ -2959,7 +3032,6 @@ var AlarmManager = function (conf) {
         applyFilter(withoutDelay);  // should save current filter as well
     };
 
-
     self.getRecentAlarms = ko.computed(function() {
         var alarmTable = alarmTables.Recent,
             refresh = alarmTable.refresh();
@@ -2996,9 +3068,6 @@ var AlarmManager = function (conf) {
     //------ Final Inits -------------------------------
     // This routine just initializes shortcuts to the views that each alarm table initially references, & sets the refresh flag if needed
     initAlarmTables();
-    
-    // Init our iframe point selector window
-    initFilterWindow();
 
     // Setup midnight notification
     setupMidnightNotify();
@@ -3015,6 +3084,7 @@ function initPage (manager) {
         $alarms = $('.alarms'),
         $newAlarmTop = $('.newAlarmTop'),
         $newAlarmBottom = $('.newAlarmBottom'),
+        timeoutId,
         toggleDropdown = function (id) {
             var $container = $(id),
                 $dropDown = $(id + ' .dropdown-menu'),
@@ -3130,16 +3200,22 @@ function initPage (manager) {
         $('.popOut').addClass('hidden');
         $('.popIn').removeClass('hidden');
     }
+
+    $(window).resize(function () {
+        window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(manager.handleResize, 25);
+    });
 }
 
 function applyBindings () {
     // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). AlarmManager requires this opener method to be established
     // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         window.manager = new AlarmManager({});
         ko.applyBindings(window.manager);
+        manager.handleResize();
     }
 }
 
