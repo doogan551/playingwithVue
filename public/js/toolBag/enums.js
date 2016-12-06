@@ -1,7 +1,7 @@
 function Manager() {
 	var self = this,
 		_propertyList = [],
-		defaultCollections = ["Properties", "Point Types"],
+		defaultCollections = ["Properties"],
 		sortArray = function (theArray, key) {
 			theArray.sort(function (a, b) {
 				var alc,
