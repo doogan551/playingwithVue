@@ -40,5 +40,35 @@ router.get('/downloadCppHeaderFile', function(req, res, next) {
 
 	res.download(filepath + filename, filename);
 });
+// Checked
+router.get('/dbValidation', function (req, res, next) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	ToolBag.getTemplateNames(function (err, templateNames) {
+		res.locals = {
+			err: err,
+			templateNames: templateNames || []
+		};
+		res.render('toolBag/dbValidation');
+	});
+});
+// Checked
+router.post('/validatePoints', function (req, res, next) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	ToolBag.validatePoints(data, function (err, validationProblems) {
+		if (err) {
+			return utils.sendResponse(res, {
+				err: err
+			});
+		}
+
+		return utils.sendResponse(res, {
+			validationProblems: validationProblems
+		});
+	});
+});
 
 module.exports = router;

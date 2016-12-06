@@ -1,7 +1,7 @@
 function Manager() {
 	var self = this,
 		_propertyList = [],
-		defaultCollections = ["Properties", "Point Types"],
+		defaultCollections = ["Properties"],
 		sortArray = function (theArray, key) {
 			theArray.sort(function (a, b) {
 				var alc,
@@ -67,6 +67,8 @@ function Manager() {
 		inspectEnumCollection = function (data) {
 			var key,
 				value,
+				lastValue,
+				expectedValue,
 				usedEnums = [],
 				usedNames = [],
 				enumsCollection = Config.Enums[data.collection];
@@ -83,6 +85,23 @@ function Manager() {
 				if (usedNames.indexOf(key) > -1) data.duplicateNames.push(key);
 				else usedNames.push(key);
 			}
+
+			usedEnums.sort(function (a,b) {
+				return a > b ? 1:-1;
+			});
+			expectedValue = usedEnums[0];
+			usedEnums.forEach(function (value, index) {
+				if (value === lastValue) {
+					return; // Duplicate
+				}
+
+				while (expectedValue < value) {
+					data.holes.push(expectedValue++);
+				}
+
+				lastValue = value;
+				expectedValue++;
+			});
 		};
 
 	self.sortColumn = ko.observable('enumSet');
@@ -103,6 +122,7 @@ function Manager() {
 		collection: "Properties",
 		duplicateEnums: ko.observableArray([]),
 		duplicateNames: ko.observableArray([]),
+		holes: ko.observableArray([]),
 		minimum: ko.observable(999999999),
 		maximum: ko.observable(0)
 	};
@@ -111,6 +131,7 @@ function Manager() {
 		collection: "Point Types",
 		duplicateEnums: ko.observableArray([]),
 		duplicateNames: ko.observableArray([]),
+		holes: ko.observableArray([]),
 		minimum: ko.observable(999999999),
 		maximum: ko.observable(0)
 	};

@@ -1,10 +1,13 @@
 var async = require('async');
+var ObjectId = require('mongodb').ObjectID;
 
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
-var ObjectId = require('mongodb').ObjectID;
+var utils = require('../helpers/utils');
+var activityLogCollection = utils.CONSTANTS("activityLogCollection");
+var actLogsEnums = Config.Enums["Activity Logs"];
 
 module.exports = {
   getSystemInfoByName: function(name, cb) {
@@ -57,7 +60,21 @@ module.exports = {
       updateObj: updateCriteria
     };
 
-    Utility.update(criteria, cb);
+    Utility.update(criteria, function(err, result) {
+
+      var logData = {
+        user: data.user,
+        timestamp: Date.now(),
+        activity: actLogsEnums["Control Priority Labels Edit"].enum,
+        log: "Control priorities edited."
+      };
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {});
+      return cb(err, result);
+    });
   },
   getQualityCodes: function(data, cb) {
     var criteria = {
@@ -115,7 +132,7 @@ module.exports = {
 
     var maskUpdate = 0;
 
-    maskUpdate = (qualityMask["Override"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"].Override["enum"] : maskUpdate;
+    maskUpdate = (qualityMask.Override * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"].Override["enum"] : maskUpdate;
     maskUpdate = (qualityMask["COV Enable"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["COV Enable"]["enum"] : maskUpdate;
     maskUpdate = (qualityMask["Alarms Off"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["Alarms Off"]["enum"] : maskUpdate;
     maskUpdate = (qualityMask["Command Pending"] * 1 !== 0) ? maskUpdate | Config.Enums["Quality Code Enable Bits"]["Command Pending"]["enum"] : maskUpdate;
@@ -144,7 +161,21 @@ module.exports = {
         collection: 'SystemInfo',
         updateObj: prefUpdate
       };
-      Utility.update(criteria, cb);
+      Utility.update(criteria, function(err, result) {
+
+        var logData = {
+          user: data.user,
+          timestamp: Date.now(),
+          activity: actLogsEnums["Quality Code Edit"].enum,
+          log: "Quality Codes edited."
+        };
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {});
+        return cb(err, result);
+      });
     });
   },
   updateControllers: function(data, cb) {
@@ -179,7 +210,21 @@ module.exports = {
       updateObj: updateCriteria
     };
 
-    Utility.update(criteria, cb);
+    Utility.update(criteria, function(err, result) {
+
+      var logData = {
+        user: data.user,
+        timestamp: Date.now(),
+        activity: actLogsEnums["Controllers Edit"].enum,
+        log: "Controllers edited."
+      };
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {});
+      return cb(err, result);
+    });
   },
 
   updateTelemetry: function(data, cb) {
@@ -293,7 +338,21 @@ module.exports = {
           if (err) {
             return cb(err.message);
           }
-          updateNetworks(netConfig, cb);
+          updateNetworks(netConfig, function(err, result) {
+
+            var logData = {
+              user: data.user,
+              timestamp: Date.now(),
+              activity: actLogsEnums["Telemetry Settings Edit"].enum,
+              log: "Telemetry Settings edited."
+            };
+            logData = utils.buildActivityLog(logData);
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {});
+            return cb(err, result);
+          });
 
         });
       });
@@ -380,6 +439,10 @@ module.exports = {
   updateAlarmTemplate: function(data, cb) {
     var searchCriteria,
       criteria;
+    var logData = {
+      user: data.user,
+      timestamp: Date.now()
+    };
 
     if (!!data.newObject) {
       var alarmTemplateNew = {
@@ -398,8 +461,15 @@ module.exports = {
         saveObj: alarmTemplateNew
       };
 
-      console.log("new criteria = " + JSON.stringify(criteria));
-      Utility.save(criteria, cb);
+      Utility.save(criteria, function(err, result) {
+        logData.activity = actLogsEnums["Alarm Message Add"].enum;
+        logData.log = "Alarm Message with text \"" + data.newObject.msgFormat + "\" added to the system.";
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, cb);
+      });
 
     } else if (!!data.updatedObject) {
       searchCriteria = {
@@ -424,11 +494,22 @@ module.exports = {
         updateObj: alarmTemplateUpdate
       };
 
-      console.log("updated criteria = " + JSON.stringify(criteria));
-      Utility.update(criteria, cb);
+      Utility.update(criteria, function(err, result) {
+        logData.activity = actLogsEnums["Alarm Message Edit"].enum;
+        logData.log = "Alarm Message with text \"" + data.updatedObject.msgFormat + "\" updated.";
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, cb);
+      });
     }
   },
   deleteAlarmTemplate: function(data, cb) {
+    var logData = {
+      user: data.user,
+      timestamp: Date.now()
+    };
     var searchCriteria = {
       "_id": ObjectId(data.deleteObject._id)
     };
@@ -443,7 +524,16 @@ module.exports = {
       }
 
       var entries = data;
-      return cb(null, entries);
+      logData.activity = actLogsEnums["Alarm Message Delete"].enum;
+      logData.log = "Alarm Message with text \"" + data.updatedObject.msgFormat + "\" remvoed from the system.";
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {
+        return cb(null, entries);
+      });
+
     });
   },
   weather: function(cb) {
@@ -573,6 +663,6 @@ module.exports = {
         versions.Processes = result['Server Version'];
         return cb(null, versions);
       }
-    })
+    });
   }
 };

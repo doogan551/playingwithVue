@@ -1,8 +1,25 @@
 var fs = require('fs');
+var async = require('async');
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
 var Config = require(utils.FileLocationsForControllers("Config"));
 var logger = require('../helpers/logger')(module);
+
+function forEach (obj, fn) {
+    var keys = Object.keys(obj),
+        c,
+        len = keys.length,
+        errorFree = true;
+
+    for (c = 0; c < len && errorFree; c++) {
+        errorFree = fn(obj[keys[c]], keys[c], c);
+        if (errorFree === undefined) {
+            errorFree = true;
+        }
+    }
+
+    return errorFree;
+}
 
 module.exports = {
 	getPoints: function(data, cb) {
@@ -15,6 +32,10 @@ module.exports = {
 		Utility.get(criteria, cb);
 	},
 	generateCppHeaderFile: function(data, cb) {
+		// Override Config so we get the latest version - this allows us to generate a new C++ header file after making
+		// changes to enumsTemplates.json without having to restart the server
+		var Config = require(utils.FileLocationsForControllers("Config"));
+
 		var buffer = ""; // This is our string buffer that we'll write out to a file when complete
 		var oneTab = "   "; // This is one tab and controls the key indent from the beginning of the line
 		var padding = "  "; // This is the padding between the key name and the '=' sign
@@ -445,5 +466,97 @@ module.exports = {
 			}
 			return cb(err, rtnObj);
 		});
+	},
+	getTemplateNames: function (cb) {
+		fs.readdir('./public/js/toolbag/dbValidationTemplates', function (err, files) {
+			cb(err, files);
+		});
+	},
+	validatePoints: function (data, cb) {
+		// data = {
+		// 	user: obj,
+		// 	template: string (i.e. myTemplateName.json)
+		// }
+		var filename = './public/js/toolbag/dbValidationTemplates/' + data.template,
+			validationProblems = [],
+			doValidate = function (path, cfg) {
+				forEach(cfg.templateObj, function (templateValue, key) {
+					var pointValue = cfg.pointObj[key],
+						newPath = path ? [path, key].join('.') : key;
+
+					if (pointValue === undefined) {
+						cfg.problems.push(newPath + ' exists on template but not on database point.');
+						return;
+					}
+
+					if (typeof templateValue === 'object') { // array or object
+						doValidate(newPath, {
+							templateObj: templateValue,
+							pointObj: pointValue,
+							problems: cfg.problems
+						});
+					}
+					// number or string
+					else if (templateValue !== pointValue) {
+						cfg.problems.push([newPath, 'Template = ' + templateValue, 'Point = ' + pointValue].join(' / '));
+					}
+				});
+
+				if (cfg.callback) {
+					cfg.callback();
+				}
+			},
+			validatePoint = function (pointTemplate, callback) {
+				var criteria = {
+						collection: 'points',
+						query: {
+							_Name: pointTemplate._Name
+						}
+					},
+					obj = {
+						pointName: pointTemplate.Name,
+						problems: []
+					};
+
+				Utility.getOne(criteria, function (err, point) {
+					if (err) {
+						return callback(err);
+					}
+					if (!point) {
+						obj.problems.push('Point not found in database');
+						validationProblems.push(obj);
+						return callback(null);
+					}
+
+					doValidate('', {
+						templateObj: pointTemplate,
+						pointObj: point,
+						problems: obj.problems,
+						callback: function done () {
+							validationProblems.push(obj);
+							callback(null);
+						}
+					});
+				});
+			};
+
+		fs.readFile(filename, 'utf8', function (err, content) {
+			var points;
+
+			if (err) {
+				return cb(err);
+			}
+
+			try {
+				points = JSON.parse(content);
+			} catch (err) {
+				return cb(err);
+			}
+
+			async.eachSeries(points, validatePoint, function finished (err) {
+				cb(err, validationProblems);
+			});
+		});
 	}
 };
+
