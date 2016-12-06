@@ -157,6 +157,9 @@
             },
             "Program Edit": {
                 "enum": 41
+            },
+            "Season Change": {
+                "enum": 42
             }
         },
         "Alarm Classes": {

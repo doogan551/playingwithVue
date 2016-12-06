@@ -32,14 +32,15 @@ var Utils = {
 				}
 			};
 
-		log.upi = (data.point._id !== undefined) ? data.point._id : '';
-		log.pointType = (data.point["Point Type"].eValue !== undefined) ? data.point["Point Type"].eValue : null;
-		log.Security = (data.point.Security !== undefined) ? data.point.Security : [];
-		log.Name = (data.point.Name !== undefined) ? data.point.Name : '';
-		log.name1 = (data.point.name1 !== undefined) ? data.point.name1 : '';
-		log.name2 = (data.point.name2 !== undefined) ? data.point.name2 : '';
-		log.name3 = (data.point.name3 !== undefined) ? data.point.name3 : '';
-		log.name4 = (data.point.name4 !== undefined) ? data.point.name4 : '';
+		if (!!data.point) {
+			log.upi = (data.point._id !== undefined) ? data.point._id : '';
+			log.pointType = (data.point["Point Type"].eValue !== undefined) ? data.point["Point Type"].eValue : null;
+			log.Name = (data.point.Name !== undefined) ? data.point.Name : '';
+			log.name1 = (data.point.name1 !== undefined) ? data.point.name1 : '';
+			log.name2 = (data.point.name2 !== undefined) ? data.point.name2 : '';
+			log.name3 = (data.point.name3 !== undefined) ? data.point.name3 : '';
+			log.name4 = (data.point.name4 !== undefined) ? data.point.name4 : '';
+		}
 
 		if ((data.activityEnum === 1 || data.activityEnum === 2)) {
 			if (data.oldValue !== undefined) {

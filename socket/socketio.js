@@ -184,7 +184,7 @@ module.exports = function socketio(_common) {
     sock.on('fieldCommand', function(data) {
 
       logger.debug('fieldCommand');
-      jsonData = JSON.parse(data);
+      var jsonData = JSON.parse(data);
       var error, logData, i;
       //data = JSON.stringify(data);
       if (jsonData["Command Type"] === 7) {
@@ -194,7 +194,6 @@ module.exports = function socketio(_common) {
           point: jsonData.logData.point,
           activity: Config.Enums["Activity Logs"]["Point Control"].enum,
           prop: "Value",
-          Security: jsonData.logData.point.Security
         };
 
         if (jsonData.Relinquish === 0) {
@@ -231,7 +230,6 @@ module.exports = function socketio(_common) {
           user: jsonData.logData.user,
           timestamp: Date.now(),
           point: jsonData.logData.point,
-          Security: jsonData.logData.point.Security
         };
         if (jsonData.state === 1) {
           logData.activity = Config.Enums["Activity Logs"]["Warm Restart"].enum;
@@ -275,7 +273,6 @@ module.exports = function socketio(_common) {
           timestamp: Date.now(),
           point: data.logData.point,
           activity: Config.Enums["Activity Logs"]["Firmware Load"].enum,
-          Security: data.logData.point.Security,
           log: data.logData.point["Firmware Version"] + " Firmware '" + data.fileName + "' loaded"
         },
         sendCommand = function(filePath) {
@@ -689,7 +686,19 @@ function doUpdateSequence(data, cb) {
     if (updateErr) {
       cb('Error: ' + updateErr.err);
     } else {
-      cb('success');
+      var logData = {
+        user: data.user,
+        timestamp: Date.now(),
+        point: data.point,
+        activity: actLogsEnums["GPL Edit"].enum,
+        log: "Sequence edited."
+      };
+      logData = utils.buildActivityLog(logData);
+      Utility.insert({
+        collection: activityLogCollection,
+        insertObj: logData
+      }, function(err, result) {});
+      return cb('success');
     }
   });
   //         } else {
@@ -894,7 +903,6 @@ function updateSchedules(data, callback) {
               }
             }, function(err, point) {
               logData.point = point;
-              logData.Security = point.Security;
               logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Edit"].enum;
               logData.log = "Schedule entry edited";
               logData = utils.buildActivityLog(logData);
@@ -944,7 +952,6 @@ function updateSchedules(data, callback) {
             }
           }, function(err, point) {
             logData.point = point;
-            logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Add"].enum;
             logData.log = "Schedule entry added";
             logData = utils.buildActivityLog(logData);
@@ -980,7 +987,6 @@ function updateSchedules(data, callback) {
             }
           }, function(err, point) {
             logData.point = point;
-            logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = utils.buildActivityLog(logData);
@@ -1026,7 +1032,6 @@ function updateSchedules(data, callback) {
             }
           }, function(err, point) {
             logData.point = point;
-            logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = utils.buildActivityLog(logData);

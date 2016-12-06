@@ -343,6 +343,19 @@ module.exports = {
                     updateObj: displayObject
                 },
                 function(err, docs) {
+                    var logData = {
+                        user: data.user,
+                        timestamp: Date.now(),
+                        point: displayObject,
+                        activity: actLogsEnums["Display Edit"].enum,
+                        log: "Display edited."
+                    };
+                    logData = utils.buildActivityLog(logData);
+                    Utility.insert({
+                        collection: activityLogCollection,
+                        insertObj: logData
+                    }, function(err, result) {});
+
                     console.log('display publish err', err);
                     console.log('displays: updated display');
                     console.log('displays: removing display');
@@ -444,7 +457,7 @@ module.exports = {
 
     browse2: function(req, res, next) {
         var files, flist, j, ext;
-        
+
         files = fs.readdirSync(path.join(__dirname, '..', 'public', 'display_assets', 'assets'));
         flist = [];
         for (j = 0; j < files.length; j++) {
@@ -476,18 +489,34 @@ module.exports = {
         for (j = 0; j < files.length; j++) {
             fileStats = fs.statSync(assetsDir + "\\" + files[j]);
             if (fileStats && !fileStats.isDirectory()) {
-                if (filetype && filetype !== "*") {  // list all files when "*"
+                if (filetype && filetype !== "*") { // list all files when "*"
                     ext = path.extname(files[j]);
                     if (("." + filetype.toLowerCase()) === ext.toLowerCase()) {
-                        flist.push({file:{filename: files[j], filesize: fileStats.size, modifieddate: fileStats.mtime}});
+                        flist.push({
+                            file: {
+                                filename: files[j],
+                                filesize: fileStats.size,
+                                modifieddate: fileStats.mtime
+                            }
+                        });
                     }
                 } else {
-                    flist.push({file:{filename: files[j], filesize: fileStats.size, modifieddate: fileStats.mtime}});
+                    flist.push({
+                        file: {
+                            filename: files[j],
+                            filesize: fileStats.size,
+                            modifieddate: fileStats.mtime
+                        }
+                    });
                 }
             }
         }
         console.log(' - - -  flist.length = ', flist.length);
-        return cb(null, { path: '/display_assets/assets/', files: flist, folders: '' } );
+        return cb(null, {
+            path: '/display_assets/assets/',
+            files: flist,
+            folders: ''
+        });
     }
 };
 
