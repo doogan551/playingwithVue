@@ -91,17 +91,16 @@ function Manager() {
 			});
 			expectedValue = usedEnums[0];
 			usedEnums.forEach(function (value, index) {
-				var nextValue = usedEnums[index+1];
-
-				// We check value bigger than expected so we don't flag duplicates as holes
-				if ((value !== expectedValue) && (value > expectedValue)) {
-					while(expectedValue < nextValue) {
-						data.holes.push(expectedValue++);
-					}
-				} else if (value !== lastValue) { // If this value is different from our last one, i.e. it's not a duplicate
-					expectedValue++;
+				if (value === lastValue) {
+					return; // Duplicate
 				}
+
+				while (expectedValue < value) {
+					data.holes.push(expectedValue++);
+				}
+
 				lastValue = value;
+				expectedValue++;
 			});
 		};
 
