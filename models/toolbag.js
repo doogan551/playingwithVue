@@ -498,7 +498,7 @@ module.exports = {
 					}
 					// number or string
 					else if (templateValue !== pointValue) {
-						cfg.problems.push([newPath, 'Template = ' + templateValue, 'Point = ' + pointValue].join(' ****** '));
+						cfg.problems.push([newPath, 'Template = ' + templateValue, 'Point = ' + pointValue].join(' / '));
 					}
 				});
 
