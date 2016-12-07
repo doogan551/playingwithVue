@@ -2159,6 +2159,7 @@ var reportsViewModel = function () {
                     filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + filter.filterName + " Bits"]);
                     break;
             }
+            updateListOfFilters(self.listOfFilters());
         },
         setDefaultFilterValue = function (valueType) {
             var result;
