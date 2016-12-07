@@ -42,12 +42,13 @@ module.exports = function socketio(_common) {
   openAlarms = _common.openAlarms;
   controlPriorities = _common.controlPriorities;
 
-  io.sockets.on('connection', function(sock) {
+  io.on('connection', function(sock) {
     logger.info('socket connected');
     var sockId, socket, user;
     socket = sock;
     sockId = sock.id;
     sock.emit('test', 'test');
+    socket.join('dynamics');
     user = sock.request.user;
     // Checked
     sock.on('getStatus', function() {
@@ -77,7 +78,7 @@ module.exports = function socketio(_common) {
         });
 
 
-        io.sockets.emit('sendDisplays', {
+        io.emit('sendDisplays', {
           data: openDisplays
         });
 
@@ -106,7 +107,7 @@ module.exports = function socketio(_common) {
       if (splicenum > -1) {
         openDisplays.splice(splicenum, 1);
         //this just alerts the console page to refresh the list
-        io.sockets.emit('sendDisplays', {
+        io.emit('sendDisplays', {
           data: openDisplays
         });
       }
@@ -731,11 +732,11 @@ function maintainAlarmViews(socketid, view, data) {
 }
 
 function sendUpdate(dynamic) {
-  io.sockets.connected[dynamic.sock].emit('recieveUpdate', {
-    sock: dynamic.sock,
-    upi: dynamic.upi,
-    dynamic: dynamic.dyn
-  });
+  // io.connected[dynamic.sock].emit('recieveUpdate', {
+  //   sock: dynamic.sock,
+  //   upi: dynamic.upi,
+  //   dynamic: dynamic.dyn
+  // });
 }
 
 function getVals() {
