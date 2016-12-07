@@ -2910,6 +2910,7 @@ var dti = {
                             id: self.id,
                             restrictPointTypes: false,
                             disableCreatePoint: false,
+                            disableNewPoint: false,
                             loading: false,
                             focus: false,
                             isModal: config.isModal
@@ -2973,6 +2974,7 @@ var dti = {
 
                     bindings.cancelCreatePoint = function () {
                         self.bindings.mode(self.modes.DEFAULT);
+                        self.bindings.disableNewPoint(false);
                         if (self.fullCreate) {
                             if (dti.navigator.temporaryCallback) {
                                 dti.navigator.temporaryCallback(false);
@@ -2983,7 +2985,10 @@ var dti = {
 
                     bindings.createPoint = function () {
                         // self.bindings.explodedPointTypes()[0].selected(true);
-                        self.bindings.mode(self.modes.CREATE);
+                        if (!self.bindings.disableNewPoint()) {
+                            self.bindings.mode(self.modes.CREATE);
+                            self.bindings.disableNewPoint(true);
+                        }
                     };
 
                     bindings.doCreatePoint = function () {
@@ -3370,6 +3375,7 @@ var dti = {
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 self.bindings.restrictPointTypes(config.restrictPointTypes);
+                self.bindings.disableNewPoint(config.disableNewPoint);
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];

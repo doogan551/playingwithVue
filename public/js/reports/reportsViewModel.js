@@ -1524,7 +1524,8 @@ var reportsViewModel = function () {
                 name2: filter.name2,
                 name3: filter.name3,
                 name4: filter.name4,
-                pointTypes: (filter.pointTypes.length === 0 ? self.pointTypes() : filter.pointTypes)
+                pointTypes: (filter.pointTypes.length === 0 ? self.pointTypes() : filter.pointTypes),
+                disableNewPoint: true
             };
         },
         setPointInspectorParams = function (filterObject, filter) {
@@ -2090,7 +2091,8 @@ var reportsViewModel = function () {
                     name2: self.name2Filter(),
                     name3: self.name3Filter(),
                     name4: self.name4Filter(),
-                    pointTypes: self.selectedPointTypesFilter()
+                    pointTypes: self.selectedPointTypesFilter(),
+                    disableNewPoint: true
                 });
                 dtiUtility.onPointSelect(pointSelectedCallback);
             }

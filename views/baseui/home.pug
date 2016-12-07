@@ -448,7 +448,7 @@ html
                     a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
                         i.material-icons.left clear
                         | Clear Names
-                    a.waves-effect.waves-light.btn.blue-grey(data-bind="click: createPoint, css: { disabled: mode() === 'create' }")
+                    a.waves-effect.waves-light.btn.blue-grey(data-bind="click: createPoint, css: { disabled: disableNewPoint() }")
                         i.material-icons.left add
                         | New Point
                 .selectorNames
