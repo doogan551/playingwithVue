@@ -31,7 +31,6 @@ var controlPriorities = [];
 var eventEmitter = new events.EventEmitter();
 
 var openDisplays = [];
-var openAlarms = [];
 var common = {};
 var io = {};
 
@@ -39,7 +38,6 @@ module.exports = function socketio(_common) {
   common = _common;
   io = _common.sockets.get().io;
   openDisplays = _common.openDisplays;
-  openAlarms = _common.openAlarms;
   controlPriorities = _common.controlPriorities;
 
   io.on('connection', function(sock) {
@@ -48,7 +46,6 @@ module.exports = function socketio(_common) {
     socket = sock;
     sockId = sock.id;
     sock.emit('test', 'test');
-    socket.join('dynamics');
     user = sock.request.user;
     // Checked
     sock.on('getStatus', function() {
@@ -67,60 +64,28 @@ module.exports = function socketio(_common) {
       });
     });
 
-    //socket function called from client to let server know a new display is open
-    sock.on('displayOpen', function(data) {
-      logger.debug('displayOpen');
-      if (data.data.display.message === undefined) {
-        //pop on displays array
-        openDisplays.push({
-          sockId: data.data.socketid,
-          display: data.data.display
-        });
-
-
-        io.emit('sendDisplays', {
-          data: openDisplays
-        });
-
-        getVals();
-      }
+    sock.on('dynamics', function(data) {
+      logger.debug('dynamics', data);
+      socket.join('dynamics');
+      io.to('dynamics').emit('test', 'dynamic update');
+      io.to(socket.id).emit('test', socket.id);
+      getVals();
     });
 
-    //removes display from active list when closed
     sock.on('disconnect', function() {
-      //checks to see if closed socket was an active display, and removes it from the list.
-      var splicenum = -1;
-
-      for (var j = 0; j < openDisplays.length; j++) {
-        if (openDisplays[j].sockId == sock.id) {
-          splicenum = j;
-        }
-      }
-
-      for (var k = 0; k < openAlarms.length; k++) {
-        if (openAlarms[k].sockId == sock.id) {
-          openAlarms.splice(k, 1);
-          k--;
-        }
-      }
-
-      if (splicenum > -1) {
-        openDisplays.splice(splicenum, 1);
-        //this just alerts the console page to refresh the list
-        io.emit('sendDisplays', {
-          data: openDisplays
-        });
-      }
+      // 
     });
     // Checked
     sock.on('getRecentAlarms', function(data) {
       logger.debug('getRecentAlarms');
-      if (typeof data === "string")
+      if (typeof data === "string") {
         data = JSON.parse(data);
+      }
 
       data.user = user;
 
-      maintainAlarmViews(sock.id, "Recent", data);
+      socket.join('recentAlarms');
+      io.to('recentAlarms').emit('test', 'recentAlarms update');
 
       common.getRecentAlarms(data, function(err, alarms, count) {
         sock.emit('recentAlarms', {
@@ -138,7 +103,8 @@ module.exports = function socketio(_common) {
         data = JSON.parse(data);
 
       data.user = user;
-      maintainAlarmViews(sock.id, "Unacknowledged", data);
+      socket.join('unacknowledged');
+      io.to('unacknowledged').emit('test', 'unacknowledged update');
 
       common.getUnacknowledged(data, function(err, alarms, count) {
         sock.emit('unacknowledged', {
@@ -156,7 +122,8 @@ module.exports = function socketio(_common) {
         data = JSON.parse(data);
 
       data.user = user;
-      maintainAlarmViews(sock.id, "Active", data);
+      socket.join('activeAlarms');
+      io.to('activeAlarms').emit('test', 'activeAlarms update');
 
       common.getActiveAlarmsNew(data, function(err, alarms, count) {
         sock.emit('activeAlarms', {
@@ -710,25 +677,6 @@ function doUpdateSequence(data, cb) {
   //         complete();
   //     }
   // });
-}
-
-function maintainAlarmViews(socketid, view, data) {
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-
-  for (var i = 0; i < openAlarms.length; i++) {
-    if (openAlarms[i].sockId === socketid && openAlarms[i].alarmView === view) {
-      openAlarms[i].data = data;
-      return;
-    }
-  }
-
-  openAlarms.push({
-    sockId: socketid,
-    alarmView: view,
-    data: data
-  });
 }
 
 function sendUpdate(dynamic) {

@@ -21,12 +21,8 @@ var historyCollection = utils.CONSTANTS("historyCollection");
 var alarmsCollection = utils.CONSTANTS("alarmsCollection");
 var activityLogCollection = utils.CONSTANTS("activityLogCollection");
 
-var openDisplays = [];
-var openAlarms = [];
 var common = {
-  sockets: require('../helpers/sockets.js'),
-  openDisplays: openDisplays,
-  openAlarms: openAlarms
+  sockets: require('../helpers/sockets.js')
 };
 
 var io = common.sockets.get().io;
@@ -120,18 +116,6 @@ module.exports = {
   socket: socket,
   common: common
 };
-
-// is this still necessary?
-(function loop() {
-
-  setTimeout(function() {
-    // if (oplog.conn.db !== undefined) {
-
-    updateAlarms(function() {});
-    // } else
-    // loop();
-  }, 10000);
-})();
 
 (function loop() {
   setTimeout(function() {
@@ -2226,47 +2210,6 @@ function getActiveAlarmsNew(data, callback) {
   });
 }
 
-//loop
-function updateAlarms(finalCB) {
-  var alarmsStart = new Date();
-  async.each(openAlarms,
-    function(openAlarm, callback) {
-      if (openAlarm.alarmView === "Recent") {
-
-        getRecentAlarms(openAlarm.data, function(err, recents, count) {
-          io.sockets.connected[openAlarm.sockId].emit('recentAlarms', {
-            alarms: recents,
-            count: count
-          });
-
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Active") {
-        getActiveAlarmsNew(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.connected[openAlarm.sockId].emit('activeAlarms', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Unacknowledged") {
-        getUnacknowledged(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.connected[openAlarm.sockId].emit('unacknowledged', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-    },
-    function(err) {
-      return finalCB();
-    });
-}
 //loop
 function autoAcknowledgeAlarms(callback) {
   var now, twentyFourHoursAgo;
