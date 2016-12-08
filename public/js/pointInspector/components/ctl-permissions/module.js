@@ -198,6 +198,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 }).done(function(data) {
                     console.log('groups updated');
                 });
+                // If the point is saved and we're on the permissions tab but the user doesn't have permissions to be here
+                // (this will happen after a non-sys-admin saves an inactive point)
+            } else if (status === "saved" && (self.root.currentTab() === "permissions") && !self.userCanEditPermissions()) {
+                // Select first tab to get user out of permissions
+                self.root.selectFirstTab();
             }
         }, self);
     }
