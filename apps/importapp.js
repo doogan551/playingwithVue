@@ -910,12 +910,12 @@ function convertHistoryReports(db, callback) {
 								"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
 								"canBeCharted": true,
 								"yaxisGroup": "A",
-								"AppIndex": index + 1
+								"AppIndex": ++index      // AppIndex 0 is reserved for Device Point
 							});
 							report["Point Refs"].push({
 								"PropertyName": "Column Point",
 								"PropertyEnum": 131,
-								"AppIndex": index + 1,
+								"AppIndex": index,
 								"isDisplayable": true,
 								"isReadOnly": false,
 								"Value": ref._id,
@@ -968,8 +968,8 @@ function convertTotalizerReports(callback) {
 		//report._Name = point.Name.toLowerCase();
 		delete report._Name;
 
-		var names = report.Name.split('_');
-		var index = 0;
+		var names = report.Name.split('_'),
+			index = 0;
 
 		for (var i = 1; i <= names.length; i++) {
 			report["name" + i] = names[i - 1];
@@ -1020,7 +1020,7 @@ function convertTotalizerReports(callback) {
 						report["Point Refs"].push({
 							"PropertyName": "Column Point",
 							"PropertyEnum": 131,
-							"AppIndex": report["Point Refs"].length + 1,
+							"AppIndex": ++index,   // AppIndex 0 is reserved for Device Point
 							"isDisplayable": true,
 							"isReadOnly": false,
 							"Value": monitor['Monitor upi'],
@@ -1045,7 +1045,7 @@ function convertTotalizerReports(callback) {
 						"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
 						"canBeCharted": true,
 						"yaxisGroup": "A",
-						"AppIndex": refIds.indexOf(ref._id)
+						"AppIndex": index
 					});
 					report = Config.EditChanges.applyUniquePIDLogic({
 						point: report,
