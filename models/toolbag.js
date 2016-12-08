@@ -1,5 +1,6 @@
 var fs = require('fs');
 var async = require('async');
+var _ = require('lodash');
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
 var Config = require(utils.FileLocationsForControllers("Config"));
@@ -479,32 +480,37 @@ module.exports = {
 		// }
 		var filename = './public/js/toolbag/dbValidationTemplates/' + data.template,
 			validationProblems = [],
+			templateConfig,
 			doValidate = function (path, cfg) {
-				forEach(cfg.templateObj, function (templateValue, key) {
-					var pointValue = cfg.pointObj[key],
+				forEach(cfg.referenceObj, function (referenceValue, key) {
+					var targetValue = cfg.targetObj[key],
 						newPath = path ? [path, key].join('.') : key;
 
-					if (pointValue === undefined) {
-						cfg.problems.push(newPath + ' exists on template but not on database point.');
+					if (targetValue === undefined) {
+						if (cfg.reference === 'database' && templateConfig.allowedExtraDbKeys[key]) {
+							// Do nothing 
+						} else {
+							cfg.problems.push([newPath, 'exists on', cfg.reference, 'but not on', cfg.target].join(' '));
+						}
 						return;
 					}
 
-					if (typeof templateValue === 'object') { // array or object
-						doValidate(newPath, {
-							templateObj: templateValue,
-							pointObj: pointValue,
-							problems: cfg.problems
-						});
+					if (typeof referenceValue === 'object') { // array or object
+						doValidate(newPath, _.assign({}, cfg, {
+							referenceObj: referenceValue,
+							targetObj: targetValue
+						}));
 					}
 					// number or string
-					else if (templateValue !== pointValue) {
-						cfg.problems.push([newPath, 'Template = ' + templateValue, 'Point = ' + pointValue].join(' / '));
+					else {
+						if (targetValue !== referenceValue) {
+							cfg.problems.push([newPath, cfg.reference + ' = ' + referenceValue, cfg.target + ' = ' + targetValue].join(' / '));
+						}
+						if (cfg.deleteTargetKeys) {
+							delete cfg.targetObj[key];
+						}
 					}
 				});
-
-				if (cfg.callback) {
-					cfg.callback();
-				}
 			},
 			validatePoint = function (pointTemplate, callback) {
 				var criteria = {
@@ -528,32 +534,56 @@ module.exports = {
 						return callback(null);
 					}
 
+					// Perform template-to-database comparison - delete database keys after they are evaluated
 					doValidate('', {
-						templateObj: pointTemplate,
-						pointObj: point,
+						reference: 'template',
+						referenceObj: pointTemplate,
+						target: 'database',
+						targetObj: point,
 						problems: obj.problems,
-						callback: function done () {
-							validationProblems.push(obj);
-							callback(null);
-						}
+						deleteTargetKeys: true
 					});
+
+					// Perform database-to-template comparison to find extra db keys (not on the template)
+					doValidate('', {
+						reference: 'database',
+						referenceObj: point,
+						target: 'template',
+						targetObj: pointTemplate,
+						problems: obj.problems
+					});
+
+					validationProblems.push(obj);
+					callback(null);
 				});
 			};
 
 		fs.readFile(filename, 'utf8', function (err, content) {
-			var points;
+			var defaultTemplateConfig = {
+					allowedExtraDbKeys: {}
+				},
+				template,
+				templatePoints;
 
 			if (err) {
 				return cb(err);
 			}
 
 			try {
-				points = JSON.parse(content);
+				template = JSON.parse(content);
 			} catch (err) {
 				return cb(err);
 			}
 
-			async.eachSeries(points, validatePoint, function finished (err) {
+			if (Array.isArray(template)) {
+				templatePoints = template;
+				templateConfig = defaultTemplateConfig;
+			} else {
+				templatePoints = template.points;
+				templateConfig = _.merge(defaultTemplateConfig, template.config);
+			}
+
+			async.eachSeries(templatePoints, validatePoint, function finished (err) {
 				cb(err, validationProblems);
 			});
 		});
