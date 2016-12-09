@@ -1024,7 +1024,7 @@
             "ValueType" : 4, 
             "Value" : 47823, 
             "isDisplayable" : true, 
-            "isReadOnly" : false
+            "isReadOnly" : true
         }, 
         "Router Address" : {
             "ValueType" : 2, 
@@ -1153,7 +1153,7 @@
         }, 
         "Description" : {
             "ValueType" : 2, 
-            "Value" : "BACnet IP Uplinkr", 
+            "Value" : "BACnet IP Uplink", 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -1496,7 +1496,7 @@
         "Device Port" : {
             "ValueType" : 5, 
             "Value" : "Port 4", 
-            "eValue" : 0, 
+            "eValue" : 4, 
             "ValueOptions" : {
                 "Ethernet" : 0, 
                 "Port 1" : 1,
@@ -1522,7 +1522,7 @@
         "Network Type" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
-            "eValue" : 4, 
+            "eValue" : 3, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -1540,7 +1540,7 @@
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 47822, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
