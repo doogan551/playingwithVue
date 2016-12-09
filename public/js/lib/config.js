@@ -3706,7 +3706,7 @@ var Config = (function(obj) {
             point._devModel = point["Model Type"].eValue;
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
             point["Time Zone"].isReadOnly = true;
-            setDisp(point, ["Firmware 2 Version", "Serial Number"], false);
+            setDisp(point, ["Firmware 2 Version", "Serial Number", "Trend Interval"], false);
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point["Time Zone"].isReadOnly = false;
@@ -3718,13 +3718,14 @@ var Config = (function(obj) {
                     "Port 3": enums["Device Ports"]["Port 3"]["enum"],
                     "Port 4": enums["Device Ports"]["Port 4"]["enum"]
                 });
-                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol", "Serial Number"], true);
+                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol", "Serial Number", "Trend Interval"], true);
 
             } else if (obj.Utility.checkMicroScan4Device(point)) {
                 setValOpt(upPort, {
                     "Ethernet": enums["Device Ports"]["Ethernet"]["enum"],
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
                 });
+                point["Trend Interval"].Value = 60;
                 setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol"], true);
                 setDisp(point, ["Port 3 Protocol", "Port 4 Protocol"], false);
             } else if (point["Model Type"].Value === "Central Device") {
@@ -3740,6 +3741,7 @@ var Config = (function(obj) {
                 setValOpt(upPort, {
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
                 });
+                point["Trend Interval"].Value = 60;
                 point["Port 1 Protocol"].isDisplayable = true;
                 setDisp(point, ["Ethernet Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], false);
             }
