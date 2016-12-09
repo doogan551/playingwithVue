@@ -407,16 +407,16 @@
             "Value" : "N/A"
         }
     }, { 
-        "Name" : "MS4 xTalk_DefNameSeg2_Device 1", 
+        "Name" : "MS4 xTalk_Device 1", 
         "name1" : "MS4 xTalk", 
-        "name2" : "DefNameSeg2", 
-        "name3" : "Device 1", 
+        "name2" : "Device 1", 
+        "name3" : "", 
         "name4" : "", 
         "_name1" : "ms4 xtalk", 
-        "_name2" : "defnameseg2", 
-        "_name3" : "device 1", 
+        "_name2" : "device 1", 
+        "_name3" : "", 
         "_name4" : "", 
-        "_Name" : "ms4 xtalk_defnameseg2_device 1", 
+        "_Name" : "ms4 xtalk_device 1", 
         "_cfgRequired" : true, 
         "_cfgDevice" : true, 
         "_relDevice" : 129, 
