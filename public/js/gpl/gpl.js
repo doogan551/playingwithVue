@@ -6448,8 +6448,9 @@ gpl.BlockManager = function (manager) {
         bmSelf.renderAll();
     };
 
-    bmSelf.processValue = function (upi, dyn) {
-        var upis = bmSelf.upis[upi],
+    bmSelf.processValue = function (dyn) {
+        var upi = dyn.upi,
+            upis = bmSelf.upis[upi] || [],
             upiListeners = bmSelf.upiListeners,
             listeners = upiListeners[upi] || [],
             listener,
@@ -8934,15 +8935,11 @@ gpl.Manager = function () {
             managerSelf.pauseRender();
 
             socket.on('connect', function () {
-                var sess = {};
-                sess.socketid = socket.id;
-                sess.display = {};
-                sess.display['Screen Objects'] = gpl.blockManager.screenObjects;
-
+                var sess = {
+                    'Point Refs': gpl.point['Point Refs']
+                };
                 if (!gpl.isEdit) {
-                    socket.emit('displayOpen', {
-                        data: sess
-                    });
+                    socket.emit('dynamics', sess);
                 }
             });
 
@@ -8955,10 +8952,7 @@ gpl.Manager = function () {
             }, 1000 * 60 * 15);
 
             socket.on('recieveUpdate', function (dynamic) {
-                var upi = dynamic.upi,
-                    dyn = dynamic.dynamic;
-
-                gpl.blockManager.processValue(upi, dyn);
+                gpl.blockManager.processValue(dynamic);
             });
 
             socket.on('sequenceUpdateMessage', function (message) {
