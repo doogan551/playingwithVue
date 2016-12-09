@@ -1423,7 +1423,6 @@ var dti = {
                     }
 
                     dti.socket.emit('getUnacknowledged', JSON.stringify({
-                        user: dti.bindings.user(),
                         numberItems: constants.BUFFER_SIZE
                     }));
                 },

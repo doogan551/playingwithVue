@@ -10,113 +10,110 @@ var NotifierUtility = require('../models/notifierutility');
 var notifierUtility = new NotifierUtility();
 var notifications = require('../models/notifications');
 var scheduler = require('../helpers/scheduler');
+var utils = require('../helpers/utils');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 var dbName = config.get('Infoscan.dbConfig').dbName;
-var openAlarms = [];
-var openDisplays = [];
 var io;
 var common;
+var rooms = {};
 
-module.exports = function(_common) {
+var model;
+
+module.exports = model = function(_common) {
     common = _common;
     var oplog = common.sockets.get().oplog;
     io = common.sockets.get().io;
-    openAlarms = common.openAlarms;
-    openDisplays = common.openDisplays;
+    rooms = common.rooms;
+
+    var checkAlarm = function(alarmData, alarm) {
+        if (compareOplogNames(alarmData.name1, alarm.Name1)) {
+            return false;
+        }
+        if (compareOplogNames(alarmData.name2, alarm.Name2)) {
+            return false;
+        }
+        if (compareOplogNames(alarmData.name3, alarm.Name3)) {
+            return false;
+        }
+        if (compareOplogNames(alarmData.name4, alarm.Name4)) {
+            return false;
+        }
+
+        if (alarmData.msgCat !== undefined && alarmData.msgCat.indexOf(alarm.msgCat) < 0) {
+            return false;
+        }
+        if (alarmData.almClass !== undefined && alarmData.almClass.indexOf(alarm.almClass) < 0) {
+            return false;
+        }
+        if (alarmData.pointTypes !== undefined && alarmData.pointTypes.indexOf(alarm.PointType) < 0) {
+            return false;
+        }
+
+        if (!checkUserAccess(alarmData.user, alarm)) {
+            return false;
+        }
+        return true;
+    }
 
     oplog.on('insert', function(doc) {
 
         var startDate, endDate;
-        if (doc.ns === dbName + '.Alarms' || doc.ns === dbName + '.ActiveAlarms') {
-            var userHasAccess = false;
-
-            // recent and unack
-            // compare saved filter against new point
-            for (var k = 0; k < openAlarms.length; k++) {
-
-                if (openAlarms[k].alarmView === "Recent" || openAlarms[k].alarmView === "Unacknowledged" || openAlarms[k].alarmView === "Active") {
-
-                    if (compareOplogNames(openAlarms[k].data.name1, doc.o.Name1)) {
-                        continue;
-                    }
-                    if (compareOplogNames(openAlarms[k].data.name2, doc.o.Name2)) {
-                        continue;
-                    }
-                    if (compareOplogNames(openAlarms[k].data.name3, doc.o.Name3)) {
-                        continue;
-                    }
-                    if (compareOplogNames(openAlarms[k].data.name4, doc.o.Name4)) {
-                        continue;
-                    }
-
-                    if (openAlarms[k].data.msgCat !== undefined && openAlarms[k].data.msgCat.indexOf(doc.o.msgCat) < 0) {
-                        continue;
-                    }
-                    if (openAlarms[k].data.almClass !== undefined && openAlarms[k].data.almClass.indexOf(doc.o.almClass) < 0) {
-                        continue;
-                    }
-                    if (openAlarms[k].data.pointTypes !== undefined && openAlarms[k].data.pointTypes.indexOf(doc.o.PointType) < 0) {
-                        continue;
-                    }
-
-                    if (!checkUserAccess(openAlarms[k].data.user, doc.o)) {
-                        continue;
-                    }
-
-                    // unack
-                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === dbName + '.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
-                        io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
-                            newAlarm: doc.o,
-                            reqID: openAlarms[k].data.reqID
-                        });
-                    }
-
-                    //recent
-                    startDate = (typeof parseInt(openAlarms[k].data.startDate, 10) === "number") ? openAlarms[k].data.startDate : 0;
-                    endDate = (parseInt(openAlarms[k].data.endDate, 10) === 0) ? Math.ceil(new Date().getTime() / 1000) + 10000 : openAlarms[k].data.endDate;
-                    if (openAlarms[k].alarmView === "Recent" && doc.ns === dbName + '.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
-                        io.sockets.connected[openAlarms[k].sockId].emit('newRecentAlarm', {
-                            newAlarm: doc.o,
-                            reqID: openAlarms[k].data.reqID
-                        });
-                    }
-
-                    // active
-                    if (openAlarms[k].alarmView === "Active" && doc.ns === dbName + '.ActiveAlarms') {
-
-                        io.sockets.connected[openAlarms[k].sockId].emit('addingActiveAlarm', {
-                            newAlarm: doc.o,
-                            reqID: openAlarms[k].data.reqID
-                        });
-                    }
+        // join room (recent)
+        // add key to room of upis with each request obj
+        // match room with logic below
+        // for each socketID in room, get obj from room.views[id]
+        if (doc.ns === dbName + '.Alarms') {
+            var recentViews = (rooms.hasOwnProperty('recentAlarms')) ? rooms.recentAlarms.views : {};
+            for (var prop in recentViews) {
+                if (!checkAlarm(recentViews[prop], doc.o)) {
+                    continue;
                 }
+                startDate = (typeof parseInt(recentViews[prop].startDate, 10) === "number") ? recentViews[prop].startDate : 0;
+                endDate = (parseInt(recentViews[prop].endDate, 10) === 0) ? Math.ceil(new Date().getTime() / 1000) + 10000 : recentViews[prop].endDate;
+                if (doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
+                    io.to(prop).emit('newRecentAlarm', {
+                        newAlarm: doc.o,
+                        reqID: recentViews[prop].reqID
+                    });
+                }
+
             }
 
-            if (doc.ns === dbName + '.Alarms') {
-                common.acknowledgePointAlarms(doc.o);
-                notifications.processIncomingAlarm(doc.o);
+            var unackdViews = (rooms.hasOwnProperty('unacknowledged')) ? rooms.unacknowledged.views : {};
+            for (var prop in unackdViews) {
+                if (!checkAlarm(unackdViews[prop], doc.o)) {
+                    continue;
+                }
+                if (doc.o.ackStatus === 1 && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
+                    io.to(prop).emit('newUnackAlarm', {
+                        newAlarm: doc.o,
+                        reqID: unackdViews[prop].reqID
+                    });
+                }
+
             }
 
+            common.acknowledgePointAlarms(doc.o);
+            notifications.processIncomingAlarm(doc.o);
+        } else if (doc.ns === dbName + '.ActiveAlarms') {
+
+            var activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
+            for (var prop in activeViews) {
+                if (!checkAlarm(activeViews[prop], doc.o)) {
+                    continue;
+                }
+                io.to(prop).emit('addingActiveAlarm', {
+                    newAlarm: doc.o,
+                    reqID: activeViews[prop].reqID
+                });
+            }
         } else if (doc.ns === dbName + '.historydata') {
             // module.exports.updateDashboard(doc.o);
         } else if (doc.ns === dbName + '.Schedules') {
-            scheduler.buildCron(doc.o, function(err, result) {
-
-            });
+            scheduler.buildCron(doc.o, function(err, result) {});
         }
-        /* else if (doc.ns === dbName+'.ActiveAlarms') {
-                    var alarm = doc.o;
-                    for (var m = 0; m < openAlarms.length; m++) {
-                        if (openAlarms[m].alarmView === "Active" && ((openAlarms[m].pointTypes !== undefined) ? openAlarms[m].pointTypes.indexOf(alarm.PointType) > -1 : true) && checkUserAccess(openAlarms[m].data.user, alarm.Security)) {
-                            io.sockets.socket(openAlarms[m].sockId).emit('addingActiveAlarm', {
-                                newAlarm: doc.o,
-                                reqID: openAlarms[m].data.reqID
-                            });
-                        }
-                    }
-                }*/
     });
 
     oplog.on('update', function(doc) {
@@ -164,7 +161,10 @@ module.exports = function(_common) {
 
                     function(point, wfcb) {
                         // logger.info(point._id + " " + doc.o2._id);
-                        if (doc.o.$set !== undefined && (doc.o.$set.Value !== undefined || doc.o.$set["Value.Value"] !== undefined || doc.o.$set["Value.ValueOptions"] !== undefined || doc.o.$set["Value.eValue"] !== undefined)) {
+                        if (doc.o.$set !== undefined && (doc.o.$set.Value !== undefined ||
+                                doc.o.$set["Value.Value"] !== undefined ||
+                                doc.o.$set["Value.ValueOptions"] !== undefined ||
+                                doc.o.$set["Value.eValue"] !== undefined)) {
                             var tempVal = _.cloneDeep(point.Value);
 
                             if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
@@ -194,8 +194,12 @@ module.exports = function(_common) {
                         }
                     },
                     function(point, wfcb) {
-                        if (doc.o.$set !== undefined && (doc.o.$set.Reliability !== undefined || doc.o.$set["Reliability.eValue"] !== undefined || doc.o.$set["Reliability.Value"] !== undefined || doc.o.$set._relDevice !== undefined || doc.o.$set._relRMU !== undefined || doc.o.$set._relPoint !== undefined)) {
-
+                        if (doc.o.$set !== undefined && (doc.o.$set.Reliability !== undefined ||
+                                doc.o.$set["Reliability.eValue"] !== undefined ||
+                                doc.o.$set["Reliability.Value"] !== undefined ||
+                                doc.o.$set._relDevice !== undefined ||
+                                doc.o.$set._relRMU !== undefined ||
+                                doc.o.$set._relPoint !== undefined)) {
                             updateReliability(point, function(err, point) {
                                 wfcb(err, point);
                             });
@@ -205,49 +209,37 @@ module.exports = function(_common) {
                     },
                     function(point, wfcb) {
 
-                        for (var i = 0; i < openDisplays.length; i++) {
-                            if (openDisplays[i].display["Screen Objects"]) {
-                                for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
-                                    if ((openDisplays[i].display["Screen Objects"][j].isGplSocket === true || openDisplays[i].display["Screen Objects"][j]["Screen Object"] === 0 || openDisplays[i].display["Screen Objects"][j]["Screen Object"] === "0") && updateArray.indexOf(openDisplays[i].display["Screen Objects"][j].upi) === -1) {
-                                        updateArray.push(openDisplays[i].display["Screen Objects"][j].upi);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (updateArray.indexOf(doc.o2._id) !== -1 && checkDynamicProperties(doc.o.$set)) {
+                        if (utils.checkDynamicProperties(doc.o.$set)) {
                             checkForPointTail(doc.o2._id, point, function() {
-                                /*if (updateValueFlag || updateReliabilityFlag) {
-                                    updateFromTail(doc.o2._id, newValue, newReliability);
-                                }*/
                                 wfcb(null, point);
                             });
                         } else {
-                            /*if (updateValueFlag || updateReliabilityFlag) {
-                                updateFromTail(doc.o2._id, newValue, newReliability);
-                            }*/
                             wfcb(null, point);
                         }
                     }
                 ],
                 function(err, result) {
-                    if (updateValueFlag || updateReliabilityFlag /*|| updateCurAlarmFlag*/ ) {
+                    if (updateValueFlag ||
+                        updateReliabilityFlag
+                        /*||
+                        updateCurAlarmFlag*/
+                    ) {
                         updateFromTail(doc.o2._id, newValue, newReliability /*, newCurAlarm*/ );
                     }
                     return;
                 });
         } else if (doc.ns === dbName + ".Alarms") {
             if (doc.o.$set !== undefined && doc.o.$set.ackStatus === 2) {
-                for (var k = 0; k < openAlarms.length; k++) {
-                    if (openAlarms[k].alarmView === "Unacknowledged") {
-                        io.sockets.connected[openAlarms[k].sockId].emit('removingUnackAlarm', {
-                            _id: doc.o2._id,
-                            ackStatus: doc.o.$set.ackStatus,
-                            ackUser: doc.o.$set.ackUser,
-                            ackTime: doc.o.$set.ackTime,
-                            reqID: openAlarms[k].data.reqID
-                        });
-                    }
+
+                var unackdViews = (rooms.hasOwnProperty('unacknowledged')) ? rooms.unacknowledged.views : {};
+                for (var prop in unackdViews) {
+                    io.to(prop).emit('removingUnackAlarm', {
+                        _id: doc.o2._id,
+                        ackStatus: doc.o.$set.ackStatus,
+                        ackUser: doc.o.$set.ackUser,
+                        ackTime: doc.o.$set.ackTime,
+                        reqID: unackdViews[prop].reqID
+                    });
                 }
             }
         } else if (doc.ns === dbName + ".SystemInfo") {
@@ -301,7 +293,8 @@ module.exports = function(_common) {
                     newReliability = point.Reliability;
                 }
             }
-            if (doc.o.$set._relDevice !== undefined || doc.o.$set._relRMU !== undefined) {
+            if (doc.o.$set._relDevice !== undefined ||
+                doc.o.$set._relRMU !== undefined) {
                 doCurAlarm(point, function(err) {
                     callback(err, point);
                 });
@@ -311,7 +304,9 @@ module.exports = function(_common) {
         }
 
         function doCurAlarm(point, callback) {
-            if ((!ObjectID("000000000000000000000000").equals(point._actvAlmId)) && (point["Point Type"].Value === "Device" || (point["Point Type"].Value === "Remote Unit" && point._relDevice === 0) || (point._relDevice === 0 && point._relRMU === 0))) {
+            if ((!ObjectID("000000000000000000000000").equals(point._actvAlmId)) && (point["Point Type"].Value === "Device" ||
+                    (point["Point Type"].Value === "Remote Unit" && point._relDevice === 0) ||
+                    (point._relDevice === 0 && point._relRMU === 0))) {
                 addActiveAlarm(ObjectID(point._actvAlmId), callback);
             } else {
                 removeActiveAlarm(point._id, callback);
@@ -325,13 +320,13 @@ module.exports = function(_common) {
 
     oplog.on('delete', function(doc) {
         if (doc.ns === dbName + '.ActiveAlarms') {
-            for (var n = 0; n < openAlarms.length; n++) {
-                if (openAlarms[n].alarmView === "Active") {
-                    io.sockets.connected[openAlarms[n].sockId].emit('removingActiveAlarm', {
-                        _id: doc.o._id,
-                        reqID: openAlarms[n].data.reqID
-                    });
-                }
+            var activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
+            for (var prop in activeViews) {
+
+                io.to(prop).emit('removingActiveAlarm', {
+                    _id: doc.o._id,
+                    reqID: activeViews[prop].reqID
+                });
             }
         } else if (doc.ns === dbName + '.Schedules') {
             console.log('deleting schedule', doc);
@@ -340,7 +335,7 @@ module.exports = function(_common) {
     });
 };
 
-module.exports.addDashboardDynamics = function(data) {
+model.addDashboardDynamics = function(data) {
     for (var i = 0; i < openDashboards.length; i++) {
         if (!!openDashboards[i].socketid && openDashboards[i].touid === data.touid && openDashboards[i].socketid === data.socketid) {
             return;
@@ -349,7 +344,7 @@ module.exports.addDashboardDynamics = function(data) {
     openDashboards.push(data);
 };
 
-module.exports.updateDashboard = function(doc, callback) {
+model.updateDashboard = function(doc, callback) {
     var history = require('../controllers/history.js');
     var startTime = new Date();
 
@@ -361,7 +356,8 @@ module.exports.updateDashboard = function(doc, callback) {
             start: parseInt(dashboard.range.start, 10),
             end: parseInt(dashboard.range.end, 10)
         };
-        if (dashboard.upis.indexOf(doc.upi) > -1 && ((doc.timestamp >= dashboard.range.start && doc.timestamp <= dashboard.range.end) || (dashboard.scale.match(/latest/)))) {
+        if (dashboard.upis.indexOf(doc.upi) > -1 && ((doc.timestamp >= dashboard.range.start && doc.timestamp <= dashboard.range.end) ||
+                (dashboard.scale.match(/latest/)))) {
             if (dashboard.fx === 'missingData') {
                 /*history.getMissing(dashboard, function(err, results) {
                     dashboard.result = results;
@@ -403,7 +399,10 @@ function addActiveAlarm(alarmId, callback) {
                     collection: 'ActiveAlarms',
                     insertObj: alarm
                 }, function(err2, result) {
-                    callback(err1 /*|| err2*/ );
+                    callback(err1
+                        /*||
+                        err2*/
+                    );
                 });
             }
         });
@@ -446,12 +445,6 @@ function updateFromTail(_id, value, reliability) {
         });
 }
 
-function checkDynamicProperties(obj) {
-    if (obj.Value !== undefined || obj["Value.Value"] !== undefined || obj["Value.ValueOptions"] !== undefined || obj["Reliability.Value"] !== undefined || (obj.Reliability !== undefined && obj.Reliability.Value !== undefined) || obj['Alarm State.Value'] !== undefined || (obj['Alarm State'] !== undefined && obj['Alarm State'].Value !== undefined) || obj['Status Flags.Value'] !== undefined || (obj['Status Flags'] !== undefined && obj['Status Flags'].Value !== undefined) || obj['Alarms Off.Value'] !== undefined || (obj['Alarms Off'] !== undefined && obj['Alarms Off'].Value !== undefined) || obj['COV Enable.Value'] !== undefined || (obj['COV Enable'] !== undefined && obj['COV Enable'].Value !== undefined) || obj['Control Pending.Value'] !== undefined || (obj['Control Pending'] !== undefined && obj['Control Pending'].Value !== undefined) || obj['Quality Code Enable.Value'] !== undefined || (obj['Quality Code Enable'] !== undefined && obj['Quality Code Enable'].Value !== undefined)) {
-        return true;
-    }
-    return false;
-}
 
 function compareOplogNames(queryNameSegment, alarmName) {
     /*if (queryNameSegment !== undefined)
@@ -489,27 +482,12 @@ function updateValsTail(point, finalCB) {
             }
         }
 
-        for (var i = 0; i < openDisplays.length; i++) {
-            if (openDisplays[i].display["Screen Objects"]) {
-                for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
-                    if (parseInt(openDisplays[i].display["Screen Objects"][j].upi, 10) === point._id && (openDisplays[i].display["Screen Objects"][j].Value !== point.Value.Value || isRelDiff(openDisplays[i].display["Screen Objects"][j]["Quality Label"], point))) {
-                        openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
-                        openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
-                        openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
-                        common.sendUpdate({
-                            sock: openDisplays[i].sockId,
-                            upi: point._id,
-                            dyn: {
-                                Value: point.Value.Value,
-                                eValue: point.Value.eValue,
-                                "Quality Label": point["Quality Label"]
-                            }
-                        });
-                        break;
-                    }
-                }
-            }
-        }
+        common.sendUpdate({
+            upi: point._id,
+            Value: point.Value.Value,
+            eValue: point.Value.eValue,
+            "Quality Label": point["Quality Label"]
+        });
 
     }
 

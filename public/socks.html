@@ -1,12 +1,12 @@
 <script src="/js/lib/socket.io.js"></script>
 <script>
   var socket = io.connect('http://localhost/');
-  socket.emit('dynamics', {'Point Refs':[]});
-  socket.emit('getRecentAlarms', {});
-  socket.emit('getUnacknowledged', {});
-  socket.emit('getActiveAlarms', {});
-  socket.on('test', function (data) {
+  socket.on('connect', function(){
+
+    socket.emit('dynamics', {'Point Refs':[]});
+  });
+
+  socket.on('recieveUpdate', function (data) {
     console.log(data);
   });
-  var socket2 = io.connect('http://localhost/dynamics');
 </script>

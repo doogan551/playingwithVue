@@ -26,6 +26,8 @@ var common = {
 };
 
 var io = common.sockets.get().io;
+var rooms = io.sockets.adapter.rooms;
+common.rooms = rooms;
 
 var socket = function() {
   Utility.getOne({
@@ -2239,11 +2241,9 @@ function autoAcknowledgeAlarms(callback) {
 }
 
 function sendUpdate(dynamic) {
-  io.sockets.connected[dynamic.sock].emit('recieveUpdate', {
-    sock: dynamic.sock,
-    upi: dynamic.upi,
-    dynamic: dynamic.dyn
-  });
+  if (rooms.hasOwnProperty(dynamic.upi)) {
+    io.to(dynamic.upi).emit('recieveUpdate', dynamic);
+  }
 }
 
 function acknowledgePointAlarms(alarm) {

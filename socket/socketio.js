@@ -30,14 +30,14 @@ var actLogsEnums = Config.Enums["Activity Logs"];
 var controlPriorities = [];
 var eventEmitter = new events.EventEmitter();
 
-var openDisplays = [];
 var common = {};
 var io = {};
+var rooms = {};
 
 module.exports = function socketio(_common) {
   common = _common;
   io = _common.sockets.get().io;
-  openDisplays = _common.openDisplays;
+  rooms = _common.rooms;
   controlPriorities = _common.controlPriorities;
 
   io.on('connection', function(sock) {
@@ -65,11 +65,16 @@ module.exports = function socketio(_common) {
     });
 
     sock.on('dynamics', function(data) {
-      logger.debug('dynamics', data);
-      socket.join('dynamics');
-      io.to('dynamics').emit('test', 'dynamic update');
-      io.to(socket.id).emit('test', socket.id);
-      getVals();
+      var upis = [];
+      console.log(data.data);
+      data['Point Refs'].forEach(function(ref) {
+        if (ref.Value !== 0) {
+          socket.join(ref.Value);
+          upis.push(ref.Value);
+        }
+      });
+
+      getVals(upis);
     });
 
     sock.on('disconnect', function() {
@@ -85,7 +90,10 @@ module.exports = function socketio(_common) {
       data.user = user;
 
       socket.join('recentAlarms');
-      io.to('recentAlarms').emit('test', 'recentAlarms update');
+      if(!rooms.recentAlarms.hasOwnProperty('views')){
+        rooms.recentAlarms.views = {};
+      }
+      rooms.recentAlarms.views[socket.id] = data;
 
       common.getRecentAlarms(data, function(err, alarms, count) {
         sock.emit('recentAlarms', {
@@ -104,7 +112,10 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('unacknowledged');
-      io.to('unacknowledged').emit('test', 'unacknowledged update');
+      if(!rooms.unacknowledged.hasOwnProperty('views')){
+        rooms.unacknowledged.views = {};
+      }
+      rooms.unacknowledged.views[socket.id] = data;
 
       common.getUnacknowledged(data, function(err, alarms, count) {
         sock.emit('unacknowledged', {
@@ -123,7 +134,10 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('activeAlarms');
-      io.to('activeAlarms').emit('test', 'activeAlarms update');
+      if(!rooms.activeAlarms.hasOwnProperty('views')){
+        rooms.activeAlarms.views = {};
+      }
+      rooms.activeAlarms.views[socket.id] = data;
 
       common.getActiveAlarmsNew(data, function(err, alarms, count) {
         sock.emit('activeAlarms', {
@@ -679,29 +693,9 @@ function doUpdateSequence(data, cb) {
   // });
 }
 
-function sendUpdate(dynamic) {
-  // io.connected[dynamic.sock].emit('recieveUpdate', {
-  //   sock: dynamic.sock,
-  //   upi: dynamic.upi,
-  //   dynamic: dynamic.dyn
-  // });
-}
+function getVals(upis) {
 
-function getVals() {
-
-  var updateArray = [];
-
-  for (var i = 0; i < openDisplays.length; i++) {
-    if (openDisplays[i].display["Screen Objects"]) {
-      for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
-        if ((parseInt(openDisplays[i].display["Screen Objects"][j].upi, 10) !== 0 && openDisplays[i].display["Screen Objects"][j].upi !== "0") && updateArray.indexOf(openDisplays[i].display["Screen Objects"][j].upi) === -1) {
-          updateArray.push(openDisplays[i].display["Screen Objects"][j].upi);
-        }
-      }
-    }
-  }
-
-  updateArray.forEach(function(upi) {
+  upis.forEach(function(upi) {
 
     getInitialVals(upi, function(point) {
       if (point) {
@@ -715,32 +709,24 @@ function getVals() {
               point.Value.Value = prop;
           }
         }
-        for (var i = 0; i < openDisplays.length; i++) {
-          for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
 
-            if (openDisplays[i].display["Screen Objects"][j].upi === point._id) {
-              var dyn = {};
-              if (point.Value) {
 
-                dyn.Value = point.Value.Value;
-                dyn.eValue = point.Value.eValue;
-                openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
-                openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
-                openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
-              }
 
-              dyn["Quality Label"] = point["Quality Label"];
-              dyn.Name = point.Name;
-              sendUpdate({
-                sock: openDisplays[i].sockId,
-                upi: point._id,
-                dyn: dyn
-              });
-              break;
-            }
-          }
+        var dyn = {
+          upi: point._id
+        };
+        if (point.Value) {
+
+          dyn.Value = point.Value.Value;
+          dyn.eValue = point.Value.eValue;
+          // openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
+          // openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
+          // openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
         }
 
+        dyn["Quality Label"] = point["Quality Label"];
+        dyn.Name = point.Name;
+        common.sendUpdate(dyn);
       }
     });
 
