@@ -788,7 +788,7 @@
         }, 
         "Modbus Unit Id" : {
             "ValueType" : 4, 
-            "Value" : 4, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -941,7 +941,7 @@
         "_relRMU" : 0, 
         "_relPoint" : 0, 
         "_devModel" : 18, 
-        "_rmuModel" : 16, 
+        "_rmuModel" : 5, 
         "_parentUpi" : 0, 
         "Point Type" : {
             "ValueType" : 5, 
@@ -1022,7 +1022,7 @@
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 501, 
+            "Value" : 47808, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1047,7 +1047,7 @@
         }, 
         "Modbus Unit Id" : {
             "ValueType" : 4, 
-            "Value" : 4, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
