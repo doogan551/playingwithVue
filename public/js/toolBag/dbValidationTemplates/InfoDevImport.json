@@ -396,7 +396,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "V2.01", 
+            "Value" : "V2.02", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -441,7 +441,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -591,8 +591,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -700,7 +700,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -850,8 +850,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -959,7 +959,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1109,8 +1109,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1218,7 +1218,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1368,8 +1368,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1477,7 +1477,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1627,8 +1627,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
