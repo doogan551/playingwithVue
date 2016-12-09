@@ -1219,7 +1219,7 @@
         "Firmware Version" : {
             "ValueType" : 2, 
             "Value" : "", 
-            "isDisplayable" : false, 
+            "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
         "COV Period" : {
@@ -1231,7 +1231,7 @@
         "Configure Device" : {
             "ValueType" : 7, 
             "Value" : false, 
-            "isDisplayable" : false, 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Device Port" : {
@@ -1239,7 +1239,6 @@
             "Value" : "Port 4", 
             "eValue" : 4, 
             "ValueOptions" : {
-                "Ethernet" : 0, 
                 "Port 1" : 1,
                 "Port 2" : 2, 
                 "Port 3" : 3,
@@ -1293,7 +1292,7 @@
         }, 
         "Poll Register" : {
             "ValueType" : 4, 
-            "Value" : 4444, 
+            "Value" : 12005, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
