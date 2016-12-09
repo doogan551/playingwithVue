@@ -522,8 +522,8 @@
             "ValueType" : 5, 
             "Value" : "Eastern Time Zone", 
             "eValue" : 5, 
-            "isDisplayable" : false, 
-            "isReadOnly" : false
+            "isDisplayable" : true, 
+            "isReadOnly" : true
         }, 
         "Trend Interval" : {
             "ValueType" : 13, 
@@ -549,8 +549,7 @@
             "eValue" : 0, 
             "ValueOptions" : {
                 "Ethernet" : 0, 
-                "Port 1" : 1, 
-                "Port 2" : 2
+                "Port 1" : 1
             }, 
             "isDisplayable" : true, 
             "isReadOnly" : false
