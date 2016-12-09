@@ -1,0 +1,3908 @@
+{
+    "config": {
+        "allowedExtraDbKeys": {
+            "_id": true,
+            "Security": true,
+            "_pStatus": true,
+            "_pAccess": true,
+            "_forceAllCOV": true,
+            "_updPoint": true,
+            "_updTOD": true,
+            "_pollTime": true,
+            "_actvAlmId": true,
+            "Alarm Messages": true,
+            "Last Report Time": true,
+            "taglist": true,
+            "Notify Policies": true
+        }
+    },
+    "points": [{ 
+        "Name" : "MS5 xTalk_Device 1", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "", 
+        "name4" : "", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "", 
+        "_name4" : "", 
+        "_Name" : "ms5 xtalk_device 1", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : true, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 0, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Device", 
+            "eValue" : 8, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "Normal", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Failed", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Critical", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 10, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 300, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 6, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Startup Delay" : {
+            "ValueType" : 13, 
+            "Value" : 27, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Retries" : {
+            "ValueType" : 4, 
+            "Value" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Timeout" : {
+            "ValueType" : 4, 
+            "Value" : 6, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Time Zone" : {
+            "ValueType" : 5, 
+            "Value" : "Eastern Time Zone", 
+            "eValue" : 5, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Trend Interval" : {
+            "ValueType" : 13, 
+            "Value" : 61, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "MS5 xTalk 1", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Uplink Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1, 
+                "Port 2" : 2, 
+                "Port 3" : 3, 
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "192.168.1.164"
+        }, 
+        "Network Segment" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 4, 
+            "Value" : 2
+        }, 
+        "Ethernet Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Ethernet Network" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet Address" : {
+            "ValueType" : 2, 
+            "Value" : "192.168.1.164", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47823, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Port 1 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Network" : {
+            "ValueType" : 4, 
+            "Value" : 10, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "N2", 
+            "eValue" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "Modbus RTU", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "MS/RTU", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Network" : {
+            "ValueType" : 4, 
+            "Value" : 5, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Address" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Network" : {
+            "ValueType" : 4, 
+            "Value" : 222, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47822, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Downlink Broadcast Delay" : {
+            "ValueType" : 4, 
+            "Value" : 53, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ], 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Failed" : 0, 
+                "Normal" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 255, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "MicroScan 5 xTalk", 
+            "eValue" : 18, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Serial Number" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "Unknown"
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "V2.01", 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Firmware 2 Version" : {
+            "isDisplayable" : false, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "N/A"
+        }
+    }, { 
+        "Name" : "MS5 xTalk_Device 1_RMU 1_Modbus IP", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 1", 
+        "name4" : "Modbus IP", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 1", 
+        "_name4" : "modbus ip", 
+        "_Name" : "ms5 xtalk_device 1_rmu 1_modbus ip", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 16, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "Programmable Modbus", 
+            "eValue" : 16, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "Unknown", 
+            "eValue" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "192.168.1.128", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 501, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 11, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 3600, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "Modbus IP", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 81, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 xTalk_Device 1", 
+                "PointInst" : 81, 
+                "DevInst" : 81, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 xTalk_Device 1_RMU 1_BACnet", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 1", 
+        "name4" : "BACnet", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 1", 
+        "_name4" : "bacnet", 
+        "_Name" : "ms5 xtalk_device 1_rmu 1_bacnet", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 3", 
+            "eValue" : 3, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 45789, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "Unknown", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 501, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 11, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 3600, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet auto discover", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 81, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 xTalk_Device 1", 
+                "PointInst" : 81, 
+                "DevInst" : 81, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 xTalk_Device 1_RMU 2_BACnet", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 2", 
+        "name4" : "BACnet", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 2", 
+        "_name4" : "bacnet", 
+        "_Name" : "ms5 xtalk_device 1_rmu 2_bacnet", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 3", 
+            "eValue" : 3, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 45789, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "192.168.1.28", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47823, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 11, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 3600, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet IP Uplinkr", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 81, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 xTalk_Device 1", 
+                "PointInst" : 81, 
+                "DevInst" : 81, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 xTalk_Device 1_RMU 3_BACnet", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 3", 
+        "name4" : "BACnet", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 3", 
+        "_name4" : "bacnet", 
+        "_Name" : "ms5 xtalk_device 1_rmu 3_bacnet", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 45790, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 222, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "192.168.2.38", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47822, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 11, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 3600, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet IP Downlink", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 81, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 xTalk_Device 1", 
+                "PointInst" : 81, 
+                "DevInst" : 81, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 xTalk_Device 1_RMU 4_BACnet", 
+        "name1" : "MS5 xTalk", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 4", 
+        "name4" : "BACnet", 
+        "_name1" : "ms5 xtalk", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 4", 
+        "_name4" : "bacnet", 
+        "_Name" : "ms5 xtalk_device 1_rmu 4_bacnet", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 4", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 457910, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 10, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "25", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47822, 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "Normal", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Failed", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Failed" : 0, 
+                "Normal" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 11, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 3600, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet MS/TP", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 81, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 xTalk_Device 1", 
+                "PointInst" : 81, 
+                "DevInst" : 81, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "", 
+        "name4" : "", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "", 
+        "_name4" : "", 
+        "_Name" : "ms5 unv_device 1", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : true, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 0, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Device", 
+            "eValue" : 8, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Urgent", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 59, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 60, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Startup Delay" : {
+            "ValueType" : 13, 
+            "Value" : 57, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Retries" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Timeout" : {
+            "ValueType" : 4, 
+            "Value" : 8, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Time Zone" : {
+            "ValueType" : 5, 
+            "Value" : "Eastern Time Zone", 
+            "eValue" : 5, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Trend Interval" : {
+            "ValueType" : 13, 
+            "Value" : 120, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Uplink Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1, 
+                "Port 2" : 2, 
+                "Port 3" : 3, 
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "192.168.1.100"
+        }, 
+        "Network Segment" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 4, 
+            "Value" : 2
+        }, 
+        "Ethernet Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Ethernet Network" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet Address" : {
+            "ValueType" : 2, 
+            "Value" : "192.168.1.100", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47823, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Port 1 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Address" : {
+            "ValueType" : 4, 
+            "Value" : 13, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 16, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47811, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Broadcast Delay" : {
+            "ValueType" : 4, 
+            "Value" : 44, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ], 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "MicroScan 5 UNV", 
+            "eValue" : 19, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Serial Number" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "Unknown"
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Firmware 2 Version" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "N/A"
+        }
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 1_BACnet IP GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 1", 
+        "name4" : "BACnet IP GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 1", 
+        "_name4" : "bacnet ip gw", 
+        "_Name" : "ms5 unv_device 1_rmu 1_bacnet ip gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15674, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 47, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "9", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.14", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "On" : 1, 
+                "Off" : 0 
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway IP Router / MSTP Address", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 2_BACnet IP GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 2", 
+        "name4" : "BACnet IP GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 2", 
+        "_name4" : "bacnet ip gw", 
+        "_Name" : "ms5 unv_device 1_rmu 2_bacnet ip gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15674, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 47, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.15", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47819, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.14", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0,
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway IP Router / IP Address", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 3_BACnet IP GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 3", 
+        "name4" : "BACnet IP GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 3", 
+        "_name4" : "bacnet ip gw", 
+        "_Name" : "ms5 unv_device 1_rmu 3_bacnet ip gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Ethernet", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15674, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.16", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47818, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.15", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0,
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway IP Address / No router", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 1_BACnet GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 1", 
+        "name4" : "BACnet GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 1", 
+        "_name4" : "bacnet gw", 
+        "_Name" : "ms5 unv_device 1_rmu 1_bacnet gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15675, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "Unknown", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 47, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "10.250.0.14", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0 ,
+                "On" : 1 
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway Auto discover", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 0, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "", 
+                "PointInst" : 0, 
+                "DevInst" : 0, 
+                "PointType" : 0
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 1_BACnet MS GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 1", 
+        "name4" : "BACnet MS GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 1", 
+        "_name4" : "bacnet ms gw", 
+        "_Name" : "ms5 unv_device 1_rmu 1_bacnet ms gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15677, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 52, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "7", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "12", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "On" : 1, 
+                "Off" : 0 
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway MS/TP Router / MSTP Address", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 2_BACnet MS GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 2", 
+        "name4" : "BACnet MS GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 2", 
+        "_name4" : "bacnet ms gw", 
+        "_Name" : "ms5 unv_device 1_rmu 2_bacnet ms gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15678, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "IP", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 55, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "7.8.9.10", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47811, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "14", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "On" : 1, 
+                "Off" : 0 
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway MS/TP Router / IP Address", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }, { 
+        "Name" : "MS5 UNV_Device 1_RMU 3_BACnet MS GW", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 1", 
+        "name3" : "RMU 3", 
+        "name4" : "BACnet MS GW", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 1", 
+        "_name3" : "rmu 3", 
+        "_name4" : "bacnet ms gw", 
+        "_Name" : "ms5 unv_device 1_rmu 3_bacnet ms gw", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "BACnet", 
+            "eValue" : 7, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1,
+                "Port 2" : 2, 
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 15678, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "11", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "18", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 1200, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Coils", 
+            "eValue" : 1, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "On" : 1, 
+                "Off" : 0 
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 15, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 1020, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "BACnet Gatway MS/TP Address / No Router", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 212, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "MS5 UNV_Device 1", 
+                "PointInst" : 212, 
+                "DevInst" : 212, 
+                "PointType" : 8
+            },
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 193, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4473_CHWS_Overview_Display", 
+                "PointInst" : 193, 
+                "DevInst" : 0, 
+                "PointType" : 151
+            }
+        ]
+    }]
+}
