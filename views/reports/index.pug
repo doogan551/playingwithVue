@@ -533,7 +533,7 @@ html.direports
                         div.tab-content
                             div.gridData#gridData.tab-pane
                                 h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
-                                table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
+                                table.table.striped.bordered.dataTablePlaceHolder
                                     tfoot.tableFooter
                                         tr(data-bind="foreach: listOfColumns()")
                                             td.strong(data-bind="attr: { colindex:  $index() }")

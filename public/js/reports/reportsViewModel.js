@@ -1512,6 +1512,7 @@ var reportsViewModel = function () {
                 if (!!pointRef) {
                     if (pointRef.PropertyName === "Column Point" || pointRef.PropertyName === "Qualifier Point") {
                         if (!pointRefUsed(pointRef)) {
+                            // console.log("- - - - cleanPointRefArray()   removing point ref[" + i + "] = " + pointRef.PointName);
                             point["Point Refs"].splice(i--, 1);
                         }
                     }
@@ -2156,7 +2157,7 @@ var reportsViewModel = function () {
                     filter.evalue = -1;
                     break;
                 case "BitString":
-                    filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + filter.filterName + " Bits"]);
+                    filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS[filter.filterName + " Bits"]);
                     break;
             }
             updateListOfFilters(self.listOfFilters());
@@ -2766,7 +2767,7 @@ var reportsViewModel = function () {
                                 endDate: self.selectedDuration().endDate.unix(),
                                 startTimeOffSet: self.durationStartTimeOffSet(),
                                 endTimeOffSet: self.durationEndTimeOffSet(),
-                                duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                                // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
                                 selectedRange: self.selectedDuration().selectedRange
                             };
                             break;
@@ -4061,8 +4062,8 @@ var reportsViewModel = function () {
 
                     if (!!columnConfig.width) {
                         columnWidth = columnConfig.width;
-                    } else if (columnIndex > 0 && aoColumns.length < 3) {
-                        columnWidth = "auto";
+                    // } else if (columnIndex > 0 && aoColumns.length < 3 && !scheduled) {
+                    //     columnWidth = "30%";
                     } else {
                         columnWidth = "auto";
                     }
@@ -4268,7 +4269,8 @@ var reportsViewModel = function () {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
                             i,
                             colIndex = 0,
-                            $theads;
+                            $theads = $(thead).find("th");
+
                         for (i = 0; i < reportColumns.length; i++) {
                             if (!!reportColumns[i].calculation && reportColumns[i].calculation.length > 0) {
                                 $(thead).find("th").eq(i).addClass("calculate");
@@ -4280,7 +4282,6 @@ var reportsViewModel = function () {
                         switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
-                                $theads = $(thead).find("th");
                                 $theads.each(function (i, el) {
                                     $(el).attr("oncontextmenu", "reportsVM.showPointReviewViaIndex(" + i + "); return false;");
                                     $(el).attr("title", "Right mouse click to run PointInspector");
@@ -6524,7 +6525,7 @@ var reportsViewModel = function () {
                             ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
                             break;
                         default:
-                            console.log(" - - - DEFAULT  viewReport()");
+                            console.log(" - - - DEFAULT  requestReportData()");
                             break;
                     }
                 } else {
