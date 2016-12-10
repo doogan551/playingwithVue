@@ -3202,12 +3202,11 @@ var Config = (function(obj) {
                 } else if (networkValue !== 0) {
                     point['Ethernet IP Port'].Value = findNetwork(networkValue);
                 }
-            } else (networkValue !== 0) {
-                    point[data.property].Value = findNetwork(networkValue);
-                    point[data.property].isReadOnly = true;
-                } else {
-                    point[data.property].isReadOnly = false;
-                }
+            } else if (networkValue !== 0) {
+                point[data.property].Value = findNetwork(networkValue);
+                point[data.property].isReadOnly = true;
+            } else {
+                point[data.property].isReadOnly = false;
             }
             return point;
         },
