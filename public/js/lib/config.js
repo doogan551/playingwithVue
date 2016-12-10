@@ -3202,11 +3202,14 @@ var Config = (function(obj) {
                 } else if (networkValue !== 0) {
                     point['Ethernet IP Port'].Value = findNetwork(networkValue);
                 }
-            } else if (networkValue !== 0) {
-                point[data.property].Value = findNetwork(networkValue);
-                point[data.property].isReadOnly = true;
             } else {
-                point[data.property].isReadOnly = false;
+                var prop = (data.property === 'Ethernet Network') ? 'Ethernet IP Port' : 'Downlink IP Port';
+                if (networkValue !== 0) {
+                    point[prop].Value = findNetwork(networkValue);
+                    point[prop].isReadOnly = true;
+                } else {
+                    point[prop].isReadOnly = false;
+                }
             }
             return point;
         },
