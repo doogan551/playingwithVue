@@ -906,7 +906,7 @@
         }, 
         "Port 1 Maximum Address" : {
             "ValueType" : 4, 
-            "Value" : 7, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1016,7 +1016,7 @@
                 "PropertyEnum" : 137, 
                 "Value" : 0, 
                 "AppIndex" : 0, 
-                "isDisplayable" : false, 
+                "isDisplayable" : true, 
                 "isReadOnly" : false, 
                 "PointName" : "", 
                 "PointInst" : 0, 
@@ -1059,7 +1059,7 @@
         "Model Type" : {
             "ValueType" : 5, 
             "Value" : "Central Device", 
-            "eValue" : 16, 
+            "eValue" : 1, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -3533,6 +3533,396 @@
         "Firmware Version" : {
             "ValueType" : 2, 
             "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Firmware 2 Version" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "N/A"
+        }
+    }, { 
+        "Name" : "MS5 UNV_Device 2", 
+        "name1" : "MS5 UNV", 
+        "name2" : "Device 2", 
+        "name3" : "", 
+        "name4" : "", 
+        "_name1" : "ms5 unv", 
+        "_name2" : "device 2", 
+        "_name3" : "", 
+        "_name4" : "", 
+        "_Name" : "ms5 unv_device 2", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : true, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 0, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Device", 
+            "eValue" : 8, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "On", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Off", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 20, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 9, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Startup Delay" : {
+            "ValueType" : 13, 
+            "Value" : 40, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Retries" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "APDU Timeout" : {
+            "ValueType" : 4, 
+            "Value" : 5, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : true, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Time Zone" : {
+            "ValueType" : 5, 
+            "Value" : "Central Time Zone", 
+            "eValue" : 6, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Trend Interval" : {
+            "ValueType" : 13, 
+            "Value" : 180, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Uplink Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0, 
+                "Port 1" : 1, 
+                "Port 2" : 2, 
+                "Port 3" : 3, 
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "2"
+        }, 
+        "Network Segment" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 4, 
+            "Value" : 5
+        }, 
+        "Ethernet Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet Address" : {
+            "ValueType" : 2, 
+            "Value" : "0.0.0.0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47808, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "MS/TP", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Port 1 Network" : {
+            "ValueType" : 4, 
+            "Value" : 5, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Address" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 1 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 2, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 2 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 3 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Port 4 Maximum Address" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Protocol" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Network" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Downlink IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47808, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Downlink Broadcast Delay" : {
+            "ValueType" : 4, 
+            "Value" : 50, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 0, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "", 
+                "PointInst" : 0, 
+                "DevInst" : 0, 
+                "PointType" : 0
+            }
+        ], 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Off", 
+            "eValue" : 0, 
+            "ValueOptions" : {
+                "Off" : 0, 
+                "On" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 251, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "MicroScan 5 UNV", 
+            "eValue" : 19, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Serial Number" : {
+            "isDisplayable" : true, 
+            "isReadOnly" : true, 
+            "ValueType" : 2, 
+            "Value" : "Unknown"
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "V2.02", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
