@@ -362,8 +362,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "No Fault",
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -749,8 +749,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1246,8 +1246,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1375,7 +1375,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1505,8 +1505,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1525,8 +1525,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1634,7 +1634,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1764,8 +1764,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1784,8 +1784,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1893,7 +1893,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "n/a", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2022,8 +2022,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2042,8 +2042,8 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Off Normal", 
+            "eValue" : 2, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2281,8 +2281,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2540,8 +2540,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2799,8 +2799,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3058,8 +3058,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "No Fault", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3498,8 +3498,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3697,13 +3697,13 @@
             "isDisplayable" : true, 
             "isReadOnly" : true, 
             "ValueType" : 2, 
-            "Value" : "2"
+            "Value" : "1"
         }, 
         "Network Segment" : {
             "isDisplayable" : true, 
             "isReadOnly" : true, 
             "ValueType" : 4, 
-            "Value" : 5
+            "Value" : 10
         }, 
         "Ethernet Protocol" : {
             "ValueType" : 5, 
@@ -3739,7 +3739,7 @@
         }, 
         "Port 1 Network" : {
             "ValueType" : 4, 
-            "Value" : 5, 
+            "Value" : 10, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -3888,8 +3888,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "No Fault",
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3922,7 +3922,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "V2.02", 
+            "Value" : "V2.02L", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4046,8 +4046,8 @@
         }, 
         "Time Zone" : {
             "ValueType" : 5, 
-            "Value" : "Eastern Time Zone", 
-            "eValue" : 5, 
+            "Value" : "Central Time Zone", 
+            "eValue" : 6, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -4093,7 +4093,7 @@
             "isDisplayable" : true, 
             "isReadOnly" : true, 
             "ValueType" : 4, 
-            "Value" : 5
+            "Value" : 10
         }, 
         "Ethernet Protocol" : {
             "ValueType" : 5, 
@@ -4129,7 +4129,7 @@
         }, 
         "Port 1 Network" : {
             "ValueType" : 4, 
-            "Value" : 5, 
+            "Value" : 10, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -4278,8 +4278,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4312,12 +4312,12 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "V2.02", 
+            "Value" : "", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
         "Firmware 2 Version" : {
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : true, 
             "ValueType" : 2, 
             "Value" : "N/A"
@@ -4487,8 +4487,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4746,8 +4746,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5005,8 +5005,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5264,8 +5264,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5523,8 +5523,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5782,8 +5782,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -6041,8 +6041,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan", 
-            "eValue" : 129, 
+            "Value" : "Remote Not Configured",
+            "eValue" : 64, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
