@@ -1270,50 +1270,42 @@ var Config = (function(obj) {
         },
 
         validateNetworkNumber: function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property value
+            var point = data.point,
+                val = data.propertyObject.Value,
                 networkConfig = data.networkConfig,
                 props = ["Port 1 Network", "Port 2 Network", "Port 3 Network", "Port 4 Network", "Downlink Network", "Ethernet Network"],
-                prop, // Work var
-                len = props.length, // Number of networks
-                i; // Work var
+                prop,
+                len = props.length,
+                i;
 
-            for (i = 0; i < len; i++) {
-                prop = props[i];
+            if (val !== 0) {
+                for (i = 0; i < len; i++) {
+                    prop = props[i];
 
-                // Make sure this isn't the property we're editing, and it exists on the point (CYB)
-                if ((prop !== data.property) && point.hasOwnProperty(prop)) {
-                    // If this communications port is in use
-                    if ((point[prop].isReadOnly === false) && (point[prop].isDisplayable === true)) {
-                        // If the user-entered network number is the same as the Port N Network number (FYI 0 means network # is unused)
-                        if ((val === point[prop].Value) && (val !== 0)) {
+                    // Make sure this isn't the property we're editing, and it exists on the point (CYB)
+                    if ((prop !== data.property) && point.hasOwnProperty(prop)) {
+                        // If this communications port is in use and the user-entered network number is the same as the Port N Network number
+                        if ((point[prop].isDisplayable === true) && (val === point[prop].Value)) {
                             data.ok = false;
                             data.result = "Please enter a network number different from the " + prop + " number.";
                             break;
                         }
                     }
                 }
-            }
-
-            if (['Ethernet Network', 'Downlink Network', 'Network Segment'].indexOf(data.property) >= 0) {
-                var validNetwork = false;
-                if (['Downlink Network', 'Network Segment'].indexOf(data.property) >= 0 && val === 0) {
-                    validNetwork = true;
-                } else if (data.point['Uplink Port'].Value !== 'Ethernet' && val === 0) {
-                    validNetwork = true;
-                }
-                for (i = 0; i < networkConfig.length; i++) {
-                    if (parseInt(networkConfig[i]['IP Network Segment'], 10) === val) {
-                        validNetwork = true;
-                        break;
+                if ((data.ok === true) && (['Ethernet Network', 'Downlink Network', 'Network Segment'].indexOf(data.property) >= 0)) {
+                    var validNetwork = false;
+                    for (i = 0; i < networkConfig.length; i++) {
+                        if (parseInt(networkConfig[i]['IP Network Segment'], 10) === val) {
+                            validNetwork = true;
+                            break;
+                        }
+                    }
+                    if (!validNetwork) {
+                        data.ok = false;
+                        data.result = "Please enter a network number listed in System Network Configuration.";
                     }
                 }
-                if (!validNetwork) {
-                    data.ok = false;
-                    data.result = "Please enter a network number listed in System Network Configuration.";
-                }
             }
-
             return data;
         },
 
@@ -2257,7 +2249,9 @@ var Config = (function(obj) {
         },
 
         "Ethernet Network": function(data) {
-            data = this.validateUsingTheseLimits(data, 1, 65534);
+            var min = (data.point['Uplink Port'].Value === 'Ethernet') ? 1 : 0;
+
+            data = this.validateUsingTheseLimits(data, min, 65534);
 
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
@@ -3202,25 +3196,18 @@ var Config = (function(obj) {
                 }
                 return port;
             };
-            switch (data.property) {
-                case 'Ethernet Network':
+            if (data.property === 'Network Segment') {
+                if (point.Gateway.isDisplayable && point.Gateway.Value) {
+                    obj.EditChanges.applyRemoteUnitNetworkType(point);
+                } else if (networkValue !== 0) {
                     point['Ethernet IP Port'].Value = findNetwork(networkValue);
-                    break;
-                case 'Downlink Network':
-                    if (networkValue !== 0) {
-                        point['Downlink IP Port'].Value = findNetwork(networkValue);
-                        point['Downlink IP Port'].isReadOnly = true;
-                    } else {
-                        point['Downlink IP Port'].isReadOnly = false;
-                    }
-                    break;
-                case 'Network Segment':
-                    if (point.Gateway.isDisplayable && point.Gateway.Value) {
-                        obj.EditChanges.applyRemoteUnitNetworkType(point);
-                    } else if (networkValue !== 0) {
-                        point['Ethernet IP Port'].Value = findNetwork(networkValue);
-                    }
-                    break;
+                }
+            } else (networkValue !== 0) {
+                    point[data.property].Value = findNetwork(networkValue);
+                    point[data.property].isReadOnly = true;
+                } else {
+                    point[data.property].isReadOnly = false;
+                }
             }
             return point;
         },

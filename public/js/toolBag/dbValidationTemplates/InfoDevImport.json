@@ -3726,9 +3726,9 @@
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 47808, 
+            "Value" : 0, 
             "isDisplayable" : false, 
-            "isReadOnly" : false
+            "isReadOnly" : true
         }, 
         "Port 1 Protocol" : {
             "ValueType" : 5, 
