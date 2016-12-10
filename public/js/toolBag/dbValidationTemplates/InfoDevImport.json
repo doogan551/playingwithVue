@@ -819,90 +819,10 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
-        "Active Text" : {
-            "ValueType" : 2, 
-            "Value" : "Normal", 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Inactive Text" : {
-            "ValueType" : 2, 
-            "Value" : "Failed", 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Alarm Value" : {
-            "ValueType" : 5, 
-            "Value" : "Failed", 
-            "eValue" : 0, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Alarms Off" : {
-            "ValueType" : 7, 
-            "Value" : false, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Alarm Class" : {
-            "ValueType" : 5, 
-            "Value" : "Critical", 
-            "eValue" : 1, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Alarm Delay Time" : {
-            "ValueType" : 13, 
-            "Value" : 10, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Alarm Repeat Enable" : {
-            "ValueType" : 7, 
-            "Value" : true, 
-            "isDisplayable" : false, 
-            "isReadOnly" : false
-        }, 
-        "Alarm Repeat Time" : {
-            "ValueType" : 17, 
-            "Value" : 300, 
-            "isDisplayable" : false, 
-            "isReadOnly" : false
-        }, 
-        "COV Period" : {
-            "ValueType" : 13, 
-            "Value" : 5, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
         "Startup Delay" : {
             "ValueType" : 13, 
-            "Value" : 25, 
+            "Value" : 0, 
             "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "APDU Retries" : {
-            "ValueType" : 4, 
-            "Value" : 2, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "APDU Timeout" : {
-            "ValueType" : 4, 
-            "Value" : 5, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
-        "Configure Device" : {
-            "ValueType" : 7, 
-            "Value" : false, 
-            "isDisplayable" : false, 
-            "isReadOnly" : false
-        }, 
-        "Stop Scan" : {
-            "ValueType" : 7, 
-            "Value" : true, 
-            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Time Zone" : {
@@ -912,21 +832,9 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
-        "Trend Interval" : {
-            "ValueType" : 13, 
-            "Value" : 60, 
-            "isDisplayable" : false, 
-            "isReadOnly" : false
-        }, 
-        "Remarks" : {
-            "ValueType" : 2, 
-            "Value" : "", 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
         "Description" : {
             "ValueType" : 2, 
-            "Value" : "MS4 xTalk 1", 
+            "Value" : "Central Device Server", 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -993,20 +901,20 @@
         "Port 1 Address" : {
             "ValueType" : 4, 
             "Value" : 0, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Port 1 Maximum Address" : {
             "ValueType" : 4, 
             "Value" : 7, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Port 2 Protocol" : {
             "ValueType" : 5, 
             "Value" : "None", 
             "eValue" : 0, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Port 2 Network" : {
@@ -1106,37 +1014,31 @@
             {
                 "PropertyName" : "Alarm Display Point", 
                 "PropertyEnum" : 137, 
-                "Value" : 193, 
+                "Value" : 0, 
                 "AppIndex" : 0, 
-                "isDisplayable" : true, 
+                "isDisplayable" : false, 
                 "isReadOnly" : false, 
-                "PointName" : "4473_CHWS_Overview_Display", 
-                "PointInst" : 193, 
+                "PointName" : "", 
+                "PointInst" : 0, 
                 "DevInst" : 0, 
-                "PointType" : 151
+                "PointType" : 0
             }
         ], 
         "Value" : {
             "ValueType" : 5, 
-            "Value" : "Failed", 
+            "Value" : "Off", 
             "eValue" : 0, 
             "ValueOptions" : {
-                "Failed" : 0, 
-                "Normal" : 1
+                "Off" : 0, 
+                "On" : 1
             }, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
-        "Quality Code Enable" : {
-            "ValueType" : 18, 
-            "Value" : 251, 
-            "isDisplayable" : true, 
-            "isReadOnly" : false
-        }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Stop Scan",
-            "eValue" : 129, 
+            "Value" : "No Fault",
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1156,7 +1058,7 @@
         }, 
         "Model Type" : {
             "ValueType" : 5, 
-            "Value" : "MicroScan 4 xTalk", 
+            "Value" : "Central Device", 
             "eValue" : 16, 
             "isDisplayable" : true, 
             "isReadOnly" : false
@@ -1169,7 +1071,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
+            "Value" : "0.1.0.0", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 

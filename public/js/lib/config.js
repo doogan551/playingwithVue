@@ -3737,6 +3737,7 @@ var Config = (function(obj) {
                 point["Ethernet Address"].isReadOnly = true;
                 point["Ethernet Network"].isReadOnly = true;
                 point._cfgRequired = false;
+                point._cfgDevice = false;
             } else {
                 setValOpt(upPort, {
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
