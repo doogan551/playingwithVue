@@ -1611,7 +1611,10 @@ var dti = {
                     return;
                 }
                 annunciator.active = true;
-                annunciator.play();
+                
+                if (dti.bindings.alarms.isMuted() === false) {
+                    annunciator.play();
+                }
 
                 annunciator.id = window.setInterval(function () {
                     if (dti.bindings.alarms.unacknowledged.count() > 0) {
