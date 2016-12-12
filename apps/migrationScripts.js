@@ -29,6 +29,7 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 
 var checkVersions = function(version) {
     // console.log(version, prevVersion, curVersion);
+    // console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
     if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }
@@ -958,7 +959,7 @@ var scripts = {
 
     // 0.3.10
     updateDevices: function(callback) {
-        var afterVersion = '0.3.10';
+        var afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateDevices',
@@ -984,6 +985,8 @@ var scripts = {
             doc['Ethernet IP Port'].isDisplayable = false;
             doc['Downlink IP Port'].isReadOnly = false;
             doc['Downlink IP Port'].isDisplayable = false;
+            doc["Ethernet Gateway"] = Config.Templates.getTemplate("Device")["Ethernet Gateway"];
+            doc["Ethernet Subnet"] = Config.Templates.getTemplate("Device")["Ethernet Subnet"];
 
             Utility.update({
                 collection: 'points',
@@ -991,7 +994,9 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, cb);
+            }, function(err, results) {
+                cb(err);
+            });
         }, function(err, count) {
             logger.info('Firmware 2 Version added to ', count, ' devices');
             callback(null, {
@@ -1464,7 +1469,7 @@ var scripts = {
     },
 
     updateSecurity: function(callback) {
-        var afterVersion = '0.4.1';
+        var afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateSecurity',
@@ -1646,7 +1651,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.addMissingProperties, scripts.removeProperties, scripts.applyDevModel];
+    tasks = [scripts.updateDevices];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
