@@ -363,8 +363,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault",
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -750,8 +750,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1247,8 +1247,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1506,8 +1506,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1765,8 +1765,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2023,8 +2023,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2282,8 +2282,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2541,8 +2541,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2800,8 +2800,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3059,8 +3059,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3499,8 +3499,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3889,8 +3889,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault",
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4279,8 +4279,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4488,8 +4488,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4747,8 +4747,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5006,8 +5006,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5265,8 +5265,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5524,8 +5524,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5783,8 +5783,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -6042,8 +6042,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
