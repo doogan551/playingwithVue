@@ -2070,6 +2070,11 @@
                 "valueType": "String",
                 "reportEnable": true
             },
+            "Ethernet Gateway": {
+                "enum": 346,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Ethernet IP Port": {
                 "enum": 345,
                 "valueType": "Unsigned",
@@ -2085,6 +2090,11 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Ethernet Protocols"
+            },
+            "Ethernet Subnet": {
+                "enum": 347,
+                "valueType": "String",
+                "reportEnable": true
             },
             "Execute Now": {
                 "enum": 237,
@@ -4056,6 +4066,12 @@
                     "ValueType": 2,
                     "Value": "0.0.0.0"
                 },
+                "Ethernet Gateway": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": "0.0.0.0"
+                },
                 "Ethernet IP Port": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -4074,6 +4090,12 @@
                     "ValueType": 5,
                     "Value": "IP",
                     "eValue": 1
+                },
+                "Ethernet Subnet": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": "255.255.255.0"
                 },
                 "Firmware Version": {
                     "isDisplayable": true,

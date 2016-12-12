@@ -3624,12 +3624,10 @@ var Config = (function(obj) {
                     if (port === "Ethernet") {
                         point["Ethernet Protocol"].Value = "IP";
                         point["Ethernet Protocol"].eValue = enums["Ethernet Protocols"]["IP"]["enum"];
-                        point["Ethernet Address"].isDisplayable = true;
                         point["Downlink Protocol"].isDisplayable = obj.Utility.checkMicroScan5Device(point);
                     } else {
                         point[ports[i] + " Protocol"].Value = "MS/TP";
                         point[ports[i] + " Protocol"].eValue = enums["Port Protocols"]["MS/TP"]["enum"];
-                        point["Ethernet Address"].isDisplayable = false;
                         point["Downlink Protocol"].isDisplayable = false;
                     }
                 } else {
@@ -3643,9 +3641,21 @@ var Config = (function(obj) {
 
         applyDeviceEthernetProtocol: function(data) {
             var point = data.point,
-                disp = ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) ? true : false;
+                setDisp = obj.Utility.setPropsDisplayable;
 
-            obj.Utility.setPropsDisplayable(point, ["Ethernet IP Port", "Ethernet Network"], disp);
+            if ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) {
+                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network"], true);
+                if (obj.Utility.checkMicroScan5Device(point)) {
+                    var ro = (point["Uplink Port"].Value === "Ethernet") ? true : false;
+                    point["Ethernet Gateway"].isReadOnly = ro;
+                    point["Ethernet Subnet"].isReadOnly = ro;
+                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], true);
+                } else {
+                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], false);
+                }
+            } else {
+                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network", "Ethernet Gateway", "Ethernet Subnet"], false);
+            }
             return point;
         },
 
