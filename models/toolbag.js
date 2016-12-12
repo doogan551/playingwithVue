@@ -553,14 +553,17 @@ module.exports = {
 						problems: obj.problems
 					});
 
-					validationProblems.push(obj);
+					if (obj.problems.length || templateConfig.showNoProblemsFound) {
+						validationProblems.push(obj);
+					}
 					callback(null);
 				});
 			};
 
 		fs.readFile(filename, 'utf8', function (err, content) {
 			var defaultTemplateConfig = {
-					allowedExtraDbKeys: {}
+					allowedExtraDbKeys: {},
+					showNoProblemsFound: true
 				},
 				template,
 				templatePoints;

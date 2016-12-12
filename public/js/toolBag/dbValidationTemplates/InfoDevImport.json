@@ -14,7 +14,8 @@
             "Last Report Time": true,
             "taglist": true,
             "Notify Policies": true
-        }
+        },
+        "showNoProblemsFound": false
     },
     "points": [{ 
         "Name" : "MS5 xTalk_Device 1", 
@@ -362,8 +363,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault",
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -749,8 +750,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1246,8 +1247,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1505,8 +1506,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1764,8 +1765,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2022,8 +2023,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2281,8 +2282,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2540,8 +2541,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -2799,8 +2800,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3058,8 +3059,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3498,8 +3499,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -3745,7 +3746,7 @@
         }, 
         "Port 1 Address" : {
             "ValueType" : 4, 
-            "Value" : 2, 
+            "Value" : 1, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -3888,8 +3889,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "No Fault",
-            "eValue" : 0, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4278,8 +4279,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4487,8 +4488,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -4746,8 +4747,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5005,8 +5006,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5264,8 +5265,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5523,8 +5524,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -5782,8 +5783,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -6041,8 +6042,8 @@
         }, 
         "Reliability" : {
             "ValueType" : 5, 
-            "Value" : "Remote Not Configured",
-            "eValue" : 64, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
