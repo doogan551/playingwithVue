@@ -90,7 +90,7 @@ module.exports = function socketio(_common) {
       data.user = user;
 
       socket.join('recentAlarms');
-      if(!rooms.recentAlarms.hasOwnProperty('views')){
+      if (!rooms.recentAlarms.hasOwnProperty('views')) {
         rooms.recentAlarms.views = {};
       }
       rooms.recentAlarms.views[socket.id] = data;
@@ -112,7 +112,7 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('unacknowledged');
-      if(!rooms.unacknowledged.hasOwnProperty('views')){
+      if (!rooms.unacknowledged.hasOwnProperty('views')) {
         rooms.unacknowledged.views = {};
       }
       rooms.unacknowledged.views[socket.id] = data;
@@ -134,7 +134,7 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('activeAlarms');
-      if(!rooms.activeAlarms.hasOwnProperty('views')){
+      if (!rooms.activeAlarms.hasOwnProperty('views')) {
         rooms.activeAlarms.views = {};
       }
       rooms.activeAlarms.views[socket.id] = data;
@@ -341,6 +341,7 @@ module.exports = function socketio(_common) {
     // Checked
     sock.on('updateSequence', function(data) {
 
+      data.user = user;
       logger.debug('updateSequence');
       doUpdateSequence(data, function(result) {
         socket.emit('sequenceUpdateMessage', result);
@@ -394,7 +395,9 @@ module.exports = function socketio(_common) {
       async.waterfall([
           function(callback) {
             async.mapSeries(data.adds, function(point, callback) {
-              common.addPoint(point, user, null, function(response, updatedPoint) {
+              common.addPoint({
+                point: point
+              }, user, null, function(response, updatedPoint) {
                 callback(response.err, updatedPoint);
               });
             }, function(err, newPoints) {
@@ -442,7 +445,10 @@ module.exports = function socketio(_common) {
     sock.on('addPoint', function(data) {
 
       logger.debug('addPoint');
-      common.addPoint(data.point, user, null, function(response, point) {
+      common.addPoint({
+        point: data.newPoint,
+        oldPoint: data.oldPoint
+      }, user, null, function(response, point) {
         if (response.err) {
           sock.emit('pointUpdated', {
             err: response.err
@@ -873,7 +879,9 @@ function updateSchedules(data, callback) {
           from: "updateSchedules",
           schedule: schedule
         };
-        common.addPoint(newSched, user, options, function(returnData) {
+        common.addPoint({
+          point: newSched
+        }, user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (newSched._pStatus !== 0)

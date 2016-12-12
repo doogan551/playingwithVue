@@ -861,7 +861,6 @@ define([
 
             if (newPointData._pStatus === pointInspector.utility.config.Enums["Point Statuses"].Inactive.enum) {
                 emitString = 'addPoint';
-                emitData   = { point: newPointData };
             } else if(newPointData._pStatus == pointInspector.utility.config.Enums["Point Statuses"].Active.enum){
                 for (var prop in newPointData) {
                     if (newPointData[prop].hasOwnProperty('ValueOptions') && Array.isArray(newPointData[prop].ValueOptions)) {

@@ -2286,7 +2286,8 @@ function acknowledgePointAlarms(alarm) {
   }
 }
 
-function addPoint(point, user, options, callback) {
+function addPoint(data, user, options, callback) {
+  var point = data.point;
   var logData = {
     user: user,
     timestamp: Date.now(),
@@ -2338,9 +2339,19 @@ function addPoint(point, user, options, callback) {
           collection: activityLogCollection,
           insertObj: logObj
         }, function(err, result) {
-          callback({
-            msg: "success"
-          }, point);
+          if (data.hasOwnProperty('oldPoint')) {
+            newUpdate(data.oldPoint, point, {
+              from: 'addpoint'
+            }, user, function(err, newPoint) {
+              callback({
+                msg: "success"
+              }, newPoint);
+            });
+          } else {
+            return callback({
+              msg: "success"
+            }, point);
+          }
         });
       }
     });
