@@ -14,7 +14,8 @@
             "Last Report Time": true,
             "taglist": true,
             "Notify Policies": true
-        }
+        },
+        "showNoProblemsFound": false
     },
     "points": [{ 
         "Name" : "MS5 xTalk_Device 1", 
