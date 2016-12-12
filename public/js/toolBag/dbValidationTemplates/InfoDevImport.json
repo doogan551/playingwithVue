@@ -3745,7 +3745,7 @@
         }, 
         "Port 1 Address" : {
             "ValueType" : 4, 
-            "Value" : 2, 
+            "Value" : 1, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
