@@ -9,6 +9,7 @@ var ObjectID = require('mongodb').ObjectID;
 
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
+var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config.js');
 
 var actLogsEnums = Config.Enums["Activity Logs"];
