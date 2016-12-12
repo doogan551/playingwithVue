@@ -2648,7 +2648,7 @@ function updateDevices(point, callback) {
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
-		point["Ethernet Address"] = Config.Templates.getTemplate("Device")["Ethernet Address"];
+		point["Ethernet Gateway"] = Config.Templates.getTemplate("Device")["Ethernet Gateway"];
 		point["Ethernet Subnet"] = Config.Templates.getTemplate("Device")["Ethernet Subnet"];
 		point["Ethernet IP Port"].isReadOnly = true;
 
