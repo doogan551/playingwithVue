@@ -671,7 +671,7 @@ function doUpdateSequence(data, cb) {
       var logData = {
         user: data.user,
         timestamp: Date.now(),
-        point: data.point,
+        // point: data.point,
         activity: actLogsEnums["GPL Edit"].enum,
         log: "Sequence edited."
       };
