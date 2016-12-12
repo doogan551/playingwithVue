@@ -205,6 +205,18 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
@@ -592,6 +604,18 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
@@ -886,6 +910,18 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "None", 
@@ -3341,6 +3377,18 @@
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
@@ -3731,6 +3779,18 @@
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
@@ -4121,6 +4181,18 @@
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
+        "Ethernet Gateway": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "0.0.0.0"
+        },
+        "Ethernet Subnet": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "255.255.255.0"
+        },
         "Port 1 Protocol" : {
             "ValueType" : 5, 
             "Value" : "MS/TP", 
