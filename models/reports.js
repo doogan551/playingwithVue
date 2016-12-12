@@ -112,13 +112,11 @@ module.exports = Rpt = {
 
         Utility.update(criteria, function(err, result) {
             if (!err) {
-                return cb(null, {
+                return cb(err, {
                     data: "Report has been saved successfully!!!"
                 });
             } else {
-                return cb(null, {
-                    err: err
-                });
+                return cb(err, null);
             }
         });
     },
@@ -804,7 +802,7 @@ module.exports = Rpt = {
             searchCriteria = {};
         }
 
-        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
+        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         var criteria = {
             query: searchCriteria,
             collection: 'points',
@@ -920,8 +918,9 @@ module.exports = Rpt = {
             // change key to internal property if possible.
             key = utils.getDBProperty(filter.filterName),
             searchKey = key,
+            searchPart1 = {},
+            searchPart2 = {},
             filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
-
 
         if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
             switch (filter.operator) {
@@ -966,13 +965,19 @@ module.exports = Rpt = {
                     };
                     break;
                 case "EqualTo":
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        if (filterValueType !== null) {
-                            searchKey = key + '.eValue';
+                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                        if (filter.evalue === -1) {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $eq: ''
+                            };
                         } else {
-                            searchKey = key;
+                            if (filterValueType !== null) {
+                                searchKey = key + '.eValue';
+                            } else {
+                                searchKey = key;
+                            }
+                            searchQuery[searchKey] = filter.evalue;
                         }
-                        searchQuery[searchKey] = filter.evalue;
                     } else {
                         if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {
@@ -1002,50 +1007,61 @@ module.exports = Rpt = {
                                 new$or.$or.push(ppp);
                             }
                         } else {
-                            if (utils.converters.isNumber(filter.value))
+                            if (utils.converters.isNumber(filter.value)) {
                                 searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                            else
+                            } else {
                                 searchQuery[propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
                                 };
+                            }
                         }
                     }
                     break;
                 case "NotEqualTo":
-                    //searchQuery[key] = {
-                    //    $exists: true
-                    //};
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        if (filterValueType !== null) {
-                            searchKey = key + '.eValue';
+                    searchPart1[key] = {
+                        $exists: true
+                    };
+                    searchQuery.$and = [];
+                    searchQuery.$and.push(searchPart1);
+                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                        if (filter.evalue === -1) {
+                            searchPart2[propertyCheckForValue(key)] = {
+                                $ne: ''
+                            };
                         } else {
-                            searchKey = key;
+                            if (filterValueType !== null) {
+                                searchKey = key + '.eValue';
+                            } else {
+                                searchKey = key;
+                            }
+                            searchPart2[searchKey] = {
+                                $ne: filter.evalue
+                            };
                         }
-                        searchQuery[searchKey] = {
-                            $ne: filter.evalue
-                        };
                     } else {
                         if (filter.valueType === "Bool") {
                             if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = {
+                                searchPart2[propertyCheckForValue(key)] = {
                                     $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                 };
                             } else {
-                                searchQuery[propertyCheckForValue(key)] = {
+                                searchPart2[propertyCheckForValue(key)] = {
                                     $ne: filter.value
                                 };
                             }
                         } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchPart2[propertyCheckForValue(key)] = {
                                 $ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         } else {
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchPart2[propertyCheckForValue(key)] = {
                                 $regex: '(?i)^(?!' + filter.value + ")"
                                     //$ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         }
                     }
+
+                    searchQuery.$and.push(searchPart2);
                     break;
                 case "LessThan":
                     searchQuery[propertyCheckForValue(key)] = {

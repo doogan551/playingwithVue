@@ -1261,9 +1261,9 @@ var initKnockout = function () {
             var $element = $(element),
                 $select = $element.children('select'),
                 config = valueAccessor(),
-                list = config.options(),
-                notifier = config.notifier,
-                hideEvent = config.hideEvent,
+                list = (!!config ? config.options() : []),
+                notifier = (!!config ? config.notifier : null),
+                hideEvent = (!!config ? config.hideEvent : null),
                 $liList;
 
             $select.addClass('select-processed');
@@ -1328,25 +1328,25 @@ var initKnockout = function () {
 
             // $element.material_select('destroy');
             $element.material_select();
-            $element.on('change', function () {
-                // console.log("material_select change() fired....");
-                if (ko.isObservable(boundField)) {
-                    boundField(this.selectedOptions[0].value);
-                } else {
-                    boundField = this.selectedOptions[0].value;
-                }
-
-                if (!suspend) {
-                    suspend = true;
-                    var event = new CustomEvent('change', {
-                        detail: 'change',
-                        bubbles: true
-                    });
-                    $(this).get(0).dispatchEvent(event);
-                } else {
-                    suspend = false;
-                }
-            });
+            // $element.on('change', function () {
+            //     // console.log("material_select change() fired....");
+            //     if (ko.isObservable(boundField)) {
+            //         boundField(this.selectedOptions[0].value);
+            //     } else {
+            //         boundField = this.selectedOptions[0].value;
+            //     }
+            //
+            //     if (!suspend) {
+            //         suspend = true;
+            //         var event = new CustomEvent('change', {
+            //             detail: 'change',
+            //             bubbles: true
+            //         });
+            //         $(this).get(0).dispatchEvent(event);
+            //     } else {
+            //         suspend = false;
+            //     }
+            // });
         },
         update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             // $(element).material_select();
@@ -1512,6 +1512,7 @@ var reportsViewModel = function () {
                 if (!!pointRef) {
                     if (pointRef.PropertyName === "Column Point" || pointRef.PropertyName === "Qualifier Point") {
                         if (!pointRefUsed(pointRef)) {
+                            // console.log("- - - - cleanPointRefArray()   removing point ref[" + i + "] = " + pointRef.PointName);
                             point["Point Refs"].splice(i--, 1);
                         }
                     }
@@ -1524,7 +1525,8 @@ var reportsViewModel = function () {
                 name2: filter.name2,
                 name3: filter.name3,
                 name4: filter.name4,
-                pointTypes: filter.pointTypes
+                pointTypes: (filter.pointTypes.length === 0 ? self.pointTypes() : filter.pointTypes),
+                disableNewPoint: true
             };
         },
         setPointInspectorParams = function (filterObject, filter) {
@@ -2038,6 +2040,13 @@ var reportsViewModel = function () {
         openPointSelectorForFilter = function (selectObjectIndex) {
             var updatedList = $.extend(true, [], self.listOfFilters()),
                 tempObject = updatedList[selectObjectIndex],
+                callShowPointSelector = function (availablePointTypes) {
+                    self.pointTypes(availablePointTypes);
+                    self.activePointSelectorRequest(false);
+
+                    dtiUtility.showPointSelector(getPointInspectorParams(filtersFilter));
+                    dtiUtility.onPointSelect(pointSelectedCallback);
+                },
                 setFilterPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -2060,8 +2069,11 @@ var reportsViewModel = function () {
                     }
                 };
 
-            dtiUtility.showPointSelector(getPointInspectorParams(filtersFilter));
-            dtiUtility.onPointSelect(pointSelectedCallback);
+            if (!!tempObject.filterName) {
+                dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [tempObject.filterName, "Report"], callShowPointSelector);
+            } else {
+                callShowPointSelector([]);
+            }
         },
         openPointSelectorFilterMode = function () {
             if (!scheduled) {
@@ -2080,7 +2092,8 @@ var reportsViewModel = function () {
                     name2: self.name2Filter(),
                     name3: self.name3Filter(),
                     name4: self.name4Filter(),
-                    pointTypes: self.selectedPointTypesFilter()
+                    pointTypes: self.selectedPointTypesFilter(),
+                    disableNewPoint: true
                 });
                 dtiUtility.onPointSelect(pointSelectedCallback);
             }
@@ -2125,7 +2138,7 @@ var reportsViewModel = function () {
             delete filter.AppIndex;
             filter.value = setDefaultFilterValue(filter.valueType);
             filter.valueList = [];
-            setValueList(selectedItem.name, selectedItem.name, indexOfFilter);
+            setValueList(selectedItem.name, selectedItem.name, indexOfFilter, self.activePropertyFilterRequest);
             switch (filter.valueType) {
                 case "Timet":
                 case "DateTime":
@@ -2144,10 +2157,10 @@ var reportsViewModel = function () {
                     filter.evalue = -1;
                     break;
                 case "BitString":
-                    filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + filter.filterName + " Bits"]);
+                    filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS[filter.filterName + " Bits"]);
                     break;
             }
-            // self.listOfFilters.valueHasMutated();
+            updateListOfFilters(self.listOfFilters());
         },
         setDefaultFilterValue = function (valueType) {
             var result;
@@ -2492,21 +2505,31 @@ var reportsViewModel = function () {
                 };
             dtiUtility.getConfig("Update.formatPoint", [params], callback);
         },
-        setValueList = function (property, pointType, index) {
+        setValueList = function (property, pointType, index, activeRequest) {
             var result = [],
                 i,
                 setOptions = function (options) {
-                    if (!!options && Array.isArray(options)) {
-                        for (i = 0; i < options.length; i++) {
+                    if (!!self.listOfFilters()[index]) {
+                        if (!!options && Array.isArray(options)) {
                             result.push({
-                                value: options[i].name,
-                                evalue: options[i].value
+                                value: "<blank>",
+                                evalue: -1
                             });
+
+                            for (i = 0; i < options.length; i++) {
+                                result.push({
+                                    value: options[i].name,
+                                    evalue: options[i].value
+                                });
+                            }
+                            self.listOfFilters()[index].value = result[0].value;
+                            self.listOfFilters()[index].evalue = result[0].evalue;
+                            self.listOfFilters()[index].valueList = result;
+                            updateListOfFilters(self.listOfFilters());
                         }
                     }
-                    if (!!self.listOfFilters()[index]) {
-                        self.listOfFilters()[index].valueList = result;
-                        updateListOfFilters(self.listOfFilters());
+                    if (!!activeRequest && typeof activeRequest === "function") {
+                        activeRequest({index: index, status: false});
                     }
                 };
 
@@ -2744,7 +2767,7 @@ var reportsViewModel = function () {
                                 endDate: self.selectedDuration().endDate.unix(),
                                 startTimeOffSet: self.durationStartTimeOffSet(),
                                 endTimeOffSet: self.durationEndTimeOffSet(),
-                                duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                                // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
                                 selectedRange: self.selectedDuration().selectedRange
                             };
                             break;
@@ -3099,7 +3122,6 @@ var reportsViewModel = function () {
         },
         pivotTotalizerData = function (totalizerData) {
             var columnConfig,
-                columnUPI,
                 columnKey,
                 pivotedData = [],
                 tempPivot,
@@ -3118,8 +3140,7 @@ var reportsViewModel = function () {
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
                         columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
-                        columnUPI = columnConfig.upi + " - " + operator;
-                        columnKey = columnUPI;
+                        columnKey = columnConfig.upi + " - " + operator;
                         rawValue = totalizerData[i].totals[j].total;
                         tempPivot[columnKey] = {};
                         //console.log("totalizerData[" + i + "].totals[" + j + "].total = " + totalizerData[i].totals[j]);
@@ -4010,12 +4031,14 @@ var reportsViewModel = function () {
                 buildColumnObject = function (columnConfig, columnIndex) {
                     var result,
                         columnTitle = columnConfig.colDisplayName,
-                        sortAbleColumn = true;
+                        sortAbleColumn = true,
+                        columnWidth;
 
                     switch (self.reportType()) {
                         case "History":
                             break;
                         case "Totalizer":
+                            columnConfig.dataColumnName = (i === 0 && columnConfig.colName === "Date" ? columnConfig.colName : columnConfig.upi + " - " + columnConfig.operator.toLowerCase());
                             if (columnIndex === 0 && columnConfig.colName === "Date") {
                                 columnTitle = "Period Begin";
                             } else if (columnIndex !== 0) {
@@ -4037,11 +4060,19 @@ var reportsViewModel = function () {
                         columnTitle = "[Deleted] " + columnTitle;
                     }
 
+                    if (!!columnConfig.width) {
+                        columnWidth = columnConfig.width;
+                    // } else if (columnIndex > 0 && aoColumns.length < 3 && !scheduled) {
+                    //     columnWidth = "30%";
+                    } else {
+                        columnWidth = "auto";
+                    }
+
                     result = {
                         title: columnTitle,
                         data: columnConfig.dataColumnName,
                         // data: columnConfig.dataColumnName + ".Value",
-                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
+                        width: columnWidth,
                         render: {
                             _: "Value",
                             type: "rawValue",
@@ -4238,7 +4269,8 @@ var reportsViewModel = function () {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
                             i,
                             colIndex = 0,
-                            $theads;
+                            $theads = $(thead).find("th");
+
                         for (i = 0; i < reportColumns.length; i++) {
                             if (!!reportColumns[i].calculation && reportColumns[i].calculation.length > 0) {
                                 $(thead).find("th").eq(i).addClass("calculate");
@@ -4250,7 +4282,6 @@ var reportsViewModel = function () {
                         switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
-                                $theads = $(thead).find("th");
                                 $theads.each(function (i, el) {
                                     $(el).attr("oncontextmenu", "reportsVM.showPointReviewViaIndex(" + i + "); return false;");
                                     $(el).attr("title", "Right mouse click to run PointInspector");
@@ -4381,7 +4412,8 @@ var reportsViewModel = function () {
                     paging: !scheduled,
                     ordering: !scheduled,
                     info: !scheduled,
-                    responsive: true,
+                    // autoWidth: (aoColumns.length > 4 && !scheduled),
+                    // responsive: true,
                     lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
                     searching: !scheduled,  // search box
                     pageLength: (!scheduled ? parseInt(self.selectedPageLength(), 10) : -1)
@@ -4972,7 +5004,7 @@ var reportsViewModel = function () {
             }
         },
         saveManager = (function () {
-            var remainingResponses = 0,
+            let remainingResponses = 0,
                 errList = [],
                 reportpStatusBeforeSave,
                 submitSaveReportRequest = function (errors) {
@@ -5012,7 +5044,8 @@ var reportsViewModel = function () {
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
-                    var err = result.err;
+                    let err = result.err;
+                    tabSwitch(1);  // switch to configuration tab
                     if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
@@ -5158,6 +5191,10 @@ var reportsViewModel = function () {
     self.activeSaveRequest = ko.observable(false);
 
     self.activeDataRequest = ko.observable(false);
+
+    self.activePointSelectorRequest = ko.observable(false);
+
+    self.activePropertyFilterRequest = ko.observable({index: 0, status: false});
 
     self.activeRequestForChart = ko.observable(false);
 
@@ -6166,7 +6203,7 @@ var reportsViewModel = function () {
                     self.pointName4(point.name4);
 
                     if (!scheduled) {
-                        dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
+                        dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", ["Column Point", "Report"], self.pointTypes);
                         initSocket();
                     }
 
@@ -6179,7 +6216,7 @@ var reportsViewModel = function () {
                             self.name2Filter(reportConfig.pointFilter.name2);
                             self.name3Filter(reportConfig.pointFilter.name3);
                             self.name4Filter(reportConfig.pointFilter.name4);
-                            self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
+                            self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
                         }
                         self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
                         self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
@@ -6435,6 +6472,7 @@ var reportsViewModel = function () {
         var currentIndex = (typeof index === "function" ? index() : index),
             columnIndex = parseInt(currentIndex, 10);
 
+        self.activePointSelectorRequest(true);
         openPointSelectorForFilter(columnIndex);
     };
 
@@ -6488,7 +6526,7 @@ var reportsViewModel = function () {
                             ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
                             break;
                         default:
-                            console.log(" - - - DEFAULT  viewReport()");
+                            console.log(" - - - DEFAULT  requestReportData()");
                             break;
                     }
                 } else {
@@ -6736,6 +6774,7 @@ var reportsViewModel = function () {
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
+        self.activePropertyFilterRequest({index: indexOfFilter, status: true});
         initializeNewFilter(selectedItem, indexOfFilter);
     };
 
@@ -6954,14 +6993,6 @@ var reportsViewModel = function () {
 
     self.displayMainSpinner = ko.computed(function () {
         return (self.activeDataRequest() && self.currentTab() === 2);
-    }, self);
-
-    self.displayChartSpinner = ko.computed(function () {
-        return (self.activeRequestForChart());
-    }, self);
-
-    self.displayTabSpinner = ko.computed(function () {
-        return self.activeDataRequest();
     }, self);
 
     self.displayTabCheckmark = ko.computed(function () {

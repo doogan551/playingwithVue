@@ -632,6 +632,15 @@ define([
             return (modelType === 3 || modelType === 6);
         }
     };
+    pointInspector.selectFirstTab = function () {
+        var $nav = $('.nav'),
+            $subNav = $nav.find('li>ul'),
+            $parentItem = $subNav.parent().children('span'),
+            $back = $subNav.find('.back'),
+            $tab = $nav.find('li').not($parentItem.parent()).not($back).not('.header');
+
+        $tab.first().trigger('click');
+    };
 
     //point viewmodel
     function Point(data) {

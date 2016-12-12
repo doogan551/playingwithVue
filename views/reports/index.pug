@@ -31,7 +31,7 @@ html.direports
                                 i.material-icons.center play_arrow
 
 
-                .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+                .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Report Data")
                     .spinner-layer
                         .circle-clipper.left
                             .circle
@@ -53,7 +53,7 @@ html.direports
                                 div.circle-clipper
                                     div.circle
                         span.spinnertext.blue-grey-text Getting Data
-                    .runReportChartSpinner.blue-grey-text(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
+                    .runReportChartSpinner.blue-grey-text(data-bind="css: { displayDiv: activeRequestForChart(), hideDiv: !activeRequestForChart()}", title="Requesting Report Data for Chart")
                         div.preloader-wrapper.small.blue-grey-text.active
                             div.spinner-layer
                                 div.circle-clipper.left
@@ -202,7 +202,7 @@ html.direports
                                                             li(role="separator", class="divider")
                                                             li(data-bind="foreach: $parent.columnFilteredProps()")
                                                                 a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'columnspropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.truncate.propertySelectForColumn.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'columnspropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                     // /ko
                                                 // ko if: ($parent.reportType() !== 'Property')
@@ -419,8 +419,20 @@ html.direports
                                                             span(data-bind="text: $root.displayOperator(operator)")
                                                 td.emptyColumn
                                                 td.filterValue
+                                                    // ko if: ($parent.activePropertyFilterRequest().index === $index() && $parent.activePropertyFilterRequest().status === true)
+                                                    .preloader-wrapper.tiny.active.propertyFilterSpinner
+                                                        .spinner-layer
+                                                            .circle-clipper.left
+                                                                .circle
+                                                            .gap-patch
+                                                                .circle
+                                                            .circle-clipper
+                                                                .circle
+                                                    // /ko
+                                                    // ko if: ($parent.activePropertyFilterRequest().index !== $index() || $parent.activePropertyFilterRequest().status === false)
                                                     div.col-md-9
                                                         include filterValueUI
+                                                    // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
                                                     i.removerow.blue-grey-text.material-icons.center(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") clear
@@ -521,7 +533,7 @@ html.direports
                         div.tab-content
                             div.gridData#gridData.tab-pane
                                 h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
-                                table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
+                                table.table.mdl-data-table.striped.bordered.dataTablePlaceHolder
                                     tfoot.tableFooter
                                         tr(data-bind="foreach: listOfColumns()")
                                             td.strong(data-bind="attr: { colindex:  $index() }")

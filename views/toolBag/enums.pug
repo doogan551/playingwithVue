@@ -5,7 +5,9 @@ html
 		style.
 			body {
 				padding: 20px;
+				padding-top: 70px;
 			}
+			nav {font-family: Consolas;}
 			ul {
 				list-style-type: none;
 				padding-left: 10px;
@@ -64,7 +66,7 @@ html
 			}			
 			.list {
 				position: absolute;
-				top: 75px;
+				top: 125px;
 				bottom: 20px;
 				left: 20px;
 				width: 275px;
@@ -90,7 +92,7 @@ html
 			}
 			.content {
 				position: absolute;
-				top: 75px;
+				top: 125px;
 				left: 325px;
 				right: 20px;
 				bottom: 20px;
@@ -104,6 +106,24 @@ html
 			}
 
 	body
+		nav(class='navbar navbar-default navbar-fixed-top', role='navigation')
+			div(class='navbar-header')
+				span(class='navbar-brand')
+					img(src='/img/InfoScanLogoBlue.png', height='30', style='position:absolute; top:11px;')
+					span(style='padding-left:85px; color:#3887c1;') Toolbag
+			div(class='collapse navbar-collapse')
+				ul(class='nav navbar-nav')
+					li
+						a(href='/toolbag/dbMonitor') dbMonitor
+					li
+						a(href='/toolbag/dbTemplate') dbTemplate
+					li
+						a(href='/toolbag/dbValidation') dbValidation
+					li.active
+						a(href='/toolbag/enums') Enums Manager
+					li
+						a(href='/toolbag/propertyUsage') Property Usage
+
 		.pull-left
 			h1 Enums Tools
 			i.fa.fa-info-circle.fa-2x(data-toggle="modal", data-target="#myModal", style="margin-left: 20px; color: #677; cursor: pointer")
@@ -206,6 +226,14 @@ html
 									span(data-bind="text: $data")
 									span &nbsp; &nbsp;
 									// /ko
+								br
+								.h4(style="overflow-x: auto")
+									.small Holes
+									span(data-bind="if: holes().length === 0") None
+									// ko foreach: holes
+									span(data-bind="text: $data")
+									span(data-bind="if: $index() < ($parent.holes().length - 1)") ,&nbsp;
+									// /ko
 								// /ko
 							.col-md-6
 								// ko with: pointTypeEnumData
@@ -237,6 +265,14 @@ html
 									// ko foreach: duplicateNames
 									span(data-bind="text: $data")
 									span &nbsp; &nbsp;
+									// /ko
+								br
+								.h4(style="overflow-x: auto")
+									.small Holes
+									span(data-bind="if: holes().length === 0") None
+									// ko foreach: holes
+									span(data-bind="text: $data")
+									span(data-bind="if: $index() < ($parent.holes().length - 1)") ,&nbsp;
 									// /ko
 								// /ko		
 				// /.modal-content

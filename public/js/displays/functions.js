@@ -731,13 +731,13 @@ displays = $.extend(displays, {
         displays.isRendered = true;
         displays.onRenderFn();
     },
-    onRenderFn: function () {
+    onRenderFn: function() {
         return;
     },
-    getPointRefByAppindex: function (pointRefIndex, referenceType) {
+    getPointRefByAppindex: function(pointRefIndex, referenceType) {
         var answer;
         if (pointRefIndex > -1) {
-            answer = displayJson["Point Refs"].filter(function (pointRef) {
+            answer = displayJson["Point Refs"].filter(function(pointRef) {
                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
             });
 
@@ -745,17 +745,17 @@ displays = $.extend(displays, {
         }
         return answer;
     },
-    getPointRefByUpi: function (upi, referenceType) {
+    getPointRefByUpi: function(upi, referenceType) {
         var answer;
         if (!!upi && !isNaN(upi)) {
-            answer = displayJson["Point Refs"].filter(function (pointRef) {
+            answer = displayJson["Point Refs"].filter(function(pointRef) {
                 return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
             });
             answer = (!!answer && answer.length > 0 ? answer[0] : null);
         }
         return answer;
     },
-    getScreenObjectType: function (screenObjectType) {
+    getScreenObjectType: function(screenObjectType) {
         var propEnum = 0,
             propName = "";
 
@@ -787,13 +787,13 @@ displays = $.extend(displays, {
             enum: propEnum
         };
     },
-    getScreenObjectPointRef: function (screenObject) {
+    getScreenObjectPointRef: function(screenObject) {
         var prop = displays.getScreenObjectType(screenObject["Screen Object"]);
         return displays.getPointRef(screenObject, prop.name, prop.enum);
     },
-    getPointRef: function (screenObject, referenceType, referenceEnum) {
+    getPointRef: function(screenObject, referenceType, referenceEnum) {
         var objRef,
-            getPointReference = function (screenobject, refType) {
+            getPointReference = function(screenobject, refType) {
                 var answer = null;
 
                 if (screenobject.pointRefIndex !== undefined) {
@@ -815,7 +815,7 @@ displays = $.extend(displays, {
         // return (!!pointRef ? pointRef : displays.makePointRef(objRef, 0, referenceType, referenceEnum));
         return (!!pointRef ? pointRef : null);
     },
-    getNextAppIndex: function () {
+    getNextAppIndex: function() {
         var answer = 0,
             i;
         for (i = 0; i < displayJson['Point Refs'].length; i++) {
@@ -825,7 +825,7 @@ displays = $.extend(displays, {
         }
         return answer + 1;
     },
-    makePointRef: function (referencedPoint, devInst, referenceType, referenceEnum) {
+    makePointRef: function(referencedPoint, devInst, referenceType, referenceEnum) {
         var pointRef = {
             "PropertyName": referenceType,
             "PropertyEnum": referenceEnum,
@@ -835,7 +835,7 @@ displays = $.extend(displays, {
             "isReadOnly": true,
             "PointName": referencedPoint.name,
             "PointInst": referencedPoint.upi,
-            "DevInst": devInst,   // TODO   what about external references?
+            "DevInst": devInst, // TODO   what about external references?
             "PointType": displays.pointTypes[referencedPoint.pointType].enum
         };
 
@@ -945,9 +945,9 @@ displays = $.extend(displays, {
             socket.on('recieveUpdate', function(dynamic) {
                 var els = $('.sc_ob_' + dynamic.upi),
                     el,
-                    val = dynamic.dynamic.Value,
+                    val = dynamic.Value,
                     upi = dynamic.upi,
-                    label = dynamic.dynamic['Quality Label'],
+                    label = dynamic['Quality Label'],
                     newVal = false,
                     parsedVal = parseFloat(val),
                     color,
@@ -970,8 +970,8 @@ displays = $.extend(displays, {
                     //is dynamic
                     if (val !== undefined && (tag === 'div' || tag === 'img')) {
                         if (tag === 'img') { //animation
-                            displays.animations[el[0].id].update(dynamic.dynamic);
-                            // displays.processGif(els[c], val, el.data('precision'), upi, dynamic.dynamic);
+                            displays.animations[el[0].id].update(dynamic);
+                            // displays.processGif(els[c], val, el.data('precision'), upi, dynamic);
                         } else {
                             //some can be "on" etc
                             if (typeof val !== 'string') {
@@ -1007,14 +1007,8 @@ displays = $.extend(displays, {
             });
 
             socket.on('connect', function() {
-                var sess = {};
-                sess.socketid = socket.id;
-                sess.display = angular.copy(window.displayJson);
-                socket.emit('displayOpen', {
-                    data: sess
-                });
+                socket.emit('dynamics', angular.copy(window.displayJson));
             });
-
 
             $(window).on('unload', function() {
                 socket.disconnect();

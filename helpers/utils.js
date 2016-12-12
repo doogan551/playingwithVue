@@ -81,6 +81,30 @@ var Utils = {
 			'$regex': '(?i)' + beginStr + name1str + endStr
 		};
 	},
+	checkDynamicProperties: function(obj) {
+		if (obj._cfgRequired !== undefined ||
+			obj.Value !== undefined ||
+			obj["Value.Value"] !== undefined ||
+			obj["Value.ValueOptions"] !== undefined ||
+			obj["Reliability.Value"] !== undefined ||
+			(obj.Reliability !== undefined && obj.Reliability.Value !== undefined) ||
+			obj['Alarm State.Value'] !== undefined ||
+			(obj['Alarm State'] !== undefined && obj['Alarm State'].Value !== undefined) ||
+			obj['Status Flags.Value'] !== undefined ||
+			(obj['Status Flags'] !== undefined && obj['Status Flags'].Value !== undefined) ||
+			obj['Alarms Off.Value'] !== undefined ||
+			(obj['Alarms Off'] !== undefined && obj['Alarms Off'].Value !== undefined) ||
+			obj['COV Enable.Value'] !== undefined ||
+			(obj['COV Enable'] !== undefined && obj['COV Enable'].Value !== undefined) ||
+			obj['Control Pending.Value'] !== undefined ||
+			(obj['Control Pending'] !== undefined && obj['Control Pending'].Value !== undefined) ||
+			obj['Quality Code Enable.Value'] !== undefined ||
+			(obj['Quality Code Enable'] !== undefined && obj['Quality Code Enable'].Value !== undefined)) {
+
+			return true;
+		}
+		return false;
+	},
 	CONSTANTS: function(constant) {
 		constant = constant.toUpperCase();
 		var constants = {
@@ -89,11 +113,7 @@ var Utils = {
 			"ACKNOWLEDGE": 4,
 			"WRITE": 8,
 			"POINTSCOLLECTION": "points",
-			"PROPERTIESCOLLECTION": "PropPointTypes",
-			"TODCOLLECTION": "Time of Day",
-			"ENUMCOLLECTION": "Enums",
 			"USERSCOLLECTION": "Users",
-			"THUMBNAILSCOLLECTION": "Thumbnails",
 			"ALARMSCOLLECTION": "Alarms",
 			"CALENDARCOLLECTION": "Holiday",
 			"SYSTEMINFOPROPERTIES": "SystemInfo",

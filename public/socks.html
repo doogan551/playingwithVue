@@ -1,7 +1,12 @@
 <script src="/js/lib/socket.io.js"></script>
 <script>
-  var socket = io.connect('http://localhost:8085');
-  socket.on('test', function (data) {
+  var socket = io.connect('http://localhost/');
+  socket.on('connect', function(){
+
+    socket.emit('dynamics', {'Point Refs':[]});
+  });
+
+  socket.on('recieveUpdate', function (data) {
     console.log(data);
   });
 </script>

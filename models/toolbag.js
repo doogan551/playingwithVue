@@ -1,5 +1,6 @@
 var fs = require('fs');
 var async = require('async');
+var _ = require('lodash');
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
 var Config = require(utils.FileLocationsForControllers("Config"));
@@ -32,6 +33,10 @@ module.exports = {
 		Utility.get(criteria, cb);
 	},
 	generateCppHeaderFile: function(data, cb) {
+		// Override Config so we get the latest version - this allows us to generate a new C++ header file after making
+		// changes to enumsTemplates.json without having to restart the server
+		var Config = require(utils.FileLocationsForControllers("Config"));
+
 		var buffer = ""; // This is our string buffer that we'll write out to a file when complete
 		var oneTab = "   "; // This is one tab and controls the key indent from the beginning of the line
 		var padding = "  "; // This is the padding between the key name and the '=' sign
@@ -475,32 +480,37 @@ module.exports = {
 		// }
 		var filename = './public/js/toolbag/dbValidationTemplates/' + data.template,
 			validationProblems = [],
+			templateConfig,
 			doValidate = function (path, cfg) {
-				forEach(cfg.templateObj, function (templateValue, key) {
-					var pointValue = cfg.pointObj[key],
+				forEach(cfg.referenceObj, function (referenceValue, key) {
+					var targetValue = cfg.targetObj[key],
 						newPath = path ? [path, key].join('.') : key;
 
-					if (pointValue === undefined) {
-						cfg.problems.push(newPath + ' exists on template but not on database point.');
+					if (targetValue === undefined) {
+						if (cfg.reference === 'database' && templateConfig.allowedExtraDbKeys[key]) {
+							// Do nothing 
+						} else {
+							cfg.problems.push([newPath, 'exists on', cfg.reference, 'but not on', cfg.target].join(' '));
+						}
 						return;
 					}
 
-					if (typeof templateValue === 'object') { // array or object
-						doValidate(newPath, {
-							templateObj: templateValue,
-							pointObj: pointValue,
-							problems: cfg.problems
-						});
+					if (typeof referenceValue === 'object') { // array or object
+						doValidate(newPath, _.assign({}, cfg, {
+							referenceObj: referenceValue,
+							targetObj: targetValue
+						}));
 					}
 					// number or string
-					else if (templateValue !== pointValue) {
-						cfg.problems.push([newPath, 'Template = ' + templateValue, 'Point = ' + pointValue].join(' ****** '));
+					else {
+						if (targetValue !== referenceValue) {
+							cfg.problems.push([newPath, cfg.reference + ' = ' + referenceValue, cfg.target + ' = ' + targetValue].join(' / '));
+						}
+						if (cfg.deleteTargetKeys) {
+							delete cfg.targetObj[key];
+						}
 					}
 				});
-
-				if (cfg.callback) {
-					cfg.callback();
-				}
 			},
 			validatePoint = function (pointTemplate, callback) {
 				var criteria = {
@@ -524,32 +534,59 @@ module.exports = {
 						return callback(null);
 					}
 
+					// Perform template-to-database comparison - delete database keys after they are evaluated
 					doValidate('', {
-						templateObj: pointTemplate,
-						pointObj: point,
+						reference: 'template',
+						referenceObj: pointTemplate,
+						target: 'database',
+						targetObj: point,
 						problems: obj.problems,
-						callback: function done () {
-							validationProblems.push(obj);
-							callback(null);
-						}
+						deleteTargetKeys: true
 					});
+
+					// Perform database-to-template comparison to find extra db keys (not on the template)
+					doValidate('', {
+						reference: 'database',
+						referenceObj: point,
+						target: 'template',
+						targetObj: pointTemplate,
+						problems: obj.problems
+					});
+
+					if (obj.problems.length || templateConfig.showNoProblemsFound) {
+						validationProblems.push(obj);
+					}
+					callback(null);
 				});
 			};
 
 		fs.readFile(filename, 'utf8', function (err, content) {
-			var points;
+			var defaultTemplateConfig = {
+					allowedExtraDbKeys: {},
+					showNoProblemsFound: true
+				},
+				template,
+				templatePoints;
 
 			if (err) {
 				return cb(err);
 			}
 
 			try {
-				points = JSON.parse(content);
+				template = JSON.parse(content);
 			} catch (err) {
 				return cb(err);
 			}
 
-			async.eachSeries(points, validatePoint, function finished (err) {
+			if (Array.isArray(template)) {
+				templatePoints = template;
+				templateConfig = defaultTemplateConfig;
+			} else {
+				templatePoints = template.points;
+				templateConfig = _.merge(defaultTemplateConfig, template.config);
+			}
+
+			async.eachSeries(templatePoints, validatePoint, function finished (err) {
 				cb(err, validationProblems);
 			});
 		});

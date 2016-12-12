@@ -1482,10 +1482,20 @@ var scripts = {
                 }
             }
         }, function(err) {
-            logger.info('Finished with updateSecurity');
-            callback(null, {
-                fn: 'updateSecurity',
-                errors: err
+            Utility.update({
+                collection: 'User Groups',
+                query: {},
+                updateObj: {
+                    $set: {
+                        Points: {}
+                    }
+                }
+            }, function(err) {
+                logger.info('Finished with updateSecurity');
+                callback(null, {
+                    fn: 'updateSecurity',
+                    errors: err
+                });
             });
         });
     },
@@ -1636,7 +1646,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [ scripts.addMissingProperties, scripts.removeProperties, scripts.applyDevModel];
+    tasks = [scripts.addMissingProperties, scripts.removeProperties, scripts.applyDevModel];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result

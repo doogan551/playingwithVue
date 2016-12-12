@@ -392,6 +392,7 @@ td.filterName {
 .tabViewReport div.dataTables_filter {
     float: right;
     margin-top: -50px;
+    margin-right: 20px;
     height: 65px;
 }
 .tabViewReport div.dataTables_paginate {
@@ -593,8 +594,14 @@ div.dataTables_wrapper div.dataTables_length select {
 .firstColumn {
     min-width: 200px;
 }
-.firstColumn.datetime {
+th.firstColumn.datetime {
     min-width: 60px;
+    width: 100px !important;
+}
+td.firstColumn.datetime {
+    min-width: 60px;
+    width: 100px !important;
+    font-size: small;
 }
 .columnName {
     display: inline-block;
@@ -705,6 +712,10 @@ a.btn.dropdown-button.propertySelect {
     padding: 0px 0px 0px 0px !important;
     width: 240px;
 }
+a.btn.dropdown-button.propertySelectForColumn {
+    padding: 0px 0px 0px 0px !important;
+    width: 260px;
+}
 .precision {
     width: 60px;
 }
@@ -747,6 +758,9 @@ th .calculateColumn:focus {
     cursor: pointer;
 }
 th .includeInChartColumn:hover {
+    outline: none;
+}
+th .includeInChartColumn:focus {
     outline: none;
 }
 .includeInChartColumn.hideCheckbox {
@@ -979,6 +993,9 @@ input.filled-in[type=number]:focus:not([readonly]) {
 }
 .gridColumnConfigTable th a.addColumnGridButton {
     background-color: white;
+}
+.columnsGrid thead tr {
+    height: 58px !important;
 }
 .columnsGrid th label {
     font-size: medium;
@@ -1277,4 +1294,8 @@ button {
 .preloader-wrapper .spinner-layer {
     /*border-color: $blue-grey-lighten-1;*/
     border-color: #78909c;
+}
+.preloader-wrapper.tiny {
+    width: 20px;
+    height: 20px;
 }
