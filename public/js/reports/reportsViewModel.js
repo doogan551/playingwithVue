@@ -4412,7 +4412,8 @@ var reportsViewModel = function () {
                     paging: !scheduled,
                     ordering: !scheduled,
                     info: !scheduled,
-                    responsive: true,
+                    // autoWidth: (aoColumns.length > 4 && !scheduled),
+                    // responsive: true,
                     lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
                     searching: !scheduled,  // search box
                     pageLength: (!scheduled ? parseInt(self.selectedPageLength(), 10) : -1)
@@ -6215,7 +6216,7 @@ var reportsViewModel = function () {
                             self.name2Filter(reportConfig.pointFilter.name2);
                             self.name3Filter(reportConfig.pointFilter.name3);
                             self.name4Filter(reportConfig.pointFilter.name4);
-                            self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
+                            self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
                         }
                         self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
                         self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
