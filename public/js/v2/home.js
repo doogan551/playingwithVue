@@ -1598,6 +1598,12 @@ var dti = {
 
             dti.socket.emit('sendAcknowledge', JSON.stringify(request));
         },
+        openPoint: function (alarm) {
+            dti.windows.openWindow({
+                pointType: alarm.PointType,
+                upi: alarm.upi
+            });
+        },
         acknowledgeRequests: {},
         annunciator: {
             id: 0,
@@ -4468,6 +4474,9 @@ var dti = {
             },
             acknowledgeOne: function (alarm) {
                 dti.alarms.sendAcknowledge([alarm]);
+            },
+            openPoint: function (alarm) {
+                dti.alarms.openPoint(alarm);
             }
         },
         socketStatus: ko.observable(),

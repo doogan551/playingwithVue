@@ -1084,8 +1084,12 @@ footer {
 
         .message {
             display: inline-block;
-            padding: 0 5px;
+            padding-right: 5px;
             border-radius: 3px;
+        }
+        .message:hover {
+            text-decoration: underline;
+            cursor: pointer;
         }
 
         .type {
