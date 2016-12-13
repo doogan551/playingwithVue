@@ -1742,8 +1742,8 @@ var reportsViewModel = function () {
             if (column.canCalculate) {
                 result = true;
             } else {
-                enumsSet = (!scheduled ? ENUMSTEMPLATESENUMS.Properties[column.colName].enumsSet : undefined);
-                result = (enumsSet !== undefined && enumsSet !== "");
+                enumsSet = (!scheduled && ENUMSTEMPLATESENUMS.Properties[column.colName] ? ENUMSTEMPLATESENUMS.Properties[column.colName].enumsSet : undefined);
+                result = (!!enumsSet && enumsSet !== "");
             }
 
             return result;
