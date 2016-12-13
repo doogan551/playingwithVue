@@ -2744,7 +2744,7 @@
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
-                "reportEnable": true,
+                "reportEnable": false,
                 "enumsSet": ""
             },
             "Momentary Delay": {
