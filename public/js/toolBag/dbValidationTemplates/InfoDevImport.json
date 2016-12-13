@@ -2445,7 +2445,7 @@
         }, 
         "Trend Interval" : {
             "ValueType" : 13, 
-            "Value" : 0, 
+            "Value" : 60, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -2673,7 +2673,7 @@
         }, 
         "Quality Code Enable" : {
             "ValueType" : 18, 
-            "Value" : 255, 
+            "Value" : 251, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -2844,7 +2844,7 @@
         }, 
         "Trend Interval" : {
             "ValueType" : 13, 
-            "Value" : 0, 
+            "Value" : 60, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -2888,7 +2888,7 @@
             "Value" : "IP", 
             "eValue" : 1, 
             "isDisplayable" : true, 
-            "isReadOnly" : true
+            "isReadOnly" : false
         }, 
         "Ethernet Network" : {
             "ValueType" : 4, 
@@ -2935,8 +2935,8 @@
         }, 
         "Port 1 Address" : {
             "ValueType" : 4, 
-            "Value" : 0, 
-            "isDisplayable" : false, 
+            "Value" : 4, 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Port 1 Maximum Address" : {
@@ -3072,7 +3072,7 @@
         }, 
         "Quality Code Enable" : {
             "ValueType" : 18, 
-            "Value" : 255, 
+            "Value" : 251, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 

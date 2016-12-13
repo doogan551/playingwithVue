@@ -156,6 +156,7 @@ var dti = {
                     },
                     autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
                     showOnFocus: false, // Show suggestions when input is focused
+                    enterOnBlur: false, // Simulate 'Enter' when the the input loses focus (only applicable if $chips is installed)
                     persistAfterSelect: false,
                     chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
@@ -415,7 +416,11 @@ var dti = {
                             selectMatch(ko.dataFor($selected[0]), e);
                         } else {
                             getMatches('');
-                            self.hide();
+                            if (cfg.showOnFocus) {
+                                self.show();
+                            } else {
+                                self.hide();
+                            }
                         }
                     } else if (key === 40) { // down
                         if (self.bindings.isShown() === false) {
@@ -806,6 +811,22 @@ var dti = {
                         self.hide();
                     }
                 });
+
+                // If our configuration is set to simulate an enter keypress when the input loses focus
+                if (cfg.enterOnBlur) {
+                    cfg.$inputElement.blur(function (e) {
+                        var inputValue = cfg.$inputElement.val();
+
+                        // Make sure our autosuggest isn't shown before we do this because clicking a suggestion triggers a blur
+                        // and we don't want to create a chip using a partial match (we want to create a chip using the selected
+                        // suggestion)
+                        if ((self.bindings.isShown() === false) && inputValue.length) {
+                            cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                            cfg.$inputElement.val('');
+                            getMatches('');
+                        }
+                    });
+                }
             }
 
             // Add autosuggest sources
@@ -5834,6 +5855,7 @@ var reportsViewModel = function () {
                     }],
                     autoselect: true,
                     showOnFocus: true,
+                    enterOnBlur: true,
                     persistAfterSelect: true
                 });
 
