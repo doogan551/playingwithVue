@@ -134,6 +134,9 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         } else {
             vm.selectedScript(vm.developmentScript);
         }
+
+        // Force our editModeSubscription to evaluate to make sure our editors are properly setup #230
+        vm.isInEditMode.valueHasMutated();
         initDone = true;
     }
 
