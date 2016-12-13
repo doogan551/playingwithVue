@@ -147,7 +147,7 @@ html
                         .row
                             .date(data-bind="text: dateTime")
                             .messageContainer
-                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }')
+                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
                             .type(data-bind='text: almClassText, css: cssClass')
                             .ackContainer
                                 a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack

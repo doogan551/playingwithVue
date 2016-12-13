@@ -319,8 +319,8 @@ module.exports = {
       query: {
         Name: 'Preferences'
       }
-    }, function(err, data) {
-      var centralUpi = data['Central Device UPI'];
+    }, function(err, _data) {
+      var centralUpi = _data['Central Device UPI'];
       Utility.update({
         collection: 'points',
         query: {
@@ -333,7 +333,7 @@ module.exports = {
         }
       }, function(err, results) {
 
-        Utility.update(criteria, function(err, data) {
+        Utility.update(criteria, function(err, result) {
 
           if (err) {
             return cb(err.message);
