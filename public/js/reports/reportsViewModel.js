@@ -1720,9 +1720,8 @@ var reportsViewModel = function () {
             }
         },
         columnCanBeCalculated = function (column) { // TODO needs investigation
-            var result = false,
-                valueOptions;
-            if (self.reportType() === "Totalizer") {
+            var result = false;
+            if (self.reportType() === "Totalizer" || self.reportType() === "History") {
                 result = true;
             } else {
                 switch (column.valueType) {
@@ -1732,48 +1731,19 @@ var reportsViewModel = function () {
                         result = true;
                         break;
                 }
-                switch (column.pointType) {
-                    case "Accumulator":
-                    case "Analog Input":
-                    case "Analog Output":
-                    case "Analog Value":
-                    case "Average":
-                    case "Binary Input":
-                    case "Binary Output":
-                    case "Binary Value":
-                    case "Math":
-                    case "Totalizer":
-                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES[column.pointType] : undefined);
-                        result = (valueOptions === undefined);
-                        break;
-                }
             }
 
             return result;
         },
         columnCanBeCharted = function (column) {
             var result = false,
-                valueOptions;
+                enumsSet;
 
-            if (columnCanBeCalculated(column)) {
+            if (column.canCalculate) {
                 result = true;
             } else {
-                switch (column.pointType) {
-                    case "Accumulator":
-                    case "Analog Input":
-                    case "Analog Output":
-                    case "Analog Value":
-                    case "Average":
-                    case "Binary Input":
-                    case "Binary Output":
-                    case "Binary Selector":
-                    case "Binary Value":
-                    case "Math":
-                    case "Totalizer":
-                        valueOptions = ENUMSTEMPLATESTEMPLATES[column.pointType];
-                        result = (valueOptions !== undefined);
-                        break;
-                }
+                enumsSet = (!scheduled ? ENUMSTEMPLATESENUMS.Properties[column.colName].enumsSet : undefined);
+                result = (enumsSet !== undefined && enumsSet !== "");
             }
 
             return result;
@@ -3226,23 +3196,30 @@ var reportsViewModel = function () {
                 len = data.length,
                 j,
                 columnData = [],
+                columnDrillDownData = [],
                 columnsLength = columnArray.length,
                 columnName,
                 columnDataFound,
                 result = [],
                 fieldValue,
                 columnSum = 0,
-                totalAmount = 0;
+                totalAmount = 0,
+                sumsForProperties = {},
+                drilldown = {};
 
+            if (self.reportType() === "Property") {
+                self.selectedChartType("Pie");
+            }
             for (j = 1; j < columnsLength; j++) {
                 columnSum = 0;
                 columnConfig = {};
                 columnConfig = columnArray[j];
                 columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
-                if (columnConfig.includeInChart) {
+                if (columnConfig.includeInChart == true) {
                     if (self.selectedChartType() !== "Pie") {
                         columnData = [];
                     }
+                    sumsForProperties[columnName] = {};
                     for (i = 0; i < len; i++) {
                         columnDataFound = (data[i][columnName] !== undefined);
                         if (columnDataFound) {
@@ -3262,7 +3239,11 @@ var reportsViewModel = function () {
                                     break;
                                 case "Property":
                                     if (self.selectedChartType() === "Pie") {
-                                        columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
+                                        if (sumsForProperties[columnName][data[i][columnName].rawValue] === undefined) {
+                                            sumsForProperties[columnName][data[i][columnName].rawValue] = 0;
+                                        }
+                                        sumsForProperties[columnName][data[i][columnName].rawValue] += 1;
+                                        // columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
                                     } else {
                                         columnData.push({
                                             value: fieldValue
@@ -3277,19 +3258,48 @@ var reportsViewModel = function () {
                             console.log("data[" + i + " ][" + columnName + "] not found");
                         }
                     }
-                    if (self.selectedChartType() === "Pie") {
-                        columnData.push({
-                            name: columnConfig.colName,
-                            y: parseFloat(columnSum)
-                        });
-                        totalAmount += parseFloat(columnSum);
+                    if (self.reportType() === "Property") {
+                        drilldown.series = [];
+                        // TODO drilldown data specific to Property & Pie chart
+                        // for (var fieldName in sumsForProperties) {
+                        //     if (sumsForProperties.hasOwnProperty(fieldName)) {
+                        //         columnData.push({
+                        //             name: fieldName,
+                        //             y: parseFloat(10),
+                        //             drilldown: fieldName
+                        //         });
+                        //         columnDrillDownData = [];
+                        //         for (var enumName in sumsForProperties[fieldName]) {
+                        //             if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
+                        //                 console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
+                        //                 columnDrillDownData.push({
+                        //                     enumName: parseFloat(sumsForProperties[fieldName][enumName])
+                        //                 });
+                        //                 totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
+                        //             }
+                        //         }
+                        //         drilldown.series.push({
+                        //             name: fieldName,
+                        //             id: fieldName,
+                        //             data: columnDrillDownData,
+                        //         });
+                        //     }
+                        // }
                     } else {
-                        if (columnData.length > 0) {
-                            result.push({
-                                data: columnData,
+                        if (self.selectedChartType() === "Pie") {
+                            columnData.push({
                                 name: columnConfig.colName,
-                                yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                y: parseFloat(columnSum)
                             });
+                            totalAmount += parseFloat(columnSum);
+                        } else {
+                            if (columnData.length > 0) {
+                                result.push({
+                                    data: columnData,
+                                    name: columnConfig.colName,
+                                    yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                });
+                            }
                         }
                     }
                 }
@@ -3301,7 +3311,8 @@ var reportsViewModel = function () {
                 result.push({
                     name: "Total",
                     colorByPoint: true,
-                    data: columnData
+                    data: columnData,
+                    drilldown: drilldown
                 });
             }
             return setYaxisValues(result);
@@ -3318,8 +3329,10 @@ var reportsViewModel = function () {
 
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
-                $activePane.css("width", (window.innerWidth - 130));
+                // $activePane.css("width", (window.innerWidth - 130));
+                $activePane.css("width", "100%");
             } else if ($activePane.attr("id") === "gridData") {
+                $dataTablePlaceHolder.css("width", "100%");
                 $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                 $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
                 $dataTablesScrollFoot = $tabViewReport.find(".dataTables_scrollFoot");
@@ -3327,12 +3340,15 @@ var reportsViewModel = function () {
 
                 setDatatableInfoBar();
                 adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
-                $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                // $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $dataTablesScrollHead.css("width", "100%"); // allow for scrolly in body
                 $dataTablesScrollBody.css("height", adjustHeight);
-                $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
-                $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                // $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
+                // $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $dataTablesScrollBody.css("width", "100%");
+                $dataTablesScrollFoot.css("width", "100%"); // allow for scrolly in body
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
-                //$dataTablePlaceHolder.DataTable().columns.adjust();
+                // $dataTablePlaceHolder.DataTable().columns.adjust().draw();
             }
         },
         adjustConfigTabActivePaneHeight = function () {
@@ -4269,15 +4285,18 @@ var reportsViewModel = function () {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
                             i,
                             colIndex = 0,
-                            $theads = $(thead).find("th");
+                            $theads = $(thead).find("th"),
+                            $firstThead;
+
 
                         for (i = 0; i < reportColumns.length; i++) {
                             if (!!reportColumns[i].calculation && reportColumns[i].calculation.length > 0) {
                                 $(thead).find("th").eq(i).addClass("calculate");
                             }
-                            $(thead).find("th").eq(i).addClass("text-center");
-                            $(thead).find("th").eq(i).removeClass("small");
                         }
+
+                        $theads.addClass("text-center");
+                        $theads.removeClass("small");
 
                         switch (self.reportType()) {
                             case "History":
@@ -4288,8 +4307,9 @@ var reportsViewModel = function () {
                                 });
                                 break;
                             case "Property":
-                                $theads = $(thead).find("th:first");
-                                $theads.addClass("pointLookupColumn");
+                                $firstThead = $(thead).find("th:first");
+                                $firstThead.addClass("pointLookupColumn");
+                                $firstThead.removeClass("pointInstance");
                                 break;
                             default:
                                 break;
@@ -4389,13 +4409,15 @@ var reportsViewModel = function () {
                             }
                         }
 
+                        $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
                         if (numberOfColumnsToCalculate > 0) {
-                            $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
                             $firstColumn.text("Calculations:");
                             $firstColumn.removeClass("small");
                             $firstColumn.addClass("text-right");
+                            $(tfoot).parent().removeClass("hide");
                         } else { // if none of the columns were calculated hide the Verbiage
-                            $(tfoot).parent().parent().addClass("hidden"); // hide the footer block
+                            $firstColumn.removeClass("pointInstance");
+                            $(tfoot).parent().addClass("hide"); // hide the footer block
                         }
                     },
                     data: reportData,
@@ -4774,7 +4796,6 @@ var reportsViewModel = function () {
                     $dataTablePlaceHolder.DataTable().clear();
                     $dataTablePlaceHolder.DataTable().rows.add(reportData);
                     $dataTablePlaceHolder.DataTable().draw("current");
-                    // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                     self.refreshData(false);
                     self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
 

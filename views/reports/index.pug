@@ -75,7 +75,7 @@ html.direports
                                         a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType() === 'Property')
                                     li.tab.col.s4.filterByPoint(role="presentation")
-                                        a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                        a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Point Type Filters
                                     // /ko
                                     li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
@@ -159,7 +159,6 @@ html.direports
                                                                     label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
                                                             // /ko
                                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="dtiReportsMaterializeDropdown", data-activates ='globalCalculationsDropdown') Calcs
-                                                // ko if: (reportType() === 'Totalizer')
                                                 th.medium.strong.typeColumn
                                                     label Type
                                                 // /ko
@@ -168,17 +167,18 @@ html.direports
                                                         label.columnText Precision
                                                         .globalPrecision.hideDiv
                                                             input.form-control.globalPrecisionInput(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+                                                // /ko
                                                 th.medium.strong
                                                     .includeInChartColumn(tabindex="930")
                                                         label.columnText Chart
                                                         .globalIncludeInChart.hideDiv
                                                             input.form-control.filled-in(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
                                                             label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
+                                                // ko if: (reportType() !== 'Property')
                                                 th.medium.strong
                                                     label.yaxisChartGroupColumn
-                                                // /ko
-                                                // /ko
                                                 th.medium.strong
+                                                // /ko
                                         tbody.sortablecolumns(data-bind="foreach: listOfColumns()")
                                             tr.columnRowData(data-bind="css: {hideDiv: ($index() === 0), fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
                                                 td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
@@ -247,8 +247,9 @@ html.direports
                                                     // ko if: ($data.canCalculate)
                                                     input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
                                                     // /ko
+                                                // /ko
                                                 td.includeInChart
-                                                    // ko if: ($root.canEdit() && $data.canCalculate)
+                                                    // ko if: ($root.canEdit() && $data.canBeCharted)
                                                     input.includeInChartColumn.tooltipped.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", data-position='bottom', data-tooltip='Include in chart', data-delay='50', type="checkbox")
                                                     label(data-bind="attr: { for: 'includeInChart' + $index()}")
                                                     // /ko
@@ -259,7 +260,6 @@ html.direports
                                                             select(data-bind="options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
                                                             label
                                                     // /ko
-                                                // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
                                                     i.removerow.blue-grey-text.material-icons.center(data-bind="click: function () { $parent.deleteReportColumn($index()) }") clear
@@ -519,7 +519,6 @@ html.direports
                                             .errorMessage.red.lighten-4
                                             .successMessage.green.lighten-4
                     .tabViewReport.well.tab-pane
-                        // ko if: (reportType() !== 'Property')
                         .row(data-bind="css: { hideDiv: (chartable() !== true)}")
                             .viewReportNav.col.s12
                                 ul.tabs
@@ -529,11 +528,10 @@ html.direports
                                     li.tab.col.reportChart(role="presentation")
                                         a.strong.toggleTab.blue-grey-text(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab") Chart
                                             //i.material-icons.center insert_chart
-                        // /ko
                         div.tab-content
                             div.gridData#gridData.tab-pane
                                 h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
-                                table.table.mdl-data-table.striped.bordered.dataTablePlaceHolder
+                                table.table.striped.bordered.dataTablePlaceHolder
                                     tfoot.tableFooter
                                         tr(data-bind="foreach: listOfColumns()")
                                             td.strong(data-bind="attr: { colindex:  $index() }")
