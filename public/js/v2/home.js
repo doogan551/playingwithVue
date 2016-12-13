@@ -1562,8 +1562,11 @@ var dti = {
             dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
             dti.socket.on('newUnackAlarm', newUnackAlarm);
             dti.socket.on('removingUnackAlarm', removingUnackAlarm);
-            dti.socket.on('acknowledgeResponse', acknowledgeResponse);
-            
+            dti.socket.on('acknowledgeResponse', acknowledgeResponse);            
+            dti.socket.on('connect', function () {
+                getUnacknowledgedAlarms(true);
+            });
+
             getUnacknowledgedAlarms(true);
         },
         sendAcknowledge: function (alarmList) {
