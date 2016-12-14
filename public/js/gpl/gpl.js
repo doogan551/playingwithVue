@@ -7521,7 +7521,8 @@ gpl.Manager = function () {
 
                 if (gpl.point._pStatus === 1) {
                     managerSelf.socket.emit('addPoint', {
-                        point: gpl.point
+                        oldPoint: gpl._origPoint,
+                        newPoint: gpl.point
                     });
                 } else {
                     managerSelf.socket.emit('updatePoint', {

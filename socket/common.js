@@ -2339,7 +2339,7 @@ function addPoint(data, user, options, callback) {
           collection: activityLogCollection,
           insertObj: logObj
         }, function(err, result) {
-          if (data.hasOwnProperty('oldPoint')) {
+          if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
             newUpdate(data.oldPoint, point, {
               from: 'addpoint'
             }, user, function(err, newPoint) {

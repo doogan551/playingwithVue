@@ -5057,7 +5057,7 @@ var reportsViewModel = function () {
                         if (point._pStatus === 1) {
                             // call addPoint here integrate into dtiutil
                             reportSocket.emit("addPoint", {
-                                point: point
+                                newPoint: point
                             });
                         } else {
                             ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
