@@ -3786,7 +3786,7 @@ var reportsViewModel = function () {
                     $filtersGrid.sortable({
                         appendTo: $filtersTbody,
                         disabled: false,
-                        items: "tr",
+                        items: "tr",  // to skip first row  "tr:gt(0)"
                         forceHelperSize: true,
                         helper: "original",
                         stop: function (event, ui) {
@@ -5057,7 +5057,8 @@ var reportsViewModel = function () {
                         if (point._pStatus === 1) {
                             // call addPoint here integrate into dtiutil
                             reportSocket.emit("addPoint", {
-                                point: point
+                                newPoint: point,
+                                oldPoint: originalPoint
                             });
                         } else {
                             ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);

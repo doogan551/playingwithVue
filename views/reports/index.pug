@@ -390,7 +390,7 @@ html.direports
                                         tbody.sortableFilters(data-bind="foreach: listOfFilters()")
                                             tr.filterdata
                                                 td.sorthandle
-                                                    .handle
+                                                    .handle(data-bind="css: { hideDiv: ($index() === -1)}")
                                                 td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
                                                     .availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.conditions(), attr: { 'id': 'availableConditions'+ $index() }")
