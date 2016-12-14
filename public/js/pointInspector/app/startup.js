@@ -866,9 +866,12 @@ define([
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
-                // return window.close();
+            }
+
+            if (data.saveAndClose === true) {
                 return dtiUtility.closeWindow();
             }
+
             $('body').css('overflow', 'hidden');
             data = data || {};
 
@@ -965,8 +968,9 @@ define([
                 }
             });
         };
-        self.saveAndClose = function() {
-            self.save({close: true});
+        self.saveAndClose = function(data) {
+            data.saveAndClose = true;
+            self.save(data);
         };
     }
 
