@@ -2,6 +2,8 @@ var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
+var utils = require('../helpers/utils');
+var activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = {
   get: function(data, cb) {
@@ -91,12 +93,18 @@ module.exports = {
     var skip = (currentPage - 1) * itemsPerPage;
     var criteria = {
       query: query,
-      collection: 'Activity Logs',
+      collection: activityLogCollection,
       sort: sort,
       _skip: skip,
       _limit: numberItems,
       data: data
     };
     Utility.getWithSecurity(criteria, cb);
+  },
+  create: function(logData, cb) {
+    Utility.insert({
+      collection: activityLogCollection,
+      insertObj: logData
+    }, cb);
   }
 };
