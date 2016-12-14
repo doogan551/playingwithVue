@@ -6520,6 +6520,7 @@ gpl.BlockManager = function (manager) {
             if (block instanceof gpl.Block) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
                     pointData = block.getPointData();
+                    pointName = block.pointName;
                     bmSelf.deselect();
                     upi = block.upi;
                     pointType = block.pointType;

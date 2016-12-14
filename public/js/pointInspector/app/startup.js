@@ -99,19 +99,32 @@ define([
 
     //for workspace 'give me point data' function
     (function checkParameters() {
-        if (window.getWindowParameters) {
-            var cfg = window.getWindowParameters();
+        setTimeout(function () {  // give messaging layer time to finish with onLoad()   home.js
+            if (window.getWindowParameters) {
 
-            window.attach = {};
+                var cfg = window.getWindowParameters();
 
-            if (cfg.pointData) {
-                window.attach.point = $.extend(true, {}, cfg.pointData);
+                window.attach = {};
+
+                if (cfg.pointData) {
+                    window.attach.point = $.extend(true, {}, cfg.pointData);
+                }
+
+                if (cfg.callback) {
+                    window.attach.saveCallback = cfg.callback;
+                }
             }
 
-            if (cfg.callback) {
-                window.attach.saveCallback = cfg.callback;
+            if (!!window.attach && !!window.attach.point) {
+                //flag for external/parameter points (mainly gpl)
+                pointInspector.isExternal = true;
+                initialize(window.attach.point);
+            } else {
+                getData(pointInspector.id).done(function (data) {
+                    initialize(data);
+                });
             }
-        }
+        }, 50);
     })();
 
     //adjust default calendar config to show time
@@ -1002,6 +1015,7 @@ define([
         }
 
         pointInspector.point = new Point(data);
+        // console.log("- - - - - -    pointInspector.point.data.name1() = " + pointInspector.point.data.name1());
         pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
             // Show animation complete
@@ -1023,17 +1037,6 @@ define([
         ko.applyBindings(pointInspector);
         window.document.title = pointInspector.point.data.Name();
     }
-
-    if (!!window.attach && !!window.attach.point) {
-        //flag for external/parameter points (mainly gpl)
-        pointInspector.isExternal = true;
-        initialize(window.attach.point);
-    } else {
-        getData(pointInspector.id).done(function (data) {
-            initialize(data);
-        });
-    }
-
 
     /**
      * Global Knockout bindings and functions
