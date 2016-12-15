@@ -5647,6 +5647,8 @@ var reportsViewModel = function () {
                         selectedReportIntervalValue: ko.observable(1),
                         selectedReportStartTimeOffset: ko.observable('00:00'),
                         selectedReportEndTimeOffset: ko.observable('00:00'),
+                        displayDuration: ko.observable(self.reportType() !== "Property"),
+                        displayInterval: ko.observable(self.reportType() !== "Property"),
                         update: function () {
                             var parsed,
                                 len;

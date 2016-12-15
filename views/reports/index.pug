@@ -609,7 +609,7 @@ html.direports
                                 option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedMonths.indexOf($data.value) }')
                                 // /ko
                             label Months
-                    .row.flex.flex-center.flex-start.inlineInputs
+                    .row.flex.flex-center.flex-start.inlineInputs(data-bind="visible: displayDuration")
                         .input-field
                             select#reportDuration(data-bind='options: availableReportRanges, optionsText: "text", value: selectedReportRange, event: { "change": handleDurationChange }')
                             label(for='reportDuration') Report Duration
@@ -621,7 +621,7 @@ html.direports
                             //- The active class on our label resolves the conflict of label overlapping initial value
                             label.active(for='reportEndTimeOffset') Report End Time
                             input#reportEndTimeOffset.timepicker(type='time', data-bind='value: selectedReportEndTimeOffset')
-                    .row.flex.flex-center.flex-start.inlineInputs
+                    .row.flex.flex-center.flex-start.inlineInputs(data-bind="visible: displayInterval")
                         .input-field
                             label.active(for='inputInterval') Report Interval
                             input#inputInterval.active(type='number', data-bind='value: selectedReportIntervalValue')
