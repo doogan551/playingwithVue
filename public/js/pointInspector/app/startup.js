@@ -868,10 +868,6 @@ define([
                 window.attach.saveCallback.call(undefined, emitData);
             }
 
-            if (data.saveAndClose === true) {
-                return dtiUtility.closeWindow();
-            }
-
             $('body').css('overflow', 'hidden');
             data = data || {};
 
@@ -967,6 +963,9 @@ define([
                     setTimeout(dtiUtility.closeWindow, 1000);
                 }
             });
+            if (data.saveAndClose === true) {
+                return dtiUtility.closeWindow();
+            }
         };
         self.saveAndClose = function(data) {
             data.saveAndClose = true;
