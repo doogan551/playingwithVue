@@ -2892,7 +2892,7 @@
         }, 
         "Ethernet Network" : {
             "ValueType" : 4, 
-            "Value" : 0, 
+            "Value" : 40, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
