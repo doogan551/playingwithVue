@@ -2999,6 +2999,7 @@ var dti = {
                         if (!self.bindings.disableNewPoint()) {
                             self.bindings.mode(self.modes.CREATE);
                             self.bindings.disableNewPoint(true);
+                            self.bindings.pointTypeChanged();
                         }
                     };
 
@@ -3063,7 +3064,13 @@ var dti = {
 
                     bindings.pointTypeInvert = function (type) {
                         self._pauseRequest = true;
-                        self.selectSinglePointType(type);
+
+                        if (self.bindings.mode() === 'create') { // #240
+                            self.bindings.newPointType(type);
+                        } else {
+                            self.selectSinglePointType(type);    
+                        }
+                        
                         self._pauseRequest = false;
                         bindings.pointTypeChanged();
                     };
@@ -3519,7 +3526,11 @@ var dti = {
                     };
 
 
-                parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
+                if (bindings.mode === 'create') {
+                    parameters.pointTypes = [bindings.newPointType];
+                } else {
+                    parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
+                }
 
                 // if (!!module.DEVICEID) {
                 //     params.deviceId = module.DEVICEID;
@@ -5077,6 +5088,8 @@ var dti = {
                     dti.fire('loaded');
                     dti.animations.fadeOut($('#loading'), function afterLoadFadeOut () {
                         dti.log('Load time:', (new Date() - dti.startLoad)/1000, 'seconds');
+                        // #223
+                        dti.toast('#223', 100, 'hiddenToast');
                     });
                 }, 1500);
             },
