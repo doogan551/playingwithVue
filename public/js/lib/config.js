@@ -3648,7 +3648,7 @@ var Config = (function(obj) {
                 point["Ethernet Gateway"].isReadOnly = ro;
                 point["Ethernet Subnet"].isReadOnly = ro;
                 point["Ethernet  IP Port"].isReadOnly = (point["Ethernet Network"].Value !== 0) ? true : false;
-                point.["Ethernet Network"].isDisplayable = true;
+                point["Ethernet Network"].isDisplayable = true;
                 setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet"], obj.Utility.checkMicroScan5Device(point));
             } else {
                 setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], false);
