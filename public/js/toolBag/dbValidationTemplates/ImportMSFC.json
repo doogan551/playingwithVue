@@ -76,7 +76,7 @@
             "isDisplayable" : true, 
             "isReadOnly" : true, 
             "ValueType" : 2, 
-            "Value" : "192.168.1.14"
+            "Value" : "192.168.1.24"
         }, 
         "Network Segment" : {
             "isDisplayable" : true, 
@@ -99,7 +99,7 @@
         }, 
         "Ethernet Address" : {
             "ValueType" : 2, 
-            "Value" : "192.168.1.14", 
+            "Value" : "192.168.1.24", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -111,13 +111,13 @@
         }, 
         "Ethernet Gateway": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "255.255.255.0"
         },
@@ -327,7 +327,7 @@
         "_name2" : "mid02", 
         "_name3" : "", 
         "_name4" : "", 
-        "_name" : "4707_mid02", 
+        "_Name" : "4707_mid02", 
         "_cfgRequired" : true, 
         "_cfgDevice" : true, 
         "_relDevice" : 129, 
@@ -725,7 +725,7 @@
         "_name2" : "mid02", 
         "_name3" : "ifc03", 
         "_name4" : "", 
-        "_name" : "4707_mid02_ifc03", 
+        "_Name" : "4707_mid02_ifc03", 
         "_cfgRequired" : true, 
         "_cfgDevice" : false, 
         "_relDevice" : 129, 
