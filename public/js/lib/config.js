@@ -3649,7 +3649,12 @@ var Config = (function(obj) {
                 point["Ethernet Subnet"].isReadOnly = ro;
                 point["Ethernet IP Port"].isReadOnly = (point["Ethernet Network"].Value !== 0) ? true : false;
                 point["Ethernet Network"].isDisplayable = true;
-                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet"], obj.Utility.checkMicroScan5Device(point));
+                if (obj.Utility.checkMicroScan5Device(point)) {
+                    setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], true);
+                } else {
+                    setDisp(point, ["Ethernet Address", "Ethernet IP Port"], ro);
+                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], false);
+                }
             } else {
                 setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], false);
             }
