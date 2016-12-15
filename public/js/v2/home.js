@@ -5077,6 +5077,8 @@ var dti = {
                     dti.fire('loaded');
                     dti.animations.fadeOut($('#loading'), function afterLoadFadeOut () {
                         dti.log('Load time:', (new Date() - dti.startLoad)/1000, 'seconds');
+                        // #223
+                        dti.toast('#223', 100, 'hiddenToast');
                     });
                 }, 1500);
             },
