@@ -418,7 +418,7 @@ function setupCfgRequired(db, callback) {
 }
 
 function createEmptyCollections(db, callback) {
-	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'dev'];
+	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'Schedules', 'dev'];
 	async.forEach(collections, function(coll, cb) {
 		db.createCollection(coll, function(err, result) {
 			cb(err);
@@ -927,9 +927,8 @@ function convertHistoryReports(db, callback) {
 							report = Config.EditChanges.applyUniquePIDLogic({
 								point: report,
 								refPoint: ref
-							}, index);
+							}, index-1); // array index, not appindex
 							report._actvAlmId = ObjectID("000000000000000000000000");
-							index++;
 						}
 						cb(null);
 
