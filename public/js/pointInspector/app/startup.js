@@ -926,7 +926,7 @@ define([
 
             self.status('saving');
             pointInspector.socket.emit(emitString, emitData);
-            pointInspector.socket.once('pointUpdated', function(rxData) {
+            pointInspector.socket.once('pointUpdated', function (rxData) {
                 var hideAfter = 3000,
                     bgColor,
                     dismissText,
@@ -956,16 +956,15 @@ define([
                     dismissText = 'OK';
                     self.status('error');
                 }
-                close = (typeof data.close === 'boolean' && data.close) && !rxData.err;
+                close = (data.saveAndClose && !rxData.err);
                 bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(dtiUtility.closeWindow, 1000);
+                    setTimeout(function () {
+                        return dtiUtility.closeWindow();
+                    }, 1000);
                 }
             });
-            if (data.saveAndClose === true) {
-                return dtiUtility.closeWindow();
-            }
         };
         self.saveAndClose = function(data) {
             data.saveAndClose = true;
