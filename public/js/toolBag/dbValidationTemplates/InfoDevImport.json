@@ -1286,37 +1286,37 @@
         }, 
         "Ethernet Protocol" : {
             "ValueType" : 5, 
-            "Value" : "None", 
-            "eValue" : 0, 
+            "Value" : "IP", 
+            "eValue" : 1, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet Network" : {
             "ValueType" : 4, 
             "Value" : 0, 
-            "isDisplayable" : false, 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet Address" : {
             "ValueType" : 2, 
-            "Value" : "0.0.0.0", 
-            "isDisplayable" : false, 
+            "Value" : "1", 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 0, 
-            "isDisplayable" : false, 
-            "isReadOnly" : true
+            "Value" : 47809, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
         }, 
         "Ethernet Gateway": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
             "Value": "255.255.255.0"
@@ -1688,37 +1688,37 @@
         }, 
         "Ethernet Protocol" : {
             "ValueType" : 5, 
-            "Value" : "None", 
-            "eValue" : 0, 
+            "Value" : "IP", 
+            "eValue" : 1, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet Network" : {
             "ValueType" : 4, 
-            "Value" : 0, 
-            "isDisplayable" : false, 
+            "Value" : 50, 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet Address" : {
             "ValueType" : 2, 
-            "Value" : "0.0.0.0", 
-            "isDisplayable" : false, 
+            "Value" : "2", 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 0, 
-            "isDisplayable" : false, 
+            "Value" : 47810, 
+            "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
         "Ethernet Gateway": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
             "Value": "255.255.255.0"
@@ -3297,7 +3297,7 @@
         }, 
         "Ethernet Address" : {
             "ValueType" : 2, 
-            "Value" : "0.0.0.0", 
+            "Value" : "5", 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -3305,7 +3305,7 @@
             "ValueType" : 4, 
             "Value" : 47814, 
             "isDisplayable" : true, 
-            "isReadOnly" : true
+            "isReadOnly" : false
         }, 
         "Ethernet Gateway": {
             "isDisplayable": false,
