@@ -2112,13 +2112,13 @@
         }, 
         "Ethernet Gateway": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "255.255.255.0"
         },
@@ -2511,13 +2511,13 @@
         }, 
         "Ethernet Gateway": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "255.255.255.0"
         },
