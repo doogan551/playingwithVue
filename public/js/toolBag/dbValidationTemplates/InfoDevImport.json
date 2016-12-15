@@ -2905,7 +2905,7 @@
         "Ethernet IP Port" : {
             "ValueType" : 4, 
             "Value" : 47808, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
         "Ethernet Gateway": {
@@ -3304,7 +3304,7 @@
         "Ethernet IP Port" : {
             "ValueType" : 4, 
             "Value" : 47814, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Ethernet Gateway": {

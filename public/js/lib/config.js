@@ -3644,17 +3644,14 @@ var Config = (function(obj) {
                 setDisp = obj.Utility.setPropsDisplayable;
 
             if ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) {
-                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network"], true);
-                if (obj.Utility.checkMicroScan5Device(point)) {
-                    var ro = (point["Uplink Port"].Value === "Ethernet") ? true : false;
-                    point["Ethernet Gateway"].isReadOnly = ro;
-                    point["Ethernet Subnet"].isReadOnly = ro;
-                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], true);
-                } else {
-                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], false);
-                }
+                var ro = (point["Uplink Port"].Value === "Ethernet") ? true : false;
+                point["Ethernet Gateway"].isReadOnly = ro;
+                point["Ethernet Subnet"].isReadOnly = ro;
+                point["Ethernet  IP Port"].isReadOnly = (point["Ethernet Network"].Value !== 0) ? true : false;
+                point.["Ethernet Network"].isDisplayable = true;
+                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet"], obj.Utility.checkMicroScan5Device(point));
             } else {
-                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network", "Ethernet Gateway", "Ethernet Subnet"], false);
+                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], false);
             }
             return point;
         },
