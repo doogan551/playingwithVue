@@ -6495,18 +6495,17 @@ gpl.BlockManager = function (manager) {
     bmSelf.openPointEditor = function (block, override) { //for view mode clicks to edit
         var upi,
             pointType,
-            pointName,
             pointData,
             saveCallback = function (results) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
                     // bmSelf.canvas.setActiveObject(block, null);  // is this causing multiple updates??
+                    gpl.pointUpiMap[upi].Name = results.newPoint.Name;  // in case name changed
                     gpl.fire('editedblock', block);
                 }
             },
             doOpenWindow = function () {
                 gpl.openWindow({
-                    pointName: pointName,
                     pointType: pointType,
                     upi: upi,
                     options: {
@@ -6520,7 +6519,6 @@ gpl.BlockManager = function (manager) {
             if (block instanceof gpl.Block) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
                     pointData = block.getPointData();
-                    pointName = block.pointName;
                     bmSelf.deselect();
                     upi = block.upi;
                     pointType = block.pointType;

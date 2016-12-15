@@ -866,9 +866,8 @@ define([
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
-                // return window.close();
-                return dtiUtility.closeWindow();
             }
+
             $('body').css('overflow', 'hidden');
             data = data || {};
 
@@ -964,9 +963,13 @@ define([
                     setTimeout(dtiUtility.closeWindow, 1000);
                 }
             });
+            if (data.saveAndClose === true) {
+                return dtiUtility.closeWindow();
+            }
         };
-        self.saveAndClose = function() {
-            self.save({close: true});
+        self.saveAndClose = function(data) {
+            data.saveAndClose = true;
+            self.save(data);
         };
     }
 
