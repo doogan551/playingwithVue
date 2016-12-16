@@ -45,7 +45,7 @@
         }, 
         "Startup Delay" : {
             "ValueType" : 13, 
-            "Value" : 160, 
+            "Value" : 120, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -262,8 +262,8 @@
         ], 
         "Value" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 1, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
             "ValueOptions" : {
                 "Failed" : 0, 
                 "Normal" : 1
