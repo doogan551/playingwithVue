@@ -3169,7 +3169,7 @@
             "Quality Code Enable": {
                 "enum": 5,
                 "valueType": "BitString",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Rate": {
                 "enum": 204,
@@ -3506,7 +3506,7 @@
             "Status Flags": {
                 "enum": 6,
                 "valueType": "BitString",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Stop Gain": {
                 "enum": 266,

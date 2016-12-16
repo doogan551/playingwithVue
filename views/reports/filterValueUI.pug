@@ -68,7 +68,7 @@ div.durationCtrl
 // ko if: (valueType === "BitString")
 div.bitStringCtrl
     // ko foreach: bitStringEnumsArray
-    input.small.bitStringCheckbox.filled-in(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }", type="checkbox")
+    input.small.bitStringCheckbox.filled-in(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }, event: { 'change': function(){$root.handleBitStringChange($element, $parentContext.$index(), $index())} }", type="checkbox")
     label.small.bitStringLabel(data-bind="text: name, attr: { for: 'filterBitString' + $parentContext.$index() + $index() }")
     br
     // /ko
