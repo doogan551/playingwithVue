@@ -76,7 +76,7 @@
             "isDisplayable" : true, 
             "isReadOnly" : true, 
             "ValueType" : 2, 
-            "Value" : "192.168.1.14"
+            "Value" : "192.168.1.24"
         }, 
         "Network Segment" : {
             "isDisplayable" : true, 
@@ -99,7 +99,7 @@
         }, 
         "Ethernet Address" : {
             "ValueType" : 2, 
-            "Value" : "192.168.1.14", 
+            "Value" : "192.168.1.24", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -111,13 +111,13 @@
         }, 
         "Ethernet Gateway": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "0.0.0.0"
         },
         "Ethernet Subnet": {
             "isDisplayable": false,
-            "isReadOnly": false,
+            "isReadOnly": true,
             "ValueType": 2,
             "Value": "255.255.255.0"
         },
@@ -327,7 +327,7 @@
         "_name2" : "mid02", 
         "_name3" : "", 
         "_name4" : "", 
-        "_name" : "4707_mid02", 
+        "_Name" : "4707_mid02", 
         "_cfgRequired" : true, 
         "_cfgDevice" : true, 
         "_relDevice" : 129, 
@@ -385,11 +385,11 @@
             "Value" : "Central Time Zone", 
             "eValue" : 6, 
             "isDisplayable" : true, 
-            "isReadOnly" : false
+            "isReadOnly" : true
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "V2.02L", 
+            "Value" : "V1.65", 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -406,7 +406,7 @@
             "isReadOnly" : false
         }, 
         "Serial Number" : {
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : true, 
             "ValueType" : 2, 
             "Value" : "Unknown"
@@ -415,14 +415,14 @@
             {
                 "PropertyName" : "Alarm Display Point", 
                 "PropertyEnum" : 137, 
-                "Value" : 193, 
+                "Value" : 0, 
                 "AppIndex" : 0, 
                 "isDisplayable" : true, 
                 "isReadOnly" : false, 
-                "PointName" : "4473_CHWS_Overview_Display", 
-                "PointInst" : 193, 
+                "PointName" : "", 
+                "PointInst" : 0, 
                 "DevInst" : 0, 
-                "PointType" : 151
+                "PointType" : 0
             }
         ], 
         "Alarms Off" : {
@@ -464,7 +464,7 @@
         }, 
         "Startup Delay" : {
             "ValueType" : 13, 
-            "Value" : 27, 
+            "Value" : 120, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -483,7 +483,7 @@
         "Trend Interval" : {
             "ValueType" : 13, 
             "Value" : 60, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Uplink Port" : {
@@ -529,9 +529,9 @@
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 47808, 
+            "Value" : 0, 
             "isDisplayable" : false, 
-            "isReadOnly" : false
+            "isReadOnly" : true
         }, 
         "Ethernet Gateway": {
             "ValueType": 2,
@@ -725,7 +725,7 @@
         "_name2" : "mid02", 
         "_name3" : "ifc03", 
         "_name4" : "", 
-        "_name" : "4707_mid02_ifc03", 
+        "_Name" : "4707_mid02_ifc03", 
         "_cfgRequired" : true, 
         "_cfgDevice" : false, 
         "_relDevice" : 129, 
@@ -756,30 +756,30 @@
         }, 
         "Active Text" : {
             "ValueType" : 2, 
-            "Value" : "On", 
+            "Value" : "Normal", 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Inactive Text" : {
             "ValueType" : 2, 
-            "Value" : "Off", 
+            "Value" : "Failed", 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Alarm Value" : {
             "ValueType" : 5, 
-            "Value" : "Off", 
+            "Value" : "Failed", 
             "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Value" : {
             "ValueType" : 5, 
-            "Value" : "Off", 
-            "eValue" : 0, 
+            "Value" : "Normal", 
+            "eValue" : 1, 
             "ValueOptions" : {
-                "Off" : 0, 
-                "On" : 1
+                "Failed" : 0, 
+                "Normal" : 1
             }, 
             "isDisplayable" : true, 
             "isReadOnly" : true
@@ -851,14 +851,14 @@
         }, 
         "Poll Register" : {
             "ValueType" : 4, 
-            "Value" : 12005, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Poll Function" : {
             "ValueType" : 5, 
-            "Value" : "Read Holding Registers", 
-            "eValue" : 3, 
+            "Value" : "None", 
+            "eValue" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -927,14 +927,14 @@
         }, 
         "Alarm State" : {
             "ValueType" : 5, 
-            "Value" : "Off Normal", 
-            "eValue" : 2, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
         "Quality Code Enable" : {
             "ValueType" : 18, 
-            "Value" : 251, 
+            "Value" : 255, 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
@@ -948,13 +948,13 @@
             {
                 "PropertyName" : "Device Point", 
                 "PropertyEnum" : 139, 
-                "Value" : 81, 
+                "Value" : 40339, 
                 "AppIndex" : 0, 
                 "isDisplayable" : true, 
                 "isReadOnly" : false, 
-                "PointName" : "MS5 xTalk_Device 1", 
-                "PointInst" : 81, 
-                "DevInst" : 81, 
+                "PointName" : "4707_MID02", 
+                "PointInst" : 40339, 
+                "DevInst" : 40339, 
                 "PointType" : 8
             }, 
             {
