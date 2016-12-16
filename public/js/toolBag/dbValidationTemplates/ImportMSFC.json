@@ -970,5 +970,264 @@
                 "PointType" : 0
             }
         ]
+    }, { 
+        "Name" : "MSFC KW3_M3 12 4", 
+        "name1" : "MSFC KW3", 
+        "name2" : "M3 12 4", 
+        "name3" : "", 
+        "name4" : "", 
+        "_name1" : "msfc kw3", 
+        "_name2" : "m3 12 4", 
+        "_name3" : "", 
+        "_name4" : "", 
+        "_Name" : "msfc kw3_m3 12 4", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 16, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "Programmable Modbus", 
+            "eValue" : 16, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "Normal", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Failed", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Failed" : 0, 
+                "Normal" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 1", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Ethernet" : 0,
+                "Port 1" : 1,
+                "Port 2" : 2,
+                "Port 3" : 3,
+                "Port 4" : 4
+            }, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 433, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "Unknown", 
+            "eValue" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "3", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47808, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 433, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "Read Holding Registers", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 433, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Urgent", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 255, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 521073, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4200_xTALK03_DoNotUpdate_Firmware", 
+                "PointInst" : 521073, 
+                "DevInst" : 521073, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 0, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "", 
+                "PointInst" : 0, 
+                "DevInst" : 0, 
+                "PointType" : 0
+            }
+        ]
     }]
 }
