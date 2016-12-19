@@ -3062,11 +3062,12 @@ var dti = {
                         self.getPoints();
                     };
 
-                    bindings.pointTypeInvert = function (type) {
+                    bindings.pointTypeInvert = function (type, e) {
                         self._pauseRequest = true;
 
                         if (self.bindings.mode() === 'create') { // #240
                             self.bindings.newPointType(type);
+                            self.bindings.storePointType(ko.dataFor(e.target));
                         } else {
                             self.selectSinglePointType(type);    
                         }
@@ -4738,7 +4739,7 @@ var dti = {
 
                         // $li.trigger('click');
 
-                        handler(text);
+                        handler(text, event);
 
                         // $li.addClass('active');
                         // $li.find('input').prop('checked', true);
