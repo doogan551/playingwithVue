@@ -20,6 +20,7 @@ var common;
 var rooms = {};
 
 var model;
+var count = 0;
 
 module.exports = model = function(_common) {
     common = _common;
@@ -58,7 +59,9 @@ module.exports = model = function(_common) {
     }
 
     oplog.on('insert', function(doc) {
-
+        if (doc.ns === 'infoscan.rob') {
+            console.log('--', ++count);
+        }
         var startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -200,6 +203,7 @@ module.exports = model = function(_common) {
                                 doc.o.$set._relDevice !== undefined ||
                                 doc.o.$set._relRMU !== undefined ||
                                 doc.o.$set._relPoint !== undefined)) {
+                            logger.info('_relDevice', ++count);
                             updateReliability(point, function(err, point) {
                                 wfcb(err, point);
                             });
