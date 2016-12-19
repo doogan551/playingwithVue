@@ -1903,16 +1903,9 @@ var reportsViewModel = function () {
         },
         displayError = function (errorMessage) {
             dti.toast(errorMessage, 6000);
-
-            // var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
-            // $errorMessageholder.text(errorMessage);
-            // setTimeout(function () {
-            //     $errorMessageholder.text("");
-            // }, 6000);  // display error message
         },
         openPointSelectorForModalColumn = function () {
-            var tempPoint,
-                valueoptions,
+            var valueoptions,
                 tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
@@ -2210,22 +2203,17 @@ var reportsViewModel = function () {
             }
         },
         validColumn = function (column, colIndex) {
-            var answer = {
-                    valid: true
-                },
+            var answer = {},
                 pointRef;
 
             if (column.colName === "Choose Point") {
-                answer.valid = false;
                 answer.error = "Missing Column point at index " + colIndex;
             } else if (column.colName === "Choose Property") {
-                answer.valid = false;
                 answer.error = "Missing Column property at index " + colIndex;
             } else if ((self.reportType() === "Totalizer") || (self.reportType() === "History")) {
                 if (column.colName !== "Date" && !!column.AppIndex) { //  skip first column  "Date"
                     pointRef = getPointRef(column, "Column Point");
                     if (pointRef === undefined) {
-                        answer.valid = false;
                         answer.error = "No corresponding 'Point Ref' for Column point at index " + colIndex;
                     }
                 }
@@ -2234,10 +2222,11 @@ var reportsViewModel = function () {
             return answer;
         },
         validateColumns = function (cleanup) {
-            var results = [],
+            var results = {},
                 localArray,
                 i,
-                col,
+                validation,
+                index,
                 checkColumnsForPointRefs = function () {
                     var column;
 
@@ -2249,22 +2238,27 @@ var reportsViewModel = function () {
                     }
                 };
 
+            results.collection = [];
             checkColumnsForPointRefs();
             localArray = $.extend(true, [], self.listOfColumns());
             for (i = 0; i < localArray.length; i++) {
-                col = validColumn(localArray[i], i);
-                localArray[i].error = col.error;
-                results.push(localArray[i]);
+                validation = validColumn(localArray[i], i);
+                localArray[i].error = validation.error;
+                if (!!validation.error) {
+                    results.error = true;
+                }
+                results.collection.push(localArray[i]);
 
-                if (cleanup && col.valid && results.length > 0) { // these fields are only used in UI
-                    delete results[results.length - 1].valueList;
-                    delete results[results.length - 1].valueType;
-                    delete results[results.length - 1].dataColumnName;
-                    delete results[results.length - 1].rawValue;
-                    delete results[results.length - 1].error;
-                    delete results[results.length - 1].softDeleted;
-                    delete results[results.length - 1].bitstringEnums;
-                    delete results[results.length - 1].upi;
+                if (cleanup && !validation.error && results.collection.length > 0) { // these fields are only used in UI
+                    index = results.collection.length - 1;
+                    delete results.collection[index].valueList;
+                    delete results.collection[index].valueType;
+                    delete results.collection[index].dataColumnName;
+                    delete results.collection[index].rawValue;
+                    delete results.collection[index].error;
+                    delete results.collection[index].softDeleted;
+                    delete results.collection[index].bitstringEnums;
+                    delete results.collection[index].upi;
                 }
             }
 
@@ -2294,14 +2288,43 @@ var reportsViewModel = function () {
             });
             updateListOfColumns(self.listOfColumns());
         },
+        calculateBitStringValue = function (filter) {
+            if (filter.valueType === "BitString") {
+                var total = 0,
+                    key,
+                    bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
+
+                for (key in bitStringEnums) {
+                    if (bitStringEnums.hasOwnProperty(key)) {
+                        if (key !== "All") {
+                            total += bitStringEnums[key].enum;
+                        }
+                    }
+                }
+
+                filter.value = 0;
+                for (var j = 0; j < filter.bitStringEnumsArray.length; j++) {
+                    key = filter.bitStringEnumsArray[j].name;
+                    if (bitStringEnums.hasOwnProperty(key)) {
+                        if (filter.bitStringEnumsArray[j].checked) {
+                            console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
+                            filter.value += bitStringEnums[key].enum;
+                            console.log("filter.value  = " + filter.value);
+                        }
+                        if (filter.value === total) {
+                            filter.value = bitStringEnums.All.enum;
+                        }
+                    }
+                }
+            }
+        },
         validateFilters = function (cleanup) {
-            var results = [],
-                valid,
-                push,
+            var results = {},
                 pointRef,
                 filters,
                 filter,
                 i,
+                index,
                 checkFiltersForPointRefs = function () {
                     for (i = 0; i < self.listOfFilters().length; i++) {
                         filter = self.listOfFilters()[i];
@@ -2311,23 +2334,33 @@ var reportsViewModel = function () {
                     }
                 };
 
+            results.collection = [];
             checkFiltersForPointRefs();
             filters = $.extend(true, [], self.listOfFilters());
             for (i = 0; i < filters.length; i++) {
-                if (filters[i].filterName !== "") {
-                    valid = true;
-                    push = true;
-                    filter = filters[i];
+                filter = filters[i];
+                delete filter.error;
+                if (filter.filterName === "") {
+                    filter.error = "Missing Filter property at index " + i;
+                } else {
                     switch (filter.valueType) {
+                        case "Unsigned":
+                        case "Float":
+                            if (!$.isNumeric(filter.value)) {
+                                filter.error = "Number is Invalid " + filter.value;
+                            }
+                            break;
+                        case "BitString":
+                            if (!$.isNumeric(filter.value)) {
+                                filter.error = "BitString is Invalid " + filter.value;
+                            }
+                            break;
                         case "Bool":
                             filter.value = (filter.value == "True" || filter.value == "true");
                             break;
                         case "Timet":
                         case "DateTime":
-                            if (moment.unix(filter.date).isValid()) {
-                                delete filter.error;
-                            } else {
-                                valid = false;
+                            if (!moment.unix(filter.date).isValid()) {
                                 filter.error = "Invalid Date format in Filters";
                             }
                             if (parseInt(filter.time, 10) === 0) {
@@ -2335,9 +2368,7 @@ var reportsViewModel = function () {
                             }
                             if (filter.time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
                                 filter.value = getFilterAdjustedDatetime(filter);
-                                delete filter.error;
                             } else {
-                                valid = false;
                                 filter.error = "Invalid Time format in Filters";
                             }
                             break;
@@ -2356,24 +2387,31 @@ var reportsViewModel = function () {
                                 pointRef = getPointRef(filter, "Qualifier Point");
                                 if (!!pointRef) {
                                     filter.value = pointRef.PointName;
-                                } else {  // upi not in pointref array
-                                    push = false;
+                                } else {
+                                    filter.error = "upi (" + filter.upi + ") not in pointref array";
                                 }
                             }
                             break;
+                        default:
+                            console.log("- - validateFilters() default for switch-n-case  " + filter.valueType);
+                            break;
                     }
+                }
 
-                    if (push) {
-                        results.push(filter);
-                    }
+                results.collection.push(filter);
 
-                    if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
-                        delete results[results.length - 1].valueList;
-                        delete results[results.length - 1].valueType;
-                        delete results[results.length - 1].error;
-                        delete results[results.length - 1].softDeleted;
-                        delete results[results.length - 1].upi;
-                    }
+                if (filter.error) {
+                    results.error = true;
+                }
+
+                if (cleanup && !filter.error && results.collection.length > 0) {  // clean fields only used during UI
+                    index = results.collection.length - 1;
+                    delete results.collection[index].valueList;
+                    delete results.collection[index].valueType;
+                    delete results.collection[index].error;
+                    delete results.collection[index].softDeleted;
+                    delete results.collection[index].upi;
+                    delete results.collection[index].valueListMaxWidth;
                 }
             }
 
@@ -2498,6 +2536,8 @@ var reportsViewModel = function () {
         },
         setValueList = function (property, pointType, index, activeRequest) {
             var result = [],
+                maxWidth = 0,
+                maxWidthInPixels = 0,
                 i,
                 setOptions = function (options) {
                     if (!!self.listOfFilters()[index]) {
@@ -2508,14 +2548,19 @@ var reportsViewModel = function () {
                             });
 
                             for (i = 0; i < options.length; i++) {
+                                if (maxWidth < options[i].name.length) {
+                                    maxWidth = options[i].name.length;
+                                }
                                 result.push({
                                     value: options[i].name,
                                     evalue: options[i].value
                                 });
                             }
+                            maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
                             self.listOfFilters()[index].value = result[0].value;
                             self.listOfFilters()[index].evalue = result[0].evalue;
                             self.listOfFilters()[index].valueList = result;
+                            self.listOfFilters()[index].valueListMaxWidth = maxWidthInPixels;
                             updateListOfFilters(self.listOfFilters());
                         }
                     }
@@ -2645,53 +2690,13 @@ var reportsViewModel = function () {
         buildReportDataRequest = function () {
             var result,
                 i,
-                j,
-                columns,
+                validatedColumns,
                 columnConfig,
-                filters,
+                validatedFilters,
+                filterConfig,
                 activeError = false,
                 upis = [],
                 uuid,
-                formatFilters = function (allFilters) {
-                    var filter,
-                        i;
-                    for (i = 0; i < allFilters.length; i++) {
-                        filter = allFilters[i];
-                        // console.log("filter  = " + JSON.stringify(filter));
-                        if (!!filter.error) {
-                            displayError(filter.error);
-                            activeError = true;
-                        }
-                        if (filter.valueType === "BitString") {
-                            var total = 0,
-                                key,
-                                bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
-
-                            for (key in bitStringEnums) {
-                                if (bitStringEnums.hasOwnProperty(key)) {
-                                    if (key !== "All") {
-                                        total += bitStringEnums[key].enum;
-                                    }
-                                }
-                            }
-
-                            filter.value = 0;
-                            for (j = 0; j < filter.bitStringEnumsArray.length; j++) {
-                                key = filter.bitStringEnumsArray[j].name;
-                                if (bitStringEnums.hasOwnProperty(key)) {
-                                    if (filter.bitStringEnumsArray[j].checked) {
-                                        //console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
-                                        filter.value += bitStringEnums[key].enum;
-                                        //console.log("filter.value  = " + filter.value);
-                                    }
-                                    if (filter.value === total) {
-                                        filter.value = bitStringEnums.All.enum;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
                 cleanUpReportConfig = function (reportConfig) {  // shrinking size of request object
                     var results = $.extend(true, {}, reportConfig),
                         i;
@@ -2711,41 +2716,49 @@ var reportsViewModel = function () {
                     return results;
                 };
 
-            columns = validateColumns(); //self.listOfColumns();
-            filters = validateFilters(); //self.listOfFilters();
+            validatedColumns = validateColumns();
+            validatedFilters = validateFilters();
 
-            if (columns.length > 1) {
-                // collect UPIs from Columns
-                for (i = 0; i < columns.length; i++) {
-                    columnConfig = columns[i];
-                    if (!!columns[i].error) {
-                        displayError(columns[i].error);
+            if (validatedColumns.collection.length > 1) {
+                for (i = 0; i < validatedColumns.collection.length; i++) {
+                    columnConfig = validatedColumns.collection[i];
+                    if (!!validatedColumns.collection[i].error) {
+                        displayError(validatedColumns.collection[i].error);
                         activeError = true;
                         $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
                         $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
                         $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        self.selectConfigReportTabSubTab("reportColumns");
                     } else {
                         $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                         $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                         $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        if (columns[i].upi > 0) {
+                        if (validatedColumns.collection[i].upi > 0) {  // collect UPIs from Columns
                             upis.push({
-                                upi: parseInt(columns[i].upi, 10),
-                                op: (columns[i].operator).toLowerCase()
+                                upi: parseInt(validatedColumns.collection[i].upi, 10),
+                                op: (validatedColumns.collection[i].operator).toLowerCase()
                             });
                         }
                     }
                 }
 
-                if (self.reportType() === "Totalizer" || self.reportType() === "History") {
-                    configureSelectedDuration();
-                } else {
-                    if (filters.length > 0) {
-                        formatFilters(filters);
+                for (i = 0; i < validatedFilters.collection.length; i++) {
+                    filterConfig = validatedFilters.collection[i];
+                    if (!!filterConfig.error) {
+                        displayError(filterConfig.error);
+                        activeError = true;
+                        $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        self.selectConfigReportTabSubTab("additionalFilters");
+                    } else {
+                        $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                     }
                 }
 
                 if (!activeError) {
+                    if (self.reportType() === "Totalizer" || self.reportType() === "History") {
+                        configureSelectedDuration();
+                    }
+
                     switch (self.reportType()) {
                         case "History":
                         case "Totalizer":
@@ -2776,8 +2789,8 @@ var reportsViewModel = function () {
                         "name4": self.name4Filter(),
                         "selectedPointTypes": self.selectedPointTypesFilter()
                     };
-                    point["Report Config"].columns = columns;
-                    point["Report Config"].filters = filters;
+                    point["Report Config"].columns = validatedColumns.collection;
+                    point["Report Config"].filters = validatedFilters.collection;
 
                     uuid = generateUUID();
                     activeDataRequests.push(uuid);
@@ -2802,8 +2815,6 @@ var reportsViewModel = function () {
         },
         tabSwitch = function (tabNumber) {
             if ($.isNumeric(tabNumber)) {
-                $tabs.find("li").removeClass("active");
-                $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
                 self.currentTab(tabNumber);
                 switch (tabNumber) {
                     case 1:
@@ -3394,7 +3405,10 @@ var reportsViewModel = function () {
         },
         setReportConfig = function (cb) {
             var formattingPointRequest = 0,
+                i,
                 errors,
+                validatedColumns,
+                validatedFilters,
                 handleFormatPointRequests = function (result) {
                     if (!!result.err) {
                         if (errors === undefined) {
@@ -3430,42 +3444,76 @@ var reportsViewModel = function () {
                     formattingPointRequest++;
                     formatPoint(handleFormatPointRequests, {}, "name4");
                 };
-            point["Report Config"].columns = validateColumns(true);
-            point["Report Config"].filters = validateFilters(true);
-            point["Report Config"].pointFilter = {
-                "name1": self.name1Filter(),
-                "name2": self.name2Filter(),
-                "name3": self.name3Filter(),
-                "name4": self.name4Filter(),
-                "selectedPointTypes": self.selectedPointTypesFilter()
-            };
-            point["Report Config"].selectedPageLength = self.selectedPageLength();
-            point["Report Config"].selectedChartType = self.selectedChartType();
-            point["Report Config"].reportTitle = self.reportDisplayTitle();
-            switch (self.reportType()) {
-                case "History":
-                case "Totalizer":
-                    point["Report Config"].interval = {
-                        period: self.intervalPeriod(),
-                        value: self.intervalValue()
-                    };
-                    point["Report Config"].duration = {
-                        startDate: self.selectedDuration().startDate.unix(),
-                        endDate: self.selectedDuration().endDate.unix(),
-                        startTimeOffSet: self.durationStartTimeOffSet(),
-                        endTimeOffSet: self.durationEndTimeOffSet(),
-                        duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
-                        selectedRange: self.selectedDuration().selectedRange
-                    };
-                    break;
-                case "Property":
-                    break;
-                default:
-                    console.log(" - - - DEFAULT  init()");
-                    break;
-            }
 
-            checkForNameChanges();
+            validatedColumns = validateColumns(true);
+            validatedFilters = validateFilters(true);
+            if (!!validatedColumns.error || !!validatedFilters.error) {
+                if (!!validatedColumns.error) {
+                    for (i = 0; i < validatedColumns.collection.length; i++) {
+                        if (!!validatedColumns.collection[i].error) {
+                            displayError(validatedColumns.collection[i].error);
+                            $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                            $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                            $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        } else {
+                            $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                            $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                            $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        }
+                    }
+                    self.selectConfigReportTabSubTab("reportColumns");
+                }
+                if (!!validatedFilters.error) {
+                    for (i = 0; i < validatedFilters.collection.length; i++) {
+                        if (!!validatedFilters.collection[i].error) {
+                            displayError(validatedFilters.collection[i].error);
+                            $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        } else {
+                            $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        }
+                    }
+                    self.selectConfigReportTabSubTab("additionalFilters");
+                }
+                tabSwitch(1);
+                self.activeSaveRequest(false);
+            } else {
+                point["Report Config"].columns = validatedColumns.collection;
+                point["Report Config"].filters = validatedFilters.collection;
+                point["Report Config"].pointFilter = {
+                    "name1": self.name1Filter(),
+                    "name2": self.name2Filter(),
+                    "name3": self.name3Filter(),
+                    "name4": self.name4Filter(),
+                    "selectedPointTypes": self.selectedPointTypesFilter()
+                };
+                point["Report Config"].selectedPageLength = self.selectedPageLength();
+                point["Report Config"].selectedChartType = self.selectedChartType();
+                point["Report Config"].reportTitle = self.reportDisplayTitle();
+                switch (self.reportType()) {
+                    case "History":
+                    case "Totalizer":
+                        point["Report Config"].interval = {
+                            period: self.intervalPeriod(),
+                            value: self.intervalValue()
+                        };
+                        point["Report Config"].duration = {
+                            startDate: self.selectedDuration().startDate.unix(),
+                            endDate: self.selectedDuration().endDate.unix(),
+                            startTimeOffSet: self.durationStartTimeOffSet(),
+                            endTimeOffSet: self.durationEndTimeOffSet(),
+                            duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                            selectedRange: self.selectedDuration().selectedRange
+                        };
+                        break;
+                    case "Property":
+                        break;
+                    default:
+                        console.log(" - - - DEFAULT  init()");
+                        break;
+                }
+
+                checkForNameChanges();
+            }
         },
         setReportEvents = function () {
             var intervals,
@@ -4521,7 +4569,7 @@ var reportsViewModel = function () {
                     var answer;
 
                     if (self.reportType() === "Property") {
-                        answer = 28;
+                        answer = 24;
                     } else {  // History & Totalizer
                         answer = 24;
                     }
@@ -5046,7 +5094,7 @@ var reportsViewModel = function () {
             }
         },
         saveManager = (function () {
-            let remainingResponses = 0,
+            var remainingResponses = 0,
                 errList = [],
                 reportpStatusBeforeSave,
                 submitSaveReportRequest = function (errors) {
@@ -5087,7 +5135,7 @@ var reportsViewModel = function () {
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
-                    let err = result.err;
+                    var err = result.err;
                     tabSwitch(1);  // switch to configuration tab
                     if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
@@ -6594,11 +6642,8 @@ var reportsViewModel = function () {
     };
 
     self.focusChartView = function (element) {
-        // self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
         $reportChartDiv.parent().css("overflow", "");
-        // $viewReportNav.find("chartData a").addClass("active");
-        // $viewReportNav.find("gridData a").removeClass("active");
         renderChart(null, scheduled);
     };
 
@@ -6878,8 +6923,6 @@ var reportsViewModel = function () {
         column.includeInChart = element.checked;
         updateListOfColumns(tempArray);
         return true;
-        // self.listOfColumns()[indexOfColumn].includeInChart = element.checked;
-        // return true;
     };
 
     self.globalColumnIncludeInChartClick = function () {
@@ -6900,8 +6943,11 @@ var reportsViewModel = function () {
         }
     };
 
-    self.setDateRange = function (element, selectedItem) {
-        console.log("selectedItem = " + selectedItem);
+    self.handleBitStringChange = function (element, indexOfFilter, checkboxIndex) {
+        var tempArray = self.listOfFilters(),
+            filter = tempArray[indexOfFilter];
+        calculateBitStringValue(filter);
+        return true;
     };
 
     self.selectedFilterEValue = function (indexOfValue, selectedItem) {
@@ -6919,6 +6965,10 @@ var reportsViewModel = function () {
         window.setTimeout(function () { // Delay the focus for drop down transition to finish
             $searchInputField.focus();
         }, 50);
+    };
+
+    self.selectConfigReportTabSubTab = function (subTabName) {
+        $tabConfiguration.find('ul.tabs').tabs('select_tab', subTabName);
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {

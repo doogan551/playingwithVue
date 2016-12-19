@@ -75,9 +75,9 @@ function runScheduleEntry(entryUpi, callback) {
             }
         }, function(err, point) {
             if (err)
-                callback(err, scheduleEntry);
+                return callback(err, scheduleEntry);
             else if (!point)
-                callback("No point found", scheduleEntry);
+                return callback("No point found", scheduleEntry);
             var controlProperty = scheduleEntry["Control Property"].Value;
             if (Config.Enums["Point Types"][point["Point Type"].Value].schedProps.indexOf(controlProperty) !== -1) {
                 if (controlProperty === "Execute Now") {

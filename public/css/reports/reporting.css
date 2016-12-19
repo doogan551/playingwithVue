@@ -710,11 +710,10 @@ a.btn.dropdown-button {
 }
 a.btn.dropdown-button.propertySelect {
     padding: 0px 0px 0px 0px !important;
-    width: 240px;
+    width: 260px;
 }
 a.btn.dropdown-button.filterValueSelect {
     padding: 0px 0px 0px 0px !important;
-    width: 240px;
 }
 a.btn.dropdown-button.propertySelectForColumn {
     padding: 0px 0px 0px 0px !important;

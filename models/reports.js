@@ -978,42 +978,40 @@ module.exports = Rpt = {
                             }
                             searchQuery[searchKey] = filter.evalue;
                         }
-                    } else {
-                        if (filter.valueType === "Bool") {
-                            if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
-                                };
-                            } else {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $eq: filter.value
-                                };
-                            }
-                        } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                        } else if (filter.value.indexOf(",") > -1) {
-                            var splitValues = filter.value.split(",");
-                            //if (!searchCriteria.$or)
-                            //    searchCriteria.$or = [];
-                            var new$or = {};
-                            new$or.$or = [];
-                            for (var kk = 0; kk < splitValues.length; kk++) {
-                                var ppp = {};
-                                if (utils.converters.isNumber(splitValues[kk])) {
-                                    ppp[key] = convertType(splitValues[kk]);
-                                } else {
-                                    ppp[key] = splitValues[kk];
-                                }
-                                new$or.$or.push(ppp);
-                            }
+                    } else if (filter.valueType === "Bool") {
+                        if (utils.converters.isNumber(filter.value)) {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                            };
                         } else {
-                            if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $eq: filter.value
+                            };
+                        }
+                    } else if (utils.converters.isNumber(filter.value)) {
+                        searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                    } else if (filter.value.indexOf(",") > -1) {
+                        var splitValues = filter.value.split(",");
+                        //if (!searchCriteria.$or)
+                        //    searchCriteria.$or = [];
+                        var new$or = {};
+                        new$or.$or = [];
+                        for (var kk = 0; kk < splitValues.length; kk++) {
+                            var ppp = {};
+                            if (utils.converters.isNumber(splitValues[kk])) {
+                                ppp[key] = convertType(splitValues[kk]);
                             } else {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $regex: '(?i)^' + filter.value
-                                };
+                                ppp[key] = splitValues[kk];
                             }
+                            new$or.$or.push(ppp);
+                        }
+                    } else {
+                        if (utils.converters.isNumber(filter.value)) {
+                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                        } else {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $regex: '(?i)^' + filter.value
+                            };
                         }
                     }
                     break;
@@ -1430,9 +1428,9 @@ module.exports = Rpt = {
             var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
             var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
             console.log(uri, path);
-            pageRender.renderPage(uri, path, function(err) {
+            pageRender.renderPage(uri, path, function (err) {
                 console.log(1, err);
-                fs.readFile(path, function(err, data) {
+                fs.readFile(path, function (err, data) {
                     console.log(2, err);
                     Utility.iterateCursor({
                         collection: 'Users',
@@ -1441,16 +1439,16 @@ module.exports = Rpt = {
                                 $in: users
                             }
                         }
-                    }, function(err, user, nextUser) {
+                    }, function (err, user, nextUser) {
                         // figure out date/time
-                        emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                        emails = emails.concat(user['Contact Info'].Value.filter(function (info) {
                             return info.Type === 'Email';
-                        }).map(function(email) {
+                        }).map(function (email) {
                             return email.Value;
                         }));
 
                         nextUser();
-                    }, function(err, count) {
+                    }, function (err, count) {
                         emails = emails.concat(schedule.emails).join(',');
                         mailer.sendEmail({
                             to: emails,
@@ -1461,12 +1459,13 @@ module.exports = Rpt = {
                                 contentType: 'application/pdf',
                                 content: data
                             }]
-                        }, function(err, info) {
+                        }, function (err, info) {
                             console.log(err, info);
                             cb(err);
                         });
                     });
                 });
+                // }, 5000);
             });
         });
     }

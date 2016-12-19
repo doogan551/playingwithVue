@@ -21,11 +21,7 @@ var reportMainCallback = function(res, err, locals, result) {
         res.locals = locals;
         switch (result["Report Type"].Value) {
           case "Property":
-            res.render('reports/index');
-            break;
           case "History":
-            res.render('reports/index');
-            break;
           case "Totalizer":
             res.render('reports/index');
             break;
@@ -58,11 +54,7 @@ var scheduledReportCallback = function(res, err, locals, result) {
         res.locals.dataUrl = "/scheduleloader";
         switch (result["Report Type"].Value) {
           case "Property":
-            res.render('reports/scheduledReport');
-            break;
           case "History":
-            res.render('reports/scheduledReport');
-            break;
           case "Totalizer":
             res.render('reports/scheduledReport');
             break;
