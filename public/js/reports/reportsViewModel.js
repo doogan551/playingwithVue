@@ -2411,6 +2411,7 @@ var reportsViewModel = function () {
                     delete results.collection[index].error;
                     delete results.collection[index].softDeleted;
                     delete results.collection[index].upi;
+                    delete results.collection[index].valueListMaxWidth;
                 }
             }
 
@@ -2535,6 +2536,8 @@ var reportsViewModel = function () {
         },
         setValueList = function (property, pointType, index, activeRequest) {
             var result = [],
+                maxWidth = 0,
+                maxWidthInPixels = 0,
                 i,
                 setOptions = function (options) {
                     if (!!self.listOfFilters()[index]) {
@@ -2545,14 +2548,19 @@ var reportsViewModel = function () {
                             });
 
                             for (i = 0; i < options.length; i++) {
+                                if (maxWidth < options[i].name.length) {
+                                    maxWidth = options[i].name.length;
+                                }
                                 result.push({
                                     value: options[i].name,
                                     evalue: options[i].value
                                 });
                             }
+                            maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
                             self.listOfFilters()[index].value = result[0].value;
                             self.listOfFilters()[index].evalue = result[0].evalue;
                             self.listOfFilters()[index].valueList = result;
+                            self.listOfFilters()[index].valueListMaxWidth = maxWidthInPixels;
                             updateListOfFilters(self.listOfFilters());
                         }
                     }
