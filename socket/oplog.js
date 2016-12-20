@@ -203,7 +203,7 @@ module.exports = model = function(_common) {
                                 doc.o.$set._relDevice !== undefined ||
                                 doc.o.$set._relRMU !== undefined ||
                                 doc.o.$set._relPoint !== undefined)) {
-                            logger.info('_relDevice', ++count);
+
                             updateReliability(point, function(err, point) {
                                 wfcb(err, point);
                             });
@@ -214,6 +214,7 @@ module.exports = model = function(_common) {
                     function(point, wfcb) {
 
                         if (utils.checkDynamicProperties(doc.o.$set)) {
+
                             checkForPointTail(doc.o2._id, point, function() {
                                 wfcb(null, point);
                             });
@@ -437,6 +438,7 @@ function updateFromTail(_id, value, reliability) {
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
+	
     Utility.update({
             query: {
                 _id: _id
@@ -485,7 +487,7 @@ function updateValsTail(point, finalCB) {
                     point.Value.Value = prop;
             }
         }
-
+        logger.info(point._id);
         common.sendUpdate({
             upi: point._id,
             Value: point.Value.Value,
