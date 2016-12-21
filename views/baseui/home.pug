@@ -455,22 +455,22 @@ html
                     .name1.input-field.col
                         input(type='text', data-bind="hasFocus: focus, textInput: name1, attr: { id: id() + '_name1' }")
                         label(data-bind="updateLabel: name1, attr: { for: id() + '_name1' }") Name 1
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }, visible: name1() !== '' ")
                             i.material-icons.suffix clear
                     .name2.input-field.col
                         input(type='text', data-bind="textInput: name2, attr: { id: id() + '_name2' }")
                         label(data-bind="updateLabel: name2, attr: { for: id() + '_name2' }") Name 2
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }, visible: name2() !== '' ")
                             i.material-icons.suffix clear                                    
                     .name3.input-field.col
                         input(type='text', data-bind="textInput: name3, attr: { id: id() + '_name3' }")
                         label(data-bind="updateLabel: name3, attr: { for: id() + '_name3' }") Name 3
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }, visible: name3() !== '' ")
                             i.material-icons.suffix clear                                    
                     .name4.input-field.col
                         input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
                         label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }, visible: name4() !== '' ")
                             i.material-icons.suffix clear                                                                                                                                       
                     //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")

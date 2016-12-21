@@ -20,6 +20,7 @@ var common;
 var rooms = {};
 
 var model;
+var count = 0;
 
 module.exports = model = function(_common) {
     common = _common;
@@ -58,7 +59,9 @@ module.exports = model = function(_common) {
     }
 
     oplog.on('insert', function(doc) {
-
+        if (doc.ns === 'infoscan.rob') {
+            console.log('--', ++count);
+        }
         var startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -200,6 +203,7 @@ module.exports = model = function(_common) {
                                 doc.o.$set._relDevice !== undefined ||
                                 doc.o.$set._relRMU !== undefined ||
                                 doc.o.$set._relPoint !== undefined)) {
+
                             updateReliability(point, function(err, point) {
                                 wfcb(err, point);
                             });
@@ -210,6 +214,7 @@ module.exports = model = function(_common) {
                     function(point, wfcb) {
 
                         if (utils.checkDynamicProperties(doc.o.$set)) {
+
                             checkForPointTail(doc.o2._id, point, function() {
                                 wfcb(null, point);
                             });
@@ -433,6 +438,7 @@ function updateFromTail(_id, value, reliability) {
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
+	
     Utility.update({
             query: {
                 _id: _id
@@ -481,7 +487,7 @@ function updateValsTail(point, finalCB) {
                     point.Value.Value = prop;
             }
         }
-
+        logger.info(point._id);
         common.sendUpdate({
             upi: point._id,
             Value: point.Value.Value,

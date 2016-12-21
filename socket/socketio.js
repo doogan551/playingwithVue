@@ -674,7 +674,7 @@ function doUpdateSequence(data, cb) {
     if (updateErr) {
       cb('Error: ' + updateErr.err);
     } else {
-      var logData = {
+      /*var logData = {
         user: data.user,
         timestamp: Date.now(),
         // point: data.point,
@@ -685,7 +685,7 @@ function doUpdateSequence(data, cb) {
       Utility.insert({
         collection: activityLogCollection,
         insertObj: logData
-      }, function(err, result) {});
+      }, function(err, result) {});*/
       return cb('success');
     }
   });
