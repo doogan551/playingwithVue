@@ -159,8 +159,10 @@ html.direports
                                                                     label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
                                                             // /ko
                                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="dtiReportsMaterializeDropdown", data-activates ='globalCalculationsDropdown') Calcs
+                                                // ko if: ($root.reportType() === 'Totalizer')
                                                 th.medium.strong.typeColumn
                                                     label Type
+                                                // /ko
                                                 // /ko
                                                 th.medium.strong
                                                     .precisionColumn(tabindex="920")
@@ -234,7 +236,7 @@ html.direports
                                                 td.totalizerOperator
                                                     .availableTotalizerOperatorsContainer
                                                         // ko if: (valueList.length > 1)
-                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect")
+                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
                                                         label
                                                         //select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
                                                         //    option(data-bind="attr: { selected: ($parent.operator === $data) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data, text: $data")
