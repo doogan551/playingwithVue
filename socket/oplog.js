@@ -59,9 +59,6 @@ module.exports = model = function(_common) {
     }
 
     oplog.on('insert', function(doc) {
-        if (doc.ns === 'infoscan.rob') {
-            console.log('--', ++count);
-        }
         var startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -163,7 +160,6 @@ module.exports = model = function(_common) {
                     },
 
                     function(point, wfcb) {
-                        // logger.info(point._id + " " + doc.o2._id);
                         if (doc.o.$set !== undefined && (doc.o.$set.Value !== undefined ||
                                 doc.o.$set["Value.Value"] !== undefined ||
                                 doc.o.$set["Value.ValueOptions"] !== undefined ||
@@ -334,7 +330,6 @@ module.exports = model = function(_common) {
                 });
             }
         } else if (doc.ns === dbName + '.Schedules') {
-            console.log('deleting schedule', doc);
             scheduler.stopSchedule(doc.o);
         }
     });
@@ -487,7 +482,7 @@ function updateValsTail(point, finalCB) {
                     point.Value.Value = prop;
             }
         }
-        logger.info(point._id);
+
         common.sendUpdate({
             upi: point._id,
             Value: point.Value.Value,
