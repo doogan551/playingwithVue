@@ -630,6 +630,9 @@ td.firstColumn.datetime {
 }
 .availableCalculations a .text {
 }
+.availableTotalizerOperatorsContainer {
+    height: 25px;
+}
 .availableTotalizerOperatorsContainer a {
     width: 80px;
     padding: 0px;

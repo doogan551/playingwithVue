@@ -1343,30 +1343,24 @@ var initKnockout = function () {
     ko.bindingHandlers.dtiReportsMaterializeSelect = {
         suspend: false,
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var suspend = false,
-                boundField = valueAccessor(),
-                $element = $(element);
+            var
+                // boundField = valueAccessor(),
+                // viewModelObject = allBindingsAccessor().optionsText,
+                $element = $(element),
+                $select = $($element.context);
 
             // $element.material_select('destroy');
             $element.material_select();
-            // $element.on('change', function () {
-            //     // console.log("material_select change() fired....");
-            //     if (ko.isObservable(boundField)) {
-            //         boundField(this.selectedOptions[0].value);
-            //     } else {
-            //         boundField = this.selectedOptions[0].value;
+            // $select.on('change', function handleMaterialSelectChange(event) {
+            //     var $target = $(event.target);
+            //
+            //     if ($target[0].value === "Starts") {
+            //         viewModelObject.precision = 0;
             //     }
             //
-            //     if (!suspend) {
-            //         suspend = true;
-            //         var event = new CustomEvent('change', {
-            //             detail: 'change',
-            //             bubbles: true
-            //         });
-            //         $(this).get(0).dispatchEvent(event);
-            //     } else {
-            //         suspend = false;
-            //     }
+            //     console.log("$target = " + $target);
+            //     console.log("boundField = " + boundField);
+            //     console.log("viewModelObject = " + viewModelObject);
             // });
         },
         update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -1991,6 +1985,9 @@ var reportsViewModel = function () {
                     if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0];
+                        if (tempObject.operator === "Starts") {
+                            tempObject.precision = 0;
+                        }
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
                         if (self.reportType() === "History") {
@@ -2217,6 +2214,9 @@ var reportsViewModel = function () {
                         answer.error = "No corresponding 'Point Ref' for Column point at index " + colIndex;
                     }
                 }
+            }
+            if (column.operator === "Starts") {
+                column.precision = 0;
             }
 
             return answer;
@@ -2503,6 +2503,9 @@ var reportsViewModel = function () {
                             currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
                             if (!Array.isArray(currentColumn.calculation)) {
                                 currentColumn.calculation = [];
+                            }
+                            if (currentColumn.operator === "Starts") {
+                                currentColumn.precision = 0;
                             }
                             break;
                         default:
