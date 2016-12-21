@@ -184,56 +184,60 @@ function importUpdate() {
 							addTrendProperties(point, function(err) {
 								if (err)
 									logger.info("addTrendProperties", err);
-								updateScriptPoint(point, function(err) {
+								addVAVProperties(point, function(err) {
 									if (err)
-										logger.info("updateScriptPoint", err);
-									/*updateProgramPoints(point, db, function(err) {
-											if (err)
-												logger.info("updateProgramPoints", err);*/
-									updateMultiplexer(point, function(err) {
+										logger.info("addVAVProperties", err);
+									updateScriptPoint(point, function(err) {
 										if (err)
-											logger.info("updateMultiplexer", err);
-										updateGPLBlocks(point, function(err) {
+											logger.info("updateScriptPoint", err);
+										/*updateProgramPoints(point, db, function(err) {
+												if (err)
+													logger.info("updateProgramPoints", err);*/
+										updateMultiplexer(point, function(err) {
 											if (err)
-												logger.info("updateGPLBlocks", err);
-											/*updateSensorPoints(db, point, function(err) {
+												logger.info("updateMultiplexer", err);
+											updateGPLBlocks(point, function(err) {
 												if (err)
-													logger.info("updateSensorPoints", err);*/
-											updateReferences(db, point, function(err) {
-												if (err)
-													logger.info("updateReferences", err);
-												// needs to be done after point refs is added to point
-												utils.setupNonFieldPoints(point);
-
-												utils.setChannelOptions(point);
-												updateTimeZones(point, function(err) {
+													logger.info("updateGPLBlocks", err);
+												/*updateSensorPoints(db, point, function(err) {
 													if (err)
-														logger.info("updateTimeZones", err);
-													updateDevices(point, function(err) {
+														logger.info("updateSensorPoints", err);*/
+												updateReferences(db, point, function(err) {
+													if (err)
+														logger.info("updateReferences", err);
+													// needs to be done after point refs is added to point
+													utils.setupNonFieldPoints(point);
+
+													utils.setChannelOptions(point);
+													updateTimeZones(point, function(err) {
 														if (err)
-															logger.info("updateDevices", err);
-														updateModels(db, point, function(err) {
+															logger.info("updateTimeZones", err);
+														updateDevices(point, function(err) {
 															if (err)
-																logger.info("updateModels", err);
-															updateAlarmMessages(point, function(err) {
+																logger.info("updateDevices", err);
+															updateModels(db, point, function(err) {
 																if (err)
-																	logger.info("updateAlarmMessages", err);
-																addBroadcastPeriod(point, function(err) {
+																	logger.info("updateModels", err);
+																updateAlarmMessages(point, function(err) {
 																	if (err)
-																		logger.info("addBroadcastPeriod", err);
-																	updateTrend(point, function(err) {
+																		logger.info("updateAlarmMessages", err);
+																	addBroadcastPeriod(point, function(err) {
 																		if (err)
-																			logger.info("updateTrend", err);
-																		updateAlarmRepeat(point, function(err) {
+																			logger.info("addBroadcastPeriod", err);
+																		updateTrend(point, function(err) {
 																			if (err)
-																				logger.info("updateAlarmRepeat", err);
-																			rearrangeProperties(point, function(err) {
+																				logger.info("updateTrend", err);
+																			updateAlarmRepeat(point, function(err) {
 																				if (err)
-																					logger.info("rearrangeProperties", err);
-																				updatePoint(db, point, function(err) {
+																					logger.info("updateAlarmRepeat", err);
+																				rearrangeProperties(point, function(err) {
 																					if (err)
-																						logger.info("updatePoint", err);
-																					cb(null);
+																						logger.info("rearrangeProperties", err);
+																					updatePoint(db, point, function(err) {
+																						if (err)
+																							logger.info("updatePoint", err);
+																						cb(null);
+																					});
 																				});
 																			});
 																		});
@@ -910,7 +914,7 @@ function convertHistoryReports(db, callback) {
 								"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
 								"canBeCharted": true,
 								"yaxisGroup": "A",
-								"AppIndex": ++index      // AppIndex 0 is reserved for Device Point
+								"AppIndex": ++index // AppIndex 0 is reserved for Device Point
 							});
 							report["Point Refs"].push({
 								"PropertyName": "Column Point",
@@ -927,7 +931,7 @@ function convertHistoryReports(db, callback) {
 							report = Config.EditChanges.applyUniquePIDLogic({
 								point: report,
 								refPoint: ref
-							}, index-1); // array index, not appindex
+							}, index - 1); // array index, not appindex
 							report._actvAlmId = ObjectID("000000000000000000000000");
 						}
 						cb(null);
@@ -1019,7 +1023,7 @@ function convertTotalizerReports(callback) {
 						report["Point Refs"].push({
 							"PropertyName": "Column Point",
 							"PropertyEnum": 131,
-							"AppIndex": ++index,   // AppIndex 0 is reserved for Device Point
+							"AppIndex": ++index, // AppIndex 0 is reserved for Device Point
 							"isDisplayable": true,
 							"isReadOnly": false,
 							"Value": monitor['Monitor upi'],
@@ -1240,40 +1244,55 @@ function updateGPLReferences(db, callback) {
 			db.collection(pointsCollection).update({
 				_id: gplBlock._id
 			}, gplBlock, function(err, result) {
-				if (err)
+				if (err) {
 					logger.info('updateGPLReferences1 err', err);
+					return cb(null);
+				} else {
 
-				db.collection(pointsCollection).find({
-					"Point Refs.Value": gplBlock._id
-				}, {
-					"Point Refs": 1
-				}).toArray(function(err, gplRefs) {
-					async.forEachSeries(gplRefs, function(gplRef, cb2) {
-						for (var m = 0; m < gplRef["Point Refs"].length; m++) {
-							if (gplRef["Point Refs"][m].Value === gplBlock._id) {
-								gplRef["Point Refs"][m].PointName = gplBlock.Name;
+					db.collection(pointsCollection).find({
+						"Point Refs.Value": gplBlock._id
+					}, {
+						"Point Refs": 1
+					}).toArray(function(err, gplRefs) {
+						async.forEachSeries(gplRefs, function(gplRef, cb2) {
+							for (var m = 0; m < gplRef["Point Refs"].length; m++) {
+								if (gplRef["Point Refs"][m].Value === gplBlock._id) {
+									gplRef["Point Refs"][m].PointName = gplBlock.Name;
+								}
 							}
-						}
-						db.collection(pointsCollection).update({
-							_id: gplRef._id
-						}, {
-							$set: {
-								"Point Refs": gplRef["Point Refs"]
-							}
-						}, function(err, result) {
-							if (err)
-								logger.info('updateGPLReferences2 err', err);
-							cb2(null);
+							db.collection(pointsCollection).update({
+								_id: gplRef._id
+							}, {
+								$set: {
+									"Point Refs": gplRef["Point Refs"]
+								}
+							}, function(err, result) {
+								if (err)
+									logger.info('updateGPLReferences2 err', err);
+								cb2(null);
+							});
+						}, function(err) {
+							cb(null);
 						});
-					}, function(err) {
-						cb(null);
-					});
 
-				});
+					});
+				}
 
 			});
 		}, function(err) {
-			callback(null);
+			db.collection(pointsCollection).update({
+				gplLabel: {
+					$exists: 1
+				}
+			}, {
+				$unset: {
+					gplLabel: 1
+				}
+			}, {
+				multi: true
+			}, function(_err, result) {
+				callback(err);
+			});
 		});
 	});
 }
@@ -1827,6 +1846,16 @@ function addTrendProperties(point, callback) {
 		point['Trend Samples'] = Config.Templates.getTemplate(pt)['Trend Samples'];
 	}
 	callback(null);
+}
+
+function addVAVProperties(point, callback) {
+	if (point['Point Type'].Value === 'VAV') {
+		point['Fan Control Strategy'] = Config.Templates.getTemplate(point['Point Type'].Value)['Fan Control Strategy'];
+		point['Fan Off Temp Deadband'] = Config.Templates.getTemplate(point['Point Type'].Value)['Fan Off Temp Deadband'];
+
+		point = Config.EditChanges.updateFanStrategy(point);
+	}
+	callback();
 }
 
 function updateScriptPoint(point, callback) {
@@ -2675,6 +2704,12 @@ function updateDevices(point, callback) {
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
 
+	}
+	// set all devices/rmus and possible points on those to Stop Scan
+	if (!!point.hasOwnProperty('Reliability')) {
+		point._relDevice = 129;
+		point.Reliability.Value = 'Stop Scan';
+		point.Reliability.eValue = 129;
 	}
 	callback(null);
 }
