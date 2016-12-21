@@ -2426,7 +2426,7 @@ function updateReferences(db, point, mainCallback) {
 		var index = 0;
 		var prop;
 
-		async.forEachSeries(pointRefs, function(pointRef, cb) {
+		async.eachOfSeries(pointRefs, function(pointRef, key, cb) {
 			if (pointRef.Value !== 0) {
 				db.collection(pointsCollection).findOne({
 					_id: pointRef.Value
@@ -2434,13 +2434,8 @@ function updateReferences(db, point, mainCallback) {
 					if (err)
 						return cb(err);
 
-					if (pointRef.PropertyName === 'GPLBlock') {
-						prop = index;
-					} else {
-						prop = pointRef.PropertyName;
-					}
-					prop = index;
-					refPoint = Config.EditChanges.applyUniquePIDLogic({
+					prop = key;
+                    Config.EditChanges.applyUniquePIDLogic({
 						point: point,
 						refPoint: refPoint
 					}, prop);
