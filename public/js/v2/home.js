@@ -4501,7 +4501,7 @@ var dti = {
         },
         taskbarButtonClick: function (object) {
             dti.fire('hideMenus');
-            if (object.singleton()) {
+            if (object.standalone()) {
                 dti.bindings.startMenuClick(object);
             } else {
                 dti.bindings.showNavigator(object.group());
