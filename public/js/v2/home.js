@@ -2901,6 +2901,7 @@ var dti = {
                     dataType: 'json',
                     type: 'post'
                 },
+                getPointsTimerId = 0,
                 getBindings = function () {
                     var pointTypes = $.extend(true, [], dti.utility.pointTypes),
                         bindings = {
@@ -3260,7 +3261,7 @@ var dti = {
                             name3 = bindings.name3(),
                             name4 = bindings.name4();
 
-                        if (!self._pauseRequest && self._loaded) {
+                        if (self._loaded) {
                             self.getPoints();
                         }
                     });
@@ -3269,7 +3270,7 @@ var dti = {
                         var showInactive = bindings.showInactive(),
                             showDeleted = bindings.showDeleted();
 
-                        if (!self._pauseRequest && self._loaded) {
+                        if (self._loaded) {
                             self.getPoints();
                         }
                     });
@@ -3562,24 +3563,16 @@ var dti = {
             };
 
             self.getPoints = function (fromTimer, id) {
-                var now = new Date(),
-                    fetchDelay = 500,
-                    tmpId = dti.makeId(),
-                    longEnough = now - self.lastFetchCall >= fetchDelay;
+                var fetchDelay = 500,
+                    tmpId = dti.makeId();
 
-                if (!fromTimer) {
-                    //only need to timestamp to check manual calls
-                    self.lastFetchCall = now;
-                }
-
-                if (fromTimer && longEnough && !self._pauseRequest) {
+                if (fromTimer && !self._pauseRequest) {
                     self._getPoints();
                 } else {
-                    if (!fromTimer) {
-                        setTimeout(function doDelayedFetch () {
-                            self.getPoints(true, tmpId);
-                        }, fetchDelay);
-                    }
+                    clearTimeout(getPointsTimerId);
+                    getPointsTimerId = setTimeout(function doDelayedFetch () {
+                        self.getPoints(true, tmpId);
+                    }, fetchDelay);
                 }
             };
 
