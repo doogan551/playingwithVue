@@ -1005,8 +1005,8 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "", 
-            "isDisplayable" : true, 
+            "Value" : "V1.00", 
+            "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
         "Active Text" : {
@@ -1062,12 +1062,12 @@
                 "Port 3" : 3,
                 "Port 4" : 4
             }, 
-            "isDisplayable" : false, 
+            "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
         "Instance" : {
             "ValueType" : 4, 
-            "Value" : 433, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1079,8 +1079,8 @@
         }, 
         "Network Type" : {
             "ValueType" : 5, 
-            "Value" : "Unknown", 
-            "eValue" : 0, 
+            "Value" : "MS/TP", 
+            "eValue" : 3, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1098,7 +1098,7 @@
         }, 
         "Ethernet IP Port" : {
             "ValueType" : 4, 
-            "Value" : 47808, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1123,7 +1123,7 @@
         }, 
         "Modbus Unit Id" : {
             "ValueType" : 4, 
-            "Value" : 433, 
+            "Value" : 0, 
             "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
@@ -1161,7 +1161,7 @@
         "Configure Device" : {
             "ValueType" : 7, 
             "Value" : false, 
-            "isDisplayable" : true, 
+            "isDisplayable" : false, 
             "isReadOnly" : false
         }, 
         "Stop Scan" : {
