@@ -471,6 +471,8 @@ module.exports = function socketio(_common) {
 
       _common.deletePoint(data.upi, data.method, user, null, function(msg) {
         msg.reqID = data.reqID;
+        msg.operation = 'deletePoint';
+        msg.method = data.method;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
@@ -484,6 +486,7 @@ module.exports = function socketio(_common) {
 
       _common.restorePoint(data.upi, user, function(msg) {
         msg.reqID = data.reqID;
+        msg.operation = 'restorePoint';
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
