@@ -5972,7 +5972,7 @@ var reportsViewModel = function () {
             return str;
         },
         setDirty: function (data) {
-            data.isDirty = true;
+            data.isDirty(true);
             return true;
         },
         getNewScheduleObject: function (cfg) {
@@ -5998,7 +5998,7 @@ var reportsViewModel = function () {
                     enabled: ko.observable(true),
                     transport: ko.observable('email'),
                     // Following are keys used by UI but removed before the object is sent to the server
-                    isDirty: true,
+                    isDirty: ko.observable(true),
                     parsed: null,
                     deleteMe: ko.observable(false)
                 },
@@ -6057,7 +6057,7 @@ var reportsViewModel = function () {
                 err = false;
 
             dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
-                if (schedule.isDirty) {
+                if (schedule.isDirty()) {
                     // Get a shallow copy of the source so we can remove the UI-only keys
                     schedule = $.extend({}, ko.toJS(schedule));
                     delete schedule.isDirty;
@@ -6105,7 +6105,7 @@ var reportsViewModel = function () {
                             }
                             // Clear our isDirty flags
                             dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
-                                schedule.isDirty = false;
+                                schedule.isDirty(false);
                             });
                         }
                         callback(err);
@@ -6139,7 +6139,7 @@ var reportsViewModel = function () {
 
                     dti.forEachArray(data.schedules, function addSchedule(schedule) {
                         // Add UI-only keys
-                        schedule.isDirty = false;
+                        schedule.isDirty = ko.observable(false);
                         schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
                         schedule.deleteMe = ko.observable(false);
                         // Convert some keys to observables

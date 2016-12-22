@@ -490,7 +490,7 @@ html.direports
                                             span , email this report to&nbsp;
                                             span(data-bind='text: $root.scheduler.buildRecipients($data)')
                                         i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
-                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: $data.hasOwnProperty("_id"), click: $root.scheduler.runNow') Run Now
+                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: !$data.isDirty(), click: $root.scheduler.runNow') Run Now
                                     // /ko
                                     // /ko
                                     a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action
