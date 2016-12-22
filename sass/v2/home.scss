@@ -380,6 +380,12 @@ $modalHeaderHeight: 42px;
     cursor: pointer;
     padding-left: 10px;
 }
+.toast.errorToast {
+    background-color: map-get($red, darken-2);
+}
+.toast.warningToast {
+    background-color: map-get($deep-orange, darken-1);
+}
 
 .activeCard {
     z-index: 101 !important;

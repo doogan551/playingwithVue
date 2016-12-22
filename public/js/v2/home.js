@@ -3598,12 +3598,31 @@ var dti = {
 
             self.processPointUpdate = function (response) {
                 var result = JSON.parse(response),
-                    point = this.contextPoint;
+                    point = this.contextPoint,
+                    style = '',
+                    msg;
 
                 if (result.message === 'success') {
                     this.bindings.points.remove(point);
-                    dti.toast('Point Successfully Deleted', 3000);
+
+                    if (result.operation === 'deletePoint') {
+                        if (result.method === 'soft') {
+                            msg = 'Point Successfully Deleted';
+                        } else {
+                            msg = 'Point Successfully Destroyed';
+                        }
+                    } else if (result.operation === 'restorePoint') {
+                        msg = 'Point Successfully Restored';
+                    }
+                } else if (data.err) {
+                    msg = 'Error: ' + data.err;
+                    style = 'errorToast';
+                } else if (data.warning) {
+                    msg = 'Warning: ' + data.warning;
+                    style = 'warningToast';
                 }
+                
+                dti.toast(msg, 3000, style);
 
                 // dti.log(result.message);
             };
@@ -3658,7 +3677,7 @@ var dti = {
 
             self.initContextMenu = function () {
                 $.contextMenu({
-                    selector: '#' + self.$container.attr('id') + ' .listEntry',
+                    selector: '#' + self.$container.attr('id') + ' .listRow',
                     //callback:
                     items: {
                         'Delete': {
