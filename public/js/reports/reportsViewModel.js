@@ -5769,8 +5769,12 @@ var reportsViewModel = function () {
                             done();
                         },
                         deleteScheduleEntry: function () {
-                            data.deleteMe(true);
-                            self.scheduler.setDirty(data);
+                            if (!data._id) { // If this is a new entry that hasn't been saved to the db
+                                self.scheduler.scheduleEntries.remove(data);
+                            } else {
+                                data.deleteMe(true);
+                                self.scheduler.setDirty(data);
+                            }
                             self.scheduler.modal.close();
                         },
                         handleDurationChange: function () {
