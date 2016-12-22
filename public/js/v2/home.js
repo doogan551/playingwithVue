@@ -3677,7 +3677,7 @@ var dti = {
 
             self.initContextMenu = function () {
                 $.contextMenu({
-                    selector: '#' + self.$container.attr('id') + ' .listEntry',
+                    selector: '#' + self.$container.attr('id') + ' .listRow',
                     //callback:
                     items: {
                         'Delete': {
