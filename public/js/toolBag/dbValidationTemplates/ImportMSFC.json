@@ -2538,6 +2538,13 @@
         "_devModel" : 2, 
         "_rmuModel" : 17, 
         "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Analog Input", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
         "Out of Service": {
             "isDisplayable": true,
             "isReadOnly": false,
@@ -2561,8 +2568,8 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 5,
-            "Value": "No Fault",
-            "eValue": 0
+            "Value": "Stop Scan",
+            "eValue": 129
         },
         "Value": {
             "isDisplayable": true,
@@ -2621,7 +2628,7 @@
             "Value": 0.0
         },
         "Channel": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "9",
@@ -2661,14 +2668,14 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Both",
+            "Value": "Swap Both",
             "eValue": 3
         },
         "Poll Data Type": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "None",
+            "Value": "Bit 0",
             "eValue": 0
         },
         "Poll Function": {
@@ -2719,7 +2726,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 60
+            "Value": 0
         },
         "Trend Samples": {
             "isDisplayable": true,
@@ -2831,7 +2838,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -2863,7 +2870,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 0
+            "Value": 15
         },
         "Quality Code Enable": {
             "isDisplayable": true,
@@ -2872,7 +2879,7 @@
             "Value": 255
         },
         "Remarks": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
             "Value": ""
