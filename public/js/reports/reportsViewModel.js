@@ -2447,6 +2447,7 @@ var reportsViewModel = function () {
                 if (validFilter) {
                     currentFilter.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentFilter.filterName].valueType : "");
                     currentFilter.valueList = [];
+                    currentFilter.valueListMaxWidth = 0;
                     setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
                     result.push(currentFilter);
                 }
