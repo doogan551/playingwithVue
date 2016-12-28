@@ -1874,7 +1874,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             idx = this._pointRefs[prop];
             if (idx !== undefined) {
                 ref = refs[idx];
-                ref.Value = ref.PointInst = upi;
+                ref.Value = upi;
 
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
@@ -1886,10 +1886,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     ref.PointType = gpl.pointTypes[refPointType].enum;
                 }
 
-                refs[idx].PointName = name;
+            } else {
+                gpl.log('setPointRef()  idx is undefined for property "', prop, '"');
             }
-            // } else {
-            //     gpl.log('no point data', this.type, this.gplId);
+        // } else {
+        //     gpl.log('no point data', this.type, this.gplId);
         }
     },
 
@@ -5725,7 +5726,9 @@ gpl.BlockManager = function (manager) {
 
                         otherBlock = anchor.getConnectedBlock();
                         if (otherBlock) {
-                            otherBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, editBlock.pointType);
+                            if (!!anchor.getLines()[0] && anchor.getLines()[0].endAnchor) {
+                                otherBlock.setPointRef(anchor.getLines()[0].endAnchor.anchorType, bmSelf.editBlockUpi, pointName, editBlock.pointType);
+                            }
                             editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, otherBlock.pointType);
                             gpl.fire('editedblock', otherBlock);
                         } else {
