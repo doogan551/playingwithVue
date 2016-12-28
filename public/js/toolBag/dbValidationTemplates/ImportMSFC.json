@@ -2487,9 +2487,7 @@
         }, 
         "Remarks" : {
             "ValueType" : 2, 
-            "Value" : "~Model # 240-VTP-F7-E4-DD-PS-V6M-ST-MP3 / Serial # 98207-5576 3 Inch Steam Meter   Min Flow  459.66 lb/hr   Max Flow  15354.10 lb/hr~
-
-8-21-14 Meter oos due to bldg scheduled for demo.HP", 
+            "Value" : "~Model # 240-VTP-F7-E4-DD-PS-V6M-ST-MP3 / Serial # 98207-5576 3 Inch Steam Meter   Min Flow  459.66 lb/hr   Max Flow  15354.10 lb/hr~\r\n\r\n8-21-14 Meter oos due to bldg scheduled for demo.HP", 
             "isDisplayable" : true, 
             "isReadOnly" : false
         }, 
