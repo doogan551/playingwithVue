@@ -3063,6 +3063,25 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
     pointType: 'Average',
     valueType: 'float',
 
+    leftAnchors: [{
+        anchorType: 'Input Point 1',
+        required: true,
+        takesConstant: false
+    },{
+        anchorType: 'Input Point 2',
+        required: true,
+        takesConstant: false
+    },{
+        anchorType: 'Input Point 3',
+        takesConstant: false
+    },{
+        anchorType: 'Input Point 4',
+        takesConstant: false
+    },{
+        anchorType: 'Input Point 5',
+        takesConstant: false
+    }],
+
     shapes: {
         'Rect': {
             cls: fabric.Rect,
