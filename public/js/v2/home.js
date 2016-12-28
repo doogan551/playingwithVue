@@ -2987,6 +2987,7 @@ var dti = {
                     bindings.cancelCreatePoint = function () {
                         self.bindings.mode(self.modes.DEFAULT);
                         self.bindings.disableNewPoint(false);
+                        self.bindings.pointTypeChanged();
                         if (self.fullCreate) {
                             if (dti.navigator.temporaryCallback) {
                                 dti.navigator.temporaryCallback(false);
@@ -3475,12 +3476,12 @@ var dti = {
                 }
             };
 
-            self.getFlatPointTypes = function (pointTypes) {
+            self.getFlatPointTypes = function (pointTypes, mode) {
                 var ret = [];
 
                 dti.forEachArray(pointTypes, function flattenPointType (type) {
                     if (typeof type === 'object') {
-                        if (type.selected !== false) {
+                        if (type.selected !== false || mode === 'create') {
                             ret.push(type.key);
                         }
                     } else {
@@ -3527,12 +3528,7 @@ var dti = {
                         name4: bindings.name4
                     };
 
-
-                if (bindings.mode === 'create') {
-                    parameters.pointTypes = [bindings.newPointType];
-                } else {
-                    parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
-                }
+                parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes, bindings.mode);
 
                 // if (!!module.DEVICEID) {
                 //     params.deviceId = module.DEVICEID;
