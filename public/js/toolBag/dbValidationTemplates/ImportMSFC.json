@@ -971,6 +971,261 @@
             }
         ]
     }, { 
+        "Name" : "4200_FID01_IFC05", 
+        "name1" : "4200", 
+        "name2" : "FID01", 
+        "name3" : "IFC05", 
+        "name4" : "", 
+        "_name1" : "4200", 
+        "_name2" : "fid01", 
+        "_name3" : "ifc05", 
+        "_name4" : "", 
+        "_Name" : "4200_fid01_ifc05", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 2, 
+        "_rmuModel" : 17, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Remote Unit", 
+            "eValue" : 144, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Model Type" : {
+            "ValueType" : 5, 
+            "Value" : "IFC Remote Unit", 
+            "eValue" : 17, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Firmware Version" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : false, 
+            "isReadOnly" : true
+        }, 
+        "Active Text" : {
+            "ValueType" : 2, 
+            "Value" : "Normal", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Inactive Text" : {
+            "ValueType" : 2, 
+            "Value" : "Failed", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Value" : {
+            "ValueType" : 5, 
+            "Value" : "Failed", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Value" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 1, 
+            "ValueOptions" : {
+                "Failed" : 0, 
+                "Normal" : 1
+            }, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Description" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "COV Period" : {
+            "ValueType" : 13, 
+            "Value" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Device Port" : {
+            "ValueType" : 5, 
+            "Value" : "Port 2", 
+            "eValue" : 2, 
+            "ValueOptions" : {
+                "Port 2" : 2
+            }, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Instance" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Gateway" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Type" : {
+            "ValueType" : 5, 
+            "Value" : "Unknown", 
+            "eValue" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Network Segment" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Device Address" : {
+            "ValueType" : 2, 
+            "Value" : "86", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Ethernet IP Port" : {
+            "ValueType" : 4, 
+            "Value" : 47808, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Router Address" : {
+            "ValueType" : 2, 
+            "Value" : "0", 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Register" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Poll Function" : {
+            "ValueType" : 5, 
+            "Value" : "None", 
+            "eValue" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Modbus Unit Id" : {
+            "ValueType" : 4, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarms Off" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Class" : {
+            "ValueType" : 5, 
+            "Value" : "Critical", 
+            "eValue" : 1, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Delay Time" : {
+            "ValueType" : 13, 
+            "Value" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Enable" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Alarm Repeat Time" : {
+            "ValueType" : 17, 
+            "Value" : 0, 
+            "isDisplayable" : false, 
+            "isReadOnly" : false
+        }, 
+        "Configure Device" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Stop Scan" : {
+            "ValueType" : 7, 
+            "Value" : false, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Reliability" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan",
+            "eValue" : 129, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Device Status" : {
+            "ValueType" : 5, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Alarm State" : {
+            "ValueType" : 5, 
+            "Value" : "Normal", 
+            "eValue" : 0, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Quality Code Enable" : {
+            "ValueType" : 18, 
+            "Value" : 255, 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Remarks" : {
+            "ValueType" : 2, 
+            "Value" : "", 
+            "isDisplayable" : true, 
+            "isReadOnly" : false
+        }, 
+        "Point Refs" : [
+            {
+                "PropertyName" : "Device Point", 
+                "PropertyEnum" : 139, 
+                "Value" : 20918, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "4200_FID01", 
+                "PointInst" : 20918, 
+                "DevInst" : 20918, 
+                "PointType" : 8
+            }, 
+            {
+                "PropertyName" : "Alarm Display Point", 
+                "PropertyEnum" : 137, 
+                "Value" : 0, 
+                "AppIndex" : 0, 
+                "isDisplayable" : true, 
+                "isReadOnly" : false, 
+                "PointName" : "", 
+                "PointInst" : 0, 
+                "DevInst" : 0, 
+                "PointType" : 0
+            }
+        ]
+    }, { 
         "Name" : "4250_UNV01_IFC06", 
         "name1" : "4250", 
         "name2" : "UNV01", 
@@ -1522,7 +1777,7 @@
         }, 
         "Firmware Version" : {
             "ValueType" : 2, 
-            "Value" : "V1.00", 
+            "Value" : "", 
             "isDisplayable" : false, 
             "isReadOnly" : true
         }, 
@@ -1694,8 +1949,8 @@
         }, 
         "Device Status" : {
             "ValueType" : 5, 
-            "Value" : "Normal", 
-            "eValue" : 0, 
+            "Value" : "Stop Scan", 
+            "eValue" : 66, 
             "isDisplayable" : true, 
             "isReadOnly" : true
         }, 
@@ -1726,7 +1981,7 @@
                 "AppIndex" : 0, 
                 "isDisplayable" : true, 
                 "isReadOnly" : false, 
-                "PointName" : "4708_UNV01 02_AH1_SA VFD", 
+                "PointName" : "4708_UNV01 02", 
                 "PointInst" : 67313, 
                 "DevInst" : 67313, 
                 "PointType" : 8
