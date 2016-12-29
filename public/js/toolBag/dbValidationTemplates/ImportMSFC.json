@@ -4707,13 +4707,13 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": -97.5
+            "Value": -50.0
         },
         "Conversion Coefficient 2": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.08479169756174088
+            "Value": 0.125
         },
         "Conversion Coefficient 3": {
             "isDisplayable": false,
@@ -4773,8 +4773,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Read Coils",
-            "eValue": 1
+            "Value": "None",
+            "eValue": 0
         },
         "Poll Register": {
             "isDisplayable": false,
@@ -4807,16 +4807,16 @@
             "Value": 60.0
         },
         "Trend Enable": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 7,
-            "Value": true
+            "Value": false
         },
         "Trend Interval": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 60
+            "Value": 0
         },
         "Trend Samples": {
             "isDisplayable": true,
@@ -5003,10 +5003,10 @@
                 "AppIndex": 0,
                 "isDisplayable": false,
                 "isReadOnly": false,
-                "Value": 941278,
-                "PointName": "Sensor_-30to240(12bit/4-20)",
-                "PointType": 205,
-                "PointInst": 941278,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
                 "DevInst": 0
             }, {
                 "PropertyName": "Alarm Adjust Point",
