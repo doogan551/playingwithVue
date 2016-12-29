@@ -929,7 +929,7 @@ module.exports = Rpt = {
                         "Point Refs": {
                             $elemMatch: {
                                 "PropertyName": key,
-                                "Value": utils.converters.convertType(filter.upi, filter.valueType)
+                                "Value": utils.converters.convertType(filter.value, filter.valueType)
                             }
                         }
                     };
