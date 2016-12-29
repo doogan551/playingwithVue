@@ -1457,7 +1457,6 @@ var reportsViewModel = function () {
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         currentUser,
-        ENUMSTEMPLATESTEMPLATES,
         ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
@@ -1899,8 +1898,7 @@ var reportsViewModel = function () {
             dti.toast(errorMessage, 6000);
         },
         openPointSelectorForModalColumn = function () {
-            var valueoptions,
-                tempObject = getNewColumnTemplate(),
+            var tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -1931,11 +1929,8 @@ var reportsViewModel = function () {
                         if (self.reportType() === "History") {
                             tempObject.dataColumnName = tempObject.upi;
                         }
-                        if (!!selectedPoint.Value.ValueOptions) {
+                        if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
-                        } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
-                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
@@ -1957,8 +1952,7 @@ var reportsViewModel = function () {
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForColumn = function (selectObjectIndex) {
-            var valueoptions,
-                updatedList = $.extend(true, [], self.listOfColumns()),
+            var updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
@@ -1995,9 +1989,6 @@ var reportsViewModel = function () {
                         }
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
-                        } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
-                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
@@ -6279,20 +6270,9 @@ var reportsViewModel = function () {
             setCurrentUser = function (results) {
                 currentUser = results;
             },
-            initComplete = function () {
-                return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
-            },
-            setGlobalEnumsTemplates = function (results) {
-                ENUMSTEMPLATESTEMPLATES = results;
-                if (initComplete()) {
-                    postConfigInit();
-                }
-            },
             setGlobalEnums = function (results) {
                 ENUMSTEMPLATESENUMS = results;
-                if (initComplete()) {
-                    postConfigInit();
-                }
+                postConfigInit();
             },
             initGlobals = function () {
                 var dateRanges = reportDateRanges(),
@@ -6310,7 +6290,6 @@ var reportsViewModel = function () {
 
                 self.reportDateRangeCollection(dateRangeCollection);
                 dtiUtility.getConfig("Enums", null, setGlobalEnums);
-                dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
             },
             postConfigInit = function () {
                 if (!!point) {
