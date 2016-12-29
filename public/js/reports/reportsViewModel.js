@@ -2325,6 +2325,21 @@ var reportsViewModel = function () {
                 filter,
                 i,
                 index,
+                validEnumEvalue = function (currentFilter) {
+                    var answer = false,
+                        foundValues;
+
+                    if (currentFilter.evalue !== -1) {
+                        foundValues = currentFilter.valueList.filter(function (availableValue) {
+                            return availableValue.evalue === currentFilter.evalue;
+                        });
+                        answer = (foundValues.length > 0);
+                    } else {
+                        answer = true;  // -1 is blank placeholder.....
+                    }
+
+                    return answer;
+                },
                 checkFiltersForPointRefs = function () {
                     for (i = 0; i < self.listOfFilters().length; i++) {
                         filter = self.listOfFilters()[i];
@@ -2344,6 +2359,11 @@ var reportsViewModel = function () {
                     filter.error = "Missing Filter property at index " + i;
                 } else {
                     switch (filter.valueType) {
+                        case "Enum":
+                            if (!validEnumEvalue(filter)) {
+                                console.log("- - validateFilters() Enum evalue not in ValueList " + filter.evalue);
+                            }
+                            break;
                         case "Unsigned":
                         case "Float":
                             if (!$.isNumeric(filter.value)) {
@@ -2561,8 +2581,10 @@ var reportsViewModel = function () {
                                 });
                             }
                             maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
-                            self.listOfFilters()[index].value = result[0].value;
-                            self.listOfFilters()[index].evalue = result[0].evalue;
+                            if (self.listOfFilters()[index].evalue === undefined || self.listOfFilters()[index].evalue < 0) {
+                                self.listOfFilters()[index].value = result[0].value;
+                                self.listOfFilters()[index].evalue = result[0].evalue;
+                            }
                             self.listOfFilters()[index].valueList = result;
                             self.listOfFilters()[index].valueListMaxWidth = maxWidthInPixels;
                             updateListOfFilters(self.listOfFilters());
@@ -3565,7 +3587,8 @@ var reportsViewModel = function () {
                             operator: "EqualTo",
                             valueType: "String",
                             value: "",
-                            valueList: ""
+                            valueList: "",
+                            valueListMaxWidth: 0
                         };
                         e.preventDefault();
                         e.stopPropagation();
