@@ -4289,13 +4289,13 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.0
+            "Value": -97.5
         },
         "Conversion Coefficient 2": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.0
+            "Value": 0.08479169756174088
         },
         "Conversion Coefficient 3": {
             "isDisplayable": false,
@@ -4355,14 +4355,14 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "None",
-            "eValue": 0
+            "Value": "Read Coils",
+            "eValue": 1
         },
         "Poll Register": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 769
+            "Value": 3
         },
         "Input Type": {
             "isDisplayable": false,
@@ -4583,12 +4583,12 @@
                 "PropertyName": "Sensor Point",
                 "PropertyEnum": 154,
                 "AppIndex": 0,
-                "isDisplayable": true,
+                "isDisplayable": false,
                 "isReadOnly": false,
-                "Value": 0,
-                "PointName": "",
-                "PointType": 0,
-                "PointInst": 0,
+                "Value": 941278,
+                "PointName": "Sensor_-30to240(12bit/4-20)",
+                "PointType": 205,
+                "PointInst": 941278,
                 "DevInst": 0
             }, {
                 "PropertyName": "Alarm Adjust Point",
