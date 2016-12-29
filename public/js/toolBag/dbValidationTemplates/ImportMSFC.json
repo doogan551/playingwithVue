@@ -5963,32 +5963,32 @@
         },
         "Conversion Type": {
             "isDisplayable": false,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 5,
             "Value": "Linear",
             "eValue": 1
         },
         "Conversion Coefficient 1": {
             "isDisplayable": false,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": -97.5
         },
         "Conversion Coefficient 2": {
             "isDisplayable": false,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": 0.0847917
         },
         "Conversion Coefficient 3": {
             "isDisplayable": false,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": 0.0
         },
         "Conversion Coefficient 4": {
             "isDisplayable": false,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": 0.0
         },
@@ -6051,12 +6051,10 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Normal",
+            "Value": "None",
             "eValue": 0,
             "ValueOptions": {
-                "Normal": 0,
-                "Inverted": 2,
-                "Velocity": 3
+                "None": 0
             }
         },
         "Filter Weight": {
@@ -6069,13 +6067,13 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.0
+            "Value": 0.1
         },
         "Trend Enable": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 7,
-            "Value": false
+            "Value": true
         },
         "Trend Interval": {
             "isDisplayable": true,
