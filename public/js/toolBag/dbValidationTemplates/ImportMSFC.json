@@ -3805,7 +3805,7 @@
         "_relDevice" : 129, 
         "_relRMU" : 0, 
         "_relPoint" : 0, 
-        "_devModel" : 19, 
+        "_devModel" : 18, 
         "_rmuModel" : 16, 
         "_parentUpi" : 0, 
         "Point Type" : {
@@ -3934,7 +3934,7 @@
             "eValue": 24
         },
         "Poll Function": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Read Holding Registers",
