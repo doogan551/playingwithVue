@@ -3985,8 +3985,8 @@ var Config = (function(obj) {
                             "1 - Zone Temperature": 1,
                             "2 - Setpoint Adjust": 2,
                             "3 - Supply Temperature": 3,
-                            "Auxiliary": 4,
-                            "Air Volume": 5
+                            "4 - Auxiliary": 4,
+                            "5 - Air Volume": 5
                         });
                         break;
 
