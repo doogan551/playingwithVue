@@ -6471,7 +6471,7 @@
             "Value": 2
         },
         "Input Type": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "None",
@@ -6490,25 +6490,25 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.0
+            "Value": 1.0
         },
         "Trend Enable": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 7,
-            "Value": false
+            "Value": true
         },
         "Trend Interval": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 0
+            "Value": 900
         },
         "Trend Samples": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 0
+            "Value": 50
         },
         "Maximum Value": {
             "isDisplayable": true,
@@ -6586,7 +6586,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 7,
-            "Value": true
+            "Value": false
         },
         "Alarm Class": {
             "isDisplayable": true,
