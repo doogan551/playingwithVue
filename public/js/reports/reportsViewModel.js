@@ -2745,96 +2745,97 @@ var reportsViewModel = function () {
             validatedColumns = validateColumns();
             validatedFilters = validateFilters();
 
-            if (validatedColumns.collection.length > 1) {
-                for (i = 0; i < validatedColumns.collection.length; i++) {
-                    columnConfig = validatedColumns.collection[i];
-                    if (!!validatedColumns.collection[i].error) {
-                        displayError(validatedColumns.collection[i].error);
-                        activeError = true;
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        self.selectConfigReportTabSubTab("reportColumns");
-                    } else {
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        if (validatedColumns.collection[i].upi > 0) {  // collect UPIs from Columns
-                            upis.push({
-                                upi: parseInt(validatedColumns.collection[i].upi, 10),
-                                op: (validatedColumns.collection[i].operator).toLowerCase()
-                            });
-                        }
+            for (i = 0; i < validatedColumns.collection.length; i++) {
+                columnConfig = validatedColumns.collection[i];
+                if (!!validatedColumns.collection[i].error) {
+                    displayError(validatedColumns.collection[i].error);
+                    activeError = true;
+                    $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    self.selectConfigReportTabSubTab("reportColumns");
+                } else {
+                    $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    if (validatedColumns.collection[i].upi > 0) {  // collect UPIs from Columns
+                        upis.push({
+                            upi: parseInt(validatedColumns.collection[i].upi, 10),
+                            op: (validatedColumns.collection[i].operator).toLowerCase()
+                        });
                     }
                 }
+            }
 
-                for (i = 0; i < validatedFilters.collection.length; i++) {
-                    filterConfig = validatedFilters.collection[i];
-                    if (!!filterConfig.error) {
-                        displayError(filterConfig.error);
-                        activeError = true;
-                        $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        self.selectConfigReportTabSubTab("additionalFilters");
-                    } else {
-                        $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                    }
+            for (i = 0; i < validatedFilters.collection.length; i++) {
+                filterConfig = validatedFilters.collection[i];
+                if (!!filterConfig.error) {
+                    displayError(filterConfig.error);
+                    activeError = true;
+                    $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    self.selectConfigReportTabSubTab("additionalFilters");
+                } else {
+                    $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                 }
+            }
 
-                if (!activeError) {
-                    if (self.reportType() === "Totalizer" || self.reportType() === "History") {
-                        configureSelectedDuration();
-                    }
-
-                    switch (self.reportType()) {
-                        case "History":
-                        case "Totalizer":
-                            point["Report Config"].interval = {
-                                period: self.intervalPeriod(),
-                                value: self.intervalValue()
-                            };
-                            point["Report Config"].duration = {
-                                startDate: self.selectedDuration().startDate.unix(),
-                                endDate: self.selectedDuration().endDate.unix(),
-                                startTimeOffSet: self.durationStartTimeOffSet(),
-                                endTimeOffSet: self.durationEndTimeOffSet(),
-                                // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
-                                selectedRange: self.selectedDuration().selectedRange
-                            };
-                            break;
-                        case "Property":
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  buildReportDataRequest()");
-                            break;
-                    }
-
-                    point["Report Config"].pointFilter = {
-                        "name1": self.name1Filter(),
-                        "name2": self.name2Filter(),
-                        "name3": self.name3Filter(),
-                        "name4": self.name4Filter(),
-                        "selectedPointTypes": self.selectedPointTypesFilter()
-                    };
-                    point["Report Config"].columns = validatedColumns.collection;
-                    point["Report Config"].filters = validatedFilters.collection;
-
-                    uuid = generateUUID();
-                    activeDataRequests.push(uuid);
-
-                    result = {
-                        requestID: uuid,
-                        upis: upis,
-                        range: {
-                            start: self.startDate(),
-                            end: self.endDate()
-                        },
-                        reportConfig: cleanUpReportConfig(point["Report Config"]),
-                        reportType: point["Report Type"].Value,
-                        sort: ""
-                    };
-                }
-            } else {
+            if (validatedColumns.collection.length === 1 && self.reportType() !== "Property") {
+                activeError = true;
                 displayError("Column list is blank. Nothing to report on.");
+            }
+
+            if (!activeError) {
+                switch (self.reportType()) {
+                    case "History":
+                    case "Totalizer":
+                        configureSelectedDuration();
+
+                        point["Report Config"].interval = {
+                            period: self.intervalPeriod(),
+                            value: self.intervalValue()
+                        };
+
+                        point["Report Config"].duration = {
+                            startDate: self.selectedDuration().startDate.unix(),
+                            endDate: self.selectedDuration().endDate.unix(),
+                            startTimeOffSet: self.durationStartTimeOffSet(),
+                            endTimeOffSet: self.durationEndTimeOffSet(),
+                            // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                            selectedRange: self.selectedDuration().selectedRange
+                        };
+                        break;
+                    case "Property":
+                        break;
+                    default:
+                        console.log(" - - - DEFAULT  buildReportDataRequest()");
+                        break;
+                }
+
+                point["Report Config"].pointFilter = {
+                    "name1": self.name1Filter(),
+                    "name2": self.name2Filter(),
+                    "name3": self.name3Filter(),
+                    "name4": self.name4Filter(),
+                    "selectedPointTypes": self.selectedPointTypesFilter()
+                };
+                point["Report Config"].columns = validatedColumns.collection;
+                point["Report Config"].filters = validatedFilters.collection;
+
+                uuid = generateUUID();
+                activeDataRequests.push(uuid);
+
+                result = {
+                    requestID: uuid,
+                    upis: upis,
+                    range: {
+                        start: self.startDate(),
+                        end: self.endDate()
+                    },
+                    reportConfig: cleanUpReportConfig(point["Report Config"]),
+                    reportType: point["Report Type"].Value,
+                    "Point Refs": point["Point Refs"],
+                    sort: ""
+                };
             }
 
             return result;
