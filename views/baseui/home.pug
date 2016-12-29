@@ -372,7 +372,7 @@ html
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
             .itemTitle.white-text
                 i.right.material-icons.closeIcon close
-                div(data-bind="text: title")
+                div(data-bind="text: title, attr: {title: title}")
             .itemBody
                 //ko if: thumbnail() === true
                 img(data-bind="thumbnail: upi, visible: thumbnailFound")

@@ -982,6 +982,13 @@ footer {
         border-bottom: 1px solid $cardTitleBorder;
         height: 23px;
         padding-right: 20px;
+
+        div {
+            max-width: 175px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     }
 
     .itemBody {
