@@ -5651,7 +5651,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 60.0
+            "Value": 0.025
         },
         "Trend Enable": {
             "isDisplayable": true,
@@ -5813,7 +5813,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 18,
-            "Value": 251
+            "Value": 255
         },
         "Remarks": {
             "isDisplayable": true,
@@ -5861,10 +5861,10 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 900375,
-                "PointName": "4207_AH3_CFM01_SetPt",
-                "PointType": 2,
-                "PointInst": 900375,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
                 "DevInst": 0
             }, {
                 "PropertyName": "Alarm Display Point",
