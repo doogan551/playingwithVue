@@ -2295,26 +2295,23 @@ function addPoint(data, user, options, callback) {
     activity: actLogsEnums["Point Add"].enum,
     log: "Point added"
   };
+  var updateObj = {
+    $set: {}
+  };
 
 
   updateCfgRequired(point, function(err) {
     if (err)
       callback(err);
 
-    point._pStatus = 0;
+    updateObj.$set._pStatus = 0;
 
     var searchQuery = {};
-    var updateObj = {};
 
-    if (!point.Security)
-      point.Security = [];
-
-    //strip activity log and then insert act msg into db
+    updateObj.$set.Security = [];
 
     searchQuery._id = point._id;
-    delete point._id;
-    updateObj = point;
-    updateObj._actvAlmId = ObjectID(updateObj._actvAlmId);
+    updateObj.$set._actvAlmId = ObjectID(point._actvAlmId);
     // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
 
 

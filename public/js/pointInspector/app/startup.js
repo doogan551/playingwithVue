@@ -1,79 +1,209 @@
 /*jslint white: true*/
 
 //register ko components and binding handlers
-require(['knockout'], function (ko) {
+require(['knockout'], function(ko) {
     //manually set the global ko property
     //for non-amd compliant plugins
     window.ko = ko;
 
     // Components are packaged as AMD modules
     // Controls
-    ko.components.register('ctl-description',   { require: 'components/ctl-description/module' });
-    ko.components.register('ctl-dropdown',      { require: 'components/ctl-dropdown/module' });
-    ko.components.register('ctl-duration',      { require: 'components/ctl-duration/module' });
-    ko.components.register('ctl-involvement',   { require: 'components/ctl-involvement/module' });
-    ko.components.register('ctl-ip',            { require: 'components/ctl-ip/module' });
-    ko.components.register('ctl-notifications', { require: 'components/ctl-notifications/module' });
-    ko.components.register('ctl-number',        { require: 'components/ctl-number/module' });
-    ko.components.register('ctl-pointReference',{ require: 'components/ctl-pointReference/module' });
-    ko.components.register('ctl-ROtime',        { require: 'components/ctl-ROtime/module' });
-    ko.components.register('ctl-ROvalue-eu',    { require: 'components/ctl-ROvalue-eu/module' });
-    ko.components.register('ctl-states',        { require: 'components/ctl-states/module' });
-    ko.components.register('ctl-statusBar',     { require: 'components/ctl-statusBar/module' });
-    ko.components.register('ctl-switch',        { require: 'components/ctl-switch/module' });
-    ko.components.register('ctl-text',          { require: 'components/ctl-text/module' });
-    ko.components.register('ctl-value-eu',      { require: 'components/ctl-value-eu/module' });
-    ko.components.register('ctl-valueBar',      { require: 'components/ctl-valueBar/module' });
-    ko.components.register('ctl-editor',        { require: 'components/ctl-editor/module' });
-    ko.components.register('ctl-permissions',   { require: 'components/ctl-permissions/module' });
-    ko.components.register('ctl-viewControls',  { require: 'components/ctl-viewControls/module' });
-    ko.components.register('ctl-sendControl',   { require: 'components/ctl-sendControl/module' });
-    ko.components.register('ctl-readValue',     { require: 'components/ctl-readValue/module' });
-    ko.components.register('ctl-viewTrend',     { require: 'components/ctl-viewTrend/module' });
-    ko.components.register('ctl-staticText',    { require: 'components/ctl-staticText/module' });
-    ko.components.register('ctl-firmwareLoader',    { require: 'components/ctl-firmwareLoader/module' });
-    ko.components.register('ctl-firmwareVersion',    { require: 'components/ctl-firmwareVersion/module' });
-    ko.components.register('ctl-conversionWizard',  { require: 'components/ctl-conversionWizard/module' });
-    ko.components.register('ctl-scheduleEntries',   { require: 'components/ctl-scheduleEntries/module'});
-    ko.components.register('ctl-qualityCodeEnable',    { require: 'components/ctl-qualityCodeEnable/module' });
-    ko.components.register('ctl-policies',      { require: 'components/ctl-policies/module' });
-    ko.components.register('ctl-networkInfo',   { require: 'components/ctl-networkInfo/module' });
+    ko.components.register('ctl-description', {
+        require: 'components/ctl-description/module'
+    });
+    ko.components.register('ctl-dropdown', {
+        require: 'components/ctl-dropdown/module'
+    });
+    ko.components.register('ctl-duration', {
+        require: 'components/ctl-duration/module'
+    });
+    ko.components.register('ctl-involvement', {
+        require: 'components/ctl-involvement/module'
+    });
+    ko.components.register('ctl-ip', {
+        require: 'components/ctl-ip/module'
+    });
+    ko.components.register('ctl-notifications', {
+        require: 'components/ctl-notifications/module'
+    });
+    ko.components.register('ctl-number', {
+        require: 'components/ctl-number/module'
+    });
+    ko.components.register('ctl-pointReference', {
+        require: 'components/ctl-pointReference/module'
+    });
+    ko.components.register('ctl-ROtime', {
+        require: 'components/ctl-ROtime/module'
+    });
+    ko.components.register('ctl-ROvalue-eu', {
+        require: 'components/ctl-ROvalue-eu/module'
+    });
+    ko.components.register('ctl-states', {
+        require: 'components/ctl-states/module'
+    });
+    ko.components.register('ctl-statusBar', {
+        require: 'components/ctl-statusBar/module'
+    });
+    ko.components.register('ctl-switch', {
+        require: 'components/ctl-switch/module'
+    });
+    ko.components.register('ctl-text', {
+        require: 'components/ctl-text/module'
+    });
+    ko.components.register('ctl-value-eu', {
+        require: 'components/ctl-value-eu/module'
+    });
+    ko.components.register('ctl-valueBar', {
+        require: 'components/ctl-valueBar/module'
+    });
+    ko.components.register('ctl-editor', {
+        require: 'components/ctl-editor/module'
+    });
+    ko.components.register('ctl-permissions', {
+        require: 'components/ctl-permissions/module'
+    });
+    ko.components.register('ctl-viewControls', {
+        require: 'components/ctl-viewControls/module'
+    });
+    ko.components.register('ctl-sendControl', {
+        require: 'components/ctl-sendControl/module'
+    });
+    ko.components.register('ctl-readValue', {
+        require: 'components/ctl-readValue/module'
+    });
+    ko.components.register('ctl-viewTrend', {
+        require: 'components/ctl-viewTrend/module'
+    });
+    ko.components.register('ctl-staticText', {
+        require: 'components/ctl-staticText/module'
+    });
+    ko.components.register('ctl-firmwareLoader', {
+        require: 'components/ctl-firmwareLoader/module'
+    });
+    ko.components.register('ctl-firmwareVersion', {
+        require: 'components/ctl-firmwareVersion/module'
+    });
+    ko.components.register('ctl-conversionWizard', {
+        require: 'components/ctl-conversionWizard/module'
+    });
+    ko.components.register('ctl-scheduleEntries', {
+        require: 'components/ctl-scheduleEntries/module'
+    });
+    ko.components.register('ctl-qualityCodeEnable', {
+        require: 'components/ctl-qualityCodeEnable/module'
+    });
+    ko.components.register('ctl-policies', {
+        require: 'components/ctl-policies/module'
+    });
+    ko.components.register('ctl-networkInfo', {
+        require: 'components/ctl-networkInfo/module'
+    });
     // Point Reviews
-    ko.components.register('pt-accumulator',    { require: 'components/pt-accumulator/module' });
-    ko.components.register('pt-alarmstatus',    { require: 'components/pt-alarmstatus/module' });
-    ko.components.register('pt-analoginput',    { require: 'components/pt-analoginput/module' });
-    ko.components.register('pt-analogoutput',   { require: 'components/pt-analogoutput/module' });
-    ko.components.register('pt-analogselector', { require: 'components/pt-analogselector/module' });
-    ko.components.register('pt-analogvalue',    { require: 'components/pt-analogvalue/module' });
-    ko.components.register('pt-average',        { require: 'components/pt-average/module' });
-    ko.components.register('pt-binaryinput',    { require: 'components/pt-binaryinput/module' });
-    ko.components.register('pt-binaryoutput',   { require: 'components/pt-binaryoutput/module' });
-    ko.components.register('pt-binaryselector', { require: 'components/pt-binaryselector/module' });
-    ko.components.register('pt-binaryvalue',    { require: 'components/pt-binaryvalue/module' });
-    ko.components.register('pt-comparator',     { require: 'components/pt-comparator/module' });
-    ko.components.register('pt-delay',          { require: 'components/pt-delay/module' });
-    ko.components.register('pt-device',         { require: 'components/pt-device/module' });
-    ko.components.register('pt-digitallogic',   { require: 'components/pt-digitallogic/module' });
-    ko.components.register('pt-economizer',     { require: 'components/pt-economizer/module' });
-    ko.components.register('pt-enthalpy',       { require: 'components/pt-enthalpy/module' });
-    ko.components.register('pt-logic',          { require: 'components/pt-logic/module' });
-    ko.components.register('pt-math',           { require: 'components/pt-math/module' });
-    ko.components.register('pt-multiplexer',    { require: 'components/pt-multiplexer/module' });
-    ko.components.register('pt-multistatevalue',{ require: 'components/pt-multistatevalue/module' });
-    ko.components.register('pt-optimumstart',   { require: 'components/pt-optimumstart/module' });
-    ko.components.register('pt-program',        { require: 'components/pt-program/module' });
-    ko.components.register('pt-proportional',   { require: 'components/pt-proportional/module' });
-    ko.components.register('pt-ramp',           { require: 'components/pt-ramp/module' });
-    ko.components.register('pt-remoteunit',     { require: 'components/pt-remoteunit/module' });
-    ko.components.register('pt-schedule',       { require: 'components/pt-schedule/module' });
-    ko.components.register('pt-script',         { require: 'components/pt-script/module' });
-    ko.components.register('pt-selectvalue',    { require: 'components/pt-selectvalue/module' });
-    ko.components.register('pt-setpointadjust', { require: 'components/pt-setpointadjust/module' });
-    ko.components.register('pt-slideshow',      { require: 'components/pt-slideshow/module' });
-    ko.components.register('pt-totalizer',      { require: 'components/pt-totalizer/module' });
-    ko.components.register('pt-vav',            { require: 'components/pt-vav/module'});
-    ko.components.register('pt-sensor',         { require: 'components/pt-sensor/module'});
-    ko.components.register('pt-liftstation',    { require: 'components/pt-liftstation/module'});
+    ko.components.register('pt-accumulator', {
+        require: 'components/pt-accumulator/module'
+    });
+    ko.components.register('pt-alarmstatus', {
+        require: 'components/pt-alarmstatus/module'
+    });
+    ko.components.register('pt-analoginput', {
+        require: 'components/pt-analoginput/module'
+    });
+    ko.components.register('pt-analogoutput', {
+        require: 'components/pt-analogoutput/module'
+    });
+    ko.components.register('pt-analogselector', {
+        require: 'components/pt-analogselector/module'
+    });
+    ko.components.register('pt-analogvalue', {
+        require: 'components/pt-analogvalue/module'
+    });
+    ko.components.register('pt-average', {
+        require: 'components/pt-average/module'
+    });
+    ko.components.register('pt-binaryinput', {
+        require: 'components/pt-binaryinput/module'
+    });
+    ko.components.register('pt-binaryoutput', {
+        require: 'components/pt-binaryoutput/module'
+    });
+    ko.components.register('pt-binaryselector', {
+        require: 'components/pt-binaryselector/module'
+    });
+    ko.components.register('pt-binaryvalue', {
+        require: 'components/pt-binaryvalue/module'
+    });
+    ko.components.register('pt-comparator', {
+        require: 'components/pt-comparator/module'
+    });
+    ko.components.register('pt-delay', {
+        require: 'components/pt-delay/module'
+    });
+    ko.components.register('pt-device', {
+        require: 'components/pt-device/module'
+    });
+    ko.components.register('pt-digitallogic', {
+        require: 'components/pt-digitallogic/module'
+    });
+    ko.components.register('pt-economizer', {
+        require: 'components/pt-economizer/module'
+    });
+    ko.components.register('pt-enthalpy', {
+        require: 'components/pt-enthalpy/module'
+    });
+    ko.components.register('pt-logic', {
+        require: 'components/pt-logic/module'
+    });
+    ko.components.register('pt-math', {
+        require: 'components/pt-math/module'
+    });
+    ko.components.register('pt-multiplexer', {
+        require: 'components/pt-multiplexer/module'
+    });
+    ko.components.register('pt-multistatevalue', {
+        require: 'components/pt-multistatevalue/module'
+    });
+    ko.components.register('pt-optimumstart', {
+        require: 'components/pt-optimumstart/module'
+    });
+    ko.components.register('pt-program', {
+        require: 'components/pt-program/module'
+    });
+    ko.components.register('pt-proportional', {
+        require: 'components/pt-proportional/module'
+    });
+    ko.components.register('pt-ramp', {
+        require: 'components/pt-ramp/module'
+    });
+    ko.components.register('pt-remoteunit', {
+        require: 'components/pt-remoteunit/module'
+    });
+    ko.components.register('pt-schedule', {
+        require: 'components/pt-schedule/module'
+    });
+    ko.components.register('pt-script', {
+        require: 'components/pt-script/module'
+    });
+    ko.components.register('pt-selectvalue', {
+        require: 'components/pt-selectvalue/module'
+    });
+    ko.components.register('pt-setpointadjust', {
+        require: 'components/pt-setpointadjust/module'
+    });
+    ko.components.register('pt-slideshow', {
+        require: 'components/pt-slideshow/module'
+    });
+    ko.components.register('pt-totalizer', {
+        require: 'components/pt-totalizer/module'
+    });
+    ko.components.register('pt-vav', {
+        require: 'components/pt-vav/module'
+    });
+    ko.components.register('pt-sensor', {
+        require: 'components/pt-sensor/module'
+    });
+    ko.components.register('pt-liftstation', {
+        require: 'components/pt-liftstation/module'
+    });
 });
 
 define([
@@ -99,7 +229,7 @@ define([
 
     //for workspace 'give me point data' function
     (function checkParameters() {
-        setTimeout(function () {  // give messaging layer time to finish with onLoad()   home.js
+        setTimeout(function() { // give messaging layer time to finish with onLoad()   home.js
             if (window.getWindowParameters) {
 
                 var cfg = window.getWindowParameters();
@@ -120,7 +250,7 @@ define([
                 pointInspector.isExternal = true;
                 initialize(window.attach.point);
             } else {
-                getData(pointInspector.id).done(function (data) {
+                getData(pointInspector.id).done(function(data) {
                     initialize(data);
                 });
             }
@@ -129,32 +259,32 @@ define([
 
     //adjust default calendar config to show time
     moment.locale('en', {
-        longDateFormat : {
-            LT   : "HH:mm",
-            LTS  : "HH:mm:ss",
-            L    : "MM/DD/YYYY",
-            LL   : "MMMM Do YYYY",
-            LLL  : "MMMM Do YYYY LT",
-            LLLL : "dddd, MMMM Do YYYY LT"
+        longDateFormat: {
+            LT: "HH:mm",
+            LTS: "HH:mm:ss",
+            L: "MM/DD/YYYY",
+            LL: "MMMM Do YYYY",
+            LLL: "MMMM Do YYYY LT",
+            LLLL: "dddd, MMMM Do YYYY LT"
         },
-        calendar : {
-            lastDay  : '[Yesterday at] LTS',
-            sameDay  : '[Today at] LTS',
-            nextDay  : '[Tomorrow at] LTS',
-            lastWeek : '[Last] dddd [at] LTS',
-            nextWeek : 'dddd [at] LTS',
-            sameElse : 'L LTS'
+        calendar: {
+            lastDay: '[Yesterday at] LTS',
+            sameDay: '[Today at] LTS',
+            nextDay: '[Tomorrow at] LTS',
+            lastWeek: '[Last] dddd [at] LTS',
+            nextWeek: 'dddd [at] LTS',
+            sameElse: 'L LTS'
         }
     });
 
-    pointInspector.webEndpoint  = '//' + window.location.hostname;
-    pointInspector.apiEndpoint  = pointInspector.webEndpoint + ':' + window.location.port + '/api/';
-    pointInspector.id           = window.location.href.split('/').reverse()[0];
+    pointInspector.webEndpoint = '//' + window.location.hostname;
+    pointInspector.apiEndpoint = pointInspector.webEndpoint + ':' + window.location.port + '/api/';
+    pointInspector.id = window.location.href.split('/').reverse()[0];
     pointInspector.permissionLevels = {
-        READ        : 1,
-        CONTROL     : 2,
-        ACKNOWLEDGE : 4,
-        WRITE       : 8
+        READ: 1,
+        CONTROL: 2,
+        ACKNOWLEDGE: 4,
+        WRITE: 8
     };
     pointInspector.utility = {
         getPointRefProperty: function(propertyName, point) {
@@ -186,7 +316,10 @@ define([
         enumToArray: function(obj) {
             var _array = [];
             for (var i in obj) {
-                _array.push({name: ko.observable(i), value: ko.observable(typeof obj[i].enum === 'undefined' ? obj[i] : obj[i].enum) });
+                _array.push({
+                    name: ko.observable(i),
+                    value: ko.observable(typeof obj[i].enum === 'undefined' ? obj[i] : obj[i].enum)
+                });
             }
             return _array;
         },
@@ -212,7 +345,7 @@ define([
                 element.attachEvent('on' + event, fn);
             }
         },
-        removeEvent: function (element, event, fn) {
+        removeEvent: function(element, event, fn) {
             if (element.removeEventListener) {
                 element.removeEventListener(event, fn, false);
             } else if (element.detachEvent) {
@@ -220,7 +353,7 @@ define([
             }
         },
         createSelection: function(input, start, end) {
-            if(input.setSelectionRange) {
+            if (input.setSelectionRange) {
                 input.focus();
                 input.setSelectionRange(start, end);
             } else if (input.createTextRange) {
@@ -292,7 +425,7 @@ define([
         config: workspace.config,
         getControllerName: function(controller) {
             var controllers = workspace.systemEnums.controllers;
-            for(var i = controllers.length; i--;) {
+            for (var i = controllers.length; i--;) {
                 if (controllers[i].value === controller) {
                     return controllers[i].name;
                 }
@@ -301,7 +434,7 @@ define([
         },
         getLevelName: function(level) {
             var priorities = workspace.systemEnums.controlpriorities;
-            for(var i = priorities.length; i--;) {
+            for (var i = priorities.length; i--;) {
                 if (priorities[i].value === level) {
                     return priorities[i].name;
                 }
@@ -317,7 +450,8 @@ define([
         var isInEditMode = pointInspector.isInEditMode();
         if (isInEditMode) {
             // undo changes
-            ko.viewmodel.updateFromModel(pointInspector.point.data, pointInspector.point.originalData);
+            // ko.viewmodel.updateFromModel(pointInspector.point.data, pointInspector.point.originalData);
+            pointInspector.updateObject(pointInspector.point.data, pointInspector.point.originalData);
             // Hide the invalid character message just in case it is visible
             $('.invalidCharMsg').hide();
         }
@@ -332,7 +466,7 @@ define([
 
         pointInspector.socket.emit('restorePoint', emitData);
 
-        pointInspector.socket.once('pointUpdated', function (response) {
+        pointInspector.socket.once('pointUpdated', function(response) {
             response = JSON.parse(response);
             if (response.err) {
                 error = ['An error occurred when trying to restore this point: ', response.err].join('');
@@ -370,45 +504,65 @@ define([
         if (newPointData._pStatus === 1 && !pointInspector.isExternal) {
             pointInspector.socket.emit(emitString, emitData);
         }
-            
+
         dtiUtility.closeWindow();
         // window.close();
     };
+    pointInspector.updateObject = function(_koPoint, _configPoint) {
+        // var _newPoint = ko.viewmodel.fromModel(_configPoint);
+        var _newPoint = (new Point(_configPoint)).data;
+        var props = ['Value', 'ValueOptions', 'isDisplayable', 'isReadOnly', 'eValue', 'ValueType', 'PropertyName', 'PropertyEnum', 'AppIndex', 'PointName', 'PointType', 'PointInst', 'DevInst', 'name', 'value'];
+        var updateValues = function(current, updated) {
+            var changeProperty = function(currentProp, updatedProp) {
+                if (typeof currentProp === 'object' || (ko.isObservable(currentProp) && typeof currentProp() === 'object')) {
+                    updateValues(currentProp, updatedProp);
+                } else {
+                    if (!!~props.indexOf(prop) && currentProp() !== updatedProp()) {
+                        currentProp(updatedProp());
+                    }
+                }
+            }
+            for (var prop in current) {
+                if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
+                    var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
+                    var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
+                    jsProp.forEach(function(item, index) {
+                        changeProperty(item, updatedJsProp[index])
+                    });
+                } else {
+                    if (!updated.hasOwnProperty(prop)) {
+                        delete currentProp;
+                    } else {
+                        changeProperty(current[prop], updated[prop]);
+                    }
+                }
+            }
+        };
+        var addValues = function(current, updated) {
+            for (var prop in updated) {
+                if (!current.hasOwnProperty(prop)) {
+                    if (typeof updated[prop] === 'object' || (ko.isObservable(updated[prop]) && typeof updated[prop]() === 'object')) {
+                        addValues(current[prop], updated[prop]);
+                    } else if (Array.isArray(current[prop])) {
+                        // handle arrays
+                    } else if (!!~props.indexOf(prop)) {
+                        current[prop] = ko.observable(updated[prop]);
+                    }
+                }
+            }
+        };
+        updateValues(_koPoint, _newPoint);
+        addValues(_koPoint, _newPoint);
+    };
     pointInspector.tabTriggers = {};
-    pointInspector.events ={
-         viewmodelChange: function(e) {
+    pointInspector.events = {
+        viewmodelChange: function(e) {
             var $element = e.targetElement === null ? null : (e.targetElement instanceof jQuery) ? e.targetElement : $(e.targetElement),
                 point,
                 config = pointInspector.utility.config,
                 updatedPoint,
                 originalProp,
-                pointProp,
-                updateObjectStructure = function(_koPoint, _configPoint) {
-                    var addProps = function(koPoint, configPoint) {
-                        for (var prop in configPoint) {
-                            if (configPoint[prop].hasOwnProperty('ValueOptions') && !koPoint[prop].hasOwnProperty('ValueOptions')) {
-                                koPoint[prop].ValueOptions = ko.observableArray(pointInspector.utility.enumToArray(configPoint[prop].ValueOptions));
-                            }
-                            if (configPoint[prop].hasOwnProperty('eValue') && !koPoint[prop].hasOwnProperty('eValue')) {
-                                koPoint[prop].eValue = ko.observable(configPoint[prop].eValue);
-                            }
-                        }
-                    };
-                    var removeProps = function(koPoint, configPoint) {
-                        for (var koProp in koPoint) {
-                            if (configPoint.hasOwnProperty(koProp)) {
-                                if (!configPoint[koProp].hasOwnProperty('ValueOptions') && koPoint[koProp].hasOwnProperty('ValueOptions')) {
-                                    delete koPoint[koProp].ValueOptions;
-                                }
-                                if (!configPoint[koProp].hasOwnProperty('eValue') && koPoint[koProp].hasOwnProperty('eValue')) {
-                                    delete koPoint[koProp].eValue;
-                                }
-                            }
-                        }
-                    };
-                    addProps(_koPoint, _configPoint);
-                    removeProps(_koPoint, _configPoint);
-                };
+                pointProp;
 
             if (e.hasOwnProperty('oldPoint') && e.oldPoint !== null) {
                 point = {
@@ -444,7 +598,8 @@ define([
                         bannerJS.showBanner(updatedPoint.err + ' The ' + e.property + ' has been set back to its original value.', 'Dismiss');
                     }
                 } else {
-                    ko.viewmodel.updateFromModel(e.point, updatedPoint);
+                    // ko.viewmodel.updateFromModel(e.point, updatedPoint);
+                    pointInspector.updateObject(e.point, updatedPoint);
                 }
             } else {
                 point = {
@@ -474,15 +629,15 @@ define([
                     } else {
                         pointProp = pointInspector.point.data[e.property];
                         originalProp = pointInspector.point.originalData[e.property];
-                        if(!!updatedPoint.truncate){
+                        if (!!updatedPoint.truncate) {
                             if (pointProp.hasOwnProperty('Value')) { // We had to add this because now it is invoked for 'name[1-4]' changes (name[1-4] do not have a 'Value' key)
-                                pointProp.Value(point.point[e.property].Value.substring(0,updatedPoint.maxLength));
+                                pointProp.Value(point.point[e.property].Value.substring(0, updatedPoint.maxLength));
                             } else {
-                                pointProp(point.point[e.property].substring(0,updatedPoint.maxLength));
+                                pointProp(point.point[e.property].substring(0, updatedPoint.maxLength));
                             }
                             bannerJS.showBanner(updatedPoint.err + ' The ' + e.property + ' has been truncated.', 'Dismiss');
-                        }else{
-                            if(e.property === 'States'){ // check for any property that could update ValueOptions instead of Value
+                        } else {
+                            if (e.property === 'States') { // check for any property that could update ValueOptions instead of Value
                                 pointProp.ValueOptions(pointInspector.utility.enumToArray(originalProp.ValueOptions));
                             } else if (pointProp.hasOwnProperty('Value')) { // We had to add this because now it is invoked for 'name[1-4]' changes (name[1-4] do not have a 'Value' key)
                                 pointProp.Value(originalProp.Value);
@@ -492,14 +647,15 @@ define([
                             //display message from config.format call
                             bannerJS.showBanner(updatedPoint.err + ' The ' + e.property + ' has been set back to its original value.', 'Dismiss');
                         }
-                        
+
                     }
                 } else {
                     pointInspector.modelUpdate(true);
                     updatedPoint = JSON.parse(JSON.stringify(updatedPoint));
                     pointInspector.point.updatedPoint = updatedPoint;
-                    ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
-                    // updateObjectStructure(pointInspector.point.data, updatedPoint);
+
+                    //ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
+                    pointInspector.updateObject(pointInspector.point.data, updatedPoint);
                     // ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
                     pointInspector.modelUpdate(false);
                 }
@@ -520,6 +676,7 @@ define([
         function showTabs($tab) {
             $tab.removeClass('tabHidden');
         }
+
         function hideTabs($tab) {
             $tab.addClass('tabHidden');
         }
@@ -562,15 +719,26 @@ define([
             $tab.removeClass('active');
             $this.addClass('active');
 
-            if($navToggle.hasClass('shown')) {
+            if ($navToggle.hasClass('shown')) {
                 $navToggle.trigger('click');
             }
 
-            $view.children().stop(true, true).animate({opacity: 0}, {duration: 100, easing: 'easeOutQuint', complete: function() {
-                $header.text(contentTitle);
-                showTabs($tabContent);
-                $view.children().animate({opacity: 1}, {duration: 500, easing: 'easeOutQuint'});
-            }});
+            $view.children().stop(true, true).animate({
+                opacity: 0
+            }, {
+                duration: 100,
+                easing: 'easeOutQuint',
+                complete: function() {
+                    $header.text(contentTitle);
+                    showTabs($tabContent);
+                    $view.children().animate({
+                        opacity: 1
+                    }, {
+                        duration: 500,
+                        easing: 'easeOutQuint'
+                    });
+                }
+            });
 
             //do we have any triggers?
             if (typeof tabTrigger === 'function') {
@@ -589,7 +757,15 @@ define([
             // Display the first sub-menu item
             $siblingMenu.children().not('.header').not('.back').first().trigger('click');
 
-            $nav.addClass('animating').animate({ left: '-146px' }, { duration: 300, easing: 'easeOutExpo', complete: function() { $nav.removeClass('animating'); } });
+            $nav.addClass('animating').animate({
+                left: '-146px'
+            }, {
+                duration: 300,
+                easing: 'easeOutExpo',
+                complete: function() {
+                    $nav.removeClass('animating');
+                }
+            });
         });
         $back.on('click', function() {
             $subNav.hide();
@@ -597,34 +773,79 @@ define([
             // Display the parent's first menu item
             $tab.first().trigger('click');
 
-            $nav.addClass('animating').animate({ left: '0px' }, { duration: 300, easing: 'easeOutExpo', complete: function() { $nav.removeClass('animating'); } });
+            $nav.addClass('animating').animate({
+                left: '0px'
+            }, {
+                duration: 300,
+                easing: 'easeOutExpo',
+                complete: function() {
+                    $nav.removeClass('animating');
+                }
+            });
         });
         $navToggle.on('click', function() {
-            if($navToggle.hasClass('shown')) {
-                if($(window).width() < 768) {
-                    $view.animate({left: '0px'}, {
-                        duration: 300, easing: 'easeOutExpo', complete: function () {
+            if ($navToggle.hasClass('shown')) {
+                if ($(window).width() < 768) {
+                    $view.animate({
+                        left: '0px'
+                    }, {
+                        duration: 300,
+                        easing: 'easeOutExpo',
+                        complete: function() {
                             $view.removeAttr('style');
                         }
                     });
                 }
-                $viewOverlay.removeClass('shown').css({top: '0', bottom: '0'});
-                $viewOverlay.animate({ left: '0px', opacity: '0' }, { duration: 300, easing: 'easeOutExpo', complete: $viewOverlay.hide });
+                $viewOverlay.removeClass('shown').css({
+                    top: '0',
+                    bottom: '0'
+                });
+                $viewOverlay.animate({
+                    left: '0px',
+                    opacity: '0'
+                }, {
+                    duration: 300,
+                    easing: 'easeOutExpo',
+                    complete: $viewOverlay.hide
+                });
                 $navToggle.removeClass('shown');
                 return;
             }
-            $viewOverlay.css({ opacity: '0' }).addClass('shown').css({top: '50px', bottom: '30px'});
-            $view.animate({ left: '136px' }, { duration: 300, easing: 'easeOutExpo' });
-            $viewOverlay.animate({ left: '136px', opacity: '1' }, { duration: 300, easing: 'easeOutExpo' });
+            $viewOverlay.css({
+                opacity: '0'
+            }).addClass('shown').css({
+                top: '50px',
+                bottom: '30px'
+            });
+            $view.animate({
+                left: '136px'
+            }, {
+                duration: 300,
+                easing: 'easeOutExpo'
+            });
+            $viewOverlay.animate({
+                left: '136px',
+                opacity: '1'
+            }, {
+                duration: 300,
+                easing: 'easeOutExpo'
+            });
             $navToggle.addClass('shown');
         });
         bannerJS.init();
         $.fn.bootstrapSwitch.defaults.size = 'small';
         $.fn.bootstrapSwitch.defaults.onColor = 'success';
         if ($.support.transition) {
-            $body.transition({opacity: 1}, 2000, 'easeOutQuint');
+            $body.transition({
+                opacity: 1
+            }, 2000, 'easeOutQuint');
         } else {
-            $body.animate({opacity: 1}, {duration: 500, easing: 'easeOutQuint'});
+            $body.animate({
+                opacity: 1
+            }, {
+                duration: 500,
+                easing: 'easeOutQuint'
+            });
         }
     };
     pointInspector.authorize = function(data, requestedAccessLevel) {
@@ -636,16 +857,16 @@ define([
         return workspace.user()['System Admin'].Value;
     };
 
-    pointInspector.isValidFirmwareLoader = function(data){
+    pointInspector.isValidFirmwareLoader = function(data) {
         var modelType = data["Model Type"].eValue();
 
-        if(data["Point Type"].eValue() === 8){
+        if (data["Point Type"].eValue() === 8) {
             return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19 || modelType === 20);
-        }else if(data["Point Type"].eValue() === 144){
+        } else if (data["Point Type"].eValue() === 144) {
             return (modelType === 3 || modelType === 6);
         }
     };
-    pointInspector.selectFirstTab = function () {
+    pointInspector.selectFirstTab = function() {
         var $nav = $('.nav'),
             $subNav = $nav.find('li>ul'),
             $parentItem = $subNav.parent().children('span'),
@@ -739,96 +960,96 @@ define([
         self.controls = {
             'Device Time': {
                 commandTX: {
-                    'Command Type'  : 1,
-                    upi             : ''
+                    'Command Type': 1,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Device Initialize': {
                 commandTX: {
-                    'Command Type'  : 2,
-                    upi             : '',
-                    state           : 1
+                    'Command Type': 2,
+                    upi: '',
+                    state: 1
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Command Point': {
                 commandTX: {
-                    'Command Type'  : 7,
-                    upi             : '',
-                    Value           :'',
-                    Controller      : '',
-                    Relinquish      : '',
-                    Priority        : '',
-                    Wait            : ''
+                    'Command Type': 7,
+                    upi: '',
+                    Value: '',
+                    Controller: '',
+                    Relinquish: '',
+                    Priority: '',
+                    Wait: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Present Value': {
                 commandTX: {
-                    'Command Type'  : 5,
-                    upi             : ''
+                    'Command Type': 5,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Control Array': {
                 commandTX: {
-                    'Command Type'  : 3,
-                    upi             : ''
+                    'Command Type': 3,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Control Log': {
                 commandTX: {
-                    'Command Type'  : 8,
-                    upi             : ''
+                    'Command Type': 8,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Trend Data': {
                 commandTX: {
-                    'Command Type'  : 4,
-                    upi             : ''
+                    'Command Type': 4,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             },
             'Network Info': {
                 commandTX: {
-                    'Command Type'  : 15,
-                    upi             : ''
+                    'Command Type': 15,
+                    upi: ''
                 },
                 commandRX: {
-                    value           : ko.observable(),
-                    error           : ko.observable()
+                    value: ko.observable(),
+                    error: ko.observable()
                 }
             }
         };
-        self.issueCommand = function (commandType, data, callback) {
+        self.issueCommand = function(commandType, data, callback) {
             var command = self.controls[commandType];
             ko.utils.extend(command.commandTX, data);
             pointInspector.socket.emit('fieldCommand', ko.toJSON(command.commandTX));
-            pointInspector.socket.once('returnFromField', function (data) {
+            pointInspector.socket.once('returnFromField', function(data) {
                 // data = $.parseJSON(data);
                 if (data.err) {
                     command.commandRX.value('');
@@ -844,11 +1065,16 @@ define([
                 }
             });
         };
-        
+
         self.originalData = data;
         self.data = ko.viewmodel.fromModel(data, options);
         //throttle point refs for model switch when toggling edit mode
-        self.data['Point Refs'].extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
+        self.data['Point Refs'].extend({
+            rateLimit: {
+                timeout: 500,
+                method: "notifyWhenChangesStop"
+            }
+        });
         self.status = ko.observable('saved'); // Options: saved, saving, error
         self.save = function(data) {
             // We won't execute this routine if either of the following is true:
@@ -860,8 +1086,11 @@ define([
             if (self.status() === 'saving' || ((new Date().getTime() - formatPointErrorTimestamp) < 1000))
                 return;
             var newPointData = ko.viewmodel.toModel(self.data),
-                emitData    = { newPoint: newPointData, oldPoint: self.originalData },
-                emitString  = 'updatePoint',
+                emitData = {
+                    newPoint: newPointData,
+                    oldPoint: self.originalData
+                },
+                emitString = 'updatePoint',
                 close;
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
@@ -873,7 +1102,7 @@ define([
 
             if (newPointData._pStatus === pointInspector.utility.config.Enums["Point Statuses"].Inactive.enum) {
                 emitString = 'addPoint';
-            } else if(newPointData._pStatus == pointInspector.utility.config.Enums["Point Statuses"].Active.enum){
+            } else if (newPointData._pStatus == pointInspector.utility.config.Enums["Point Statuses"].Active.enum) {
                 for (var prop in newPointData) {
                     if (newPointData[prop].hasOwnProperty('ValueOptions') && Array.isArray(newPointData[prop].ValueOptions)) {
                         newPointData[prop].ValueOptions = pointInspector.utility.arrayToValueOptions(newPointData[prop].ValueOptions);
@@ -881,7 +1110,7 @@ define([
                 }
             }
 
-            if (data.baseComponent === "pt-slideshow") {  // clean up any removed slides
+            if (data.baseComponent === "pt-slideshow") { // clean up any removed slides
                 var i,
                     pointRefs = emitData.newPoint["Point Refs"],
                     len = pointRefs.length,
@@ -889,7 +1118,7 @@ define([
                     slides = emitData.newPoint["Slides"],
                     slide,
                     displayId,
-                    getSlideIndexById = function (id) {
+                    getSlideIndexById = function(id) {
                         for (var j = 0; j < slides.length; j++) {
                             if (slides[j].display === id) {
                                 return j;
@@ -897,7 +1126,7 @@ define([
                         }
                         return null;
                     },
-                    reorderDataSets = function () {
+                    reorderDataSets = function() {
                         for (var i = 0; i < pointRefs.length; i++) {
                             pointRefs[i].AppIndex = i + 1;
                             displayId = pointRefs[i].Value;
@@ -909,10 +1138,10 @@ define([
                         }
                     };
 
-                for (i = (len-1); i >= 0; i--) {
+                for (i = (len - 1); i >= 0; i--) {
                     currentPointRef = pointRefs[i];
                     if (currentPointRef) {
-                        if (currentPointRef.PointName === ""  && currentPointRef.Value === 0) {
+                        if (currentPointRef.PointName === "" && currentPointRef.Value === 0) {
                             slides.splice(getSlideIndexById(currentPointRef.PointInst), 1);
                             pointRefs.splice(i, 1);
                         }
@@ -926,7 +1155,7 @@ define([
 
             self.status('saving');
             pointInspector.socket.emit(emitString, emitData);
-            pointInspector.socket.once('pointUpdated', function (rxData) {
+            pointInspector.socket.once('pointUpdated', function(rxData) {
                 var hideAfter = 3000,
                     bgColor,
                     dismissText,
@@ -938,7 +1167,8 @@ define([
                     // Update our originalData with rxData received from the server
                     self.originalData = ko.viewmodel.toModel(rxData.point);
                     // Update our viewmodel with the new originalData
-                    ko.viewmodel.updateFromModel(self.data, self.originalData);
+                    // ko.viewmodel.updateFromModel(self.data, self.originalData);
+                    pointInspector.updateObject(pointInspector.point.data, self.originalData);
                     // Update our status
                     self.status('saved');
 
@@ -960,7 +1190,7 @@ define([
                 bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(function () {
+                    setTimeout(function() {
                         return dtiUtility.closeWindow();
                     }, 1000);
                 }
@@ -973,14 +1203,12 @@ define([
     }
 
     function getData(id) {
-        return $.ajax(
-            {
-                url        : pointInspector.apiEndpoint + 'points/' + id,
-                contentType: 'application/json',
-                dataType   : 'json',
-                type       : 'get'
-            }
-        );
+        return $.ajax({
+            url: pointInspector.apiEndpoint + 'points/' + id,
+            contentType: 'application/json',
+            dataType: 'json',
+            type: 'get'
+        });
     }
 
     function initialize(data) {
@@ -1023,7 +1251,7 @@ define([
             // Show animation complete
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time
             // Delay the bannerJS animation for another 500ms to let things settle down
-            window.setTimeout(function () {
+            window.setTimeout(function() {
                 if (data._pStatus === pointStatuses.Deleted.enum) {
                     bannerJS.showBanner({
                         msg: 'This point has been deleted. Click the restore button to undelete it.',
@@ -1043,7 +1271,7 @@ define([
     /**
      * Global Knockout bindings and functions
      */
-    ko.utils.unwrapProperties = function (wrappedProperties) {
+    ko.utils.unwrapProperties = function(wrappedProperties) {
 
         if (wrappedProperties === null || typeof wrappedProperties !== 'object') {
             return wrappedProperties;
@@ -1051,7 +1279,7 @@ define([
 
         var options = {};
 
-        ko.utils.objectForEach(wrappedProperties, function (propertyName, propertyValue) {
+        ko.utils.objectForEach(wrappedProperties, function(propertyName, propertyValue) {
             options[propertyName] = ko.unwrap(propertyValue);
         });
 
@@ -1059,21 +1287,26 @@ define([
     };
 
     ko.bindingHandlers.tooltip = {
-        init: function (element) {
+        init: function(element) {
             var $element = $(element);
 
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 if ($element.data('bs.tooltip')) {
                     $element.tooltip('destroy');
                 }
             });
         },
-        update: function (element, valueAccessor) {
+        update: function(element, valueAccessor) {
             var $element = $(element),
                 value = ko.unwrap(valueAccessor()),
                 options = ko.utils.unwrapProperties(value),
                 tooltipData = $element.data('bs.tooltip'),
-                defaults = {delay: { show:500, hide: 100 } };
+                defaults = {
+                    delay: {
+                        show: 500,
+                        hide: 100
+                    }
+                };
             //define some defaults
             ko.utils.extend(defaults, options);
             if (!tooltipData) {
@@ -1085,7 +1318,7 @@ define([
     };
 
     ko.bindingHandlers.modal = {
-        init: function (element, valueAccessor) {
+        init: function(element, valueAccessor) {
             var value = valueAccessor();
 
             $(element).modal({
@@ -1096,12 +1329,12 @@ define([
                     value(false);
                 });
             }
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 // $(element).modal("destroy"); // Destory was deprecated in bootstrap v3+
                 $(element).data('bs.modal', null);
             });
         },
-        update: function (element, valueAccessor) {
+        update: function(element, valueAccessor) {
             var value = valueAccessor();
             if (ko.utils.unwrapObservable(value)) {
                 $(element).modal('show');
@@ -1113,7 +1346,7 @@ define([
 
     ko.bindingHandlers.formattedNumericText = {
         update: function(element, valueAccessor, allBindingsAccessor) {
-            var utility  = pointInspector.utility,
+            var utility = pointInspector.utility,
                 $element = $(element),
                 value = valueAccessor(),
                 context = ko.contextFor(element),
@@ -1130,10 +1363,11 @@ define([
             }
 
             if (!!fontSize) {
-                $element.css({'font-size': fontSize + 'px'});
+                $element.css({
+                    'font-size': fontSize + 'px'
+                });
             } else if ($element.attr('style')) {
-                $element.attr('style', function(i, style)
-                {
+                $element.attr('style', function(i, style) {
                     return style.replace(/font-size[^;]+;?/g, '');
                 });
             }
@@ -1143,21 +1377,21 @@ define([
     };
 
     ko.bindingHandlers.numeric = {
-        init: function (element, valueAccessor, allBindingsAccessor) {
-            var utility                 = pointInspector.utility,
-                valueTypeEnums          = utility.config.Enums["Value Types"],
-                $element                = $(element),
-                underlyingObservable    = valueAccessor(),
-                valueType               = ko.unwrap(allBindingsAccessor().valueType),
-                noTruncate              = allBindingsAccessor().noTruncate,
-                noComma                 = allBindingsAccessor().noComma,
-                min                     = allBindingsAccessor().min,
-                max                     = allBindingsAccessor().max,
-                doValidate              = allBindingsAccessor().doValidate,
-                noConfigValidation      = ko.unwrap(allBindingsAccessor().noValidation),
+        init: function(element, valueAccessor, allBindingsAccessor) {
+            var utility = pointInspector.utility,
+                valueTypeEnums = utility.config.Enums["Value Types"],
+                $element = $(element),
+                underlyingObservable = valueAccessor(),
+                valueType = ko.unwrap(allBindingsAccessor().valueType),
+                noTruncate = allBindingsAccessor().noTruncate,
+                noComma = allBindingsAccessor().noComma,
+                min = allBindingsAccessor().min,
+                max = allBindingsAccessor().max,
+                doValidate = allBindingsAccessor().doValidate,
+                noConfigValidation = ko.unwrap(allBindingsAccessor().noValidation),
                 method,
                 interceptor = ko.computed({
-                    read: function () {
+                    read: function() {
                         var val,
                             valIsPureNumber,
                             valueType;
@@ -1204,65 +1438,81 @@ define([
                         }
                         underlyingObservable.valueHasMutated();
                     }
-                }).extend({ notify: 'always' });
+                }).extend({
+                    notify: 'always'
+                });
 
             if ($element.is('input')) {
-                ko.applyBindingsToNode(element, { value: interceptor });
+                ko.applyBindingsToNode(element, {
+                    value: interceptor
+                });
             } else {
-                ko.applyBindingsToNode(element, { text: interceptor });
+                ko.applyBindingsToNode(element, {
+                    text: interceptor
+                });
             }
             $element
-                .on('keydown', function (event) {
-                    var cursorPosition  = utility.getSelectionStart($element[0]),
-                        currentValue    = $element.val(),
-                        hasDecimal      = /\./g.test(currentValue),
-                        hasE            = /[Ee]/g.test(currentValue),
-                        keyCode         = event.keyCode,
-                        allow           = false,
-                        allowSign       = function () {
+                .on('keydown', function(event) {
+                    var cursorPosition = utility.getSelectionStart($element[0]),
+                        currentValue = $element.val(),
+                        hasDecimal = /\./g.test(currentValue),
+                        hasE = /[Ee]/g.test(currentValue),
+                        keyCode = event.keyCode,
+                        allow = false,
+                        allowSign = function() {
                             if (cursorPosition === 0) {
                                 // Allow if our number doesn't already begin with a sign
                                 return !/^[\+-]/g.test(currentValue);
                             } else {
                                 // Allow if previous character is 'e' or 'E' and next character is NOT '+' or '-'
-                                return (/^[eE]$|^[eE][^\+-]/g).test(currentValue.substring(cursorPosition-1, cursorPosition+1));
+                                return (/^[eE]$|^[eE][^\+-]/g).test(currentValue.substring(cursorPosition - 1, cursorPosition + 1));
                             }
                         };
                     method = 'key';
 
                     switch (keyCode) {
                         // Backspace, delete, tab, escape, and enter
-                        case 46: case 8: case 9: case 27: case 13:
-                        // Home, end, left, right
-                        case 36: case 35: case 37: case 39:
+                        case 46:
+                        case 8:
+                        case 9:
+                        case 27:
+                        case 13:
+                            // Home, end, left, right
+                        case 36:
+                        case 35:
+                        case 37:
+                        case 39:
                             allow = true;
-                        break;
-                        // 'a'
+                            break;
+                            // 'a'
                         case 65:
                             if (event.ctrlKey) allow = true;
-                        break;
-                        // '.'
-                        case 190: case 110:
+                            break;
+                            // '.'
+                        case 190:
+                        case 110:
                             // Float number without decimal and doesn't have an 'e' or 'E' left of the cursor position
                             if (valueType === 1 && !hasDecimal && !/[eE]/g.test(currentValue.substring(0, cursorPosition))) allow = true;
-                        break;
-                        // '-'
-                        case 109: case 189:
+                            break;
+                            // '-'
+                        case 109:
+                        case 189:
                             if (valueType !== 4) {
                                 allow = allowSign();
                             }
-                        break;
-                        // '+'
-                        case 187: case 107:
+                            break;
+                            // '+'
+                        case 187:
+                        case 107:
                             allow = allowSign();
-                        break;
-                        // 'e'
+                            break;
+                            // 'e'
                         case 69:
                             if (!hasE && cursorPosition !== 0) allow = true;
-                        break;
+                            break;
 
                         default:
-                        break;
+                            break;
                     }
 
                     if (!allow) {
@@ -1274,26 +1524,29 @@ define([
                         // if it's an up or down arrow, increment or decrement
                         if (keyCode === 38) {
                             method = 'arrow';
-                            $element.trigger('mousewheel', {deltaY: 1});
+                            $element.trigger('mousewheel', {
+                                deltaY: 1
+                            });
                         }
                         if (keyCode === 40) {
                             method = 'arrow';
-                            $element.trigger('mousewheel', {deltaY: -1});
+                            $element.trigger('mousewheel', {
+                                deltaY: -1
+                            });
                         }
                     }
-                }
-            )
-                .on('mousewheel', function (event, trigger) {
-                    var cursorPosition      = utility.getSelectionStart($element[0]),
-                        currentValue        = this.value,
-                        decimalPosition     = currentValue.indexOf('.'),
-                        hasDecimal          = !!~decimalPosition,
-                        decimalPlaces       = hasDecimal ? currentValue.length - decimalPosition - 1 : 0,
-                        divisor             = 1,
-                        selectionStart      = 0,
-                        selectionEnd        = currentValue.length;
+                })
+                .on('mousewheel', function(event, trigger) {
+                    var cursorPosition = utility.getSelectionStart($element[0]),
+                        currentValue = this.value,
+                        decimalPosition = currentValue.indexOf('.'),
+                        hasDecimal = !!~decimalPosition,
+                        decimalPlaces = hasDecimal ? currentValue.length - decimalPosition - 1 : 0,
+                        divisor = 1,
+                        selectionStart = 0,
+                        selectionEnd = currentValue.length;
 
-                    if ($.trim(currentValue) === '' || isNaN(currentValue))  return;
+                    if ($.trim(currentValue) === '' || isNaN(currentValue)) return;
 
                     if (typeof trigger.deltaY === 'number') {
                         event = trigger;
@@ -1309,40 +1562,37 @@ define([
                     // if value type is float, we will check the position of the decimal and
                     // increment/decrement accordingly
                     if (hasDecimal && cursorPosition > decimalPosition) {
-                        divisor         = Math.pow(10, decimalPlaces);
-                        selectionStart  = decimalPosition + 1;
-                        selectionEnd    = currentValue.length;
+                        divisor = Math.pow(10, decimalPlaces);
+                        selectionStart = decimalPosition + 1;
+                        selectionEnd = currentValue.length;
                     } else {
-                        selectionStart  = 0;
-                        selectionEnd    = hasDecimal ? decimalPosition : currentValue.length;
+                        selectionStart = 0;
+                        selectionEnd = hasDecimal ? decimalPosition : currentValue.length;
                     }
-                    $element.val(new Big(currentValue).plus(event.deltaY/divisor).toFixed(decimalPlaces)).trigger('change');
+                    $element.val(new Big(currentValue).plus(event.deltaY / divisor).toFixed(decimalPlaces)).trigger('change');
                     utility.createSelection($element[0], selectionStart, selectionEnd);
-                }
-            )
+                })
                 .on('click', function(event) {
-                    var cursorPosition      = utility.getSelectionStart($element[0]),
-                        currentValue        = $element.val(),
-                        decimalPosition     = currentValue.indexOf('.'),
-                        hasDecimal          = !!~decimalPosition,
-                        selectionStart      = 0,
-                        selectionEnd        = currentValue.length;
+                    var cursorPosition = utility.getSelectionStart($element[0]),
+                        currentValue = $element.val(),
+                        decimalPosition = currentValue.indexOf('.'),
+                        hasDecimal = !!~decimalPosition,
+                        selectionStart = 0,
+                        selectionEnd = currentValue.length;
                     if (hasDecimal) {
                         if (cursorPosition > decimalPosition) {
-                            selectionStart  = decimalPosition + 1;
-                            selectionEnd    = currentValue.length;
+                            selectionStart = decimalPosition + 1;
+                            selectionEnd = currentValue.length;
                         } else {
-                            selectionStart  = 0;
-                            selectionEnd    = decimalPosition;
+                            selectionStart = 0;
+                            selectionEnd = decimalPosition;
                         }
                     }
                     utility.createSelection($element[0], selectionStart, selectionEnd);
-                }
-            )
+                })
                 .on('focus', function() {
                     $element.val(utility.normalizeNumber($element.val(), valueType));
-                }
-            )
+                })
                 .on('focusout', function() {
                     underlyingObservable(parseFloat(underlyingObservable()));
                     if (!!noConfigValidation) return;
@@ -1354,26 +1604,24 @@ define([
                             refPoint: null
                         });
                     }
-                }
-            )
+                })
                 .on('blur', function() {
                     if ($element.val() === underlyingObservable()) {
                         $element.val(utility.formatNumber($element.val(), valueType));
                     }
-                }
-            );
+                });
         }
     };
 
     ko.bindingHandlers.validateOnBlur = {
-        init: function (element, valueAccessor, allBindingsAccessor) {
+        init: function(element, valueAccessor, allBindingsAccessor) {
             var subscription,
                 context = {
                     $element: $(element),
                     property: valueAccessor()
                 };
 
-            subscription = allBindingsAccessor().value.subscribe(function (value) {
+            subscription = allBindingsAccessor().value.subscribe(function(value) {
                 $(document).triggerHandler({
                     type: 'viewmodelChange',
                     targetElement: this.$element,
@@ -1381,36 +1629,36 @@ define([
                     refPoint: null
                 });
             }, context);
-            
+
             // Dispose our subscription after this element is removed
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 subscription.dispose();
             });
         }
     };
 
     ko.bindingHandlers.protectedText = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var val = valueAccessor(),
                 $element = $(element),
                 $message = $('.invalidCharMsg'),
                 $badChar = $message.find('.invalidChar'),
-                offset   = $element.offset(),
-                height   = $element.outerHeight(),
-                messageTop  = offset.top  + height + 3,
+                offset = $element.offset(),
+                height = $element.outerHeight(),
+                messageTop = offset.top + height + 3,
                 messageLeft = offset.left,
-                messageWidth= $element.outerWidth(),
+                messageWidth = $element.outerWidth(),
                 config = pointInspector.utility.config;
 
             $element.val(val());
             $element
-                .on('keypress', function (event) {
+                .on('keypress', function(event) {
                     var _char = String.fromCharCode(event.which);
                     if (config.Utility.isPointNameCharacterLegal(_char) === false) {
                         $message.css({
                             opacity: 1,
-                            top:   messageTop,
-                            left:  messageLeft,
+                            top: messageTop,
+                            left: messageLeft,
                             width: messageWidth
                         });
                         $badChar.text(_char);
@@ -1438,8 +1686,7 @@ define([
                 })
                 .on('focus', function() {
                     $message.fadeOut(400);
-                }
-            );
+                });
         }
     };
 });
