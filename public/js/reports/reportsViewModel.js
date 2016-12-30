@@ -4627,9 +4627,11 @@ var reportsViewModel = function () {
                                 }
 
                             }
-                            for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {  // add column headers
-                                if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
-                                    headerArray.push({Value: columnsArray[j].colDisplayName});
+                            if (columnsArray.length > 1) {  // property reports can have a single column
+                                for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {  // add column headers
+                                    if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
+                                        headerArray.push({Value: columnsArray[j].colDisplayName});
+                                    }
                                 }
                             }
                         };
@@ -4643,9 +4645,11 @@ var reportsViewModel = function () {
                         if (columnsArray[0].dataColumnName !== undefined) {
                             rowArray.push(row[columnsArray[0].dataColumnName]);
                         }
-                        for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {
-                            if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
-                                rowArray.push(row[columnsArray[j].dataColumnName]);
+                        if (columnsArray.length > 1) {  // property reports can have a single column
+                            for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {
+                                if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
+                                    rowArray.push(row[columnsArray[j].dataColumnName]);
+                                }
                             }
                         }
                         currentPage.push({cells: rowArray});
@@ -4668,7 +4672,7 @@ var reportsViewModel = function () {
                         dataIndex.rowStartIdx = dataIndex.rowStopIdx + 1;
                         dataIndex.gridRowStartIdx = dataIndex.rowStartIdx;
                         dataIndex.gridRowStopIdx = reportData.length - 1;
-                        dataIndex.columnStartIdx = 1;
+                        dataIndex.columnStartIdx = (columnsArray.length === 1 ? 0 : 1); // property reports can have a single column
                         if (columnRangeNeeded) {
                             columnRange++;
                             columnRangeNeeded = false;  // displayed all data for current range
@@ -4827,7 +4831,7 @@ var reportsViewModel = function () {
                 };
 
             if (reportData !== undefined) {
-                dataIndex.columnStartIdx = 1;  // set indexes to full data set
+                dataIndex.columnStartIdx = (columnsArray.length === 1 ? 0 : 1);  // set indexes to full data set.   property reports can have a single column
                 dataIndex.columnStopIdx = (columnsArray.length);
                 dataIndex.rowStartIdx = 0;
                 dataIndex.rowStopIdx = (reportData.length - 1);
