@@ -5141,7 +5141,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -5592,7 +5592,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -6359,7 +6359,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Momentary Delay": {
@@ -6833,7 +6833,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Momentary Delay": {
@@ -7596,7 +7596,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -7827,7 +7827,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
