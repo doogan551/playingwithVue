@@ -14,6 +14,8 @@ var logger = require('../helpers/logger')(module);
 var pageRender = require('../models/pagerender');
 var mailer = require('../models/mailer');
 
+var actLogsEnums = Config.Enums["Activity Logs"];
+var activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = Rpt = {
 
@@ -92,6 +94,18 @@ module.exports = Rpt = {
         });
     },
     saveReport: function(data, cb) {
+        data['Point Type'] = {
+            eValue: Config.Enums['Point Types'].Report.enum
+        };
+
+        var logData = {
+            user: data.user,
+            timestamp: Date.now(),
+            point: data,
+            activity: actLogsEnums["Report Edit"].enum,
+            log: "Report edited."
+        };
+
         var criteria = {
             collection: 'points',
             query: {
@@ -110,14 +124,21 @@ module.exports = Rpt = {
             }
         };
 
+        var logObj = utils.buildActivityLog(logData);
+
         Utility.update(criteria, function(err, result) {
-            if (!err) {
-                return cb(err, {
-                    data: "Report has been saved successfully!!!"
-                });
-            } else {
-                return cb(err, null);
-            }
+            Utility.insert({
+                collection: activityLogCollection,
+                insertObj: logObj
+            }, function(err, result) {
+                if (!err) {
+                    return cb(err, {
+                        data: "Report has been saved successfully!!!"
+                    });
+                } else {
+                    return cb(err, null);
+                }
+            });
         });
     },
     getSVG: function(data, cb) {
@@ -842,7 +863,7 @@ module.exports = Rpt = {
             return cb(null, docs);
         });
     },
-    collectFilters: function (theFilters, reportPointRefs) {
+    collectFilters: function(theFilters, reportPointRefs) {
         var grouping = "$and",
             currentFilter,
             localSearchCriteria = {},
@@ -851,7 +872,7 @@ module.exports = Rpt = {
             expressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
-            getPointRefByAppIndex = function (appIndex) {
+            getPointRefByAppIndex = function(appIndex) {
                 var result,
                     i;
 
@@ -864,7 +885,7 @@ module.exports = Rpt = {
 
                 return result;
             },
-            collectFilter = function (filter) {
+            collectFilter = function(filter) {
                 var searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
@@ -1004,7 +1025,7 @@ module.exports = Rpt = {
                                 } else {
                                     searchPart2[propertyCheckForValue(key)] = {
                                         $regex: '(?i)^(?!' + filter.value + ")"
-                                        //$ne: utils.converters.convertType(filter.value, filter.valueType)
+                                            //$ne: utils.converters.convertType(filter.value, filter.valueType)
                                     };
                                 }
                             }
@@ -1066,7 +1087,7 @@ module.exports = Rpt = {
                 }
                 return searchQuery;
             },
-            groupLogic = function (logicType) {
+            groupLogic = function(logicType) {
                 var group = [],
                     sameGroup = true;
 
@@ -1432,9 +1453,9 @@ module.exports = Rpt = {
             var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
             var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
             console.log(uri, path);
-            pageRender.renderPage(uri, path, function (err) {
+            pageRender.renderPage(uri, path, function(err) {
                 console.log(1, err);
-                fs.readFile(path, function (err, data) {
+                fs.readFile(path, function(err, data) {
                     console.log(2, err);
                     Utility.iterateCursor({
                         collection: 'Users',
@@ -1443,16 +1464,16 @@ module.exports = Rpt = {
                                 $in: users
                             }
                         }
-                    }, function (err, user, nextUser) {
+                    }, function(err, user, nextUser) {
                         // figure out date/time
-                        emails = emails.concat(user['Contact Info'].Value.filter(function (info) {
+                        emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
                             return info.Type === 'Email';
-                        }).map(function (email) {
+                        }).map(function(email) {
                             return email.Value;
                         }));
 
                         nextUser();
-                    }, function (err, count) {
+                    }, function(err, count) {
                         emails = emails.concat(schedule.emails).join(',');
                         mailer.sendEmail({
                             to: emails,
@@ -1463,7 +1484,7 @@ module.exports = Rpt = {
                                 contentType: 'application/pdf',
                                 content: data
                             }]
-                        }, function (err, info) {
+                        }, function(err, info) {
                             console.log(err, info);
                             cb(err);
                         });

@@ -160,6 +160,9 @@
             },
             "Season Change": {
                 "enum": 42
+            },
+            "Report Edit": {
+                "enum": 43
             }
         },
         "Alarm Classes": {
