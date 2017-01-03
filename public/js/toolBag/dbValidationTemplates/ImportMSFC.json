@@ -7175,7 +7175,7 @@
         "_name2" : "saf1", 
         "_name3" : "hdkt", 
         "_name4" : "", 
-        "_Name" : "4207_saf1_hdkt", 
+        "_Name" : "4200_saf1_hdkt", 
         "_cfgRequired" : true, 
         "_cfgDevice" : false, 
         "_relDevice" : 129, 
@@ -7639,7 +7639,7 @@
         "Value": {
             "isDisplayable": true,
             "isReadOnly": true,
-            "oosValue": 0,
+            "oosValue": 1,
             "ValueType": 5,
             "Value": "FWD",
             "eValue": 1,
@@ -7672,13 +7672,13 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": "On"
+            "Value": "FWD"
         },
         "Inactive Text": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": "Off"
+            "Value": "REV"
         },
         "Description": {
             "isDisplayable": true,
@@ -7690,7 +7690,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "1",
+            "Value": "8449",
             "eValue": 8449,
             "ValueOptions": {
                 "1": 1
@@ -7726,7 +7726,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Raed Holding Registers",
+            "Value": "Read Holding Registers",
             "eValue": 3
         },
         "Poll Register": {
@@ -7783,7 +7783,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 60
+            "Value": 0
         },
         "Trend Samples": {
             "isDisplayable": true,
@@ -7813,7 +7813,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383384770
         },
         "Run Total Reset Enable": {
             "isDisplayable": true,
@@ -7835,7 +7835,7 @@
         },
         "Number of Starts": {
             "isDisplayable": true,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 4,
             "Value": 9
         },
@@ -7843,19 +7843,19 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383384771
         },
         "Last Start Time": {
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1475599340
         },
         "Alarms Off": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 7,
-            "Value": false
+            "Value": true
         },
         "Alarm Class": {
             "isDisplayable": true,
@@ -7909,7 +7909,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 18,
-            "Value": 255
+            "Value": 251
         },
         "Remarks": {
             "isDisplayable": true,
