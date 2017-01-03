@@ -9110,16 +9110,16 @@
             }
         ]
     }, { 
-        "Name" : "4602_LAB VAV_OCC OVR", 
+        "Name" : "4602_LAB VA65_OCC OVR", 
         "name1" : "4602", 
-        "name2" : "LAB VAV", 
+        "name2" : "LAB VAV65", 
         "name3" : "OCC OVR", 
         "name4" : "", 
         "_name1" : "4602", 
-        "_name2" : "lab vav", 
+        "_name2" : "lab vav65", 
         "_name3" : "occ ovr", 
         "_name4" : "", 
-        "_Name" : "4602_lab vav_occ ovr", 
+        "_Name" : "4602_lab vav65_occ ovr", 
         "_cfgRequired" : true, 
         "_cfgDevice" : false, 
         "_relDevice" : 129, 
