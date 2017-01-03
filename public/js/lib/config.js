@@ -4173,29 +4173,20 @@ var Config = (function(obj) {
                         break;
 
                     default: // Unknown, no RMU
+                        setValOpt(type, {
+                            "Latch": 0,
+                            "Momentary": 1,
+                            "Pulse": 2
+                        });
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
+                            case eDev["MicroScan 4 UNV"]["enum"]:
                                 setCh(ch, 1, 16);
                                 break;
                             case eDev["SCADA Vio"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
                                 setCh(ch, 1, 9);
                                 break;
                             case eDev["SCADA IO"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
                                 setValOpt(ch, {
                                     "I/O 1": 1,
                                     "I/O 2": 2,
@@ -4207,18 +4198,7 @@ var Config = (function(obj) {
                                     "I/O 8": 8
                                 });
                                 break;
-                            case eDev["MicroScan 4 UNV"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1
-                                });
-                                setCh(ch, 1, 16);
-                                break;
                             default: // MicroScan 4 Digital
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1
-                                });
                                 setCh(ch, 1, 32);
                                 break;
                         }

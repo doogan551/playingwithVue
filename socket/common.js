@@ -312,7 +312,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     updateObject[propName] = newPoint[prop].eValue;
                   }
 
-                  if (newPoint["Out of Service"].Value === true) {
+                  if (!!newPoint.hasOwnProperty("Out of Service") && newPoint["Out of Service"].Value === true) {
 
                     if (newPoint.Value.oosValue !== undefined) {
                       downloadPoint = true;

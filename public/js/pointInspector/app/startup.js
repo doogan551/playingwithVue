@@ -1190,12 +1190,16 @@ define([
                     self.status('error');
                 }
                 close = (data.saveAndClose && !rxData.err);
-                bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
-                $('body').css('overflow', 'auto');
-                if (close) {
-                    setTimeout(function() {
-                        return dtiUtility.closeWindow();
-                    }, 1000);
+
+                if (!close) {
+                    bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
+                    $('body').css('overflow', 'auto');
+                } else {
+                    dtiUtility.toast({
+                        msg: 'Point saved',
+                        duration: 4000
+                    });
+                    return dtiUtility.closeWindow();
                 }
             });
         };
