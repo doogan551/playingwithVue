@@ -512,12 +512,15 @@ define([
         // var _newPoint = ko.viewmodel.fromModel(_configPoint);
         var _newPoint = (new Point(_configPoint)).data;
         var props = ['Value', 'ValueOptions', 'isDisplayable', 'isReadOnly', 'eValue', 'ValueType', 'PropertyName', 'PropertyEnum', 'AppIndex', 'PointName', 'PointType', 'PointInst', 'DevInst', 'name', 'value'];
+        var checkForProp = function(prop){
+            return !!pointInspector.utility.config.Templates.commonProperties.hasOwnProperty(prop) || !!~props.indexOf(prop);
+        };
         var updateValues = function(current, updated) {
             var changeProperty = function(currentProp, updatedProp) {
                 if (typeof currentProp === 'object' || (ko.isObservable(currentProp) && typeof currentProp() === 'object')) {
                     updateValues(currentProp, updatedProp);
                 } else {
-                    if (!!~props.indexOf(prop) && currentProp() !== updatedProp()) {
+                    if (checkForProp(prop) && currentProp() !== updatedProp()) {
                         currentProp(updatedProp());
                     }
                 }
@@ -545,7 +548,7 @@ define([
                         addValues(current[prop], updated[prop]);
                     } else if (Array.isArray(current[prop])) {
                         // handle arrays
-                    } else if (!!~props.indexOf(prop)) {
+                    } else if (checkForProp(prop)) {
                         current[prop] = ko.observable(updated[prop]);
                     }
                 }

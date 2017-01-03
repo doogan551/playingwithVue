@@ -5066,7 +5066,8 @@ var Config = (function(obj) {
             template["Point Type"].Value = pointType;
             template["Point Type"].eValue = enumsTemplatesJson.Enums["Point Types"][pointType].enum;
             return templateClone(template);
-        }
+        },
+        commonProperties: enumsTemplatesJson.Templates._common
     };
 
     // Application-specific configuration
