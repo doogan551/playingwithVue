@@ -387,10 +387,9 @@ html
         .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
-                    div
-                        a.white-text(href="javascript://")
-                            i.material-icons.popInOutIcon call_made
-                        | #[span(data-bind="text: title")]
+                    a.white-text(href="javascript://")
+                        i.material-icons.popInOutIcon call_made
+                    | #[span(data-bind="text: title")]
                 a.white-text(href="javascript://", data-bind="click: refresh, visible: hasUrl")
                     i.material-icons refresh
                 //- a.white-text(href="javascript://")

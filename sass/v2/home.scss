@@ -419,19 +419,17 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         .card-title {
             font-size: 16px;
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 6px;
+            top: 4px;
+            left: 30px;
+            right: 60px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
 
-            div {
-                position: relative;
-
-                .popInOutIcon {
-                    position: absolute;
-                    left: -20px;
-                    top: -1px;
-                    font-size: 16px;
-                }
+            .popInOutIcon {
+                margin-right: 10px;
+                font-size: 16px;
             }
         }
     }
@@ -1622,6 +1620,7 @@ $loaderSpeedScale: 1 / .75;
             width: 20%;
             max-height: 28px;
             display: inline-block;
+            overflow: hidden;
         }
     }
 

@@ -4251,6 +4251,9 @@ var dti = {
                     },
                     pointFilterSelected: function () {
 
+                    },
+                    toast: function () {
+                        dti.toast(config.msg, config.duration, config.style);
                     }
                 };
 
