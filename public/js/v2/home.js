@@ -2237,6 +2237,9 @@ var dti = {
                         container: 'autosuggestContainer'   // Added to suggestion container
                     },
                     autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
+                    showOnFocus: false, // Show suggestions when input is focused
+                    enterOnBlur: false, // Simulate 'Enter' when the the input loses focus (only applicable if $chips is installed)
+                    persistAfterSelect: false,
                     chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
                 cfg = $.extend(defaults, config),
@@ -2386,12 +2389,12 @@ var dti = {
                                 if (parsed.operator) {
                                     regex = new RegExp(parsed.value, 'ig');
 
-                                    dti.forEachArray(data, function (item, index) {
-                                        if (regex.test(item.text)) {
+                                    dti.forEachArray(data, function (_private, index) {
+                                        if (regex.test(_private.text)) {
                                             if (cfg.highlight) {
-                                                item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                                _private.html(_private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
                                             }
-                                            matches.push(item);
+                                            matches.push(_private);
                                         }
                                     });
                                 } else {
@@ -2416,10 +2419,51 @@ var dti = {
                         totalMatches += matches.length;
                     });
 
-                    if (totalMatches <= 1) {
+                    if (totalMatches === 0) {
                         self.hide();
+                    } else if (!self.getSelected().length) {
+                        if (cfg.autoselect) {
+                            self.selectFirst();
+                        }
+                    } else {
+                        scrollTo(self.getSelected());   // Call scroll in case the selected item is not in view
                     }
+
                     self.numberOfMatches = totalMatches;
+                },
+                selectMatch = function (data, e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        operator = getOperator(inputValue),
+                        isEnterKeyPress = (e.which === 10) || (e.which === 13);
+
+                    if (operator) {
+                        inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
+                    } else {
+                        if (!data.parent) {
+                            inputValue = data.text;
+                        } else {
+                            inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter) + 1) + data.text;
+                        }
+                    }
+
+                    // If materialize chips is installed
+                    if (cfg.$chips) {
+                        // If the selected item has children or values to choose from
+                        if (data.hasChildren || data.hasValues) {
+                            if (isEnterKeyPress) { // If we arrived her by way of the enter key
+                                e.stopImmediatePropagation(); // Stop propagation so we don't create a chip
+                            }
+                        } else {
+                            if (!isEnterKeyPress) { // If we arrived here by way of mouse click one of our suggestions
+                                cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                                inputValue = '';
+                            }
+                        }
+                        getMatches(inputValue);
+                    }
+
+                    cfg.$inputElement.val(inputValue);
+                    cfg.$inputElement.focus();
                 },
                 handleKeyup = function (e) {
                     var inputValue = cfg.$inputElement.val(),
@@ -2439,31 +2483,25 @@ var dti = {
                         if (inputValue.length > cfg.minLength) {
                             self.show();
                         }
-                    } else if (!self.getSelected().length) {
-                        if (cfg.autoselect) {
-                            self.selectFirst();
-                        }
-                    } else {
-                        scrollTo(self.getSelected());   // Scroll to the selected item (JIC it's not in view)
                     }
                 },
                 handleKeydown = function (e) {
                     var key = e.which,
+                        koData,
                         $selected;
 
                     if (key === 10 || key === 13) { // return
                         $selected = self.getSelected();
-                        if (self.bindings.isShown() && $selected.length) {
-                            // If materialize chips is installed on this input
-                            if (cfg.$chips) {
-                                // Stop propagation so we don't create a chip
-                                e.stopImmediatePropagation();
-                            }
 
-                            self.bindings.selectMatch(ko.dataFor($selected[0]));
+                        if (self.bindings.isShown() && $selected.length) {
+                            selectMatch(ko.dataFor($selected[0]), e);
                         } else {
                             getMatches('');
-                            self.hide();
+                            if (cfg.showOnFocus) {
+                                self.show();
+                            } else {
+                                self.hide();
+                            }
                         }
                     } else if (key === 40) { // down
                         if (self.bindings.isShown() === false) {
@@ -2513,16 +2551,24 @@ var dti = {
                 self.bindings.sources.push(source);
 
                 self.addData(source.name(), src.data);
-
-                getMatches(cfg.$inputElement.val());
             };
 
             self.addData = function (sourceName, data) {
                 // data: array of suggestion strings or an object
                 var source = self.getSource(sourceName),
-                    addValues = function (fromArray, toArray, additionalProperties) {
-                        var item;
+                    addValues = function (from, toArray, additionalProperties) {
+                        var item,
+                            fromArray;
 
+                        if (!from) {
+                            return;
+                        }
+
+                        if (Array.isArray(from)) {
+                            fromArray = from;
+                        } else {
+                            fromArray = [from];
+                        }
                         additionalProperties = additionalProperties || {};
 
                         dti.forEachArray(fromArray, function (value) {
@@ -2539,37 +2585,63 @@ var dti = {
                         addValues(fromArray, toArray, additionalProperties);
                         sortArray(toArray);
                     },
-                    addObj = function (parent, srcItem, text) {
+                    addObj = function (param) {
+                        // param = {
+                        //     root: root object
+                        //     parent: parent object (null if top level object)
+                        //     srcItem: source object or array
+                        //     text: object key
+                        // }
                         var item = {
-                                _private: {
-                                    parent: parent,
-                                    text: text,
-                                    html: ko.observable(text),
-                                    values: [],
-                                    isTopLevel: !!!parent._private
-                                }
-                            };
+                            _private: {
+                                parent: param.parent,
+                                text: param.text,
+                                html: ko.observable(param.text),
+                                values: [],
+                                hasChildren: false,
+                                hasValues: false
+                            }
+                        };
 
-                        if (!parent[text]) {
-                            parent[text] = item;
+                        if (!param.parent) { //  If we don't have a parent
+                            if (param.root[param.text]) {
+                                item = param.root[param.text]; // Point to the existing item
+                            } else {
+                                param.root[param.text] = item; // Install this item on the root
+                            }
+                        } else if (param.parent[param.text]) { // Else if this item already exists
+                            item = param.parent[param.text]; // Point to the existing item
                         } else {
-                            item = parent[text];
+                            param.parent[param.text] = item; // Install new item on the parent
                         }
 
-                        if (!!srcItem) {
-                            if (Array.isArray(srcItem)) {
-                                addValuesAndSort(srcItem, item._private.values);
+                        if (!!param.srcItem) {
+                            if (typeof param.srcItem === 'string') {
+                                item._private.hasValues = true;
+                                addValues(param.srcItem, item._private.values);
+                            } else if (Array.isArray(param.srcItem)) {
+                                item._private.hasValues = true;
+                                addValuesAndSort(param.srcItem, item._private.values);
                             } else {
-                                dti.forEach(srcItem, function (subSource, subText) {
+                                item._private.hasChildren = true;
+
+                                dti.forEach(param.srcItem, function (subSource, subText) {
                                     // Look for special keys and handle accordingly
                                     if (subText === '_values') {
+                                        item._private.hasValues = true;
                                         return addValuesAndSort(subSource, item._private.values);
                                     }
                                     if (subText === '_valuesNoSort') {
+                                        item._private.hasValues = true;
                                         return addValues(subSource, item._private.values);
                                     }
 
-                                    addObj(item, subSource, subText);
+                                    addObj({
+                                        root: source.data,
+                                        parent: item,
+                                        srcItem: subSource,
+                                        text: subText
+                                    });
                                 });
                             }
                         }
@@ -2586,18 +2658,24 @@ var dti = {
 
                 if (Array.isArray(data)) {
                     addValuesAndSort(data, source.data, {
-                        isTopLevel: true
+                        parent: null,
+                        hasChildren: false,
+                        hasValues: false
                     });
                 } else { // data must be an object
                     dti.forEach(data, function (item, text) {
-                        addObj(source.data, item, text);
+                        addObj({
+                            root: source.data,
+                            srcItem: item,
+                            text: text
+                        });
                     });
                 }
 
                 getMatches(cfg.$inputElement.val());
             };
 
-            self.deleteData = function (sourceName) {
+            self.removeAllData = function (sourceName) {
                 var source = self.getSource(sourceName);
 
                 if (!source) {
@@ -2613,32 +2691,65 @@ var dti = {
                 getMatches(cfg.$inputElement.val());
             };
 
+            self.removeData = function (sourceName, dataToRemove) {
+                // sourceName = string
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (!Array.isArray(source.data)) {
+                    return dti.log('This source\'s data cannot be removed because it is not an array');
+                }
+
+                if (!Array.isArray(dataToRemove)) {
+                    dataToRemove = [dataToRemove];
+                }
+
+                dti.forEachArray(dataToRemove, function (text) {
+                    dti.forEachArray(source.data, function (sourceItem, ndx) {
+                        // sourceItem = {
+                        //     hasChildren : false,
+                        //     hasValues : false,
+                        //     html : observable,
+                        //     parent : null
+                        //     text : "Jeff Shore"
+                        // }
+                        if (sourceItem.text === text) {
+                            source.data.splice(ndx, 1);
+                            return false; // Stop iterrating the forEach array
+                        }
+                    });
+                });
+
+                getMatches(cfg.$inputElement.val());
+            };
+
             self.show = function () {
                 if (!self.bindings.isShown() && (self.numberOfMatches > 0)) {
+                    self.selectNone();
                     if (cfg.autoselect) {
                         self.selectFirst();
                     }
-                    self.reposition();
                     self.bindings.isShown(true);
+                    self.reposition();
                 }
             };
 
             self.hide = function (clearInputValue) {
                 self.bindings.isShown(false);
-                self.selectNone();
                 if (clearInputValue) {
                     cfg.$inputElement.val('');
                 }
             };
 
             self.reposition = function () {
-                var leftOffset = cfg.$inputElement.get(0).getBoundingClientRect().left;
-                self.bindings.position.left(leftOffset + 'px');
-                // $markup.position({
-                //     my: 'left top',
-                //     at: 'left bottom',
-                //     of: cfg.$inputElement,
-                // });
+                $markup.position({
+                    my: 'left top',
+                    at: 'left bottom',
+                    of: cfg.$inputElement,
+                });
             };
 
             self.selectFirst = function () {
@@ -2695,45 +2806,38 @@ var dti = {
                 return parse(str);
             };
 
+            self.destroy = function () {
+                // Remove all event listeners
+                if (cfg.$chips) {
+                    cfg.$chips.off();
+                }
+                cfg.$resultsContainer.off();
+                cfg.$inputElement.off();
+
+                // Remove all cached DOM elements
+                delete cfg.$chips;
+                delete cfg.$inputElement;
+                delete cfg.$resultsContainer;
+
+                $markup = null;
+                $container = null;
+            };
+
             self.numberOfMatches = 0;
 
             self.bindings = {
                 isShown: ko.observable(false),
                 sources: ko.observableArray([]),
-                position: {
-                    top: ko.observable('0px'),
-                    left: ko.observable('0px')
-                },
                 selectMatch: function (data, e) {
-                    var inputValue = cfg.$inputElement.val(),
-                        operator = getOperator(inputValue);
-
-                    if (data.text) {
-                        if (operator) {
-                            inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
-                        } else {
-                            if (data.isTopLevel) {
-                                inputValue = data.text;
-                            } else {
-                                inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
-                            }
-                        }
-
-                        cfg.$inputElement.val(inputValue);
-                        cfg.$inputElement.focus();
-                        self.hide();
-                    }
+                    selectMatch(data, e);
                 }
             };
-
-            // Add autosuggest sources
-            dti.forEachArray(cfg.sources, self.addSource);
 
             // Get autosuggest DOM template
             $markup = dti.utility.getTemplate('#autosuggestTemplate');
 
             // Change default class names if needed
-            dti.forEach(defaults.classNames, function changeDefaultClassName (defaultClassName, key) {
+            dti.forEach(defaults.classNames, function changeDefaultClassName(defaultClassName, key) {
                 var defaultSelector = '.' + defaultClassName,
                     requestedClassName = cfg.classNames[key];
 
@@ -2754,10 +2858,17 @@ var dti = {
 
             cfg.$inputElement.keydown(handleKeydown);
 
-            cfg.$resultsContainer.click(function handleClick (e) {
-                var $target = $(e.target);
+            if (cfg.showOnFocus) {
+                cfg.$inputElement.focus(function () {
+                    self.show();
+                });
+            }
 
-                if (($target.is(cfg.$inputElement) === false) && ($target.parents(selectors.container).length) === 0) {
+            cfg.$resultsContainer.click(function handleClick(e) {
+                var $target = $(e.target),
+                    $parents = $target.parents();
+
+                if (($target.is(cfg.$inputElement) === false) && $parents.length && ($parents.filter(selectors.container).length === 0)) {
                     self.hide();
                 }
             });
@@ -2766,7 +2877,34 @@ var dti = {
                 cfg.$chips.on('chip.delete', function (e, chip) {
                     self.reposition();
                 });
+
+                cfg.$chips.on('chip.add', function (e, chip) {
+                    if (cfg.persistAfterSelect) {
+                        self.reposition();
+                    } else {
+                        self.hide();
+                    }
+                });
+
+                // If our configuration is set to simulate an enter keypress when the input loses focus
+                if (cfg.enterOnBlur) {
+                    cfg.$inputElement.blur(function (e) {
+                        var inputValue = cfg.$inputElement.val();
+
+                        // Make sure our autosuggest isn't shown before we do this because clicking a suggestion triggers a blur
+                        // and we don't want to create a chip using a partial match (we want to create a chip using the selected
+                        // suggestion)
+                        if ((self.bindings.isShown() === false) && inputValue.length) {
+                            cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                            cfg.$inputElement.val('');
+                            getMatches('');
+                        }
+                    });
+                }
             }
+
+            // Add autosuggest sources
+            dti.forEachArray(cfg.sources, self.addSource);
         }
     },
     globalSearchOld: {
