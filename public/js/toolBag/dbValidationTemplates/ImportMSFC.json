@@ -8389,7 +8389,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "DIRTY",
+            "Value": "Occ",
             "eValue": 1
         },
         "Value": {
@@ -8605,6 +8605,384 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
+            "Value": 1475599557
+        },
+        "Alarms Off": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Alarm Class": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Alarm Delay Time": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Alarm Repeat Enable": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm Repeat Time": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 17,
+            "Value": 0
+        },
+        "Interlock State": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0,
+            "ValueOptions": {
+                "Off": 0,
+                "On": 1
+            }
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 251
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 901572,
+                "PointName": "4220_UNV07",
+                "PointType": 8,
+                "PointInst": 901572,
+                "DevInst": 901572
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 901932,
+                "PointName": "4220_UNV07_HUBBLE1",
+                "PointType": 144,
+                "PointInst": 901932,
+                "DevInst": 901572
+            }, {
+                "PropertyName": "Alarm Display Point",
+                "PropertyEnum": 137,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }, {
+                "PropertyName": "Interlock Point",
+                "PropertyEnum": 148,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }, {
+                "PropertyName": "Feedback Point",
+                "PropertyEnum": 141,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }
+        ]
+    }, { 
+        "Name" : "4759_DXAC3_SAF", 
+        "name1" : "4759", 
+        "name2" : "DXAC3", 
+        "name3" : "SAF", 
+        "name4" : "", 
+        "_name1" : "4759", 
+        "_name2" : "dxac3", 
+        "_name3" : "saf", 
+        "_name4" : "", 
+        "_Name" : "4759_dxac3_saf", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 16, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Binary Input", 
+            "eValue" : 3, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "On",
+            "eValue": 1
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "oosValue": 1,
+            "ValueType": 5,
+            "Value": "On",
+            "eValue": 1,
+            "ValueOptions": {
+                "Off": 0,
+                "On": 1
+            }
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Active Text": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "On"
+        },
+        "Inactive Text": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "Off"
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "25",
+            "eValue": 25,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Instance": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 25
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 25
+        },
+        "Polarity": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Input Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Latch",
+            "eValue": 0,
+            "ValueOptions": {
+                "Latch": 0,
+                "Momentary": 1,
+                "Pulse": 2
+            }
+        },
+        "Momentary Delay": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Supervised Input": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Feedback Polarity": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Trend Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Trend Interval": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 60
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Run Total Limit": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 0.0
+        },
+        "Run Total": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 0.0
+        },
+        "Run Total Reset Time": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 11,
+            "Value": 0
+        },
+        "Run Total Reset Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Run Total Alarm Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Starts Alarm Limit": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Number of Starts": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Last Start Reset Time": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 11,
+            "Value": 0
+        },
+        "Last Start Time": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 11,
             "Value": 0
         },
         "Alarms Off": {
@@ -8665,7 +9043,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 18,
-            "Value": 255
+            "Value": 251
         },
         "Remarks": {
             "isDisplayable": true,
@@ -8680,22 +9058,22 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 901572,
-                "PointName": "4220_UNV07",
+                "Value": 61687,
+                "PointName": "4759_xTALK01",
                 "PointType": 8,
-                "PointInst": 901572,
-                "DevInst": 901572
+                "PointInst": 61687,
+                "DevInst": 61687
             }, {
                 "PropertyName": "Remote Unit Point",
                 "PropertyEnum": 152,
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 901932,
-                "PointName": "4220_UNV07_HUBBLE1",
+                "Value": 235889,
+                "PointName": "4759_xTALK01_Viconics01",
                 "PointType": 144,
-                "PointInst": 901932,
-                "DevInst": 901572
+                "PointInst": 235889,
+                "DevInst": 61687
             }, {
                 "PropertyName": "Alarm Display Point",
                 "PropertyEnum": 137,
