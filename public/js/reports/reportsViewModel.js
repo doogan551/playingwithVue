@@ -143,6 +143,7 @@ var dti = {
             //     }, {...}],
             //     see 'defaults' object below for additional options
             // }
+
             var self = this,
                 defaults = {
                     highlight: true, // If true, when suggestions are rendered, pattern matches for the current query in text nodes will be wrapped in a strong element with its class set to {{classNames.highlight}}
@@ -167,11 +168,10 @@ var dti = {
                     dti.forEach(cfg.classNames, function (cssClass, name) {
                         obj[name] = '.' + cssClass;
                     });
-
+                    
                     return obj;
                 })(),
                 operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
-                selectedMatches = {},
                 $markup,
                 $container,
                 scrollTo = function ($target) {
@@ -186,7 +186,7 @@ var dti = {
                         doScroll = true;
                     } else {
                         topOffset = (topOffset + $target.height()) - $container.height();
-
+                        
                         if (topOffset > 0) {
                             doScroll = true;
                         }
@@ -199,8 +199,8 @@ var dti = {
                     return $target;
                 },
                 sortArray = function (arr) {
-                    arr.sort(function (a, b) {
-                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
+                    arr.sort(function (a,b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1:-1;
                     });
                 },
                 getOperator = function (str) {
@@ -225,7 +225,7 @@ var dti = {
                         equationParts = str.split(parsed.operator);
                         parsed.expression = equationParts[0].trim();
                         parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
-
+                        
                         if (parsed.expression.length === 0) {
                             parsed.isEquation = false;
                             parsed.value = null;
@@ -295,7 +295,7 @@ var dti = {
                                             data = data._private.values;
                                         } else {
                                             // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
-                                            regex = new RegExp(chain[chain.length - 1], 'ig');
+                                            regex = new RegExp(chain[chain.length-1], 'ig');
                                         }
                                         return false;
                                     }
@@ -365,20 +365,20 @@ var dti = {
                         }
                     }
 
-                    // If materialize chips is installed on this input and the selected item has children or values to choose from
+                    // If materialize chips is installed
                     if (cfg.$chips) {
+                        // If the selected item has children or values to choose from
                         if (data.hasChildren || data.hasValues) {
                             if (isEnterKeyPress) { // If we arrived her by way of the enter key
                                 e.stopImmediatePropagation(); // Stop propagation so we don't create a chip
                             }
                         } else {
-                            getMatches('');
-
                             if (!isEnterKeyPress) { // If we arrived here by way of mouse click one of our suggestions
                                 cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
                                 inputValue = '';
                             }
                         }
+                        getMatches(inputValue);
                     }
 
                     cfg.$inputElement.val(inputValue);
@@ -461,11 +461,11 @@ var dti = {
 
             self.addSource = function (src) {
                 var source = {
-                    name: ko.observable(src.name || dti.makeId()),
-                    nameShown: ko.observable(src.nameShown),
-                    data: Array.isArray(src.data) ? []:{},
-                    matches: ko.observableArray([])
-                };
+                        name: ko.observable(src.name || dti.makeId()),
+                        nameShown: ko.observable(src.nameShown),
+                        data: Array.isArray(src.data) ? []:{},
+                        matches: ko.observableArray([])
+                    };
 
                 self.bindings.sources.push(source);
 
@@ -479,7 +479,10 @@ var dti = {
                         var item,
                             fromArray;
 
-                        // autosuggestMOD - support from as array or string
+                        if (!from) {
+                            return;
+                        }
+
                         if (Array.isArray(from)) {
                             fromArray = from;
                         } else {
@@ -501,8 +504,6 @@ var dti = {
                         addValues(fromArray, toArray, additionalProperties);
                         sortArray(toArray);
                     },
-                    // autosuggestMOD
-                    // addObj = function (parent, srcItem, text) {
                     addObj = function (param) {
                         // param = {
                         //     root: root object
@@ -511,29 +512,28 @@ var dti = {
                         //     text: object key
                         // }
                         var item = {
-                            // autosuggestMOD - use param._____
                             _private: {
                                 parent: param.parent,
                                 text: param.text,
                                 html: ko.observable(param.text),
                                 values: [],
-                                // autosuggestMOD
-                                // isTopLevel: !!!parent._private
                                 hasChildren: false,
                                 hasValues: false
                             }
                         };
 
-                        // autosuggestMOD
                         if (!param.parent) { //  If we don't have a parent
-                            param.root[param.text] = item; // Install this item on the root
+                            if (param.root[param.text]) {
+                                item = param.root[param.text]; // Point to the existing item
+                            } else {
+                                param.root[param.text] = item; // Install this item on the root
+                            }
                         } else if (param.parent[param.text]) { // Else if this item already exists
                             item = param.parent[param.text]; // Point to the existing item
                         } else {
                             param.parent[param.text] = item; // Install new item on the parent
                         }
 
-                        // autosuggestMOD - use param._____
                         if (!!param.srcItem) {
                             if (typeof param.srcItem === 'string') {
                                 item._private.hasValues = true;
@@ -542,7 +542,7 @@ var dti = {
                                 item._private.hasValues = true;
                                 addValuesAndSort(param.srcItem, item._private.values);
                             } else {
-                                item._private.hasChildren = true; // autosuggestMOD - set hasChildren flag
+                                item._private.hasChildren = true;
 
                                 dti.forEach(param.srcItem, function (subSource, subText) {
                                     // Look for special keys and handle accordingly
@@ -555,8 +555,6 @@ var dti = {
                                         return addValues(subSource, item._private.values);
                                     }
 
-                                    // autosuggestMOD
-                                    // addObj(item, subSource, subText);
                                     addObj({
                                         root: source.data,
                                         parent: item,
@@ -579,16 +577,12 @@ var dti = {
 
                 if (Array.isArray(data)) {
                     addValuesAndSort(data, source.data, {
-                        // autosuggestMOD
-                        // isTopLevel: true
                         parent: null,
                         hasChildren: false,
                         hasValues: false
                     });
                 } else { // data must be an object
                     dti.forEach(data, function (item, text) {
-                        // autosuggestMOD
-                        // addObj(source.data, item, text);
                         addObj({
                             root: source.data,
                             srcItem: item,
@@ -670,7 +664,6 @@ var dti = {
             };
 
             self.reposition = function () {
-                // autosuggestMOD
                 $markup.position({
                     my: 'left top',
                     at: 'left bottom',

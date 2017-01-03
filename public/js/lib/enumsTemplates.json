@@ -7985,7 +7985,7 @@
                 },
                 "Point Refs": [{
                     "PropertyName": "Device Point",
-                    "PropertyEnum": 276,
+                    "PropertyEnum": 139,
                     "AppIndex": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
