@@ -56,31 +56,31 @@ var Utils = {
 
 		return log;
 	},
-	buildNameSegmentQuery: function(segment, name) {
-		var beginStr, nameStr;
-		beginStr = '';
-		nameStr = '';
+	// buildNameSegmentQuery: function(segment, name) {
+	// 	var beginStr, nameStr;
+	// 	beginStr = '';
+	// 	nameStr = '';
 
-		if (req.body[searchTypeString] == 'begin') {
-			beginStr = '^';
-			endStr = '';
-		} else if (req.body[searchTypeString] == 'contain') {
-			beginStr = '.*';
-			endStr = '.*';
-		} else if (req.body[searchTypeString] == 'end') {
-			beginStr = '';
-			endStr = '$';
-		}
-		if (req.body[segment].value !== null && req.body[segment].value !== undefined) {
-			nameStr = req.body[segment].value;
-		} else {
-			nameStr = req.body[segment];
-		}
+	// 	if (req.body[searchTypeString] == 'begin') {
+	// 		beginStr = '^';
+	// 		endStr = '';
+	// 	} else if (req.body[searchTypeString] == 'contain') {
+	// 		beginStr = '.*';
+	// 		endStr = '.*';
+	// 	} else if (req.body[searchTypeString] == 'end') {
+	// 		beginStr = '';
+	// 		endStr = '$';
+	// 	}
+	// 	if (req.body[segment].value !== null && req.body[segment].value !== undefined) {
+	// 		nameStr = req.body[segment].value;
+	// 	} else {
+	// 		nameStr = req.body[segment];
+	// 	}
 
-		return {
-			'$regex': '(?i)' + beginStr + name1str + endStr
-		};
-	},
+	// 	return {
+	// 		'$regex': '(?i)' + beginStr + name1str + endStr
+	// 	};
+	// },
 	checkDynamicProperties: function(obj) {
 		if (obj._cfgRequired !== undefined ||
 			obj.Value !== undefined ||
@@ -191,9 +191,9 @@ var Utils = {
 							eValue: value,
 							ValueType: Enums['Value Types'].Enum.enum
 						};
-						for (var prop in enumSet) {
-							if (enumSet[prop].enum === value) {
-								obj.Value = prop;
+						for (var prop2 in enumSet) {
+							if (enumSet[prop2].enum === value) {
+								obj.Value = prop2;
 							}
 						}
 					} else {
@@ -237,20 +237,28 @@ var Utils = {
 
 		if (str.charAt(0) === '"' && str.charAt(len - 1) === '"') {
 			regex = '^' + str.substring(1, len - 1) + '$';
-		} else if (str.indexOf('*') < 0) { // No wildcard characters in string
+		} else {
 			if (options.matchBeginning) {
 				regex = '^';
 			}
-			regex += str;
-		} else {
-			regex = '^';
-			strArray = str.split('');
-			for (var i = 0; i < strArray.length; i++) {
-				regex += (strArray[i] === '*') ? '.*' : strArray[i];
-			}
-			regex += '$';
+			regex += Utils.convertRegexString(str);
 		}
+
 		return new RegExp(regex);
+	},
+	convertRegexString: function(string) {
+		return string.split('').map(function(char) {
+			return Utils.convertRegexChar(char);
+		}).join('');
+	},
+	convertRegexChar: function(char) {
+		var characters = ['+', '(', ')', '[', ']'];
+		if (!!~characters.indexOf(char)) {
+			return '\\' + char;
+		} else if (char === '*') {
+			return '.*';
+		}
+		return char;
 	},
 	sendResponse: function(res, data) {
 
