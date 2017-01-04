@@ -10089,7 +10089,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383105830
         },
         "Run Total Reset Enable": {
             "isDisplayable": true,
@@ -10119,13 +10119,13 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383105831
         },
         "Last Start Time": {
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1451200480
         },
         "Alarms Off": {
             "isDisplayable": true,
@@ -10144,7 +10144,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 300
+            "Value": 0
         },
         "Alarm Repeat Enable": {
             "isDisplayable": false,
