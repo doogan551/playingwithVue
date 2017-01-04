@@ -245,6 +245,10 @@ var dtiUtility =  {
 
     toast: function (parameters) {
         dtiUtility.sendMessage('toast', parameters);
+    },
+
+    playAudio: function (parameters) {
+        dtiUtility.sendMessage('playAudio', parameters);
     }
 };
 
