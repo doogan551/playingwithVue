@@ -1548,9 +1548,7 @@ var Config = (function(obj) {
                 point._devModel = enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"];
             }
 
-            if (point._devModel !== data.oldPoint._devModel) {
-                obj.Utility.updDevModel(data);
-            }
+            obj.Utility.updDevModel(data);
             return data;
         },
 
@@ -2061,9 +2059,7 @@ var Config = (function(obj) {
                 point._relRMU = enums["Reliabilities"]["No Fault"]["enum"];
             }
 
-            if (point._rmuModel !== data.oldPoint._rmuModel) {
-                obj.Utility.updDevModel(data);
-            }
+            obj.Utility.updDevModel(data);
             return data;
         },
 

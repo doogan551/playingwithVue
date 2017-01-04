@@ -11440,7 +11440,7 @@
             "Value": false
         },
         "Alarm Value": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Closed",
@@ -11608,7 +11608,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 60
+            "Value": 0
         },
         "Trend Samples": {
             "isDisplayable": true,
@@ -11638,7 +11638,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383184234
         },
         "Run Total Reset Enable": {
             "isDisplayable": true,
@@ -11668,13 +11668,13 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1383184235
         },
         "Last Start Time": {
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 1475178284
         },
         "Alarms Off": {
             "isDisplayable": true,
