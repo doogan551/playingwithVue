@@ -1874,6 +1874,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             idx = this._pointRefs[prop];
             if (idx !== undefined) {
                 ref = refs[idx];
+                ref.PointInst = upi;
                 ref.Value = upi;
 
                 if (this.type === 'MonitorBlock') {

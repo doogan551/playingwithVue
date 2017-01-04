@@ -1670,7 +1670,9 @@ define([
                         });
                         $badChar.text(_char);
                         $message.stop().show();
-                        workspace.playSound('beep');
+                        dtiUtility.playAudio({
+                            sound: 'beep'
+                        });
 
                         event.preventDefault();
                         event.stopImmediatePropagation();
