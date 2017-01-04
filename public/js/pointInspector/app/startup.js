@@ -512,7 +512,7 @@ define([
         // var _newPoint = ko.viewmodel.fromModel(_configPoint);
         var _newPoint = (new Point(_configPoint)).data;
         var props = ['Value', 'ValueOptions', 'isDisplayable', 'isReadOnly', 'eValue', 'ValueType', 'PropertyName', 'PropertyEnum', 'AppIndex', 'PointName', 'PointType', 'PointInst', 'DevInst', 'name', 'value'];
-        var checkForProp = function(prop){
+        var checkForProp = function(prop) {
             return !!pointInspector.utility.config.Templates.commonProperties.hasOwnProperty(prop) || !!~props.indexOf(prop);
         };
         var updateValues = function(current, updated) {
@@ -542,15 +542,16 @@ define([
             }
         };
         var addValues = function(current, updated) {
+            var currentModel = ko.viewmodel.toModel(current);
+            var updatedModel = ko.viewmodel.toModel(updated);
             for (var prop in updated) {
-                if (!current.hasOwnProperty(prop)) {
-                    if (typeof updated[prop] === 'object' || (ko.isObservable(updated[prop]) && typeof updated[prop]() === 'object')) {
-                        addValues(current[prop], updated[prop]);
-                    } else if (Array.isArray(current[prop])) {
-                        // handle arrays
-                    } else if (checkForProp(prop)) {
-                        current[prop] = ko.observable(updated[prop]);
-                    }
+                if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
+                    var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
+                    current[prop](updatedJsProp);
+                } else if (typeof updated[prop] === 'object' || (ko.isObservable(updated[prop]) && typeof updated[prop]() === 'object')) {
+                    addValues((ko.isObservable(current[prop])) ? current[prop]() : current[prop], (ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop]);
+                } else if (!current.hasOwnProperty(prop) && checkForProp(prop)) {
+                    current[prop] = ko.observable(updated[prop]);
                 }
             }
         };
