@@ -3398,7 +3398,7 @@ var dti = {
                         var name1 = bindings.name1(),
                             name2 = bindings.name2(),
                             name3 = bindings.name3(),
-                            name4 = bindings.name4();
+                            name4 = bindings.name4(),
                             names = {
                                 name1: name1,
                                 name2: name2,
@@ -3407,7 +3407,7 @@ var dti = {
                             },
                             isLegal = true,
                             getChar = function (char) {
-                                specialChars = {
+                                var specialChars = {
                                     '[': true,
                                     '\\': true,
                                     '^': true,
