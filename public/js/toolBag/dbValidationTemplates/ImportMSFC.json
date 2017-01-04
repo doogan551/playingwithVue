@@ -2838,7 +2838,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -3256,7 +3256,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -3674,7 +3674,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -4092,7 +4092,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -4510,7 +4510,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -4928,7 +4928,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -6191,7 +6191,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -6614,7 +6614,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -7050,7 +7050,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -7482,7 +7482,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -7883,7 +7883,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -8261,7 +8261,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -8639,7 +8639,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -9017,7 +9017,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -9396,7 +9396,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -9781,7 +9781,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",
@@ -10159,7 +10159,7 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Off",

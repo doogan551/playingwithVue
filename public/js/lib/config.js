@@ -4198,21 +4198,16 @@ var Config = (function(obj) {
                                     "I/O 8": 8
                                 });
                                 break;
-                            default: // MicroScan 4 Digital
+                            case eDev["MicroScan 4 Digital"]["enum"]:
                                 setCh(ch, 1, 32);
+                                break;
+                            default: // MicroSPC Device
+                                setCh(ch, 1, 1);
+                                type.isDisplayable = false;
                                 break;
                         }
                         break;
                 }
-            }
-            if (obj.Utility.getPropertyObject("Feedback Point", point).PointInst !== 0) {
-
-                point["Feedback Polarity"].isDisplayable = true;
-                point["Alarm Value"].isDisplayable = false;
-            } else {
-
-                point["Feedback Polarity"].isDisplayable = false;
-                point["Alarm Value"].isDisplayable = true;
             }
             return obj.EditChanges.applyBinaryInputInputType(data);
         },
