@@ -3748,11 +3748,11 @@ var dti = {
                     } else if (result.operation === 'restorePoint') {
                         msg = 'Point Successfully Restored';
                     }
-                } else if (data.err) {
-                    msg = 'Error: ' + data.err;
+                } else if (result.err) {
+                    msg = 'Error: ' + result.err;
                     style = 'errorToast';
-                } else if (data.warning) {
-                    msg = 'Warning: ' + data.warning;
+                } else if (result.warning) {
+                    msg = 'Warning: ' + result.warning;
                     style = 'warningToast';
                 }
                 
