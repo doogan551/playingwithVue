@@ -4202,7 +4202,8 @@ var Config = (function(obj) {
                                 setCh(ch, 1, 32);
                                 break;
                             default: // MicroSPC Device
-                                setCh(ch, 1, 1);
+                                setCh(ch, 0, 0);
+                                ch.isDisplayable = false;
                                 type.isDisplayable = false;
                                 break;
                         }
