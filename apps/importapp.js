@@ -2671,6 +2671,7 @@ function updateReferences(db, point, mainCallback) {
 function fixDisplayableProperties(point, callback) {
 	var feedbackPoint = Config.Utility.getPropertyObject('Feedback Point', point);
 	var interlockPoint = Config.Utility.getPropertyObject('Interlock Point', point);
+	var adjustPoint = Config.Utility.getPropertyObject('Alarm Adjust Point', point);
 
 	if (feedbackPoint !== null && !!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
 		if(feedbackPoint.PointInst !== 0){
@@ -2685,6 +2686,27 @@ function fixDisplayableProperties(point, callback) {
 	if (interlockPoint !== null) {
 		point['Interlock State'].isDisplayable = (interlockPoint.PointInst !== 0) ? true : false;
 	}
+
+	if (adjustPoint !== null) {
+        if (adjustPoint.PointInst === 0) {
+            point['Alarm Adjust Band'].isDisplayable = false;
+        } else {
+            point['Alarm Adjust Band'].isDisplayable = true;
+        }
+	    if (point['Enable Warning Alarms'].Value === true) {
+            point['High Warning Limit'].isDisplayable = true;
+            point['Low Warning Limit'].isDisplayable = true;
+	        if (adjustPoint.PointInst === 0) {
+	            point['Warning Adjust Band'].isDisplayable = false;
+	        } else {
+	            point['Warning Adjust Band'].isDisplayable = true;
+	        }
+	    } else {
+            point['High Warning Limit'].isDisplayable = false;
+            point['Low Warning Limit'].isDisplayable = false;
+            point['Warning Adjust Band'].isDisplayable = false;
+	    }
+    }
 
 	callback();
 }
