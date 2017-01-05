@@ -447,7 +447,8 @@ module.exports = function socketio(_common) {
       logger.debug('addPoint');
       common.addPoint({
         point: data.newPoint,
-        oldPoint: data.oldPoint
+        oldPoint: data.oldPoint,
+        path: data.path
       }, user, null, function(response, point) {
         if (response.err) {
           sock.emit('pointUpdated', {

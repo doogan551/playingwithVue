@@ -2338,7 +2338,8 @@ function addPoint(data, user, options, callback) {
         }, function(err, result) {
           if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
             newUpdate(data.oldPoint, point, {
-              from: 'addpoint'
+              from: 'addpoint',
+              path: data.path
             }, user, function(err, newPoint) {
               callback({
                 msg: "success"
