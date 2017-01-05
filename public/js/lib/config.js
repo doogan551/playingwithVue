@@ -2588,6 +2588,13 @@ var Config = (function(obj) {
             return data;
         },
 
+        "Alarm Adjust Point": function(data) {
+            var point = data.point;
+
+            data.point = obj.EditChanges.applyAlarmAdjustPoint(data); 
+            return data;
+        },
+
         "Close On Complete": function(data) {
             return data;
         },
@@ -3169,14 +3176,20 @@ var Config = (function(obj) {
         },
 
         applyEnableWarningAlarms: function(data) {
-            if (data.point["Enable Warning Alarms"].Value === true) {
-                data.point["High Warning Limit"].isReadOnly = false;
-                data.point["Low Warning Limit"].isReadOnly = false;
+            var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable;
+
+            if (point["Enable Warning Alarms"].Value === true) {
+                setDisp(point, ["High Warning Limit", "Low Warning Limit"], true);
+                if (obj.Utility.getPropertyObject("Alarm Adjust Point", point).PointInst === 0) {
+                    point["Warning Adjust Band"].isDisplayable = false;
+                } else {
+                    point["Warning Adjust Band"].isDisplayable = true;
+                }
             } else {
-                data.point["High Warning Limit"].isReadOnly = true;
-                data.point["Low Warning Limit"].isReadOnly = true;
+                setDisp(point, ["High Warning Limit", "Low Warning Limit", "Warning Adjust Band"], false);
             }
-            return data.point;
+            return point;
         },
 
         applyNetworkNumber: function(data) {
@@ -3465,6 +3478,23 @@ var Config = (function(obj) {
                 point["Interlock State"].isDisplayable = false;
             }
             return point;
+        },
+
+        applyAlarmAdjustPoint: function(data) {
+            var point = data.point;
+
+            if (data.propertyObject.PointInst === 0) {
+                point["Alarm Adjust Band"].isDisplayable = false;
+                point["Warning Adjust Band"].isDisplayable = false;
+            } else {
+                point["Alarm Adjust Band"].isDisplayable = true;
+                if (point["Enable Warning Alarms"].Value === false) {
+                    point["Warning Adjust Band"].isDisplayable = false;
+                } else {
+                    point["Warning Adjust Band"].isDisplayable = true;
+                }
+            }
+                return point;
         },
 
         applyOutOfService: function(data) {
