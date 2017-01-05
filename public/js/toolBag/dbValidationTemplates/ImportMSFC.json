@@ -11879,7 +11879,6 @@
         "Value": {
             "isDisplayable": true,
             "isReadOnly": true,
-            "oosValue": 32.0,
             "ValueType": 1,
             "Value": 32.0
         },
@@ -11950,8 +11949,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "1",
-            "eValue": 1,
+            "Value": "0",
+            "eValue": 0,
             "ValueOptions": {
                 "1": 1
             }
@@ -12002,14 +12001,14 @@
             "Value": 3
         },
         "Control Function": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Write Single Registers",
             "eValue": 6
         },
         "Control Data Type": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Unsigned Single",
@@ -12201,10 +12200,10 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 915913,
+                "Value": 915193,
                 "PointName": "4260_UNV01 02_BLR1",
                 "PointType": 144,
-                "PointInst": 915913,
+                "PointInst": 915193,
                 "DevInst": 914947
             }, {
                 "PropertyName": "Sensor Point",
