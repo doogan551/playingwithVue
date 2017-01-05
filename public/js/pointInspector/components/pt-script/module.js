@@ -218,7 +218,11 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             if (isInEditMode) {
                 // If no development script is in progress, then default it to the production code
                 if (!developmentScript.len()) {
-                    self.showEditScriptButton(true);
+                    if (developmentScript.$tab.css('display') === 'none') { // #273 - Make sure the tab is not visible
+                        self.showEditScriptButton(true);
+                    } else {
+                        developmentScript.selectTab();
+                    }
                     developmentEditor.setValue(productionScript.source()); // This also updates the self.data['Development Source File'] observable
                 } else {
                     developmentScript.$tab.show();
@@ -226,7 +230,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
                     self.showDiscardScriptButton(true);
                 }
             } else {
-                self.showDiscardScriptButton(false)
+                self.showDiscardScriptButton(false);
                 self.showEditScriptButton(false);
                 developmentEditor.setValue(_developmentSourceFile); // Roll back development script source
                 if (!developmentScript.len() && productionScript.len()) {
