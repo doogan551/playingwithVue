@@ -212,31 +212,35 @@ function importUpdate() {
 													updateTimeZones(point, function(err) {
 														if (err)
 															logger.info("updateTimeZones", err);
-														updateDevices(point, function(err) {
+														fixDisplayableProperties(point, function(err) {
 															if (err)
-																logger.info("updateDevices", err);
-															updateModels(db, point, function(err) {
+																logger.info("fixDisplayableProperties", err);
+															updateDevices(point, function(err) {
 																if (err)
-																	logger.info("updateModels", err);
-																updateAlarmMessages(point, function(err) {
+																	logger.info("updateDevices", err);
+																updateModels(db, point, function(err) {
 																	if (err)
-																		logger.info("updateAlarmMessages", err);
-																	addBroadcastPeriod(point, function(err) {
+																		logger.info("updateModels", err);
+																	updateAlarmMessages(point, function(err) {
 																		if (err)
-																			logger.info("addBroadcastPeriod", err);
-																		updateTrend(point, function(err) {
+																			logger.info("updateAlarmMessages", err);
+																		addBroadcastPeriod(point, function(err) {
 																			if (err)
-																				logger.info("updateTrend", err);
-																			updateAlarmRepeat(point, function(err) {
+																				logger.info("addBroadcastPeriod", err);
+																			updateTrend(point, function(err) {
 																				if (err)
-																					logger.info("updateAlarmRepeat", err);
-																				rearrangeProperties(point, function(err) {
+																					logger.info("updateTrend", err);
+																				updateAlarmRepeat(point, function(err) {
 																					if (err)
-																						logger.info("rearrangeProperties", err);
-																					updatePoint(db, point, function(err) {
+																						logger.info("updateAlarmRepeat", err);
+																					rearrangeProperties(point, function(err) {
 																						if (err)
-																							logger.info("updatePoint", err);
-																						cb(null);
+																							logger.info("rearrangeProperties", err);
+																						updatePoint(db, point, function(err) {
+																							if (err)
+																								logger.info("updatePoint", err);
+																							cb(null);
+																						});
 																					});
 																				});
 																			});
@@ -2435,7 +2439,7 @@ function updateReferences(db, point, mainCallback) {
 						return cb(err);
 
 					prop = key;
-                    Config.EditChanges.applyUniquePIDLogic({
+					Config.EditChanges.applyUniquePIDLogic({
 						point: point,
 						refPoint: refPoint
 					}, prop);
@@ -2662,6 +2666,27 @@ function updateReferences(db, point, mainCallback) {
 	} else {
 		uniquePID(point["Point Refs"]);
 	}
+}
+
+function fixDisplayableProperties(point, callback) {
+	var feedbackPoint = Config.Utility.getPropertyObject('Feedback Point', point);
+	var interlockPoint = Config.Utility.getPropertyObject('Interlock Point', point);
+
+	if (feedbackPoint !== null && !!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
+		if(feedbackPoint.PointInst !== 0){
+			point['Feedback Polarity'].isDisplayable = true;
+			point['Alarm Value'].isDisplayable = false;
+		}else{
+			point['Feedback Polarity'].isDisplayable = false;
+			point['Alarm Value'].isDisplayable = true;
+		}
+	}
+
+	if (interlockPoint !== null) {
+		point['Interlock State'].isDisplayable = (interlockPoint.PointInst !== 0) ? true : false;
+	}
+
+	callback();
 }
 
 function updateDevices(point, callback) {
