@@ -3048,7 +3048,7 @@ var reportsViewModel = function () {
                     case "undecided":
                     case "null":
                     case "None":
-                        if ($.isNumeric(rawValue)) {
+                        if ($.isNumeric(rawValue) && self.reportType() !== 'Property') { // #271 Channel values were getting unwanted precision in property reports
                             if (!!columnConfig.multiplier) {
                                 result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                             } else {
