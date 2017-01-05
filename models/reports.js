@@ -903,7 +903,7 @@ module.exports = Rpt = {
                                 "Point Refs": {
                                     $elemMatch: {
                                         "PropertyName": key,
-                                        "Value": pointRef.Value
+                                        "Value": (!!pointRef ? pointRef.Value : 0)
                                     }
                                 }
                             };
@@ -915,7 +915,7 @@ module.exports = Rpt = {
                                     $elemMatch: {
                                         "PropertyName": key,
                                         "Value": {
-                                            $ne: pointRef.Value
+                                            $ne: (!!pointRef ? pointRef.Value : 0)
                                         }
                                     }
                                 }
