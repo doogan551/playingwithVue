@@ -433,7 +433,7 @@ function updateFromTail(_id, value, reliability) {
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
-	
+
     Utility.update({
             query: {
                 _id: _id
@@ -483,12 +483,16 @@ function updateValsTail(point, finalCB) {
             }
         }
 
-        common.sendUpdate({
-            upi: point._id,
-            Value: point.Value.Value,
-            eValue: point.Value.eValue,
-            "Quality Label": point["Quality Label"]
-        });
+        if (!point.hasOwnProperty('Value')) {
+            logger.info('no value property on ', point._id);
+        } else {
+            common.sendUpdate({
+                upi: point._id,
+                Value: point.Value.Value,
+                eValue: point.Value.eValue,
+                "Quality Label": point["Quality Label"]
+            });
+        }
 
     }
 
