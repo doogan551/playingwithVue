@@ -529,9 +529,13 @@ define([
                 if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
                     var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
                     var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
-                    jsProp.forEach(function(item, index) {
-                        changeProperty(item, updatedJsProp[index])
-                    });
+                    if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
+                        current[prop] = updated[prop];
+                    } else {
+                        jsProp.forEach(function(item, index) {
+                            changeProperty(item, updatedJsProp[index]);
+                        });
+                    }
                 } else {
                     if (!updated.hasOwnProperty(prop)) {
                         delete currentProp;
