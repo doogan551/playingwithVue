@@ -14001,7 +14001,7 @@
                 "isReadOnly": false,
                 "Value": 0,
                 "PointName": "",
-                "PointType": 205,
+                "PointType": 0,
                 "PointInst": 0,
                 "DevInst": 0
             }, {
