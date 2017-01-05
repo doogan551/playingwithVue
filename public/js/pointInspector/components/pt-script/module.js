@@ -332,11 +332,12 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             return;
         var self = this,
             data = {
-                close: true,
+                saveAndClose: true,
                 extendData: { path: self.exePath }
             };
         self.productionScript.source(self.developmentScript.source());
         self.developmentScript.source("");
+        self.showDiscardScriptButton(false);
 
         self.buildStatus('activating');
         self.root.point.save(data);
