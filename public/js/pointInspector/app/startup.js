@@ -529,7 +529,8 @@ define([
                 if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
                     var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
                     var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
-                    if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
+                    if (!!~['taglist', 'Security'].indexOf(prop)) { // commented below is going to get complex and will probably rewrite entire function to better support ko/js objects
+                        // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
                         current[prop] = updated[prop];
                     } else {
                         jsProp.forEach(function(item, index) {

@@ -1,7 +1,7 @@
 <!-- ko if: getPointRef().isDisplayable -->
 <div data-bind="attr: { class: columnClasses }">
     <div class="dataField" id="pointReference">
-        <label data-bind="text: getPointRef().PropertyName, visible: showLabel"></label>
+        <label data-bind="text: displayLabel, visible: showLabel"></label>
         <div class="table well well-sm">
             <!-- ko if: isInEditMode() && !getPointRef().isReadOnly()-->
             <div class="td fixed-gutter-75 align-right">
