@@ -49,7 +49,7 @@ var gpl = {
     $editActionButtonValueModal: $('#editActionButtonValueModal'),
     $actionButtonReportParameterModal: $('#actionButtonReportParameterModal'),
     $useEditVersionButton: $('#useEditVersion'),
-    $discardEditVersionButton: $('#discardEditVersion'),
+    // $discardEditVersionButton: $('#discardEditVersion'),
     point: window.gplData.point,
     references: window.gplData.references,
     upi: window.gplData.upi,
@@ -1876,6 +1876,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref = refs[idx];
                 ref.PointInst = upi;
                 ref.Value = upi;
+                ref.PointName = name;
 
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
@@ -5708,6 +5709,7 @@ gpl.BlockManager = function (manager) {
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
                     otherBlock,
                     anchor,
+                    anchorType,
                     pointName,
                     prop;
 
@@ -5738,16 +5740,22 @@ gpl.BlockManager = function (manager) {
 
                         if (prop === 'Monitor Point') {
                             anchor = editBlock.outputAnchor;
+                            if (!!anchor.getLines()[0] && anchor.getLines()[0].endAnchor) {
+                                anchorType = anchor.getLines()[0].endAnchor.anchorType;
+                            }
                         } else {
                             anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
+                            if (!!anchor.getLines()[0] && anchor.getLines()[0].startAnchor) {
+                                anchorType = anchor.getLines()[0].startAnchor.anchorType;
+                            }
                         }
 
                         pointName = bmSelf.bindings.editPointName();
 
                         otherBlock = anchor.getConnectedBlock();
                         if (otherBlock) {
-                            if (!!anchor.getLines()[0] && anchor.getLines()[0].endAnchor) {
-                                otherBlock.setPointRef(anchor.getLines()[0].endAnchor.anchorType, bmSelf.editBlockUpi, pointName, editBlock.pointType);
+                            if (anchorType) {
+                                otherBlock.setPointRef(anchorType, bmSelf.editBlockUpi, pointName, editBlock.pointType);
                             }
                             editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, otherBlock.pointType);
                             gpl.fire('editedblock', otherBlock);
@@ -6887,7 +6895,8 @@ gpl.Manager = function () {
                 gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
 
                 gpl.on('rendered', function () {
-                    managerSelf.bindings.hasEdits(true);
+                    // managerSelf.bindings.hasEdits(true);
+                    managerSelf.bindings.hasEditVersion(true);
                     gpl.blockManager.useEditVersion();
                 });
 
@@ -6958,6 +6967,7 @@ gpl.Manager = function () {
                 managerSelf.$saveForLaterButton = $('#saveForLater');
                 managerSelf.$editButton = $('#edit');
                 managerSelf.$cancelButton = $('#cancel');
+                managerSelf.$discardChangesButton = $('#discardChanges');
                 managerSelf.$quitButton = $('#quit');
                 managerSelf.$validateButton = $('#validate');
                 managerSelf.$contextMenuList = $('#jqxMenu ul');
@@ -8178,6 +8188,7 @@ gpl.Manager = function () {
         managerSelf.addToBindings({
             isEdit: gpl.isEdit,
             hasEdits: ko.observable(false),
+            hasEditVersion:  ko.observable(false),
             loaded: managerSelf.sequenceLoaded,
             editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
 
@@ -8483,6 +8494,23 @@ gpl.Manager = function () {
             offsetPositions(false);
 
             gpl.saveSequence();
+
+            setTimeout(function () {
+                managerSelf.doCancel();
+            }, 100);
+        });
+
+        managerSelf.$discardChangesButton.click(function () {
+            gpl.isCancel = true;
+            managerSelf.bindings.hasEdits(false);
+            gpl.blockManager.handleUnload();
+
+            gpl.json = $.extend(true, {}, gpl.originalSequence);
+            if (!!gpl.json.editVersion) { // handle a saveForLater dataset
+                delete gpl.json.editVersion;
+
+                gpl.saveSequence();
+            }
 
             setTimeout(function () {
                 managerSelf.doCancel();
