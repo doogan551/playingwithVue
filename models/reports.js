@@ -676,6 +676,23 @@ module.exports = Rpt = {
             reportRequestComplete = false,
             scheduleRequestComplete = false,
             reportData,
+            getValueTypes = function (data) {
+                "use strict";
+                var i,
+                    column,
+                    filter;
+                    for (i = 1; i < data["Report Config"].columns.length; i++) {
+                        column = data["Report Config"].columns[i];
+                        column.valueType = Config.Enums.Properties[column.colName].valueType;
+                    }
+
+                    for (i = 0; i < data["Report Config"].filters.length; i++) {
+                        filter = data["Report Config"].filters[i];
+                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
+                    }
+
+                return data;
+            },
             handleResults = function() {
                 "use strict";
                 if (scheduled) {
@@ -714,6 +731,9 @@ module.exports = Rpt = {
                     if (result === null) {
                         return cb();
                     } else {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
                     }
@@ -731,6 +751,9 @@ module.exports = Rpt = {
                     if (result === null) {
                         return cb();
                     } else {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
                     }
