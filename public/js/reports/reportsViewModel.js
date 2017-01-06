@@ -3072,7 +3072,7 @@ var reportsViewModel = function () {
                                 result.Value = dataField.PointName;
                                 result.rawValue = dataField.PointName;
                             } else {
-                                result.Value = "";
+                                result.Value = "None";
                                 result.rawValue = "";
                             }
                         } else {
