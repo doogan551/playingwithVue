@@ -315,8 +315,8 @@ module.exports = function socketio(_common) {
     sock.on('checkPropertiesForOne', function(data) {
 
       logger.debug('checkPropertiesForOne');
-      checkProperties(data, function(data) {
-        sock.emit('returnProperties', data); // Handle the received results
+      checkProperties(data, function(propData) {
+        sock.emit('returnProperties', propData); // Handle the received results
       });
     });
     // NOT CHECKED
@@ -1014,8 +1014,7 @@ function getScheduleEntries(data, callback) {
     Utility.get({
       collection: pointsCollection,
       query: {
-        "Point Type.Value": "Schedule Entry",
-        _parentUpi: upi
+        "Point Type.Value": "Schedule Entry"
       }
     }, callback);
   } else {
@@ -1037,8 +1036,8 @@ function getScheduleEntries(data, callback) {
 function checkProperties(data, callback) {
   // Override Config so we get the latest version - this allows us to see the affects of changes to our enumsTemplates.json file
   // without having to restart the server
-  var Config = require('../public/js/lib/config.js');
-  var template = Config.Templates.getTemplate(data.pointType), // Template object
+  var _Config = require('../public/js/lib/config.js');
+  var template = _Config.Templates.getTemplate(data.pointType), // Template object
     dbResult,
     skipProperties = {
       "Trend Last Status": 1,
@@ -1077,13 +1076,12 @@ function checkProperties(data, callback) {
   data.errMsg = '';
 
   if (template !== undefined) {
-    Utility.get({
+    Utility.iterateCursor({
       collection: pointsCollection,
       query: {
         'Point Type.Value': data.pointType
       }
-    }, function(recsErr, recs) {
-
+    }, function(recsErr, rec, next) {
       var prop, // Work vars
         key,
         subKey,
@@ -1096,17 +1094,15 @@ function checkProperties(data, callback) {
         // TODO change summary to error. Verify viewModel looks @ error key
         data.err = true;
         data.errMsg = "INTERNAL ERROR: dbResult.toArray() failed."; // Push the 'problems found object' onto our results array
-        callback(data); // Perform the callback
+        next(recsErr, true); // Perform the callback
+      } else {
 
-        return;
-      }
 
-      // Itterate through mongo result set
-      for (var i = 0; i < recs.length; i++) {
+        // Itterate through mongo result set
         // Initialize temporary object which contains the problems found for this point (also stores identifying info)
         var tempObj = {
-          _id: recs[i]._id,
-          Name: recs[i].Name,
+          _id: rec._id,
+          Name: rec.Name,
           Problems: []
         };
 
@@ -1117,7 +1113,7 @@ function checkProperties(data, callback) {
           }
 
           // If the template property doesn't exist in the database
-          if (recs[i][prop] === undefined) {
+          if (rec[prop] === undefined) {
             // Log the problem
             tempObj.Problems.push("Property '" + prop + "' exists in template but not in DB.");
           }
@@ -1136,7 +1132,7 @@ function checkProperties(data, callback) {
             // The template does not define the keys for some properties because they are different for every point, so we skip 'em!
             if (skipDeepPropertyCheck.hasOwnProperty(prop)) {
               continue; // Go to next property
-            } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
+            } else if ((_Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
               continue;
             } else if (Array.isArray(template[prop]) && template[prop].length === 0) {
               continue;
@@ -1149,7 +1145,7 @@ function checkProperties(data, callback) {
 
                 if (skipRefProperties.hasOwnProperty(propName)) {
                   continue;
-                } else if ((propertyObject = Config.Utility.getPropertyObject(propName, recs[i])) === null) {
+                } else if ((propertyObject = _Config.Utility.getPropertyObject(propName, rec)) === null) {
                   tempObj.Problems.push("Reference property '" + propName + "' exists in template but not in DB.");
                 } else {
                   for (subKey in template[prop][key]) {
@@ -1162,20 +1158,20 @@ function checkProperties(data, callback) {
                 }
               }
               // If the template key doesn't exist in the database
-              else if (recs[i][prop][key] === undefined) {
+              else if (rec[prop][key] === undefined) {
                 // Log the problem
                 tempObj.Problems.push("Key '" + key + "' for property '" + prop + "' exists in template but not in DB.");
               } else {
-                delete recs[i][prop][key]; // No problems found. Delete the key out of the db record so we don't re-evaluate it again
+                delete rec[prop][key]; // No problems found. Delete the key out of the db record so we don't re-evaluate it again
               }
             }
           } else {
-            delete recs[i][prop]; // No problems found. Delete the property out of the db record so we don't re-evaluate it again
+            delete rec[prop]; // No problems found. Delete the property out of the db record so we don't re-evaluate it again
           }
         }
 
         // Find database properties that do not exist in the template
-        for (prop in recs[i]) {
+        for (prop in rec) {
           if (skipProperties.hasOwnProperty(prop)) {
             continue; // Go to next property
           }
@@ -1197,29 +1193,29 @@ function checkProperties(data, callback) {
           //          }
           //
           // If the prop_value is actually an object
-          else if ((typeof recs[i][prop] === 'object') && (recs[i][prop] !== null)) {
+          else if ((typeof rec[prop] === 'object') && (rec[prop] !== null)) {
 
             // The template does not define the keys for some properties because they are different for every point, so we skip 'em!
             if (skipDeepPropertyCheck.hasOwnProperty(prop)) {
               continue; // Go to next property
-            } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
+            } else if ((_Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
               continue;
             }
 
             // Find database property keys that do not exist in the template.
-            for (key in recs[i][prop]) {
+            for (key in rec[prop]) {
               if (prop == "Point Refs") {
-                if (_.isEmpty(recs[i][prop][key]))
+                if (_.isEmpty(rec[prop][key]))
                   continue;
 
-                propName = recs[i][prop][key].PropertyName;
+                propName = rec[prop][key].PropertyName;
 
                 if (skipRefProperties.hasOwnProperty(propName)) {
                   continue;
-                } else if ((propertyObject = Config.Utility.getPropertyObject(propName, template)) === null) {
+                } else if ((propertyObject = _Config.Utility.getPropertyObject(propName, template)) === null) {
                   tempObj.Problems.push("Reference property '" + propName + "' exists in DB but not in template.");
                 } else {
-                  for (subKey in recs[i][prop][key]) {
+                  for (subKey in rec[prop][key]) {
                     if (propertyObject[subKey] === undefined) {
                       tempObj.Problems.push("Key '" + subKey + "' for reference property '" + propName + "' exists in template but not in DB.");
                     }
@@ -1241,12 +1237,17 @@ function checkProperties(data, callback) {
           data.results.push(tempObj); // Push the 'problems found object' onto our results array
 
           if (data.results.length >= 25) { // Limit number of reported points with problems to 25
-            break; // Do not process any more points
+            return next(null, true); // Do not process any more points
           }
         }
+
+        return next(); // Perform the callback
       }
-      callback(data); // Perform the callback
-    }); // end dbResult.toArray(function ())
+    }, function(err, count) {
+      setTimeout(function() {
+        callback(data);
+      }, 100);
+    });
 
     // Could not find point type in template
 
