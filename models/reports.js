@@ -1449,7 +1449,7 @@ module.exports = Rpt = {
             var users = schedule.users.map(function(id) {
                 return ObjectID(id);
             });
-            var date = moment().format('YYYYMMDDhhmm');
+            var date = moment().format('YYYY/MM/DD');
             var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
             var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
             console.log(uri, path);
@@ -1479,6 +1479,7 @@ module.exports = Rpt = {
                             to: emails,
                             fromAccount: 'infoscan',
                             subject: [reportName, ' for ', date].join(''),
+                            html: '<html><body><h1>You\'re welcome!</h1></body></html>',
                             attachments: [{
                                 path: path,
                                 contentType: 'application/pdf',
