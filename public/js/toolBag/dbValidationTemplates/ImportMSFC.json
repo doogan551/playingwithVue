@@ -14542,14 +14542,14 @@
             "Value": 0
         },
         "Conversion Coefficient 1": {
-            "isDisplayable": false,
-            "isReadOnly": false,
+            "isDisplayable": true,
+            "isReadOnly": true,
             "ValueType": 1,
             "Value": 768.0
         },
         "Conversion Coefficient 2": {
-            "isDisplayable": false,
-            "isReadOnly": false,
+            "isDisplayable": true,
+            "isReadOnly": true,
             "ValueType": 1,
             "Value": 31.63
         },
@@ -14560,7 +14560,7 @@
             "Value": ""
         },
         "Output Type": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Analog",
@@ -14578,7 +14578,7 @@
             "eValue": 0
         },
         "Channel": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "1 - Damper",
@@ -14609,7 +14609,7 @@
             }
         },
         "Instance": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
             "Value": 1
@@ -14695,7 +14695,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 101.0
+            "Value": 100.0
         },
         "Minimum Value": {
             "isDisplayable": true,
