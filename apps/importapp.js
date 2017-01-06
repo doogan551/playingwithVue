@@ -2669,12 +2669,10 @@ function updateReferences(db, point, mainCallback) {
 }
 
 function fixDisplayableProperties(point, callback) {
-	var feedbackPoint = Config.Utility.getPropertyObject('Feedback Point', point);
-	var interlockPoint = Config.Utility.getPropertyObject('Interlock Point', point);
-	var adjustPoint = Config.Utility.getPropertyObject('Alarm Adjust Point', point);
+	var prop = Config.Utility.getPropertyObject('Feedback Point', point);
 
-	if (feedbackPoint !== null && !!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
-		if(feedbackPoint.PointInst !== 0){
+	if (prop !== null && !!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
+		if(prop.PointInst !== 0){
 			point['Feedback Polarity'].isDisplayable = true;
 			point['Alarm Value'].isDisplayable = false;
 		}else{
@@ -2683,12 +2681,14 @@ function fixDisplayableProperties(point, callback) {
 		}
 	}
 
-	if (interlockPoint !== null) {
-		point['Interlock State'].isDisplayable = (interlockPoint.PointInst !== 0) ? true : false;
+	prop = Config.Utility.getPropertyObject('Interlock Point', point);
+	if (prop !== null) {
+		point['Interlock State'].isDisplayable = (prop.PointInst !== 0) ? true : false;
 	}
 
-	if (adjustPoint !== null) {
-        if (adjustPoint.PointInst === 0) {
+	prop = Config.Utility.getPropertyObject('Alarm Adjust Point', point);
+	if (prop !== null) {
+        if (prop.PointInst === 0) {
             point['Alarm Adjust Band'].isDisplayable = false;
         } else {
             point['Alarm Adjust Band'].isDisplayable = true;
@@ -2696,7 +2696,7 @@ function fixDisplayableProperties(point, callback) {
 	    if (point['Enable Warning Alarms'].Value === true) {
             point['High Warning Limit'].isDisplayable = true;
             point['Low Warning Limit'].isDisplayable = true;
-	        if (adjustPoint.PointInst === 0) {
+	        if (prop.PointInst === 0) {
 	            point['Warning Adjust Band'].isDisplayable = false;
 	        } else {
 	            point['Warning Adjust Band'].isDisplayable = true;
@@ -2707,6 +2707,25 @@ function fixDisplayableProperties(point, callback) {
             point['Warning Adjust Band'].isDisplayable = false;
 	    }
     }
+
+	prop = Config.Utility.getPropertyObject('Trend Samples', point);
+	if (prop !== null) {
+		var disp = (prop.Value !== 0) ? true : false;
+
+        point['Trend Enable'].isDisplayable = disp;
+        point['Trend Interval'].isDisplayable = disp;
+        if (disp === false) {
+	        point['Trend Enable'].Value = false;
+	        point['Trend Interval'].Value = 60;
+        }
+		prop = Config.Utility.getPropertyObject('Trend COV Increment', point);
+		if (prop !== null) {
+			prop.isDisplayable = disp;
+	        if (disp === false) {
+		        prop.Value = 1.0;
+	        }
+		}
+	}
 
 	callback();
 }
