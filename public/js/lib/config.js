@@ -1417,7 +1417,7 @@ var Config = (function(obj) {
         },
 
         "Enable Warning Alarms": function(data) {
-            data.point = obj.EditChanges.applyEnableWarningAlarms(data);
+            data.point = obj.EditChanges[data.property](data);
             return data;
         },
         //------ End analog alarm properties validation --------------------------------------
@@ -2787,6 +2787,23 @@ var Config = (function(obj) {
             return obj.EditChanges.applyRemoteUnitNetworkType(point);
         },
 
+        "Enable Warning Alarms": function(data) {
+            var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable;
+
+            if (point["Enable Warning Alarms"].Value === true) {
+                setDisp(point, ["High Warning Limit", "Low Warning Limit"], true);
+                if (obj.Utility.getPropertyObject("Alarm Adjust Point", point).PointInst === 0) {
+                    point["Warning Adjust Band"].isDisplayable = false;
+                } else {
+                    point["Warning Adjust Band"].isDisplayable = true;
+                }
+            } else {
+                setDisp(point, ["High Warning Limit", "Low Warning Limit", "Warning Adjust Band"], false);
+            }
+            return point;
+        },
+
         "Fan Control Point": function(data) {
             this.updateFanStrategy(data.point);
             return data.point;
@@ -3127,18 +3144,17 @@ var Config = (function(obj) {
         },
 
         "Trend Samples": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value, // Property value
+            var point = data.point,
                 props = ["Trend Enable", "Trend Interval", "Trend COV Increment"],
                 len = props.length,
-                ro = (val === 0) ? true : false, // If Trend Sample 0, set read-only flag true
+                disp = (point[data.property].Value !== 0) ? true : false,
                 prop,
                 i;
 
             for (i = 0; i < len; i++) {
                 prop = props[i];
                 if (point.hasOwnProperty(prop)) {
-                    point[prop].isReadOnly = ro;
+                    point[prop].isDisplayable = disp;
                 }
             }
             return point;
@@ -3172,23 +3188,6 @@ var Config = (function(obj) {
             }
             point = this.applyPropertyEnumSet(point, "Reliability", enumsTemplatesJson.Enums.Reliabilities);
 
-            return point;
-        },
-
-        applyEnableWarningAlarms: function(data) {
-            var point = data.point,
-                setDisp = obj.Utility.setPropsDisplayable;
-
-            if (point["Enable Warning Alarms"].Value === true) {
-                setDisp(point, ["High Warning Limit", "Low Warning Limit"], true);
-                if (obj.Utility.getPropertyObject("Alarm Adjust Point", point).PointInst === 0) {
-                    point["Warning Adjust Band"].isDisplayable = false;
-                } else {
-                    point["Warning Adjust Band"].isDisplayable = true;
-                }
-            } else {
-                setDisp(point, ["High Warning Limit", "Low Warning Limit", "Warning Adjust Band"], false);
-            }
             return point;
         },
 
