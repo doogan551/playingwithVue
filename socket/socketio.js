@@ -1244,9 +1244,7 @@ function checkProperties(data, callback) {
         return next(); // Perform the callback
       }
     }, function(err, count) {
-      setTimeout(function() {
-        callback(data);
-      }, 100);
+      callback(data);
     });
 
     // Could not find point type in template
