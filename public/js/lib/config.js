@@ -4259,7 +4259,7 @@ var Config = (function(obj) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
-                min,
+                min = 0,
                 max,
                 setCh = obj.Utility.setChannelOptions,
                 setValOpt = obj.Utility.setupPropValueOptions,
@@ -4268,36 +4268,31 @@ var Config = (function(obj) {
                 och = point["Open Channel"],
                 cch = point["Close Channel"];
 
-            obj.Utility.setPropsDisplayable(point, ["Open Channel", "Channel", "Close Channel", "Polarity"], false);
+            obj.Utility.setPropsDisplayable(point, ["Channel", "Open Channel", "Close Channel", "Polarity"], false);
 
             if (val) {
                 val = point["Output Type"].Value;
-                if ((val === "Pulsed") || (val === "Pulse Width")) {
-                    point.Polarity.isDisplayable = true;
-                }
                 switch (point._rmuModel) {
                     case eRmu["MS 4 VAV"]["enum"]:
                         setValOpt(ch, {
                             "1 - Damper": 1,
                             "2 - Reheat": 2
                         });
+                        min = -1;
                         max = -1;
                         break;
 
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        min = 0;
                         max = (val === "Analog") ? 3 : 7;
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
-                        min = 0;
                         max = 7;
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
-                        min = 0;
                         max = (val === "Analog") ? 3 : 15;
                         break;
 
@@ -4353,6 +4348,9 @@ var Config = (function(obj) {
                         }
                         break;
                 }
+                if ((min >= 0) && ((val === "Pulsed") || (val === "Pulse Width"))) {
+                    point.Polarity.isDisplayable = true;
+                }
                 if (max >= 0) {
                     if (val === "Pulsed") {
                         setCh(och, min, max);
@@ -4406,6 +4404,12 @@ var Config = (function(obj) {
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(outType, {
+                            "Analog": 0,
+                            "Pulsed": 2
+                        });
+                        break;
+
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:

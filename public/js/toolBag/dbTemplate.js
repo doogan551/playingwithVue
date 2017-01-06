@@ -31,6 +31,13 @@ var conTemplate =   "<div class='tab-pane' id='{_pointType}'>\
 
 var myViewModel;
 var socket = io.connect(window.location.origin);
+var inq = [];
+
+function processQ () {
+    if (inq.length) {
+        socket.emit('checkPropertiesForOne', inq[0]);
+    }
+}
 
 // Data object returned looks like this:
 // data.ndx        = Int
@@ -50,6 +57,9 @@ socket.on('returnProperties', function (data) {
         $resTemplate = $(resTemplate);
 
     console.log("data", data);
+
+    inq.shift(); // Remove processed q entry
+    processQ();
 
     pointViewmodel.templateData = [];
 
@@ -113,12 +123,15 @@ myViewModel = (function () {
                 ko.removeNode($(self.points()[ndx].domElement).children());
                 $(self.points()[ndx].domElement).empty();
 
-                socket.emit('checkPropertiesForOne', {
+                inq.push({
                     ndx: self.points()[ndx].ndx,
                     pointType:  self.points()[ndx].pointType,
                     _pointType: self.points()[ndx]._pointType,
                     domElement: self.points()[ndx].domElement
                 });
+                if (inq.length === 1) {
+                    processQ();
+                }
             };
         })();
         self.points.push(temp); // We have to push our incomplete object onto the array
