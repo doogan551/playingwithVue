@@ -15396,7 +15396,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": "%"
+            "Value": "%   "
         },
         "Alarm State": {
             "isDisplayable": true,
@@ -15440,13 +15440,13 @@
         },
         "Conversion Coefficient 1": {
             "isDisplayable": true,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": 1.0
         },
         "Conversion Coefficient 2": {
             "isDisplayable": true,
-            "isReadOnly": true,
+            "isReadOnly": false,
             "ValueType": 1,
             "Value": 0.3
         },
@@ -15528,8 +15528,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Swap Both",
-            "eValue": 3
+            "Value": "Swap Bytes",
+            "eValue": 2
         },
         "Poll Register": {
             "isDisplayable": false,
