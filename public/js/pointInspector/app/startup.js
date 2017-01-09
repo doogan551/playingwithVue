@@ -526,20 +526,24 @@ define([
                 }
             }
             for (var prop in current) {
-                if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
-                    var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
-                    var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
-                    if (!!~['taglist', 'Security'].indexOf(prop)) { // commented below is going to get complex and will probably rewrite entire function to better support ko/js objects
-                        // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
-                        current[prop] = updated[prop];
-                    } else {
-                        current[prop](updated[prop]())
-                    }
+                if (prop === 'Alarm Messages') {
+                    continue;
                 } else {
-                    if (!updated.hasOwnProperty(prop)) {
-                        delete currentProp;
+                    if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
+                        var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
+                        var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
+                        if (!!~['taglist', 'Security'].indexOf(prop)) { // commented below is going to get complex and will probably rewrite entire function to better support ko/js objects
+                            // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
+                            current[prop] = updated[prop];
+                        } else {
+                            current[prop](updated[prop]())
+                        }
                     } else {
-                        changeProperty(current[prop], updated[prop]);
+                        if (!updated.hasOwnProperty(prop)) {
+                            delete currentProp;
+                        } else {
+                            changeProperty(current[prop], updated[prop]);
+                        }
                     }
                 }
             }
@@ -548,6 +552,9 @@ define([
             var currentModel = ko.viewmodel.toModel(current);
             var updatedModel = ko.viewmodel.toModel(updated);
             for (var prop in updated) {
+                if (prop === 'Alarm Messages') {
+                    continue;
+                }
                 if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
                     var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
                     current[prop](updatedJsProp);
