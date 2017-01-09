@@ -676,6 +676,23 @@ module.exports = Rpt = {
             reportRequestComplete = false,
             scheduleRequestComplete = false,
             reportData,
+            getValueTypes = function (data) {
+                "use strict";
+                var i,
+                    column,
+                    filter;
+                    for (i = 1; i < data["Report Config"].columns.length; i++) {
+                        column = data["Report Config"].columns[i];
+                        column.valueType = Config.Enums.Properties[column.colName].valueType;
+                    }
+
+                    for (i = 0; i < data["Report Config"].filters.length; i++) {
+                        filter = data["Report Config"].filters[i];
+                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
+                    }
+
+                return data;
+            },
             handleResults = function() {
                 "use strict";
                 if (scheduled) {
@@ -714,6 +731,9 @@ module.exports = Rpt = {
                     if (result === null) {
                         return cb();
                     } else {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
                     }
@@ -731,6 +751,9 @@ module.exports = Rpt = {
                     if (result === null) {
                         return cb();
                     } else {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
                     }
@@ -1449,7 +1472,7 @@ module.exports = Rpt = {
             var users = schedule.users.map(function(id) {
                 return ObjectID(id);
             });
-            var date = moment().format('YYYYMMDDhhmm');
+            var date = moment().format('YYYY/MM/DD');
             var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
             var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
             console.log(uri, path);
@@ -1479,6 +1502,7 @@ module.exports = Rpt = {
                             to: emails,
                             fromAccount: 'infoscan',
                             subject: [reportName, ' for ', date].join(''),
+                            html: '<html><body><h1>You\'re welcome!</h1></body></html>',
                             attachments: [{
                                 path: path,
                                 contentType: 'application/pdf',

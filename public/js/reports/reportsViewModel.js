@@ -1619,6 +1619,15 @@ var reportsViewModel = function () {
             }
             return answer;
         },
+        getValueType = function (valuetype) {
+            var answer = "";
+
+            if (!!ENUMSTEMPLATESENUMS) {
+                answer = getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Value Types"], valuetype);
+            }
+
+            return answer;
+        },
         buildBitStringHtml = function (config, rawValue, disabled) {
             var htmlString = '<div class="bitstringReporting">',
                 enumValue;
@@ -1899,7 +1908,7 @@ var reportsViewModel = function () {
                     }
                     tempObject.upi = selectedPoint._id;
                     tempObject.dataColumnName = tempObject.upi;
-                    tempObject.valueType = "None";
+                    tempObject.valueType = getValueType(selectedPoint.Value.ValueType);
                     tempObject.colName = selectedPoint.Name;
                     tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
                     tempObject.pointType = selectedPoint["Point Type"].Value;
@@ -1954,7 +1963,7 @@ var reportsViewModel = function () {
                     }
                     tempObject.upi = selectedPoint._id;
                     tempObject.dataColumnName = tempObject.upi;
-                    tempObject.valueType = "None";
+                    tempObject.valueType = getValueType(selectedPoint.Value.ValueType);
                     tempObject.colName = selectedPoint.Name;
                     tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
                     tempObject.pointType = selectedPoint["Point Type"].Value;
@@ -2236,7 +2245,6 @@ var reportsViewModel = function () {
                 if (cleanup && !validation.error && results.collection.length > 0) { // these fields are only used in UI
                     index = results.collection.length - 1;
                     delete results.collection[index].valueList;
-                    delete results.collection[index].valueType;
                     delete results.collection[index].dataColumnName;
                     delete results.collection[index].rawValue;
                     delete results.collection[index].error;
@@ -2449,7 +2457,6 @@ var reportsViewModel = function () {
                 }
 
                 if (validFilter) {
-                    currentFilter.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentFilter.filterName].valueType : "");
                     currentFilter.valueList = [];
                     currentFilter.valueListMaxWidth = 0;
                     setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
@@ -2488,7 +2495,6 @@ var reportsViewModel = function () {
                     switch (self.reportType()) {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentColumn.colName].valueType : "");
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }

@@ -533,9 +533,7 @@ define([
                         // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
                         current[prop] = updated[prop];
                     } else {
-                        jsProp.forEach(function(item, index) {
-                            changeProperty(item, updatedJsProp[index]);
-                        });
+                        current[prop](updated[prop]())
                     }
                 } else {
                     if (!updated.hasOwnProperty(prop)) {
