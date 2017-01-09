@@ -2299,7 +2299,6 @@ function addPoint(data, user, options, callback) {
     $set: {}
   };
 
-
   updateCfgRequired(point, function(err) {
     if (err)
       callback(err);
@@ -2325,32 +2324,29 @@ function addPoint(data, user, options, callback) {
       } else {
         point._id = searchQuery._id;
         logData.point._id = searchQuery._id;
-        if (!!options && options.from === "updateSchedules") {
+        if (!!options && options.from !== "updateSchedules") {
+          var logObj = utils.buildActivityLog(logData);
+
+          Utility.insert({
+            collection: activityLogCollection,
+            insertObj: logObj
+          }, function(err, result) {});
+        }
+
+        if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
+          newUpdate(data.oldPoint, point, {
+            from: 'addpoint',
+            path: data.path
+          }, user, function(err, newPoint) {
+            callback({
+              msg: "success"
+            }, newPoint);
+          });
+        } else {
           return callback({
             msg: "success"
           }, point);
         }
-        var logObj = utils.buildActivityLog(logData);
-
-        Utility.insert({
-          collection: activityLogCollection,
-          insertObj: logObj
-        }, function(err, result) {
-          if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
-            newUpdate(data.oldPoint, point, {
-              from: 'addpoint',
-              path: data.path
-            }, user, function(err, newPoint) {
-              callback({
-                msg: "success"
-              }, newPoint);
-            });
-          } else {
-            return callback({
-              msg: "success"
-            }, point);
-          }
-        });
       }
     });
 

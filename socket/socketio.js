@@ -883,13 +883,20 @@ function updateSchedules(data, callback) {
           from: "updateSchedules",
           schedule: schedule
         };
+
+        for (var i = 0; i < oldPoints.length; i++) {
+          if (oldPoints[i]._id === newSched._id) {
+            oldPoint = oldPoints[i];
+            break;
+          }
+        }
+
         common.addPoint({
-          point: newSched
+          point: newSched,
+          oldPoint: oldPoint
         }, user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
-          if (newSched._pStatus !== 0)
-            return feCB(null);
 
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", newSched);
           Utility.getOne({
