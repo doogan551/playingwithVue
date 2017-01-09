@@ -2671,13 +2671,36 @@ function updateReferences(db, point, mainCallback) {
 function fixDisplayableProperties(point, callback) {
 	var prop = Config.Utility.getPropertyObject('Feedback Point', point);
 
-	if (prop !== null && !!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
-		if(prop.PointInst !== 0){
-			point['Feedback Polarity'].isDisplayable = true;
-			point['Alarm Value'].isDisplayable = false;
-		}else{
-			point['Feedback Polarity'].isDisplayable = false;
-			point['Alarm Value'].isDisplayable = true;
+	if (prop !== null) {
+		if (!!~['Binary Input', 'Binary Value'].indexOf(point['Point Type'].Value)) {
+			if (prop.PointInst !== 0) {
+				point['Feedback Polarity'].isDisplayable = true;
+				point['Alarm Value'].isDisplayable = false;
+			} else {
+				point['Feedback Polarity'].isDisplayable = false;
+				point['Alarm Value'].isDisplayable = true;
+			}
+		} else if (point['Point Type'].Value === 'Binary Output') {
+			if (point['Feedback Type'].Value !== 'None') {
+				if (point._rmuModel === 6) {
+					point['Feedback Type'].Value = 'None';
+					point['Feedback Type'].eValue = 0;
+				} else if (prop.PointInst !== 0) {
+						point['Feedback Type'].Value = 'Point';
+						point['Feedback Type'].eValue = 3;
+				} else if (Config.Utility.checkModbusRMU(point)) {
+					point['Feedback Type'].Value = 'None';
+					point['Feedback Type'].eValue = 0;
+				} else if (point._rmuModel === 7) {
+					point['Feedback Type'].Value = 'Remote';
+					point['Feedback Type'].eValue = 4;
+				} else if (point._rmuModel !== 0) {
+					point['Feedback Type'].Value = 'Single';
+					point['Feedback Type'].eValue = 1;
+				}
+			} else {
+				point['Feedback Type'].eValue = 0;
+			}
 		}
 	}
 
