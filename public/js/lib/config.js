@@ -4504,10 +4504,6 @@ var Config = (function(obj) {
                     fbPoint.isDisplayable = true;
                     break;
 
-                case "Remote":
-                    fbPoint.isDisplayable = true;
-                    break;
-
                 default: // None or Remote
                     break;
             }
@@ -4528,9 +4524,6 @@ var Config = (function(obj) {
             obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
             return point;
         },
-
-        // TODO Coordinate with Rob to remove this routine
-        //applyBinaryOutputTypeFeedbackPoint: function(data) {},
 
         applyBinaryOutputDevModel: function(data) {
             var point = data.point,
