@@ -2557,7 +2557,6 @@ var Config = (function(obj) {
 
         "Output Type": function(data) {
             var point = data.point, // Shortcut
-                val = point["Output Type"].Value, // Property value
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Analog Output") {
