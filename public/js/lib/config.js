@@ -2578,12 +2578,9 @@ var Config = (function(obj) {
         },
 
         "Feedback Type": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value; // Point type
+            var point = data.point;
 
-            if (type === "Binary Output") {
-                data.point = obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
-            }
+            data.point = obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
             return data;
         },
 

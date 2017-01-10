@@ -2682,10 +2682,7 @@ function fixDisplayableProperties(point, callback) {
 			}
 		} else if (point['Point Type'].Value === 'Binary Output') {
 			if (point['Feedback Type'].Value !== 'None') {
-				if (point._rmuModel === 6) {
-					point['Feedback Type'].Value = 'None';
-					point['Feedback Type'].eValue = 0;
-				} else if (prop.PointInst !== 0) {
+				if (prop.PointInst !== 0) {
 						point['Feedback Type'].Value = 'Point';
 						point['Feedback Type'].eValue = 3;
 				} else if (Config.Utility.checkModbusRMU(point)) {
