@@ -18,8 +18,8 @@
             "Trend Last Status": true,
             "Trend Last Value": true,
             "Run Total Reset Time": true,
-            "Last Start Reset Time": true,
-            "Last Start Time": true
+            "Last Start Time": true,
+            "Last Start Reset Time": true
         },
         "showNoProblemsFound": false
     },
@@ -19508,7 +19508,7 @@
         "_relRMU" : 0, 
         "_relPoint" : 0, 
         "_devModel" : 13, 
-        "_rmuModel" : 0, 
+        "_rmuModel" : 16, 
         "_parentUpi" : 0, 
         "Point Type" : {
             "ValueType" : 5, 
@@ -19876,7 +19876,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 11,
-            "Value": 0
+            "Value": 50
         },
         "Last Start Time": {
             "isDisplayable": true,
@@ -19897,7 +19897,7 @@
             "Value": 0
         },
         "Same State Test": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 7,
             "Value": false
@@ -19979,13 +19979,13 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 18,
-            "Value": 0
+            "Value": 255
         },
         "Remarks": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": "4-15-15 R. Shook requested this unit off and CRU-10 on per Doug Hubbard request.   skl"
+            "Value": "4-15-15 R. Shook requested this unit off and CRU-10 on per Doug Hubbard request.   skl\r\n"
         },
         "Point Refs": [
             {
@@ -20036,7 +20036,7 @@
                 "PropertyName": "Feedback Point",
                 "PropertyEnum": 141,
                 "AppIndex": 0,
-                "isDisplayable": true,
+                "isDisplayable": false,
                 "isReadOnly": false,
                 "Value": 0,
                 "PointName": "",
