@@ -5225,7 +5225,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -5448,7 +5448,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Control Function": {
@@ -5707,7 +5707,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -6451,7 +6451,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -6866,7 +6866,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Off Control Function": {
@@ -6902,7 +6902,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "On Control Function": {
@@ -7025,7 +7025,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -7636,7 +7636,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -7774,7 +7774,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Control Function": {
@@ -7867,7 +7867,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
