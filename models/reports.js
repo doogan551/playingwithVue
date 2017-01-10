@@ -1472,7 +1472,7 @@ module.exports = Rpt = {
             var users = schedule.users.map(function(id) {
                 return ObjectID(id);
             });
-            var date = moment().format('YYYY/MM/DD');
+            var date = moment().format('YYYY-MM-DD');
             var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
             var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
             console.log(uri, path);
