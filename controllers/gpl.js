@@ -8,20 +8,31 @@ router.get('/view/:upoint', function(req, res, next) {
 	var upi = parseInt(req.params.upoint, 10),
 		cbCount = 0,
 		cbTotal = 1,
-		complete = function() {
+        completeWithError = function() {
+            cbCount++;
+            console.log('completing with Error', cbCount);
+            if (cbCount === cbTotal) {
+                res.render('gpl/sequenceNotFound.pug');
+            }
+        },
+        complete = function() {
 			cbCount++;
 			console.log('completing', cbCount);
 			if (cbCount === cbTotal) {
 				res.render('gpl/index.pug');
 			}
 		},
-		processGpl = function(data) {
-			res.locals.upi = upi;
-			res.locals.point = JSON.stringify(data.data || {
-				msg: 'no results'
-			});
-			res.locals.references = JSON.stringify(data.pointdata);
-			complete();
+		processGpl = function(err, data) {
+            if (!!err) {
+                completeWithError();
+            } else {
+                res.locals.upi = upi;
+                res.locals.point = JSON.stringify(data.data || {
+                        msg: 'no results'
+                    });
+                res.locals.references = JSON.stringify(data.pointdata);
+                complete();
+			}
 		};
 
 	res.locals = {};
@@ -36,6 +47,13 @@ router.get('/edit/:upoint', function(req, res, next) {
 	var upi = parseInt(req.params.upoint, 10),
 		cbCount = 0,
 		cbTotal = 1,
+        completeWithError = function() {
+            cbCount++;
+            console.log('completing with Error', cbCount);
+            if (cbCount === cbTotal) {
+                res.render('gpl/sequenceNotFound.pug');
+            }
+        },
 		complete = function() {
 			cbCount++;
 			console.log('completing', cbCount);
@@ -43,13 +61,17 @@ router.get('/edit/:upoint', function(req, res, next) {
 				res.render('gpl/index.pug');
 			}
 		},
-		processGpl = function(data) {
-			res.locals.upi = upi;
-			res.locals.point = JSON.stringify(data.data || {
-				msg: 'no results'
-			});
-			res.locals.references = JSON.stringify(data.pointdata);
-			complete();
+		processGpl = function(err, data) {
+            if (!!err) {
+                completeWithError();
+            } else {
+                res.locals.upi = upi;
+                res.locals.point = JSON.stringify(data.data || {
+                        msg: 'no results'
+                    });
+                res.locals.references = JSON.stringify(data.pointdata);
+                complete();
+			}
 		};
 
 	GPL.getGplInfo({
