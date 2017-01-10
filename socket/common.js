@@ -1494,10 +1494,12 @@ function updateDependencies(refPoint, flags, user, callback) {
 }
 
 function restorePoint(upi, user, callback) {
-  var logData = {
-    user: user,
-    timestamp: Date.now()
-  };
+    var logData = {
+            user: user,
+            timestamp: Date.now()
+        },
+        pointType;
+
   Utility.findAndModify({
     collection: pointsCollection,
     query: {
@@ -1526,37 +1528,59 @@ function restorePoint(upi, user, callback) {
       collection: activityLogCollection,
       insertObj: logData
     }, function(err, result) {
-      if (["Schedule", 'Sequence'].indexOf(point["Point Type"].Value) >= 0) {
-        // get points based on parentupi
-        Utility.update({
-          collection: 'points',
-          query: {
-            _parentUpi: point._id
-          },
-          updateObj: {
-            $set: {
-              _pStatus: 0
-            }
-          },
-          options: {
-            multi: true
-          }
-        }, function(err, result) {
-          return callback({
-            message: "success"
-          });
-        });
-      } else {
-        restoreScheduleEntries(point, user, function() {
-          common.updateDependencies(point, {
-            method: "restore"
-          }, user, function() {
-            return callback({
-              message: "success"
-            });
-          });
-        });
-      }
+        pointType = point["Point Type"].Value;
+        switch (pointType) {
+            case "Schedule":
+            case "Sequence":
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _parentUpi: point._id
+                    },
+                    updateObj: {
+                        $set: {
+                            _pStatus: 0
+                        }
+                    },
+                    options: {
+                        multi: true
+                    }
+                }, function (err, result) {
+                    return callback({
+                        message: "success"
+                    });
+                });
+                break;
+            case "Report":
+                // enable related schedules
+                // Utility.findAndModify({
+                //     collection: constants('schedulescollection'),
+                //     query: {
+                //         upi: point._id
+                //     },
+                //     updateObj: {
+                //         $set: {
+                //             enabled: true
+                //         }
+                //     }
+                // }, function (err, result) {
+                //     return callback({
+                //         message: "success"
+                //     });
+                // });
+                break;
+            default:
+                restoreScheduleEntries(point, user, function () {
+                    common.updateDependencies(point, {
+                        method: "restore"
+                    }, user, function () {
+                        return callback({
+                            message: "success"
+                        });
+                    });
+                });
+                break;
+        }
     });
   });
 }
@@ -1777,8 +1801,35 @@ function deletePoint(upi, method, user, options, callback) {
         cb(null);
       });
     },
+    _updateRelatedSchedule = function(cb) {
+        var query = {
+                upi: _upi
+            },
+            update = {
+                $set: {
+                    enabled: false
+                }
+            };
+
+        if (method === 'hard') {
+            Utility.remove({
+                collection: constants('schedulescollection'),
+                query: query
+            }, function(err, result) {
+                cb(err);
+            });
+        } else {
+            Utility.findAndModify({
+                collection: constants('schedulescollection'),
+                query: query,
+                updateObj: update
+            }, function(err, schedule) {
+                cb(err);
+            });
+        }
+    },
     executeFunctions = [_findPoint, _deletePoint, _updateUpis, _deleteHistory, _fromScheduleExitCheck, _addActivityLog,
-      _deleteChildren, _updateCfgRequired, _updateDependencies
+      _deleteChildren, _updateCfgRequired, _updateDependencies, _updateRelatedSchedule
     ];
 
   async.waterfall(executeFunctions, function(err) {
