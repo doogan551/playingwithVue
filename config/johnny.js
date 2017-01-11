@@ -1,28 +1,37 @@
-var johnny = {
-  'Infoscan': {
-    'dbConfig': {
-      'host': '192.168.1.88',
-      'dbName': 'infoscan'
-    },
-    'files': {
-      'driveLetter': 'C'
-    },
-    'location': {
-      'site': 'Johnny'
-    },
-    'email': {
-      'onError': {
-          'to': 'jroberts@dorsett-tech.com',
-          'enabled': true
-      }
-    }
-  },
-  runNotifications: false,
-  minifyFiles: false
-};
+var driveLetter = 'C';
+var host = 'info-int';
 
-johnny.redisConfig = {
-  host: johnny.Infoscan.dbConfig.host
+var johnny = {
+    'Infoscan': {
+        'dbConfig': {
+            'host': host,
+            'dbName': 'infoscan'
+        },
+        'zmqConfig': {
+            'server': 'info-int'
+        },
+        'processes': {
+            'zmqProcess': driveLetter + ':/InfoScan/Server/zmqServer.exe',
+            'smProcess': driveLetter + ':/InfoScan/Server/ServerMonitor.exe'
+        },
+        'redisConfig': {
+            'host': host
+        },
+        'files': {
+            'driveLetter': driveLetter
+        },
+        'location': {
+            'site': 'Johnny'
+        },
+        'email': {
+            'onError': {
+                'to': 'jroberts@dorsett-tech.com',
+                'enabled': true
+            }
+        }
+    },
+    runNotifications: false,
+    minifyFiles: false
 };
 
 module.exports = johnny;
