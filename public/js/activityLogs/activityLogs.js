@@ -104,7 +104,7 @@ var ActivityLogsManager = function (conf) {
             } else {
                 self.pointTypes([]);
             }
-            self.refreshActivityLogsData();
+            self.applyPointNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var theDate = new Date(timestamp),
@@ -310,7 +310,7 @@ var ActivityLogsManager = function (conf) {
             var filterValues,
                 storeData = store.get(storeKey);
 
-            if (storeData === undefined) {
+            if (!storeData) {
                 storeData = {};
                 storeData.sessionId = sessionId;
             }
