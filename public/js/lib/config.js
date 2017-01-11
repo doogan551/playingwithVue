@@ -4482,18 +4482,23 @@ var Config = (function(obj) {
 
         applyBinaryOutputTypeFeedbackType: function(data) {
             var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable,
                 fbPoint = obj.Utility.getPropertyObject("Feedback Point", point);
 
             fbPoint.isDisplayable = false;
-            obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], false);
+            setDisp(point, ["Feedback Channel", "Feedback Instance", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], false);
 
             switch (point["Feedback Type"].Value) {
                 case "Single":
-                    obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity"], true);
+                    if (point.Instance.isDisplayable) {
+                        setDisp(point, ["Feedback Instance", "Feedback Polarity"], true);
+                    } else {
+                        setDisp(point, ["Feedback Channel", "Feedback Polarity"], true);
+                    }
                     break;
 
                 case "Dual":
-                    obj.Utility.setPropsDisplayable(point, ["Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], true);
+                    setDisp(point, ["Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], true);
                     break;
 
                 case "Point":
@@ -4546,7 +4551,7 @@ var Config = (function(obj) {
                 chMax = -1,
                 outType = point["Output Type"];
 
-            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Feedback Channel", "Open Channel", "Close Channel", "Polarity", "Feedback Polarity", "Open Polarity", "Close Polarity", "Same State Test", "Supervised Input"], false);
+            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Feedback Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Feedback Channel", "Open Channel", "Close Channel", "Polarity", "Feedback Polarity", "Open Polarity", "Close Polarity", "Same State Test", "Supervised Input"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
@@ -4584,7 +4589,6 @@ var Config = (function(obj) {
                             "Single": 1,
                             "Point": 3
                         });
-                        fbMax = 255;
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:

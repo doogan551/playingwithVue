@@ -2681,6 +2681,8 @@ function fixDisplayableProperties(point, callback) {
 				point['Alarm Value'].isDisplayable = true;
 			}
 		} else if (point['Point Type'].Value === 'Binary Output') {
+			point['Feedback Instance'] = Config.Templates.getTemplate('Binary Output')['Feedback Instance'];
+			point['Feedback Instance'].Value = point['Feedback Channel'].eValue;
 			if (point['Feedback Type'].Value !== 'None') {
 				if (prop.PointInst !== 0) {
 						point['Feedback Type'].Value = 'Point';
