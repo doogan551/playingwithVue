@@ -1748,12 +1748,17 @@ var Config = (function(obj) {
         },
 
         "Instance": function(data) {
-            data = this.validateUsingTheseLimits(data, 0, 4194303);
+
+            if (data.point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
+                data = obj.EditValidation.validateUsingTheseLimits(data, 1, 255);
+            } else {
+                data = obj.EditValidation.validateUsingTheseLimits(data, 0, 4194303);
+            }
             return data;
         },
 
         "Feedback Instance": function(data) {
-            data = this.validateUsingTheseLimits(data, 1, 255);
+            data = obj.EditValidation.validateUsingTheseLimits(data, 1, 255);
             return data;
         },
 
