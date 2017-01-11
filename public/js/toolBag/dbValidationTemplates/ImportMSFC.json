@@ -20238,8 +20238,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Reverse",
-            "eValue": 1
+            "Value": "Normal",
+            "eValue": 0
         },
         "Close Channel": {
             "isDisplayable": false,
@@ -20401,7 +20401,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 11
+            "Value": 0
         },
         "Minimum Off Time": {
             "isDisplayable": true,
@@ -20444,8 +20444,8 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Urgent",
-            "eValue": 3
+            "Value": "Normal",
+            "eValue": 0
         },
         "Alarm Delay Time": {
             "isDisplayable": true,
