@@ -72,7 +72,7 @@ if (processFlag === "gpl") {
 	dbModel.connect(connectionString.join(''), function(err) {
 		updateHistory(function(err) {
 			console.log('done');
-		})
+		});
 	});
 } else {
 	mongo.connect(conn, function(err, db) {
@@ -145,15 +145,17 @@ function importUpdate() {
 					logger.info("before changeUpis", err, new Date());
 					// changeUpis(function(err) {
 					fixUpisCollection(db, 'new_points', function(err) {
-						// updateHistory(function(err) {
-						// logger.info('finished updateHistory', err);
-						// cleanupDB(db, function(err) {
-						if (err) {
-							logger.info("updateGPLReferences err:", err);
-						}
-						logger.info("done", err, new Date());
-						process.exit(0);
-						// });
+						setOptions(function(err) {
+							// updateHistory(function(err) {
+							// logger.info('finished updateHistory', err);
+							// cleanupDB(db, function(err) {
+							if (err) {
+								logger.info("updateGPLReferences err:", err);
+							}
+							logger.info("done", err, new Date());
+							process.exit(0);
+							// });
+						});
 					});
 					// });
 					// });
@@ -164,7 +166,7 @@ function importUpdate() {
 	};
 
 
-	importPoint = function(db, point, cb) {
+	var importPoint = function(db, point, cb) {
 
 		updateNameSegments(point, function(err) {
 			if (err)
@@ -426,7 +428,7 @@ function setupCfgRequired(db, callback) {
 }
 
 function createEmptyCollections(db, callback) {
-	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'Schedules', 'dev'];
+	var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'Schedules', 'dev', 'Options'];
 	async.forEach(collections, function(coll, cb) {
 		db.createCollection(coll, function(err, result) {
 			cb(err);
@@ -521,7 +523,7 @@ function fixPowerMeters(callback) {
 
 	var splitName = function(meter) {
 		return meter.Name.split('_');
-	}
+	};
 
 	Utility.iterateCursor({
 		collection: 'PowerMeters',
@@ -616,7 +618,7 @@ function fixPowerMeters(callback) {
 					wfCb();
 				}
 			});
-		}], cb)
+		}], cb);
 	}, function(err, count) {
 		callback(err, count);
 	});
@@ -871,7 +873,7 @@ function convertHistoryReports(db, callback) {
 					report = lodash.merge(template, guide);
 
 				report["Report Type"].Value = "History";
-				report["Report Type"].eValue = Config.Enums["Report Types"]["History"].enum;
+				report["Report Type"].eValue = Config.Enums["Report Types"].History.enum;
 				report["Point Refs"] = [];
 				report._pStatus = 0;
 				report._id = point._id;
@@ -968,7 +970,7 @@ function convertTotalizerReports(callback) {
 		var refIds = [];
 
 		report["Report Type"].Value = "Totalizer";
-		report["Report Type"].eValue = Config.Enums["Report Types"]["Totalizer"].enum;
+		report["Report Type"].eValue = Config.Enums["Report Types"].Totalizer.enum;
 		report["Point Refs"] = [];
 		report._pStatus = 0;
 		report.Name = doc.Name;
@@ -1637,6 +1639,14 @@ function updateIndexes(callback) {
 			unique: true
 		},
 		collection: "historydata"
+	}, {
+		index: {
+			"name": 1
+		},
+		options: {
+			unique: true
+		},
+		collection: "Options"
 	}];
 
 	async.forEachSeries(indexes, function(index, indexCB) {
@@ -1764,10 +1774,10 @@ function findRefs(db, callback) {
 	logger.info("findRefs");
 	db.collection(pointsCollection).find({}).toArray(function(err, points) {
 		logger.info("Points returned", points.length);
-		for (i = 0; i < points.length; i++) {
-			upi = points[i]._id;
+		for (var i = 0; i < points.length; i++) {
+			var upi = points[i]._id;
 
-			for (j = 0; j < points.length; j++) {
+			for (var j = 0; j < points.length; j++) {
 
 				if (points[j]["Alarm Adjust Point"] && points[j]["Alarm Adjust Point"].Value === upi)
 					points[j]["Alarm Adjust Point"].PointInst = upi;
@@ -1956,7 +1966,7 @@ function updateSensorPoints(db, point, callback) {
 function formatPoints(limit, skip, db, formatCB) {
 	logger.info("formatPoints");
 	var properties = [];
-	count = 0;
+	var count = 0;
 	db.collection(pointsCollection).findOne({}, {}, {
 		limit: limit,
 		skip: skip
@@ -1980,12 +1990,12 @@ function formatPoints(limit, skip, db, formatCB) {
 							_id: point[property].Value
 						}, function(err, refPoint) {
 
-							returnObj = {};
+							var returnObj = {};
 							returnObj[property] = (refPoint) ? refPoint : null;
 							callback(null, returnObj);
 						});
 					} else {
-						returnObj = {};
+						var returnObj = {};
 						returnObj[property] = null;
 						callback(null, returnObj);
 					}
@@ -1993,7 +2003,7 @@ function formatPoints(limit, skip, db, formatCB) {
 					async.forEachSeries(results, function(result, fesCB) {
 
 						for (var prop in result) {
-							data = {};
+							var data = {};
 
 							data.point = point;
 							data.refPoint = result[prop];
@@ -2683,8 +2693,8 @@ function fixDisplayableProperties(point, callback) {
 		} else if (point['Point Type'].Value === 'Binary Output') {
 			if (point['Feedback Type'].Value !== 'None') {
 				if (prop.PointInst !== 0) {
-						point['Feedback Type'].Value = 'Point';
-						point['Feedback Type'].eValue = 3;
+					point['Feedback Type'].Value = 'Point';
+					point['Feedback Type'].eValue = 3;
 				} else if (Config.Utility.checkModbusRMU(point)) {
 					point['Feedback Type'].Value = 'None';
 					point['Feedback Type'].eValue = 0;
@@ -2708,42 +2718,42 @@ function fixDisplayableProperties(point, callback) {
 
 	prop = Config.Utility.getPropertyObject('Alarm Adjust Point', point);
 	if (prop !== null) {
-        if (prop.PointInst === 0) {
-            point['Alarm Adjust Band'].isDisplayable = false;
-        } else {
-            point['Alarm Adjust Band'].isDisplayable = true;
-        }
-	    if (point['Enable Warning Alarms'].Value === true) {
-            point['High Warning Limit'].isDisplayable = true;
-            point['Low Warning Limit'].isDisplayable = true;
-	        if (prop.PointInst === 0) {
-	            point['Warning Adjust Band'].isDisplayable = false;
-	        } else {
-	            point['Warning Adjust Band'].isDisplayable = true;
-	        }
-	    } else {
-            point['High Warning Limit'].isDisplayable = false;
-            point['Low Warning Limit'].isDisplayable = false;
-            point['Warning Adjust Band'].isDisplayable = false;
-	    }
-    }
+		if (prop.PointInst === 0) {
+			point['Alarm Adjust Band'].isDisplayable = false;
+		} else {
+			point['Alarm Adjust Band'].isDisplayable = true;
+		}
+		if (point['Enable Warning Alarms'].Value === true) {
+			point['High Warning Limit'].isDisplayable = true;
+			point['Low Warning Limit'].isDisplayable = true;
+			if (prop.PointInst === 0) {
+				point['Warning Adjust Band'].isDisplayable = false;
+			} else {
+				point['Warning Adjust Band'].isDisplayable = true;
+			}
+		} else {
+			point['High Warning Limit'].isDisplayable = false;
+			point['Low Warning Limit'].isDisplayable = false;
+			point['Warning Adjust Band'].isDisplayable = false;
+		}
+	}
 
 	prop = Config.Utility.getPropertyObject('Trend Samples', point);
 	if (prop !== null) {
 		var disp = (prop.Value !== 0) ? true : false;
 
-        point['Trend Enable'].isDisplayable = disp;
-        point['Trend Interval'].isDisplayable = disp;
-        if (disp === false) {
-	        point['Trend Enable'].Value = false;
-	        point['Trend Interval'].Value = 60;
-        }
+		point['Trend Enable'].isDisplayable = disp;
+		point['Trend Interval'].isDisplayable = disp;
+		if (disp === false) {
+			point['Trend Enable'].Value = false;
+			point['Trend Interval'].Value = 60;
+		}
 		prop = Config.Utility.getPropertyObject('Trend COV Increment', point);
 		if (prop !== null) {
 			prop.isDisplayable = disp;
-	        if (disp === false) {
-		        prop.Value = 1.0;
-	        }
+			if (disp === false) {
+				prop.Value = 1.0;
+			}
 		}
 	}
 
@@ -2879,7 +2889,7 @@ function rearrangeProperties(point, callback) {
 			return 1;
 		}
 		return 0;
-	}
+	};
 	var arr = [];
 	var o = {};
 	for (var prop in point) {
@@ -2893,62 +2903,60 @@ function rearrangeProperties(point, callback) {
 	callback(null);
 }
 
-function test(db) {
+function setOptions(callback) {
+	Utility.iterateCursor({
+		collection: 'points',
+		query: {
+			'Value.ValueOptions': {
+				$exists: 1
+			}
+		}
+	}, function(err, point, next) {
+		var prefix = '';
+		var isBinary = !!~['Binary Input', 'Binary Output', 'Binary Value', 'Device', 'Remote Unit'].indexOf(point['Point Type'].Value);
+		var isGPLBlock = !!~['Delay', 'Binary Selector', 'Logic', 'Alarm Status', 'Comparator', 'Digital Logic'].indexOf(point['Point Type'].Value);
 
-	db.collection(pointsCollection).findOne({
-		_id: 54381
-	}, function(err, point) {
+		if (!!isGPLBlock) {
+			var controlPoint = Config.Utility.getPropertyObject('Control Point', point);
+			if (!!controlPoint && controlPoint.PointInst === 0) {
+				prefix = 'MultiState';
+			}
+		} else if (point['Point Type'].Value === 'MultiState Value') {
+			prefix = 'MultiState';
+		} else if (!!isBinary) {
+			prefix = 'Binary';
+		}
 
+		if (prefix === '') {
+			return next();
+		}
 
-		async.forEachSeries(point["Screen Objects"], function(screenObject, propCb) {
-				if (screenObject["Screen Object"] === 0 || screenObject["Screen Object"] === 1 || screenObject["Screen Object"] === 3 || screenObject["Screen Object"] === 7) {
+		var options = Object.keys(point.Value.ValueOptions);
+		var optionsObj = {
+			name: prefix + ' ' + options.join('/'),
+			options: point.Value.ValueOptions,
+			binary: isBinary
+		};
 
-					var propertyEnum = 0;
-					var propertyName = "";
-					if (screenObject["Screen Object"] === 0) {
-						propertyEnum = Config.Enums.Properties["Display Dynamic"].enum;
-						propertyName = "Display Dynamic";
-					}
-					if (screenObject["Screen Object"] === 1) {
-						propertyEnum = Config.Enums.Properties["Display Button"].enum;
-						propertyName = "Display Button";
-					}
-					if (screenObject["Screen Object"] === 3) {
-						propertyEnum = Config.Enums.Properties["Display Animation"].enum;
-						propertyName = "Display Animation";
-					}
-					if (screenObject["Screen Object"] === 7) {
-						propertyEnum = Config.Enums.Properties["Display Trend"].enum;
-						propertyName = "Display Trend";
-					}
+		Utility.getOne({
+			collection: 'Options',
+			query: {
+				name: optionsObj.name
+			}
+		}, function(err, obj) {
+			if (obj) {
+				next();
+			} else {
 
-					db.collection(pointsCollection).findOne({
-						_id: screenObject.upi
-					}, function(err, displaypoint) {
-						var pointRef = {};
-						if (displaypoint !== null) {
-							pointRef.PropertyEnum = propertyEnum;
-							pointRef.PropertyName = propertyName;
-							pointRef.Value = displaypoint._id;
-							pointRef.AppIndex = 1;
-							pointRef.isDisplayable = true;
-							pointRef.isReadOnly = false;
-							pointRef.PointName = displaypoint.Name;
-							pointRef.PointType = displaypoint["Point Type"].eValue;
-							pointRef.PointInst = (displaypoint._pStatus !== 2) ? displaypoint._id : 0;
-							pointRef.DevInst = (Config.Utility.getPropertyObject("Device Point", displaypoint) !== null) ? Config.Utility.getPropertyObject("Device Point", displaypoint).Value : 0;
-
-							point["Point Refs"].push(pointRef);
-						}
-						propCb(null);
-					});
-				} else
-					propCb(null);
-			},
-			function(err) {
-
-			});
-	});
+				Utility.insert({
+					collection: 'Options',
+					insertObj: optionsObj
+				}, function() {
+					next();
+				});
+			}
+		});
+	}, callback);
 }
 
 function updateNameSegments(point, callback) {
