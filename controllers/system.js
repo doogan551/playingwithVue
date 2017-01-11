@@ -271,5 +271,20 @@ router.get('/versions', function(req, res, next) {
     }
   });
 });
+// Checked
+router.get('/options', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.getOptions(data, function(err, options) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, options);
+    }
+  });
+});
 
 module.exports = router;
