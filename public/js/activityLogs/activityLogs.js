@@ -7,8 +7,7 @@ var ActivityLogsManager = function (conf) {
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),
         storeKey = 'activityLogs_' + user._id,
-        windowUpi = "activitylog" + window.location.search.slice(1), // prefix required or pop-in/pop-out don't work
-        filterDataKey = "activityFilters",
+        filterDataKey = "activityLogFilters" + window.location.search.slice(1),
         $dateFrom = $("#dateFrom"),
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
@@ -388,15 +387,6 @@ var ActivityLogsManager = function (conf) {
             stickyScrollBar: false
         };
 
-    self.togglePop = function () {
-        // If we're a pop-out; pop back in
-        if (window.top.location.href === window.location.href) {
-            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', 'mainWindow', windowUpi);
-        } else {
-            // Open the window
-            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi);
-        }
-    };
     self.refreshActivityLogsData = function () {
         // _log('self.refreshActivityLogsData() called........');
         var localActivityLogTable = self.activityLogs();
