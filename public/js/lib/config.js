@@ -1752,6 +1752,11 @@ var Config = (function(obj) {
             return data;
         },
 
+        "Feedback Instance": function(data) {
+            data = this.validateUsingTheseLimits(data, 1, 255);
+            return data;
+        },
+
         "Interlock Point": function(data) {
             data.point = obj.EditChanges.applyInterlockPoint(data);
             return data;
