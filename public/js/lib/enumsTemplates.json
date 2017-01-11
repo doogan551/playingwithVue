@@ -2151,6 +2151,11 @@
                 "valueType": "Enum",
                 "reportEnable": true
             },
+            "Feedback Instance": {
+                "enum": 66,
+                "valueType": "Unsigned",
+                "reportEnable": true
+            },
             "Feedback Point": {
                 "enum": 141,
                 "valueType": "UniquePID",
@@ -6761,6 +6766,12 @@
                     "ValueOptions": {
                         "1": 1
                     }
+                },
+                "Feedback Instance": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 4,
+                    "Value": 0
                 },
                 "Feedback Polarity": {
                     "isDisplayable": false,

@@ -4501,7 +4501,7 @@ var dti = {
     system: {
         init: function () {
             dti.bindings.system.status = ko.computed(function () {
-                if (dti.bindings.socketStatus() !== 'connect') {
+                if ((dti.bindings.socketStatus() !== 'connect') || (dti.bindings.serverProcessesStatus() !== 'serverup')) {
                     return 'error';
                 } else {
                     return 'ok';
@@ -4522,6 +4522,26 @@ var dti = {
 
             // Initialize our system errors hover menu
             dti.system.eventLog.systemErrorsHoverMenu = dti.events.hoverMenu('#systemErrorsIcon');
+
+            // Setup our listener for server processes status updates
+            dti.socket.on('statusUpdate', function handleStatusUpdate (data) {
+                // data is 'serverup', 'serverdown', or {err: <error getting status update>}
+                var msg;
+
+                if (typeof data === 'string') {
+                    dti.bindings.serverProcessesStatus(data);
+                } else {
+                    dti.bindings.serverProcessesStatus('serverdown');
+
+                    if (data.err) {
+                        msg = 'Error encountered when trying to get the status of the server processes. The server reported: ' + data.err;
+                    } else {
+                        msg = 'An unknown error occurred when retrieving the status of the server processes.';
+                    }
+                    dti.system.eventLog.addError(msg);
+                }
+            });
+            dti.socket.emit('getStatus');
         },
         eventLog: {
             options: {
@@ -4693,6 +4713,7 @@ var dti = {
             }
         },
         socketStatus: ko.observable(),
+        serverProcessesStatus: ko.observable(),
         system: {
             status: null, // ko computed; installed in dti.system.init
             eventLog: {
