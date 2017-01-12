@@ -40,6 +40,7 @@ var ActivityLogsManager = function (conf) {
             name4: '',
             pointTypes: []
         },
+        availablePointTypes = {},
         _log = function () {
             console.log.apply(console, arguments);
         },
@@ -50,6 +51,7 @@ var ActivityLogsManager = function (conf) {
         buildActivityLogRequestObject = function (activityLog, reqObj) {
             var l_startDate = 0,
                 l_endDate = 0,
+                i,
                 nPages = activityLog.numberOfPages.peek();
 
             // Paging
@@ -70,7 +72,14 @@ var ActivityLogsManager = function (conf) {
             reqObj.name2 = self.name2();
             reqObj.name3 = self.name3();
             reqObj.name4 = self.name4();
-            reqObj.pointTypes = (self.pointTypes().length > 0 && self.pointTypes().length !== numberPointTypes.length) ? self.pointTypes() : [];
+            if (availablePointTypes) {
+                if (self.pointTypes().length > 0 && self.pointTypes().length !== numberPointTypes.length) {
+                    reqObj.pointTypes = [];
+                    for (i = 0; i < self.pointTypes().length; i++) {
+                        reqObj.pointTypes.push(availablePointTypes[self.pointTypes()[i]]);
+                    }
+                }
+            }
 
             // Date-time filtering
             if (self.dateFrom()) {
@@ -87,6 +96,9 @@ var ActivityLogsManager = function (conf) {
             reqObj.endDate = l_endDate;
         },
         pointNameFilterCallback = function (filter) {
+            var arrayOfPointTypes = [],
+                pointType;
+
             self.name1(filter.name1);
             self.name2(filter.name2);
             self.name3(filter.name3);
@@ -95,7 +107,10 @@ var ActivityLogsManager = function (conf) {
             if (!!filter.pointTypes && filter.pointTypes.length !== numberPointTypes) {
                 self.pointTypes(filter.pointTypes);
             } else {
-                self.pointTypes(self.availablePointTypes());
+                for (pointType in availablePointTypes) {
+                    arrayOfPointTypes.push(pointType);
+                }
+                self.pointTypes(arrayOfPointTypes);
             }
             self.applyPointNameFilter();
         },
@@ -171,10 +186,10 @@ var ActivityLogsManager = function (conf) {
             var i;
             if (results) {
                 for (i = 0; i < results.length; i++) {
-                    self.availablePointTypes().push(results[i].key);
+                    availablePointTypes[results[i].key] = results[i].enum;
                 }
             }
-            numberPointTypes = self.availablePointTypes().length;
+            numberPointTypes = results.length;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
@@ -575,8 +590,15 @@ var ActivityLogsManager = function (conf) {
         }
     };
     self.showPointFilter = function () {
+        var arrayOfPointTypes = [],
+            pointType;
+
         if (self.pointTypes().length === 0) {
-            self.pointTypes(self.availablePointTypes());
+            for (pointType in availablePointTypes) {
+                arrayOfPointTypes.push(pointType);
+            }
+
+            self.pointTypes(arrayOfPointTypes);
         }
         var parameters = {
             name1: self.name1(),
@@ -677,7 +699,6 @@ var ActivityLogsManager = function (conf) {
     self.pointTypes = ko.observableArray([]);
     self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
-    self.availablePointTypes = ko.observableArray([]);
 
     self.activityLogs = ko.computed(function () {
         return activityLogTables;

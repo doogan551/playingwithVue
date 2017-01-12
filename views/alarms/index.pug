@@ -14,7 +14,7 @@ html
                 span.dropdown-toggle(data-toggle="dropdown")
                     span(data-bind="text: viewTitle")
                     span  ALARMS
-                    | 
+                    | &nbsp;
                     i.fa.fa-caret-down
                 .nav(class="dropdown-menu")
                     // div.header Alarm Views
@@ -291,15 +291,6 @@ html
                     // /ko
 
         .bodyMask
-
-        // Point Filter Modal
-        //- .modal#pointFilterModal(role="dialog", style="overflow: hidden;")
-        //-     .modalContainer
-        //-         .subTitle POINT NAME/TYPE FILTER
-        //-         .pull-right.fa.fa-2x.fa-times.closeIt
-        //-         iframe#pointLookup(name="pid_filter")
-        //-         .text-center
-        //-             button.btn.btn-success.closeIt OK
 
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/knockout-3.1.0.js')

@@ -325,7 +325,6 @@ var AlarmManager = function (conf) {
         },
         setAvailablePointTypes = function (results) {
             var i;
-
             if (results) {
                 for (i = 0; i < results.length; i++) {
                     availablePointTypes[results[i].key] = results[i].enum;

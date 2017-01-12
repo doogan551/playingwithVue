@@ -32,11 +32,7 @@ exports.getRecentAlarms = function(data, cb) {
   var itemsPerPage = parseInt(data.itemsPerPage, 10);
   var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
   var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
-  var allEnumsPointTypes = config.Enums["Point Types"];
-  var filterByPointTypeEnums = [];
-
   var sort = {};
-  var groups = [];
 
   if (!itemsPerPage) {
     itemsPerPage = 200;
@@ -46,8 +42,6 @@ exports.getRecentAlarms = function(data, cb) {
   }
 
   var numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  var user = data.user;
 
   var query = {
     $and: [{
@@ -102,14 +96,9 @@ exports.getRecentAlarms = function(data, cb) {
   }
 
   if (data.pointTypes) {
-    if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
-      for (var i = 0; i < data.pointTypes.length; i++) {
-        if (data.pointTypes[i].length > 0) {
-          filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
-        }
-      }
+    if (data.pointTypes.length > 0) {
       query.pointType = {
-        $in: filterByPointTypeEnums
+        $in: data.pointTypes
       };
     }
   }
