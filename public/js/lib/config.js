@@ -4474,14 +4474,18 @@ var Config = (function(obj) {
             var point = data.point,
                 disp;
 
-            if ((point["Output Type"].Value === "Latch") || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"])) {
-                point.Channel.isDisplayable = true;
-                disp = false;
+            if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
+                point["Momentary Delay"].isDisplayable = (point["Output Type"].Value === "Latch") ? false : true;
             } else {
-                point.Channel.isDisplayable = false;
-                disp = true;
-            }
-            obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
+                if (point["Output Type"].Value === "Latch") {
+                    point.Channel.isDisplayable = true;
+                    disp = false;
+                } else {
+                    point.Channel.isDisplayable = false;
+                    disp = true;
+                }
+                obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
+            } 
             return point;
         },
 
@@ -4501,6 +4505,10 @@ var Config = (function(obj) {
                     "I/O 6": 6,
                     "I/O 7": 7,
                     "I/O 8": 8
+                },
+                opts = {
+                    "Latch": 0,
+                    "Momentary": 1
                 },
                 fbMin = 1,
                 fbMax = -1,
@@ -4550,14 +4558,11 @@ var Config = (function(obj) {
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(outType, opts);
                         setValOpt(fbType, {
                             "None": 0
                         });
                         fbType.isDisplayable = false;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         setValOpt(point.Channel, {
                             "3 - Lights": 3,
                             "5 - Fan": 5,
@@ -4570,7 +4575,8 @@ var Config = (function(obj) {
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Same State Test"], true);
+                        setDisp(point, ["Supervised Input", "Supervised Input", "Same State Test"], true);
+                        setValOpt(outType, opts);
                         setValOpt(fbType, {
                             "None": 0,
                             "Single": 1,
@@ -4578,16 +4584,13 @@ var Config = (function(obj) {
                         });
                         fbMin = 0;
                         fbMax = 7;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         chMin = 0;
                         chMax = 7;
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
                         setDisp(point, ["Supervised Input", "Same State Test"], true);
+                        setValOpt(outType, opts);
                         setValOpt(fbType, {
                             "None": 0,
                             "Single": 1,
@@ -4595,16 +4598,13 @@ var Config = (function(obj) {
                         });
                         fbMin = 0;
                         fbMax = 15;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         chMin = 0;
                         chMax = 15;
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
                         point["Same State Test"].isDisplayable = true;
+                        setValOpt(outType, opts);
                         setValOpt(fbType, {
                             "None": 0,
                             "Single": 1,
@@ -4612,10 +4612,6 @@ var Config = (function(obj) {
                         });
                         fbMin = 0;
                         fbMax = 7;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         chMin = 0;
                         chMax = 7;
                         break;
@@ -4628,10 +4624,7 @@ var Config = (function(obj) {
                             "Dual": 2,
                             "Point": 3
                         });
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
+                        setValOpt(outType, opts);
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
                             case eDev["MicroScan 4 UNV"]["enum"]:
@@ -4661,6 +4654,7 @@ var Config = (function(obj) {
                         break;
                 }
                 if (outType.isDisplayable) {
+                    point.Polarity.isDisplayable = true;
                     if (chMax >= 0) {
                         setCh(point.Channel, chMin, chMax);
                         setCh(point["On Channel"], chMin, chMax);
