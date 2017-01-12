@@ -1,5 +1,4 @@
 "use strict";
-window.workspaceManager = window.top.workspaceManager;
 
 var dti = {
     settings: {
