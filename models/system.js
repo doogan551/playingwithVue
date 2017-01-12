@@ -664,21 +664,5 @@ module.exports = {
         return cb(null, versions);
       }
     });
-  },
-  getOptions: function(data, cb) {
-    var returnOptions = [];
-    Utility.iterateCursor({
-      collection: 'Options'
-    }, function(err, options, next) {
-      Object.keys(options.options).forEach(function(key){
-        if(!~returnOptions.indexOf(key)){
-          returnOptions.push(key);
-        }
-      });
-      next();
-    }, function(err, count){
-      console.log('--', count);
-      cb(err, returnOptions.sort());
-    });
   }
 };

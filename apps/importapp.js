@@ -145,7 +145,6 @@ function importUpdate() {
 					logger.info("before changeUpis", err, new Date());
 					// changeUpis(function(err) {
 					fixUpisCollection(db, 'new_points', function(err) {
-						setOptions(function(err) {
 							// updateHistory(function(err) {
 							// logger.info('finished updateHistory', err);
 							// cleanupDB(db, function(err) {
@@ -155,7 +154,6 @@ function importUpdate() {
 							logger.info("done", err, new Date());
 							process.exit(0);
 							// });
-						});
 					});
 					// });
 					// });
@@ -2903,62 +2901,6 @@ function rearrangeProperties(point, callback) {
 	}
 	point = o;
 	callback(null);
-}
-
-function setOptions(callback) {
-	Utility.iterateCursor({
-		collection: 'points',
-		query: {
-			'Value.ValueOptions': {
-				$exists: 1
-			}
-		}
-	}, function(err, point, next) {
-		var prefix = '';
-		var isBinary = !!~['Binary Input', 'Binary Output', 'Binary Value', 'Device', 'Remote Unit'].indexOf(point['Point Type'].Value);
-		var isGPLBlock = !!~['Delay', 'Binary Selector', 'Logic', 'Alarm Status', 'Comparator', 'Digital Logic'].indexOf(point['Point Type'].Value);
-
-		if (!!isGPLBlock) {
-			var controlPoint = Config.Utility.getPropertyObject('Control Point', point);
-			if (!!controlPoint && controlPoint.PointInst === 0) {
-				prefix = 'MultiState';
-			}
-		} else if (point['Point Type'].Value === 'MultiState Value') {
-			prefix = 'MultiState';
-		} else if (!!isBinary) {
-			prefix = 'Binary';
-		}
-
-		if (prefix === '') {
-			return next();
-		}
-
-		var options = Object.keys(point.Value.ValueOptions);
-		var optionsObj = {
-			name: prefix + ' ' + options.join('/'),
-			options: point.Value.ValueOptions,
-			binary: isBinary
-		};
-
-		Utility.getOne({
-			collection: 'Options',
-			query: {
-				name: optionsObj.name
-			}
-		}, function(err, obj) {
-			if (obj) {
-				next();
-			} else {
-
-				Utility.insert({
-					collection: 'Options',
-					insertObj: optionsObj
-				}, function() {
-					next();
-				});
-			}
-		});
-	}, callback);
 }
 
 function updateNameSegments(point, callback) {

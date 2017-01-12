@@ -4211,8 +4211,6 @@ var dti = {
                             });
                         }
                         _object = data;
-                    } else if (enumType === 'options') {
-                        console.log('options length:', len);
                     }
 
                     dti.utility.systemEnums[enumType] = _array;
@@ -4284,7 +4282,6 @@ var dti = {
             dti.utility.getSystemEnum('qualityCodes');
             dti.utility.getSystemEnum('telemetry');
             dti.utility.getSystemEnum('controllers', dti.utility.refreshUserCtlr);
-            dti.utility.getSystemEnum('options');
         }
     },
     pointSelector: {

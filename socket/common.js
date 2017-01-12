@@ -2375,7 +2375,7 @@ function addPoint(data, user, options, callback) {
       } else {
         point._id = searchQuery._id;
         logData.point._id = searchQuery._id;
-        if (!!options && options.from !== "updateSchedules") {
+        if (!options || (!!options && options.from !== "updateSchedules")) {
           var logObj = utils.buildActivityLog(logData);
 
           Utility.insert({
