@@ -502,6 +502,7 @@ var Config = (function(obj) {
                         case 'Control Priority':
                             return workspace && workspace.systemEnums.controlpriorities;
                         case 'Controller':
+                        case 'Setback Controller':
                             return workspace && workspace.systemEnums.controllers;
                         case 'Conversion Type':
                             return _getEnumFromTemplate('Conversion Types');
@@ -4093,15 +4094,19 @@ var Config = (function(obj) {
                                 });
                                 break;
                             case eDev["MicroScan 4 UNV"]["enum"]:
+                                if (inType.eValue !== 0) {
+                                    inType.eValue = 5;
+                                    inType.Value = "Rate Input";
+                                }
                                 setValOpt(inType, {
                                     "Normal": 0,
-                                    "Rate Input": 1
+                                    "Rate Input": 5
                                 });
                                 setCh(ch, 1, 16);
                                 break;
                             default: // MicroScan 4 Digital
                                 setValOpt(inType, {
-                                    "Rate Input": 1
+                                    "Rate Input": 5
                                 });
                                 setCh(ch, 1, 32);
                                 break;
