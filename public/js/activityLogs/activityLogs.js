@@ -168,7 +168,12 @@ var ActivityLogsManager = function (conf) {
             self.activityLogs().gettingData(false);
         },
         setAvailablePointTypes = function (results) {
-            self.availablePointTypes(results);
+            var i;
+            if (results) {
+                for (i = 0; i < results.length; i++) {
+                    self.availablePointTypes().push(results[i].key);
+                }
+            }
             numberPointTypes = self.availablePointTypes().length;
         },
         getStoreData = function () {

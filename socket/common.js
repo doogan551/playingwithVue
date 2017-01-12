@@ -26,7 +26,6 @@ var common = {
 };
 
 var allEnumsPointTypes = Config.Enums["Point Types"];
-var filterByPointTypeEnums = [];
 var io = common.sockets.get().io;
 var rooms = io.sockets.adapter.rooms;
 common.rooms = rooms;
@@ -1990,7 +1989,7 @@ function updateCfgRequired(point, callback) {
 }
 
 function getRecentAlarms(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, query, sort, groups = [];
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, query, sort, groups = [], filterByPointTypeEnums = [];
 
   if (typeof data === "string")
     data = JSON.parse(data);
@@ -2063,7 +2062,7 @@ function getRecentAlarms(data, callback) {
   }
 
   if (data.pointTypes) {
-    if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
+    if (data.pointTypes.length > 0) {
       for (var i = 0; i < data.pointTypes.length; i++) {
         if (data.pointTypes[i].length > 0) {
           filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
@@ -2091,7 +2090,7 @@ function getRecentAlarms(data, callback) {
 }
 
 function getUnacknowledged(data, callback) {
-  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
+  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort, filterByPointTypeEnums = [];
 
   if (typeof data === "string")
     data = JSON.parse(data);
@@ -2186,7 +2185,7 @@ function getUnacknowledged(data, callback) {
 }
 
 function getActiveAlarmsNew(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [], filterByPointTypeEnums = [];
 
   if (typeof data === "string")
     data = JSON.parse(data);
