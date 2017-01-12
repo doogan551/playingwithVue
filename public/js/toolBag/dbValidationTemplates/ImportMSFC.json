@@ -19687,6 +19687,12 @@
                 "1": 1
             }
         },
+        "Feedback Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 1
+        },
         "Open Channel": {
             "isDisplayable": false,
             "isReadOnly": false,
@@ -19726,12 +19732,6 @@
             "isReadOnly": false,
             "ValueType": 4,
             "Value": 25
-        },
-        "Feedback Instance": {
-            "isDisplayable": false,
-            "isReadOnly": false,
-            "ValueType": 4,
-            "Value": 5
         },
         "Read Only": {
             "isDisplayable": false,
@@ -20230,6 +20230,12 @@
                 "1": 1
             }
         },
+        "Feedback Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 1
+        },
         "Open Channel": {
             "isDisplayable": false,
             "isReadOnly": false,
@@ -20266,12 +20272,6 @@
         },
         "Instance": {
             "isDisplayable": true,
-            "isReadOnly": false,
-            "ValueType": 4,
-            "Value": 5
-        },
-        "Feedback Instance": {
-            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
             "Value": 5
@@ -20664,7 +20664,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 18,
-            "Value": 0
+            "Value": 2
         },
         "Active Text": {
             "isDisplayable": true,
@@ -20773,12 +20773,18 @@
                 "1": 1
             }
         },
+        "Feedback Instance": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 5
+        },
         "Open Channel": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "0",
-            "eValue": 0,
+            "Value": "5",
+            "eValue": 5,
             "ValueOptions": {
                 "1": 1
             }
@@ -20808,12 +20814,6 @@
             "eValue": 0
         },
         "Instance": {
-            "isDisplayable": true,
-            "isReadOnly": false,
-            "ValueType": 4,
-            "Value": 5
-        },
-        "Feedback Instance": {
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
@@ -20908,7 +20908,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 255
+            "Value": 50
         },
         "Trend Enable": {
             "isDisplayable": true,
@@ -20920,7 +20920,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 300
+            "Value": 900
         },
         "Run Total Limit": {
             "isDisplayable": true,
@@ -20932,7 +20932,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 0.0
+            "Value": 8720.04
         },
         "Run Total Reset Enable": {
             "isDisplayable": true,
@@ -20956,7 +20956,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 0
+            "Value": 94
         },
         "Minimum Off Time": {
             "isDisplayable": true,
@@ -20999,8 +20999,8 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Normal",
-            "eValue": 0
+            "Value": "Critical",
+            "eValue": 1
         },
         "Alarm Delay Time": {
             "isDisplayable": true,
@@ -21012,7 +21012,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 60
+            "Value": 90
         },
         "Alarm Repeat Enable": {
             "isDisplayable": false,
@@ -21059,7 +21059,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": ""
+            "Value": "~GE AF600FP HOA must be in OFF to be controlled by N2~"
         },
         "Point Refs": [
             {
@@ -21068,22 +21068,22 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 21092,
-                "PointName": "4607_UNV01",
+                "Value": 74288,
+                "PointName": "4487_UNV01 07",
                 "PointType": 8,
-                "PointInst": 21092,
-                "DevInst": 21092
+                "PointInst": 74288,
+                "DevInst": 74288
             }, {
                 "PropertyName": "Remote Unit Point",
                 "PropertyEnum": 152,
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 88440,
-                "PointName": "4607_UNV01_FloZone",
+                "Value": 88164,
+                "PointName": "4487_UNV01 07_CHWP1",
                 "PointType": 144,
-                "PointInst": 88440,
-                "DevInst": 21092
+                "PointInst": 88164,
+                "DevInst": 74288
             }, {
                 "PropertyName": "Alarm Display Point",
                 "PropertyEnum": 137,
