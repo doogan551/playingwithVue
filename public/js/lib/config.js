@@ -491,70 +491,20 @@ var Config = (function(obj) {
                 },
                 _getEnums = function(property, pointType, options) {
                     var workspace = (typeof window != 'undefined') && window.workspaceManager,
-                        set = [],
                         _hasPointType = !!pointType;
 
                     switch (property) {
-                        case 'Alarm Class':
-                            return _getEnumFromTemplate('Alarm Classes');
-                        case 'Alarm State':
-                            return _getEnumFromTemplate('Alarm States');
                         case 'Control Priority':
                             return workspace && workspace.systemEnums.controlpriorities;
                         case 'Controller':
                         case 'Setback Controller':
                             return workspace && workspace.systemEnums.controllers;
-                        case 'Conversion Type':
-                            return _getEnumFromTemplate('Conversion Types');
-                        case 'Device Status':
-                            return _getEnumFromTemplate('Device Statuses');
-                        case 'Ethernet Protocol':
-                            return _getEnumFromTemplate('Ethernet Protocols');
-                        case 'Fail Action':
-                            return _getEnumFromTemplate('Fail Actions');
-                        case 'Input Rate':
-                            return _getEnumFromTemplate('Input Rate');
                         case 'Model Type':
                             if (pointType === 'Device') {
                                 return _getEnumFromTemplate('Device Model Types');
-                            }
-                            if (pointType === 'Remote Unit') {
+                            } else {
                                 return _getEnumFromFunction(pointType, options);
                             }
-                            set.push.apply(set, _getEnumFromTemplate('Device Model Types'));
-                            set.push.apply(set, _getEnumFromTemplate('Remote Unit Model Types'));
-                            return set;
-                        case 'Point Type':
-                            return _getEnumFromTemplate('Point Types');
-                        case 'Close Polarity':
-                        case 'Feedback Polarity':
-                        case 'Polarity':
-                            return _getEnumFromTemplate('Polarities');
-                        case 'Control Data Type':
-                        case 'Off Control Data Type':
-                        case 'On Control Data Type':
-                        case 'Poll Data Type':
-                            return _getEnumFromTemplate('Modbus Data Types');
-                        case 'Control Function':
-                        case 'Off Control Function':
-                        case 'On Control Function':
-                        case 'Poll Function':
-                            return _getEnumFromTemplate('Modbus Poll Functions');
-                        case 'Modbus Order':
-                            return _getEnumFromTemplate('Modbus Orders');
-                        case 'Port 1 Prototcol':
-                        case 'Port 2 Prototcol':
-                        case 'Port 3 Prototcol':
-                        case 'Port 4 Prototcol':
-                            return _getEnumFromTemplate('Port Protocols');
-                        case 'Reliability':
-                            return _getEnumFromTemplate('Reliabilities');
-                        case 'Reset Interval':
-                            return _getEnumFromTemplate('Reset Intervals');
-                        case 'Sensor Type':
-                            return _getEnumFromTemplate('Sensor Types');
-                        case 'Report Type':
-                            return _getEnumFromTemplate('Report Types');
                         default:
                             return _getEnumFromTemplate(property);
                     }
@@ -1810,13 +1760,6 @@ var Config = (function(obj) {
         },
 
         "Maximum Change": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value; // Property Value
-
-            if (val > point["Maximum Value"].Value) {
-                data.ok = false;
-                data.result = data.property + " must be less than or equal to the Maximum Value.";
-            }
             return data;
         },
 

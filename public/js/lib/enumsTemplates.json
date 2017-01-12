@@ -3649,7 +3649,8 @@
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": false
+                "reportEnable": false,
+                "enumsSet": "Report Types"
             },
             "Repeat Count": {
                 "enum": 253,
