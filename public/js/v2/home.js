@@ -77,7 +77,7 @@ var dti = {
                 url: '/alarms',
                 singleton: false,
                 options: {
-                    width: 1040
+                    width: 1070
                 }
             },
             'Activity Log': {
@@ -89,7 +89,7 @@ var dti = {
                 url: '/activityLogs',
                 singleton: false,
                 options: {
-                    width: 1040
+                    width: 900
                 }
             },
             'Point': {

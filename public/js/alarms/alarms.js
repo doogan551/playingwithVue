@@ -1,5 +1,14 @@
 /*jslint white: true */
 "use strict";
+var dti = {
+    $: function (fn) {
+        $(function delayFn() {
+            setTimeout(function runInit() {
+                fn();
+            }, 1);
+        });
+    }
+};
 
 /*********************************** NOTES **********************************
     Application Overview
@@ -141,6 +150,7 @@ var AlarmManager = function (conf) {
             Active: [],
             Unacknowledged: []
         },
+        availablePointTypes = {},
 
         alarmClassEnums = {
             Emergency: 2,
@@ -314,8 +324,13 @@ var AlarmManager = function (conf) {
             return alm.toString('HH:mm:ss');
         },
         setAvailablePointTypes = function (results) {
-            self.availablePointTypes(results);
-            numberPointTypes = self.availablePointTypes().length;
+            var i;
+            if (results) {
+                for (i = 0; i < results.length; i++) {
+                    availablePointTypes[results[i].key] = results[i].enum;
+                }
+            }
+            numberPointTypes = results.length;
         },
         sendAcknowledge = function (idList) {
             var request,
@@ -973,6 +988,7 @@ var AlarmManager = function (conf) {
                 i,
                 len,
                 key,
+                pointType,
                 val,
                 l_startDate = 0,
                 l_endDate = 0,
@@ -992,7 +1008,14 @@ var AlarmManager = function (conf) {
                 if (key === 'pointTypes') {
                     // pointTypes array length of 0 indicates all point types should be included. The server will 
                     // give us all point types if we do not send the 'pointTypes' key.
-                    reqObj[key] = (nameSegments[key].length > 0 && nameSegments[key].length !== numberPointTypes) ? nameSegments[key] : [];
+                    if (availablePointTypes) {
+                        if (nameSegments[key].length > 0) {
+                            reqObj[key] = [];
+                            for (pointType in nameSegments[key]) {
+                                reqObj[key].push(availablePointTypes[nameSegments[key][pointType]]);
+                            }
+                        }
+                    }
                 } else {
                     val = nameSegments[key];
                     // A value of undefined means we require that the name segment be empty
@@ -1860,7 +1883,6 @@ var AlarmManager = function (conf) {
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
     self.currentPage = ko.observable(1);
-    self.availablePointTypes = ko.observableArray([]);
 
     //------ Alarm socket handlers
     socket.on('acknowledgeResponse', function (data) {
@@ -3031,13 +3053,15 @@ var AlarmManager = function (conf) {
 
     //------ Final Inits -------------------------------
     // This routine just initializes shortcuts to the views that each alarm table initially references, & sets the refresh flag if needed
-    initAlarmTables();
+    setTimeout(function () {
+        initAlarmTables();
 
-    // Setup midnight notification
-    setupMidnightNotify();
+        // Setup midnight notification
+        setupMidnightNotify();
 
-    // Apply the view
-    applyView(self.currentView());
+        // Apply the view
+        applyView(self.currentView());
+    }, 10);
 };
 
 function initPage (manager) {
@@ -3183,7 +3207,7 @@ function applyBindings () {
     }
 }
 
-$(function () {
+dti.$(function () {
     // Apply KO bindings
     applyBindings();
 

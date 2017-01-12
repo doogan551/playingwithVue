@@ -25,8 +25,6 @@ var common = {
   sockets: require('../helpers/sockets.js')
 };
 
-var allEnumsPointTypes = Config.Enums["Point Types"];
-var filterByPointTypeEnums = [];
 var io = common.sockets.get().io;
 var rooms = io.sockets.adapter.rooms;
 common.rooms = rooms;
@@ -2063,16 +2061,9 @@ function getRecentAlarms(data, callback) {
   }
 
   if (data.pointTypes) {
-    if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
-      for (var i = 0; i < data.pointTypes.length; i++) {
-        if (data.pointTypes[i].length > 0) {
-          filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
-        }
-      }
-      query.PointType = {
-        $in: filterByPointTypeEnums
-      };
-    }
+    query.PointType = {
+      $in: data.pointTypes
+    };
   }
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
@@ -2158,16 +2149,9 @@ function getUnacknowledged(data, callback) {
   }
 
   if (data.pointTypes) {
-    if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
-      for (var i = 0; i < data.pointTypes.length; i++) {
-        if (data.pointTypes[i].length > 0) {
-          filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
-        }
-      }
-      query.PointType = {
-        $in: filterByPointTypeEnums
-      };
-    }
+    query.PointType = {
+      $in: data.pointTypes
+    };
   }
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
@@ -2261,16 +2245,9 @@ function getActiveAlarmsNew(data, callback) {
   }
 
   if (data.pointTypes) {
-    if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
-      for (var i = 0; i < data.pointTypes.length; i++) {
-        if (data.pointTypes[i].length > 0) {
-          filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
-        }
-      }
-      query.PointType = {
-        $in: filterByPointTypeEnums
-      };
-    }
+    query.PointType = {
+      $in: data.pointTypes
+    };
   }
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;

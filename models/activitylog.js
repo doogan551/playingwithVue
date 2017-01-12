@@ -13,8 +13,6 @@ module.exports = {
     var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
     var usernames = data.usernames;
     var sort = {};
-    var allEnumsPointTypes = config.Enums["Point Types"];
-    var filterByPointTypeEnums = [];
 
     if (!itemsPerPage) {
       itemsPerPage = 200;
@@ -78,14 +76,9 @@ module.exports = {
     }
 
     if (data.pointTypes) {
-      if (data.pointTypes.length > 0 && data.pointTypes.length !== allEnumsPointTypes.length) {
-        for (var i = 0; i < data.pointTypes.length; i++) {
-          if (data.pointTypes[i].length > 0) {
-            filterByPointTypeEnums.push(allEnumsPointTypes[data.pointTypes[i]].enum);
-          }
-        }
+      if (data.pointTypes.length > 0) {
         query.pointType = {
-          $in: filterByPointTypeEnums
+          $in: data.pointTypes
         };
       }
     }
