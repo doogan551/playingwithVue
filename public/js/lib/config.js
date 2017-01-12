@@ -502,6 +502,7 @@ var Config = (function(obj) {
                         case 'Control Priority':
                             return workspace && workspace.systemEnums.controlpriorities;
                         case 'Controller':
+                        case 'Setback Controller':
                             return workspace && workspace.systemEnums.controllers;
                         case 'Conversion Type':
                             return _getEnumFromTemplate('Conversion Types');
