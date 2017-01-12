@@ -307,6 +307,83 @@
                 "enum": 68
             }
         },
+        "Calculation Types": {
+            "Enthalpy": {
+                "enum" : 0
+            },
+            "Dew Point": {
+                "enum" : 1
+            },
+            "Wet Bulb": {
+                "enum" : 2
+            },
+            "Low Value": {
+                "enum" : 0
+            },
+            "High Value": {
+                "enum" : 1
+            },
+            "Sum": {
+                "enum" : 0
+            },
+            "Average": {
+                "enum" : 1
+            },
+            "P Only": {
+                "enum" : 1
+            },
+            "PI": {
+                "enum" : 2
+            },
+            "PID": {
+                "enum" : 3
+            },
+            "Add": {
+                "enum" : 0
+            },
+            "Subtract": {
+                "enum" : 1
+            },
+            "Multiply": {
+                "enum" : 2
+            },
+            "Divide": {
+                "enum" : 3
+            },
+            "Delay": {
+                "enum" : 0
+            },
+            "Pulsed": {
+                "enum" : 1
+            },
+            ">": {
+                "enum" : 0
+            },
+            ">=": {
+                "enum" : 1
+            },
+            "<": {
+                "enum" : 2
+            },
+            "<=": {
+                "enum" : 3
+            },
+            "<>": {
+                "enum" : 4
+            },
+            "=": {
+                "enum" : 5
+            },
+            "And": {
+                "enum" : 0
+            },
+            "Or": {
+                "enum" : 1
+            },
+            "XOr": {
+                "enum" : 2
+            }
+        },
         "Command Types": {
             "No Command": {
                 "enum": 0
@@ -1614,7 +1691,7 @@
                 "enum": 36,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Calculation Types"
             },
             "Calibration Factor": {
                 "enum": 284,
