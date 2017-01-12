@@ -81,10 +81,9 @@ ko.bindingHandlers.dataSrc = {
 var AlarmManager = function (conf) {
     var self = this,
         socket = io.connect(window.location.origin),
-        workspaceManager = window.top.workspaceManager,
-        sessionId = workspaceManager.sessionId(),
-        user = workspaceManager.user(),
-        storeKey = 'alarms_' + user._id,
+        sessionId = store.get('sessionId'),
+        storeKey = 'alarms_',
+        currentUser,
         windowUpi = "alarm" + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
 
         $elAlarms = $('.alarms'),
@@ -171,7 +170,7 @@ var AlarmManager = function (conf) {
             name4: '',
             pointTypes: []
         },
-        numberPointTypes = workspaceManager.config.Utility.pointTypes.getAllowedPointTypes().length,
+        numberPointTypes,
 
         nSelectedAlarmsOnPage = 0,
 
@@ -184,7 +183,11 @@ var AlarmManager = function (conf) {
         _log = function () {
             // JDR 4/27/2015 Disabling console.log for LMH testing. This would be disabled for a production environment anyway
             // console.log.apply(console, arguments);
-        },        
+        },
+        setCurrentUser = function (results) {
+            currentUser = results;
+            storeKey += currentUser;
+        },
         deepClone = function (o) {
             // Return the value if it's not an object
             if ((o === null) || (typeof(o) !== 'object'))
@@ -272,31 +275,6 @@ var AlarmManager = function (conf) {
             self.nameFilterPaused(false);
             applyFilter(true);
         },
-        //------ Workspace routine
-        updateWorkspaceWindowTitle = function (view) {
-            var i,
-                win,
-                title,
-                done = false,
-                workspaceWindows = workspaceManager.windows(),
-                len = workspaceWindows.length;
-
-            // Find the workspace window reference to this window
-            for (i = 0; i < len && !done; i++) {
-                win = workspaceWindows[i];
-                if (win.upi() === windowUpi) {
-                    // Get title text and update workspace manager window title
-                    title = view.title + " Alarms";
-                    win.title(title);
-
-                    // If we're a pop out
-                    if (window.top.location.href === window.location.href) {
-                        window.document.title = title;
-                    }
-                    done = true;
-                }
-            }
-        },
         //------ Point selector routines
         filterCallback = function(filterObj) {
             var i,
@@ -335,6 +313,10 @@ var AlarmManager = function (conf) {
             var alm = new Date(timestamp * 1000);
             return alm.toString('HH:mm:ss');
         },
+        setAvailablePointTypes = function (results) {
+            self.availablePointTypes(results);
+            numberPointTypes = self.availablePointTypes().length;
+        },
         sendAcknowledge = function (idList) {
             var request,
                 reqID = new Date().getTime(),
@@ -358,7 +340,7 @@ var AlarmManager = function (conf) {
 
             request.reqID = reqID;
             request.ids = idList;
-            request.username = user.username;
+            request.username = currentUser.username;
 
             socket.emit('sendAcknowledge', JSON.stringify(request));
 
@@ -426,7 +408,6 @@ var AlarmManager = function (conf) {
                 key,
                 i,
                 len,
-                str,
                 ackStatus = data.ackStatus ? ((typeof data.ackStatus === 'function') ? data.ackStatus() : data.ackStatus) : null,
                 ackUser = data.ackUser ? ((typeof data.ackUser === 'function') ? data.ackUser() : data.ackUser) : null,
                 ackTime = data.ackTime ? data.ackTime : null;
@@ -989,13 +970,10 @@ var AlarmManager = function (conf) {
                 dateTimeOptions,
                 alarmClassOptions,
                 alarmCatOptions,
-                userObj,
                 i,
                 len,
                 key,
-                key2,
                 val,
-                enumsPointTypes = workspaceManager.config.Enums["Point Types"],
                 l_startDate = 0,
                 l_endDate = 0,
                 view = alarmTable.view,
@@ -1014,12 +992,7 @@ var AlarmManager = function (conf) {
                 if (key === 'pointTypes') {
                     // pointTypes array length of 0 indicates all point types should be included. The server will 
                     // give us all point types if we do not send the 'pointTypes' key.
-                    if (nameSegments[key].length > 0) {
-                        reqObj[key] = [];
-                        for (key2 in nameSegments[key]) {
-                            reqObj[key].push(enumsPointTypes[nameSegments[key][key2]].enum);
-                        }
-                    }
+                    reqObj[key] = (nameSegments[key].length > 0 && nameSegments[key].length !== numberPointTypes) ? nameSegments[key] : [];
                 } else {
                     val = nameSegments[key];
                     // A value of undefined means we require that the name segment be empty
@@ -1063,13 +1036,6 @@ var AlarmManager = function (conf) {
             }
             reqObj.startDate = l_startDate;
             reqObj.endDate = l_endDate;
-
-            reqObj.user = {};
-            userObj = reqObj.user;
-
-            userObj['System Admin'] = user['System Admin'];
-            userObj._id = user._id;
-            // userObj.groups = user.groups;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
@@ -1542,10 +1508,13 @@ var AlarmManager = function (conf) {
             window.setTimeout(reformatPrintedDates, tom - now);
         },
         showPointReview = function (data) {
-            var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
-                pointType = pointTypesUtility.getPointTypeNameFromEnum(data.PointType),
-                endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi);
-            dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi);
+            var upi = parseInt(data.upi, 10);
+            if (upi > 0) {
+                dtiUtility.openWindow({
+                    upi: upi,
+                    pointType: data.PointType
+                });
+            }
         },
         findView = function (key, keyValue) {
             var i,
@@ -1891,6 +1860,7 @@ var AlarmManager = function (conf) {
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
     self.currentPage = ko.observable(1);
+    self.availablePointTypes = ko.observableArray([]);
 
     //------ Alarm socket handlers
     socket.on('acknowledgeResponse', function (data) {
@@ -2012,17 +1982,6 @@ var AlarmManager = function (conf) {
     });
 
     //------ Misc. interactivity functions-------------------------
-    self.togglePop = function () {
-        var title = self.alarms().name + ' Alarms';
-
-        // If we're a pop-out; pop back in
-        if (window.top.location.href === window.location.href) {
-            dtiUtility.openWindow(window.location.href, title, 'alarm', 'mainWindow', windowUpi);
-        } else {
-            dtiUtility.openWindow(window.location.href, title, 'alarm', '', windowUpi);
-        }
-    };
-
     self.toHexColor = function(color) {
         return '#' + color;
     };
@@ -2136,9 +2095,13 @@ var AlarmManager = function (conf) {
     };
 
     self.openDisplay = function (data) {
-        var endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", data._id),
-            name = data.Name || '';
-        dtiUtility.openWindow(endPoint.review.url, name, 'Display', '', data._id);
+        var upi = parseInt(data.upi, 10);
+        if (upi > 0) {
+            dtiUtility.openWindow({
+                upi: upi,
+                pointType: data.PointType
+            });
+        }
     };
 
     self.refreshAlarms = function () {
@@ -2386,9 +2349,7 @@ var AlarmManager = function (conf) {
             return;
         }
 
-        // TODO
-        // Disable until this is supported in v2
-        // updateWorkspaceWindowTitle(view);
+        dtiUtility.updateWindow('updateTitle', view.title + " Alarms");
 
         // Update local storage with the name of the new view we're looking at
         storeViewFilters(view);
@@ -2795,6 +2756,9 @@ var AlarmManager = function (conf) {
 
         self.changeView(view);
     });
+
+    dtiUtility.getUser(setCurrentUser);
+    dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
 
     // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
     initViewGroup('defaultViews');

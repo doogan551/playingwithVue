@@ -1637,6 +1637,45 @@ var scripts = {
                 errors: err
             });
         });
+    },
+
+    addFeedbackInstance: function(callback) {
+        var afterVersion = '0.5.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'addFeedbackInstance',
+                errors: null,
+                results: null
+            });
+        }
+        Utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Binary Output'
+            }
+        }, function(err, doc, cb) {
+
+            doc['Feedback Instance'] = Config.Templates.getTemplate('Binary Output')['Feedback Instance'];
+            doc['Feedback Instance'].Value = doc['Feedback Channel'].eValue;
+            doc = Config.EditChanges.applyBinaryOutputTypeFeedbackType({
+                point: doc
+            });
+            Utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function(err, result) {
+                cb(err);
+            });
+        }, function(err, count) {
+            logger.info('Finished with addFeedbackInstance');
+            callback(null, {
+                fn: 'addFeedbackInstance',
+                errors: err
+            });
+        });
     }
 };
 
