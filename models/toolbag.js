@@ -153,7 +153,7 @@ module.exports = {
 				keyMap: {},
 				extraKeys: {}
 			},
-			"Default Feedback Types": {
+			"Feedback Types": {
 				name: "FeedbackType",
 				prepend: "fbt",
 				keyMap: {},
