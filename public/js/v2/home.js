@@ -2999,9 +2999,7 @@ var dti = {
                     dti.navigator.temporaryCallback = null;
                 }
 
-                if (config.mode === 'create') {
-                    config.fullCreate = true;
-                }
+                config.fullCreate = (config.mode === 'create');
 
                 if (config.pointType && config.property) {
                     config.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes(config.property, config.pointType);
@@ -3025,7 +3023,6 @@ var dti = {
                     return;
                 }
             }
-
 
             if (dti.navigator.$commonNavigatorModal) {
                 dti.navigator.$commonNavigatorModal.closeModal();
@@ -3122,13 +3119,14 @@ var dti = {
                     };
 
                     bindings.handleModalClose = function() {
-                        if (self.fullCreate) {
-                            if (dti.navigator.temporaryCallback) {
-                                dti.navigator.temporaryCallback(false);
-                            }
+                        // #187 still bug hunting..........
+                        // if (self.fullCreate) {
+                        //     if (dti.navigator.temporaryCallback) {
+                        //         dti.navigator.temporaryCallback(false);
+                        //     }
                             dti.navigator.temporaryCallback = null;
                             dti.navigator.hideNavigator(self);
-                        }
+                        // }
                     };
 
                     bindings.cancelCreatePoint = function() {
@@ -3148,6 +3146,7 @@ var dti = {
                         if (!self.bindings.disableNewPoint()) {
                             self.bindings.mode(self.modes.CREATE);
                             self.bindings.disableNewPoint(true);
+                            dti.navigator.temporaryCallback = null;  // #187 still bug hunting..........
                             self.bindings.pointTypeChanged();
                         }
                     };
