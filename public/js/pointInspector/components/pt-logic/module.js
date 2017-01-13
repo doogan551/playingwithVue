@@ -33,11 +33,21 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         params.tabTriggers = this.tabTriggers;
         // someObservableOrComputed.extend({ rateLimit: 0 });
         this.logicPoints = {
-            point1: ko.observable(this.utility.getPointRefProperty('Input Point 1').data),
-            point2: ko.observable(this.utility.getPointRefProperty('Input Point 2').data),
-            point3: ko.observable(this.utility.getPointRefProperty('Input Point 3').data),
-            point4: ko.observable(this.utility.getPointRefProperty('Input Point 4').data),
-            point5: ko.observable(this.utility.getPointRefProperty('Input Point 5').data)
+            point1: ko.computed(function() {
+                return this.utility.getPointRefProperty('Input Point 1').data
+            }, this),
+            point2: ko.computed(function() {
+                return this.utility.getPointRefProperty('Input Point 2').data
+            }, this),
+            point3: ko.computed(function() {
+                return this.utility.getPointRefProperty('Input Point 3').data
+            }, this),
+            point4: ko.computed(function() {
+                return this.utility.getPointRefProperty('Input Point 4').data
+            }, this),
+            point5: ko.computed(function() {
+                return this.utility.getPointRefProperty('Input Point 5').data
+            }, this)
         };
         params.initDOM();
     }
