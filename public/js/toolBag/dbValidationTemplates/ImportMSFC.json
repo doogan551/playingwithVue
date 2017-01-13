@@ -21136,7 +21136,7 @@
         "_relRMU" : 0, 
         "_relPoint" : 0, 
         "_devModel" : 13, 
-        "_rmuModel" : 4, 
+        "_rmuModel" : 6, 
         "_parentUpi" : 0, 
         "Point Type" : {
             "ValueType" : 5, 
@@ -21207,7 +21207,7 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 18,
-            "Value": 2
+            "Value": 0
         },
         "Active Text": {
             "isDisplayable": true,
@@ -21248,7 +21248,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "7",
+            "Value": "7 - Digital Heat 2",
             "eValue": 7,
             "ValueOptions": {
                 "3 - Lights": 3,
@@ -21305,15 +21305,15 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Normal",
-            "eValue": 0
+            "Value": "Reverse",
+            "eValue": 1
         },
         "Feedback Channel": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "5",
-            "eValue": 5,
+            "Value": "2",
+            "eValue": 2,
             "ValueOptions": {
                 "1": 1
             }
@@ -21322,14 +21322,14 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 5
+            "Value": 2
         },
         "Open Channel": {
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "5",
-            "eValue": 5,
+            "Value": "2",
+            "eValue": 2,
             "ValueOptions": {
                 "1": 1
             }
@@ -21338,8 +21338,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Normal",
-            "eValue": 0
+            "Value": "Reverse",
+            "eValue": 1
         },
         "Close Channel": {
             "isDisplayable": false,
@@ -21362,7 +21362,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 5
+            "Value": 7
         },
         "Read Only": {
             "isDisplayable": false,
@@ -21381,7 +21381,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 5
+            "Value": 7
         },
         "Poll Function": {
             "isDisplayable": false,
@@ -21401,7 +21401,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 5
+            "Value": 7
         },
         "On Control Function": {
             "isDisplayable": false,
@@ -21427,7 +21427,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 5
+            "Value": 7
         },
         "Off Control Function": {
             "isDisplayable": false,
@@ -21465,7 +21465,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 0
+            "Value": 60
         },
         "Run Total Limit": {
             "isDisplayable": true,
@@ -21604,7 +21604,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": "~GE AF600FP HOA must be in OFF to be controlled by N2~"
+            "Value": ""
         },
         "Point Refs": [
             {
