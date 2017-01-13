@@ -4506,18 +4506,23 @@ var Config = (function(obj) {
                     "I/O 7": 7,
                     "I/O 8": 8
                 },
+                fbOpts = {
+                    "None": 0,
+                    "Single": 1,
+                    "Point": 3
+                },
                 opts = {
                     "Latch": 0,
                     "Momentary": 1
                 },
                 fbMin = 1,
                 fbMax = -1,
-                fbType = point["Feedback Type"],
                 chMin = 1,
                 chMax = -1,
+                fbType = point["Feedback Type"],
                 outType = point["Output Type"];
 
-            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Feedback Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Feedback Channel", "Open Channel", "Close Channel", "Polarity", "Feedback Polarity", "Open Polarity", "Close Polarity", "Same State Test", "Supervised Input"], false);
+            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Polarity", "Same State Test", "Supervised Input"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
@@ -4550,11 +4555,7 @@ var Config = (function(obj) {
 
                     case eRmu["N2 Device"]["enum"]:
                         point.Instance.isDisplayable = true;
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        setValOpt(fbType, fbOpts);
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:
@@ -4575,13 +4576,9 @@ var Config = (function(obj) {
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Supervised Input", "Same State Test"], true);
+                        point["Same State Test"].isDisplayable = true;
                         setValOpt(outType, opts);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 7;
                         chMin = 0;
@@ -4591,11 +4588,7 @@ var Config = (function(obj) {
                     case eRmu["IFC Remote Unit"]["enum"]:
                         setDisp(point, ["Supervised Input", "Same State Test"], true);
                         setValOpt(outType, opts);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 15;
                         chMin = 0;
@@ -4605,11 +4598,7 @@ var Config = (function(obj) {
                     case eRmu["Smart II Remote Unit"]["enum"]:
                         point["Same State Test"].isDisplayable = true;
                         setValOpt(outType, opts);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 7;
                         chMin = 0;
@@ -4662,14 +4651,12 @@ var Config = (function(obj) {
                     }
                     obj.EditChanges.applyBinaryOutputOutputType(data);
                 }
-                if (fbType.isDisplayable) {
-                    if (fbMax >= 0) {
-                        setCh(point["Feedback Channel"], fbMin, fbMax);
-                        setCh(point["Open Channel"], fbMin, fbMax);
-                        setCh(point["Close Channel"], fbMin, fbMax);
-                    }
-                    obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
+                if (fbMax >= 0) {
+                    setCh(point["Feedback Channel"], fbMin, fbMax);
+                    setCh(point["Open Channel"], fbMin, fbMax);
+                    setCh(point["Close Channel"], fbMin, fbMax);
                 }
+                obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
             }
             return point;
         },
