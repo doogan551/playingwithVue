@@ -3069,6 +3069,7 @@ var dti = {
                             disableNewPoint: false,
                             loading: false,
                             focus: false,
+                            pointType: '',
                             isModal: config.isModal
                         },
                         explodedPointTypes = [];
@@ -3585,7 +3586,7 @@ var dti = {
             self.applyConfig = function(cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
+                    propertiesToApply = ['pointType', 'showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 self.bindings.restrictPointTypes(config.restrictPointTypes);
                 self.bindings.disableNewPoint(config.disableNewPoint);
@@ -3709,6 +3710,7 @@ var dti = {
             self._getPoints = function() {
                 var bindings = ko.toJS(self.bindings),
                     parameters = {
+                        pointType: bindings.pointType,
                         pointTypes: bindings.pointTypes,
                         showDeleted: bindings.showDeleted,
                         showInactive: bindings.showInactive,
