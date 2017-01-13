@@ -4444,7 +4444,7 @@ var Config = (function(obj) {
                 fbPoint = obj.Utility.getPropertyObject("Feedback Point", point);
 
             fbPoint.isDisplayable = false;
-            setDisp(point, ["Feedback Channel", "Feedback Instance", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], false);
+            setDisp(point, ["Feedback Channel", "Feedback Instance", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity", "Supervised Input"], false);
 
             switch (point["Feedback Type"].Value) {
                 case "Single":
@@ -4452,6 +4452,9 @@ var Config = (function(obj) {
                         setDisp(point, ["Feedback Instance", "Feedback Polarity"], true);
                     } else {
                         setDisp(point, ["Feedback Channel", "Feedback Polarity"], true);
+                        if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
+                            point["Supervised Input"].isDisplayable = true;
+                        }
                     }
                     break;
 
@@ -4522,7 +4525,7 @@ var Config = (function(obj) {
                 fbType = point["Feedback Type"],
                 outType = point["Output Type"];
 
-            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Polarity", "Same State Test", "Supervised Input"], false);
+            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Polarity", "Same State Test"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
@@ -4586,7 +4589,7 @@ var Config = (function(obj) {
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Same State Test"], true);
+                        point["Same State Test"].isDisplayable = true;
                         setValOpt(outType, opts);
                         setValOpt(fbType, fbOpts);
                         fbMin = 0;
