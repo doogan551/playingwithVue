@@ -21664,5 +21664,550 @@
                 "DevInst": 0
             }
         ]
+    }, { 
+        "Name" : "SHOP_xTALK01_IFC05_LIGHT",
+        "name1" : "SHOP",
+        "name2" : "xTALK01",
+        "name3" : "IFC05",
+        "name4" : "LIGHT",
+        "_Name" : "shop_xtalk01_ifc05_light",
+        "_name1" : "shop",
+        "_name2" : "xtalk01",
+        "_name3" : "ifc05",
+        "_name4" : "light",
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 6, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Binary Output", 
+            "eValue" : 4, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Control Pending": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Control Priority": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Controller": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0,
+            "ValueOptions": {
+                "Off": 0,
+                "On": 1
+            }
+        },
+        "Authorized Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Active Text": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "ON"
+        },
+        "Inactive Text": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "Off"
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Output Type": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Momentary",
+            "eValue": 1,
+            "ValueOptions": {
+                "Latch": 0,
+                "Momentary": 1
+            }
+        },
+        "Momentary Delay": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 30
+        },
+        "Channel": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "3 - Lights",
+            "eValue": 3,
+            "ValueOptions": {
+                "3 - Lights": 3,
+                "5 - Fan": 5,
+                "6 - Digital Heat 1": 6,
+                "7 - Digital Heat 2": 7,
+                "8 - Digital Heat 3": 8
+            }
+        },
+        "Polarity": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "On Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "3",
+            "eValue": 3,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Off Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "0",
+            "eValue": 0,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Supervised Input": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Feedback Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0,
+            "ValueOptions": {
+                "None": 0
+            }
+        },
+        "Feedback Polarity": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Feedback Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "0",
+            "eValue": 0,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Feedback Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Open Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "0",
+            "eValue": 0,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Open Polarity": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Close Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "0",
+            "eValue": 0,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Close Polarity": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "On Control Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "On Control Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "On Control Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "On Control Value": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 1
+        },
+        "Off Control Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Off Control Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Off Control Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Off Control Value": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Trend Enable": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Trend Interval": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 60
+        },
+        "Run Total Limit": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 0.0
+        },
+        "Run Total": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 0.02
+        },
+        "Run Total Reset Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Run Total Alarm Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Starts Alarm Limit": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Number of Starts": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 40
+        },
+        "Minimum Off Time": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 12,
+            "Value": 0
+        },
+        "Minimum On Time": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 12,
+            "Value": 0
+        },
+        "Same State Test": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Default Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0
+        },
+        "Alarms Off": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm Class": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Alarm Delay Time": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Verify Delay": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Alarm Repeat Enable": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm Repeat Time": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 17,
+            "Value": 0
+        },
+        "Interlock State": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0,
+            "ValueOptions": {
+                "Off": 0,
+                "On": 1
+            }
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 61724,
+                "PointName": "SHOP_MS5xTalk01",
+                "PointType": 8,
+                "PointInst": 61724,
+                "DevInst": 61724
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 61296,
+                "PointName": "SHOP_xTALK01_IFC05",
+                "PointType": 144,
+                "PointInst": 61296,
+                "DevInst": 61724
+            }, {
+                "PropertyName": "Alarm Display Point",
+                "PropertyEnum": 137,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }, {
+                "PropertyName": "Interlock Point",
+                "PropertyEnum": 148,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }, {
+                "PropertyName": "Feedback Point",
+                "PropertyEnum": 141,
+                "AppIndex": 0,
+                "isDisplayable": false,
+                "isReadOnly": false,
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
+            }
+        ]
   }]
 }
