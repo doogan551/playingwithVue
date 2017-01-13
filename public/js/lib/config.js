@@ -4576,7 +4576,7 @@ var Config = (function(obj) {
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Supervised Input", "Same State Test"], true);
+                        point["Same State Test"].isDisplayable = true;
                         setValOpt(outType, opts);
                         setValOpt(fbType, fbOpts);
                         fbMin = 0;
