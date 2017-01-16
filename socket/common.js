@@ -1753,6 +1753,9 @@ function deletePoint(upi, method, user, options, callback) {
       }
     },
     _addActivityLog = function(cb) {
+      if(_point._pStatus === Config.Enums['Point Statuses'].Inactive.enum){
+        return cb(null);
+      }
       if (method === 'hard') {
         _logData.activity = actLogsEnums["Point Hard Delete"].enum;
         _logData.log = "Point destroyed";
