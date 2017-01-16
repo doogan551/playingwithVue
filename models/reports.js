@@ -892,12 +892,10 @@ module.exports = Rpt = {
         });
     },
     collectFilters: function(theFilters, reportPointRefs) {
-        var grouping = "$and",
-            currentFilter,
+        var currentFilter,
             localSearchCriteria = {},
             andExpressions = [],
             orExpressions = [],
-            expressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
             getPointRefByAppIndex = function(appIndex) {
@@ -1124,7 +1122,7 @@ module.exports = Rpt = {
                         currentIndex--;
                         sameGroup = false;
                     } else {
-                        group.push(Rpt.collectFilter(currentFilter));
+                        group.push(collectFilter(currentFilter));
                         currentFilter = theFilters[currentIndex++];
                     }
                 }
