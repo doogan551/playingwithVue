@@ -24013,14 +24013,14 @@
             }
         ]
     }, { 
-        "Name" : "4610_AH6_SAF",
+        "Name" : "4610_AH3_SAF",
         "name1" : "4610",
-        "name2" : "AH6",
+        "name2" : "AH3",
         "name3" : "SAF",
         "name4" : "",
-        "_Name" : "4610_ah6_saf",
+        "_Name" : "4610_ah3_saf",
         "_name1" : "4610",
-        "_name2" : "ah6",
+        "_name2" : "ah3",
         "_name3" : "saf",
         "_name4" : "",
         "_cfgRequired" : true, 
@@ -24028,8 +24028,8 @@
         "_relDevice" : 129, 
         "_relRMU" : 0, 
         "_relPoint" : 0, 
-        "_devModel" : 2, 
-        "_rmuModel" : 17, 
+        "_devModel" : 4, 
+        "_rmuModel" : 18, 
         "_parentUpi" : 0, 
         "Point Type" : {
             "ValueType" : 5, 
@@ -24068,15 +24068,15 @@
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 5,
-            "Value": "Continuous Run (11)",
-            "eValue": 11
+            "Value": "Level (15)",
+            "eValue": 15
         },
         "Controller": {
             "isDisplayable": true,
             "isReadOnly": true,
             "ValueType": 5,
-            "Value": "Skip",
-            "eValue": 14
+            "Value": "OSS",
+            "eValue": 2
         },
         "Value": {
             "isDisplayable": true,
@@ -24121,14 +24121,13 @@
             "Value": ""
         },
         "Output Type": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
             "Value": "Latch",
             "eValue": 0,
             "ValueOptions": {
-                "Latch": 0,
-                "Momentary": 1
+                "Latch": 0
             }
         },
         "Momentary Delay": {
@@ -24151,15 +24150,7 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Polarity": {
@@ -24183,15 +24174,7 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Off Channel": {
@@ -24208,19 +24191,11 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Supervised Input": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 7,
             "Value": false
@@ -24258,15 +24233,7 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Feedback Instance": {
@@ -24289,15 +24256,7 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Open Polarity": {
@@ -24321,15 +24280,7 @@
                 "4": 4,
                 "5": 5,
                 "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 10,
-                "11": 11,
-                "12": 12,
-                "13": 13,
-                "14": 14,
-                "15": 15
+                "7": 7
             }
         },
         "Close Polarity": {
@@ -24458,7 +24409,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 1,
-            "Value": 25500.0
+            "Value": 9286.13
         },
         "Run Total Reset Enable": {
             "isDisplayable": true,
@@ -24482,7 +24433,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 12
+            "Value": 707
         },
         "Minimum Off Time": {
             "isDisplayable": true,
@@ -24497,7 +24448,7 @@
             "Value": 0
         },
         "Same State Test": {
-            "isDisplayable": true,
+            "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 7,
             "Value": false
@@ -24525,8 +24476,8 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Critical",
-            "eValue": 1
+            "Value": "Urgent",
+            "eValue": 3
         },
         "Alarm Delay Time": {
             "isDisplayable": true,
@@ -24594,22 +24545,22 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 20912,
-                "PointName": "4610_FID01",
+                "Value": 21040,
+                "PointName": "4610_SID05",
                 "PointType": 8,
-                "PointInst": 20912,
-                "DevInst": 20912
+                "PointInst": 21040,
+                "DevInst": 21040
             }, {
                 "PropertyName": "Remote Unit Point",
                 "PropertyEnum": 152,
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 21262,
-                "PointName": "4610_FID01_IFC02",
+                "Value": 21861,
+                "PointName": "4610_SID05_IFC12",
                 "PointType": 144,
-                "PointInst": 21262,
-                "DevInst": 20912
+                "PointInst": 21861,
+                "DevInst": 21040
             }, {
                 "PropertyName": "Alarm Display Point",
                 "PropertyEnum": 137,

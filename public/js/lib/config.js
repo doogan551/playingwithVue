@@ -4599,8 +4599,11 @@ var Config = (function(obj) {
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
-                        point["Same State Test"].isDisplayable = true;
-                        setValOpt(outType, opts);
+                        setValOpt(outType, {
+                            "Latch": 0
+                        });
+                        point["Output Type"].isDisplayable = false;
+                        point.Polarity.isDisplayable = true;
                         setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 7;
