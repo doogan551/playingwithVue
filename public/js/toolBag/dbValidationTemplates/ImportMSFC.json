@@ -25603,7 +25603,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 13,
-            "Value": 0
+            "Value": 60
         },
         "Run Total Limit": {
             "isDisplayable": true,
