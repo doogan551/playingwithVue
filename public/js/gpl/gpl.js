@@ -22,6 +22,7 @@ var gpl = {
     gridSize: 1, //setOffset needs fixing to properly accomodate grid size > 1
     boundingRectTime: 0,
     boundingRectCount: 0,
+    deviceId: 0,
     logLinePrefix: true,
     rendered: false,
     poppedIn: false,//window.top.location.href !== window.location.href,
@@ -1870,7 +1871,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             idx;
 
         if (data) {
-            refs = this._pointData['Point Refs'];//if monitor
+            refs = data['Point Refs'];
             idx = this._pointRefs[prop];
             if (idx !== undefined) {
                 ref = refs[idx];
@@ -1881,7 +1882,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
-                    ref.DevInst = gpl.deviceId;
+                    ref.DevInst = (ref.DevInst === 0 ? gpl.deviceId : ref.DevInst);
                 }
 
                 if (!!refPointType && !!gpl.pointTypes[refPointType]) {
@@ -8344,11 +8345,23 @@ gpl.Manager = function () {
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
             updateSequenceProperties: function () {
-                var props = ko.toJS(managerSelf.bindings),
+                var oldDevicePointID = gpl.devicePoint._id,
+                    props = ko.toJS(managerSelf.bindings),
                     setBlockDevicePointRef = function (block) {
-                        var dataPoint = block.getPointData();
-                        if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
-                            dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                        var idx = block._pointRefs["Control Point"],
+                            dataPoint = block.getPointData(),
+                            blockDeviceID;
+
+                        if (!!dataPoint) {
+                            blockDeviceID = dataPoint["Point Refs"][0].Value;
+                            // if (blockDeviceID === 0 || blockDeviceID === oldDevicePointID) {
+                            if (blockDeviceID === 0) {
+                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                            }
+
+                            if (idx !== undefined && dataPoint["Point Refs"][idx].DevInst === 0) {
+                                dataPoint["Point Refs"][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
+                            }
                         }
                     };
 
@@ -8481,19 +8494,11 @@ gpl.Manager = function () {
         });
 
         managerSelf.$cancelButton.click(function () {
-            var saveObj = gpl.blockManager.getSaveObject(true);
-            managerSelf.socket.emit('updateSequencePoints', saveObj);
-
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
 
             gpl.json = $.extend(true, {}, gpl.originalSequence);
-            delete gpl.json.editVersion;
-
-            offsetPositions(false);
-
-            gpl.saveSequence();
 
             setTimeout(function () {
                 managerSelf.doCancel();
