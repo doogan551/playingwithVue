@@ -474,12 +474,16 @@ module.exports = Rpt = {
                                             limit: 1
                                         };
                                         Utility.get(criteria, function(err, nextOldest) {
+                                            if (!!err) {
+                                                return callback2(err);
+                                            }
+
                                             History.findLatest({
                                                 upis: [upi],
                                                 range: {
                                                     end: ts
                                                 }
-                                            }, function(err, results) {
+                                            }, function (err, results) {
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;
@@ -505,7 +509,6 @@ module.exports = Rpt = {
                                             });
                                         });
                                     } else {
-
                                         callback2(null);
                                     }
                                 }
