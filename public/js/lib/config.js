@@ -4605,10 +4605,9 @@ var Config = (function(obj) {
                         point["Output Type"].isDisplayable = false;
                         point.Polarity.isDisplayable = true;
                         setValOpt(fbType, fbOpts);
+                        setCh(point.Channel, 0, 7);
                         fbMin = 0;
                         fbMax = 7;
-                        chMin = 0;
-                        chMax = 7;
                         break;
 
                     default: // Unknown, no RMU
