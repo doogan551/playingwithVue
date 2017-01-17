@@ -8594,7 +8594,7 @@ gpl.Manager = function () {
                         // Allow: . ,
                         (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
                         // Allow: home, end, left, right
-                        (event.keyCode >= 35 && event.keyCode <= 39)) {
+                        (event.keyCode >= 35 && event.keyCode <= 40)) {
                         // let it happen, don't do anything
                         return;
                     }
