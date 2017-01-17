@@ -25591,7 +25591,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 00
+            "Value": 0
         },
         "Trend Enable": {
             "isDisplayable": false,
