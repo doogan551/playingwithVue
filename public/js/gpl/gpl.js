@@ -26,7 +26,6 @@ var gpl = {
     logLinePrefix: true,
     rendered: false,
     poppedIn: false,//window.top.location.href !== window.location.href,
-    modalOpen: false,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
     iconPath: '/img/icons/',
@@ -5805,7 +5804,6 @@ gpl.BlockManager = function (manager) {
                 editBlock.setShowValue(showValue);
 
                 gpl.$editInputOutputModal.modal('hide');
-                gpl.modalOpen = false;
 
                 gpl.fire('editedblock', bmSelf.editBlock);
             }
@@ -5996,7 +5994,6 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
 
             gpl.$editInputOutputModal.modal('show');
-            gpl.modalOpen = true;
             // }
         },
 
@@ -9314,7 +9311,7 @@ gpl.Manager = function () {
                     evt;
 
                 if (gpl.isEdit) {
-                    if (event.which === gpl.DELETEKEY && !gpl.modalOpen) {
+                    if (event.which === gpl.DELETEKEY && !managerSelf.modalOpen) {
                         objects = managerSelf.canvas.getActiveGroup();
                         object = managerSelf.canvas.getActiveObject();
 
