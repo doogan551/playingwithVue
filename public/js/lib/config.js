@@ -4602,7 +4602,7 @@ var Config = (function(obj) {
                         setValOpt(outType, {
                             "Latch": 0
                         });
-                        point["Output Type"].isDisplayable = false;
+                        outType.isDisplayable = false;
                         point.Polarity.isDisplayable = true;
                         setValOpt(fbType, fbOpts);
                         setCh(point.Channel, 0, 7);
