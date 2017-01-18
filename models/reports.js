@@ -385,9 +385,9 @@ module.exports = Rpt = {
             },
             collection: 'points'
         };
-        //logger.info("---------");
-        //logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
-        //logger.info("---------");
+        // logger.info("---------");
+        // logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
+        // logger.info("---------");
         Utility.get(criteria, function(err, points) {
             if (err)
                 return cb(err, null);
@@ -436,11 +436,12 @@ module.exports = Rpt = {
 
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
-                                        if (points[x]._id === upi)
+                                        if (points[x]._id === upi) {
                                             returnObj.HistoryResults.push({
                                                 upi: upi,
                                                 Name: points[x].Name
                                             });
+                                        }
                                     }
                                     //setTimeout(function() {
                                     callback2(null);
@@ -473,12 +474,16 @@ module.exports = Rpt = {
                                             limit: 1
                                         };
                                         Utility.get(criteria, function(err, nextOldest) {
+                                            if (!!err) {
+                                                return callback2(err);
+                                            }
+
                                             History.findLatest({
                                                 upis: [upi],
                                                 range: {
                                                     end: ts
                                                 }
-                                            }, function(err, results) {
+                                            }, function (err, results) {
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;
@@ -504,7 +509,6 @@ module.exports = Rpt = {
                                             });
                                         });
                                     } else {
-
                                         callback2(null);
                                     }
                                 }
@@ -538,8 +542,9 @@ module.exports = Rpt = {
             tempObj.statusflag = setStatusFlag(historyPoint.statusflags);
             tempObj.ValueType = point.Value.ValueType;
 
-            if (historyPoint.timestamp === startTime)
+            if (historyPoint.timestamp === startTime) {
                 checkForOldest[historyPoint.upi] = false;
+            }
 
             if (historyPoint.ValueType === 5) {
                 for (var key in point.Value.ValueOptions) {
@@ -551,7 +556,7 @@ module.exports = Rpt = {
             } else {
                 tempObj.Value = historyPoint.Value.toString();
             }
-            //console.log(tempObj);
+            // console.log(tempObj);
             return tempObj;
         }
 

@@ -22,6 +22,7 @@ var gpl = {
     gridSize: 1, //setOffset needs fixing to properly accomodate grid size > 1
     boundingRectTime: 0,
     boundingRectCount: 0,
+    deviceId: 0,
     logLinePrefix: true,
     rendered: false,
     poppedIn: false,//window.top.location.href !== window.location.href,
@@ -42,6 +43,7 @@ var gpl = {
     $messageModalBody: $('#gplMessageBody'),
     $sequencePropertiesModal: $('#gplSequenceProperties'),
     $editInputOutputModal: $('#editInputOutput'),
+    $editLabelModal: $('#editLabelModal'),
     $editPrecisionModal: $('#editPrecisionModal'),
     $editVersionModal: $('#editVersionModal'),
     $colorpickerModal: $('#colorpickerModal'),
@@ -279,7 +281,7 @@ var gpl = {
         return ret;
     },
     formatValue: function (block, value) {
-        var precision = block.precision || 0,
+        var precision = (!!block.precision ? (block.precision.split(".")[1] || 0) : 0),
             ret,
             val = value;
 
@@ -290,10 +292,8 @@ var gpl = {
         if (isNaN(val)) {
             ret = value;
         } else {
-            precision = (precision * 10) % 10;
-
             if (precision > 0) {
-                ret = val.toFixed(precision);
+                ret = parseFloat(val.toFixed(precision));
             } else {
                 ret = parseInt(val, 10);
             }
@@ -1870,7 +1870,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             idx;
 
         if (data) {
-            refs = this._pointData['Point Refs'];//if monitor
+            refs = data['Point Refs'];
             idx = this._pointRefs[prop];
             if (idx !== undefined) {
                 ref = refs[idx];
@@ -1881,7 +1881,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
-                    ref.DevInst = gpl.deviceId;
+                    ref.DevInst = (ref.DevInst === 0 ? gpl.deviceId : ref.DevInst);
                 }
 
                 if (!!refPointType && !!gpl.pointTypes[refPointType]) {
@@ -2076,10 +2076,16 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setPlaceholderText: function () {
-        var text = this.getPlaceholderText();
+        var text;
 
         if (this.valueText) {
-            this.valueText.setText(text);
+            if (this.blockType === "Constant") {
+                this.valueText.setText(gpl.formatValue(this, this.value + ""));
+            } else {
+                text = this.getPlaceholderText();
+                this.valueText.setText(text);
+            }
+
             this.renderAll();
         }
     },
@@ -2707,11 +2713,13 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             anchor,
             block,
             c,
-            len;
+            len,
+            numericValue = parseFloat(val);
 
-        if (!isNaN(val) && this.value !== val) {
-            this.value = val;
-            this.valueText.setText(gpl.formatValue(this, val));
+        this.valueText.setText(gpl.formatValue(this, numericValue));
+
+        if (!isNaN(numericValue) && this.value !== numericValue) {
+            this.value = numericValue;
 
             lines = this.outputAnchor.getLines();
             len = lines.length;
@@ -2719,11 +2727,10 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             for (c = 0; c < len; c++) {
                 anchor = lines[c].getOtherAnchor(this.outputAnchor);
                 block = gpl.blockManager.getBlock(anchor.gplId);
-                block.syncAnchorValue(anchor, val);
+                block.syncAnchorValue(anchor, numericValue);
             }
 
             this.renderAll();
-
             gpl.manager.bindings.hasEdits(true);
         }
     }
@@ -5676,16 +5683,33 @@ gpl.BlockManager = function (manager) {
                 bmSelf.editBlock = block;
                 bmSelf.openPrecisionEditor();
             },
+            editBlockLabel: function () {
+                var block = manager.contextObject,
+                    label = block.label,
+                    showLabel = block.labelVisible;
+
+                bmSelf.bindings.editPointLabel(label);
+                bmSelf.bindings.editPointShowLabel(showLabel);
+
+                bmSelf.editBlock = block;
+                bmSelf.openLabelEditor();
+            },
             showPointEditor: function () {
                 var block = manager.contextObject;
 
                 gpl.blockManager.openPointEditor(block, true);
             },
             updateBlockPrecision: function () {
-                bmSelf.editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
+                bmSelf.editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 bmSelf.editBlock.setPlaceholderText();
                 gpl.fire('editedblock', bmSelf.editBlock);
                 bmSelf.closePrecisionEditor();
+            },
+            updateBlockLabel: function () {
+                bmSelf.editBlock.setLabel(bmSelf.bindings.editPointLabel());
+                bmSelf.editBlock.setShowLabel(bmSelf.bindings.editPointShowLabel());
+                gpl.fire('editedblock', bmSelf.editBlock);
+                bmSelf.closeLabelEditor();
             },
             editPointReference: function () {
                 var editBlock = bmSelf.editBlock,
@@ -5713,6 +5737,7 @@ gpl.BlockManager = function (manager) {
                     pointName,
                     prop;
 
+                editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 if (editBlock.hasReferenceType) { //is monitor/control block
                     if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -5785,10 +5810,10 @@ gpl.BlockManager = function (manager) {
                         }
                     }
                 } else { //constant
-                    editBlock.setValue(+bmSelf.bindings.editPointValue());
+                    editBlock.setValue(bmSelf.bindings.editPointValue());
                 }
 
-                editBlock.setLabel(label);
+                editBlock.setPlaceholderText();
 
                 if (!!props[editBlock.blockType.toLowerCase()]) {
                     gpl.forEachArray(newReferences, function (ref, c) {
@@ -5797,10 +5822,20 @@ gpl.BlockManager = function (manager) {
                     });
                 }
 
-                editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
-                editBlock.setPlaceholderText();
-                editBlock.setShowLabel(showLabel);
-                editBlock.setShowValue(showValue);
+                if (editBlock.label !== label) {
+                    editBlock.setLabel(label);
+                    gpl.manager.bindings.hasEdits(true);
+                }
+
+                if (editBlock.setShowLabel() !== showLabel) {
+                    editBlock.setShowLabel(showLabel);
+                    gpl.manager.bindings.hasEdits(true);
+                }
+
+                if (editBlock.setShowValue() !== showValue) {
+                    editBlock.setShowValue(showValue);
+                    gpl.manager.bindings.hasEdits(true);
+                }
 
                 gpl.$editInputOutputModal.modal('hide');
 
@@ -5965,6 +6000,14 @@ gpl.BlockManager = function (manager) {
 
         closePrecisionEditor: function () {
             gpl.$editPrecisionModal.modal('hide');
+        },
+
+        openLabelEditor: function (block) {
+            gpl.$editLabelModal.modal('show');
+        },
+
+        closeLabelEditor: function () {
+            gpl.$editLabelModal.modal('hide');
         },
 
         openBlockEditor: function (block) {
@@ -6274,7 +6317,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.manager.bindings.hasEdits(true);
             // gpl.hasEdits = true;
         }
-        if (!isNaN(block.upi)) {
+        if (!!block.upi && !isNaN(block.upi)) {
             bmSelf.editedBlocks[block.upi] = block;
         }
     });
@@ -8344,11 +8387,23 @@ gpl.Manager = function () {
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
             updateSequenceProperties: function () {
-                var props = ko.toJS(managerSelf.bindings),
+                var oldDevicePointID = gpl.devicePoint._id,
+                    props = ko.toJS(managerSelf.bindings),
                     setBlockDevicePointRef = function (block) {
-                        var dataPoint = block.getPointData();
-                        if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
-                            dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                        var idx = block._pointRefs["Control Point"],
+                            dataPoint = block.getPointData(),
+                            blockDeviceID;
+
+                        if (!!dataPoint) {
+                            blockDeviceID = dataPoint["Point Refs"][0].Value;
+                            // if (blockDeviceID === 0 || blockDeviceID === oldDevicePointID) {
+                            if (blockDeviceID === 0) {
+                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                            }
+
+                            if (idx !== undefined && dataPoint["Point Refs"][idx].DevInst === 0) {
+                                dataPoint["Point Refs"][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
+                            }
                         }
                     };
 
@@ -8481,19 +8536,11 @@ gpl.Manager = function () {
         });
 
         managerSelf.$cancelButton.click(function () {
-            var saveObj = gpl.blockManager.getSaveObject(true);
-            managerSelf.socket.emit('updateSequencePoints', saveObj);
-
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
 
             gpl.json = $.extend(true, {}, gpl.originalSequence);
-            delete gpl.json.editVersion;
-
-            offsetPositions(false);
-
-            gpl.saveSequence();
 
             setTimeout(function () {
                 managerSelf.doCancel();
@@ -8589,7 +8636,7 @@ gpl.Manager = function () {
                         // Allow: . ,
                         (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
                         // Allow: home, end, left, right
-                        (event.keyCode >= 35 && event.keyCode <= 39)) {
+                        (event.keyCode >= 35 && event.keyCode <= 40)) {
                         // let it happen, don't do anything
                         return;
                     }
@@ -9306,7 +9353,7 @@ gpl.Manager = function () {
                     evt;
 
                 if (gpl.isEdit) {
-                    if (event.which === gpl.DELETEKEY) {
+                    if (event.which === gpl.DELETEKEY && !managerSelf.modalOpen) {
                         objects = managerSelf.canvas.getActiveGroup();
                         object = managerSelf.canvas.getActiveObject();
 
