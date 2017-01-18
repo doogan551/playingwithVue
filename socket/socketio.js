@@ -1242,12 +1242,14 @@ function checkProperties(data, callback) {
         // If we found at least one problem
         if (tempObj.Problems.length !== 0) {
           data.results.push(tempObj); // Push the 'problems found object' onto our results array
-
-          if (data.results.length >= 25) { // Limit number of reported points with problems to 25
-            return next(null, true); // Do not process any more points
-          }
         }
-        return next(); // Perform the callback
+        if (data.results.length >= 25) { // Limit number of reported points with problems to 25
+          next(null, true); // Do not process any more points
+        } else {
+          process.nextTick(function() {
+            next(); // Perform the callback
+          });
+        }
       }
     }, function(err, count) {
       setTimeout(function() {
