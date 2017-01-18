@@ -280,7 +280,7 @@ var gpl = {
         return ret;
     },
     formatValue: function (block, value) {
-        var precision = block.precision || 0,
+        var precision = (!!block.precision ? (block.precision.split(".")[1] || 0) : 0),
             ret,
             val = value;
 
@@ -291,10 +291,8 @@ var gpl = {
         if (isNaN(val)) {
             ret = value;
         } else {
-            precision = (precision * 10) % 10;
-
             if (precision > 0) {
-                ret = val.toFixed(precision);
+                ret = parseFloat(val.toFixed(precision));
             } else {
                 ret = parseInt(val, 10);
             }
@@ -2077,10 +2075,16 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setPlaceholderText: function () {
-        var text = this.getPlaceholderText();
+        var text;
 
         if (this.valueText) {
-            this.valueText.setText(text);
+            if (this.blockType === "Constant") {
+                this.valueText.setText(gpl.formatValue(this, this.value + ""));
+            } else {
+                text = this.getPlaceholderText();
+                this.valueText.setText(text);
+            }
+
             this.renderAll();
         }
     },
@@ -2708,11 +2712,13 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             anchor,
             block,
             c,
-            len;
+            len,
+            numericValue = parseFloat(val);
 
-        if (!isNaN(val) && this.value !== val) {
-            this.value = val;
-            this.valueText.setText(gpl.formatValue(this, val));
+        this.valueText.setText(gpl.formatValue(this, numericValue));
+
+        if (!isNaN(numericValue) && this.value !== numericValue) {
+            this.value = numericValue;
 
             lines = this.outputAnchor.getLines();
             len = lines.length;
@@ -2720,11 +2726,10 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             for (c = 0; c < len; c++) {
                 anchor = lines[c].getOtherAnchor(this.outputAnchor);
                 block = gpl.blockManager.getBlock(anchor.gplId);
-                block.syncAnchorValue(anchor, val);
+                block.syncAnchorValue(anchor, numericValue);
             }
 
             this.renderAll();
-
             gpl.manager.bindings.hasEdits(true);
         }
     }
@@ -5683,7 +5688,7 @@ gpl.BlockManager = function (manager) {
                 gpl.blockManager.openPointEditor(block, true);
             },
             updateBlockPrecision: function () {
-                bmSelf.editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
+                bmSelf.editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 bmSelf.editBlock.setPlaceholderText();
                 gpl.fire('editedblock', bmSelf.editBlock);
                 bmSelf.closePrecisionEditor();
@@ -5714,6 +5719,7 @@ gpl.BlockManager = function (manager) {
                     pointName,
                     prop;
 
+                editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 if (editBlock.hasReferenceType) { //is monitor/control block
                     if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -5786,10 +5792,10 @@ gpl.BlockManager = function (manager) {
                         }
                     }
                 } else { //constant
-                    editBlock.setValue(+bmSelf.bindings.editPointValue());
+                    editBlock.setValue(bmSelf.bindings.editPointValue());
                 }
 
-                editBlock.setLabel(label);
+                editBlock.setPlaceholderText();
 
                 if (!!props[editBlock.blockType.toLowerCase()]) {
                     gpl.forEachArray(newReferences, function (ref, c) {
@@ -5798,10 +5804,20 @@ gpl.BlockManager = function (manager) {
                     });
                 }
 
-                editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
-                editBlock.setPlaceholderText();
-                editBlock.setShowLabel(showLabel);
-                editBlock.setShowValue(showValue);
+                if (editBlock.label !== label) {
+                    editBlock.setLabel(label);
+                    gpl.manager.bindings.hasEdits(true);
+                }
+
+                if (editBlock.setShowLabel() !== showLabel) {
+                    editBlock.setShowLabel(showLabel);
+                    gpl.manager.bindings.hasEdits(true);
+                }
+
+                if (editBlock.setShowValue() !== showValue) {
+                    editBlock.setShowValue(showValue);
+                    gpl.manager.bindings.hasEdits(true);
+                }
 
                 gpl.$editInputOutputModal.modal('hide');
 

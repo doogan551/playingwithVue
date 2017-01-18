@@ -150,9 +150,9 @@ html
                     .modal-body.clearfix
                         .subtitle.col-xs-12.center-block Numeric Format
                             .input-row  # of Characters
-                                input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                                input.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
                             .input-row # of Decimals
-                                input.pull-right(type="number", min="0", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
+                                input.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateBlockPrecision") Save
@@ -325,10 +325,10 @@ html
 
                             .subtitle.col-xs-5 Numeric Format
                                 .input-row  # of Characters
-                                    input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                                    input.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
 
                                 .input-row # of Decimals
-                                    input.pull-right(type="number", min="0", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
+                                    input.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
 
                             .subtitle.col-xs-5.pull-right Label Format
                                 .input-row
@@ -354,11 +354,11 @@ html
                                 .col-md-6
                                     .input-row.dataField
                                         label(for="configPointCharacters") # of Characters
-                                        input#configPointCharacters.form-control.input-sm(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                                        input#configPointCharacters.form-control.input-sm(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
                                 .col-md-6
                                     .input-row.dataField
                                         label(for="configPointDecimals") # of Decimals
-                                        input#configPointDecimals.form-control.input-sm(type="number", min="0", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
+                                        input#configPointDecimals.form-control.input-sm(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
                             .subtitle.col-md-5.pull-right.editSection Label Format
                                 .input-row
                                     .checkbox.dataField
