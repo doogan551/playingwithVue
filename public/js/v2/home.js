@@ -1124,7 +1124,7 @@ var dti = {
             return newWindow;
         },
         processOpenWindowParameters: function(config) {
-            if (config.pointType && !config.type) {
+            if (config.pointType !== undefined && config.pointType !== null && !config.type) {
                 config.type = config.pointType;
             }
 
