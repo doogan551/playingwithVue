@@ -43,6 +43,7 @@ var gpl = {
     $messageModalBody: $('#gplMessageBody'),
     $sequencePropertiesModal: $('#gplSequenceProperties'),
     $editInputOutputModal: $('#editInputOutput'),
+    $editLabelModal: $('#editLabelModal'),
     $editPrecisionModal: $('#editPrecisionModal'),
     $editVersionModal: $('#editVersionModal'),
     $colorpickerModal: $('#colorpickerModal'),
@@ -5682,6 +5683,17 @@ gpl.BlockManager = function (manager) {
                 bmSelf.editBlock = block;
                 bmSelf.openPrecisionEditor();
             },
+            editBlockLabel: function () {
+                var block = manager.contextObject,
+                    label = block.label,
+                    showLabel = block.labelVisible;
+
+                bmSelf.bindings.editPointLabel(label);
+                bmSelf.bindings.editPointShowLabel(showLabel);
+
+                bmSelf.editBlock = block;
+                bmSelf.openLabelEditor();
+            },
             showPointEditor: function () {
                 var block = manager.contextObject;
 
@@ -5692,6 +5704,12 @@ gpl.BlockManager = function (manager) {
                 bmSelf.editBlock.setPlaceholderText();
                 gpl.fire('editedblock', bmSelf.editBlock);
                 bmSelf.closePrecisionEditor();
+            },
+            updateBlockLabel: function () {
+                bmSelf.editBlock.setLabel(bmSelf.bindings.editPointLabel());
+                bmSelf.editBlock.setShowLabel(bmSelf.bindings.editPointShowLabel());
+                gpl.fire('editedblock', bmSelf.editBlock);
+                bmSelf.closeLabelEditor();
             },
             editPointReference: function () {
                 var editBlock = bmSelf.editBlock,
@@ -5982,6 +6000,14 @@ gpl.BlockManager = function (manager) {
 
         closePrecisionEditor: function () {
             gpl.$editPrecisionModal.modal('hide');
+        },
+
+        openLabelEditor: function (block) {
+            gpl.$editLabelModal.modal('show');
+        },
+
+        closeLabelEditor: function () {
+            gpl.$editLabelModal.modal('hide');
         },
 
         openBlockEditor: function (block) {

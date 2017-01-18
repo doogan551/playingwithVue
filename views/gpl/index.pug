@@ -156,6 +156,22 @@ html
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateBlockPrecision") Save
+        #editLabelModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog.modal-sm
+                .modal-content
+                    .modal-header
+                        h3.panel-title Edit Label
+                    .modal-body.clearfix
+                        .subtitle.col-xs-12.center-block
+                            .input-row.dataField
+                                label(for="blockeditlabel") Label
+                                input#blockeditlabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
+                            .input-row.checkbox
+                                label(style="padding-left:0px") Show Label
+                                    input(type="checkbox", style="margin-left:2px", data-bind="checked: editPointShowLabel")
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                        button.btn.btn-primary.btn-sm(data-bind="click: updateBlockLabel") Save
 
         #editTextModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
@@ -374,6 +390,8 @@ html
 
         #jqxMenu.contextMenu.hideLoading
             ul.editSection
+                li.block(data-ignoretheme="true")
+                    a(href="", data-bind="click: editBlockLabel") Edit Label
                 li.block(data-ignoretheme="true")
                     a(href="", data-bind="click: editBlockPrecision") Edit Precision
                 li.block.nonPoint(data-ignoretheme="true")
