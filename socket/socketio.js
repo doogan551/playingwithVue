@@ -1247,11 +1247,12 @@ function checkProperties(data, callback) {
             return next(null, true); // Do not process any more points
           }
         }
-
         return next(); // Perform the callback
       }
     }, function(err, count) {
-      callback(data);
+      setTimeout(function() {
+        callback(data);
+      }, 100);
     });
 
     // Could not find point type in template
