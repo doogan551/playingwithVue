@@ -2723,14 +2723,9 @@ var Config = (function(obj) {
         },
 
         "Demand Enable": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value; // Property value
+            var point = data.point;
 
-            if (val === true) {
-                point["Demand Interval"].isReadOnly = false;
-            } else {
-                point["Demand Interval"].isReadOnly = true;
-            }
+            point["Demand Interval"].isDisplayable = point[data.property].Value;
             return point;
         },
 
