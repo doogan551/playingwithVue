@@ -281,7 +281,7 @@ var gpl = {
         return ret;
     },
     formatValue: function (block, value) {
-        var precision = (!!block.precision ? (block.precision.split(".")[1] || 0) : 0),
+        var precision = (!!block.precision ? (String(block.precision).split(".")[1] || 0) : 0),
             ret,
             val = value;
 
@@ -8548,9 +8548,14 @@ gpl.Manager = function () {
         });
 
         managerSelf.$discardChangesButton.click(function () {
+            var deleteNewBlocksObj;
+
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
+
+            deleteNewBlocksObj = gpl.blockManager.getSaveObject(gpl.isCancel);
+            managerSelf.socket.emit('updateSequencePoints', deleteNewBlocksObj);  // delete any created points
 
             gpl.json = $.extend(true, {}, gpl.originalSequence);
             if (!!gpl.json.editVersion) { // handle a saveForLater dataset
