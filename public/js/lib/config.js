@@ -882,7 +882,7 @@ var Config = (function(obj) {
 
                 if (rmuOpt[rmuModel] === undefined) {
                     return eRel;
-                } else {
+                    } else {
                     switch (point["Point Type"].eValue) {
                         case eTyp["Analog Input"]["enum"]:
                         case eTyp["Analog Output"]["enum"]:
@@ -2463,19 +2463,23 @@ var Config = (function(obj) {
         },
 
         "Monitor Point": function(data) {
-            if (data.point["Point Type"].Value === "Delay") {
-                data.point = obj.EditChanges.applyDelayMointorPoint(data);
+            var point = data.point,
+                type = point["Point Type"].Value;
+
+            if (type === "Delay") {
+                point = obj.EditChanges.applyDelayMointorPoint(data);
+            } else if ((type === "Analog Value") || (type === "Binary Value")) {
+                point = obj.EditChanges.applyAnalogValueMonitorPoint(data);
             }
-            data.point = obj.EditChanges[data.property](data);
             return data;
         },
 
         "Input Type": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value; // Point type
+            var point = data.point,
+                type = point["Point Type"].Value;
 
             if (type === "Binary Input") {
-                data.point = obj.EditChanges.applyBinaryInputInputType(data);
+                point = obj.EditChanges.applyBinaryInputInputType(data);
             }
             return data;
         },
@@ -3065,22 +3069,6 @@ var Config = (function(obj) {
 
         "Input Point 5": function(data) {
             return this.applyInputPointN(data);
-        },
-
-        "Monitor Point": function(data) {
-            var point = data.point, // Shortcut
-                props = ["Fail Action", "Demand Interval", "Demand Enable"], // Related properties
-                len = props.length, // Number of related properties
-                ro = (data.propertyObject.PointInst === 0) ? true : false, // Set read-only flag if value is 0
-                i; // Work var
-
-            for (i = 0; i < len; i++) {
-                if (point.hasOwnProperty(props[i])) {
-                    point[props[i]].isReadOnly = ro;
-                }
-            }
-
-            return point;
         },
 
         "Occupied Max Cool CFM": function(data) {
@@ -4666,34 +4654,55 @@ var Config = (function(obj) {
             return point;
         },
 
+        applyAnalogValueMonitorPoint: function(data) {
+            var point = data.point,
+                mp = obj.Utility.getPropertyObject("Monitor Point", point),
+                props = ["Fail Action", "Demand Interval", "Demand Enable"],
+                len = props.length,
+                disp = (mp.isDisplayable && (mp.PointInst !== 0)) ? true : false,
+                i; // Work var
+
+            for (i = 0; i < len; i++) {
+                point[props[i]].isDisplayable = disp;
+            }
+
+            return point;
+        },
+
         applyAnalogValueDevModel: function(data) {
             var point = data.point,
-                enums = enumsTemplatesJson.Enums,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 mp = false;
 
             obj.Utility.setPropsDisplayable(point, ["Instance", "Read Only"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if (point._relPoint === enums.Reliabilities["No Fault"]["enum"]) {
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
-                    case enums["Remote Unit Model Types"]["BACnet"]["enum"]:
+                    case eRmu["BACnet"]["enum"]:
                         point.Instance.isDisplayable = true;
                         if (obj.Utility.checkMicroScan5Device(point)) {
                             point["Read Only"].isDisplayable = true;
                         }
                         break;
 
-                    case enums["Remote Unit Model Types"]["N2 Device"]["enum"]:
+                    case eRmu["N2 Device"]["enum"]:
                         point.Instance.isDisplayable = true;
                         break;
 
-                    default: // Unknown, no RMU
+                    case eRmu["Unknown"]["enum"]:
+                    case eRmu["MS 4 VAV"]["enum"]:
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
                         mp = true;
+                        break;
+
+                    default:
                         break;
                 }
             }
             obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = mp;
-            obj.Utility.setPropsDisplayable(point, ["Demand Interval", "Demand Enable", "Fail Action"], mp);
-            return point;
+            return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
 
         applyBinaryValueDevModel: function(data) {
