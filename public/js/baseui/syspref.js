@@ -1897,6 +1897,7 @@ var alarmMessageViewModel = function() {
         description: 'Include point name in alarm message'
     }]);
     self.showEntryForm = ko.observable(false);
+    self.hasNameError = ko.observable(false);
     self.init = function() {
         columnsArray = getColumns();
         self.alarmTemplateBackgroundColor.subscribe(function(newValue) {
@@ -1911,6 +1912,7 @@ var alarmMessageViewModel = function() {
         $alarmTemplateModal = $alarmTemplateContainer.find(".sysprefAlarmTemplateModel");
         $alarmTemplateDeleteConfirm = $alarmTemplateContainer.find(".alarmTemplateDeleteConfirm");
         $msgFormat = $alarmTemplateContainer.find(".msgFormat");
+        $alarmNameError = $("#alarmNameError");
         $alarmTemplateModal.modal("hide");
         $alarmTemplateDeleteConfirm.modal("hide");
         blockUI($alarmMessagesData, true);
@@ -1965,18 +1967,34 @@ var alarmMessageViewModel = function() {
                 alarmTemplate.msgName.rawValue = $alarmTemplateContainer.find(".msgName").val();
                 if (!alarmTemplate.isSystemMessage.rawValue) {
                     alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").val();
-                    alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
+                    // alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
                 }
 
                 for (key in alarmTemplate) {
                     if (alarmTemplate.hasOwnProperty(key)) {
                         alarmTemplate[key] = (!!alarmTemplate[key] ? alarmTemplate[key].rawValue : null);
-                        delete alarmTemplate["msgEditLevel"];
+                        delete alarmTemplate.msgEditLevel;
                     }
                 }
+
+                if (!alarmTemplate.msgName.length) {
+                    self.hasNameError(true);
+                    return false;
+                }
+                for (var i = 0; i < alarmTemplateData.length; i++) {
+                    var alarmMsg = alarmTemplateData[i];
+                    if (alarmMsg.msgName.rawValue === alarmTemplate.msgName && alarmMsg._id.rawValue !== alarmTemplate._id) {
+                        self.hasNameError(true);
+                        return false;
+                    }
+                };
+                return true;
             };
 
-        sanitize();
+        self.hasNameError(false);
+        if (!sanitize()) {
+            return false;
+        }
 
         if (alarmTemplate._id === null) {
             data.newObject = alarmTemplate;
@@ -2034,8 +2052,10 @@ var alarmMessageViewModel = function() {
         var data = {},
             alarmTemplate = $.extend(true, {}, self.alarmTemplate());
 
-        data.deleteObject = {};
-        data.deleteObject._id = alarmTemplate._id.rawValue;
+        data.deleteObject = {
+            _id: alarmTemplate._id.rawValue,
+            msgFormat: alarmTemplate.msgFormat.rawValue
+        };
 
         $.ajax({
             url: deleteUrl,

@@ -12,7 +12,6 @@
                 <tr>
                     <th>Ack</th>
                     <th>Notify</th>
-                    <th>Type</th>
                     <th>Message</th>
                 </tr>
             </thead>
@@ -25,7 +24,6 @@
                 <td>
                     <input type="checkbox" data-bind="checked: notify, enable: $parent.isInEditMode">
                 </td>
-                <td data-bind="text: $parent.getMessageById(msgId()).msgTypeName"></td>
                 <td>
                     <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "></select>
                 </td>
@@ -49,7 +47,6 @@
                         <input id="notifyR2nInput" type="checkbox" data-bind="checked: notifyAll, enable: $parent.isInEditMode">
                         <label for="notifyR2nInput">Notify</label>
                     </th>
-                    <th>Type</th>
                     <th>Message</th>
                 </tr>
             </thead>
@@ -61,7 +58,6 @@
                 <td>
                     <input type="checkbox" data-bind="checked: notify, enable: false">
                 </td>
-                <td data-bind="text: $parent.getMessageById(msgId()).msgTypeName"></td>
                 <td>
                     <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "></select>
                 </td>

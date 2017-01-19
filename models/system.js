@@ -517,21 +517,60 @@ module.exports = {
       query: searchCriteria,
       collection: 'AlarmDefs'
     };
-    Utility.remove(criteria, function(err, data) {
+
+    var fixPoints = function(id, cb) {
+      var findAlarmDef = function(type, alarms) {
+        for (var i = 0; i < alarms.length; i++) {
+          if (!!alarms[i].isSystemMessage && type === alarms[i].msgType) {
+            console.log(typeof alarms[i]._id);
+            return alarms[i]._id.toString();
+          }
+        }
+      };
+      Utility.get({
+        collection: 'AlarmDefs'
+      }, function(err, alarmDefs) {
+
+        Utility.iterateCursor({
+          collection: 'points',
+          query: {
+            'Alarm Messages.msgId': id
+          }
+        }, function(err, point, next) {
+          point['Alarm Messages'].forEach(function(msg) {
+            if (msg.msgId === id) {
+              msg.msgId = findAlarmDef(msg.msgType, alarmDefs);
+            }
+          });
+          Utility.update({
+            collection: 'points',
+            query: {
+              _id: point._id
+            },
+            updateObj: point
+          }, function(err, result) {
+            next(err);
+          })
+        }, cb);
+      });
+    };
+
+    Utility.remove(criteria, function(err, _data) {
 
       if (err) {
         return cb(err.message);
       }
-
-      var entries = data;
-      logData.activity = actLogsEnums["Alarm Message Delete"].enum;
-      logData.log = "Alarm Message with text \"" + data.updatedObject.msgFormat + "\" remvoed from the system.";
-      logData = utils.buildActivityLog(logData);
-      Utility.insert({
-        collection: activityLogCollection,
-        insertObj: logData
-      }, function(err, result) {
-        return cb(null, entries);
+      fixPoints(data.deleteObject._id, function(err) {
+        var entries = _data;
+        logData.activity = actLogsEnums["Alarm Message Delete"].enum;
+        logData.log = "Alarm Message with text \"" + data.deleteObject.msgFormat + "\" removed from the system.";
+        logData = utils.buildActivityLog(logData);
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {
+          return cb(null, entries);
+        });
       });
 
     });
