@@ -5896,7 +5896,7 @@ gpl.BlockManager = function (manager) {
                 if (!block.isNonPoint) {
                     data = block.getPointData();
                     if (isCancel) {
-                        saveObj.deletes.push(data);
+                        saveObj.deletes.push(block.upi);
                     } else {
                         saveObj.adds.push(data);
                     }
@@ -8548,10 +8548,12 @@ gpl.Manager = function () {
         });
 
         managerSelf.$discardChangesButton.click(function () {
-            var deleteNewBlocksObj;
+            var deleteNewBlocksObj,
+                timeOutLength;
 
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
+            managerSelf.bindings.hasEditVersion(false);
             gpl.blockManager.handleUnload();
 
             deleteNewBlocksObj = gpl.blockManager.getSaveObject(gpl.isCancel);
@@ -8560,13 +8562,20 @@ gpl.Manager = function () {
             gpl.json = $.extend(true, {}, gpl.originalSequence);
             if (!!gpl.json.editVersion) { // handle a saveForLater dataset
                 delete gpl.json.editVersion;
+                if (!!gpl.point.SequenceData.sequence.editVersion) {
+                    delete gpl.point.SequenceData.sequence.editVersion;
+                }
 
                 gpl.saveSequence();
+
+                timeOutLength = 600;
+            } else {
+                timeOutLength = 100;
             }
 
             setTimeout(function () {
                 managerSelf.doCancel();
-            }, 100);
+            }, timeOutLength);
         });
 
         managerSelf.$quitButton.click(function () {
