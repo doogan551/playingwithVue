@@ -4655,10 +4655,10 @@ var Config = (function(obj) {
                 setDisp = obj.Utility.setPropsDisplayable;
 
             if (mp.isDisplayable && (mp.PointInst !== 0)) {
-                setDisp(["Fail Action", "Demand Enable"], true);
+                setDisp(point, ["Fail Action", "Demand Enable"], true);
                 point["Demand Interval"].isDisplayable = point["Demand Enable"].Value;
             } else {
-                setDisp(["Fail Action", "Demand Enable", "Demand Interval"], false);
+                setDisp(point, ["Fail Action", "Demand Enable", "Demand Interval"], false);
             }
             return point;
         },
