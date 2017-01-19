@@ -4652,15 +4652,14 @@ var Config = (function(obj) {
         applyAnalogValueMonitorPoint: function(data) {
             var point = data.point,
                 mp = obj.Utility.getPropertyObject("Monitor Point", point),
-                props = ["Fail Action", "Demand Interval", "Demand Enable"],
-                len = props.length,
-                disp = (mp.isDisplayable && (mp.PointInst !== 0)) ? true : false,
-                i; // Work var
+                setDisp = obj.Utility.setPropsDisplayable;
 
-            for (i = 0; i < len; i++) {
-                point[props[i]].isDisplayable = disp;
+            if (mp.isDisplayable && (mp.PointInst !== 0)) {
+                setDisp(["Fail Action", "Demand Enable"], true);
+                point["Demand Interval"].isDisplayable = point["Demand Enable"].Value;
+            } else {
+                setDisp(["Fail Action", "Demand Enable", "Demand Interval"], false);
             }
-
             return point;
         },
 
