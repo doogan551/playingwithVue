@@ -34,7 +34,7 @@ html
             span.sequenceName(style="display:none", data-bind="text: sequenceName, visible: sequenceName !== undefined")
             button.btn.btn-primary.btn-sm#save(type="button", style="display:none", data-bind="visible: isEdit === true") Save
             button.btn.btn-danger.btn-sm#cancel(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === false)") Cancel
-            button.btn.btn-primary.btn-sm#saveForLater(type="button", style="display:none", data-bind="visible: (isEdit === true && (hasEdits() === true || hasEditVersion() === true))") Save For Later
+            button.btn.btn-primary.btn-sm#saveForLater(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === true)") Save For Later
             button.btn.btn-danger.btn-sm#discardChanges(type="button", style="display:none", data-bind="visible: (hasEdits() === true || hasEditVersion() === true)") Discard Changes
             button.btn.btn-primary.btn-sm#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
             span.editVersionAvailable(data-bind="visible: editVersionAvailable") *Edit Version Available

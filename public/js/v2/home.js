@@ -3119,15 +3119,12 @@ var dti = {
                         }, 100);
                     };
 
-                    bindings.handleModalClose = function() {
-                        // #187 still bug hunting..........
-                        // if (self.fullCreate) {
-                        //     if (dti.navigator.temporaryCallback) {
-                        //         dti.navigator.temporaryCallback(false);
-                        //     }
-                            dti.navigator.temporaryCallback = null;
-                            dti.navigator.hideNavigator(self);
-                        // }
+                    bindings.handleModalClose = function () {
+                        if (dti.navigator.temporaryCallback) {
+                            dti.navigator.temporaryCallback(false);
+                        }
+                        dti.navigator.temporaryCallback = null;
+                        dti.navigator.hideNavigator(self);
                     };
 
                     bindings.cancelCreatePoint = function() {
