@@ -30453,7 +30453,7 @@
         "_relRMU" : 0, 
         "_relPoint" : 0, 
         "_devModel" : 19, 
-        "_rmuModel" : 9, 
+        "_rmuModel" : 7, 
         "_parentUpi" : 0, 
         "Point Type" : {
             "ValueType" : 5, 
@@ -30660,6 +30660,234 @@
                 "PointType": 144,
                 "PointInst": 866759,
                 "DevInst": 866758
+            }
+       ]
+    }, { 
+        "Name" : "4760_STEAM1_LBS", 
+        "name1" : "4760", 
+        "name2" : "STEAM1", 
+        "name3" : "LBS", 
+        "name4" : "", 
+        "_Name" : "4760_steam1_lbs", 
+        "_name1" : "4760", 
+        "_name2" : "steam1", 
+        "_name3" : "lbs", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 13, 
+        "_rmuModel" : 9, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Accumulator", 
+            "eValue" : 128, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 1,
+            "Value": 603065.0
+        },
+        "Engineering Units": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "LBS"
+        },
+        "Pulse Weight": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Rate Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "Measures BLDG steam usage."
+        },
+        "Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "3",
+            "eValue": 3,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Fast Pulse": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Unsigned Double",
+            "eValue": 18
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 255
+        },
+        "Trend Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Trend Interval": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 3599
+        },
+        "Trend COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Maximum Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0e+10
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "~Measures BLDG. Steam usage~"
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 91469,
+                "PointName": "4760_UNV01",
+                "PointType": 8,
+                "PointInst": 91469,
+                "DevInst": 91469
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 58394,
+                "PointName": "4760_UNV01_STM METER01",
+                "PointType": 144,
+                "PointInst": 58394,
+                "DevInst": 91469
             }
        ]
     }]

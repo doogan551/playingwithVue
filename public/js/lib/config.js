@@ -4765,15 +4765,15 @@ var Config = (function(obj) {
                     default: // Unknown, no RMU
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
-                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Fast Pulse", "Rate Period"], true);
                                 setCh(ch, 1, 16);
                                 break;
                             case eDev["SCADA Vio"]["enum"]:
-                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Fast Pulse", "Rate Period"], true);
                                 setCh(ch, 6, 9);
                                 break;
                             case eDev["SCADA IO"]["enum"]:
-                                setDisp(point, ["Channel", "Fast Pulse", "Rate Period"], true);
+                                setDisp(point, ["Fast Pulse", "Rate Period"], true);
                                 setValOpt(ch, {
                                     "I/O 1": 1,
                                     "I/O 2": 2,
@@ -4786,11 +4786,11 @@ var Config = (function(obj) {
                                 });
                                 break;
                             case eDev["MicroScan 4 UNV"]["enum"]:
-                                setDisp(point, ["Channel", "Rate Period"], true);
+                                point["Rate Period"].isDisplayable = true;
                                 setCh(ch, 1, 16);
                                 break;
                             default: // MicroScan 4 Digital
-                                setDisp(point, ["Channel", "Rate Period"], true);
+                                point["Rate Period"].isDisplayable = true;
                                 setCh(ch, 1, 32);
                                 break;
                         }
