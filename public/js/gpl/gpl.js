@@ -25,7 +25,6 @@ var gpl = {
     deviceId: 0,
     logLinePrefix: true,
     rendered: false,
-    poppedIn: false,//window.top.location.href !== window.location.href,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
     iconPath: '/img/icons/',
@@ -1378,19 +1377,24 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     self.processValue.apply(self, arguments);
                 });
                 idx = self._pointRefs[anchor.anchorType];
+                if (idx) {
+                    name = "";
+                    if (upi) {
+                        name = gpl.pointData[upi];
+                        name = name && name.Name;
+                    } else {
+                        name = otherBlock.name;
+                    }
+
+                    if (upi) {
+                        self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
+                    }
+                }
                 self.formatPoint(anchor, line, otherBlock);
             }
 
             if (idx) {
-                if (otherBlock.upi) {
-                    name = gpl.pointData[otherBlock.upi];
-                    name = name && name.Name;
-                } else {
-                    name = otherBlock.name;
-                }
-
                 if (name && gpl.rendered) {
-                    self.setPointRef(anchor.anchorType, otherBlock.upi, name, otherBlock.pointType);
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1433,16 +1437,29 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     formatPoint: function (anchor, line, block, newData) {
         if (gpl.rendered && !window.destroyed) {
-            var otherEnd = line && line.getOtherAnchor(),
+            var self = this,
+                otherEnd = line && line.getOtherAnchor(),
                 otherBlock = block || gpl.blockManager.getBlock(otherEnd && otherEnd.gplId),
+                getRefPoint = function () {
+                    "use strict";
+                    var answer;
+
+                    if (!(self.blockType !== 'output' && anchor.anchorType === 'Control Point')) {
+                        if (!!otherBlock) {
+                            answer = otherBlock.getPointData();
+                        }
+                    }
+
+                    return answer;
+                },
                 args = {
-                    point: newData || this.getPointData(),
-                    oldPoint: this._origPointData,
-                    property: this.blockType === 'output' ? otherEnd.anchorType : anchor.anchorType,
-                    refPoint: (this.blockType !== 'output' && anchor.anchorType === 'Control Point') ? undefined : otherBlock && otherBlock.upi
+                    point: newData || self.getPointData(),
+                    oldPoint: self._origPointData,
+                    property: self.blockType === 'output' ? otherEnd.anchorType : anchor.anchorType,
+                    refPoint: getRefPoint()
                 };
 
-            this._doFormatPoint(args, function (data) {
+            self._doFormatPoint(args, function (data) {
                 newData = data;
             });
         }
@@ -7402,8 +7419,7 @@ gpl.Manager = function () {
             bottom = box.bottom,
             verticalBuffer = 50,
             horizontalBuffer = 50,
-            minHeight = 750,
-            minHeightView = 550,
+            minHeight = (gpl.isEdit ? 750 : 550),
             minWidth = 900,
             width = right + horizontalBuffer,
             height,
@@ -7413,26 +7429,19 @@ gpl.Manager = function () {
             width = minWidth;
         }
 
-        if (!gpl.poppedIn) {
-            if (gpl.isEdit) {
-                height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
-            } else {
-                height = (bottom + verticalBuffer > minHeightView) ? bottom + verticalBuffer : minHeightView;
-            }
+        height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
+        height += heightOffset;
+        managerSelf.currWidth = width;
+        managerSelf.currHeight = height;
 
-            height += heightOffset;
-            managerSelf.currWidth = width;
-            managerSelf.currHeight = height;
+        dtiUtility.updateWindow('resize', {
+            width: width,
+            height: height
+        });
+        // window.resizeTo(width, height);
 
-            dtiUtility.updateWindow('resize', {
-                width: width,
-                height: height
-            });
-            // window.resizeTo(width, height);
-
-            if (initial) {
-                managerSelf.resizeCanvas(width, height);
-            }
+        if (initial) {
+            managerSelf.resizeCanvas(width, height);
         }
     };
 

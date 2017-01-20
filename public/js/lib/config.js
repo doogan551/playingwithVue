@@ -3145,7 +3145,7 @@ var Config = (function(obj) {
             }
 
             // Adding a reference point
-            if (refPoint !== null && (propertyObject.Value !== 0)) {
+            if (!!refPoint && (propertyObject.Value !== 0)) {
                 propertyObject.PointName = refPoint.Name;
                 propertyObject.PointType = refPoint["Point Type"].eValue;
                 propertyObject.PointInst = refPoint._id;
