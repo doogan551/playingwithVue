@@ -30961,7 +30961,7 @@
             "Value": 200.0
         },
         "Rate Period": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 13,
             "Value": 0
