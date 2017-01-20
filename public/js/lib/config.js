@@ -490,8 +490,7 @@ var Config = (function(obj) {
                     return endPoint;
                 },
                 _getEnums = function(property, pointType, options) {
-                    var workspace = (typeof window != 'undefined') && window.workspaceManager,
-                        _hasPointType = !!pointType;
+                    var workspace = (typeof window != 'undefined') && window.workspaceManager;
 
                     switch (property) {
                         case 'Control Priority':
@@ -541,39 +540,6 @@ var Config = (function(obj) {
                         if (!enumArray.length && !!enumsProperty && !!enumsProperty["enumsSet"]) {
                             enumArray = _buildOptionsArray(enumsTemplatesJson.Enums[enumsProperty["enumsSet"]]);
                         }
-
-                        /*for (var i = 0, last = keys.length; i < last; i++) {
-                            if (_hasPointType) {
-                                item = {
-                                    name: keys[i],
-                                    value: enums[keys[i]].enum,
-                                    noninitializable: enums[keys[i]].noninitializable
-                                };
-                            } else {
-                                item = keys[i];
-                            }
-                            enumArray.push(item);
-                        }
-
-                        if (!!enumsProperty && !!enumsProperty["enumsSet"]) {
-                            enumsSetKey = enumsProperty["enumsSet"];
-                        }
-
-                        if (property && enumsSetKey) {
-                            enumsSetKey = enumsSetKey;
-                            if (enumsSetKey !== undefined && enumsSetKey !== "") {
-                                enumsSet = enumsTemplatesJson.Enums[enumsSetKey];
-                                for (var key in enumsSet) {
-                                    if (enumsSet.hasOwnProperty(key)) {
-                                        enumArray.push({
-                                            name: key,
-                                            value: enumsSet[key].enum,
-                                            noninitializable: false
-                                        });
-                                    }
-                                }
-                            }
-                        }*/
 
                         if (!enums && enumArray.length === 0) enumArray = null;
 
@@ -882,7 +848,7 @@ var Config = (function(obj) {
 
                 if (rmuOpt[rmuModel] === undefined) {
                     return eRel;
-                    } else {
+                } else {
                     switch (point["Point Type"].eValue) {
                         case eTyp["Analog Input"]["enum"]:
                         case eTyp["Analog Output"]["enum"]:
