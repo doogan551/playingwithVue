@@ -29486,14 +29486,18 @@
             "isReadOnly": true,
             "ValueType": 5,
             "Value": "Wade",
-            "eValue": 13
+            "eValue": 8
         },
         "Value": {
             "isDisplayable": true,
             "isReadOnly": true,
-            "ValueType": 1,
+            "ValueType": 5,
             "Value": "Auto",
-            "eValue": 0
+            "eValue": 0,
+            "ValueOptions": {
+                "Auto": 0,
+                "Stop": 1
+            }
         },
         "Alarm Value": {
             "isDisplayable": true,
@@ -29563,6 +29567,12 @@
             "ValueType": 13,
             "Value": 60
         },
+        "Minimum On Time": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 12,
+            "Value": 0
+        },
         "Minimum Off Time": {
             "isDisplayable": true,
             "isReadOnly": false,
@@ -29575,16 +29585,10 @@
             "ValueType": 7,
             "Value": true
         },
-        "COV Increment": {
-            "isDisplayable": true,
-            "isReadOnly": false,
-            "ValueType": 1,
-            "Value": 0.1
-        },
         "Default Value": {
             "isDisplayable": true,
             "isReadOnly": false,
-            "ValueType": 1,
+            "ValueType": 5,
             "Value": "Stop",
             "eValue": 1
         },
@@ -29639,21 +29643,15 @@
             "Value": 0
         },
         "Interlock State": {
-            "isDisplayable": false,
+            "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Off",
-            "eValue": 0,
+            "Value": "Maint",
+            "eValue": 1,
             "ValueOptions": {
-                "Off": 0,
-                "On": 1
+                "Normal": 0,
+                "Maint": 1
             }
-        },
-        "Alarm Adjust Band": {
-            "isDisplayable": false,
-            "isReadOnly": false,
-            "ValueType": 1,
-            "Value": 0.0
         },
         "Broadcast Enable": {
             "isDisplayable": true,
@@ -29677,7 +29675,7 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 2,
-            "Value": ""
+            "Value": "~Stops Hx operation but does not open valves.  HxReady remains set.~"
         },
         "Point Refs": [
             {
@@ -29686,22 +29684,22 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 44667,
-                "PointName": "4471_MID01",
+                "Value": 63472,
+                "PointName": "4473_UNV01",
                 "PointType": 8,
-                "PointInst": 44667,
-                "DevInst": 44667
+                "PointInst": 63472,
+                "DevInst": 63472
             }, {
                 "PropertyName": "Remote Unit Point",
                 "PropertyEnum": 152,
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 44677,
-                "PointName": "4471_MID01_IFC01",
-                "PointType": 144,
-                "PointInst": 44677,
-                "DevInst": 44667
+                "Value": 0,
+                "PointName": "",
+                "PointType": 0,
+                "PointInst": 0,
+                "DevInst": 0
             }, {
                 "PropertyName": "Alarm Display Point",
                 "PropertyEnum": 137,
@@ -29719,11 +29717,11 @@
                 "AppIndex": 0,
                 "isDisplayable": true,
                 "isReadOnly": false,
-                "Value": 0,
-                "PointName": "",
-                "PointType": 0,
-                "PointInst": 0,
-                "DevInst": 0
+                "Value": 66224,
+                "PointName": "4473_HX_Maintenance_Mode",
+                "PointType": 5,
+                "PointInst": 66224,
+                "DevInst": 63476
             }, {
                 "PropertyName": "Monitor Point",
                 "PropertyEnum": 150,
