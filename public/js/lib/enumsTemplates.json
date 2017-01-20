@@ -160,6 +160,9 @@
             },
             "Season Change": {
                 "enum": 42
+            },
+            "Report Edit": {
+                "enum": 43
             }
         },
         "Alarm Classes": {
@@ -304,6 +307,177 @@
                 "enum": 68
             }
         },
+        "Calculation Types": {
+            "Enthalpy": {
+                "enum" : 0
+            },
+            "Dew Point": {
+                "enum" : 1
+            },
+            "Wet Bulb": {
+                "enum" : 2
+            },
+            "Low Value": {
+                "enum" : 0
+            },
+            "High Value": {
+                "enum" : 1
+            },
+            "Sum": {
+                "enum" : 0
+            },
+            "Average": {
+                "enum" : 1
+            },
+            "P Only": {
+                "enum" : 1
+            },
+            "PI": {
+                "enum" : 2
+            },
+            "PID": {
+                "enum" : 3
+            },
+            "Add": {
+                "enum" : 0
+            },
+            "Subtract": {
+                "enum" : 1
+            },
+            "Multiply": {
+                "enum" : 2
+            },
+            "Divide": {
+                "enum" : 3
+            },
+            "Delay": {
+                "enum" : 0
+            },
+            "Pulsed": {
+                "enum" : 1
+            },
+            ">": {
+                "enum" : 0
+            },
+            ">=": {
+                "enum" : 1
+            },
+            "<": {
+                "enum" : 2
+            },
+            "<=": {
+                "enum" : 3
+            },
+            "<>": {
+                "enum" : 4
+            },
+            "=": {
+                "enum" : 5
+            },
+            "And": {
+                "enum" : 0
+            },
+            "Or": {
+                "enum" : 1
+            },
+            "XOr": {
+                "enum" : 2
+            }
+        },
+        "Channels": {
+            "1 - Zone Temperature": {
+                "enum": 1
+            },
+            "2 - Setpoint Adjust": {
+                "enum": 2
+            },
+            "3 - Supply Temperature": {
+                "enum": 2
+            },
+            "4 - Auxiliary": {
+                "enum": 4
+            },
+            "5 - Air Volume": {
+                "enum": 5
+            },
+            "1 - Occupancy Override": {
+                "enum": 1
+            },
+            "2 - Occupancy Sensor": {
+                "enum": 2
+            },
+            "1 - Damper": {
+                "enum": 1
+            },
+            "2 - Reheat": {
+                "enum": 2
+            },
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            },
+            "Battery Voltage": {
+                "enum": 9
+            },
+            "Temperature": {
+                "enum": 10
+            },
+            "Power Voltage": {
+                "enum": 11
+            },
+            "Power Current": {
+                "enum": 12
+            },
+            "Power Consumption": {
+                "enum": 13
+            }
+        },
+        "Close Channels": {
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            }
+        },
         "Command Types": {
             "No Command": {
                 "enum": 0
@@ -437,7 +611,7 @@
                 "enum": 16
             }
         },
-        "Default Feedback Types": {
+        "Feedback Types": {
             "None": {
                 "enum": 0
             },
@@ -586,6 +760,82 @@
                 "enum": 3
             }
         },
+        "Feedback Channels": {
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            }
+        },
+        "Input Ranges": {
+            "1": {
+                "enum": 0
+            },
+            "10": {
+                "enum": 1
+            },
+            "100": {
+                "enum": 2
+            },
+            "1000": {
+                "enum": 3
+            },
+            "5000": {
+                "enum": 4
+            },
+            "10000": {
+                "enum": 5
+            },
+            "25000": {
+                "enum": 6
+            },
+            "Auto": {
+                "enum": 7
+            },
+            "25 Sec": {
+                "enum": 0
+            },
+            "50 Sec": {
+                "enum": 1
+            },
+            "75 Sec": {
+                "enum": 2
+            },
+            "100 Sec": {
+                "enum": 3
+            },
+            "125 Sec": {
+                "enum": 4
+            },
+            "150 Sec": {
+                "enum": 5
+            },
+            "175 Sec": {
+                "enum": 6
+            },
+            "200 Sec": {
+                "enum": 7
+            }
+        },
         "Input Rates": {
             "Seconds": {
                 "enum": 0
@@ -601,6 +851,65 @@
             },
             "Accumulated": {
                 "enum": 4
+            }
+        },
+        "Input Types": {
+            "Resistance": {
+                "enum": 0
+            },
+            "5 Volt": {
+                "enum": 1
+            },
+            "10 Volt": {
+                "enum": 2
+            },
+            "20 mA SP": {
+                "enum": 3
+            },
+            "20 mA LP": {
+                "enum": 4
+            },
+            "Rate Input": {
+                "enum": 5
+            },
+            "Normal": {
+                "enum": 0
+            },
+            "Inverted": {
+                "enum": 2
+            },
+            "Velocity": {
+                "enum": 3
+            },
+            "High Resistance": {
+                "enum": 0
+            },
+            "High Voltage": {
+                "enum": 1
+            },
+            "Low Resistance": {
+                "enum": 2
+            },
+            "Low Voltage": {
+                "enum": 3
+            },
+            "Latch": {
+                "enum": 0
+            },
+            "Momentary": {
+                "enum": 1
+            },
+            "Pulse": {
+                "enum": 2
+            },
+            "Input": {
+                "enum": 13
+            },
+            "Output": {
+                "enum": 14
+            },
+            "Value": {
+                "enum": 19
             }
         },
         "Lift Station Alarm Output Configuration Bits": {
@@ -760,6 +1069,110 @@
             },
             "IP": {
                 "enum": 4
+            }
+        },
+        "Off Channels": {
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            }
+        },
+        "On Channels": {
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            }
+        },
+        "Open Channels": {
+            "I/O 1": {
+                "enum": 1
+            },
+            "I/O 2": {
+                "enum": 2
+            },
+            "I/O 3": {
+                "enum": 3
+            },
+            "I/O 4": {
+                "enum": 4
+            },
+            "I/O 5": {
+                "enum": 5
+            },
+            "I/O 6": {
+                "enum": 6
+            },
+            "I/O 7": {
+                "enum": 7
+            },
+            "I/O 8": {
+                "enum": 8
+            }
+        },
+        "Output Types": {
+            "Analog": {
+                "enum": 0
+            },
+            "0 to 5 Volt": {
+                "enum": 0
+            },
+            "0 to 10 Volt": {
+                "enum": 3
+            },
+            "0 to 20 mA": {
+                "enum": 4
+            },
+            "Pulse Width": {
+                "enum": 1
+            },
+            "Pulsed": {
+                "enum": 2
+            },
+            "Latch": {
+                "enum": 0
+            },
+            "Momentary": {
+                "enum": 1
             }
         },
         "Point Statuses": {
@@ -1465,8 +1878,7 @@
             "Active Value": {
                 "enum": 4,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Alarm Adjust Band": {
                 "enum": 67,
@@ -1523,8 +1935,7 @@
             "Alarm Value": {
                 "enum": 35,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Alarms Off": {
                 "enum": 9,
@@ -1544,8 +1955,7 @@
             "Authorized Value": {
                 "enum": 231,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Auxiliary Control Point": {
                 "enum": 423,
@@ -1611,7 +2021,7 @@
                 "enum": 36,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Calculation Types"
             },
             "Calibration Factor": {
                 "enum": 284,
@@ -1631,12 +2041,14 @@
             "Channel": {
                 "enum": 161,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Channels"
             },
             "Close Channel": {
                 "enum": 162,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Close Channels"
             },
             "Close On Complete": {
                 "enum": 251,
@@ -1741,8 +2153,7 @@
             "Controller": {
                 "enum": 40,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Conversion Adjustment": {
                 "enum": 69,
@@ -2070,6 +2481,11 @@
                 "valueType": "String",
                 "reportEnable": true
             },
+            "Ethernet Gateway": {
+                "enum": 346,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Ethernet IP Port": {
                 "enum": 345,
                 "valueType": "Unsigned",
@@ -2085,6 +2501,11 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Ethernet Protocols"
+            },
+            "Ethernet Subnet": {
+                "enum": 347,
+                "valueType": "String",
+                "reportEnable": true
             },
             "Execute Now": {
                 "enum": 237,
@@ -2136,6 +2557,12 @@
             "Feedback Channel": {
                 "enum": 228,
                 "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Feedback Channels"
+            },
+            "Feedback Instance": {
+                "enum": 66,
+                "valueType": "Unsigned",
                 "reportEnable": true
             },
             "Feedback Point": {
@@ -2153,7 +2580,7 @@
                 "enum": 238,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Default Feedback Types"
+                "enumsSet": "Feedback Types"
             },
             "Filter": {
                 "enum": 19,
@@ -2473,8 +2900,7 @@
             "Inactive Value": {
                 "enum": 120,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Input 1 Constant": {
                 "enum": 202,
@@ -2530,7 +2956,7 @@
                 "enum": 47,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Input Ranges"
             },
             "Input Rate": {
                 "enum": 210,
@@ -2542,7 +2968,7 @@
                 "enum": 48,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Input Types"
             },
             "Instance": {
                 "enum": 166,
@@ -2572,8 +2998,7 @@
             "Interlock State": {
                 "enum": 49,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Lag Level Float Point": {
                 "enum": 429,
@@ -2734,8 +3159,7 @@
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": false
             },
             "Momentary Delay": {
                 "enum": 112,
@@ -2851,7 +3275,8 @@
             "Off Channel": {
                 "enum": 218,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Off Channels"
             },
             "Off Control Data Type": {
                 "enum": 219,
@@ -2888,7 +3313,8 @@
             "On Channel": {
                 "enum": 223,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "On Channels"
             },
             "On Control Data Type": {
                 "enum": 224,
@@ -2915,7 +3341,8 @@
             "Open Channel": {
                 "enum": 168,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Open Channels"
             },
             "Open Polarity": {
                 "enum": 229,
@@ -2932,7 +3359,7 @@
                 "enum": 51,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": ""
+                "enumsSet": "Output Types"
             },
             "Outside Air Gain": {
                 "enum": 262,
@@ -3159,7 +3586,7 @@
             "Quality Code Enable": {
                 "enum": 5,
                 "valueType": "BitString",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Rate": {
                 "enum": 204,
@@ -3222,7 +3649,8 @@
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": false
+                "reportEnable": false,
+                "enumsSet": "Report Types"
             },
             "Repeat Count": {
                 "enum": 253,
@@ -3344,20 +3772,17 @@
             "Select State": {
                 "enum": 207,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Sensor IO Device": {
                 "enum": 399,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Sensor IO Type": {
                 "enum": 400,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Sensor Point": {
                 "enum": 154,
@@ -3367,8 +3792,7 @@
             "Sensor RTD Type": {
                 "enum": 401,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Sensor Type": {
                 "enum": 61,
@@ -3384,8 +3808,7 @@
             "Setback Controller": {
                 "enum": 261,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Setback Deadband": {
                 "enum": 264,
@@ -3450,8 +3873,7 @@
             "Shutdown State": {
                 "enum": 62,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Shutdown Value": {
                 "enum": 121,
@@ -3496,7 +3918,7 @@
             "Status Flags": {
                 "enum": 6,
                 "valueType": "BitString",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Stop Gain": {
                 "enum": 266,
@@ -3562,8 +3984,7 @@
             "Trigger Constant": {
                 "enum": 64,
                 "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
+                "reportEnable": true
             },
             "Trigger Point": {
                 "enum": 157,
@@ -3638,8 +4059,7 @@
             },
             "Velocity Type": {
                 "enum": 403,
-                "valueType": "Enum",
-                "reportEnable": false
+                "valueType": "Enum"
             },
             "Velocity Pressure": {
                 "enum": 404,
@@ -4056,6 +4476,12 @@
                     "ValueType": 2,
                     "Value": "0.0.0.0"
                 },
+                "Ethernet Gateway": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": "0.0.0.0"
+                },
                 "Ethernet IP Port": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -4074,6 +4500,12 @@
                     "ValueType": 5,
                     "Value": "IP",
                     "eValue": 1
+                },
+                "Ethernet Subnet": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": "255.255.255.0"
                 },
                 "Firmware Version": {
                     "isDisplayable": true,
@@ -5119,7 +5551,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -5200,7 +5632,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -5423,7 +5855,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Control Function": {
@@ -5570,7 +6002,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -5682,7 +6114,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -6337,7 +6769,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Momentary Delay": {
@@ -6426,7 +6858,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -6737,6 +7169,12 @@
                         "1": 1
                     }
                 },
+                "Feedback Instance": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 4,
+                    "Value": 0
+                },
                 "Feedback Polarity": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -6811,7 +7249,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Momentary Delay": {
@@ -6841,7 +7279,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Off Control Function": {
@@ -6877,7 +7315,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "On Control Function": {
@@ -7000,7 +7438,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -7574,7 +8012,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -7611,7 +8049,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -7749,7 +8187,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Control Function": {
@@ -7805,7 +8243,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "Both",
+                    "Value": "Swap Both",
                     "eValue": 3
                 },
                 "Notify Policies": [],
@@ -7842,7 +8280,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "None",
+                    "Value": "Bit 0",
                     "eValue": 0
                 },
                 "Poll Function": {
@@ -7960,7 +8398,7 @@
                 },
                 "Point Refs": [{
                     "PropertyName": "Device Point",
-                    "PropertyEnum": 276,
+                    "PropertyEnum": 139,
                     "AppIndex": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,

@@ -19,7 +19,7 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
     ul.dropdown-content(data-bind="foreach: valueList, attr: { 'id': 'enumValueList' + $index() }")
         li
             a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
-    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'enumValueList' + $index() }, dtiReportsMaterializeDropdown")
+    a.dropdown-button.btn.waves-effect.waves-light.blue-grey.filterValueSelect(href="#", data-bind="style: { width: valueListMaxWidth + 'px' }, attr: { 'data-activates': 'enumValueList' + $index() }, dtiReportsMaterializeDropdown")
         span.text(data-bind="text: value")
 // /ko
 // ko if: (valueType === "UniquePID")
@@ -68,7 +68,7 @@ div.durationCtrl
 // ko if: (valueType === "BitString")
 div.bitStringCtrl
     // ko foreach: bitStringEnumsArray
-    input.small.bitStringCheckbox.filled-in(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }", type="checkbox")
+    input.small.bitStringCheckbox.filled-in(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }, event: { 'change': function(){$root.handleBitStringChange($element, $parentContext.$index(), $index())} }", type="checkbox")
     label.small.bitStringLabel(data-bind="text: name, attr: { for: 'filterBitString' + $parentContext.$index() + $index() }")
     br
     // /ko

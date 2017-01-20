@@ -30,9 +30,7 @@ var Scheduler = {
     if (!!schedule.enabled) {
       var time = schedule.runTime;
       scheduleContainer[schedule._id] = new CronJob(time, function() {
-        Schedule.runSchedule({
-          schedule: schedule
-        });
+        Schedule.runSchedule(schedule, function() {});
 
       });
       cb();

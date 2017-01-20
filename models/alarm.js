@@ -32,9 +32,7 @@ exports.getRecentAlarms = function(data, cb) {
   var itemsPerPage = parseInt(data.itemsPerPage, 10);
   var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
   var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
-
   var sort = {};
-  var groups = [];
 
   if (!itemsPerPage) {
     itemsPerPage = 200;
@@ -44,8 +42,6 @@ exports.getRecentAlarms = function(data, cb) {
   }
 
   var numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  var user = data.user;
 
   var query = {
     $and: [{
@@ -100,9 +96,11 @@ exports.getRecentAlarms = function(data, cb) {
   }
 
   if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
+    if (data.pointTypes.length > 0) {
+      query.pointType = {
+        $in: data.pointTypes
+      };
+    }
   }
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;

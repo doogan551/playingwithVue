@@ -1,5 +1,4 @@
 "use strict";
-window.workspaceManager = window.top.workspaceManager;
 
 var dti = {
     settings: {
@@ -143,6 +142,7 @@ var dti = {
             //     }, {...}],
             //     see 'defaults' object below for additional options
             // }
+
             var self = this,
                 defaults = {
                     highlight: true, // If true, when suggestions are rendered, pattern matches for the current query in text nodes will be wrapped in a strong element with its class set to {{classNames.highlight}}
@@ -156,6 +156,7 @@ var dti = {
                     },
                     autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
                     showOnFocus: false, // Show suggestions when input is focused
+                    enterOnBlur: false, // Simulate 'Enter' when the the input loses focus (only applicable if $chips is installed)
                     persistAfterSelect: false,
                     chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
@@ -166,11 +167,10 @@ var dti = {
                     dti.forEach(cfg.classNames, function (cssClass, name) {
                         obj[name] = '.' + cssClass;
                     });
-
+                    
                     return obj;
                 })(),
                 operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
-                selectedMatches = {},
                 $markup,
                 $container,
                 scrollTo = function ($target) {
@@ -185,7 +185,7 @@ var dti = {
                         doScroll = true;
                     } else {
                         topOffset = (topOffset + $target.height()) - $container.height();
-
+                        
                         if (topOffset > 0) {
                             doScroll = true;
                         }
@@ -198,8 +198,8 @@ var dti = {
                     return $target;
                 },
                 sortArray = function (arr) {
-                    arr.sort(function (a, b) {
-                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
+                    arr.sort(function (a,b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1:-1;
                     });
                 },
                 getOperator = function (str) {
@@ -224,7 +224,7 @@ var dti = {
                         equationParts = str.split(parsed.operator);
                         parsed.expression = equationParts[0].trim();
                         parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
-
+                        
                         if (parsed.expression.length === 0) {
                             parsed.isEquation = false;
                             parsed.value = null;
@@ -294,7 +294,7 @@ var dti = {
                                             data = data._private.values;
                                         } else {
                                             // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
-                                            regex = new RegExp(chain[chain.length - 1], 'ig');
+                                            regex = new RegExp(chain[chain.length-1], 'ig');
                                         }
                                         return false;
                                     }
@@ -364,20 +364,20 @@ var dti = {
                         }
                     }
 
-                    // If materialize chips is installed on this input and the selected item has children or values to choose from
+                    // If materialize chips is installed
                     if (cfg.$chips) {
+                        // If the selected item has children or values to choose from
                         if (data.hasChildren || data.hasValues) {
                             if (isEnterKeyPress) { // If we arrived her by way of the enter key
                                 e.stopImmediatePropagation(); // Stop propagation so we don't create a chip
                             }
                         } else {
-                            getMatches('');
-
                             if (!isEnterKeyPress) { // If we arrived here by way of mouse click one of our suggestions
                                 cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
                                 inputValue = '';
                             }
                         }
+                        getMatches(inputValue);
                     }
 
                     cfg.$inputElement.val(inputValue);
@@ -415,7 +415,11 @@ var dti = {
                             selectMatch(ko.dataFor($selected[0]), e);
                         } else {
                             getMatches('');
-                            self.hide();
+                            if (cfg.showOnFocus) {
+                                self.show();
+                            } else {
+                                self.hide();
+                            }
                         }
                     } else if (key === 40) { // down
                         if (self.bindings.isShown() === false) {
@@ -456,11 +460,11 @@ var dti = {
 
             self.addSource = function (src) {
                 var source = {
-                    name: ko.observable(src.name || dti.makeId()),
-                    nameShown: ko.observable(src.nameShown),
-                    data: Array.isArray(src.data) ? []:{},
-                    matches: ko.observableArray([])
-                };
+                        name: ko.observable(src.name || dti.makeId()),
+                        nameShown: ko.observable(src.nameShown),
+                        data: Array.isArray(src.data) ? []:{},
+                        matches: ko.observableArray([])
+                    };
 
                 self.bindings.sources.push(source);
 
@@ -474,7 +478,10 @@ var dti = {
                         var item,
                             fromArray;
 
-                        // autosuggestMOD - support from as array or string
+                        if (!from) {
+                            return;
+                        }
+
                         if (Array.isArray(from)) {
                             fromArray = from;
                         } else {
@@ -496,8 +503,6 @@ var dti = {
                         addValues(fromArray, toArray, additionalProperties);
                         sortArray(toArray);
                     },
-                    // autosuggestMOD
-                    // addObj = function (parent, srcItem, text) {
                     addObj = function (param) {
                         // param = {
                         //     root: root object
@@ -506,29 +511,28 @@ var dti = {
                         //     text: object key
                         // }
                         var item = {
-                            // autosuggestMOD - use param._____
                             _private: {
                                 parent: param.parent,
                                 text: param.text,
                                 html: ko.observable(param.text),
                                 values: [],
-                                // autosuggestMOD
-                                // isTopLevel: !!!parent._private
                                 hasChildren: false,
                                 hasValues: false
                             }
                         };
 
-                        // autosuggestMOD
                         if (!param.parent) { //  If we don't have a parent
-                            param.root[param.text] = item; // Install this item on the root
+                            if (param.root[param.text]) {
+                                item = param.root[param.text]; // Point to the existing item
+                            } else {
+                                param.root[param.text] = item; // Install this item on the root
+                            }
                         } else if (param.parent[param.text]) { // Else if this item already exists
                             item = param.parent[param.text]; // Point to the existing item
                         } else {
                             param.parent[param.text] = item; // Install new item on the parent
                         }
 
-                        // autosuggestMOD - use param._____
                         if (!!param.srcItem) {
                             if (typeof param.srcItem === 'string') {
                                 item._private.hasValues = true;
@@ -537,7 +541,7 @@ var dti = {
                                 item._private.hasValues = true;
                                 addValuesAndSort(param.srcItem, item._private.values);
                             } else {
-                                item._private.hasChildren = true; // autosuggestMOD - set hasChildren flag
+                                item._private.hasChildren = true;
 
                                 dti.forEach(param.srcItem, function (subSource, subText) {
                                     // Look for special keys and handle accordingly
@@ -550,8 +554,6 @@ var dti = {
                                         return addValues(subSource, item._private.values);
                                     }
 
-                                    // autosuggestMOD
-                                    // addObj(item, subSource, subText);
                                     addObj({
                                         root: source.data,
                                         parent: item,
@@ -574,16 +576,12 @@ var dti = {
 
                 if (Array.isArray(data)) {
                     addValuesAndSort(data, source.data, {
-                        // autosuggestMOD
-                        // isTopLevel: true
                         parent: null,
                         hasChildren: false,
                         hasValues: false
                     });
                 } else { // data must be an object
                     dti.forEach(data, function (item, text) {
-                        // autosuggestMOD
-                        // addObj(source.data, item, text);
                         addObj({
                             root: source.data,
                             srcItem: item,
@@ -665,7 +663,6 @@ var dti = {
             };
 
             self.reposition = function () {
-                // autosuggestMOD
                 $markup.position({
                     my: 'left top',
                     at: 'left bottom',
@@ -806,6 +803,22 @@ var dti = {
                         self.hide();
                     }
                 });
+
+                // If our configuration is set to simulate an enter keypress when the input loses focus
+                if (cfg.enterOnBlur) {
+                    cfg.$inputElement.blur(function (e) {
+                        var inputValue = cfg.$inputElement.val();
+
+                        // Make sure our autosuggest isn't shown before we do this because clicking a suggestion triggers a blur
+                        // and we don't want to create a chip using a partial match (we want to create a chip using the selected
+                        // suggestion)
+                        if ((self.bindings.isShown() === false) && inputValue.length) {
+                            cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                            cfg.$inputElement.val('');
+                            getMatches('');
+                        }
+                    });
+                }
             }
 
             // Add autosuggest sources
@@ -1322,30 +1335,24 @@ var initKnockout = function () {
     ko.bindingHandlers.dtiReportsMaterializeSelect = {
         suspend: false,
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var suspend = false,
-                boundField = valueAccessor(),
-                $element = $(element);
+            var
+                // boundField = valueAccessor(),
+                // viewModelObject = allBindingsAccessor().optionsText,
+                $element = $(element),
+                $select = $($element.context);
 
             // $element.material_select('destroy');
             $element.material_select();
-            // $element.on('change', function () {
-            //     // console.log("material_select change() fired....");
-            //     if (ko.isObservable(boundField)) {
-            //         boundField(this.selectedOptions[0].value);
-            //     } else {
-            //         boundField = this.selectedOptions[0].value;
+            // $select.on('change', function handleMaterialSelectChange(event) {
+            //     var $target = $(event.target);
+            //
+            //     if ($target[0].value === "Starts") {
+            //         viewModelObject.precision = 0;
             //     }
             //
-            //     if (!suspend) {
-            //         suspend = true;
-            //         var event = new CustomEvent('change', {
-            //             detail: 'change',
-            //             bubbles: true
-            //         });
-            //         $(this).get(0).dispatchEvent(event);
-            //     } else {
-            //         suspend = false;
-            //     }
+            //     console.log("$target = " + $target);
+            //     console.log("boundField = " + boundField);
+            //     console.log("viewModelObject = " + viewModelObject);
             // });
         },
         update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -1442,7 +1449,6 @@ var reportsViewModel = function () {
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         currentUser,
-        ENUMSTEMPLATESTEMPLATES,
         ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
@@ -1612,6 +1618,15 @@ var reportsViewModel = function () {
             }
             return answer;
         },
+        getValueType = function (valuetype) {
+            var answer = "";
+
+            if (!!ENUMSTEMPLATESENUMS) {
+                answer = getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Value Types"], valuetype);
+            }
+
+            return answer;
+        },
         buildBitStringHtml = function (config, rawValue, disabled) {
             var htmlString = '<div class="bitstringReporting">',
                 enumValue;
@@ -1720,9 +1735,8 @@ var reportsViewModel = function () {
             }
         },
         columnCanBeCalculated = function (column) { // TODO needs investigation
-            var result = false,
-                valueOptions;
-            if (self.reportType() === "Totalizer") {
+            var result = false;
+            if (self.reportType() === "Totalizer" || self.reportType() === "History") {
                 result = true;
             } else {
                 switch (column.valueType) {
@@ -1732,48 +1746,19 @@ var reportsViewModel = function () {
                         result = true;
                         break;
                 }
-                switch (column.pointType) {
-                    case "Accumulator":
-                    case "Analog Input":
-                    case "Analog Output":
-                    case "Analog Value":
-                    case "Average":
-                    case "Binary Input":
-                    case "Binary Output":
-                    case "Binary Value":
-                    case "Math":
-                    case "Totalizer":
-                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES[column.pointType] : undefined);
-                        result = (valueOptions === undefined);
-                        break;
-                }
             }
 
             return result;
         },
         columnCanBeCharted = function (column) {
             var result = false,
-                valueOptions;
+                enumsSet;
 
-            if (columnCanBeCalculated(column)) {
+            if (column.canCalculate) {
                 result = true;
             } else {
-                switch (column.pointType) {
-                    case "Accumulator":
-                    case "Analog Input":
-                    case "Analog Output":
-                    case "Analog Value":
-                    case "Average":
-                    case "Binary Input":
-                    case "Binary Output":
-                    case "Binary Selector":
-                    case "Binary Value":
-                    case "Math":
-                    case "Totalizer":
-                        valueOptions = ENUMSTEMPLATESTEMPLATES[column.pointType];
-                        result = (valueOptions !== undefined);
-                        break;
-                }
+                enumsSet = (!scheduled && ENUMSTEMPLATESENUMS.Properties[column.colName] ? ENUMSTEMPLATESENUMS.Properties[column.colName].enumsSet : undefined);
+                result = (!!enumsSet && enumsSet !== "");
             }
 
             return result;
@@ -1912,17 +1897,9 @@ var reportsViewModel = function () {
         },
         displayError = function (errorMessage) {
             dti.toast(errorMessage, 6000);
-
-            // var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
-            // $errorMessageholder.text(errorMessage);
-            // setTimeout(function () {
-            //     $errorMessageholder.text("");
-            // }, 6000);  // display error message
         },
         openPointSelectorForModalColumn = function () {
-            var tempPoint,
-                valueoptions,
-                tempObject = getNewColumnTemplate(),
+            var tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -1930,66 +1907,7 @@ var reportsViewModel = function () {
                     }
                     tempObject.upi = selectedPoint._id;
                     tempObject.dataColumnName = tempObject.upi;
-                    tempObject.valueType = "None";
-                    tempObject.colName = selectedPoint.Name;
-                    tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
-                    tempObject.pointType = selectedPoint["Point Type"].Value;
-                    tempObject.canCalculate = columnCanBeCalculated(tempObject);
-                    if (selectedPoint["Engineering Units"]) {
-                        tempObject.units = selectedPoint["Engineering Units"].Value;
-                    }
-                    if (tempObject.canCalculate) {
-                        tempObject.precision = 3;
-                        tempObject.includeInChart = false;
-                    }
-                    tempObject.calculation = [];
-                    tempObject.multiplier = 1;
-                    delete tempObject.valueOptions;
-                    if (self.reportType() === "Totalizer") {
-                        tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                        tempObject.operator = tempObject.valueList[0];
-                        tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
-                    } else {
-                        if (self.reportType() === "History") {
-                            tempObject.dataColumnName = tempObject.upi;
-                        }
-                        if (!!selectedPoint.Value.ValueOptions) {
-                            tempObject.valueOptions = selectedPoint.Value.ValueOptions;
-                        } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
-                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
-                        }
-                    }
-                    tempObject.canBeCharted = columnCanBeCharted(tempObject);
-                    tempObject.yaxisGroup = "A";
-                    updateColumnFromPointRefs(tempObject);  // sets AppIndex;
-                    if (tempObject.AppIndex) {
-                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
-                    }
-                    self.currentColumnEdit(tempObject);
-                },
-                pointSelectedCallback = function (pointInfo) {
-                    if (!!pointInfo) {
-                        setPointInspectorParams(columnsFilter, pointInfo.filter);
-                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
-                    }
-                };
-
-            dtiUtility.showPointSelector(getPointInspectorParams(columnsFilter));
-            dtiUtility.onPointSelect(pointSelectedCallback);
-        },
-        openPointSelectorForColumn = function (selectObjectIndex) {
-            var valueoptions,
-                updatedList = $.extend(true, [], self.listOfColumns()),
-                tempObject = updatedList[selectObjectIndex],
-                setColumnPoint = function (selectedPoint) {
-                    newlyReferencedPoints.push(selectedPoint);
-                    if (!!tempObject.AppIndex) {
-                        delete tempObject.AppIndex;
-                    }
-                    tempObject.upi = selectedPoint._id;
-                    tempObject.dataColumnName = tempObject.upi;
-                    tempObject.valueType = "None";
+                    tempObject.valueType = getValueType(selectedPoint.Value.ValueType);
                     tempObject.colName = selectedPoint.Name;
                     tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
                     tempObject.pointType = selectedPoint["Point Type"].Value;
@@ -2014,9 +1932,64 @@ var reportsViewModel = function () {
                         }
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
-                        } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
-                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
+                        }
+                    }
+                    tempObject.canBeCharted = columnCanBeCharted(tempObject);
+                    tempObject.yaxisGroup = "A";
+                    updateColumnFromPointRefs(tempObject);  // sets AppIndex;
+                    if (tempObject.AppIndex) {
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
+                    }
+                    self.currentColumnEdit(tempObject);
+                },
+                pointSelectedCallback = function (pointInfo) {
+                    if (!!pointInfo) {
+                        setPointInspectorParams(columnsFilter, pointInfo.filter);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
+                    }
+                };
+
+            dtiUtility.showPointSelector(getPointInspectorParams(columnsFilter));
+            dtiUtility.onPointSelect(pointSelectedCallback);
+        },
+        openPointSelectorForColumn = function (selectObjectIndex) {
+            var updatedList = $.extend(true, [], self.listOfColumns()),
+                tempObject = updatedList[selectObjectIndex],
+                setColumnPoint = function (selectedPoint) {
+                    newlyReferencedPoints.push(selectedPoint);
+                    if (!!tempObject.AppIndex) {
+                        delete tempObject.AppIndex;
+                    }
+                    tempObject.upi = selectedPoint._id;
+                    tempObject.dataColumnName = tempObject.upi;
+                    tempObject.valueType = getValueType(selectedPoint.Value.ValueType);
+                    tempObject.colName = selectedPoint.Name;
+                    tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
+                    tempObject.pointType = selectedPoint["Point Type"].Value;
+                    tempObject.canCalculate = columnCanBeCalculated(tempObject);
+                    if (selectedPoint["Engineering Units"]) {
+                        tempObject.units = selectedPoint["Engineering Units"].Value;
+                    }
+                    if (tempObject.canCalculate) {
+                        tempObject.precision = 3;
+                        tempObject.includeInChart = false;
+                    }
+                    tempObject.calculation = [];
+                    tempObject.multiplier = 1;
+                    delete tempObject.valueOptions;
+                    if (self.reportType() === "Totalizer") {
+                        tempObject.valueList = getTotalizerValueList(tempObject.pointType);
+                        tempObject.operator = tempObject.valueList[0];
+                        if (tempObject.operator === "Starts") {
+                            tempObject.precision = 0;
+                        }
+                        tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
+                    } else {
+                        if (self.reportType() === "History") {
+                            tempObject.dataColumnName = tempObject.upi;
+                        }
+                        if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
+                            tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
@@ -2219,34 +2192,33 @@ var reportsViewModel = function () {
             }
         },
         validColumn = function (column, colIndex) {
-            var answer = {
-                    valid: true
-                },
+            var answer = {},
                 pointRef;
 
             if (column.colName === "Choose Point") {
-                answer.valid = false;
                 answer.error = "Missing Column point at index " + colIndex;
             } else if (column.colName === "Choose Property") {
-                answer.valid = false;
                 answer.error = "Missing Column property at index " + colIndex;
             } else if ((self.reportType() === "Totalizer") || (self.reportType() === "History")) {
                 if (column.colName !== "Date" && !!column.AppIndex) { //  skip first column  "Date"
                     pointRef = getPointRef(column, "Column Point");
                     if (pointRef === undefined) {
-                        answer.valid = false;
                         answer.error = "No corresponding 'Point Ref' for Column point at index " + colIndex;
                     }
                 }
+            }
+            if (column.operator === "Starts") {
+                column.precision = 0;
             }
 
             return answer;
         },
         validateColumns = function (cleanup) {
-            var results = [],
+            var results = {},
                 localArray,
                 i,
-                col,
+                validation,
+                index,
                 checkColumnsForPointRefs = function () {
                     var column;
 
@@ -2258,22 +2230,26 @@ var reportsViewModel = function () {
                     }
                 };
 
+            results.collection = [];
             checkColumnsForPointRefs();
             localArray = $.extend(true, [], self.listOfColumns());
             for (i = 0; i < localArray.length; i++) {
-                col = validColumn(localArray[i], i);
-                localArray[i].error = col.error;
-                results.push(localArray[i]);
+                validation = validColumn(localArray[i], i);
+                localArray[i].error = validation.error;
+                if (!!validation.error) {
+                    results.error = true;
+                }
+                results.collection.push(localArray[i]);
 
-                if (cleanup && col.valid && results.length > 0) { // these fields are only used in UI
-                    delete results[results.length - 1].valueList;
-                    delete results[results.length - 1].valueType;
-                    delete results[results.length - 1].dataColumnName;
-                    delete results[results.length - 1].rawValue;
-                    delete results[results.length - 1].error;
-                    delete results[results.length - 1].softDeleted;
-                    delete results[results.length - 1].bitstringEnums;
-                    delete results[results.length - 1].upi;
+                if (cleanup && !validation.error && results.collection.length > 0) { // these fields are only used in UI
+                    index = results.collection.length - 1;
+                    delete results.collection[index].valueList;
+                    delete results.collection[index].dataColumnName;
+                    delete results.collection[index].rawValue;
+                    delete results.collection[index].error;
+                    delete results.collection[index].softDeleted;
+                    delete results.collection[index].bitstringEnums;
+                    delete results.collection[index].upi;
                 }
             }
 
@@ -2303,14 +2279,58 @@ var reportsViewModel = function () {
             });
             updateListOfColumns(self.listOfColumns());
         },
+        calculateBitStringValue = function (filter) {
+            if (filter.valueType === "BitString") {
+                var total = 0,
+                    key,
+                    bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
+
+                for (key in bitStringEnums) {
+                    if (bitStringEnums.hasOwnProperty(key)) {
+                        if (key !== "All") {
+                            total += bitStringEnums[key].enum;
+                        }
+                    }
+                }
+
+                filter.value = 0;
+                for (var j = 0; j < filter.bitStringEnumsArray.length; j++) {
+                    key = filter.bitStringEnumsArray[j].name;
+                    if (bitStringEnums.hasOwnProperty(key)) {
+                        if (filter.bitStringEnumsArray[j].checked) {
+                            console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
+                            filter.value += bitStringEnums[key].enum;
+                            console.log("filter.value  = " + filter.value);
+                        }
+                        if (filter.value === total) {
+                            filter.value = bitStringEnums.All.enum;
+                        }
+                    }
+                }
+            }
+        },
         validateFilters = function (cleanup) {
-            var results = [],
-                valid,
-                push,
+            var results = {},
                 pointRef,
                 filters,
                 filter,
                 i,
+                index,
+                validEnumEvalue = function (currentFilter) {
+                    var answer = false,
+                        foundValues;
+
+                    if (currentFilter.evalue !== -1) {
+                        foundValues = currentFilter.valueList.filter(function (availableValue) {
+                            return availableValue.evalue === currentFilter.evalue;
+                        });
+                        answer = (foundValues.length > 0);
+                    } else {
+                        answer = true;  // -1 is blank placeholder.....
+                    }
+
+                    return answer;
+                },
                 checkFiltersForPointRefs = function () {
                     for (i = 0; i < self.listOfFilters().length; i++) {
                         filter = self.listOfFilters()[i];
@@ -2320,23 +2340,38 @@ var reportsViewModel = function () {
                     }
                 };
 
+            results.collection = [];
             checkFiltersForPointRefs();
             filters = $.extend(true, [], self.listOfFilters());
             for (i = 0; i < filters.length; i++) {
-                if (filters[i].filterName !== "") {
-                    valid = true;
-                    push = true;
-                    filter = filters[i];
+                filter = filters[i];
+                delete filter.error;
+                if (filter.filterName === "") {
+                    filter.error = "Missing Filter property at index " + i;
+                } else {
                     switch (filter.valueType) {
+                        case "Enum":
+                            if (!validEnumEvalue(filter)) {
+                                console.log("- - validateFilters() Enum evalue not in ValueList " + filter.evalue);
+                            }
+                            break;
+                        case "Unsigned":
+                        case "Float":
+                            if (!$.isNumeric(filter.value)) {
+                                filter.error = "Number is Invalid " + filter.value;
+                            }
+                            break;
+                        case "BitString":
+                            if (!$.isNumeric(filter.value)) {
+                                filter.error = "BitString is Invalid " + filter.value;
+                            }
+                            break;
                         case "Bool":
                             filter.value = (filter.value == "True" || filter.value == "true");
                             break;
                         case "Timet":
                         case "DateTime":
-                            if (moment.unix(filter.date).isValid()) {
-                                delete filter.error;
-                            } else {
-                                valid = false;
+                            if (!moment.unix(filter.date).isValid()) {
                                 filter.error = "Invalid Date format in Filters";
                             }
                             if (parseInt(filter.time, 10) === 0) {
@@ -2344,9 +2379,7 @@ var reportsViewModel = function () {
                             }
                             if (filter.time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
                                 filter.value = getFilterAdjustedDatetime(filter);
-                                delete filter.error;
                             } else {
-                                valid = false;
                                 filter.error = "Invalid Time format in Filters";
                             }
                             break;
@@ -2365,24 +2398,31 @@ var reportsViewModel = function () {
                                 pointRef = getPointRef(filter, "Qualifier Point");
                                 if (!!pointRef) {
                                     filter.value = pointRef.PointName;
-                                } else {  // upi not in pointref array
-                                    push = false;
+                                } else {
+                                    filter.error = "upi (" + filter.upi + ") not in pointref array";
                                 }
                             }
                             break;
+                        default:
+                            console.log("- - validateFilters() default for switch-n-case  " + filter.valueType);
+                            break;
                     }
+                }
 
-                    if (push) {
-                        results.push(filter);
-                    }
+                results.collection.push(filter);
 
-                    if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
-                        delete results[results.length - 1].valueList;
-                        delete results[results.length - 1].valueType;
-                        delete results[results.length - 1].error;
-                        delete results[results.length - 1].softDeleted;
-                        delete results[results.length - 1].upi;
-                    }
+                if (filter.error) {
+                    results.error = true;
+                }
+
+                if (cleanup && !filter.error && results.collection.length > 0) {  // clean fields only used during UI
+                    index = results.collection.length - 1;
+                    delete results.collection[index].valueList;
+                    delete results.collection[index].valueType;
+                    delete results.collection[index].error;
+                    delete results.collection[index].softDeleted;
+                    delete results.collection[index].upi;
+                    delete results.collection[index].valueListMaxWidth;
                 }
             }
 
@@ -2416,8 +2456,8 @@ var reportsViewModel = function () {
                 }
 
                 if (validFilter) {
-                    currentFilter.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentFilter.filterName].valueType : "");
                     currentFilter.valueList = [];
+                    currentFilter.valueListMaxWidth = 0;
                     setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
                     result.push(currentFilter);
                 }
@@ -2454,7 +2494,6 @@ var reportsViewModel = function () {
                     switch (self.reportType()) {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentColumn.colName].valueType : "");
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }
@@ -2474,6 +2513,9 @@ var reportsViewModel = function () {
                             currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
                             if (!Array.isArray(currentColumn.calculation)) {
                                 currentColumn.calculation = [];
+                            }
+                            if (currentColumn.operator === "Starts") {
+                                currentColumn.precision = 0;
                             }
                             break;
                         default:
@@ -2507,6 +2549,8 @@ var reportsViewModel = function () {
         },
         setValueList = function (property, pointType, index, activeRequest) {
             var result = [],
+                maxWidth = 0,
+                maxWidthInPixels = 0,
                 i,
                 setOptions = function (options) {
                     if (!!self.listOfFilters()[index]) {
@@ -2517,14 +2561,21 @@ var reportsViewModel = function () {
                             });
 
                             for (i = 0; i < options.length; i++) {
+                                if (maxWidth < options[i].name.length) {
+                                    maxWidth = options[i].name.length;
+                                }
                                 result.push({
                                     value: options[i].name,
                                     evalue: options[i].value
                                 });
                             }
-                            self.listOfFilters()[index].value = result[0].value;
-                            self.listOfFilters()[index].evalue = result[0].evalue;
+                            maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
+                            if (self.listOfFilters()[index].evalue === undefined || self.listOfFilters()[index].evalue < 0) {
+                                self.listOfFilters()[index].value = result[0].value;
+                                self.listOfFilters()[index].evalue = result[0].evalue;
+                            }
                             self.listOfFilters()[index].valueList = result;
+                            self.listOfFilters()[index].valueListMaxWidth = maxWidthInPixels;
                             updateListOfFilters(self.listOfFilters());
                         }
                     }
@@ -2654,53 +2705,13 @@ var reportsViewModel = function () {
         buildReportDataRequest = function () {
             var result,
                 i,
-                j,
-                columns,
+                validatedColumns,
                 columnConfig,
-                filters,
+                validatedFilters,
+                filterConfig,
                 activeError = false,
                 upis = [],
                 uuid,
-                formatFilters = function (allFilters) {
-                    var filter,
-                        i;
-                    for (i = 0; i < allFilters.length; i++) {
-                        filter = allFilters[i];
-                        // console.log("filter  = " + JSON.stringify(filter));
-                        if (!!filter.error) {
-                            displayError(filter.error);
-                            activeError = true;
-                        }
-                        if (filter.valueType === "BitString") {
-                            var total = 0,
-                                key,
-                                bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
-
-                            for (key in bitStringEnums) {
-                                if (bitStringEnums.hasOwnProperty(key)) {
-                                    if (key !== "All") {
-                                        total += bitStringEnums[key].enum;
-                                    }
-                                }
-                            }
-
-                            filter.value = 0;
-                            for (j = 0; j < filter.bitStringEnumsArray.length; j++) {
-                                key = filter.bitStringEnumsArray[j].name;
-                                if (bitStringEnums.hasOwnProperty(key)) {
-                                    if (filter.bitStringEnumsArray[j].checked) {
-                                        //console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
-                                        filter.value += bitStringEnums[key].enum;
-                                        //console.log("filter.value  = " + filter.value);
-                                    }
-                                    if (filter.value === total) {
-                                        filter.value = bitStringEnums.All.enum;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
                 cleanUpReportConfig = function (reportConfig) {  // shrinking size of request object
                     var results = $.extend(true, {}, reportConfig),
                         i;
@@ -2720,99 +2731,106 @@ var reportsViewModel = function () {
                     return results;
                 };
 
-            columns = validateColumns(); //self.listOfColumns();
-            filters = validateFilters(); //self.listOfFilters();
+            validatedColumns = validateColumns();
+            validatedFilters = validateFilters();
 
-            if (columns.length > 1) {
-                // collect UPIs from Columns
-                for (i = 0; i < columns.length; i++) {
-                    columnConfig = columns[i];
-                    if (!!columns[i].error) {
-                        displayError(columns[i].error);
-                        activeError = true;
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
-                    } else {
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                        if (columns[i].upi > 0) {
-                            upis.push({
-                                upi: parseInt(columns[i].upi, 10),
-                                op: (columns[i].operator).toLowerCase()
-                            });
-                        }
-                    }
-                }
-
-                if (self.reportType() === "Totalizer" || self.reportType() === "History") {
-                    configureSelectedDuration();
+            for (i = 0; i < validatedColumns.collection.length; i++) {
+                columnConfig = validatedColumns.collection[i];
+                if (!!validatedColumns.collection[i].error) {
+                    displayError(validatedColumns.collection[i].error);
+                    activeError = true;
+                    $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    self.selectConfigReportTabSubTab("reportColumns");
                 } else {
-                    if (filters.length > 0) {
-                        formatFilters(filters);
+                    $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                    if (validatedColumns.collection[i].upi > 0) {  // collect UPIs from Columns
+                        upis.push({
+                            upi: parseInt(validatedColumns.collection[i].upi, 10),
+                            op: (validatedColumns.collection[i].operator).toLowerCase()
+                        });
                     }
                 }
+            }
 
-                if (!activeError) {
-                    switch (self.reportType()) {
-                        case "History":
-                        case "Totalizer":
-                            point["Report Config"].interval = {
-                                period: self.intervalPeriod(),
-                                value: self.intervalValue()
-                            };
-                            point["Report Config"].duration = {
-                                startDate: self.selectedDuration().startDate.unix(),
-                                endDate: self.selectedDuration().endDate.unix(),
-                                startTimeOffSet: self.durationStartTimeOffSet(),
-                                endTimeOffSet: self.durationEndTimeOffSet(),
-                                // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
-                                selectedRange: self.selectedDuration().selectedRange
-                            };
-                            break;
-                        case "Property":
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  buildReportDataRequest()");
-                            break;
-                    }
-
-                    point["Report Config"].pointFilter = {
-                        "name1": self.name1Filter(),
-                        "name2": self.name2Filter(),
-                        "name3": self.name3Filter(),
-                        "name4": self.name4Filter(),
-                        "selectedPointTypes": self.selectedPointTypesFilter()
-                    };
-                    point["Report Config"].columns = columns;
-                    point["Report Config"].filters = filters;
-
-                    uuid = generateUUID();
-                    activeDataRequests.push(uuid);
-
-                    result = {
-                        requestID: uuid,
-                        upis: upis,
-                        range: {
-                            start: self.startDate(),
-                            end: self.endDate()
-                        },
-                        reportConfig: cleanUpReportConfig(point["Report Config"]),
-                        reportType: point["Report Type"].Value,
-                        sort: ""
-                    };
+            for (i = 0; i < validatedFilters.collection.length; i++) {
+                filterConfig = validatedFilters.collection[i];
+                if (!!filterConfig.error) {
+                    displayError(filterConfig.error);
+                    activeError = true;
+                    $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                    self.selectConfigReportTabSubTab("additionalFilters");
+                } else {
+                    $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                 }
-            } else {
+            }
+
+            if (validatedColumns.collection.length === 1 && self.reportType() !== "Property") {
+                activeError = true;
                 displayError("Column list is blank. Nothing to report on.");
+            }
+
+            if (!activeError) {
+                switch (self.reportType()) {
+                    case "History":
+                    case "Totalizer":
+                        configureSelectedDuration();
+
+                        point["Report Config"].interval = {
+                            period: self.intervalPeriod(),
+                            value: self.intervalValue()
+                        };
+
+                        point["Report Config"].duration = {
+                            startDate: self.selectedDuration().startDate.unix(),
+                            endDate: self.selectedDuration().endDate.unix(),
+                            startTimeOffSet: self.durationStartTimeOffSet(),
+                            endTimeOffSet: self.durationEndTimeOffSet(),
+                            // duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                            selectedRange: self.selectedDuration().selectedRange
+                        };
+                        break;
+                    case "Property":
+                        break;
+                    default:
+                        console.log(" - - - DEFAULT  buildReportDataRequest()");
+                        break;
+                }
+
+                point["Report Config"].pointFilter = {
+                    "name1": self.name1Filter(),
+                    "name2": self.name2Filter(),
+                    "name3": self.name3Filter(),
+                    "name4": self.name4Filter(),
+                    "selectedPointTypes": self.selectedPointTypesFilter()
+                };
+                point["Report Config"].columns = validatedColumns.collection;
+                point["Report Config"].filters = validatedFilters.collection;
+
+                uuid = generateUUID();
+                activeDataRequests.push(uuid);
+
+                result = {
+                    requestID: uuid,
+                    upis: upis,
+                    range: {
+                        start: self.startDate(),
+                        end: self.endDate()
+                    },
+                    reportConfig: cleanUpReportConfig(point["Report Config"]),
+                    reportType: point["Report Type"].Value,
+                    "Point Refs": point["Point Refs"],
+                    sort: ""
+                };
             }
 
             return result;
         },
         tabSwitch = function (tabNumber) {
             if ($.isNumeric(tabNumber)) {
-                $tabs.find("li").removeClass("active");
-                $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
                 self.currentTab(tabNumber);
                 switch (tabNumber) {
                     case 1:
@@ -3035,7 +3053,7 @@ var reportsViewModel = function () {
                     case "undecided":
                     case "null":
                     case "None":
-                        if ($.isNumeric(rawValue)) {
+                        if ($.isNumeric(rawValue) && self.reportType() !== 'Property') { // #271 Channel values were getting unwanted precision in property reports
                             if (!!columnConfig.multiplier) {
                                 result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                             } else {
@@ -3059,7 +3077,7 @@ var reportsViewModel = function () {
                                 result.Value = dataField.PointName;
                                 result.rawValue = dataField.PointName;
                             } else {
-                                result.Value = "";
+                                result.Value = "None";
                                 result.rawValue = "";
                             }
                         } else {
@@ -3226,23 +3244,30 @@ var reportsViewModel = function () {
                 len = data.length,
                 j,
                 columnData = [],
+                columnDrillDownData = [],
                 columnsLength = columnArray.length,
                 columnName,
                 columnDataFound,
                 result = [],
                 fieldValue,
                 columnSum = 0,
-                totalAmount = 0;
+                totalAmount = 0,
+                sumsForProperties = {},
+                drilldown = {};
 
+            if (self.reportType() === "Property") {
+                self.selectedChartType("Pie");
+            }
             for (j = 1; j < columnsLength; j++) {
                 columnSum = 0;
                 columnConfig = {};
                 columnConfig = columnArray[j];
                 columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
-                if (columnConfig.includeInChart) {
+                if (columnConfig.includeInChart == true) {
                     if (self.selectedChartType() !== "Pie") {
                         columnData = [];
                     }
+                    sumsForProperties[columnName] = {};
                     for (i = 0; i < len; i++) {
                         columnDataFound = (data[i][columnName] !== undefined);
                         if (columnDataFound) {
@@ -3262,7 +3287,11 @@ var reportsViewModel = function () {
                                     break;
                                 case "Property":
                                     if (self.selectedChartType() === "Pie") {
-                                        columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
+                                        if (sumsForProperties[columnName][data[i][columnName].rawValue] === undefined) {
+                                            sumsForProperties[columnName][data[i][columnName].rawValue] = 0;
+                                        }
+                                        sumsForProperties[columnName][data[i][columnName].rawValue] += 1;
+                                        // columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
                                     } else {
                                         columnData.push({
                                             value: fieldValue
@@ -3277,19 +3306,48 @@ var reportsViewModel = function () {
                             console.log("data[" + i + " ][" + columnName + "] not found");
                         }
                     }
-                    if (self.selectedChartType() === "Pie") {
-                        columnData.push({
-                            name: columnConfig.colName,
-                            y: parseFloat(columnSum)
-                        });
-                        totalAmount += parseFloat(columnSum);
+                    if (self.reportType() === "Property") {
+                        drilldown.series = [];
+                        // TODO drilldown data specific to Property & Pie chart
+                        // for (var fieldName in sumsForProperties) {
+                        //     if (sumsForProperties.hasOwnProperty(fieldName)) {
+                        //         columnData.push({
+                        //             name: fieldName,
+                        //             y: parseFloat(10),
+                        //             drilldown: fieldName
+                        //         });
+                        //         columnDrillDownData = [];
+                        //         for (var enumName in sumsForProperties[fieldName]) {
+                        //             if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
+                        //                 console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
+                        //                 columnDrillDownData.push({
+                        //                     enumName: parseFloat(sumsForProperties[fieldName][enumName])
+                        //                 });
+                        //                 totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
+                        //             }
+                        //         }
+                        //         drilldown.series.push({
+                        //             name: fieldName,
+                        //             id: fieldName,
+                        //             data: columnDrillDownData,
+                        //         });
+                        //     }
+                        // }
                     } else {
-                        if (columnData.length > 0) {
-                            result.push({
-                                data: columnData,
+                        if (self.selectedChartType() === "Pie") {
+                            columnData.push({
                                 name: columnConfig.colName,
-                                yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                y: parseFloat(columnSum)
                             });
+                            totalAmount += parseFloat(columnSum);
+                        } else {
+                            if (columnData.length > 0) {
+                                result.push({
+                                    data: columnData,
+                                    name: columnConfig.colName,
+                                    yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                });
+                            }
                         }
                     }
                 }
@@ -3301,7 +3359,8 @@ var reportsViewModel = function () {
                 result.push({
                     name: "Total",
                     colorByPoint: true,
-                    data: columnData
+                    data: columnData,
+                    drilldown: drilldown
                 });
             }
             return setYaxisValues(result);
@@ -3318,8 +3377,10 @@ var reportsViewModel = function () {
 
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
-                $activePane.css("width", (window.innerWidth - 130));
+                // $activePane.css("width", (window.innerWidth - 130));
+                $activePane.css("width", "100%");
             } else if ($activePane.attr("id") === "gridData") {
+                $dataTablePlaceHolder.css("width", "100%");
                 $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                 $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
                 $dataTablesScrollFoot = $tabViewReport.find(".dataTables_scrollFoot");
@@ -3327,12 +3388,15 @@ var reportsViewModel = function () {
 
                 setDatatableInfoBar();
                 adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
-                $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                // $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $dataTablesScrollHead.css("width", "100%"); // allow for scrolly in body
                 $dataTablesScrollBody.css("height", adjustHeight);
-                $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
-                $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                // $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
+                // $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $dataTablesScrollBody.css("width", "100%");
+                $dataTablesScrollFoot.css("width", "100%"); // allow for scrolly in body
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
-                //$dataTablePlaceHolder.DataTable().columns.adjust();
+                // $dataTablePlaceHolder.DataTable().columns.adjust().draw();
             }
         },
         adjustConfigTabActivePaneHeight = function () {
@@ -3357,7 +3421,10 @@ var reportsViewModel = function () {
         },
         setReportConfig = function (cb) {
             var formattingPointRequest = 0,
+                i,
                 errors,
+                validatedColumns,
+                validatedFilters,
                 handleFormatPointRequests = function (result) {
                     if (!!result.err) {
                         if (errors === undefined) {
@@ -3393,42 +3460,76 @@ var reportsViewModel = function () {
                     formattingPointRequest++;
                     formatPoint(handleFormatPointRequests, {}, "name4");
                 };
-            point["Report Config"].columns = validateColumns(true);
-            point["Report Config"].filters = validateFilters(true);
-            point["Report Config"].pointFilter = {
-                "name1": self.name1Filter(),
-                "name2": self.name2Filter(),
-                "name3": self.name3Filter(),
-                "name4": self.name4Filter(),
-                "selectedPointTypes": self.selectedPointTypesFilter()
-            };
-            point["Report Config"].selectedPageLength = self.selectedPageLength();
-            point["Report Config"].selectedChartType = self.selectedChartType();
-            point["Report Config"].reportTitle = self.reportDisplayTitle();
-            switch (self.reportType()) {
-                case "History":
-                case "Totalizer":
-                    point["Report Config"].interval = {
-                        period: self.intervalPeriod(),
-                        value: self.intervalValue()
-                    };
-                    point["Report Config"].duration = {
-                        startDate: self.selectedDuration().startDate.unix(),
-                        endDate: self.selectedDuration().endDate.unix(),
-                        startTimeOffSet: self.durationStartTimeOffSet(),
-                        endTimeOffSet: self.durationEndTimeOffSet(),
-                        duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
-                        selectedRange: self.selectedDuration().selectedRange
-                    };
-                    break;
-                case "Property":
-                    break;
-                default:
-                    console.log(" - - - DEFAULT  init()");
-                    break;
-            }
 
-            checkForNameChanges();
+            validatedColumns = validateColumns(true);
+            validatedFilters = validateFilters(true);
+            if (!!validatedColumns.error || !!validatedFilters.error) {
+                if (!!validatedColumns.error) {
+                    for (i = 0; i < validatedColumns.collection.length; i++) {
+                        if (!!validatedColumns.collection[i].error) {
+                            displayError(validatedColumns.collection[i].error);
+                            $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                            $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                            $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        } else {
+                            $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                            $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                            $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        }
+                    }
+                    self.selectConfigReportTabSubTab("reportColumns");
+                }
+                if (!!validatedFilters.error) {
+                    for (i = 0; i < validatedFilters.collection.length; i++) {
+                        if (!!validatedFilters.collection[i].error) {
+                            displayError(validatedFilters.collection[i].error);
+                            $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        } else {
+                            $filtersGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        }
+                    }
+                    self.selectConfigReportTabSubTab("additionalFilters");
+                }
+                tabSwitch(1);
+                self.activeSaveRequest(false);
+            } else {
+                point["Report Config"].columns = validatedColumns.collection;
+                point["Report Config"].filters = validatedFilters.collection;
+                point["Report Config"].pointFilter = {
+                    "name1": self.name1Filter(),
+                    "name2": self.name2Filter(),
+                    "name3": self.name3Filter(),
+                    "name4": self.name4Filter(),
+                    "selectedPointTypes": self.selectedPointTypesFilter()
+                };
+                point["Report Config"].selectedPageLength = self.selectedPageLength();
+                point["Report Config"].selectedChartType = self.selectedChartType();
+                point["Report Config"].reportTitle = self.reportDisplayTitle();
+                switch (self.reportType()) {
+                    case "History":
+                    case "Totalizer":
+                        point["Report Config"].interval = {
+                            period: self.intervalPeriod(),
+                            value: self.intervalValue()
+                        };
+                        point["Report Config"].duration = {
+                            startDate: self.selectedDuration().startDate.unix(),
+                            endDate: self.selectedDuration().endDate.unix(),
+                            startTimeOffSet: self.durationStartTimeOffSet(),
+                            endTimeOffSet: self.durationEndTimeOffSet(),
+                            duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                            selectedRange: self.selectedDuration().selectedRange
+                        };
+                        break;
+                    case "Property":
+                        break;
+                    default:
+                        console.log(" - - - DEFAULT  init()");
+                        break;
+                }
+
+                checkForNameChanges();
+            }
         },
         setReportEvents = function () {
             var intervals,
@@ -3476,7 +3577,8 @@ var reportsViewModel = function () {
                             operator: "EqualTo",
                             valueType: "String",
                             value: "",
-                            valueList: ""
+                            valueList: "",
+                            valueListMaxWidth: 0
                         };
                         e.preventDefault();
                         e.stopPropagation();
@@ -3749,7 +3851,7 @@ var reportsViewModel = function () {
                     $filtersGrid.sortable({
                         appendTo: $filtersTbody,
                         disabled: false,
-                        items: "tr",
+                        items: "tr",  // to skip first row  "tr:gt(0)"
                         forceHelperSize: true,
                         helper: "original",
                         stop: function (event, ui) {
@@ -4269,15 +4371,18 @@ var reportsViewModel = function () {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
                             i,
                             colIndex = 0,
-                            $theads = $(thead).find("th");
+                            $theads = $(thead).find("th"),
+                            $firstThead;
+
 
                         for (i = 0; i < reportColumns.length; i++) {
                             if (!!reportColumns[i].calculation && reportColumns[i].calculation.length > 0) {
                                 $(thead).find("th").eq(i).addClass("calculate");
                             }
-                            $(thead).find("th").eq(i).addClass("text-center");
-                            $(thead).find("th").eq(i).removeClass("small");
                         }
+
+                        $theads.addClass("text-center");
+                        $theads.removeClass("small");
 
                         switch (self.reportType()) {
                             case "History":
@@ -4288,8 +4393,9 @@ var reportsViewModel = function () {
                                 });
                                 break;
                             case "Property":
-                                $theads = $(thead).find("th:first");
-                                $theads.addClass("pointLookupColumn");
+                                $firstThead = $(thead).find("th:first");
+                                $firstThead.addClass("pointLookupColumn");
+                                $firstThead.removeClass("pointInstance");
                                 break;
                             default:
                                 break;
@@ -4389,13 +4495,15 @@ var reportsViewModel = function () {
                             }
                         }
 
+                        $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
                         if (numberOfColumnsToCalculate > 0) {
-                            $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
                             $firstColumn.text("Calculations:");
                             $firstColumn.removeClass("small");
                             $firstColumn.addClass("text-right");
+                            $(tfoot).parent().removeClass("hide");
                         } else { // if none of the columns were calculated hide the Verbiage
-                            $(tfoot).parent().parent().addClass("hidden"); // hide the footer block
+                            $firstColumn.removeClass("pointInstance");
+                            $(tfoot).parent().addClass("hide"); // hide the footer block
                         }
                     },
                     data: reportData,
@@ -4478,7 +4586,7 @@ var reportsViewModel = function () {
                     var answer;
 
                     if (self.reportType() === "Property") {
-                        answer = 28;
+                        answer = 24;
                     } else {  // History & Totalizer
                         answer = 24;
                     }
@@ -4517,9 +4625,11 @@ var reportsViewModel = function () {
                                 }
 
                             }
-                            for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {  // add column headers
-                                if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
-                                    headerArray.push({Value: columnsArray[j].colDisplayName});
+                            if (columnsArray.length > 1) {  // property reports can have a single column
+                                for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {  // add column headers
+                                    if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
+                                        headerArray.push({Value: columnsArray[j].colDisplayName});
+                                    }
                                 }
                             }
                         };
@@ -4533,9 +4643,11 @@ var reportsViewModel = function () {
                         if (columnsArray[0].dataColumnName !== undefined) {
                             rowArray.push(row[columnsArray[0].dataColumnName]);
                         }
-                        for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {
-                            if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
-                                rowArray.push(row[columnsArray[j].dataColumnName]);
+                        if (columnsArray.length > 1) {  // property reports can have a single column
+                            for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {
+                                if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
+                                    rowArray.push(row[columnsArray[j].dataColumnName]);
+                                }
                             }
                         }
                         currentPage.push({cells: rowArray});
@@ -4558,7 +4670,7 @@ var reportsViewModel = function () {
                         dataIndex.rowStartIdx = dataIndex.rowStopIdx + 1;
                         dataIndex.gridRowStartIdx = dataIndex.rowStartIdx;
                         dataIndex.gridRowStopIdx = reportData.length - 1;
-                        dataIndex.columnStartIdx = 1;
+                        dataIndex.columnStartIdx = (columnsArray.length === 1 ? 0 : 1); // property reports can have a single column
                         if (columnRangeNeeded) {
                             columnRange++;
                             columnRangeNeeded = false;  // displayed all data for current range
@@ -4717,7 +4829,7 @@ var reportsViewModel = function () {
                 };
 
             if (reportData !== undefined) {
-                dataIndex.columnStartIdx = 1;  // set indexes to full data set
+                dataIndex.columnStartIdx = (columnsArray.length === 1 ? 0 : 1);  // set indexes to full data set.   property reports can have a single column
                 dataIndex.columnStopIdx = (columnsArray.length);
                 dataIndex.rowStartIdx = 0;
                 dataIndex.rowStopIdx = (reportData.length - 1);
@@ -4774,7 +4886,6 @@ var reportsViewModel = function () {
                     $dataTablePlaceHolder.DataTable().clear();
                     $dataTablePlaceHolder.DataTable().rows.add(reportData);
                     $dataTablePlaceHolder.DataTable().draw("current");
-                    // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                     self.refreshData(false);
                     self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
 
@@ -5004,7 +5115,7 @@ var reportsViewModel = function () {
             }
         },
         saveManager = (function () {
-            let remainingResponses = 0,
+            var remainingResponses = 0,
                 errList = [],
                 reportpStatusBeforeSave,
                 submitSaveReportRequest = function (errors) {
@@ -5015,7 +5126,8 @@ var reportsViewModel = function () {
                         if (point._pStatus === 1) {
                             // call addPoint here integrate into dtiutil
                             reportSocket.emit("addPoint", {
-                                point: point
+                                newPoint: point,
+                                oldPoint: originalPoint
                             });
                         } else {
                             ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
@@ -5044,7 +5156,7 @@ var reportsViewModel = function () {
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
-                    let err = result.err;
+                    var err = result.err;
                     tabSwitch(1);  // switch to configuration tab
                     if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
@@ -5604,6 +5716,8 @@ var reportsViewModel = function () {
                         selectedReportIntervalValue: ko.observable(1),
                         selectedReportStartTimeOffset: ko.observable('00:00'),
                         selectedReportEndTimeOffset: ko.observable('00:00'),
+                        displayDuration: ko.observable(self.reportType() !== "Property"),
+                        displayInterval: ko.observable(self.reportType() !== "Property"),
                         update: function () {
                             var parsed,
                                 len;
@@ -5673,8 +5787,12 @@ var reportsViewModel = function () {
                             done();
                         },
                         deleteScheduleEntry: function () {
-                            data.deleteMe(true);
-                            self.scheduler.setDirty(data);
+                            if (!data._id) { // If this is a new entry that hasn't been saved to the db
+                                self.scheduler.scheduleEntries.remove(data);
+                            } else {
+                                data.deleteMe(true);
+                                self.scheduler.setDirty(data);
+                            }
                             self.scheduler.modal.close();
                         },
                         handleDurationChange: function () {
@@ -5813,6 +5931,7 @@ var reportsViewModel = function () {
                     }],
                     autoselect: true,
                     showOnFocus: true,
+                    enterOnBlur: true,
                     persistAfterSelect: true
                 });
 
@@ -5871,7 +5990,7 @@ var reportsViewModel = function () {
             return str;
         },
         setDirty: function (data) {
-            data.isDirty = true;
+            data.isDirty(true);
             return true;
         },
         getNewScheduleObject: function (cfg) {
@@ -5897,7 +6016,7 @@ var reportsViewModel = function () {
                     enabled: ko.observable(true),
                     transport: ko.observable('email'),
                     // Following are keys used by UI but removed before the object is sent to the server
-                    isDirty: true,
+                    isDirty: ko.observable(true),
                     parsed: null,
                     deleteMe: ko.observable(false)
                 },
@@ -5956,7 +6075,7 @@ var reportsViewModel = function () {
                 err = false;
 
             dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
-                if (schedule.isDirty) {
+                if (schedule.isDirty()) {
                     // Get a shallow copy of the source so we can remove the UI-only keys
                     schedule = $.extend({}, ko.toJS(schedule));
                     delete schedule.isDirty;
@@ -6004,7 +6123,7 @@ var reportsViewModel = function () {
                             }
                             // Clear our isDirty flags
                             dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
-                                schedule.isDirty = false;
+                                schedule.isDirty(false);
                             });
                         }
                         callback(err);
@@ -6038,7 +6157,7 @@ var reportsViewModel = function () {
 
                     dti.forEachArray(data.schedules, function addSchedule(schedule) {
                         // Add UI-only keys
-                        schedule.isDirty = false;
+                        schedule.isDirty = ko.observable(false);
                         schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
                         schedule.deleteMe = ko.observable(false);
                         // Convert some keys to observables
@@ -6153,20 +6272,9 @@ var reportsViewModel = function () {
             setCurrentUser = function (results) {
                 currentUser = results;
             },
-            initComplete = function () {
-                return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
-            },
-            setGlobalEnumsTemplates = function (results) {
-                ENUMSTEMPLATESTEMPLATES = results;
-                if (initComplete()) {
-                    postConfigInit();
-                }
-            },
             setGlobalEnums = function (results) {
                 ENUMSTEMPLATESENUMS = results;
-                if (initComplete()) {
-                    postConfigInit();
-                }
+                postConfigInit();
             },
             initGlobals = function () {
                 var dateRanges = reportDateRanges(),
@@ -6184,7 +6292,6 @@ var reportsViewModel = function () {
 
                 self.reportDateRangeCollection(dateRangeCollection);
                 dtiUtility.getConfig("Enums", null, setGlobalEnums);
-                dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
             },
             postConfigInit = function () {
                 if (!!point) {
@@ -6548,11 +6655,8 @@ var reportsViewModel = function () {
     };
 
     self.focusChartView = function (element) {
-        // self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
         $reportChartDiv.parent().css("overflow", "");
-        // $viewReportNav.find("chartData a").addClass("active");
-        // $viewReportNav.find("gridData a").removeClass("active");
         renderChart(null, scheduled);
     };
 
@@ -6832,8 +6936,6 @@ var reportsViewModel = function () {
         column.includeInChart = element.checked;
         updateListOfColumns(tempArray);
         return true;
-        // self.listOfColumns()[indexOfColumn].includeInChart = element.checked;
-        // return true;
     };
 
     self.globalColumnIncludeInChartClick = function () {
@@ -6854,8 +6956,11 @@ var reportsViewModel = function () {
         }
     };
 
-    self.setDateRange = function (element, selectedItem) {
-        console.log("selectedItem = " + selectedItem);
+    self.handleBitStringChange = function (element, indexOfFilter, checkboxIndex) {
+        var tempArray = self.listOfFilters(),
+            filter = tempArray[indexOfFilter];
+        calculateBitStringValue(filter);
+        return true;
     };
 
     self.selectedFilterEValue = function (indexOfValue, selectedItem) {
@@ -6873,6 +6978,10 @@ var reportsViewModel = function () {
         window.setTimeout(function () { // Delay the focus for drop down transition to finish
             $searchInputField.focus();
         }, 50);
+    };
+
+    self.selectConfigReportTabSubTab = function (subTabName) {
+        $tabConfiguration.find('ul.tabs').tabs('select_tab', subTabName);
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {

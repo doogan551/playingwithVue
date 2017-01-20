@@ -241,6 +241,14 @@ var dtiUtility =  {
         dtiUtility._getUserCb = cb;
 
         dtiUtility.sendMessage('getUser');
+    },
+
+    toast: function (parameters) {
+        dtiUtility.sendMessage('toast', parameters);
+    },
+
+    playAudio: function (parameters) {
+        dtiUtility.sendMessage('playAudio', parameters);
     }
 };
 

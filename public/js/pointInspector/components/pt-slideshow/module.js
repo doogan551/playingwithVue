@@ -1,5 +1,13 @@
 define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
-    var apiEndpoint;
+    var apiEndpoint,
+        filter = {
+            name1: "",
+            name2: "",
+            name3: "",
+            name4: "",
+            pointTypes: ["Display"],
+            disableNewPoint: true
+        };
 
     ko.bindingHandlers.dataSrc = {
         update: function(element, valueAccessor) {
@@ -166,9 +174,9 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
     };
 
     ViewModel.prototype.addPointRef = function(vm, event) {
-        var parameters,
-            callback = function (pointInfo) {
+        var callback = function (pointInfo) {
                 if (!!pointInfo) {
+                    filter = $.extend(filter, pointInfo.filter);
                     getRefData(pointInfo._id).done(
                         function (data) {
                             var pointRefs = vm.data['Point Refs'](),
@@ -199,7 +207,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                 }
             };
 
-        dtiUtility.showPointSelector(parameters);
+        dtiUtility.showPointSelector(filter);
         dtiUtility.onPointSelect(callback);
     };
 

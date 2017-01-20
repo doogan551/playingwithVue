@@ -20,6 +20,7 @@ var common;
 var rooms = {};
 
 var model;
+var count = 0;
 
 module.exports = model = function(_common) {
     common = _common;
@@ -58,7 +59,6 @@ module.exports = model = function(_common) {
     }
 
     oplog.on('insert', function(doc) {
-
         var startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -160,7 +160,6 @@ module.exports = model = function(_common) {
                     },
 
                     function(point, wfcb) {
-                        // logger.info(point._id + " " + doc.o2._id);
                         if (doc.o.$set !== undefined && (doc.o.$set.Value !== undefined ||
                                 doc.o.$set["Value.Value"] !== undefined ||
                                 doc.o.$set["Value.ValueOptions"] !== undefined ||
@@ -200,6 +199,7 @@ module.exports = model = function(_common) {
                                 doc.o.$set._relDevice !== undefined ||
                                 doc.o.$set._relRMU !== undefined ||
                                 doc.o.$set._relPoint !== undefined)) {
+
                             updateReliability(point, function(err, point) {
                                 wfcb(err, point);
                             });
@@ -210,6 +210,7 @@ module.exports = model = function(_common) {
                     function(point, wfcb) {
 
                         if (utils.checkDynamicProperties(doc.o.$set)) {
+
                             checkForPointTail(doc.o2._id, point, function() {
                                 wfcb(null, point);
                             });
@@ -329,7 +330,6 @@ module.exports = model = function(_common) {
                 });
             }
         } else if (doc.ns === dbName + '.Schedules') {
-            console.log('deleting schedule', doc);
             scheduler.stopSchedule(doc.o);
         }
     });
@@ -433,6 +433,7 @@ function updateFromTail(_id, value, reliability) {
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
+
     Utility.update({
             query: {
                 _id: _id
@@ -482,12 +483,16 @@ function updateValsTail(point, finalCB) {
             }
         }
 
-        common.sendUpdate({
-            upi: point._id,
-            Value: point.Value.Value,
-            eValue: point.Value.eValue,
-            "Quality Label": point["Quality Label"]
-        });
+        if (!point.hasOwnProperty('Value')) {
+            logger.info('no value property on ', point._id);
+        } else {
+            common.sendUpdate({
+                upi: point._id,
+                Value: point.Value.Value,
+                eValue: point.Value.eValue,
+                "Quality Label": point["Quality Label"]
+            });
+        }
 
     }
 

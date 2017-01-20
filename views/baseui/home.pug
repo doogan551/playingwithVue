@@ -147,7 +147,7 @@ html
                         .row
                             .date(data-bind="text: dateTime")
                             .messageContainer
-                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }')
+                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
                             .type(data-bind='text: almClassText, css: cssClass')
                             .ackContainer
                                 a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
@@ -372,7 +372,7 @@ html
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
             .itemTitle.white-text
                 i.right.material-icons.closeIcon close
-                div(data-bind="text: title")
+                div(data-bind="text: title, attr: {title: title}")
             .itemBody
                 //ko if: thumbnail() === true
                 img(data-bind="thumbnail: upi, visible: thumbnailFound")
@@ -387,10 +387,9 @@ html
         .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
-                    div
-                        a.white-text(href="javascript://")
-                            i.material-icons.popInOutIcon call_made
-                        | #[span(data-bind="text: title")]
+                    a.white-text(href="javascript://")
+                        i.material-icons.popInOutIcon call_made
+                    | #[span(data-bind="text: title")]
                 a.white-text(href="javascript://", data-bind="click: refresh, visible: hasUrl")
                     i.material-icons refresh
                 //- a.white-text(href="javascript://")
@@ -455,22 +454,22 @@ html
                     .name1.input-field.col
                         input(type='text', data-bind="hasFocus: focus, textInput: name1, attr: { id: id() + '_name1' }")
                         label(data-bind="updateLabel: name1, attr: { for: id() + '_name1' }") Name 1
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }, visible: name1() !== '' ")
                             i.material-icons.suffix clear
                     .name2.input-field.col
                         input(type='text', data-bind="textInput: name2, attr: { id: id() + '_name2' }")
                         label(data-bind="updateLabel: name2, attr: { for: id() + '_name2' }") Name 2
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }, visible: name2() !== '' ")
                             i.material-icons.suffix clear                                    
                     .name3.input-field.col
                         input(type='text', data-bind="textInput: name3, attr: { id: id() + '_name3' }")
                         label(data-bind="updateLabel: name3, attr: { for: id() + '_name3' }") Name 3
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }, visible: name3() !== '' ")
                             i.material-icons.suffix clear                                    
                     .name4.input-field.col
                         input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
                         label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
-                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }, visible: name4() !== '' ")
                             i.material-icons.suffix clear                                                                                                                                       
                     //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
@@ -498,7 +497,7 @@ html
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
                             // ko if: visible() === true
-                            span(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); return false; }")
+                            span(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); $parent.pointTypeChanged(); return false; }")
                                 input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
                             // /ko
@@ -575,7 +574,7 @@ html
         // /ko
 
     script#autosuggestTemplate(type='text/html')
-        .autosuggestContainer.z-depth-2(data-bind='visible: isShown, style: { left: position.left }')
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown')
             // ko foreach: sources
             .autosuggestHeader(data-bind='visibile: nameShown, text: name')
             .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')

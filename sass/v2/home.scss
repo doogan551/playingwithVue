@@ -380,6 +380,12 @@ $modalHeaderHeight: 42px;
     cursor: pointer;
     padding-left: 10px;
 }
+.toast.errorToast {
+    background-color: map-get($red, darken-2);
+}
+.toast.warningToast {
+    background-color: map-get($deep-orange, darken-1);
+}
 
 .activeCard {
     z-index: 101 !important;
@@ -413,19 +419,17 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         .card-title {
             font-size: 16px;
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 6px;
+            top: 4px;
+            left: 30px;
+            right: 60px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
 
-            div {
-                position: relative;
-
-                .popInOutIcon {
-                    position: absolute;
-                    left: -20px;
-                    top: -1px;
-                    font-size: 16px;
-                }
+            .popInOutIcon {
+                margin-right: 10px;
+                font-size: 16px;
             }
         }
     }
@@ -976,6 +980,13 @@ footer {
         border-bottom: 1px solid $cardTitleBorder;
         height: 23px;
         padding-right: 20px;
+
+        div {
+            max-width: 175px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     }
 
     .itemBody {
@@ -1084,8 +1095,12 @@ footer {
 
         .message {
             display: inline-block;
-            padding: 0 5px;
+            padding-right: 5px;
             border-radius: 3px;
+        }
+        .message:hover {
+            text-decoration: underline;
+            cursor: pointer;
         }
 
         .type {
@@ -1605,6 +1620,8 @@ $loaderSpeedScale: 1 / .75;
             width: 20%;
             max-height: 28px;
             display: inline-block;
+            overflow: hidden;
+            vertical-align: top;
         }
     }
 
@@ -1690,4 +1707,10 @@ $loaderSpeedScale: 1 / .75;
 input:focus {
     border-bottom: 1px solid $blue-grey !important;
     box-shadow: 0 1px 0 0 $blue-grey !important;
+}
+
+.hiddenToast {
+    background-color: transparent;
+    box-shadow: none;
+    color: transparent;
 }

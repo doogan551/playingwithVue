@@ -73,6 +73,23 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
         this.refPointType = this.getPointTypeName(parseInt(this.reference.PointType(), 10));
         this.url = ko.observable(undefined);
         this.target = ko.observable(undefined);
+        this.displayLabel = ko.computed(function() {
+            var label = this.getPointRef().PropertyName();
+            if (label === 'Device Point') {
+                var devModel = this.point.data._devModel();
+                if (devModel !== 0) {
+                    devModel = this.utility.config.revEnums['Device Model Types'][devModel];
+                    label += [' (', devModel, ')'].join('');
+                }
+            } else if (label === 'Remote Unit Point') {
+                var rmuModel = this.point.data._rmuModel();
+                if (rmuModel !== 0) {
+                    rmuModel = this.utility.config.revEnums['Remote Unit Model Types'][rmuModel];
+                    label += [' (', rmuModel, ')'].join('');
+                }
+            }
+            return label;
+        }, this);
         if (!!this.refPointType) {
             endPoint = this.utility.config.Utility.pointTypes.getUIEndpoint(this.refPointType, this.data.Value());
             this.url(endPoint.review.url);
@@ -129,7 +146,7 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                     },
                     // path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
                     props = ['Control Point', 'Occupied Point', 'Remote Unit Point', 'Damper Control Point', 'Digital Heat 1 Control Point', 'Digital Heat 2 Control Point', 'Digital Heat 3 Control Point', 'Fan Control Point', 'Heat 1 Control Point', 'Lights Control Point'];
-                
+
                 // If Control Point or RMU property, we need to restrict our selection to points on the same device
                 if (props.indexOf(propertyName) > -1) {
                     rmuPoint = self.utility.getPointRefProperty('Remote Unit Point');
@@ -153,9 +170,9 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                 // return path;
             },
             // pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
-            callback = function (selectedPoint) {
-                var id = selectedPoint._id, 
-                    name = selectedPoint.name, 
+            callback = function(selectedPoint) {
+                var id = selectedPoint._id,
+                    name = selectedPoint.name,
                     pointType = selectedPoint.pointType;
                 // Schedule entry point ref changes don't go through normal validation in configjs
                 // this is the first point that the returned id can be checked for a recursive loop.

@@ -15,17 +15,10 @@
                 fieldset
                     .form-group
                         label Name
-                        input.msgName(data-bind='value: msgName.Value', type='text')
+                        input.msgName(data-bind='value: msgName.Value, disable: isSystemMessage.rawValue', type='text')
                     .form-group
-                        // ko if: !isSystemMessage.rawValue
-                        label Alarm Message
-                        textarea.msgFormat(type='text', data-bind="value: msgFormat.Value")
-                        // /ko
-
-                        // ko if: isSystemMessage.rawValue
-                        label Alarm Message (Read-Only)
-                        div.msgFormat(data-bind="text: msgFormat.Value")
-                        // /ko
+                        label(data-bind="text:(isSystemMessage.rawValue) ? 'Alarm Message (Read-Only)': 'Alarm Message'")
+                        textarea.msgFormat(data-bind="value: msgFormat.Value, disable: isSystemMessage.rawValue", type='text')
 
                         .value-token
                             h4 Alarm Message Tokens
@@ -51,4 +44,6 @@
             .modal-footer.alarmTemplateControls
                 button.btn.btn-primary.btn-sm(data-bind='click: $parent.save') Save
                 button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                br
+                label#alarmNameError(data-bind='visible: $parent.hasNameError') Alarm name must be entered and unique.
         // /ko

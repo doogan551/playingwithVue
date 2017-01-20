@@ -90,7 +90,7 @@ module.exports = function socketio(_common) {
       data.user = user;
 
       socket.join('recentAlarms');
-      if(!rooms.recentAlarms.hasOwnProperty('views')){
+      if (!rooms.recentAlarms.hasOwnProperty('views')) {
         rooms.recentAlarms.views = {};
       }
       rooms.recentAlarms.views[socket.id] = data;
@@ -112,7 +112,7 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('unacknowledged');
-      if(!rooms.unacknowledged.hasOwnProperty('views')){
+      if (!rooms.unacknowledged.hasOwnProperty('views')) {
         rooms.unacknowledged.views = {};
       }
       rooms.unacknowledged.views[socket.id] = data;
@@ -134,7 +134,7 @@ module.exports = function socketio(_common) {
 
       data.user = user;
       socket.join('activeAlarms');
-      if(!rooms.activeAlarms.hasOwnProperty('views')){
+      if (!rooms.activeAlarms.hasOwnProperty('views')) {
         rooms.activeAlarms.views = {};
       }
       rooms.activeAlarms.views[socket.id] = data;
@@ -315,8 +315,8 @@ module.exports = function socketio(_common) {
     sock.on('checkPropertiesForOne', function(data) {
 
       logger.debug('checkPropertiesForOne');
-      checkProperties(data, function(data) {
-        sock.emit('returnProperties', data); // Handle the received results
+      checkProperties(data, function(propData) {
+        sock.emit('returnProperties', propData); // Handle the received results
       });
     });
     // NOT CHECKED
@@ -341,6 +341,7 @@ module.exports = function socketio(_common) {
     // Checked
     sock.on('updateSequence', function(data) {
 
+      data.user = user;
       logger.debug('updateSequence');
       doUpdateSequence(data, function(result) {
         socket.emit('sequenceUpdateMessage', result);
@@ -394,7 +395,9 @@ module.exports = function socketio(_common) {
       async.waterfall([
           function(callback) {
             async.mapSeries(data.adds, function(point, callback) {
-              common.addPoint(point, user, null, function(response, updatedPoint) {
+              common.addPoint({
+                point: point
+              }, user, null, function(response, updatedPoint) {
                 callback(response.err, updatedPoint);
               });
             }, function(err, newPoints) {
@@ -442,7 +445,11 @@ module.exports = function socketio(_common) {
     sock.on('addPoint', function(data) {
 
       logger.debug('addPoint');
-      common.addPoint(data.point, user, null, function(response, point) {
+      common.addPoint({
+        point: data.newPoint,
+        oldPoint: data.oldPoint,
+        path: data.path
+      }, user, null, function(response, point) {
         if (response.err) {
           sock.emit('pointUpdated', {
             err: response.err
@@ -465,6 +472,8 @@ module.exports = function socketio(_common) {
 
       _common.deletePoint(data.upi, data.method, user, null, function(msg) {
         msg.reqID = data.reqID;
+        msg.operation = 'deletePoint';
+        msg.method = data.method;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
@@ -478,6 +487,7 @@ module.exports = function socketio(_common) {
 
       _common.restorePoint(data.upi, user, function(msg) {
         msg.reqID = data.reqID;
+        msg.operation = 'restorePoint';
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
@@ -668,10 +678,10 @@ function doUpdateSequence(data, cb) {
     if (updateErr) {
       cb('Error: ' + updateErr.err);
     } else {
-      var logData = {
+      /*var logData = {
         user: data.user,
         timestamp: Date.now(),
-        point: data.point,
+        // point: data.point,
         activity: actLogsEnums["GPL Edit"].enum,
         log: "Sequence edited."
       };
@@ -679,7 +689,7 @@ function doUpdateSequence(data, cb) {
       Utility.insert({
         collection: activityLogCollection,
         insertObj: logData
-      }, function(err, result) {});
+      }, function(err, result) {});*/
       return cb('success');
     }
   });
@@ -873,11 +883,20 @@ function updateSchedules(data, callback) {
           from: "updateSchedules",
           schedule: schedule
         };
-        common.addPoint(newSched, user, options, function(returnData) {
+
+        for (var i = 0; i < oldPoints.length; i++) {
+          if (oldPoints[i]._id === newSched._id) {
+            oldPoint = oldPoints[i];
+            break;
+          }
+        }
+
+        common.addPoint({
+          point: newSched,
+          oldPoint: oldPoint
+        }, user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
-          if (newSched._pStatus !== 0)
-            return feCB(null);
 
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", newSched);
           Utility.getOne({
@@ -1002,8 +1021,7 @@ function getScheduleEntries(data, callback) {
     Utility.get({
       collection: pointsCollection,
       query: {
-        "Point Type.Value": "Schedule Entry",
-        _parentUpi: upi
+        "Point Type.Value": "Schedule Entry"
       }
     }, callback);
   } else {
@@ -1025,8 +1043,8 @@ function getScheduleEntries(data, callback) {
 function checkProperties(data, callback) {
   // Override Config so we get the latest version - this allows us to see the affects of changes to our enumsTemplates.json file
   // without having to restart the server
-  var Config = require('../public/js/lib/config.js');
-  var template = Config.Templates.getTemplate(data.pointType), // Template object
+  var _Config = require('../public/js/lib/config.js');
+  var template = _Config.Templates.getTemplate(data.pointType), // Template object
     dbResult,
     skipProperties = {
       "Trend Last Status": 1,
@@ -1065,13 +1083,12 @@ function checkProperties(data, callback) {
   data.errMsg = '';
 
   if (template !== undefined) {
-    Utility.get({
+    Utility.iterateCursor({
       collection: pointsCollection,
       query: {
         'Point Type.Value': data.pointType
       }
-    }, function(recsErr, recs) {
-
+    }, function(recsErr, rec, next) {
       var prop, // Work vars
         key,
         subKey,
@@ -1084,17 +1101,15 @@ function checkProperties(data, callback) {
         // TODO change summary to error. Verify viewModel looks @ error key
         data.err = true;
         data.errMsg = "INTERNAL ERROR: dbResult.toArray() failed."; // Push the 'problems found object' onto our results array
-        callback(data); // Perform the callback
+        next(recsErr, true); // Perform the callback
+      } else {
 
-        return;
-      }
 
-      // Itterate through mongo result set
-      for (var i = 0; i < recs.length; i++) {
+        // Itterate through mongo result set
         // Initialize temporary object which contains the problems found for this point (also stores identifying info)
         var tempObj = {
-          _id: recs[i]._id,
-          Name: recs[i].Name,
+          _id: rec._id,
+          Name: rec.Name,
           Problems: []
         };
 
@@ -1105,7 +1120,7 @@ function checkProperties(data, callback) {
           }
 
           // If the template property doesn't exist in the database
-          if (recs[i][prop] === undefined) {
+          if (rec[prop] === undefined) {
             // Log the problem
             tempObj.Problems.push("Property '" + prop + "' exists in template but not in DB.");
           }
@@ -1124,7 +1139,7 @@ function checkProperties(data, callback) {
             // The template does not define the keys for some properties because they are different for every point, so we skip 'em!
             if (skipDeepPropertyCheck.hasOwnProperty(prop)) {
               continue; // Go to next property
-            } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
+            } else if ((_Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
               continue;
             } else if (Array.isArray(template[prop]) && template[prop].length === 0) {
               continue;
@@ -1137,7 +1152,7 @@ function checkProperties(data, callback) {
 
                 if (skipRefProperties.hasOwnProperty(propName)) {
                   continue;
-                } else if ((propertyObject = Config.Utility.getPropertyObject(propName, recs[i])) === null) {
+                } else if ((propertyObject = _Config.Utility.getPropertyObject(propName, rec)) === null) {
                   tempObj.Problems.push("Reference property '" + propName + "' exists in template but not in DB.");
                 } else {
                   for (subKey in template[prop][key]) {
@@ -1150,20 +1165,20 @@ function checkProperties(data, callback) {
                 }
               }
               // If the template key doesn't exist in the database
-              else if (recs[i][prop][key] === undefined) {
+              else if (rec[prop][key] === undefined) {
                 // Log the problem
                 tempObj.Problems.push("Key '" + key + "' for property '" + prop + "' exists in template but not in DB.");
               } else {
-                delete recs[i][prop][key]; // No problems found. Delete the key out of the db record so we don't re-evaluate it again
+                delete rec[prop][key]; // No problems found. Delete the key out of the db record so we don't re-evaluate it again
               }
             }
           } else {
-            delete recs[i][prop]; // No problems found. Delete the property out of the db record so we don't re-evaluate it again
+            delete rec[prop]; // No problems found. Delete the property out of the db record so we don't re-evaluate it again
           }
         }
 
         // Find database properties that do not exist in the template
-        for (prop in recs[i]) {
+        for (prop in rec) {
           if (skipProperties.hasOwnProperty(prop)) {
             continue; // Go to next property
           }
@@ -1185,29 +1200,29 @@ function checkProperties(data, callback) {
           //          }
           //
           // If the prop_value is actually an object
-          else if ((typeof recs[i][prop] === 'object') && (recs[i][prop] !== null)) {
+          else if ((typeof rec[prop] === 'object') && (rec[prop] !== null)) {
 
             // The template does not define the keys for some properties because they are different for every point, so we skip 'em!
             if (skipDeepPropertyCheck.hasOwnProperty(prop)) {
               continue; // Go to next property
-            } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
+            } else if ((_Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
               continue;
             }
 
             // Find database property keys that do not exist in the template.
-            for (key in recs[i][prop]) {
+            for (key in rec[prop]) {
               if (prop == "Point Refs") {
-                if (_.isEmpty(recs[i][prop][key]))
+                if (_.isEmpty(rec[prop][key]))
                   continue;
 
-                propName = recs[i][prop][key].PropertyName;
+                propName = rec[prop][key].PropertyName;
 
                 if (skipRefProperties.hasOwnProperty(propName)) {
                   continue;
-                } else if ((propertyObject = Config.Utility.getPropertyObject(propName, template)) === null) {
+                } else if ((propertyObject = _Config.Utility.getPropertyObject(propName, template)) === null) {
                   tempObj.Problems.push("Reference property '" + propName + "' exists in DB but not in template.");
                 } else {
-                  for (subKey in recs[i][prop][key]) {
+                  for (subKey in rec[prop][key]) {
                     if (propertyObject[subKey] === undefined) {
                       tempObj.Problems.push("Key '" + subKey + "' for reference property '" + propName + "' exists in template but not in DB.");
                     }
@@ -1227,14 +1242,20 @@ function checkProperties(data, callback) {
         // If we found at least one problem
         if (tempObj.Problems.length !== 0) {
           data.results.push(tempObj); // Push the 'problems found object' onto our results array
-
-          if (data.results.length >= 25) { // Limit number of reported points with problems to 25
-            break; // Do not process any more points
-          }
+        }
+        if (data.results.length >= 25) { // Limit number of reported points with problems to 25
+          next(null, true); // Do not process any more points
+        } else {
+          process.nextTick(function() {
+            next(); // Perform the callback
+          });
         }
       }
-      callback(data); // Perform the callback
-    }); // end dbResult.toArray(function ())
+    }, function(err, count) {
+      setTimeout(function() {
+        callback(data);
+      }, 100);
+    });
 
     // Could not find point type in template
 

@@ -4,6 +4,8 @@ var _ = require('lodash');
 var passport = require('passport');
 var utils = require('../helpers/utils');
 var Workspace = require('../models/workspace');
+var ActivityLog = require('../models/activitylog');
+var actLogsEnums = require('../public/js/lib/config').Enums["Activity Logs"];
 var logger = require('../helpers/logger')(module);
 // Checked
 router.get('/', function(req, res, next) {
@@ -51,7 +53,13 @@ router.post('/authenticate', function(req, res, next) {
       if (err) {
         return next(err);
       }
-
+      var logData = {
+        user: user,
+        timestamp: Date.now(),
+        activity: actLogsEnums["User Logon"].enum,
+        log: "User Logged In."
+      };
+      ActivityLog.create(utils.buildActivityLog(logData), function() {});
       return res.json(user);
     });
   })(req, res, next);
@@ -118,7 +126,16 @@ router.post('/lost-password', function(req, res, next) {
 });
 // Checked
 router.get('/logout', function(req, res) {
+  var user = req.user;
   req.logout();
+
+  var logData = {
+    user: user,
+    timestamp: Date.now(),
+    activity: actLogsEnums["User Logoff"].enum,
+    log: "User Logged Out."
+  };
+  ActivityLog.create(utils.buildActivityLog(logData), function() {});
   res.redirect('/');
 });
 

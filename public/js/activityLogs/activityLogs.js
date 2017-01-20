@@ -1,14 +1,20 @@
 "use strict";
+var dti = {
+    $: function (fn) {
+        $(function delayFn() {
+            setTimeout(function runInit() {
+                fn();
+            }, 1);
+        });
+    }
+};
 
 var ActivityLogsManager = function (conf) {
     var self = this,
         myTitle = 'Activity Logs',
-        workspaceManager = window.top.workspaceManager,
-        sessionId = workspaceManager.sessionId(),
-        user = workspaceManager.user(),
-        storeKey = 'activityLogs_' + user._id,
-        windowUpi = "activitylog" + window.location.search.slice(1), // prefix required or pop-in/pop-out don't work
-        filterDataKey = "activityFilters",
+        sessionId = store.get('sessionId'),
+        storeKey = 'activityLogs_',
+        filterDataKey = "activityLogFilters" + window.location.search.slice(1),
         $dateFrom = $("#dateFrom"),
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
@@ -22,7 +28,8 @@ var ActivityLogsManager = function (conf) {
             }
         },
         nSelectedRowsOnPage = 0,
-        numberPointTypes = workspaceManager.config.Utility.pointTypes.getAllowedPointTypes().length,
+        numberPointTypes,
+        currentUser,
         listOfUsers = ko.observableArray([]),
         listOfFilteredUsers = ko.observableArray([]),
         gotoPageOne = true,
@@ -33,16 +40,18 @@ var ActivityLogsManager = function (conf) {
             name4: '',
             pointTypes: []
         },
+        availablePointTypes = {},
         _log = function () {
             console.log.apply(console, arguments);
         },
+        setCurrentUser = function (results) {
+            currentUser = results;
+            storeKey += currentUser;
+        },
         buildActivityLogRequestObject = function (activityLog, reqObj) {
-            var localPointTypes,
-                userObj,
-                i,
-                enumsPointTypes = workspaceManager.config.Enums["Point Types"],
-                l_startDate = 0,
+            var l_startDate = 0,
                 l_endDate = 0,
+                i,
                 nPages = activityLog.numberOfPages.peek();
 
             // Paging
@@ -63,12 +72,11 @@ var ActivityLogsManager = function (conf) {
             reqObj.name2 = self.name2();
             reqObj.name3 = self.name3();
             reqObj.name4 = self.name4();
-            localPointTypes = self.pointTypes();
-            if (localPointTypes.length > 0 && localPointTypes.length !== numberPointTypes) {
-                reqObj.pointTypes = [];
-                for (i = 0; i < localPointTypes.length; i++) {
-                    if (localPointTypes[i].length > 0) {
-                        reqObj.pointTypes.push(enumsPointTypes[localPointTypes[i]].enum);
+            if (availablePointTypes) {
+                if (self.pointTypes().length > 0 && self.pointTypes().length !== numberPointTypes.length) {
+                    reqObj.pointTypes = [];
+                    for (i = 0; i < self.pointTypes().length; i++) {
+                        reqObj.pointTypes.push(availablePointTypes[self.pointTypes()[i]]);
                     }
                 }
             }
@@ -86,14 +94,11 @@ var ActivityLogsManager = function (conf) {
 
             reqObj.startDate = l_startDate;
             reqObj.endDate = l_endDate;
-
-            reqObj.user = {};
-            userObj = reqObj.user;
-            userObj['System Admin'] = user['System Admin'];
-            userObj._id = user._id;
-            userObj.groups = user.groups;
         },
         pointNameFilterCallback = function (filter) {
+            var arrayOfPointTypes = [],
+                pointType;
+
             self.name1(filter.name1);
             self.name2(filter.name2);
             self.name3(filter.name3);
@@ -102,9 +107,12 @@ var ActivityLogsManager = function (conf) {
             if (!!filter.pointTypes && filter.pointTypes.length !== numberPointTypes) {
                 self.pointTypes(filter.pointTypes);
             } else {
-                self.pointTypes([]);
+                for (pointType in availablePointTypes) {
+                    arrayOfPointTypes.push(pointType);
+                }
+                self.pointTypes(arrayOfPointTypes);
             }
-            self.refreshActivityLogsData();
+            self.applyPointNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var theDate = new Date(timestamp),
@@ -173,6 +181,15 @@ var ActivityLogsManager = function (conf) {
                 console.log(' theLogData.logs = undefined');
             }
             self.activityLogs().gettingData(false);
+        },
+        setAvailablePointTypes = function (results) {
+            var i;
+            if (results) {
+                for (i = 0; i < results.length; i++) {
+                    availablePointTypes[results[i].key] = results[i].enum;
+                }
+            }
+            numberPointTypes = results.length;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
@@ -262,19 +279,7 @@ var ActivityLogsManager = function (conf) {
             });
         },
         requestUsers = function () {
-            var date = new Date(),
-                userObj,
-                reqObj = {};
-
-            reqObj.reqID = date.getTime();
-            reqObj.user = {};
-            userObj = reqObj.user;
-            userObj['System Admin'] = user['System Admin'];
-            userObj._id = user._id;
-            userObj.groups = user.groups;
-
-            //console.log('Requesting Users from server.', reqObj, date);
-            ajaxPOST(reqObj, '/api/security/users/getallusers', processUsers);
+            ajaxPOST(undefined, '/api/security/users/getallusers', processUsers);
         },
         requestActivityLogs = function (activityLogTable) {
             var name = activityLogTable.name,
@@ -310,7 +315,7 @@ var ActivityLogsManager = function (conf) {
             var filterValues,
                 storeData = store.get(storeKey);
 
-            if (storeData === undefined) {
+            if (!storeData) {
                 storeData = {};
                 storeData.sessionId = sessionId;
             }
@@ -388,15 +393,6 @@ var ActivityLogsManager = function (conf) {
             stickyScrollBar: false
         };
 
-    self.togglePop = function () {
-        // If we're a pop-out; pop back in
-        if (window.top.location.href === window.location.href) {
-            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', 'mainWindow', windowUpi);
-        } else {
-            // Open the window
-            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi);
-        }
-    };
     self.refreshActivityLogsData = function () {
         // _log('self.refreshActivityLogsData() called........');
         var localActivityLogTable = self.activityLogs();
@@ -407,14 +403,13 @@ var ActivityLogsManager = function (conf) {
         requestUsers();
     };
     self.showPointReview = function (element, theData) {
-        var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
-            pointType,
-            endPoint,
+        var upi = parseInt(theData.upi, 10),
             originalElementText;
-        pointType = pointTypesUtility.getPointTypeNameFromEnum(theData.pointType);
-        endPoint = pointTypesUtility.getUIEndpoint(pointType, theData.upi);
-        if (endPoint) {
-            dtiUtility.openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi);
+        if (upi > 0) {
+            dtiUtility.openWindow({
+                upi: upi,
+                pointType: theData.pointType
+            });
         } else {
             originalElementText = element.text;
             $(element).stop().fadeOut("4000", function () {
@@ -595,6 +590,16 @@ var ActivityLogsManager = function (conf) {
         }
     };
     self.showPointFilter = function () {
+        var arrayOfPointTypes = [],
+            pointType;
+
+        if (self.pointTypes().length === 0) {
+            for (pointType in availablePointTypes) {
+                arrayOfPointTypes.push(pointType);
+            }
+
+            self.pointTypes(arrayOfPointTypes);
+        }
         var parameters = {
             name1: self.name1(),
             name2: self.name2(),
@@ -694,6 +699,7 @@ var ActivityLogsManager = function (conf) {
     self.pointTypes = ko.observableArray([]);
     self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
+
     self.activityLogs = ko.computed(function () {
         return activityLogTables;
     }, self);
@@ -803,6 +809,8 @@ var ActivityLogsManager = function (conf) {
         return aFilterIsSet;
     }, self).extend(computedThrottle);
 
+    dtiUtility.getUser(setCurrentUser);
+    dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
     initFilterValues();
 };
 
@@ -920,7 +928,7 @@ function applyBindings() {
     }
 }
 
-$(function () {
+dti.$(function () {
     applyBindings();
     initPage(window.manager);
 

@@ -57,27 +57,31 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             options = this.config.Utility.pointTypes.getEnums(this.propertyName, this.root.point.data['Point Type'].Value(), {devModel: this.root.point.data._devModel()});
         }
 
-        if (!options) {
+        if (!options && this.root.point.data.Value.ValueOptions) {
             options = this.root.point.data.Value.ValueOptions();
         }
 
-        valueIsInOptions = ko.utils.arrayFirst(options, function(option) {
-            return ko.unwrap(option.value) == data.eValue();
-        });
-        if (!valueIsInOptions) {
-            options.unshift({
-                name: data.Value(),
-                value: data.eValue(),
-                badProperty: true
+        if (!!options) {
+            valueIsInOptions = ko.utils.arrayFirst(options, function(option) {
+                return ko.unwrap(option.value) == data.eValue();
             });
-        } else {
-            for (var o = 0; o < options.length; o++) {
-                if (ko.isObservable(options[0].name)) {
-                    if (data.eValue() === options[o].value()) {
-                        data.Value(options[o].name());
+            if (!valueIsInOptions) {
+                options.unshift({
+                    name: data.Value(),
+                    value: data.eValue(),
+                    badProperty: true
+                });
+            } else {
+                for (var o = 0; o < options.length; o++) {
+                    if (ko.isObservable(options[0].name)) {
+                        if (data.eValue() === options[o].value()) {
+                            data.Value(options[o].name());
+                        }
                     }
                 }
             }
+        } else {
+            options = [];
         }
         return options;
     };

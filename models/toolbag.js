@@ -153,7 +153,7 @@ module.exports = {
 				keyMap: {},
 				extraKeys: {}
 			},
-			"Default Feedback Types": {
+			"Feedback Types": {
 				name: "FeedbackType",
 				prepend: "fbt",
 				keyMap: {},
@@ -484,7 +484,8 @@ module.exports = {
 			doValidate = function (path, cfg) {
 				forEach(cfg.referenceObj, function (referenceValue, key) {
 					var targetValue = cfg.targetObj[key],
-						newPath = path ? [path, key].join('.') : key;
+						newPath = path ? [path, key].join('.') : key,
+						problem;
 
 					if (targetValue === undefined) {
 						if (cfg.reference === 'database' && templateConfig.allowedExtraDbKeys[key]) {
@@ -503,9 +504,17 @@ module.exports = {
 					}
 					// number or string
 					else {
-						if (targetValue !== referenceValue) {
-							cfg.problems.push([newPath, cfg.reference + ' = ' + referenceValue, cfg.target + ' = ' + targetValue].join(' / '));
+						problem = [newPath, cfg.reference + ' = ' + referenceValue, cfg.target + ' = ' + targetValue].join(' / ');
+
+						// If we're evaluating the 'Value' or 'oosValue' key and our value type is a float, then check if they're close enough
+						if ((key === 'Value' || key === 'oosValue') && (cfg.referenceObj.ValueType === 1)) {
+							if (Math.abs((targetValue - referenceValue)/referenceValue) > templateConfig.floatDiffThreshold) {
+								cfg.problems.push(problem);
+							}
+						} else if (targetValue !== referenceValue) {
+							cfg.problems.push(problem);
 						}
+
 						if (cfg.deleteTargetKeys) {
 							delete cfg.targetObj[key];
 						}
@@ -563,7 +572,8 @@ module.exports = {
 		fs.readFile(filename, 'utf8', function (err, content) {
 			var defaultTemplateConfig = {
 					allowedExtraDbKeys: {},
-					showNoProblemsFound: true
+					showNoProblemsFound: true,
+					floatDiffThreshold: 1e-5
 				},
 				template,
 				templatePoints;

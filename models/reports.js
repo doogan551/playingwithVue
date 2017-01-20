@@ -14,6 +14,8 @@ var logger = require('../helpers/logger')(module);
 var pageRender = require('../models/pagerender');
 var mailer = require('../models/mailer');
 
+var actLogsEnums = Config.Enums["Activity Logs"];
+var activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = Rpt = {
 
@@ -92,6 +94,18 @@ module.exports = Rpt = {
         });
     },
     saveReport: function(data, cb) {
+        data['Point Type'] = {
+            eValue: Config.Enums['Point Types'].Report.enum
+        };
+
+        var logData = {
+            user: data.user,
+            timestamp: Date.now(),
+            point: data,
+            activity: actLogsEnums["Report Edit"].enum,
+            log: "Report edited."
+        };
+
         var criteria = {
             collection: 'points',
             query: {
@@ -110,14 +124,21 @@ module.exports = Rpt = {
             }
         };
 
+        var logObj = utils.buildActivityLog(logData);
+
         Utility.update(criteria, function(err, result) {
-            if (!err) {
-                return cb(err, {
-                    data: "Report has been saved successfully!!!"
-                });
-            } else {
-                return cb(err, null);
-            }
+            Utility.insert({
+                collection: activityLogCollection,
+                insertObj: logObj
+            }, function(err, result) {
+                if (!err) {
+                    return cb(err, {
+                        data: "Report has been saved successfully!!!"
+                    });
+                } else {
+                    return cb(err, null);
+                }
+            });
         });
     },
     getSVG: function(data, cb) {
@@ -364,9 +385,9 @@ module.exports = Rpt = {
             },
             collection: 'points'
         };
-        //logger.info("---------");
-        //logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
-        //logger.info("---------");
+        // logger.info("---------");
+        // logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
+        // logger.info("---------");
         Utility.get(criteria, function(err, points) {
             if (err)
                 return cb(err, null);
@@ -415,11 +436,12 @@ module.exports = Rpt = {
 
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
-                                        if (points[x]._id === upi)
+                                        if (points[x]._id === upi) {
                                             returnObj.HistoryResults.push({
                                                 upi: upi,
                                                 Name: points[x].Name
                                             });
+                                        }
                                     }
                                     //setTimeout(function() {
                                     callback2(null);
@@ -452,12 +474,16 @@ module.exports = Rpt = {
                                             limit: 1
                                         };
                                         Utility.get(criteria, function(err, nextOldest) {
+                                            if (!!err) {
+                                                return callback2(err);
+                                            }
+
                                             History.findLatest({
                                                 upis: [upi],
                                                 range: {
                                                     end: ts
                                                 }
-                                            }, function(err, results) {
+                                            }, function (err, results) {
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;
@@ -483,7 +509,6 @@ module.exports = Rpt = {
                                             });
                                         });
                                     } else {
-
                                         callback2(null);
                                     }
                                 }
@@ -517,8 +542,9 @@ module.exports = Rpt = {
             tempObj.statusflag = setStatusFlag(historyPoint.statusflags);
             tempObj.ValueType = point.Value.ValueType;
 
-            if (historyPoint.timestamp === startTime)
+            if (historyPoint.timestamp === startTime) {
                 checkForOldest[historyPoint.upi] = false;
+            }
 
             if (historyPoint.ValueType === 5) {
                 for (var key in point.Value.ValueOptions) {
@@ -530,7 +556,7 @@ module.exports = Rpt = {
             } else {
                 tempObj.Value = historyPoint.Value.toString();
             }
-            //console.log(tempObj);
+            // console.log(tempObj);
             return tempObj;
         }
 
@@ -655,6 +681,27 @@ module.exports = Rpt = {
             reportRequestComplete = false,
             scheduleRequestComplete = false,
             reportData,
+            getValueTypes = function (data) {
+                "use strict";
+                var i,
+                    column,
+                    filter;
+                if (data["Report Config"].columns) {
+                    for (i = 1; i < data["Report Config"].columns.length; i++) {
+                        column = data["Report Config"].columns[i];
+                        column.valueType = Config.Enums.Properties[column.colName].valueType;
+                    }
+                }
+
+                if (data["Report Config"].filters) {
+                    for (i = 0; i < data["Report Config"].filters.length; i++) {
+                        filter = data["Report Config"].filters[i];
+                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
+                    }
+                }
+
+                return data;
+            },
             handleResults = function() {
                 "use strict";
                 if (scheduled) {
@@ -690,15 +737,19 @@ module.exports = Rpt = {
                     return cb(err);
                 } else {
                     result = result[0];
-                    if (result === null) {
-                        return cb();
-                    } else {
+                    if (!!result) {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
+
+                        reportData = result;
+                        reportRequestComplete = true;
+                        handleResults();
+                    } else {
+                        return cb();    // error
                     }
-                    reportData = result;
-                    reportRequestComplete = true;
-                    handleResults();
                 }
             });
         } else {
@@ -707,15 +758,18 @@ module.exports = Rpt = {
                     return cb(err);
                 } else {
                     result = result[0];
-                    if (result === null) {
-                        return cb();
-                    } else {
+                    if (!!result) {
+                        if (result["Report Type"].Value === "Property") {
+                            result = getValueTypes(result);
+                        }
                         reportResults.id = data.id;
                         reportResults.point = JSON.stringify(result);
+                        reportData = result;
+                        reportRequestComplete = true;
+                        handleResults();
+                    } else {
+                        return cb();    // error
                     }
-                    reportData = result;
-                    reportRequestComplete = true;
-                    handleResults();
                 }
             });
         }
@@ -723,6 +777,7 @@ module.exports = Rpt = {
     reportSearch: function(data, cb) {
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
+            pointRefs = data["Point Refs"],
             filters = reportConfig.filters,
             pointFilter = reportConfig.pointFilter,
             fields = {},
@@ -789,7 +844,7 @@ module.exports = Rpt = {
         }
 
         if (filters && filters.length > 0) {
-            searchCriteria["$and"].push(Rpt.collectFilters(filters));
+            searchCriteria["$and"].push(Rpt.collectFilters(filters, pointRefs));
         }
 
         if (sort) {
@@ -841,16 +896,228 @@ module.exports = Rpt = {
             return cb(null, docs);
         });
     },
-    collectFilters: function(theFilters) {
-
-        var grouping = "$and",
-            currentFilter,
+    collectFilters: function(theFilters, reportPointRefs) {
+        var currentFilter,
             localSearchCriteria = {},
             andExpressions = [],
             orExpressions = [],
-            expressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
+            getPointRefByAppIndex = function(appIndex) {
+                var result,
+                    i;
+
+                for (i = 0; i < reportPointRefs.length; i++) {
+                    if (reportPointRefs[i].AppIndex === appIndex) {
+                        result = reportPointRefs[i];
+                        break;
+                    }
+                }
+
+                return result;
+            },
+            collectFilter = function(filter) {
+                var searchQuery = {},
+                    // change key to internal property if possible.
+                    key = utils.getDBProperty(filter.filterName),
+                    searchKey = key,
+                    searchPart1 = {},
+                    searchPart2 = {},
+                    pointRef,
+                    filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
+
+                if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
+                    pointRef = getPointRefByAppIndex(filter.AppIndex);
+                    switch (filter.operator) {
+                        case "EqualTo":
+                            searchQuery = {
+                                "Point Refs": {
+                                    $elemMatch: {
+                                        "PropertyName": key,
+                                        "Value": (!!pointRef ? pointRef.Value : 0)
+                                    }
+                                }
+                            };
+
+                            break;
+                        case "NotEqualTo":
+                            searchQuery = {
+                                "Point Refs": {
+                                    $elemMatch: {
+                                        "PropertyName": key,
+                                        "Value": {
+                                            $ne: (!!pointRef ? pointRef.Value : 0)
+                                        }
+                                    }
+                                }
+                            };
+                            break;
+                    }
+                } else {
+                    switch (filter.operator) {
+                        case "Containing":
+                            searchQuery[key] = {
+                                $regex: '.*(?i)' + filter.value + '.*'
+                            };
+                            break;
+                        case "NotContaining":
+                            var re = new RegExp(filter.value, i);
+                            searchQuery[key] = {
+                                $not: re
+                            };
+                            break;
+                        case "EqualTo":
+                            if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                                if (filter.evalue === -1) {
+                                    searchQuery[propertyCheckForValue(key)] = {
+                                        $eq: ''
+                                    };
+                                } else {
+                                    if (filterValueType !== null) {
+                                        searchKey = key + '.eValue';
+                                    } else {
+                                        searchKey = key;
+                                    }
+                                    searchQuery[searchKey] = filter.evalue;
+                                }
+                            } else if (filter.valueType === "Bool") {
+                                if (utils.converters.isNumber(filter.value)) {
+                                    searchQuery[propertyCheckForValue(key)] = {
+                                        $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                    };
+                                } else {
+                                    searchQuery[propertyCheckForValue(key)] = {
+                                        $eq: filter.value
+                                    };
+                                }
+                            } else if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                            } else if (filter.value.indexOf(",") > -1) {
+                                var splitValues = filter.value.split(",");
+                                //if (!searchCriteria.$or)
+                                //    searchCriteria.$or = [];
+                                var new$or = {};
+                                new$or.$or = [];
+                                for (var kk = 0; kk < splitValues.length; kk++) {
+                                    var ppp = {};
+                                    if (utils.converters.isNumber(splitValues[kk])) {
+                                        ppp[key] = convertType(splitValues[kk]);
+                                    } else {
+                                        ppp[key] = splitValues[kk];
+                                    }
+                                    new$or.$or.push(ppp);
+                                }
+                            } else {
+                                if (utils.converters.isNumber(filter.value)) {
+                                    searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                                } else {
+                                    searchQuery[propertyCheckForValue(key)] = {
+                                        $regex: '(?i)^' + filter.value
+                                    };
+                                }
+                            }
+                            break;
+                        case "NotEqualTo":
+                            searchPart1[key] = {
+                                $exists: true
+                            };
+                            searchQuery.$and = [];
+                            searchQuery.$and.push(searchPart1);
+                            if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                                if (filter.evalue === -1) {
+                                    searchPart2[propertyCheckForValue(key)] = {
+                                        $ne: ''
+                                    };
+                                } else {
+                                    if (filterValueType !== null) {
+                                        searchKey = key + '.eValue';
+                                    } else {
+                                        searchKey = key;
+                                    }
+                                    searchPart2[searchKey] = {
+                                        $ne: filter.evalue
+                                    };
+                                }
+                            } else {
+                                if (filter.valueType === "Bool") {
+                                    if (utils.converters.isNumber(filter.value)) {
+                                        searchPart2[propertyCheckForValue(key)] = {
+                                            $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                        };
+                                    } else {
+                                        searchPart2[propertyCheckForValue(key)] = {
+                                            $ne: filter.value
+                                        };
+                                    }
+                                } else if (utils.converters.isNumber(filter.value)) {
+                                    searchPart2[propertyCheckForValue(key)] = {
+                                        $ne: utils.converters.convertType(filter.value, filter.valueType)
+                                    };
+                                } else {
+                                    searchPart2[propertyCheckForValue(key)] = {
+                                        $regex: '(?i)^(?!' + filter.value + ")"
+                                            //$ne: utils.converters.convertType(filter.value, filter.valueType)
+                                    };
+                                }
+                            }
+
+                            searchQuery.$and.push(searchPart2);
+                            break;
+                        case "LessThan":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $lt: utils.converters.convertType(filter.value, filter.valueType)
+                            };
+                            break;
+                        case "LessThanOrEqualTo":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $lte: utils.converters.convertType(filter.value, filter.valueType)
+                            };
+                            break;
+                        case "GreaterThan":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $gt: utils.converters.convertType(filter.value, filter.valueType)
+                            };
+                            break;
+                        case "GreaterThanOrEqualTo":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $gte: utils.converters.convertType(filter.value, filter.valueType)
+                            };
+                            break;
+                        case "BeginningWith":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $regex: '^(?i)' + filter.value + '.*'
+                            };
+                            break;
+                        case "EndingWith":
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $regex: '(?i)' + filter.value + '*$'
+                            };
+                            break;
+                        case "Between":
+                            searchQuery[key] = {
+                                $exists: true
+                            };
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $gte: utils.converters.convertType(filter.value, filter.valueType),
+                                $lte: utils.converters.convertType(filter.value, filter.valueType)
+                            };
+                            break;
+                        case "NotBetween":
+                            searchQuery[key] = {
+                                $exists: true
+                            };
+                            //{$nin:{$gte:2,$lt:5}}
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $nin: {
+                                    $gte: utils.converters.convertType(filter.value, filter.valueType),
+                                    $lt: utils.converters.convertType(filter.value, filter.valueType)
+                                }
+                            };
+                            break;
+                    }
+                }
+                return searchQuery;
+            },
             groupLogic = function(logicType) {
                 var group = [],
                     sameGroup = true;
@@ -860,7 +1127,7 @@ module.exports = Rpt = {
                         currentIndex--;
                         sameGroup = false;
                     } else {
-                        group.push(Rpt.collectFilter(currentFilter));
+                        group.push(collectFilter(currentFilter));
                         currentFilter = theFilters[currentIndex++];
                     }
                 }
@@ -877,7 +1144,7 @@ module.exports = Rpt = {
             } else {
                 switch (currentFilter.condition) {
                     case "$and":
-                        andExpressions.push(Rpt.collectFilter(currentFilter));
+                        andExpressions.push(collectFilter(currentFilter));
                         break;
                     case "$or":
                         orExpressions.push(groupLogic("$or"));
@@ -892,14 +1159,6 @@ module.exports = Rpt = {
             //logger.info(" - - orExpressions = " + orExpressions);
         }
 
-        // if (expressions.length > 0) {
-        //     if (grouping === "$or") {
-        //         orExpressions.push(Rpt.groupOrExpression(expressions));
-        //     } else if (grouping === "$and") {
-        //         andExpressions = andExpressions.concat(expressions);
-        //     }
-        // }
-
         if (andExpressions.length > 0) {
             localSearchCriteria.$or = localSearchCriteria.$or.concat({
                 $and: andExpressions
@@ -912,211 +1171,6 @@ module.exports = Rpt = {
 
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
-    },
-    collectFilter: function(filter) {
-        var searchQuery = {},
-            // change key to internal property if possible.
-            key = utils.getDBProperty(filter.filterName),
-            searchKey = key,
-            searchPart1 = {},
-            searchPart2 = {},
-            filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
-
-        if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
-            switch (filter.operator) {
-                case "EqualTo":
-                    searchQuery = {
-                        "Point Refs": {
-                            $elemMatch: {
-                                "PropertyName": key,
-                                "Value": utils.converters.convertType(filter.upi, filter.valueType)
-                            }
-                        }
-                    };
-
-                    break;
-                case "NotEqualTo":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $ne: utils.converters.convertType(filter.upi, filter.valueType)
-                    };
-                    searchQuery = {
-                        "Point Refs": {
-                            $elemMatch: {
-                                "PropertyName": key,
-                                "Value": {
-                                    $ne: utils.converters.convertType(filter.upi, filter.valueType)
-                                }
-                            }
-                        }
-                    };
-                    break;
-            }
-        } else {
-            switch (filter.operator) {
-                case "Containing":
-                    searchQuery[key] = {
-                        $regex: '.*(?i)' + filter.value + '.*'
-                    };
-                    break;
-                case "NotContaining":
-                    var re = new RegExp(filter.value, i);
-                    searchQuery[key] = {
-                        $not: re
-                    };
-                    break;
-                case "EqualTo":
-                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
-                        if (filter.evalue === -1) {
-                            searchQuery[propertyCheckForValue(key)] = {
-                                $eq: ''
-                            };
-                        } else {
-                            if (filterValueType !== null) {
-                                searchKey = key + '.eValue';
-                            } else {
-                                searchKey = key;
-                            }
-                            searchQuery[searchKey] = filter.evalue;
-                        }
-                    } else {
-                        if (filter.valueType === "Bool") {
-                            if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
-                                };
-                            } else {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $eq: filter.value
-                                };
-                            }
-                        } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                        } else if (filter.value.indexOf(",") > -1) {
-                            var splitValues = filter.value.split(",");
-                            //if (!searchCriteria.$or)
-                            //    searchCriteria.$or = [];
-                            var new$or = {};
-                            new$or.$or = [];
-                            for (var kk = 0; kk < splitValues.length; kk++) {
-                                var ppp = {};
-                                if (utils.converters.isNumber(splitValues[kk])) {
-                                    ppp[key] = convertType(splitValues[kk]);
-                                } else {
-                                    ppp[key] = splitValues[kk];
-                                }
-                                new$or.$or.push(ppp);
-                            }
-                        } else {
-                            if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                            } else {
-                                searchQuery[propertyCheckForValue(key)] = {
-                                    $regex: '(?i)^' + filter.value
-                                };
-                            }
-                        }
-                    }
-                    break;
-                case "NotEqualTo":
-                    searchPart1[key] = {
-                        $exists: true
-                    };
-                    searchQuery.$and = [];
-                    searchQuery.$and.push(searchPart1);
-                    if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
-                        if (filter.evalue === -1) {
-                            searchPart2[propertyCheckForValue(key)] = {
-                                $ne: ''
-                            };
-                        } else {
-                            if (filterValueType !== null) {
-                                searchKey = key + '.eValue';
-                            } else {
-                                searchKey = key;
-                            }
-                            searchPart2[searchKey] = {
-                                $ne: filter.evalue
-                            };
-                        }
-                    } else {
-                        if (filter.valueType === "Bool") {
-                            if (utils.converters.isNumber(filter.value)) {
-                                searchPart2[propertyCheckForValue(key)] = {
-                                    $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
-                                };
-                            } else {
-                                searchPart2[propertyCheckForValue(key)] = {
-                                    $ne: filter.value
-                                };
-                            }
-                        } else if (utils.converters.isNumber(filter.value)) {
-                            searchPart2[propertyCheckForValue(key)] = {
-                                $ne: utils.converters.convertType(filter.value, filter.valueType)
-                            };
-                        } else {
-                            searchPart2[propertyCheckForValue(key)] = {
-                                $regex: '(?i)^(?!' + filter.value + ")"
-                                    //$ne: utils.converters.convertType(filter.value, filter.valueType)
-                            };
-                        }
-                    }
-
-                    searchQuery.$and.push(searchPart2);
-                    break;
-                case "LessThan":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $lt: utils.converters.convertType(filter.value, filter.valueType)
-                    };
-                    break;
-                case "LessThanOrEqualTo":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $lte: utils.converters.convertType(filter.value, filter.valueType)
-                    };
-                    break;
-                case "GreaterThan":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $gt: utils.converters.convertType(filter.value, filter.valueType)
-                    };
-                    break;
-                case "GreaterThanOrEqualTo":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filter.valueType)
-                    };
-                    break;
-                case "BeginningWith":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $regex: '^(?i)' + filter.value + '.*'
-                    };
-                    break;
-                case "EndingWith":
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $regex: '(?i)' + filter.value + '*$'
-                    };
-                    break;
-                case "Between":
-                    searchQuery[key] = {
-                        $exists: true
-                    };
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filter.valueType),
-                        $lte: utils.converters.convertType(filter.value, filter.valueType)
-                    };
-                    break;
-                case "NotBetween":
-                    searchQuery[key] = {
-                        $exists: true
-                    };
-                    //{$nin:{$gte:2,$lt:5}}
-                    searchQuery[propertyCheckForValue(key)] = {
-                        $nin: {
-                            $gte: utils.converters.convertType(filter.value, filter.valueType),
-                            $lt: utils.converters.convertType(filter.value, filter.valueType)
-                        }
-                    };
-                    break;
-            }
-        }
-        return searchQuery;
     },
     groupOrExpression: function(listOfExpressions) {
         var concatJSON = {},
@@ -1421,53 +1475,58 @@ module.exports = Rpt = {
                 Name: 1
             }
         }, function(err, point) {
-
-            var reportName = point.Name;
-            var users = schedule.users.map(function(id) {
-                return ObjectID(id);
-            });
-            var date = moment().format('YYYYMMDDhhmm');
-            var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
-            var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
-            console.log(uri, path);
-            pageRender.renderPage(uri, path, function(err) {
-                console.log(1, err);
-                fs.readFile(path, function(err, data) {
-                    console.log(2, err);
-                    Utility.iterateCursor({
-                        collection: 'Users',
-                        query: {
-                            _id: {
-                                $in: users
+            if (!!point) {
+                var reportName = point.Name;
+                var users = schedule.users.map(function(id) {
+                    return ObjectID(id);
+                });
+                var date = moment().format('YYYY-MM-DD');
+                var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
+                var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
+                console.log(uri, path);
+                pageRender.renderPage(uri, path, function(err) {
+                    console.log(1, err);
+                    fs.readFile(path, function(err, data) {
+                        console.log(2, err);
+                        Utility.iterateCursor({
+                            collection: 'Users',
+                            query: {
+                                _id: {
+                                    $in: users
+                                }
                             }
-                        }
-                    }, function(err, user, nextUser) {
-                        // figure out date/time
-                        emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
-                            return info.Type === 'Email';
-                        }).map(function(email) {
-                            return email.Value;
-                        }));
+                        }, function(err, user, nextUser) {
+                            // figure out date/time
+                            emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                                return info.Type === 'Email';
+                            }).map(function(email) {
+                                return email.Value;
+                            }));
 
-                        nextUser();
-                    }, function(err, count) {
-                        emails = emails.concat(schedule.emails).join(',');
-                        mailer.sendEmail({
-                            to: emails,
-                            fromAccount: 'infoscan',
-                            subject: [reportName, ' for ', date].join(''),
-                            attachments: [{
-                                path: path,
-                                contentType: 'application/pdf',
-                                content: data
-                            }]
-                        }, function(err, info) {
-                            console.log(err, info);
-                            cb(err);
+                            nextUser();
+                        }, function(err, count) {
+                            emails = emails.concat(schedule.emails).join(',');
+                            mailer.sendEmail({
+                                to: emails,
+                                fromAccount: 'infoscan',
+                                subject: [reportName, ' for ', date].join(''),
+                                html: '<html><body><h1>You\'re welcome!</h1></body></html>',
+                                attachments: [{
+                                    path: path,
+                                    contentType: 'application/pdf',
+                                    content: data
+                                }]
+                            }, function(err, info) {
+                                console.log(err, info);
+                                cb(err);
+                            });
                         });
                     });
+                    // }, 5000);
                 });
-            });
+            } else {
+                logger.info("   - -  scheduledReport() schedule._id = " + schedule._id + "  unable to find Report with UPI = " + upi);
+            }
         });
     }
 };

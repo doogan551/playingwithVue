@@ -147,14 +147,6 @@ html
                         span(data-bind="text: activityLogs().count()")
                         |  ActivityLogs
         .bodyMask
-        // Point Filter Modal
-        //- .modal#pointFilterModal(role="dialog", style="overflow: hidden;")
-            .modalContainer
-                .subTitle POINT NAME/TYPE FILTER
-                .pull-right.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelPointNameFilter")
-                iframe#pointLookup(name="pid_activityfilter")
-                .text-center
-                    button.btn.btn-success.closeIt(data-bind="click: applyPointNameFilter") OK
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/knockout-3.4.0.js')
         script(type='text/javascript', src='/js/lib/bootstrap3.min.js')

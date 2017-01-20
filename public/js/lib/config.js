@@ -490,70 +490,20 @@ var Config = (function(obj) {
                     return endPoint;
                 },
                 _getEnums = function(property, pointType, options) {
-                    var workspace = (typeof window != 'undefined') && window.workspaceManager,
-                        set = [],
-                        _hasPointType = !!pointType;
+                    var workspace = (typeof window != 'undefined') && window.workspaceManager;
 
                     switch (property) {
-                        case 'Alarm Class':
-                            return _getEnumFromTemplate('Alarm Classes');
-                        case 'Alarm State':
-                            return _getEnumFromTemplate('Alarm States');
                         case 'Control Priority':
                             return workspace && workspace.systemEnums.controlpriorities;
                         case 'Controller':
+                        case 'Setback Controller':
                             return workspace && workspace.systemEnums.controllers;
-                        case 'Conversion Type':
-                            return _getEnumFromTemplate('Conversion Types');
-                        case 'Device Status':
-                            return _getEnumFromTemplate('Device Statuses');
-                        case 'Ethernet Protocol':
-                            return _getEnumFromTemplate('Ethernet Protocols');
-                        case 'Fail Action':
-                            return _getEnumFromTemplate('Fail Actions');
-                        case 'Input Rate':
-                            return _getEnumFromTemplate('Input Rate');
                         case 'Model Type':
                             if (pointType === 'Device') {
                                 return _getEnumFromTemplate('Device Model Types');
-                            }
-                            if (pointType === 'Remote Unit') {
+                            } else {
                                 return _getEnumFromFunction(pointType, options);
                             }
-                            set.push.apply(set, _getEnumFromTemplate('Device Model Types'));
-                            set.push.apply(set, _getEnumFromTemplate('Remote Unit Model Types'));
-                            return set;
-                        case 'Point Type':
-                            return _getEnumFromTemplate('Point Types');
-                        case 'Close Polarity':
-                        case 'Feedback Polarity':
-                        case 'Polarity':
-                            return _getEnumFromTemplate('Polarities');
-                        case 'Control Data Type':
-                        case 'Off Control Data Type':
-                        case 'On Control Data Type':
-                        case 'Poll Data Type':
-                            return _getEnumFromTemplate('Modbus Data Types');
-                        case 'Control Function':
-                        case 'Off Control Function':
-                        case 'On Control Function':
-                        case 'Poll Function':
-                            return _getEnumFromTemplate('Modbus Poll Functions');
-                        case 'Modbus Order':
-                            return _getEnumFromTemplate('Modbus Orders');
-                        case 'Port 1 Prototcol':
-                        case 'Port 2 Prototcol':
-                        case 'Port 3 Prototcol':
-                        case 'Port 4 Prototcol':
-                            return _getEnumFromTemplate('Port Protocols');
-                        case 'Reliability':
-                            return _getEnumFromTemplate('Reliabilities');
-                        case 'Reset Interval':
-                            return _getEnumFromTemplate('Reset Intervals');
-                        case 'Sensor Type':
-                            return _getEnumFromTemplate('Sensor Types');
-                        case 'Report Type':
-                            return _getEnumFromTemplate('Report Types');
                         default:
                             return _getEnumFromTemplate(property);
                     }
@@ -590,39 +540,6 @@ var Config = (function(obj) {
                         if (!enumArray.length && !!enumsProperty && !!enumsProperty["enumsSet"]) {
                             enumArray = _buildOptionsArray(enumsTemplatesJson.Enums[enumsProperty["enumsSet"]]);
                         }
-
-                        /*for (var i = 0, last = keys.length; i < last; i++) {
-                            if (_hasPointType) {
-                                item = {
-                                    name: keys[i],
-                                    value: enums[keys[i]].enum,
-                                    noninitializable: enums[keys[i]].noninitializable
-                                };
-                            } else {
-                                item = keys[i];
-                            }
-                            enumArray.push(item);
-                        }
-
-                        if (!!enumsProperty && !!enumsProperty["enumsSet"]) {
-                            enumsSetKey = enumsProperty["enumsSet"];
-                        }
-
-                        if (property && enumsSetKey) {
-                            enumsSetKey = enumsSetKey;
-                            if (enumsSetKey !== undefined && enumsSetKey !== "") {
-                                enumsSet = enumsTemplatesJson.Enums[enumsSetKey];
-                                for (var key in enumsSet) {
-                                    if (enumsSet.hasOwnProperty(key)) {
-                                        enumArray.push({
-                                            name: key,
-                                            value: enumsSet[key].enum,
-                                            noninitializable: false
-                                        });
-                                    }
-                                }
-                            }
-                        }*/
 
                         if (!enums && enumArray.length === 0) enumArray = null;
 
@@ -1417,7 +1334,7 @@ var Config = (function(obj) {
         },
 
         "Enable Warning Alarms": function(data) {
-            data.point = obj.EditChanges.applyEnableWarningAlarms(data);
+            data.point = obj.EditChanges[data.property](data);
             return data;
         },
         //------ End analog alarm properties validation --------------------------------------
@@ -1548,9 +1465,7 @@ var Config = (function(obj) {
                 point._devModel = enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"];
             }
 
-            if (point._devModel !== data.oldPoint._devModel) {
-                obj.Utility.updDevModel(data);
-            }
+            obj.Utility.updDevModel(data);
             return data;
         },
 
@@ -1750,7 +1665,17 @@ var Config = (function(obj) {
         },
 
         "Instance": function(data) {
-            data = this.validateUsingTheseLimits(data, 0, 4194303);
+
+            if (data.point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
+                data = obj.EditValidation.validateUsingTheseLimits(data, 1, 255);
+            } else {
+                data = obj.EditValidation.validateUsingTheseLimits(data, 0, 4194303);
+            }
+            return data;
+        },
+
+        "Feedback Instance": function(data) {
+            data = obj.EditValidation.validateUsingTheseLimits(data, 1, 255);
             return data;
         },
 
@@ -1801,13 +1726,6 @@ var Config = (function(obj) {
         },
 
         "Maximum Change": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value; // Property Value
-
-            if (val > point["Maximum Value"].Value) {
-                data.ok = false;
-                data.result = data.property + " must be less than or equal to the Maximum Value.";
-            }
             return data;
         },
 
@@ -2061,9 +1979,7 @@ var Config = (function(obj) {
                 point._relRMU = enums["Reliabilities"]["No Fault"]["enum"];
             }
 
-            if (point._rmuModel !== data.oldPoint._rmuModel) {
-                obj.Utility.updDevModel(data);
-            }
+            obj.Utility.updDevModel(data);
             return data;
         },
 
@@ -2513,19 +2429,23 @@ var Config = (function(obj) {
         },
 
         "Monitor Point": function(data) {
-            if (data.point["Point Type"].Value === "Delay") {
-                data.point = obj.EditChanges.applyDelayMointorPoint(data);
+            var point = data.point,
+                type = point["Point Type"].Value;
+
+            if (type === "Delay") {
+                point = obj.EditChanges.applyDelayMointorPoint(data);
+            } else if ((type === "Analog Value") || (type === "Binary Value")) {
+                point = obj.EditChanges.applyAnalogValueMonitorPoint(data);
             }
-            data.point = obj.EditChanges[data.property](data);
             return data;
         },
 
         "Input Type": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value; // Point type
+            var point = data.point,
+                type = point["Point Type"].Value;
 
             if (type === "Binary Input") {
-                data.point = obj.EditChanges.applyBinaryInputInputType(data);
+                point = obj.EditChanges.applyBinaryInputInputType(data);
             }
             return data;
         },
@@ -2561,7 +2481,6 @@ var Config = (function(obj) {
 
         "Output Type": function(data) {
             var point = data.point, // Shortcut
-                val = point["Output Type"].Value, // Property value
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Analog Output") {
@@ -2583,12 +2502,16 @@ var Config = (function(obj) {
         },
 
         "Feedback Type": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value; // Point type
+            var point = data.point;
 
-            if (type === "Binary Output") {
-                data.point = obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
-            }
+            data.point = obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
+            return data;
+        },
+
+        "Alarm Adjust Point": function(data) {
+            var point = data.point;
+
+            data.point = obj.EditChanges.applyAlarmAdjustPoint(data); 
             return data;
         },
 
@@ -2766,14 +2689,9 @@ var Config = (function(obj) {
         },
 
         "Demand Enable": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value; // Property value
+            var point = data.point;
 
-            if (val === true) {
-                point["Demand Interval"].isReadOnly = false;
-            } else {
-                point["Demand Interval"].isReadOnly = true;
-            }
+            point["Demand Interval"].isDisplayable = point[data.property].Value;
             return point;
         },
 
@@ -2782,6 +2700,23 @@ var Config = (function(obj) {
             var point = data.point;
 
             return obj.EditChanges.applyRemoteUnitNetworkType(point);
+        },
+
+        "Enable Warning Alarms": function(data) {
+            var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable;
+
+            if (point["Enable Warning Alarms"].Value === true) {
+                setDisp(point, ["High Warning Limit", "Low Warning Limit"], true);
+                if (obj.Utility.getPropertyObject("Alarm Adjust Point", point).PointInst === 0) {
+                    point["Warning Adjust Band"].isDisplayable = false;
+                } else {
+                    point["Warning Adjust Band"].isDisplayable = true;
+                }
+            } else {
+                setDisp(point, ["High Warning Limit", "Low Warning Limit", "Warning Adjust Band"], false);
+            }
+            return point;
         },
 
         "Fan Control Point": function(data) {
@@ -3097,22 +3032,6 @@ var Config = (function(obj) {
             return this.applyInputPointN(data);
         },
 
-        "Monitor Point": function(data) {
-            var point = data.point, // Shortcut
-                props = ["Fail Action", "Demand Interval", "Demand Enable"], // Related properties
-                len = props.length, // Number of related properties
-                ro = (data.propertyObject.PointInst === 0) ? true : false, // Set read-only flag if value is 0
-                i; // Work var
-
-            for (i = 0; i < len; i++) {
-                if (point.hasOwnProperty(props[i])) {
-                    point[props[i]].isReadOnly = ro;
-                }
-            }
-
-            return point;
-        },
-
         "Occupied Max Cool CFM": function(data) {
             data.point = this.updateFanStrategy(data.point);
             return data;
@@ -3124,18 +3043,17 @@ var Config = (function(obj) {
         },
 
         "Trend Samples": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value, // Property value
+            var point = data.point,
                 props = ["Trend Enable", "Trend Interval", "Trend COV Increment"],
                 len = props.length,
-                ro = (val === 0) ? true : false, // If Trend Sample 0, set read-only flag true
+                disp = (point[data.property].Value !== 0) ? true : false,
                 prop,
                 i;
 
             for (i = 0; i < len; i++) {
                 prop = props[i];
                 if (point.hasOwnProperty(prop)) {
-                    point[prop].isReadOnly = ro;
+                    point[prop].isDisplayable = disp;
                 }
             }
             return point;
@@ -3170,17 +3088,6 @@ var Config = (function(obj) {
             point = this.applyPropertyEnumSet(point, "Reliability", enumsTemplatesJson.Enums.Reliabilities);
 
             return point;
-        },
-
-        applyEnableWarningAlarms: function(data) {
-            if (data.point["Enable Warning Alarms"].Value === true) {
-                data.point["High Warning Limit"].isReadOnly = false;
-                data.point["Low Warning Limit"].isReadOnly = false;
-            } else {
-                data.point["High Warning Limit"].isReadOnly = true;
-                data.point["Low Warning Limit"].isReadOnly = true;
-            }
-            return data.point;
         },
 
         applyNetworkNumber: function(data) {
@@ -3471,6 +3378,23 @@ var Config = (function(obj) {
             return point;
         },
 
+        applyAlarmAdjustPoint: function(data) {
+            var point = data.point;
+
+            if (data.propertyObject.PointInst === 0) {
+                point["Alarm Adjust Band"].isDisplayable = false;
+                point["Warning Adjust Band"].isDisplayable = false;
+            } else {
+                point["Alarm Adjust Band"].isDisplayable = true;
+                if (point["Enable Warning Alarms"].Value === false) {
+                    point["Warning Adjust Band"].isDisplayable = false;
+                } else {
+                    point["Warning Adjust Band"].isDisplayable = true;
+                }
+            }
+                return point;
+        },
+
         applyOutOfService: function(data) {
             var point = data.point;
 
@@ -3624,12 +3548,10 @@ var Config = (function(obj) {
                     if (port === "Ethernet") {
                         point["Ethernet Protocol"].Value = "IP";
                         point["Ethernet Protocol"].eValue = enums["Ethernet Protocols"]["IP"]["enum"];
-                        point["Ethernet Address"].isDisplayable = true;
                         point["Downlink Protocol"].isDisplayable = obj.Utility.checkMicroScan5Device(point);
                     } else {
                         point[ports[i] + " Protocol"].Value = "MS/TP";
                         point[ports[i] + " Protocol"].eValue = enums["Port Protocols"]["MS/TP"]["enum"];
-                        point["Ethernet Address"].isDisplayable = false;
                         point["Downlink Protocol"].isDisplayable = false;
                     }
                 } else {
@@ -3643,9 +3565,23 @@ var Config = (function(obj) {
 
         applyDeviceEthernetProtocol: function(data) {
             var point = data.point,
-                disp = ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) ? true : false;
+                setDisp = obj.Utility.setPropsDisplayable;
 
-            obj.Utility.setPropsDisplayable(point, ["Ethernet IP Port", "Ethernet Network"], disp);
+            if ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) {
+                var ro = (point["Uplink Port"].Value === "Ethernet") ? true : false;
+                point["Ethernet Gateway"].isReadOnly = ro;
+                point["Ethernet Subnet"].isReadOnly = ro;
+                point["Ethernet IP Port"].isReadOnly = (point["Ethernet Network"].Value !== 0) ? true : false;
+                point["Ethernet Network"].isDisplayable = true;
+                if (obj.Utility.checkMicroScan5Device(point)) {
+                    setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], true);
+                } else {
+                    setDisp(point, ["Ethernet Address", "Ethernet IP Port"], ro);
+                    setDisp(point, ["Ethernet Gateway", "Ethernet Subnet"], false);
+                }
+            } else {
+                setDisp(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Gateway", "Ethernet Subnet", "Ethernet Network"], false);
+            }
             return point;
         },
 
@@ -3973,8 +3909,8 @@ var Config = (function(obj) {
                             "1 - Zone Temperature": 1,
                             "2 - Setpoint Adjust": 2,
                             "3 - Supply Temperature": 3,
-                            "Auxiliary": 4,
-                            "Air Volume": 5
+                            "4 - Auxiliary": 4,
+                            "5 - Air Volume": 5
                         });
                         break;
 
@@ -4050,15 +3986,19 @@ var Config = (function(obj) {
                                 });
                                 break;
                             case eDev["MicroScan 4 UNV"]["enum"]:
+                                if (inType.eValue !== 0) {
+                                    inType.eValue = 5;
+                                    inType.Value = "Rate Input";
+                                }
                                 setValOpt(inType, {
                                     "Normal": 0,
-                                    "Rate Input": 1
+                                    "Rate Input": 5
                                 });
                                 setCh(ch, 1, 16);
                                 break;
                             default: // MicroScan 4 Digital
                                 setValOpt(inType, {
-                                    "Rate Input": 1
+                                    "Rate Input": 5
                                 });
                                 setCh(ch, 1, 32);
                                 break;
@@ -4161,29 +4101,20 @@ var Config = (function(obj) {
                         break;
 
                     default: // Unknown, no RMU
+                        setValOpt(type, {
+                            "Latch": 0,
+                            "Momentary": 1,
+                            "Pulse": 2
+                        });
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
+                            case eDev["MicroScan 4 UNV"]["enum"]:
                                 setCh(ch, 1, 16);
                                 break;
                             case eDev["SCADA Vio"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
                                 setCh(ch, 1, 9);
                                 break;
                             case eDev["SCADA IO"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1,
-                                    "Pulse": 2
-                                });
                                 setValOpt(ch, {
                                     "I/O 1": 1,
                                     "I/O 2": 2,
@@ -4195,32 +4126,17 @@ var Config = (function(obj) {
                                     "I/O 8": 8
                                 });
                                 break;
-                            case eDev["MicroScan 4 UNV"]["enum"]:
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1
-                                });
-                                setCh(ch, 1, 16);
-                                break;
-                            default: // MicroScan 4 Digital
-                                setValOpt(type, {
-                                    "Latch": 0,
-                                    "Momentary": 1
-                                });
+                            case eDev["MicroScan 4 Digital"]["enum"]:
                                 setCh(ch, 1, 32);
+                                break;
+                            default: // MicroSPC Device
+                                setCh(ch, 0, 0);
+                                ch.isDisplayable = false;
+                                type.isDisplayable = false;
                                 break;
                         }
                         break;
                 }
-            }
-            if (obj.Utility.getPropertyObject("Feedback Point", point).PointInst !== 0) {
-
-                point["Feedback Polarity"].isDisplayable = true;
-                point["Alarm Value"].isDisplayable = false;
-            } else {
-
-                point["Feedback Polarity"].isDisplayable = false;
-                point["Alarm Value"].isDisplayable = true;
             }
             return obj.EditChanges.applyBinaryInputInputType(data);
         },
@@ -4246,7 +4162,7 @@ var Config = (function(obj) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
-                min,
+                min = 0,
                 max,
                 setCh = obj.Utility.setChannelOptions,
                 setValOpt = obj.Utility.setupPropValueOptions,
@@ -4255,36 +4171,31 @@ var Config = (function(obj) {
                 och = point["Open Channel"],
                 cch = point["Close Channel"];
 
-            obj.Utility.setPropsDisplayable(point, ["Open Channel", "Channel", "Close Channel", "Polarity"], false);
+            obj.Utility.setPropsDisplayable(point, ["Channel", "Open Channel", "Close Channel", "Polarity"], false);
 
             if (val) {
                 val = point["Output Type"].Value;
-                if ((val === "Pulsed") || (val === "Pulse Width")) {
-                    point.Polarity.isDisplayable = true;
-                }
                 switch (point._rmuModel) {
                     case eRmu["MS 4 VAV"]["enum"]:
                         setValOpt(ch, {
                             "1 - Damper": 1,
                             "2 - Reheat": 2
                         });
+                        min = -1;
                         max = -1;
                         break;
 
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        min = 0;
                         max = (val === "Analog") ? 3 : 7;
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
-                        min = 0;
                         max = 7;
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
-                        min = 0;
                         max = (val === "Analog") ? 3 : 15;
                         break;
 
@@ -4340,6 +4251,9 @@ var Config = (function(obj) {
                         }
                         break;
                 }
+                if ((min >= 0) && ((val === "Pulsed") || (val === "Pulse Width"))) {
+                    point.Polarity.isDisplayable = true;
+                }
                 if (max >= 0) {
                     if (val === "Pulsed") {
                         setCh(och, min, max);
@@ -4393,6 +4307,12 @@ var Config = (function(obj) {
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(outType, {
+                            "Analog": 0,
+                            "Pulsed": 2
+                        });
+                        break;
+
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
@@ -4469,26 +4389,30 @@ var Config = (function(obj) {
 
         applyBinaryOutputTypeFeedbackType: function(data) {
             var point = data.point,
+                setDisp = obj.Utility.setPropsDisplayable,
                 fbPoint = obj.Utility.getPropertyObject("Feedback Point", point);
 
             fbPoint.isDisplayable = false;
-            obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], false);
+            setDisp(point, ["Feedback Channel", "Feedback Instance", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity", "Supervised Input"], false);
 
             switch (point["Feedback Type"].Value) {
                 case "Single":
-                    obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity"], true);
+                    if (point.Instance.isDisplayable) {
+                        setDisp(point, ["Feedback Instance", "Feedback Polarity"], true);
+                    } else {
+                        setDisp(point, ["Feedback Channel", "Feedback Polarity"], true);
+                        if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
+                            point["Supervised Input"].isDisplayable = true;
+                        }
+                    }
                     break;
 
                 case "Dual":
-                    obj.Utility.setPropsDisplayable(point, ["Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], true);
+                    setDisp(point, ["Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], true);
                     break;
 
                 case "Point":
                     point["Feedback Polarity"].isDisplayable = true;
-                    fbPoint.isDisplayable = true;
-                    break;
-
-                case "Remote":
                     fbPoint.isDisplayable = true;
                     break;
 
@@ -4502,19 +4426,20 @@ var Config = (function(obj) {
             var point = data.point,
                 disp;
 
-            if ((point["Output Type"].Value === "Latch") || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"])) {
-                point.Channel.isDisplayable = true;
-                disp = false;
+            if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
+                point["Momentary Delay"].isDisplayable = (point["Output Type"].Value === "Latch") ? false : true;
             } else {
-                point.Channel.isDisplayable = false;
-                disp = true;
-            }
-            obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
+                if (point["Output Type"].Value === "Latch") {
+                    point.Channel.isDisplayable = true;
+                    disp = false;
+                } else {
+                    point.Channel.isDisplayable = false;
+                    disp = true;
+                }
+                obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
+            } 
             return point;
         },
-
-        // TODO Coordinate with Rob to remove this routine
-        //applyBinaryOutputTypeFeedbackPoint: function(data) {},
 
         applyBinaryOutputDevModel: function(data) {
             var point = data.point,
@@ -4533,14 +4458,23 @@ var Config = (function(obj) {
                     "I/O 7": 7,
                     "I/O 8": 8
                 },
+                fbOpts = {
+                    "None": 0,
+                    "Single": 1,
+                    "Point": 3
+                },
+                opts = {
+                    "Latch": 0,
+                    "Momentary": 1
+                },
                 fbMin = 1,
                 fbMax = -1,
-                fbType = point["Feedback Type"],
                 chMin = 1,
                 chMax = -1,
+                fbType = point["Feedback Type"],
                 outType = point["Output Type"];
 
-            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Feedback Channel", "Open Channel", "Close Channel", "Polarity", "Feedback Polarity", "Open Polarity", "Close Polarity", "Same State Test", "Supervised Input"], false);
+            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Polarity", "Same State Test"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
@@ -4573,23 +4507,15 @@ var Config = (function(obj) {
 
                     case eRmu["N2 Device"]["enum"]:
                         point.Instance.isDisplayable = true;
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
-                        fbMax = 255;
+                        setValOpt(fbType, fbOpts);
                         break;
 
                     case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(outType, opts);
                         setValOpt(fbType, {
                             "None": 0
                         });
                         fbType.isDisplayable = false;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         setValOpt(point.Channel, {
                             "3 - Lights": 3,
                             "5 - Fan": 5,
@@ -4602,54 +4528,35 @@ var Config = (function(obj) {
                     case eRmu["MS3 RT"]["enum"]:
                     case eRmu["MS 3 EEPROM"]["enum"]:
                     case eRmu["MS 3 Flash"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Same State Test"], true);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        point["Same State Test"].isDisplayable = true;
+                        setValOpt(outType, opts);
+                        setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 7;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         chMin = 0;
                         chMax = 7;
                         break;
 
                     case eRmu["IFC Remote Unit"]["enum"]:
-                        setDisp(point, ["Supervised Input", "Same State Test"], true);
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
-                        });
+                        point["Same State Test"].isDisplayable = true;
+                        setValOpt(outType, opts);
+                        setValOpt(fbType, fbOpts);
                         fbMin = 0;
                         fbMax = 15;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
                         chMin = 0;
                         chMax = 15;
                         break;
 
                     case eRmu["Smart II Remote Unit"]["enum"]:
-                        point["Same State Test"].isDisplayable = true;
-                        setValOpt(fbType, {
-                            "None": 0,
-                            "Single": 1,
-                            "Point": 3
+                        setValOpt(outType, {
+                            "Latch": 0
                         });
+                        outType.isDisplayable = false;
+                        point.Polarity.isDisplayable = true;
+                        setValOpt(fbType, fbOpts);
+                        setCh(point.Channel, 0, 7);
                         fbMin = 0;
                         fbMax = 7;
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
-                        chMin = 0;
-                        chMax = 7;
                         break;
 
                     default: // Unknown, no RMU
@@ -4660,10 +4567,7 @@ var Config = (function(obj) {
                             "Dual": 2,
                             "Point": 3
                         });
-                        setValOpt(outType, {
-                            "Latch": 0,
-                            "Momentary": 1
-                        });
+                        setValOpt(outType, opts);
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
                             case eDev["MicroScan 4 UNV"]["enum"]:
@@ -4693,6 +4597,7 @@ var Config = (function(obj) {
                         break;
                 }
                 if (outType.isDisplayable) {
+                    point.Polarity.isDisplayable = true;
                     if (chMax >= 0) {
                         setCh(point.Channel, chMin, chMax);
                         setCh(point["On Channel"], chMin, chMax);
@@ -4700,46 +4605,64 @@ var Config = (function(obj) {
                     }
                     obj.EditChanges.applyBinaryOutputOutputType(data);
                 }
-                if (fbType.isDisplayable) {
-                    if (fbMax >= 0) {
-                        setCh(point["Feedback Channel"], fbMin, fbMax);
-                        setCh(point["Open Channel"], fbMin, fbMax);
-                        setCh(point["Close Channel"], fbMin, fbMax);
-                    }
-                    obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
+                if (fbMax >= 0) {
+                    setCh(point["Feedback Channel"], fbMin, fbMax);
+                    setCh(point["Open Channel"], fbMin, fbMax);
+                    setCh(point["Close Channel"], fbMin, fbMax);
                 }
+                obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
+            }
+            return point;
+        },
+
+        applyAnalogValueMonitorPoint: function(data) {
+            var point = data.point,
+                mp = obj.Utility.getPropertyObject("Monitor Point", point),
+                setDisp = obj.Utility.setPropsDisplayable;
+
+            if (mp.isDisplayable && (mp.PointInst !== 0)) {
+                setDisp(point, ["Fail Action", "Demand Enable"], true);
+                point["Demand Interval"].isDisplayable = point["Demand Enable"].Value;
+            } else {
+                setDisp(point, ["Fail Action", "Demand Enable", "Demand Interval"], false);
             }
             return point;
         },
 
         applyAnalogValueDevModel: function(data) {
             var point = data.point,
-                enums = enumsTemplatesJson.Enums,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 mp = false;
 
             obj.Utility.setPropsDisplayable(point, ["Instance", "Read Only"], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if (point._relPoint === enums.Reliabilities["No Fault"]["enum"]) {
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
                 switch (point._rmuModel) {
-                    case enums["Remote Unit Model Types"]["BACnet"]["enum"]:
+                    case eRmu["BACnet"]["enum"]:
                         point.Instance.isDisplayable = true;
                         if (obj.Utility.checkMicroScan5Device(point)) {
                             point["Read Only"].isDisplayable = true;
                         }
                         break;
 
-                    case enums["Remote Unit Model Types"]["N2 Device"]["enum"]:
+                    case eRmu["N2 Device"]["enum"]:
                         point.Instance.isDisplayable = true;
                         break;
 
-                    default: // Unknown, no RMU
+                    case eRmu["Unknown"]["enum"]:
+                    case eRmu["MS 4 VAV"]["enum"]:
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
                         mp = true;
+                        break;
+
+                    default:
                         break;
                 }
             }
             obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = mp;
-            obj.Utility.setPropsDisplayable(point, ["Demand Interval", "Demand Enable", "Fail Action"], mp);
-            return point;
+            return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
 
         applyBinaryValueDevModel: function(data) {
@@ -5054,7 +4977,8 @@ var Config = (function(obj) {
             template["Point Type"].Value = pointType;
             template["Point Type"].eValue = enumsTemplatesJson.Enums["Point Types"][pointType].enum;
             return templateClone(template);
-        }
+        },
+        commonProperties: enumsTemplatesJson.Templates._common
     };
 
     // Application-specific configuration

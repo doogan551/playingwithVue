@@ -58,10 +58,10 @@ var loader = function() {
 // io & oplog
 common.setQualityLabel = function(point) {
 
-  if (point._cfgRequired !== undefined && point._cfgRequired === true)
-    point["Quality Label"] = "Fault";
-  else if (point._relDevice !== undefined && point._relDevice === Config.Enums.Reliabilities["Stop Scan"]["enum"])
+  if (point._relDevice !== undefined && point._relDevice === Config.Enums.Reliabilities["Stop Scan"]["enum"])
     point["Quality Label"] = "Stop Scan";
+  else if (point._cfgRequired !== undefined && point._cfgRequired === true)
+    point["Quality Label"] = "Fault";
   else if (point._relDevice !== undefined && point._relDevice !== Config.Enums.Reliabilities["No Fault"]["enum"])
     point["Quality Label"] = "Fault";
   else if (point._relRMU !== undefined && point._relRMU === Config.Enums.Reliabilities["Stop Scan"]["enum"])
@@ -312,7 +312,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     updateObject[propName] = newPoint[prop].eValue;
                   }
 
-                  if (newPoint["Out of Service"].Value === true) {
+                  if (!!newPoint.hasOwnProperty("Out of Service") && newPoint["Out of Service"].Value === true) {
 
                     if (newPoint.Value.oosValue !== undefined) {
                       downloadPoint = true;
@@ -1494,10 +1494,12 @@ function updateDependencies(refPoint, flags, user, callback) {
 }
 
 function restorePoint(upi, user, callback) {
-  var logData = {
-    user: user,
-    timestamp: Date.now()
-  };
+    var logData = {
+            user: user,
+            timestamp: Date.now()
+        },
+        pointType;
+
   Utility.findAndModify({
     collection: pointsCollection,
     query: {
@@ -1526,37 +1528,59 @@ function restorePoint(upi, user, callback) {
       collection: activityLogCollection,
       insertObj: logData
     }, function(err, result) {
-      if (["Schedule", 'Sequence'].indexOf(point["Point Type"].Value) >= 0) {
-        // get points based on parentupi
-        Utility.update({
-          collection: 'points',
-          query: {
-            _parentUpi: point._id
-          },
-          updateObj: {
-            $set: {
-              _pStatus: 0
-            }
-          },
-          options: {
-            multi: true
-          }
-        }, function(err, result) {
-          return callback({
-            message: "success"
-          });
-        });
-      } else {
-        restoreScheduleEntries(point, user, function() {
-          common.updateDependencies(point, {
-            method: "restore"
-          }, user, function() {
-            return callback({
-              message: "success"
-            });
-          });
-        });
-      }
+        pointType = point["Point Type"].Value;
+        switch (pointType) {
+            case "Schedule":
+            case "Sequence":
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _parentUpi: point._id
+                    },
+                    updateObj: {
+                        $set: {
+                            _pStatus: 0
+                        }
+                    },
+                    options: {
+                        multi: true
+                    }
+                }, function (err, result) {
+                    return callback({
+                        message: "success"
+                    });
+                });
+                break;
+            case "Report":
+                // enable related schedules
+                // Utility.findAndModify({
+                //     collection: constants('schedulescollection'),
+                //     query: {
+                //         upi: point._id
+                //     },
+                //     updateObj: {
+                //         $set: {
+                //             enabled: true
+                //         }
+                //     }
+                // }, function (err, result) {
+                //     return callback({
+                //         message: "success"
+                //     });
+                // });
+                break;
+            default:
+                restoreScheduleEntries(point, user, function () {
+                    common.updateDependencies(point, {
+                        method: "restore"
+                    }, user, function () {
+                        return callback({
+                            message: "success"
+                        });
+                    });
+                });
+                break;
+        }
     });
   });
 }
@@ -1729,6 +1753,9 @@ function deletePoint(upi, method, user, options, callback) {
       }
     },
     _addActivityLog = function(cb) {
+      if(_point._pStatus === Config.Enums['Point Statuses'].Inactive.enum){
+        return cb(null);
+      }
       if (method === 'hard') {
         _logData.activity = actLogsEnums["Point Hard Delete"].enum;
         _logData.log = "Point destroyed";
@@ -1777,8 +1804,35 @@ function deletePoint(upi, method, user, options, callback) {
         cb(null);
       });
     },
+    _updateRelatedSchedule = function(cb) {
+        var query = {
+                upi: _upi
+            },
+            update = {
+                $set: {
+                    enabled: false
+                }
+            };
+
+        if (method === 'hard') {
+            Utility.remove({
+                collection: constants('schedulescollection'),
+                query: query
+            }, function(err, result) {
+                cb(err);
+            });
+        } else {
+            Utility.findAndModify({
+                collection: constants('schedulescollection'),
+                query: query,
+                updateObj: update
+            }, function(err, schedule) {
+                cb(err);
+            });
+        }
+    },
     executeFunctions = [_findPoint, _deletePoint, _updateUpis, _deleteHistory, _fromScheduleExitCheck, _addActivityLog,
-      _deleteChildren, _updateCfgRequired, _updateDependencies
+      _deleteChildren, _updateCfgRequired, _updateDependencies, _updateRelatedSchedule
     ];
 
   async.waterfall(executeFunctions, function(err) {
@@ -2286,7 +2340,8 @@ function acknowledgePointAlarms(alarm) {
   }
 }
 
-function addPoint(point, user, options, callback) {
+function addPoint(data, user, options, callback) {
+  var point = data.point;
   var logData = {
     user: user,
     timestamp: Date.now(),
@@ -2294,26 +2349,22 @@ function addPoint(point, user, options, callback) {
     activity: actLogsEnums["Point Add"].enum,
     log: "Point added"
   };
-
+  var updateObj = {
+    $set: {}
+  };
 
   updateCfgRequired(point, function(err) {
     if (err)
       callback(err);
 
-    point._pStatus = 0;
+    updateObj.$set._pStatus = 0;
 
     var searchQuery = {};
-    var updateObj = {};
 
-    if (!point.Security)
-      point.Security = [];
-
-    //strip activity log and then insert act msg into db
+    updateObj.$set.Security = [];
 
     searchQuery._id = point._id;
-    delete point._id;
-    updateObj = point;
-    updateObj._actvAlmId = ObjectID(updateObj._actvAlmId);
+    updateObj.$set._actvAlmId = ObjectID(point._actvAlmId);
     // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
 
 
@@ -2327,21 +2378,29 @@ function addPoint(point, user, options, callback) {
       } else {
         point._id = searchQuery._id;
         logData.point._id = searchQuery._id;
-        if (!!options && options.from === "updateSchedules") {
+        if (!options || (!!options && options.from !== "updateSchedules")) {
+          var logObj = utils.buildActivityLog(logData);
+
+          Utility.insert({
+            collection: activityLogCollection,
+            insertObj: logObj
+          }, function(err, result) {});
+        }
+
+        if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
+          newUpdate(data.oldPoint, point, {
+            from: 'addpoint',
+            path: data.path
+          }, user, function(err, newPoint) {
+            callback({
+              msg: "success"
+            }, newPoint);
+          });
+        } else {
           return callback({
             msg: "success"
           }, point);
         }
-        var logObj = utils.buildActivityLog(logData);
-
-        Utility.insert({
-          collection: activityLogCollection,
-          insertObj: logObj
-        }, function(err, result) {
-          callback({
-            msg: "success"
-          }, point);
-        });
       }
     });
 

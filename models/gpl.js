@@ -6,10 +6,11 @@ module.exports = {
         var seqData,
             sendToJade = function(err, pointdata) {
                 // console.log('GPL:', 'got points');
-                cb({
-                    data: seqData,
-                    pointdata: pointdata
-                });
+                cb(err,
+                    {
+                        data: seqData,
+                        pointdata: pointdata
+                    });
             },
             getPointData = function() {
                 getGplPoints({
@@ -26,7 +27,12 @@ module.exports = {
         }, function(err, result) {
             // console.log('GPL:', 'got point');
             seqData = result;
-            getPointData();
+            if (!!seqData) {
+                getPointData();
+            } else {
+                sendToJade("No sequence found!");
+            }
+
         });
     },
     getReferences: function(data, cb) {

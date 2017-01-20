@@ -234,9 +234,6 @@ input.intervalValue {
     padding-left: 5px;
     padding-right: 5px;
 }
-.pointLookupColumn {
-    min-width: 270px;
-}
 .operators.dropdown-menu {
     min-width: 45px;
     width: 45px;
@@ -592,16 +589,19 @@ div.dataTables_wrapper div.dataTables_length select {
     padding: 3px 3px;
 }
 .firstColumn {
-    min-width: 200px;
+    /*min-width: 200px;*/
 }
 th.firstColumn.datetime {
     min-width: 60px;
-    width: 100px !important;
+    /*width: 100px !important;*/
 }
 td.firstColumn.datetime {
     min-width: 60px;
-    width: 100px !important;
+    /*width: 100px !important;*/
     font-size: small;
+}
+.firstColumn.pointLookupColumn {
+    /*min-width: 270px;*/
 }
 .columnName {
     display: inline-block;
@@ -629,6 +629,9 @@ td.firstColumn.datetime {
     line-height: 26px;
 }
 .availableCalculations a .text {
+}
+.availableTotalizerOperatorsContainer {
+    height: 25px;
 }
 .availableTotalizerOperatorsContainer a {
     width: 80px;
@@ -710,7 +713,10 @@ a.btn.dropdown-button {
 }
 a.btn.dropdown-button.propertySelect {
     padding: 0px 0px 0px 0px !important;
-    width: 240px;
+    width: 260px;
+}
+a.btn.dropdown-button.filterValueSelect {
+    padding: 0px 0px 0px 0px !important;
 }
 a.btn.dropdown-button.propertySelectForColumn {
     padding: 0px 0px 0px 0px !important;
@@ -1299,3 +1305,6 @@ button {
     width: 20px;
     height: 20px;
 }
+/*table, th, td {*/
+    /*border: 1px solid !important;*/
+/*}*/

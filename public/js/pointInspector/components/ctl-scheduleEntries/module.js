@@ -359,7 +359,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                     data: params
                 })
                 .done(function(data) {
-
+                    var oldPoint = _.cloneDeep(data);
                     data["Enable Schedule"].Value = self.hostSchedule();
                     data["Host Schedule"].Value = self.enableAll();
                     data["Heating Season"].Value = self.heating();
@@ -380,8 +380,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                         data._parentUpi = 0;
                     }
 
-                    var oldPoint = data,
-                        newPoint = ko.viewmodel.fromModel(data);
+                    var newPoint = ko.viewmodel.fromModel(data);
                     self.oldPoints.push(oldPoint);
                     item = self.buildObservable({
                         point: newPoint,
