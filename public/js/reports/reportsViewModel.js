@@ -1383,6 +1383,7 @@ var reportsViewModel = function () {
         $tabs,
         $tabConfiguration,
         $configurationButton,
+        $saveReportButton,
         $tabViewReport,
         $viewReportButton,
         $dataTablePlaceHolder,
@@ -2834,12 +2835,16 @@ var reportsViewModel = function () {
                 self.currentTab(tabNumber);
                 switch (tabNumber) {
                     case 1:
+                        $configurationButton.addClass("active");
+                        $viewReportButton.removeClass("active");
                         $tabConfiguration.addClass("active");
                         $tabConfiguration.show();
                         $tabViewReport.removeClass("active");
                         $tabViewReport.hide();
                         break;
                     case 2:
+                        $configurationButton.removeClass("active");
+                        $viewReportButton.addClass("active");
                         $tabViewReport.addClass("active");
                         $tabConfiguration.removeClass("active");
                         $tabConfiguration.hide();
@@ -2874,6 +2879,7 @@ var reportsViewModel = function () {
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
             $configurationButton = $direports.find(".configurationButton");
+            $saveReportButton = $direports.find(".saveReportButton");
             $tabViewReport = $direports.find(".tabViewReport");
             $viewReportButton = $direports.find(".viewReportButton");
             $viewReportNav = $tabViewReport.find(".viewReportNav");
@@ -6597,7 +6603,7 @@ var reportsViewModel = function () {
         }
     };
 
-    self.reportConfiguration = function () {
+    self.reportConfiguration = function (e) {
         tabSwitch(1);
     };
 

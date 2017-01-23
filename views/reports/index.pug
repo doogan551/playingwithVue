@@ -19,28 +19,26 @@ html.direports
                 div
                     ul#slide-out.side-nav.fixed
                         li.configurationButton
-                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Report settings")
                                 //| Configuration
                                 i.material-icons.center settings
-                        li(data-bind='if: $root.canEdit()')
-                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='attr: {disabled: activeSaveRequest}', style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Save report")
+                        li.saveReportButton(data-bind='if: $root.canEdit()')
+                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='attr: {disabled: activeSaveRequest}', style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Save report")
                                 i.mdi.mdi-content-save.center
                         li.viewReportButton
-                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Run report")
                                 //| Run Report
                                 i.material-icons.center play_arrow
-
-
-                .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Report Data")
-                    .spinner-layer
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper
-                            .circle
-                .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
-                    i.material-icons.center thumb_up
+                            .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Report Data")
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper
+                                        .circle
+                            .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+                                i.material-icons.center thumb_up
             #page-content-wrapper.rightPanel
                 .container-fluid
                     .runReportSpinner.blue-grey-text(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")

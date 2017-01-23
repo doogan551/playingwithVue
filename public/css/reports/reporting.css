@@ -497,6 +497,16 @@ span.caret.lm10px {
     color: #23527c;
     text-decoration: none;
 }
+#slide-out.side-nav li.active a.btn, #slide-out.side-nav li.active a.btn-large {
+    background-color: #91a5af !important;
+}
+#slide-out.side-nav a.btn i, #slide-out.side-nav a.btn-large i {
+    color: white;
+}
+#slide-out.side-nav a.btn i:hover, #slide-out.side-nav a.btn-large i:hover {
+    color: #23527c;
+    text-decoration: none;
+}
 a.tab {
     color: #ffffff;
 }
