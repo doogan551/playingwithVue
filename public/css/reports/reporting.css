@@ -10,6 +10,9 @@
 .leftBar a {
     /*padding-top: 0px;*/
 }
+#slide-out.side-nav.fixed {
+    width: 86px;
+}
 .rightPanel {
     z-index: 0;
     position: absolute;
@@ -565,7 +568,12 @@ html, body {
     position: absolute;
     font-size: 18px;
 }
-
+.saveReportSpinner {
+    left: 45%;
+    padding-top: 200px;
+    position: relative;
+    font-size: 18px;
+}
 i.iconLink {
     vertical-align: middle;
 }

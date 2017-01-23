@@ -17,7 +17,7 @@ html.direports
         #wrapper(style="display:none")
             #sidebar-wrapper.leftBar
                 div
-                    ul
+                    ul#slide-out.side-nav.fixed
                         li.configurationButton
                             a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
                                 //| Configuration
@@ -63,7 +63,17 @@ html.direports
                                 div.circle-clipper
                                     div.circle
                         span.spinnertext.blue-grey-text(data-bind="text: chartSpinnerTitle")
-                    .tabConfiguration
+                    .saveReportSpinner.blue-grey-text(data-bind="css: { displayDiv: activeSaveRequest(), hideDiv: !activeSaveRequest()} ", title="Saving Report")
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.blue-grey-text Saving Report
+                    .tabConfiguration.side-nav-pane
                         .row
                             .reportTabs.col.s12
                                 ul.tabs
@@ -520,7 +530,7 @@ html.direports
                                         .row.well-sm
                                             .errorMessage.red.lighten-4
                                             .successMessage.green.lighten-4
-                    .tabViewReport.well.tab-pane
+                    .tabViewReport.side-nav-pane
                         .row(data-bind="css: { hideDiv: (chartable() !== true)}")
                             .viewReportNav.col.s12
                                 ul.tabs

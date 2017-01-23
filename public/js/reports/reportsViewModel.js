@@ -5118,6 +5118,7 @@ var reportsViewModel = function () {
             var remainingResponses = 0,
                 errList = [],
                 reportpStatusBeforeSave,
+                $activeSidePane,
                 submitSaveReportRequest = function (errors) {
                     if (!!errors) {
                         itemFinished(errors);
@@ -5138,12 +5139,8 @@ var reportsViewModel = function () {
                     reportpStatusBeforeSave = point._pStatus;
 
                     self.activeSaveRequest(true);
-
-                    // var $screenMessages = $tabConfiguration.find(".screenMessages");
-                    blockUI($tabConfiguration, true, " Saving Report...");
-
-                    // $screenMessages.find(".errorMessage").text(""); // clear messages
-                    // $screenMessages.find(".successMessage").text(""); // clear messages
+                    $activeSidePane = $rightPanel.find(".side-nav-pane.active");
+                    blockUI($activeSidePane, true, " Saving Report...");
                     errList = [];
                     remainingResponses = 0;
 
@@ -5157,7 +5154,7 @@ var reportsViewModel = function () {
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
                     var err = result.err;
-                    tabSwitch(1);  // switch to configuration tab
+
                     if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
@@ -5189,10 +5186,9 @@ var reportsViewModel = function () {
                                 msg = 'Report Saved';
                             }
                             dti.toast(msg, duration);
-
                             self.activeSaveRequest(false);
-
-                            blockUI($tabConfiguration, false);
+                            $activeSidePane = $rightPanel.find(".side-nav-pane.active");
+                            blockUI($activeSidePane, false);
                         }
                     }
                 };
