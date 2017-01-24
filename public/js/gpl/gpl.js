@@ -2127,6 +2127,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.y = this.config.y || 0;
 
         this.initShapes();
+        this.valueText.visible = (this.config.presentValueVisible !== undefined ? this.config.presentValueVisible : true);
 
         gpl.blockManager.registerBlock(this, this.valueText, this.targetCanvas);
 
@@ -2322,6 +2323,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (this.presentValueVisible === false || this.config.showValue === false) {
             config.visible = false;
+        } else {
+            config.visible = true;
         }
 
         this.valueText = new fabric.Text(this.getPlaceholderText(), config);
@@ -5844,12 +5847,12 @@ gpl.BlockManager = function (manager) {
                     gpl.manager.bindings.hasEdits(true);
                 }
 
-                if (editBlock.setShowLabel() !== showLabel) {
+                if (editBlock.labelVisible !== showLabel) {
                     editBlock.setShowLabel(showLabel);
                     gpl.manager.bindings.hasEdits(true);
                 }
 
-                if (editBlock.setShowValue() !== showValue) {
+                if (editBlock.presentValueVisible !== showValue) {
                     editBlock.setShowValue(showValue);
                     gpl.manager.bindings.hasEdits(true);
                 }
