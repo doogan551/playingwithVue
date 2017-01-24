@@ -2127,7 +2127,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.y = this.config.y || 0;
 
         this.initShapes();
-        this.valueText.visible = (this.config.presentValueVisible !== undefined ? this.config.presentValueVisible : true);
+        if (this.targetCanvas !== 'toolbar') {
+            this.valueText.visible = (this.config.presentValueVisible !== undefined ? this.config.presentValueVisible : true);
+        }
 
         gpl.blockManager.registerBlock(this, this.valueText, this.targetCanvas);
 
