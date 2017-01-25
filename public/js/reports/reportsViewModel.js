@@ -1414,7 +1414,6 @@ var reportsViewModel = function () {
         $globalCalculate,
         $availableChartTypesChartTab,
         $reportChartDiv,
-        $saveReportButton,
         $pointSelectorIframe,
         longClickStart,
         longClickTimer = 100,
@@ -1871,7 +1870,6 @@ var reportsViewModel = function () {
         ajaxCall = function (type, input, url, callback) {
             var errorRaised = false;
 
-            self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
                 type: type,
@@ -2892,7 +2890,6 @@ var reportsViewModel = function () {
             $filtersGrid = $direports.find(".filtersGrid");
             $columnNames = $direports.find(".columnName");
             $filterByPoint = $direports.find("#filterByPoint");
-            $saveReportButton = $direports.find(".saveReportButton");
             $pointSelectorIframe = $filterByPoint.find(".pointLookupFrame");
             $reportTitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find(".filtersGrid .sortableFilters");
@@ -3623,14 +3620,6 @@ var reportsViewModel = function () {
                         if (!self.activeSaveRequest()) {
                             saveManager.doSave();
                         }
-                        // $(this).blur(); why do this?
-                    });
-
-                    $direports.find(".runReportButton").on("click", function (e) {
-                        $(this).focus();
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self.requestReportData();
                     });
 
                     $dataTablePlaceHolder.on("click", ".pointInstance", function () {
@@ -4851,6 +4840,7 @@ var reportsViewModel = function () {
 
             self.scheduledReportData({tables: reportDataPages});
             self.numberOfScheduledReportTables(reportDataPages.length);
+            self.activeRequestDataDrawn(false);
         },
         getNewColumnTemplate = function () {
             return {
@@ -4874,7 +4864,7 @@ var reportsViewModel = function () {
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
-                self.reportResultViewed(self.currentTab() === 2);
+                self.reportResultViewed(true);
                 blockUI($tabViewReport, false);
                 if (scheduled) {
                     breakReportDataIntoPrintablePages();
@@ -4910,6 +4900,7 @@ var reportsViewModel = function () {
                     }
 
                     adjustViewReportTabHeightWidth();
+                    self.activeRequestDataDrawn(true);
                 }
             }
         },
@@ -6394,7 +6385,6 @@ var reportsViewModel = function () {
                     checkForColumnCalculations();
                     checkForIncludeInChart();
                     adjustConfigTabActivePaneHeight();
-
                     if (scheduled && !!scheduledConfig) {
                         configureSelectedDuration(scheduledConfig);
                         self.requestReportData();
@@ -6639,6 +6629,7 @@ var reportsViewModel = function () {
                             break;
                     }
                 } else {
+                    self.activeRequestDataDrawn(false);
                     renderReport();
                 }
             }
@@ -7103,7 +7094,7 @@ var reportsViewModel = function () {
     }, self);
 
     self.displayMainSpinner = ko.computed(function () {
-        return (self.activeDataRequest() && self.currentTab() === 2);
+        return ((self.activeDataRequest() || !self.activeRequestDataDrawn()) && self.currentTab() === 2);
     }, self);
 
     self.displayTabCheckmark = ko.computed(function () {

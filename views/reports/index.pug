@@ -515,19 +515,6 @@ html.direports
                                           .circle
                                     // /ko
 
-                                .reportButtons
-                                    // ko if: ($root.canEdit())
-                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
-                                        //| Save
-                                        i.material-icons.tiny.center done
-                                    // /ko
-                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
-                                        //| Run
-                                        i.material-icons.center play_arrow
-                                    .screenMessages
-                                        .row.well-sm
-                                            .errorMessage.red.lighten-4
-                                            .successMessage.green.lighten-4
                     .tabViewReport.side-nav-pane
                         .row(data-bind="css: { hideDiv: (chartable() !== true)}")
                             .viewReportNav.col.s12
