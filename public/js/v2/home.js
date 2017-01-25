@@ -3122,8 +3122,8 @@ var dti = {
                     bindings.handleModalClose = function () {
                         if (dti.navigator.temporaryCallback) {
                             dti.navigator.temporaryCallback(false);
+                            dti.navigator.temporaryCallback = null;
                         }
-                        dti.navigator.temporaryCallback = null;
                         dti.navigator.hideNavigator(self);
                     };
 
@@ -3134,6 +3134,7 @@ var dti = {
                         if (self.fullCreate) {
                             if (dti.navigator.temporaryCallback) {
                                 dti.navigator.temporaryCallback(false);
+                                dti.navigator.temporaryCallback = null;
                             }
                             dti.navigator.hideNavigator(self);
                         }
@@ -3144,7 +3145,6 @@ var dti = {
                         if (!self.bindings.disableNewPoint()) {
                             self.bindings.mode(self.modes.CREATE);
                             self.bindings.disableNewPoint(true);
-                            dti.navigator.temporaryCallback = null;  // #187 still bug hunting..........
                             self.bindings.pointTypeChanged();
                         }
                     };
@@ -3158,6 +3158,7 @@ var dti = {
                             };
 
                         if (bindings.allowCreatePoint()) {
+                            dti.navigator.temporaryCallback = null;  // #187 still bug hunting..........
                             bindings.disableCreatePoint(true);
                             bindings.loading(true);
 
