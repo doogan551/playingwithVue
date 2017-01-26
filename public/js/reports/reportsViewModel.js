@@ -5185,7 +5185,7 @@ var reportsViewModel = function () {
                             dti.toast(msg, duration);
                             self.activeSaveRequest(false);
                             $activeSidePane = $rightPanel.find(".side-nav-pane.active");
-                            blockUI($activeSidePane, false);
+                            blockUI($activeSidePane, self.activeDataRequest());  // don't display pane if datarequest is active
                         }
                     }
                 };
@@ -7094,7 +7094,7 @@ var reportsViewModel = function () {
     }, self);
 
     self.displayMainSpinner = ko.computed(function () {
-        return ((self.activeDataRequest() || !self.activeRequestDataDrawn()) && self.currentTab() === 2);
+        return ((self.activeDataRequest() || !self.activeRequestDataDrawn()) && !self.activeSaveRequest() && self.currentTab() === 2);
     }, self);
 
     self.displayTabCheckmark = ko.computed(function () {
