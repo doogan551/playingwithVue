@@ -1229,7 +1229,7 @@ var dti = {
             });
 
             dti.bindings.startMenuItems(ko.viewmodel.fromModel(menuItems));
-            //load user preferences 
+            //load user preferences
             dti.forEachArray(dti.taskbar.pinnedItems, function processPinnedItem(item) {
                 dti.bindings.openWindows[item] = ko.observableArray([]);
                 dti.bindings.windowGroups.push(dti.taskbar.getKOWindowGroup(item, true));
@@ -1506,7 +1506,7 @@ var dti = {
                 removingUnackAlarm = function(data) {
                     // data: {
                     //      _id: string
-                    //      ackStatus: int 
+                    //      ackStatus: int
                     //      ackUser: string
                     //      ackTime: int (Unix Epoch)
                     // }
@@ -1912,8 +1912,8 @@ var dti = {
                         if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
                             // If we have more results on the server
                             if (bindings.count() > bindings.searchResults().length) {
-                                // We do this because normally the scroll event triggers loading of 
-                                // more results. But since the scroll bar isn't visible, we need to 
+                                // We do this because normally the scroll event triggers loading of
+                                // more results. But since the scroll bar isn't visible, we need to
                                 // let the user do it manually
                                 bindings.showLoadMoreResultsButton(true);
                             }
@@ -3158,7 +3158,9 @@ var dti = {
                             };
 
                         if (bindings.allowCreatePoint()) {
-                            dti.navigator.temporaryCallback = null;  // #187 still bug hunting..........
+                            // if (!self.fullCreate) {
+                            //     dti.navigator.temporaryCallback = null;  // #187 still bug hunting..........
+                            // }
                             bindings.disableCreatePoint(true);
                             bindings.loading(true);
 
@@ -3648,6 +3650,7 @@ var dti = {
                     if (dti.navigator.temporaryCallback) {
                         dti.navigator.hideNavigator(self);
                         dti.navigator.temporaryCallback(data);
+                        dti.navigator.temporaryCallback = null;
                     } else {
                         dti.windows.openWindow({
                             url: handoffMode.url,
@@ -3871,34 +3874,34 @@ var dti = {
                         'Delete': {
                             name: 'Delete',
                             visible: function(key, opt) {
-                                    var pStatus = ko.dataFor(this[0])._pStatus;
-                                    return (pStatus === 0);
-                                }
-                                // icon: 'delete'
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 0);
+                            }
+                            // icon: 'delete'
                         },
                         'Destroy': {
                             name: 'Destroy',
                             visible: function(key, opt) {
-                                    var pStatus = ko.dataFor(this[0])._pStatus;
-                                    return (pStatus === 1 || pStatus === 2); // inactive or deleted
-                                }
-                                // icon: 'delete'
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 1 || pStatus === 2); // inactive or deleted
+                            }
+                            // icon: 'delete'
                         },
                         'Restore': {
                             name: 'Restore',
                             visible: function(key, opt) {
-                                    var pStatus = ko.dataFor(this[0])._pStatus;
-                                    return (pStatus === 2);
-                                }
-                                // icon: 'restore'
+                                var pStatus = ko.dataFor(this[0])._pStatus;
+                                return (pStatus === 2);
+                            }
+                            // icon: 'restore'
                         },
                         'Clone': {
                             name: 'Clone',
                             visible: function(key, opt) {
-                                    //var pStatus = ko.dataFor(this[0])._pStatus;
-                                    return true;
-                                }
-                                // icon: 'copy'
+                                //var pStatus = ko.dataFor(this[0])._pStatus;
+                                return true;
+                            }
+                            // icon: 'copy'
                         }
                     },
                     events: {
@@ -4687,7 +4690,7 @@ var dti = {
                 }
 
                 dti.animations.slideUp($(element), function updateAlarmList() {
-                    // Remove the alarm from the DOM (it has already been removed from the observable 
+                    // Remove the alarm from the DOM (it has already been removed from the observable
                     // array - see socket handler "removingUnackAlarm" defined in dti.alarms.init)
                     $(element).remove();
 
@@ -4840,7 +4843,7 @@ var dti = {
             };
 
             ko.bindingHandlers.thumbnail = {
-                update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                     var upi = ko.unwrap(valueAccessor()),
                         thumbnailFound = viewModel.thumbnailFound,
                         $element = $(element),
@@ -4853,38 +4856,38 @@ var dti = {
                         if (currThumb === undefined || currThumb === false) {
                             // dti.log('No thumb for upi', upi);
                             $.ajax({
-                                    url: '/img/thumbs/' + upi + '.txt',
-                                    dataType: 'text',
-                                    type: 'get'
-                                })
-                                .done(
-                                    function(file) {
-                                        var data = file.split('||'),
-                                            bgColor = data[0],
-                                            image = data[1];
+                                url: '/img/thumbs/' + upi + '.txt',
+                                dataType: 'text',
+                                type: 'get'
+                            })
+                            .done(
+                                function (file) {
+                                    var data = file.split('||'),
+                                        bgColor = data[0],
+                                        image = data[1];
 
-                                        // dti.log('Saving thumb for upi', upi);
+                                    // dti.log('Saving thumb for upi', upi);
 
-                                        dti.thumbs[upi] = {
-                                            bgColor: bgColor,
-                                            image: image
-                                        };
+                                    dti.thumbs[upi] = {
+                                        bgColor: bgColor,
+                                        image: image
+                                    };
 
-                                        $element.attr('src', image);
-                                        if (bgColor != 'undefined') {
-                                            $bg.css('background-color', bgColor);
-                                        }
-
-                                        thumbnailFound(true);
+                                    $element.attr('src', image);
+                                    if (bgColor != 'undefined') {
+                                        $bg.css('background-color', bgColor);
                                     }
-                                )
-                                .fail(
-                                    function() {
-                                        dti.thumbs[upi] = false;
-                                        thumbnailFound(false);
-                                        // $icon.show();
-                                    }
-                                );
+
+                                    thumbnailFound(true);
+                                }
+                            )
+                            .fail(
+                                function () {
+                                    dti.thumbs[upi] = false;
+                                    thumbnailFound(false);
+                                    // $icon.show();
+                                }
+                            );
                         } else {
                             // dti.log('Using existing thumb for', upi);
                             bg = currThumb.bgColor;
@@ -5004,7 +5007,7 @@ var dti = {
                                 value: item.key(),
                                 selected: true
                             })
-                            .text(item.key())
+                                .text(item.key())
                         );
                     });
                     // Initial initialization:
@@ -5438,23 +5441,23 @@ var Widget = function(config) {
 
 
 /*
-input widget as subclassed widget
+ input widget as subclassed widget
 
-edit mode
+ edit mode
 
-subclasses/types
-input widget
-toolbar widget (only toolbar or has toolbar state)
+ subclasses/types
+ input widget
+ toolbar widget (only toolbar or has toolbar state)
 
-minimal view?  states?
-toolbar view?
+ minimal view?  states?
+ toolbar view?
 
-container-based--passed in or auto-generated?  passed in or body?
-container movement handled in base class--mixins?--or just overridable
+ container-based--passed in or auto-generated?  passed in or body?
+ container movement handled in base class--mixins?--or just overridable
 
-absolute/relative/fixed position--bindings?  base css classes via binding, positions via binding
+ absolute/relative/fixed position--bindings?  base css classes via binding, positions via binding
 
-*/
+ */
 
 dti.workspaceManager = window.workspaceManager = {
     openWindowPositioned: dti.windows.openWindow,
