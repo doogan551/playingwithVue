@@ -13,22 +13,22 @@ body {
 
 .canvas-container {
     position: absolute !important;
-    top: 0;
-    left: 0;
-    display: inline-block;
-    vertical-align: top;
+    /*top: 0;*/
+    /*left: 0;*/
+    /*display: inline-block;*/
+    /*vertical-align: top;*/
 }
 
-#toolbarCanvas {
-    width: 100px;
-}
+/*#toolbarCanvas {*/
+    /*width: 100px;*/
+/*}*/
 
-#gplCanvas {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 77px;
-}
+/*#gplCanvas {*/
+    /*position: fixed;*/
+    /*left: 0;*/
+    /*top: 0;*/
+    /*width: 77px;*/
+/*}*/
 .datepicker {
     z-index: 3000 !important;
 }

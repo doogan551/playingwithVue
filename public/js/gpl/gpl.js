@@ -280,7 +280,7 @@ var gpl = {
         return ret;
     },
     formatValue: function (block, value) {
-        var precision = (!!block.precision ? (String(block.precision).split(".")[1] || 0) : 0),
+        var numDecimals = parseInt(block.precision.decimals, 10),
             ret,
             val = value;
 
@@ -291,8 +291,8 @@ var gpl = {
         if (isNaN(val)) {
             ret = value;
         } else {
-            if (precision > 0) {
-                ret = parseFloat(val.toFixed(precision));
+            if (numDecimals > 0) {
+                ret = parseFloat(val.toFixed(numDecimals));
             } else {
                 ret = parseInt(val, 10);
             }
@@ -1203,7 +1203,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         offsetX: 1.5,
         offsetY: 1.5
     },
-    defaultPrecision: 3.1,
+    defaultPrecision: {
+        characters: 3,
+        decimals: 1
+    },
     labelFontFamily: 'Arial',
     hasOutput: true,
     hasShutdownBlock: true,
@@ -2071,20 +2074,19 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     getPlaceholderText: function () {
-        var precision = this.precision,
-            ints = Math.floor(precision),
-            decs = parseInt(String(precision).split('.')[1], 10),
+        var chars = parseInt(this.precision.characters, 10),
+            numDecimals = parseInt(this.precision.decimals, 10),
             c,
             ret = '';
 
         if (this.valueType === 'enum') {
             ret = '###';
         } else {
-            for (c = 0; c < ints; c++) {
+            for (c = 0; c < chars; c++) {
                 ret += '#';
             }
             ret += '.';
-            for (c = 0; c < decs; c++) {
+            for (c = 0; c < numDecimals; c++) {
                 ret += '#';
             }
         }
@@ -5695,11 +5697,10 @@ gpl.BlockManager = function (manager) {
             },
             editBlockPrecision: function () {
                 var block = manager.contextObject,
-                    precision = block.precision.toString().split('.'),
-                    numChars = parseInt(precision[0], 10),
-                    numDecimals = parseInt(precision[1], 10);
+                    chars = parseInt(block.precision.characters, 10),
+                    numDecimals = parseInt(block.precision.decimals, 10);
 
-                bmSelf.bindings.editPointCharacters(numChars);
+                bmSelf.bindings.editPointCharacters(chars);
                 bmSelf.bindings.editPointDecimals(numDecimals);
 
                 bmSelf.editBlock = block;
@@ -5722,7 +5723,8 @@ gpl.BlockManager = function (manager) {
                 gpl.blockManager.openPointEditor(block, true);
             },
             updateBlockPrecision: function () {
-                bmSelf.editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
+                bmSelf.editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
+                bmSelf.editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 bmSelf.editBlock.setPlaceholderText();
                 gpl.fire('editedblock', bmSelf.editBlock);
                 bmSelf.closePrecisionEditor();
@@ -5759,7 +5761,8 @@ gpl.BlockManager = function (manager) {
                     pointName,
                     prop;
 
-                editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
+                editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
+                editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
                 if (editBlock.hasReferenceType) { //is monitor/control block
                     if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -6033,9 +6036,8 @@ gpl.BlockManager = function (manager) {
         },
 
         openBlockEditor: function (block) {
-            var precision = block.precision.toString().split('.'),
-                numChars = parseInt(precision[0], 10),
-                numDecimals = parseInt(precision[1], 10),
+            var chars = parseInt(block.precision.characters, 10),
+                numDecimals = parseInt(block.precision.decimals, 10),
                 value = block.value,
                 label = block.label,
                 editableTypes = {
@@ -6050,7 +6052,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.blockTitle(block.label);
             bmSelf.bindings.editPointType(block.type);
             bmSelf.bindings.editPointName(block.pointName);
-            bmSelf.bindings.editPointCharacters(numChars);
+            bmSelf.bindings.editPointCharacters(chars);
             bmSelf.bindings.editPointDecimals(numDecimals);
             bmSelf.bindings.editPointValue(value);
             bmSelf.bindings.editPointLabel(label);
@@ -7463,10 +7465,6 @@ gpl.Manager = function () {
             managerSelf.pauseRender();
             gpl.scaleValue = value;
 
-            managerSelf.canvas.setZoom(value);
-            managerSelf.canvas.setWidth(currentCanvasWidth * value);
-            managerSelf.canvas.setHeight(currentCanvasHeight * value);
-
             $('.dynamicBtn').each(function () {
                 var $el = $(this),
                     origLeft = $el.data('origLeft'),
@@ -7483,6 +7481,11 @@ gpl.Manager = function () {
             if (!fromBinding) {
                 managerSelf.bindings.currentZoom(Math.round(value * 100));
             }
+
+            managerSelf.canvas.setZoom(value);
+            managerSelf.canvas.setWidth(currentCanvasWidth * value);
+            managerSelf.canvas.setHeight(currentCanvasHeight * value);
+            // managerSelf.canvas.setDimensions({width: currentCanvasWidth * value, height: currentCanvasHeight * value});
 
             managerSelf.resumeRender();
         }
@@ -8733,6 +8736,7 @@ gpl.Manager = function () {
     managerSelf.initCanvas = function () {
         var editConfig = {
                 renderOnAddRemove: false,
+                imageSmoothingEnabled: false,
                 selection: false, //group selection
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
@@ -8740,12 +8744,14 @@ gpl.Manager = function () {
             },
             toolbarConfig = {
                 renderOnAddRemove: false,
+                imageSmoothingEnabled: false,
                 selection: false,
                 hasControls: false,
                 hoverCursor: 'default'
             },
             viewConfig = {
                 renderOnAddRemove: false,
+                imageSmoothingEnabled: false,
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
                 selection: false,

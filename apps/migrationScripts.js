@@ -715,6 +715,83 @@ var scripts = {
             });
         });
     },
+    // 0.5.1 - GPL precision moving to object...
+    updateGPLBlockPrecision: function(callback) {
+        var afterVersion = '0.5.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateGPLBlockPrecision',
+                errors: null,
+                results: null
+            });
+        }
+        Utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Sequence'
+            }
+        }, function processSequence(err, doc, cb) {
+            var blocks = doc.SequenceData.sequence.block,
+                oldPrecision,
+                chars,
+                decimals;
+
+            blocks.forEach(function processPrecision(block) {
+
+                if (!!block.presentvalueVisible) {
+                    block.presentValueVisible = block.presentvalueVisible;  // fix type-O in field...
+                    delete block.presentvalueVisible;
+                }
+
+                // logger.info('block.precision:', block.precision);
+                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {
+                    oldPrecision = block.precision;
+                    chars = 3;  // defaults
+                    decimals = 1;  // defaults
+                    block.precision = {};
+
+                    if (!isNaN(oldPrecision)) {
+                        if (String(oldPrecision).indexOf(".") > -1) {
+                            if (!isNaN(String(oldPrecision).split(".")[0])) {
+                                chars = parseInt(String(oldPrecision).split(".")[0]);
+                            }
+                            if (!isNaN(String(oldPrecision).split(".")[1])) {
+                                decimals = parseInt(String(oldPrecision).split(".")[1]);
+                            }
+                        } else {
+                            decimals = oldPrecision;
+                        }
+                    }
+                    block.precision.characters = chars;
+                    block.precision.decimals = decimals;
+                    // logger.info('block.precision:', JSON.stringify(block.precision));
+                }
+            });
+
+            // logger.info('updating sequence:', doc._id);
+
+            Utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler(err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with updateGPLBlockPrecision');
+            callback(null, {
+                fn: 'updateGPLBlockPrecision',
+                errors: err
+            });
+        });
+    },
 
     // 0.4.2 - Report schema change
     updateReportsDurationInterval: function(callback) {

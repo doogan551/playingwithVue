@@ -2427,9 +2427,48 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 			} else {
 				cb();
 			}
-		};
+		},
+        cleanupBlockFields = function () {
+            var oldPrecision,
+                chars,
+                decimals,
+				block,
+				i;
+
+            for (i = 0; i < blocks.length; i++) {
+                block = blocks[i];
+
+                if (!!block.presentvalueVisible) {
+                	block.presentValueVisible = block.presentvalueVisible;  // fix type-O in field...
+                	delete block.presentvalueVisible;
+                }
+
+                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {
+                    oldPrecision = block.precision;
+                    chars = 3;  // defaults
+                    decimals = 1;  // defaults
+                    block.precision = {};
+
+                    if (!isNaN(oldPrecision)) {
+                        if (String(oldPrecision).indexOf(".") > -1) {
+                            if (!isNaN(String(oldPrecision).split(".")[0])) {
+                                chars = parseInt(String(oldPrecision).split(".")[0]);
+                            }
+                            if (!isNaN(String(oldPrecision).split(".")[1])) {
+                                decimals = parseInt(String(oldPrecision).split(".")[1]);
+                            }
+                        } else {
+                            decimals = oldPrecision;
+                        }
+                    }
+                    block.precision.characters = chars;
+                    block.precision.decimals = decimals;
+                }
+            }
+        };
 
 	setGPLPointData();
+	cleanupBlockFields();
 }
 
 function updateReferences(db, point, mainCallback) {
