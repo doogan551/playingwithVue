@@ -1908,8 +1908,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     ref.PointType = gpl.pointTypes[refPointType].enum;
                 }
 
-            } else {
-                gpl.log('setPointRef()  idx is undefined for property "', prop, '"');
+            // } else {
+            //     gpl.log("setPointRef()  idx is undefined for property '" + prop + "'");
             }
         // } else {
         //     gpl.log('no point data', this.type, this.gplId);

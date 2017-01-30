@@ -2438,9 +2438,20 @@ function addReferencesToSequencePointRefs(db, point, cb) {
             for (i = 0; i < blocks.length; i++) {
                 block = blocks[i];
 
-                if (!!block.presentvalueVisible) {
-                	block.presentValueVisible = block.presentvalueVisible;  // fix type-O in field...
-                	delete block.presentvalueVisible;
+                if (block.presentValueVisible !== undefined) {  // convert to Bool
+                    block.presentValueVisible = (block.presentValueVisible == true || block.presentValueVisible == 1);
+                    updateMe = true;
+                }
+
+                if (block.presentvalueVisible !== undefined) {
+                    block.presentValueVisible = (block.presentvalueVisible == true || block.presentvalueVisible == 1);
+                    delete block.presentvalueVisible;
+                    updateMe = true;
+                }
+
+                if (block.labelVisible !== undefined) { // convert to Bool
+                    block.labelVisible = (block.labelVisible == true || block.labelVisible == 1);
+                    updateMe = true;
                 }
 
                 if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {

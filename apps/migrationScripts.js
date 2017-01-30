@@ -731,59 +731,82 @@ var scripts = {
                 'Point Type.Value': 'Sequence'
             }
         }, function processSequence(err, doc, cb) {
-            var blocks = doc.SequenceData.sequence.block,
+            var blocks = doc.SequenceData && doc.SequenceData.sequence && doc.SequenceData.sequence.block,
                 oldPrecision,
                 chars,
-                decimals;
+                decimals,
+                updateMe = false;
 
-            blocks.forEach(function processPrecision(block) {
+            if (!!blocks) {
+                // logger.info("working on " + doc.Name );
+                blocks.forEach(function processPrecision(block) {
 
-                if (!!block.presentvalueVisible) {
-                    block.presentValueVisible = block.presentvalueVisible;  // fix type-O in field...
-                    delete block.presentvalueVisible;
-                }
-
-                // logger.info('block.precision:', block.precision);
-                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {
-                    oldPrecision = block.precision;
-                    chars = 3;  // defaults
-                    decimals = 1;  // defaults
-                    block.precision = {};
-
-                    if (!isNaN(oldPrecision)) {
-                        if (String(oldPrecision).indexOf(".") > -1) {
-                            if (!isNaN(String(oldPrecision).split(".")[0])) {
-                                chars = parseInt(String(oldPrecision).split(".")[0]);
-                            }
-                            if (!isNaN(String(oldPrecision).split(".")[1])) {
-                                decimals = parseInt(String(oldPrecision).split(".")[1]);
-                            }
-                        } else {
-                            decimals = oldPrecision;
-                        }
+                    if (block.presentValueVisible !== undefined) {  // convert to Bool
+                        block.presentValueVisible = (block.presentValueVisible == true || block.presentValueVisible == 1);
+                        updateMe = true;
                     }
-                    block.precision.characters = chars;
-                    block.precision.decimals = decimals;
-                    // logger.info('block.precision:', JSON.stringify(block.precision));
+
+                    if (block.presentvalueVisible !== undefined) {
+                        block.presentValueVisible = (block.presentvalueVisible == true || block.presentvalueVisible == 1);
+                        delete block.presentvalueVisible;
+                        updateMe = true;
+                    }
+
+                    if (block.labelVisible !== undefined) { // convert to Bool
+                        block.labelVisible = (block.labelVisible == true || block.labelVisible == 1);
+                        updateMe = true;
+                    }
+
+                    // logger.info('block.precision:', block.precision);
+                    if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {
+                        oldPrecision = block.precision;
+                        chars = 3;  // defaults
+                        decimals = 1;  // defaults
+                        block.precision = {};
+                        updateMe = true;
+
+                        if (!isNaN(oldPrecision)) {
+                            if (String(oldPrecision).indexOf(".") > -1) {
+                                if (!isNaN(String(oldPrecision).split(".")[0])) {
+                                    chars = parseInt(String(oldPrecision).split(".")[0]);
+                                }
+                                if (!isNaN(String(oldPrecision).split(".")[1])) {
+                                    decimals = parseInt(String(oldPrecision).split(".")[1]);
+                                }
+                            } else {
+                                decimals = oldPrecision;
+                            }
+                        }
+                        block.precision.characters = chars;
+                        block.precision.decimals = decimals;
+                        // logger.info('block.precision:', JSON.stringify(block.precision));
+                    }
+                });
+
+                // logger.info('updating sequence:', doc._id);
+
+                if (updateMe) {
+                    Utility.update({
+                        collection: 'points',
+                        query: {
+                            _id: doc._id
+                        },
+                        updateObj: doc
+                    }, function updatedSequenceHandler(err) {
+                        if (err) {
+                            logger.debug('Update err:', err);
+                        }
+
+                        cb(null);
+                    });
+                } else {
+                    logger.info("nothing change for " + doc.Name );
+                    cb(null);
                 }
-            });
-
-            // logger.info('updating sequence:', doc._id);
-
-            Utility.update({
-                collection: 'points',
-                query: {
-                    _id: doc._id
-                },
-                updateObj: doc
-            }, function updatedSequenceHandler(err) {
-                if (err) {
-                    logger.debug('Update err:', err);
-                }
-
+            } else {
+                logger.info("no SequenceData for " + doc.Name );
                 cb(null);
-            });
-
+            }
         }, function finishUpdatingSequences(err) {
             logger.info('Finished with updateGPLBlockPrecision');
             callback(null, {
@@ -1767,7 +1790,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.updateDevices];
+    tasks = [scripts.updateGPLBlockPrecision];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1815,7 +1838,7 @@ db.connect(connectionString, function(err) {
                     }
                 }, function(err, result) {
                     process.exit(0);
-                })
+                });
             }
         });
     });
