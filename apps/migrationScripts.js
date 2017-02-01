@@ -774,7 +774,8 @@ var scripts = {
                                     decimals = parseInt(String(oldPrecision).split(".")[1]);
                                 }
                             } else {
-                                decimals = oldPrecision;
+                                chars = oldPrecision;
+                                decimals = 0;
                             }
                         }
                         block.precision.characters = chars;

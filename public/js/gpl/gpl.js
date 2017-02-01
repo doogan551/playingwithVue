@@ -8736,7 +8736,7 @@ gpl.Manager = function () {
     managerSelf.initCanvas = function () {
         var editConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: false,
+                imageSmoothingEnabled: true,
                 selection: false, //group selection
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
@@ -8744,14 +8744,14 @@ gpl.Manager = function () {
             },
             toolbarConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: false,
+                imageSmoothingEnabled: true,
                 selection: false,
                 hasControls: false,
                 hoverCursor: 'default'
             },
             viewConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: false,
+                imageSmoothingEnabled: true,
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
                 selection: false,
