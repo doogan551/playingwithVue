@@ -5,7 +5,9 @@ var rtdTables = require('../lib/rtdTables');
 var logger = require('../helpers/logger')(module);
 
 module.exports = {
-
+    /////////////////////////////////////
+    // Point of entry to run fit model //
+    /////////////////////////////////////
     doFit: function(_data, cb) {
         var type = _data.type;
         var data = _data.data;
@@ -35,7 +37,7 @@ var polyFit = function(data, callback) {
         highTemp = data.highTemp,
         lowTemp = data.lowTemp,
         sensorType = data.sensorType;
-    coeff = [0, 0, 0, 0];
+    var coeff = [0, 0, 0, 0];
     if (degree === "Cubic") {
         degree = 3;
     } else if (degree === "Quadratic") {
@@ -45,14 +47,14 @@ var polyFit = function(data, callback) {
     // fill x,y and count from rtdtable using high and low temp with sensor
 
     if (rtdTables.hasOwnProperty(sensorType)) {
-        for (i = 0; i < rtdTables[sensorType].length; i++) {
+        for (var i = 0; i < rtdTables[sensorType].length; i++) {
             if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
                 values.push([rtdTables[sensorType][i].R, rtdTables[sensorType][i].T]);
             }
         }
     }
 
-    result = reg('polynomial', values, degree);
+    var result = reg('polynomial', values, degree);
 
     coeff = result.equation;
 
@@ -231,7 +233,7 @@ var LinearFit = function(data, callback) {
         high = data.high,
         resistor = data.resistor,
         c = data.c,
-        hi_cnt, lo_cnt, flope, offset, fhi_cnt, flo_cnt, oa, ob;
+        hi_cnt, lo_cnt, flope, offset, fhi_cnt, flo_cnt, oa, ob, slope;
 
     // Calculate high and low count range. Pulse width requires no calculation 
 

@@ -4,6 +4,9 @@ var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 
+/////////////////////////////////////////////////////////////////////////////
+// Adds alarm windows to memory. Used by oplog when alarms are added to DB //
+/////////////////////////////////////////////////////////////////////////////
 exports.maintainAlarmViews = function(socketid, view, data, common) {
   var openAlarms = common.openAlarms;
 
@@ -24,6 +27,9 @@ exports.maintainAlarmViews = function(socketid, view, data, common) {
   });
 };
 
+//////////////////////////////////////////////////////////////////
+// Queries for alarms that would show in a Recent Alarms window //
+//////////////////////////////////////////////////////////////////
 exports.getRecentAlarms = function(data, cb) {
   if (typeof data === "string") {
     data = JSON.parse(data);
@@ -117,6 +123,9 @@ exports.getRecentAlarms = function(data, cb) {
   Utility.getWithSecurity(criteria, cb);
 };
 
+//////////////////////////////////////////////////
+// Used to acknowledge an alarm in the database //
+//////////////////////////////////////////////////
 exports.acknowledgeAlarm = function(data, cb) {
   var ids, username, time, ackMethod;
 

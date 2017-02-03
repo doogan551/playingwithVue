@@ -6,7 +6,6 @@ var activityLogCollection = utils.CONSTANTS("activityLogCollection");
 var actLogsEnums = Config.Enums["Activity Logs"];
 
 module.exports = {
-
     getYear: function(data, cb) {
         var criteria = {
             query: {

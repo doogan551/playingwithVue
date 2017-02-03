@@ -6,12 +6,18 @@ var logger = require('../helpers/logger')(module);
 
 module.exports = {
 
+	//////////////////////////////////////////////////////////////////////////
+	// Firmware files are stored in filesystem and file names are retrieved //
+	//////////////////////////////////////////////////////////////////////////
 	getModelFiles: function(data, cb) {
 		var model = data.model;
 		var firmwareFolder = config.get('Infoscan.files').firmwareLocation + model + "/";
 
 		fs.readdir(firmwareFolder, cb);
 	},
+	////////////////////////////////////////////
+	// Gets remote units attached to a device //
+	////////////////////////////////////////////
 	getRemoteUnits: function(data, cb) {
 
 		var upi = parseInt(data.deviceUpi, 10);

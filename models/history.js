@@ -192,11 +192,10 @@ var editHistoryData = function(values, updateOptions, callback) {
 
 					if ((updateOptions & 1 !== 0) && !sPoint) {
 						// only inserting new data
-						updateDashboard = true;
 						var insertStatement = 'INSERT INTO ' + table + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED)';
 						insertStatement += 'VALUES ($upi, $timestamp, $Value, $ValueType, $statusflags, 1)';
-						bindings['$ValueType'] = (!!value.ValueType) ? value.ValueType : 1;
-						bindings['$statusflags'] = (!!value.statusflags) ? value.statusflags : 0;
+						bindings.$ValueType = (!!value.ValueType) ? value.ValueType : 1;
+						bindings.$statusflags = (!!value.statusflags) ? value.statusflags : 0;
 
 						criteria = {
 							year: moment.unix(value.timestamp).year(),
@@ -225,7 +224,7 @@ var editHistoryData = function(values, updateOptions, callback) {
 						var updateStatement = 'UPDATE ' + table;
 						updateStatement += ' SET VALUE=$Value';
 						if (!!value.statusflags) {
-							bindings['$statusflags'] = value.statusflags;
+							bindings.$statusflags = value.statusflags;
 							updateStatement += ', STATUSFLAGS=$statusflags';
 						}
 
@@ -1048,7 +1047,7 @@ var getMinAndMax = function(values, op, option, callback) {
 		var max = 'start';
 		var minDate = null;
 		var maxDate = null;
-		
+
 		for (var r = 0; r < values.length; r++) {
 			if (values[r].timestamp >= periods[i].start && values[r].timestamp <= periods[i].end) {
 				if (isNaN(min) || min > values[r].value) {
@@ -1200,7 +1199,7 @@ var findInSql = function(options, tables, callback) {
 		}
 
 		statement = statement.join(' ');
-		criteria = {
+		var criteria = {
 			year: parseInt(year, 10),
 			statement: statement
 		};
@@ -1319,7 +1318,7 @@ var countInSql = function(options, tables, callback) {
 			}
 		}
 		statement = statement.join(' ');
-		criteria = {
+		var criteria = {
 			year: parseInt(year, 10),
 			statement: statement
 		};
@@ -1618,7 +1617,7 @@ var removeFromHistorydata = function(ranges, cb) {
 	cb();
 };
 
-module.exports = historyModel = {
+var historyModel = module.exports = {
 	getMeters: function(data, cb) {
 		var upis = data.upis;
 
@@ -1688,7 +1687,7 @@ module.exports = historyModel = {
 			var neededCount = Math.ceil((endOfPeriod - start) / (30 * 60)) * meter.upis.length;
 			var statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
 
-			criteria = {
+			var criteria = {
 				year: moment.unix(start).year(),
 				statement: statement
 			};
@@ -1938,10 +1937,10 @@ module.exports = historyModel = {
 		self.findEarliest(options, function(err, earliest) {
 			options.range.end = moment().unix();
 			self.findLatest(options, function(err2, latest) {
-				min = earliest[0] || {
+				var min = earliest[0] || {
 					timestamp: 0
 				};
-				max = latest[0] || {
+				var max = latest[0] || {
 					timestamp: 0
 				};
 

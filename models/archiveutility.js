@@ -1,3 +1,11 @@
+/**
+ * Utility object to load, read, and update the archiving database
+ * Currently, the database is sqlite3
+ * This file is just a wrapper for the db functionality
+ * documentation for this module can be found @ 
+ * https://github.com/mapbox/node-sqlite3
+ */
+
 var sqlite3 = require('sqlite3').verbose();
 var config = require('config');
 var fs = require('fs');
@@ -5,12 +13,15 @@ var async = require('async');
 var moment = require('moment');
 var logger = require("../helpers/logger")(module);
 
-var sdb = {};
+var sqliteDB = {};
 
 var driveLetter = config.get('Infoscan.files').driveLetter;
 var archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
 
-var buildSdb = function(year, callback) {
+/////////////////////////////////////////////////////
+// Populating any necessary databases if necessary //
+/////////////////////////////////////////////////////
+var buildSqliteDB = function(year, callback) {
   var buildTables = function(year, tableCB) {
     var months = [];
     for (var i = 1; i <= 12; i++) {
@@ -18,14 +29,14 @@ var buildSdb = function(year, callback) {
     }
     async.eachSeries(months, function(month, cb) {
       var tableName = 'History_' + year.toString() + ((month < 10) ? '0' + month.toString() : month.toString());
-      sdb[year].run('CREATE TABLE IF NOT EXISTS ' + tableName + ' (UPI INTEGER NOT NULL, TIMESTAMP INTEGER NOT NULL, VALUE REAL NOT NULL, VALUETYPE INTEGER NOT NULL, STATUSFLAGS INTEGER DEFAULT 0, USEREDITED INTEGER DEFAULT 0, PRIMARY KEY(UPI, TIMESTAMP) ON CONFLICT IGNORE)', cb);
+      sqliteDB[year].run('CREATE TABLE IF NOT EXISTS ' + tableName + ' (UPI INTEGER NOT NULL, TIMESTAMP INTEGER NOT NULL, VALUE REAL NOT NULL, VALUETYPE INTEGER NOT NULL, STATUSFLAGS INTEGER DEFAULT 0, USEREDITED INTEGER DEFAULT 0, PRIMARY KEY(UPI, TIMESTAMP) ON CONFLICT IGNORE)', cb);
     }, tableCB);
   };
 
-  if (!!sdb) {
-    // sdb.close();
+  if (!!sqliteDB) {
+    // sqliteDB.close();
   }
-  if (!!sdb[year]) {
+  if (!!sqliteDB[year]) {
     return callback();
   }
   var file = 'History_' + year + '.db';
@@ -36,29 +47,37 @@ var buildSdb = function(year, callback) {
       var mkdirp = require('mkdirp');
       mkdirp(archiveLocation, function(err) {
         fs.openSync(hsd, 'w');
-        sdb[year] = new sqlite3.Database(hsd);
+        sqliteDB[year] = new sqlite3.Database(hsd);
         buildTables(year, callback);
         // callback();
       });
     } else {
-      sdb[year] = new sqlite3.Database(hsd);
+      sqliteDB[year] = new sqlite3.Database(hsd);
       buildTables(year, callback);
       // callback();
     }
   });
 };
 
-var getSdb = function(year, callback) {
-  if (!!sdb[year]) {
-    return callback(sdb[year]);
+//////////////////////////////
+// returns database by year //
+//////////////////////////////
+var getSqliteDB = function(year, callback) {
+  if (!!sqliteDB[year]) {
+    return callback(sqliteDB[year]);
   } else {
-    buildSdb(year, function() {
-      return callback(sdb[year]);
+    buildSqliteDB(year, function() {
+      return callback(sqliteDB[year]);
     });
   }
 };
 
-(function buildAllSdb(callback) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// On startup, loads all databases into memory by year                                              //
+// Creates databases if necessary                                                                   //
+// Builds next year's database if it doesn't exist (in case year rolls over without server restart) //
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+(function buildAllSqliteDB(callback) {
   fs.readdir(archiveLocation, function(err, files) {
     if (err) {
       logger.error(err);
@@ -78,16 +97,16 @@ var getSdb = function(year, callback) {
           year += chars[c];
         }
       }
-      buildSdb(parseInt(year, 10), cb);
+      buildSqliteDB(parseInt(year, 10), cb);
     }, function(err) {
       var nextYear = moment().add(1, 'year').year();
-      buildSdb(nextYear, function(){
-        buildSdb(moment().year(), callback);
+      buildSqliteDB(nextYear, function(){
+        buildSqliteDB(moment().year(), callback);
       });
     });
   });
 })(function() {
-  // logger.debug('sdb', sdb);
+  // logger.debug('sqliteDB', sqliteDB);
 });
 
 exports.get = function(criteria, cb) {
@@ -98,8 +117,8 @@ exports.get = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', {});
   } else {
-    getSdb(year, function(_sdb) {
-      _sdb.get(statement, parameters, cb);
+    getSqliteDB(year, function(_sqliteDB) {
+      _sqliteDB.get(statement, parameters, cb);
     });
   }
 };
@@ -112,8 +131,8 @@ exports.all = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', []);
   } else {
-    getSdb(year, function(_sdb) {
-      _sdb.all(statement, parameters, cb);
+    getSqliteDB(year, function(_sqliteDB) {
+      _sqliteDB.all(statement, parameters, cb);
     });
   }
 };
@@ -125,8 +144,8 @@ exports.prepare = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', []);
   } else {
-    getSdb(year, function(_sdb) {
-      return cb(_sdb.prepare(statement));
+    getSqliteDB(year, function(_sqliteDB) {
+      return cb(_sqliteDB.prepare(statement));
     });
   }
 };
@@ -139,8 +158,8 @@ exports.exec = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', []);
   } else {
-    getSdb(year, function(_sdb) {
-      _sdb.exec(statement, cb);
+    getSqliteDB(year, function(_sqliteDB) {
+      _sqliteDB.exec(statement, cb);
     });
   }
 };
@@ -153,8 +172,8 @@ exports.runDB = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', []);
   } else {
-    getSdb(year, function(_sdb) {
-      _sdb.run(statement, parameters, cb);
+    getSqliteDB(year, function(_sqliteDB) {
+      _sqliteDB.run(statement, parameters, cb);
     });
   }
 };
@@ -184,9 +203,9 @@ exports.finalizeStatement = function(criteria, cb) {
 exports.serialize = function(criteria, cb) {
   var year = criteria.year || moment().year();
   console.log('serializing');
-  getSdb(year, function(_sdb) {
+  getSqliteDB(year, function(_sqliteDB) {
     console.log('gotten db');
-    _sdb.serialize(function(err){
+    _sqliteDB.serialize(function(err){
       console.log(err);
       return cb();
     });

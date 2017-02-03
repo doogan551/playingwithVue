@@ -6,11 +6,17 @@ var utils = require('../helpers/utils');
 var activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = {
+  /////////////////////////////////////////////////
+  //Returns activity logs based on criteria sent //
+  /////////////////////////////////////////////////
   get: function(data, cb) {
+    /** @type {Number} Current page of log window. Used to skip in mongo */
     var currentPage = parseInt(data.currentPage, 10);
+    /** @type {Number} How many logs are being shown in window. Used to skip in mongo */
     var itemsPerPage = parseInt(data.itemsPerPage, 10);
     var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
     var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
+    /** @type {Number} Usernames associated with logs (not logged in user) */
     var usernames = data.usernames;
     var sort = {};
 
@@ -21,6 +27,7 @@ module.exports = {
       currentPage = 1;
     }
 
+    /** @type {Number} I don't remember what this is for, but it overrides itemsPerPage if it exists */
     var numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
 
     var query = {
@@ -75,6 +82,7 @@ module.exports = {
       query.name4 = "";
     }
 
+    /** @type {Array} Point Type enums */
     if (data.pointTypes) {
       if (data.pointTypes.length > 0) {
         query.pointType = {
@@ -101,6 +109,9 @@ module.exports = {
     };
     Utility.getWithSecurity(criteria, cb);
   },
+  //////////////////////////////////////////////
+  // inserts an activity log into the databse //
+  //////////////////////////////////////////////
   create: function(logData, cb) {
     Utility.insert({
       collection: activityLogCollection,

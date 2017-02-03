@@ -23,9 +23,10 @@ module.exports = {
         var tree = [];
         var badNumbers = [];
         var networkNumbers = [];
-        // get devices
-        // remove invalid network numbers
-        // build structure
+
+        ///////////////////////////////////////
+        // Gets devices to build device tree //
+        ///////////////////////////////////////
         var getDevices = function(callback) {
 
             Utility.iterateCursor({
@@ -71,17 +72,15 @@ module.exports = {
                 branches: []
             };
 
-            //TODO REMOVE AFTER TESTING
-            /*if (deviceBranch.networkSegment !== 4000) {
-                deviceBranch.networks.push(4000);
-            }*/
-
             var addToNetworks = function(upSegment, downSegment) {
                 if (upSegment !== downSegment && deviceBranch.networks.indexOf(downSegment) < 0 && downSegment !== 0) {
                     deviceBranch.networks.push(downSegment);
                 }
             };
 
+            /////////////////////////////////////////////////////////
+            // builds networks that are associated with the device //
+            /////////////////////////////////////////////////////////
             var fixNetworks = function() {
                 var deviceNetwork = device["Network Segment"].Value;
                 var currentUplinkPort = device['Uplink Port'].eValue;
@@ -109,6 +108,9 @@ module.exports = {
                 }
             };
 
+            //////////////////////////////////////////////////////////////////////
+            // searches tree for any childeren that may have already been added //
+            //////////////////////////////////////////////////////////////////////
             var findChildren = function(node, networkNumber) {
                 var retChild = null;
                 if (!node.hasOwnProperty('networks') && node.networkSegment === networkNumber) {
@@ -126,6 +128,9 @@ module.exports = {
                 return retChild;
             };
 
+            //////////////
+            // Not used //
+            //////////////
             var isInTree = function(tree, network) {
                 var inTree = false;
                 if (tree.networkSegment === network) {
@@ -142,6 +147,9 @@ module.exports = {
                 return inTree;
             };
 
+            /////////////////////////////////////////////////////////////
+            // Finds any parent nodes that may have been added already //
+            /////////////////////////////////////////////////////////////
             var findParents = function(index, device) {
                 var removals = [];
                 for (var b = 0; b < device.networks.length; b++) {
@@ -163,6 +171,9 @@ module.exports = {
                 }
             };
 
+            //////////////////////////////
+            // moves nodes around tree  //
+            //////////////////////////////
             var moveChildren = function(deviceIndex, deviceBranch) {
                 var removals = [];
                 tree.forEach(function(node, index) {
@@ -202,6 +213,9 @@ module.exports = {
             next();
         };
 
+        //////////////////////////////////
+        // sets up network numbers list //
+        //////////////////////////////////
         var findNumbers = function() {
             var addNumber = function(number) {
                 if (networkNumbers.indexOf(number) < 0) {
@@ -209,10 +223,10 @@ module.exports = {
                 } else if (badNumbers.indexOf(number) < 0) {
                     badNumbers.push(number);
                 }
-            }
+            };
             var loop = function(branch) {
                 if (!branch.hasOwnProperty('networks')) {
-                    addNumber(branch.networkSegment)
+                    addNumber(branch.networkSegment);
                 } else if (branch.hasOwnProperty('networks')) {
                     for (var n = 0; n < branch.networks.length; n++) {
                         addNumber(branch.networks[n]);
@@ -222,12 +236,15 @@ module.exports = {
                 for (var b = 0; b < branch.branches.length; b++) {
                     loop(branch.branches[b]);
                 }
-            }
+            };
             tree.forEach(function(branch) {
                 loop(branch);
             });
         };
 
+        /////////////////////////////////////////////////
+        // puts default network segment at top of list //
+        /////////////////////////////////////////////////
         var sortTree = function(next) {
             Utility.getOne({
                 collection: 'SystemInfo',
