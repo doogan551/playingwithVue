@@ -1416,7 +1416,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     _doFormatPoint: function (args, cb) {
-        if (args.point) {
+        if (args.point && args.property !== "Monitor Point" && args.property !== "Control Point") {
             var tmpData = gpl.formatPoint(args),
                 self = this;
 
@@ -1898,6 +1898,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref.Value = upi;
                 ref.PointName = name;
 
+                // console.log("  this.type = " + this.type);
+                // console.log("      prop = " + prop + "    idx = " + idx + "    name = " + name);
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
@@ -5755,11 +5757,34 @@ gpl.BlockManager = function (manager) {
                     editBlock = bmSelf.editBlock,
                     currReferences = bmSelf.upis[editBlock.upi] || [],
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
-                    otherBlock,
                     anchor,
-                    anchorType,
-                    pointName,
-                    prop;
+                    prop,
+                    adjustAnchoredPoints = function (focusedAnchor, anchorLocation, propertyname) {
+                        var anchorType,
+                            otherBlock,
+                            i,
+                            numberOfLines;
+
+                        numberOfLines = focusedAnchor.getLines().length;
+                        for (i = 0; i < numberOfLines; i++) {
+                            otherBlock = undefined;
+                            if (!!focusedAnchor.getLines()[i] && focusedAnchor.getLines()[i][anchorLocation]) {
+                                anchorType = focusedAnchor.getLines()[i][anchorLocation].anchorType;
+                                otherBlock = gpl.blockManager.getBlock(focusedAnchor.getLines()[i][anchorLocation].gplId);
+                                // otherBlock = focusedAnchor.getLines()[i][anchorLocation].getConnectedBlock();
+                            }
+
+                            if (!!otherBlock) {
+                                if (anchorType) {
+                                    otherBlock.setPointRef(anchorType, bmSelf.editBlockUpi, bmSelf.bindings.editPointName(), editBlock.pointType);
+                                }
+                                editBlock.setPointRef(propertyname, bmSelf.editBlockUpi, bmSelf.bindings.editPointName(), otherBlock.pointType);
+                                gpl.fire('editedblock', otherBlock);
+                            } else {
+                                editBlock.setPointRef(propertyname, bmSelf.editBlockUpi, bmSelf.bindings.editPointName());
+                            }
+                        }
+                    };
 
                 editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
                 editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
@@ -5788,32 +5813,16 @@ gpl.BlockManager = function (manager) {
 
                         prop = props[editBlock.blockType.toLowerCase()];
 
+                        // configure references (all connected lines)
                         if (prop === 'Monitor Point') {
                             anchor = editBlock.outputAnchor;
-                            if (!!anchor.getLines()[0] && anchor.getLines()[0].endAnchor) {
-                                anchorType = anchor.getLines()[0].endAnchor.anchorType;
-                            }
+                            adjustAnchoredPoints(anchor, "endAnchor", prop);
                         } else {
                             anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
-                            if (!!anchor.getLines()[0] && anchor.getLines()[0].startAnchor) {
-                                anchorType = anchor.getLines()[0].startAnchor.anchorType;
-                            }
+                            adjustAnchoredPoints(anchor, "startAnchor", prop);
                         }
 
-                        pointName = bmSelf.bindings.editPointName();
-
-                        otherBlock = anchor.getConnectedBlock();
-                        if (otherBlock) {
-                            if (anchorType) {
-                                otherBlock.setPointRef(anchorType, bmSelf.editBlockUpi, pointName, editBlock.pointType);
-                            }
-                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, otherBlock.pointType);
-                            gpl.fire('editedblock', otherBlock);
-                        } else {
-                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
-                        }
-
-                        editBlock.pointName = pointName;
+                        editBlock.pointName = bmSelf.bindings.editPointName();
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
                         editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
@@ -8736,7 +8745,7 @@ gpl.Manager = function () {
     managerSelf.initCanvas = function () {
         var editConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: true,
+                imageSmoothingEnabled: false,
                 selection: false, //group selection
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
@@ -8744,14 +8753,14 @@ gpl.Manager = function () {
             },
             toolbarConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: true,
+                imageSmoothingEnabled: false,
                 selection: false,
                 hasControls: false,
                 hoverCursor: 'default'
             },
             viewConfig = {
                 renderOnAddRemove: false,
-                imageSmoothingEnabled: true,
+                imageSmoothingEnabled: false,
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
                 selection: false,
