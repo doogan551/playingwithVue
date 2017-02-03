@@ -16,7 +16,7 @@ module.exports = {
         var script = data.script;
 
         tmp.dir({
-            dir: __dirname + "/../scripts/"
+            dir: __dirname + "/../tmp/"
         }, function _tempDirCreated(err, path, cleanupCallback) {
 
             var filepath = path + '/' + fileName + '.dsl';
