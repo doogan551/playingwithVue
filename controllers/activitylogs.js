@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
-var ActivityLog = require('../models/activitylog');
+var ActivityLog = new (require('../models/activitylog'))();
 var logger = require('../helpers/logger')(module);
 
 

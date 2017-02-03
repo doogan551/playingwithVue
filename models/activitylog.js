@@ -24,7 +24,7 @@ let ActivityLog = class ActivityLog extends Model {
     let criteria = {
       collection: this.collection,
       insertObj: logData
-    }
+    };
     Utility.insert(criteria, cb);
   }
 
@@ -72,10 +72,10 @@ let ActivityLog = class ActivityLog extends Model {
       }]
     };
 
-    addNamesToQuery(data, query, 'name1');
-    addNamesToQuery(data, query, 'name2');
-    addNamesToQuery(data, query, 'name3');
-    addNamesToQuery(data, query, 'name4');
+    this.addNamesToQuery(data, query, 'name1');
+    this.addNamesToQuery(data, query, 'name2');
+    this.addNamesToQuery(data, query, 'name3');
+    this.addNamesToQuery(data, query, 'name4');
 
     /** @type {Array} Point Type enums */
     if (data.pointTypes) {
@@ -106,6 +106,6 @@ let ActivityLog = class ActivityLog extends Model {
     };
     Utility.getWithSecurity(criteria, cb);
   }
-}
+};
 
 module.exports = ActivityLog;
