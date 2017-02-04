@@ -1,5 +1,4 @@
 require('./helpers/checkDirectories');
-var startTime = new Date();
 process.setMaxListeners(0);
 
 var logger = require('./helpers/logger')(module);
@@ -15,25 +14,22 @@ var sockets = require('./helpers/sockets');
 var config = require('config');
 var passport = require('passport');
 var morgan = require('morgan');
-var loggerStream = require("./helpers/loggerStream");
+var loggerStream = require('./helpers/loggerStream');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var session = require('express-session');
-var router = express.Router();
-var errorHandler = require('errorhandler');
 var favicon = require('serve-favicon');
 var RedisStore = require('connect-redis')(session);
-var redis = require('redis');
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
-var port = config.get('Infoscan.siteConfig').port;
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 var _controllers = require('./helpers/controllers')(app, {});
 var sessionStore = new RedisStore(config.get('redisConfig'));
 
-require('./helpers/passport')(passport); // pass passport for configuration
+// pass passport for configuration
+require('./helpers/passport')(passport);
 
 //if production, use dist folders
 if (config.minifyFiles !== false) {
@@ -46,7 +42,7 @@ if (config.minifyFiles !== false) {
 app.use(express.static(__dirname + '/public'));
 
 app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
-  'stream': loggerStream.stream
+  stream: loggerStream.stream
 }));
 app.use(cookieParser());
 
@@ -90,7 +86,8 @@ app.use(session({
   saveUninitialized: true,
   store: sessionStore,
   cookie: {
-    maxAge: null // not working as intended
+    // not working as intended
+    maxAge: null
   }
 }));
 app.use(passport.initialize());
@@ -98,27 +95,28 @@ app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
 
-db.connect(connectionString.join(''), function(err) {
-  require('./helpers/processes')(function(err) {
-    logger.info('processes', err);
-    require('./helpers/globals').setGlobals(function() {
-      require('./helpers/scheduler').buildAll(function(err) {
-        logger.info('scheduler', err);
-        if (!!config.get('Infoscan.letsencrypt').enabled) {
+db.connect(connectionString.join(''), function (err) {
+  logger.info('db.connect', err);
+  require('./helpers/processes')(function (err2) {
+    logger.info('processes', err2);
+    require('./helpers/globals').setGlobals(function () {
+      require('./helpers/scheduler').buildAll(function (err3) {
+        logger.info('scheduler', err3);
 
+        if (!!config.get('Infoscan.letsencrypt').enabled) {
           var lex = LEX.create({
             configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
-            approveRegistration: function(hostname, cb) {
+            approveRegistration: function (hostname, cb) {
               cb(null, {
                 domains: config.get('Infoscan').domains,
-                email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+                email: 'rkendall@dorsett-tech.com',
                 agreeTos: true
               });
             },
-            handleRenewFailure: function(err, hostname, certInfo) {
-              logger.error("ERROR: Failed to renew domain '", hostname, "':");
-              if (err) {
-                logger.error(err.stack || err);
+            handleRenewFailure: function (err4, hostname, certInfo) {
+              logger.error('ERROR: Failed to renew domain \'', hostname, '\':');
+              if (err4) {
+                logger.error(err4.stack || err4);
               }
               if (certInfo) {
                 logger.error(certInfo);
@@ -128,34 +126,32 @@ db.connect(connectionString.join(''), function(err) {
 
           http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
             res.writeHead(301, {
-              "Location": "https://" + req.headers['host'] + req.url
+              Location: 'https://' + req.headers.host + req.url
             });
             res.end();
           })).listen(80);
 
           var httpsServer = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
-          sockets.connect(config, httpsServer, sessionStore, cookieParser, function() {
+          sockets.connect(config, httpsServer, sessionStore, cookieParser, function () {
             require('./socket/common').socket();
             httpsServer.listen(443);
           });
         } else {
           var httpServer = http.createServer(app);
-          sockets.connect(config, httpServer, sessionStore, cookieParser, function() {
+          sockets.connect(config, httpServer, sessionStore, cookieParser, function () {
             require('./socket/common').socket();
             httpServer.listen(80);
           });
         }
-
       });
     });
   });
 });
 
-process.on('uncaughtException', function(err) {
-
+process.on('uncaughtException', function (err) {
   var mailer = require('./models/mailer');
   mailer.sendError(err.stack);
-  setTimeout(function() {
+  setTimeout(function () {
     process.exit(1);
   }, 5000);
 });

@@ -1,22 +1,17 @@
-const db = require('../helpers/db');
 const Utility = require('../models/utility');
-const config = require('../public/js/lib/config.js');
-const logger = require('../helpers/logger')(module);
 const utils = require('../helpers/utils');
 const activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 const Model = require('../models/model');
 
 let ActivityLog = class ActivityLog extends Model {
-  constructor(args) {
+  constructor() {
     super();
     this.collection = activityLogCollection;
   }
 
   getOne(criteria, cb) {
-    this.assignObjects(criteria, {
-      collection: this.collection
-    });
+    this.assignObjects(criteria, { collection: this.collection });
     Utility.getOne(criteria, cb);
   }
 
@@ -29,14 +24,14 @@ let ActivityLog = class ActivityLog extends Model {
   }
 
   addNamesToQuery(data, query, segment) {
-    if (data[segment] !== undefined) {
+    if (!!data.hasOwnProperty(segment)) {
       if (data[segment] !== null) {
-        query[segment] = new RegExp("^" + data[segment], 'i');
+        query[segment] = new RegExp('^' + data[segment], 'i');
       } else {
-        query[segment] = "";
+        query[segment] = '';
       }
     } else {
-      query[segment] = "";
+      query[segment] = '';
     }
   }
 
@@ -45,7 +40,7 @@ let ActivityLog = class ActivityLog extends Model {
     let currentPage = parseInt(data.currentPage, 10);
     /** @type {Number} How many logs are being shown in window. Used to skip in mongo */
     let itemsPerPage = parseInt(data.itemsPerPage, 10);
-    let startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
+    let startDate = (typeof parseInt(data.startDate, 10) === 'number') ? data.startDate : 0;
     let endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
     /** @type {Number} Usernames associated with logs (not logged in user) */
     let usernames = data.usernames;
