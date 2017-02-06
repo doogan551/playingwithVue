@@ -5,7 +5,7 @@ var logger = require('../helpers/logger')(module);
 var Config = require('../public/js/lib/config.js');
 var ObjectID = require('mongodb').ObjectID;
 var Notifier = require('../models/notifierutility');
-var alarmUtility = require('../models/alarm.js');
+var alarmUtility = new(require('../models/alarm.js'))();
 var serverName = require('os').hostname();
 
 var notifier = new Notifier();
@@ -53,27 +53,27 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             par = function (content, noStyle) {
                 if (noStyle) {
                     return '<p>' + content + '</p>';
-                } else {
-                    return '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">' + content + '</p>';
                 }
+                return '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">' + content + '</p>';
+
             },
             lnk = function (to, mailto) {
                 if (mailto) {
                     return '<a href="mailto:' + to + '" style="color: #15C;">' + to + '</a>';
-                } else {
-                    return '<a href=' + to + ' " style="color: #15C;">' + to + '</a>';
                 }
+                return '<a href=' + to + ' " style="color: #15C;">' + to + '</a>';
+
             };
 
         if (data.user) {
-            html =  par('Hi ' + data.user['First Name'].Value + ',');
+            html = par('Hi ' + data.user['First Name'].Value + ',');
         }
 
         if (err || data.err) {
             logger.error('Error processing received email', '/sparkpost/email', err || data.err, relay_message);
 
             if (err) {
-                html += par("An unexpected error occurred which prevented us from acknowledging this alarm. An error log is attached which you can forward to " + lnk('engineering@dorsett-tech.com', true) + " for support. We apologize for the error.");
+                html += par('An unexpected error occurred which prevented us from acknowledging this alarm. An error log is attached which you can forward to ' + lnk('engineering@dorsett-tech.com', true) + ' for support. We apologize for the error.');
 
                 // Add error log attachment
                 replyObj.attachments = [{
@@ -125,7 +125,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         }
     });
 
-    function getUser (cb) {
+    function getUser(cb) {
         var data = {},
             criteria = {
                 collection: 'Users',
@@ -146,7 +146,8 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             cb(null, data);
         });
     }
-    function getAlarm (data, cb) {
+
+    function getAlarm(data, cb) {
         if (data.err) {
             return cb(null, data);
         }
@@ -171,7 +172,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
                     return cb(err);
                 }
                 data.alarm = alarm;
-                
+
                 if (!alarm) {
                     // We log this error but don't tell the user
                     data.err = 'Invalid alarm id';
@@ -191,21 +192,22 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             cb(null, data);
         }
     }
-    function getGroups (data, cb) {
+
+    function getGroups(data, cb) {
         if (data.err || data.user['System Admin'].Value) {
             return cb(null, data);
         }
-        
+
         var criteria = {
-                collection: 'User Groups'
-            };
+            collection: 'User Groups'
+        };
 
         utility.get(criteria, function (err, groups) {
             if (err) {
                 return cb(err);
             }
             data.groups = groups;
-            
+
             // Generate a groups object
             data.groupsObj = {};
             groups.forEach(function (group) {
@@ -215,7 +217,8 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             cb(null, data);
         });
     }
-    function checkUserPermissions (data, cb) {
+
+    function checkUserPermissions(data, cb) {
         if (data.err || data.user['System Admin'].Value) {
             return cb(null, data);
         }
@@ -224,7 +227,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             security = data.alarm.Security,
             group,
             i, len;
-            
+
         for (i = 0, len = security.length; i < len; i++) {
             group = data.groupsObj[security[i]];
             if (group && group.Users[userId]) {
@@ -239,7 +242,8 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         data.replyErr = true;
         cb(null, data);
     }
-    function ackAlarm (data, cb) {
+
+    function ackAlarm(data, cb) {
         if (data.err) {
             return cb(null, data);
         }
@@ -259,7 +263,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
 
 module.exports = {
     sparkpost: function (data) {
-        var _data = Array.isArray(data) ? data[0]:null,
+        var _data = Array.isArray(data) ? data[0] : null,
             relay_message = _data && _data.msys && _data.msys.relay_message,
             content = relay_message && relay_message.content,
             to = content && content.to[0],
@@ -289,7 +293,7 @@ module.exports = {
                     ], done);
 
                     // Waterfall functions
-                    function getNotifyLog (cb) {
+                    function getNotifyLog(cb) {
                         var info = {},
                             criteria = {
                                 collection: 'NotifyLogs',
@@ -310,31 +314,33 @@ module.exports = {
                             cb(null, info);
                         });
                     }
-                    function getAlarm (info, cb) {
+
+                    function getAlarm(info, cb) {
                         if (info.err) {
                             return cb(null, info);
                         }
 
                         var criteria = {
-                                collection: 'Alarms',
-                                query: {
-                                    _id: ObjectID(info.notifyLog.alarmId)
-                                }
-                            };
+                            collection: 'Alarms',
+                            query: {
+                                _id: ObjectID(info.notifyLog.alarmId)
+                            }
+                        };
 
                         utility.getOne(criteria, function (err, alarm) {
                             if (err) {
                                 return cb(err);
                             }
                             info.alarm = alarm;
-                            
+
                             if (!alarm) {
                                 info.err = 'Alarm id not found';
                             }
                             cb(null, info);
                         });
                     }
-                    function done (err, info) {
+
+                    function done(err, info) {
                         var ackIsAllowed,
                             digits = data && data.Digits,
                             human = data && (data.AnsweredBy === 'human'),
@@ -346,13 +352,13 @@ module.exports = {
                             ackedBy,
                             criteria,
                             getAorAn = function (text) {
-                                return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an':'a';
+                                return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an' : 'a';
                             },
                             say = function (text) {
                                 return '<Say voice="alice">' + text + '</Say>';
                             },
                             pause = function (length) {
-                                var _length = length > 0 ? length:1;
+                                var _length = length > 0 ? length : 1;
                                 return '<Pause length="' + _length + '"/>';
                             },
                             // Not using the below function, but keeping in case we ever need to build
@@ -367,7 +373,7 @@ module.exports = {
                             //      i,
                             //      j,
                             //      len;
-                                
+
                             //  for (i = 0, len = msg.length; i < len; i++) {
                             //      _char = msg.charAt(i);
 
@@ -398,21 +404,21 @@ module.exports = {
                             logger.error('Error processing post request', '/twilio/voice/alarms/answer', err || info.err, req);
 
                             if (digits) { // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
-                                xml += say("We encountered an unexpected error and could not acknowledge the alarm at this time.");
+                                xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time.');
                             } else {
-                                xml += say("Hello, this is a message from info-scan. We called to notify you about an alarm but we encountered an unexpected error and are unable to do so. Please log in to info-scan and check the alarms.");
+                                xml += say('Hello, this is a message from info-scan. We called to notify you about an alarm but we encountered an unexpected error and are unable to do so. Please log in to info-scan and check the alarms.');
                             }
-                            xml += say("We apologize for the error. Thank you and goodbye.");
+                            xml += say('We apologize for the error. Thank you and goodbye.');
 
                             xml += '</Response>';
                             sendResponse();
                         }
                         // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
                         // We fall into this case if user supplied the correct acknowledgement digit or if they didn't but the alarm has already been acknowledged by someone else during the call
-                        else if (digits && ((digits === "1") || alarmIsAcknowledged)) {
+                        else if (digits && ((digits === '1') || alarmIsAcknowledged)) {
                             if (alarmIsAcknowledged) {
-                                xml += say("This alarm was just acknowledged by user " + info.alarm.ackUser + ".");
-                                xml += say("Thank you and goodbye.");
+                                xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser + '.');
+                                xml += say('Thank you and goodbye.');
                                 xml += pause(1);
                                 xml += '</Response>';
                                 sendResponse();
@@ -425,12 +431,12 @@ module.exports = {
 
                                 alarmUtility.acknowledgeAlarm(criteria, function (err, result) {
                                     if (err) {
-                                        xml += say("We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.");
+                                        xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
                                     } else {
-                                        xml += say("Alarm acknowledged.");
+                                        xml += say('Alarm acknowledged.');
                                     }
 
-                                    xml += say("Thank you and goodbye.");
+                                    xml += say('Thank you and goodbye.');
                                     xml += pause(1);
                                     xml += '</Response>';
                                     sendResponse();
@@ -438,16 +444,14 @@ module.exports = {
                             }
                         } else {
                             ackIsAllowed = info.notifyLog.userCanAck && alarmNotAcknowledged;
-                            
+
                             // Presence of digits indicates we're already in an established call with the user and he/she has supplied incorrect digits to ack the alarm
                             if (digits) {
-                                xml += say(digits.split('').join(' ') + " is an unrecognized input.");
+                                xml += say(digits.split('').join(' ') + ' is an unrecognized input.');
+                            } else if (info.alarm.almClass === alarmClasses.Normal.enum) {
+                                xml += say("Hello, this is a message from info-scan.");
                             } else {
-                                if (info.alarm.almClass === alarmClasses.Normal.enum) {
-                                    xml += say("Hello, this is a message from info-scan.");
-                                } else {
-                                    xml += say("Hello, this is " + getAorAn(alarmClassText) + " " + alarmClassText + " message from info-scan.");
-                                }
+                                xml += say("Hello, this is " + getAorAn(alarmClassText) + " " + alarmClassText + " message from info-scan.");
                             }
 
                             if (human) {
@@ -459,12 +463,12 @@ module.exports = {
                                     xml += say(info.notifyLog.message);
 
                                     if (ackIsAllowed) {
-                                        xml += say("Press 1 to acknowledge this alarm. Hangup to end this call without acknowledging this alarm.");
+                                        xml += say('Press 1 to acknowledge this alarm. Hangup to end this call without acknowledging this alarm.');
                                     } else if (alarmIsAcknowledged) {
-                                        xml += say("This alarm was just acknowledged by user " + info.alarm.ackUser);
+                                        xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser);
                                     }
                                     if (numberRepeats > 0) {
-                                        xml += say("Stay on the line to hear this message again.");
+                                        xml += say('Stay on the line to hear this message again.');
                                         xml += pause(2);
                                     } else if (ackIsAllowed) {
                                         xml += pause(2);
@@ -478,7 +482,7 @@ module.exports = {
                                 xml += say(info.notifyLog.message);
                             }
 
-                            xml += say("Thank you and goodbye.");
+                            xml += say('Thank you and goodbye.');
                             xml += pause(1);
                             xml += '</Response>';
                             sendResponse();
@@ -488,7 +492,7 @@ module.exports = {
                 status: function (data) {
                     var sid = data && data.CallSid,
                         criteria;
-                    
+
                     if (sid) {
                         criteria = {
                             collection: 'NotifyLogs',

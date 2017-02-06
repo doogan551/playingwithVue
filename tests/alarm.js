@@ -1,4 +1,4 @@
-// var Alarm = require('../models/alarm');
+// var Alarm = new (require('../models/alarm.js'))();
 // var query;
 
 // describe('Alarms Model', function() {

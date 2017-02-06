@@ -1,13 +1,12 @@
-var process = require('child_process').exec,
-	child;
+let process = require('child_process').exec;
 
-module.exports.compile = function(path, newpath, callback) {
-	var infoScriptExe = __dirname + '/../infoscript.exe ',
-		command = infoScriptExe + path + ' ' + newpath;
+module.exports.compile = function (path, newpath, callback) {
+    let infoScriptExe = __dirname + '/../infoscript.exe ';
+    let command = infoScriptExe + path + ' ' + newpath;
 
-	child = process(command, function(err, stdout, stderr) {
-		callback(err);
-	});
+    process(command, function (err) {
+        callback(err);
+    });
 };
 
 // make temp folder for these files
