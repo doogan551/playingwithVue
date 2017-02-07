@@ -1,10 +1,9 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
+let Utility = require('../models/utility');
 
 module.exports = {
 
-    get: function(data, cb) {
-        upi = parseInt(data.id, 10);
+    get: function (data, cb) {
+        let upi = parseInt(data.id, 10);
 
         Utility.getOne({
             collection: 'points',
@@ -13,10 +12,10 @@ module.exports = {
             },
             fields: {
                 Slides: 1,
-                "Close On Complete.Value": 1,
-                "Continuous Show.Value": 1,
-                "Maximize Displays.Value": 1,
-                "Repeat Count.Value": 1,
+                'Close On Complete.Value': 1,
+                'Continuous Show.Value': 1,
+                'Maximize Displays.Value': 1,
+                'Repeat Count.Value': 1,
                 name1: 1,
                 name2: 1,
                 name3: 1,

@@ -1,24 +1,23 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-var ObjectID = require('mongodb').ObjectID;
-var _ = require('lodash');
-var moment = require('moment');
-var logger = require('../helpers/logger')(module);
-var notifications = require('../models/notifications');
+let Utility = require('../models/utility');
+let logger = require('../helpers/logger')(module);
+let ObjectID = require('mongodb').ObjectID;
+let _ = require('lodash');
+let moment = require('moment');
+let notifications = require('../models/notifications');
 
-var Policies = function () {
+let Policies = function () {
     this.get = function (data, cb) {
-        var criteria = {
+        let criteria = {
             collection: 'NotifyPolicies',
             query: data.data || {}
         };
         Utility.get(criteria, cb);
     };
     this.save = function (rawData, cb) {
-        var data;
-        var newID;
-        var callback = function (err, points) {
-            var complete = function (removeErr) {
+        let data;
+        let newID;
+        let callback = function (err) {
+            let complete = function (removeErr) {
                 if (removeErr) {
                     logger.debug('Error removing threads for policy:', newID, removeErr);
                 }
@@ -33,22 +32,18 @@ var Policies = function () {
             } else {
                 complete();
             }
-
         };
-        var convertStrings = function (obj) {
-            var key,
+        let convertStrings = function (obj) {
+            let key,
                 prop,
                 type,
                 c,
-                propsToRemove = {
-                    // 'xp:Value': true
-                },
                 matrix = {
                     object: function (o) {
                         return convertStrings(o);
                     },
                     string: function (o) {
-                        var ret;
+                        let ret;
 
                         if (!o.match(/[^\d.]/g)) { //no characters, must be number
                             if (o.indexOf('.') > -1) {
@@ -63,7 +58,7 @@ var Policies = function () {
                         return ret;
                     },
                     array: function (o) {
-                        var arr = [];
+                        let arr = [];
                         for (c = 0; c < o.length; c++) {
                             arr[c] = convertStrings(o[c]);
                         }
@@ -87,8 +82,8 @@ var Policies = function () {
             }
             return obj;
         };
-        var doUpdate = function () {
-            var criteria = {
+        let doUpdate = function () {
+            let criteria = {
                 collection: 'NotifyPolicies',
                 query: {
                     _id: data._id
@@ -126,17 +121,17 @@ var Policies = function () {
     };
 
     this.delete = function (data, cb) {
-        var criteria = {
+        let criteria = {
             collection: 'NotifyPolicies',
             query: {
                 _id: data._id
             }
         };
-        var updatePoints = function (err) {
+        let updatePoints = function (err) {
             if (err) {
                 return cb(err);
             }
-            var criteria = {
+            let criteria = {
                 collection: 'points',
                 query: {
                     'Notify Policies': data._id.toString()
@@ -153,7 +148,7 @@ var Policies = function () {
     };
 
     this.processRotateConfig = function (data, config, task, cb) {
-        var criteria = {
+        let criteria = {
                 collection: 'NotifyScheduledTasks',
                 query: {
                     policyID: data.policyID.toString(),
@@ -163,45 +158,31 @@ var Policies = function () {
                 }
             },
             taskTemplate = {
-                type : 'RECURRING',
-                action : task,
-                policyID : data.policyID.toString(),
-                nextAction : null,
-                interval : config.scale * 7,
-                config : {
-                    alertConfigID : data.alertConfigID,
-                    groupID : data.groupID,
-                    escalationID : data.escalationID
+                type: 'RECURRING',
+                action: task,
+                policyID: data.policyID.toString(),
+                nextAction: null,
+                interval: config.scale * 7,
+                config: {
+                    alertConfigID: data.alertConfigID,
+                    groupID: data.groupID,
+                    escalationID: data.escalationID
                 },
-                lastAction : null
-            },
-            cfg = {
-                day: 'Friday',
-                enabled: true,
-                scale: 1,
-                time: 1700
+                lastAction: null
             };
 
         Utility.get(criteria, function (err, docs) {
-            var nextAction,
+            let nextAction,
                 now = moment(),
                 taskList = [],
-                insertTask = function (task) {
-
-                },
                 setLastAction = function (last) {
-                    var nextMinute;
-
-                    // console.log();
-
                     if (last) {
-                        nextMinute = moment().seconds(0).milliseconds(0).add(1, 'm');
                         nextAction = moment(last);
                         nextAction.seconds(0).milliseconds(0);
                         // console.log('Previous Action', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
                         // console.log();
                         nextAction.add(config.scale, 'w');
-                        while(nextAction.isBefore(now)) {
+                        while (nextAction.isBefore(now)) {
                             //do rotate
                             taskTemplate.nextAction = nextAction.valueOf();
                             taskTemplate.type = 'ONETIME';
@@ -249,9 +230,9 @@ var Policies = function () {
             } else {
                 _.each(docs, function (doc) {
                     // if (doc) {
-                        setLastAction(doc.lastAction);
-                        // taskTemplate.nextAction = nextAction.add(config.scale, 'w');
-                        // console.log('found', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+                    setLastAction(doc.lastAction);
+                    // taskTemplate.nextAction = nextAction.add(config.scale, 'w');
+                    // console.log('found', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
                     // } else {
                     //     setLastAction();
                     //     console.log('new', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
@@ -271,21 +252,19 @@ var Policies = function () {
     };
 
 
-
-    this.processScheduledTasks = function (policy, cb) {
-        var self = this,
-            policyID = policy._id.toString(),
+    this.processScheduledTasks = (policy, cb) => {
+        let policyID = policy._id.toString(),
             count = 0,
             newTasks = [],
             found = false,
             insertTasks = function () {
-                var criteria = {
+                let criteria = {
                     collection: 'NotifyScheduledTasks',
                     insertObj: newTasks
                 };
 
                 // console.log('Inserting for policy', policyID);
-                Utility.insert(criteria, function (err, points) {
+                Utility.insert(criteria, function (err) {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
@@ -296,7 +275,7 @@ var Policies = function () {
                 });
             },
             deleteTasks = function (callback) {
-                var criteria = {
+                let criteria = {
                     collection: 'NotifyScheduledTasks',
                     query: {
                         policyID: policyID
@@ -328,12 +307,12 @@ var Policies = function () {
             };
 
         _.each(policy.alertConfigs, function (alertConfig) {
-            var data = {
-                    policyID: policyID,
-                    alertConfigID: alertConfig.id,
-                    groupID: null,
-                    escalationID: null
-                };
+            let data = {
+                policyID: policyID,
+                alertConfigID: alertConfig.id,
+                groupID: null,
+                escalationID: null
+            };
 
             if (alertConfig.groups.length > 1) {
                 count++;
@@ -343,7 +322,7 @@ var Policies = function () {
 
             _.each(alertConfig.groups, function (group) {
                 _.each(group.escalations, function (escalation) {
-                    var rotateConfig = escalation.rotateConfig,
+                    let rotateConfig = escalation.rotateConfig,
                         data = {
                             policyID: policyID,
                             alertConfigID: alertConfig.id,

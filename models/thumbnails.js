@@ -1,10 +1,9 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-var fs = require('fs');
+let Utility = require('../models/utility');
+let fs = require('fs');
 
 module.exports = {
-    batch: function(data, cb) {
-        var localVars = {};
+    batch: function (data, cb) {
+        let locallets = {};
 
         Utility.get({
             collection: 'points',
@@ -27,34 +26,34 @@ module.exports = {
             sort: {
                 'Point Type.Value': -1
             }
-        }, function(err, result) {
-            var pageData = [];
+        }, function (err, result) {
+            let pageData = [];
             if (!err) {
-                result.forEach(function(point, i) {
-                    var record = {
-                        "id": point._id,
-                        "name": point.Name,
-                        "type": point['Point Type'].Value.toLowerCase(),
-                        "tn": fs.existsSync(__dirname + '/../public/img/thumbs/' + point._id + '.txt')
+                result.forEach(function (point) {
+                    let record = {
+                        'id': point._id,
+                        'name': point.Name,
+                        'type': point['Point Type'].Value.toLowerCase(),
+                        'tn': fs.existsSync(__dirname + '/../public/img/thumbs/' + point._id + '.txt')
                     };
                     pageData.push(record);
                 });
-                localVars = {
+                locallets = {
                     err: false,
                     pageData: JSON.stringify(pageData)
                 };
             } else {
-                localVars = {
+                locallets = {
                     pageData: JSON.stringify(pageData),
                     err: JSON.stringify(err)
                 };
             }
-            return cb(null, localVars);
-            // res.render("thumbnailGenerator/batch", localVars);
+            return cb(null, locallets);
+            // res.render("thumbnailGenerator/batch", locallets);
         });
     },
-    one: function(data, cb) {
-        localVars = {};
+    one: function (data, cb) {
+        let locallets = {};
 
         Utility.getOne({
             collection: 'points',
@@ -66,35 +65,34 @@ module.exports = {
                 'Point Type.Value': 1,
                 'Name': 1
             }
-        }, function(err, result) {
-            var pageData = [];
+        }, function (err, result) {
+            let pageData = [];
             if (!err) {
                 if (result) {
                     pageData.push({
-                        "id": result._id,
-                        "name": result.Name,
-                        "type": result['Point Type'].Value.toLowerCase(),
-                        "tn": false
+                        'id': result._id,
+                        'name': result.Name,
+                        'type': result['Point Type'].Value.toLowerCase(),
+                        'tn': false
                     });
                 }
-                localVars = {
+                locallets = {
                     err: false,
                     pageData: JSON.stringify(pageData)
                 };
             } else {
-                localVars = {
+                locallets = {
                     pageData: JSON.stringify(pageData),
                     err: JSON.stringify(err)
                 };
             }
-            return cb(null, localVars);
-            // res.render("thumbnailGenerator/single", localVars);
+            return cb(null, locallets);
+            // res.render("thumbnailGenerator/single", locallets);
         });
     },
-    saveOld: function(data, cb) {
-
-        var thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.png',
-            base64Data = data.thumb.replace(/^data:image\/png;base64,/, "");
+    saveOld: function (data, cb) {
+        let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.png',
+            base64Data = data.thumb.replace(/^data:image\/png;base64,/, '');
 
         fs.writeFile(thumbDir, base64Data, 'base64', cb
             /*function(err) {
@@ -111,9 +109,8 @@ module.exports = {
                     }*/
         );
     },
-    save: function(data, cb) {
-
-        var thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.txt',
+    save: function (data, cb) {
+        let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.txt',
             _data = data.bgColorHex + '||' + data.thumb;
 
         fs.writeFile(thumbDir, _data, 'utf8', function () {
@@ -121,17 +118,17 @@ module.exports = {
                 thumbDir: thumbDir
             });
         });
-            /*function(err) {
-                       if (!err) {
-                           res.json({
-                               "msg": "success",
-                               "result": thumbDir
-                           });
-                       } else {
-                           res.json({
-                               "msg": "Error: " + err
-                           });
-                       }
-                   }*/
+        /*function(err) {
+                   if (!err) {
+                       res.json({
+                           "msg": "success",
+                           "result": thumbDir
+                       });
+                   } else {
+                       res.json({
+                           "msg": "Error: " + err
+                       });
+                   }
+               }*/
     }
 };

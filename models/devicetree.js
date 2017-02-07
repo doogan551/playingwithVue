@@ -1,34 +1,34 @@
-var async = require('async');
-var _ = require('lodash');
+let _ = require('lodash');
 
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
+let Utility = require('../models/utility');
 
-var validPortProtocols = [1, 4];
-var validEthProtocols = [1];
+let validPortProtocols = [1, 4];
+let validEthProtocols = [1];
 
-var sortArray = function(a, b) {
+let sortArray = function (a, b) {
     return a - b;
 };
-var compare = function(a, b) {
-    if (a.networkSegment < b.networkSegment)
+
+let compare = function (a, b) {
+    if (a.networkSegment < b.networkSegment) {
         return -1;
-    if (a.networkSegment > b.networkSegment)
+    }
+    if (a.networkSegment > b.networkSegment) {
         return 1;
+    }
     return 0;
 };
 
-module.exports = {
-    getTree: function(cb) {
-        var tree = [];
-        var badNumbers = [];
-        var networkNumbers = [];
+let DeviceTree = class DeviceTree {
+    getTree(cb) {
+        let tree = [];
+        let badNumbers = [];
+        let networkNumbers = [];
 
         ///////////////////////////////////////
         // Gets devices to build device tree //
         ///////////////////////////////////////
-        var getDevices = function(callback) {
-
+        let getDevices = function (callback) {
             Utility.iterateCursor({
                 collection: 'points',
                 query: {
@@ -57,9 +57,9 @@ module.exports = {
             }, buildTree, callback);
         };
 
-        var buildTree = function(err, device, next) {
-            var isAdded = false;
-            var deviceBranch = {
+        let buildTree = function (err, device, next) {
+            let isAdded = false;
+            let deviceBranch = {
                 upi: device._id,
                 text: device.Name,
                 status: device['Device Status'].Value,
@@ -72,7 +72,7 @@ module.exports = {
                 branches: []
             };
 
-            var addToNetworks = function(upSegment, downSegment) {
+            let addToNetworks = function (upSegment, downSegment) {
                 if (upSegment !== downSegment && deviceBranch.networks.indexOf(downSegment) < 0 && downSegment !== 0) {
                     deviceBranch.networks.push(downSegment);
                 }
@@ -81,18 +81,18 @@ module.exports = {
             /////////////////////////////////////////////////////////
             // builds networks that are associated with the device //
             /////////////////////////////////////////////////////////
-            var fixNetworks = function() {
-                var deviceNetwork = device["Network Segment"].Value;
-                var currentUplinkPort = device['Uplink Port'].eValue;
-                var portNs = [1, 2];
+            let fixNetworks = function () {
+                let deviceNetwork = device['Network Segment'].Value;
+                let currentUplinkPort = device['Uplink Port'].eValue;
+                let portNs = [1, 2];
 
                 if ([18, 19, 20].indexOf(device['Model Type'].eValue) > -1) {
                     portNs = portNs.concat([3, 4]);
                 }
 
-                for (var n = 1; n <= portNs.length; n++) {
+                for (let n = 1; n <= portNs.length; n++) {
                     if (n !== currentUplinkPort) {
-                        var portN = 'Port ' + n + ' ';
+                        let portN = 'Port ' + n + ' ';
                         if (device[portN + 'Network'].Value !== 0 && validPortProtocols.indexOf(device[portN + 'Protocol'].eValue) > -1) {
                             addToNetworks(deviceNetwork, device[portN + 'Network'].Value);
                         }
@@ -111,14 +111,14 @@ module.exports = {
             //////////////////////////////////////////////////////////////////////
             // searches tree for any childeren that may have already been added //
             //////////////////////////////////////////////////////////////////////
-            var findChildren = function(node, networkNumber) {
-                var retChild = null;
+            let findChildren = function (node, networkNumber) {
+                let retChild = null;
                 if (!node.hasOwnProperty('networks') && node.networkSegment === networkNumber) {
                     retChild = node;
                 } else if (node.hasOwnProperty('networks') && node.networks.indexOf(networkNumber) >= 0) {
                     retChild = node;
                 } else if (!!node.branches.length) {
-                    for (var b = 0; b < node.branches.length; b++) {
+                    for (let b = 0; b < node.branches.length; b++) {
                         retChild = findChildren(node.branches[b], networkNumber);
                         if (!!retChild) {
                             break;
@@ -131,13 +131,13 @@ module.exports = {
             //////////////
             // Not used //
             //////////////
-            var isInTree = function(tree, network) {
-                var inTree = false;
+            let isInTree = function (tree, network) {
+                let inTree = false;
                 if (tree.networkSegment === network) {
                     inTree = true;
                 } else if (!!tree.children.length) {
-                    for (var b = 0; b < tree.children.length; b++) {
-                        var child = tree.children[b];
+                    for (let b = 0; b < tree.children.length; b++) {
+                        let child = tree.children[b];
                         inTree = isInTree(child, network);
                         if (!!inTree) {
                             break;
@@ -150,13 +150,13 @@ module.exports = {
             /////////////////////////////////////////////////////////////
             // Finds any parent nodes that may have been added already //
             /////////////////////////////////////////////////////////////
-            var findParents = function(index, device) {
-                var removals = [];
-                for (var b = 0; b < device.networks.length; b++) {
-                    for (var t = 0; t < tree.length; t++) {
+            let findParents = function (index, device) {
+                let removals = [];
+                for (let b = 0; b < device.networks.length; b++) {
+                    for (let t = 0; t < tree.length; t++) {
                         if (t !== index) {
                             if (tree[t].networkSegment === device.networks[b]) {
-                                for (var i = 0; i < tree[t].branches.length; i++) {
+                                for (let i = 0; i < tree[t].branches.length; i++) {
                                     device.branches.push(_.cloneDeep(tree[t].branches[i]));
                                 }
 
@@ -166,7 +166,7 @@ module.exports = {
                     }
                 }
                 removals.sort(sortArray).reverse();
-                for (var r = 0; r < removals.length; r++) {
+                for (let r = 0; r < removals.length; r++) {
                     tree.splice(removals[r], 1);
                 }
             };
@@ -174,12 +174,12 @@ module.exports = {
             //////////////////////////////
             // moves nodes around tree  //
             //////////////////////////////
-            var moveChildren = function(deviceIndex, deviceBranch) {
-                var removals = [];
-                tree.forEach(function(node, index) {
+            let moveChildren = function (deviceIndex, deviceBranch) {
+                let removals = [];
+                tree.forEach(function (node, index) {
                     if (deviceIndex !== index) {
                         if (deviceBranch.networks.indexOf(node.networkSegment) >= 0) {
-                            for (var b = 0; b < node.branches.length; b++) {
+                            for (let b = 0; b < node.branches.length; b++) {
                                 deviceBranch.branches.push(_.cloneDeep(node.branches[b]));
                             }
                             removals.push(index);
@@ -187,14 +187,14 @@ module.exports = {
                     }
                 });
                 removals.sort(sortArray).reverse();
-                for (var r = 0; r < removals.length; r++) {
+                for (let r = 0; r < removals.length; r++) {
                     tree.splice(removals[r], 1);
                 }
             };
 
             fixNetworks();
-            for (var t = 0; t < tree.length; t++) {
-                var child = findChildren(tree[t], deviceBranch.networkSegment);
+            for (let t = 0; t < tree.length; t++) {
+                let child = findChildren(tree[t], deviceBranch.networkSegment);
                 if (child !== null) {
                     moveChildren(t, deviceBranch);
                     child.branches.push(deviceBranch);
@@ -207,7 +207,7 @@ module.exports = {
                     networkSegment: deviceBranch.networkSegment,
                     branches: [deviceBranch]
                 });
-                var parent = findParents(tree.length - 1, deviceBranch);
+                findParents(tree.length - 1, deviceBranch);
             }
 
             next();
@@ -216,28 +216,28 @@ module.exports = {
         //////////////////////////////////
         // sets up network numbers list //
         //////////////////////////////////
-        var findNumbers = function() {
-            var addNumber = function(number) {
+        let findNumbers = function () {
+            let addNumber = function (number) {
                 if (networkNumbers.indexOf(number) < 0) {
                     networkNumbers.push(number);
                 } else if (badNumbers.indexOf(number) < 0) {
                     badNumbers.push(number);
                 }
             };
-            var loop = function(branch) {
+            let loop = function (branch) {
                 if (!branch.hasOwnProperty('networks')) {
                     addNumber(branch.networkSegment);
                 } else if (branch.hasOwnProperty('networks')) {
-                    for (var n = 0; n < branch.networks.length; n++) {
+                    for (let n = 0; n < branch.networks.length; n++) {
                         addNumber(branch.networks[n]);
                     }
                 }
 
-                for (var b = 0; b < branch.branches.length; b++) {
+                for (let b = 0; b < branch.branches.length; b++) {
                     loop(branch.branches[b]);
                 }
             };
-            tree.forEach(function(branch) {
+            tree.forEach(function (branch) {
                 loop(branch);
             });
         };
@@ -245,16 +245,16 @@ module.exports = {
         /////////////////////////////////////////////////
         // puts default network segment at top of list //
         /////////////////////////////////////////////////
-        var sortTree = function(next) {
+        let sortTree = function (next) {
             Utility.getOne({
                 collection: 'SystemInfo',
                 query: {
                     'Name': 'Preferences'
                 }
-            }, function(err, syspref) {
-                var serverNetwork = syspref['IP Network Segment'];
+            }, function (err, syspref) {
+                let serverNetwork = syspref['IP Network Segment'];
                 tree.sort(compare);
-                for (var i = 0; i < tree.length; i++) {
+                for (let i = 0; i < tree.length; i++) {
                     if (tree[i].networkSegment === serverNetwork) {
                         tree.unshift(tree.splice(i, 1)[0]);
                     }
@@ -263,8 +263,8 @@ module.exports = {
             });
         };
 
-        getDevices(function(err, count) {
-            sortTree(function(err) {
+        getDevices(function (err) {
+            sortTree(function (err) {
                 findNumbers();
                 return cb(err, {
                     tree: tree,
@@ -275,3 +275,5 @@ module.exports = {
         });
     }
 };
+
+module.exports = DeviceTree;

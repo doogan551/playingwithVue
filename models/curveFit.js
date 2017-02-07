@@ -1,60 +1,54 @@
-var reg = require('regression');
+let reg = require('regression');
 
-var Utility = require('../models/utility');
-var rtdTables = require('../lib/rtdTables');
-var logger = require('../helpers/logger')(module);
+let Utility = require('../models/utility');
+let rtdTables = require('../lib/rtdTables');
 
-module.exports = {
-    /////////////////////////////////////
-    // Point of entry to run fit model //
-    /////////////////////////////////////
-    doFit: function(_data, cb) {
-        var type = _data.type;
-        var data = _data.data;
+let CurveFit = class CurveFit {
+    doFit(_data, cb) {
+        let type = _data.type;
+        let data = _data.data;
 
-        if (type === "Cubic") {
+        if (type === 'Cubic') {
             polyFit(data, cb);
             //CubicFit(data, callback);
-        } else if (type === "Linear") {
-
+        } else if (type === 'Linear') {
             LinearFit(data, cb);
-        } else if (type === "Flow") {
+        } else if (type === 'Flow') {
             FlowFit(data, cb);
         } else {
             cb({
-                err: "bad type"
+                err: 'bad type'
             });
         }
     }
 };
 
+module.exports = CurveFit;
 
-var polyFit = function(data, callback) {
-    var values = [],
-        x = [],
-        y = [],
+let polyFit = function (data, callback) {
+    let values = [],
         degree = data.degree,
         highTemp = data.highTemp,
         lowTemp = data.lowTemp,
         sensorType = data.sensorType;
-    var coeff = [0, 0, 0, 0];
-    if (degree === "Cubic") {
+    let coeff = [0, 0, 0, 0];
+    if (degree === 'Cubic') {
         degree = 3;
-    } else if (degree === "Quadratic") {
+    } else if (degree === 'Quadratic') {
         degree = 2;
     }
 
     // fill x,y and count from rtdtable using high and low temp with sensor
 
     if (rtdTables.hasOwnProperty(sensorType)) {
-        for (var i = 0; i < rtdTables[sensorType].length; i++) {
+        for (let i = 0; i < rtdTables[sensorType].length; i++) {
             if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
                 values.push([rtdTables[sensorType][i].R, rtdTables[sensorType][i].T]);
             }
         }
     }
 
-    var result = reg('polynomial', values, degree);
+    let result = reg('polynomial', values, degree);
 
     coeff = result.equation;
 
@@ -63,22 +57,13 @@ var polyFit = function(data, callback) {
     });
 };
 
-var CURRENT = 0,
-    VOLTAGE = 1,
-    PWO = 2,
-    HRESISTOR = 3,
-    LRESISTOR = 4,
-    COUNTS = 5,
-    HI_COUNTS_PER_OHM = 2.048,
-    LOW_COUNTS_PER_OHM = 20.48;
-
 //------------------------------------------------------------------------------
 //    Function: cubicFit()
 // Description: This function performs a cubic curve fit.
 //  Parameters: int  degree   - Degree of desired curve fit
 //              int  count    - Number of values
-//              float x[64]    - Independent variable values
-//              float y[64]    - Dependent variable values
+//              float x[64]    - Independent letiable values
+//              float y[64]    - Dependent letiable values
 //              float coeff[4] - Calculated conversion coefficients
 //     Returns: void
 //       Notes: degree must be from 1 to 3.
@@ -86,134 +71,136 @@ var CURRENT = 0,
 // Rev.  0  09-18-97  LMH  Original Issue
 //------------------------------------------------------------------------------
 
-var CubicFit = function(data, callback) {
-    var degree = data.degree,
-        highTemp = data.highTemp,
-        lowTemp = data.lowTemp,
-        sensorType = data.sensorType,
-        x = [],
-        y = [],
-        coeff = data.coeff,
-        count,
-        nterms,
-        i, j, k, n,
-        chi = 0,
-        amax = 0,
-        sumx = [], // [21] intermediate x-array
-        sumy = [], //[11] intermediate y-array
-        matrix, //[11][11]
-        xterm = 1,
-        yterm,
-        atemp = [], // [11]
-        fxi;
+// let CubicFit = function (data, callback) {
+//     let degree = data.degree,
+//         highTemp = data.highTemp,
+//         lowTemp = data.lowTemp,
+//         sensorType = data.sensorType,
+//         x = [],
+//         y = [],
+//         coeff = data.coeff,
+//         count,
+//         nterms,
+//         i, j, k, n,
+//         amax = 0,
+//         chi = 0,
+//         sumx = [], // [21] intermediate x-array
+//         sumy = [], //[11] intermediate y-array
+//         matrix, //[11][11]
+//         xterm = 1,
+//         yterm,
+//         atemp = [], // [11]
+//         fxi;
 
-    if (degree === "Cubic") {
-        degree = 3;
-    } else if (degree === "Quadratic") {
-        degree = 2;
-    }
+//     if (degree === 'Cubic') {
+//         degree = 3;
+//     } else if (degree === 'Quadratic') {
+//         degree = 2;
+//     }
 
-    nterms = degree + 1;
+//     nterms = degree + 1;
 
-    // fill x,y and count from rtdtable using high and low temp with sensor
-    //
-    for (i = 0; i < rtdTables[sensorType].length; i++) {
-        if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
-            x.push(rtdTables[sensorType][i].R);
-            y.push(rtdTables[sensorType][i].T);
-        }
-    }
-    count = x.length;
+//     // fill x,y and count from rtdtable using high and low temp with sensor
+//     //
+//     for (i = 0; i < rtdTables[sensorType].length; i++) {
+//         if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
+//             x.push(rtdTables[sensorType][i].R);
+//             y.push(rtdTables[sensorType][i].T);
+//         }
+//     }
+//     count = x.length;
 
-    // convert matrix to 2d array
-    for (matrix = []; matrix.length < nterms; matrix.push([]));
-    //
+//     // convert matrix to 2d array
+//     for (matrix = []; matrix.length < nterms; matrix.push([])) {
+//         // adding an empty array for every nterms
+//     }
+//     //
 
-    // scale data to prevent loss of precision
+//     // scale data to prevent loss of precision
 
-    for (i = 0; i < count; i++) {
-        if (Math.abs(x[i]) > amax) {
-            amax = Math.abs(x[i]);
-        }
-    }
+//     for (i = 0; i < count; i++) {
+//         if (Math.abs(x[i]) > amax) {
+//             amax = Math.abs(x[i]);
+//         }
+//     }
 
-    for (i = 0; i < count; i++) {
-        x[i] *= 10 / amax; // check Order of Operations here
-    }
+//     for (i = 0; i < count; i++) {
+//         x[i] *= 10 / amax; // check Order of Operations here
+//     }
 
-    for (i = 0; i < nterms; i++) {
-        coeff[i] = 0;
-        atemp[i] = 0;
-    }
+//     for (i = 0; i < nterms; i++) {
+//         coeff[i] = 0;
+//         atemp[i] = 0;
+//     }
 
-    n = (nterms * 2) - 1;
-    for (i = 0; i < n; i++) {
-        sumx[i] = 0;
-    }
+//     n = (nterms * 2) - 1;
+//     for (i = 0; i < n; i++) {
+//         sumx[i] = 0;
+//     }
 
-    for (i = 0; i < nterms; i++) {
-        sumy[i] = 0;
-    }
-
-
-    for (i = 0; i < count; i++) {
-        xterm = 1;
-        for (j = 0; j < n; j++) {
-            sumx[j] += xterm;
-            xterm *= x[i];
-        }
-
-        yterm = y[i];
-        for (j = 0; j < nterms; j++) {
-            sumy[j] += yterm;
-            yterm *= x[i];
-        }
-    }
-
-    for (i = 0; i < nterms; i++) {
-        for (j = 0; j < nterms; j++) {
-            k = i + j;
-            matrix[i][j] = sumx[k];
-        }
-    }
-
-    matrixInversion(matrix, nterms);
+//     for (i = 0; i < nterms; i++) {
+//         sumy[i] = 0;
+//     }
 
 
-    // Compute each coefficient by multiplying the appropriate row of the inverse matrix by the sumy vector
-    for (i = 0; i < nterms; i++) {
-        for (j = 0; j < nterms; j++) {
-            atemp[i] += matrix[i][j] * sumy[j];
-        }
-    }
+//     for (i = 0; i < count; i++) {
+//         xterm = 1;
+//         for (j = 0; j < n; j++) {
+//             sumx[j] += xterm;
+//             xterm *= x[i];
+//         }
 
-    for (i = 0; i < count; i++) {
-        fxi = 0;
-        for (j = 0; j < nterms; j++) {
-            fxi = (fxi * x[i]) + atemp[nterms - j - 1];
-        }
+//         yterm = y[i];
+//         for (j = 0; j < nterms; j++) {
+//             sumy[j] += yterm;
+//             yterm *= x[i];
+//         }
+//     }
 
-        if (y[i] === 0) {
-            chi += fxi * fxi;
-        } else {
-            chi += (1 - (fxi / y[i])) * (1 - (fxi / y[i]));
-        }
-    }
+//     for (i = 0; i < nterms; i++) {
+//         for (j = 0; j < nterms; j++) {
+//             k = i + j;
+//             matrix[i][j] = sumx[k];
+//         }
+//     }
 
-    for (i = 0; i < nterms; i++) {
-        coeff[i] = atemp[i] * Math.pow((10 / amax), 1);
-    }
+//     matrixInversion(matrix, nterms);
 
-    callback({
-        coeffs: coeff
-    });
-};
+
+//     // Compute each coefficient by multiplying the appropriate row of the inverse matrix by the sumy vector
+//     for (i = 0; i < nterms; i++) {
+//         for (j = 0; j < nterms; j++) {
+//             atemp[i] += matrix[i][j] * sumy[j];
+//         }
+//     }
+
+//     for (i = 0; i < count; i++) {
+//         fxi = 0;
+//         for (j = 0; j < nterms; j++) {
+//             fxi = (fxi * x[i]) + atemp[nterms - j - 1];
+//         }
+
+//         if (y[i] === 0) {
+//             chi += fxi * fxi;
+//         } else {
+//             chi += (1 - (fxi / y[i])) * (1 - (fxi / y[i]));
+//         }
+//     }
+
+//     for (i = 0; i < nterms; i++) {
+//         coeff[i] = atemp[i] * Math.pow((10 / amax), 1);
+//     }
+
+//     callback({
+//         coeffs: coeff
+//     });
+// };
 
 //------------------------------------------------------------------------------
 //    Function: LinearFit()
 // Description: This function calculates a linear conversion
 //  Parameters: volt_type  - 0 is Current, 1 is Voltage, 2 is time in seconds
-//              input_conv - true if conversion is for input, false for output
+//              inputConv - true if conversion is for input, false for output
 //              lvolts     - Low electrical value (volts, amps, ohms, or seconds)
 //              hvolts     - High electrical value
 //              low        - Low engineering units
@@ -225,28 +212,28 @@ var CubicFit = function(data, callback) {
 //     Returns: void
 // Rev.  0  11-6-98  RWC  Original Issue
 //------------------------------------------------------------------------------
-var LinearFit = function(data, callback) {
-    var input_conv = data.input_conv,
+let LinearFit = function (data, callback) {
+    let inputConv = data.input_conv,
         lvolts = data.lvolts,
         hvolts = data.hvolts,
         low = data.low,
         high = data.high,
-        resistor = data.resistor,
         c = data.c,
-        hi_cnt, lo_cnt, flope, offset, fhi_cnt, flo_cnt, oa, ob, slope;
+        offset, fhiCount, floCount, oa, ob, slope;
 
-    // Calculate high and low count range. Pulse width requires no calculation 
+    // Calculate high and low count range. Pulse width requires no calculation
 
-    fhi_cnt = hvolts;
-    flo_cnt = lvolts;
+    fhiCount = hvolts;
+    floCount = lvolts;
 
     /* Calculate slope and offset for linear EU vs counts equation */
-    if (fhi_cnt !== flo_cnt)
-        slope = (high - low) / (fhi_cnt - flo_cnt);
-    else
+    if (fhiCount !== floCount) {
+        slope = (high - low) / (fhiCount - floCount);
+    } else {
         slope = 0.0;
+    }
 
-    offset = low - slope * flo_cnt; // check OOO
+    offset = low - slope * floCount; // check OOO
 
     /* Get reverse conversion coefficients */
     if (slope !== 0.0) {
@@ -258,7 +245,7 @@ var LinearFit = function(data, callback) {
 
 
     /* Store conversion coefficients */
-    if (input_conv) {
+    if (inputConv) {
         c[0] = offset;
         c[1] = slope;
     } else {
@@ -270,7 +257,6 @@ var LinearFit = function(data, callback) {
     callback({
         coeffs: c
     });
-
 };
 
 //------------------------------------------------------------------------------
@@ -283,7 +269,7 @@ var LinearFit = function(data, callback) {
 //               supplied. For velocity pressure sensors, a pressure reading
 //               and the corresponding flow must be supplied.
 //
-//  Parameters: lv_sensor  - True for linear velocity sensor. False for velocity
+//  Parameters: lvSensor  - True for linear velocity sensor. False for velocity
 //                            pressure sensor
 //              geometry   - eRectangular for rect or square. p1 and p2 will
 //                            supply length and width.
@@ -291,10 +277,10 @@ var LinearFit = function(data, callback) {
 //                            diameter
 //                           eCustom for irregular geometries. p1 will supply
 //                            cross sectional area of conveyance
-//              p1         - if lv_sensor, supplies parameter indicated in
-//                            geometry. if !lv_sensor, supplies pressure point
-//              p2         - if lv_sensor, supplies parameter indicated in
-//                            geometry. if !lv_sensor, supplies flow at pressure
+//              p1         - if lvSensor, supplies parameter indicated in
+//                            geometry. if !lvSensor, supplies pressure point
+//              p2         - if lvSensor, supplies parameter indicated in
+//                            geometry. if !lvSensor, supplies flow at pressure
 //                            point.
 //              c          - Pointer to array of 4 floats to store results. On
 //                            entry, c[0] should be linear conversion offset and
@@ -304,8 +290,8 @@ var LinearFit = function(data, callback) {
 //     Returns: void
 // Rev.  0  11-9-98  RWC  Original Issue
 //------------------------------------------------------------------------------
-var FlowFit = function(data, callback) {
-    var lv_sensor = data.lv_sensor,
+let FlowFit = function (data, callback) {
+    let lvSensor = data.lv_sensor,
         sensorRef = data.sensorRef,
         area = data.area,
         p1 = data.p1,
@@ -318,18 +304,19 @@ var FlowFit = function(data, callback) {
         query: {
             _id: sensorRef.Value
         }
-    }, function(err, sensor) {
-        if (err)
+    }, function (err, sensor) {
+        if (err) {
             return callback({
                 err: err
             });
+        }
 
-        c[0] = sensor["Conversion Coefficient 1"].Value;
-        c[1] = sensor["Conversion Coefficient 2"].Value;
+        c[0] = sensor['Conversion Coefficient 1'].Value;
+        c[1] = sensor['Conversion Coefficient 2'].Value;
         c[2] = c[3] = 0.0;
 
-        if (lv_sensor) {
-            // Compute area from parameters     
+        if (lvSensor) {
+            // Compute area from parameters
 
 
             c[0] *= area;
@@ -377,90 +364,90 @@ var FlowFit = function(data, callback) {
     });
 };
 
-var matrixInversion = function(matrix, nterms) {
-    var i, j, k, n,
-        ik = [], // [11]
-        jk = [], // [11]
-        amax,
-        save;
+// let matrixInversion = function (matrix, nterms) {
+//     let i, j, k, n,
+//         ik = [], // [11]
+//         jk = [], // [11]
+//         amax,
+//         save;
 
-    for (k = 0; k < nterms; k++) {
-        // Find largest element in rest of matrix
-        amax = 0;
-        for (i = k; i < nterms; i++) {
-            for (j = k; j < nterms; j++) {
-                if (Math.abs(matrix[i][j]) > Math.abs(amax)) {
-                    amax = matrix[i][j];
-                    ik[k] = i;
-                    jk[k] = j;
-                }
-            }
-        }
+//     for (k = 0; k < nterms; k++) {
+//         // Find largest element in rest of matrix
+//         amax = 0;
+//         for (i = k; i < nterms; i++) {
+//             for (j = k; j < nterms; j++) {
+//                 if (Math.abs(matrix[i][j]) > Math.abs(amax)) {
+//                     amax = matrix[i][j];
+//                     ik[k] = i;
+//                     jk[k] = j;
+//                 }
+//             }
+//         }
 
-        // Interchange rows and columns to put amax into matrix[k][k]
-        i = ik[k];
+//         // Interchange rows and columns to put amax into matrix[k][k]
+//         i = ik[k];
 
-        if (i != k) {
-            for (j = 0; j < nterms; j++) {
-                save = matrix[k][j];
-                matrix[k][j] = matrix[i][j];
-                matrix[i][j] = -save;
-            }
-        }
+//         if (i != k) {
+//             for (j = 0; j < nterms; j++) {
+//                 save = matrix[k][j];
+//                 matrix[k][j] = matrix[i][j];
+//                 matrix[i][j] = -save;
+//             }
+//         }
 
-        // Now a row
-        j = jk[k];
-        if (j != k) {
-            for (i = 0; i < nterms; i++) {
-                save = matrix[i][k];
-                matrix[i][k] = matrix[i][j];
-                matrix[i][j] = -save;
-            }
-        }
+//         // Now a row
+//         j = jk[k];
+//         if (j != k) {
+//             for (i = 0; i < nterms; i++) {
+//                 save = matrix[i][k];
+//                 matrix[i][k] = matrix[i][j];
+//                 matrix[i][j] = -save;
+//             }
+//         }
 
-        // Accumulate elements of inverse matrix
-        for (i = 0; i < nterms; i++) {
-            if (i != k) {
-                matrix[i][k] = -matrix[i][k] / amax;
-            }
-        }
+//         // Accumulate elements of inverse matrix
+//         for (i = 0; i < nterms; i++) {
+//             if (i != k) {
+//                 matrix[i][k] = -matrix[i][k] / amax;
+//             }
+//         }
 
-        for (i = 0; i < nterms; i++) {
-            for (j = 0; j < nterms; j++) {
-                if ((i != k) && (j != k)) {
-                    matrix[i][j] = matrix[i][j] + matrix[i][k] * matrix[k][j];
-                }
-            }
-        }
+//         for (i = 0; i < nterms; i++) {
+//             for (j = 0; j < nterms; j++) {
+//                 if ((i != k) && (j != k)) {
+//                     matrix[i][j] = matrix[i][j] + matrix[i][k] * matrix[k][j];
+//                 }
+//             }
+//         }
 
-        for (j = 0; j < nterms; j++) {
-            if (j != k) {
-                matrix[k][j] = matrix[k][j] / amax;
-            }
-        }
+//         for (j = 0; j < nterms; j++) {
+//             if (j != k) {
+//                 matrix[k][j] = matrix[k][j] / amax;
+//             }
+//         }
 
-        matrix[k][k] = 1 / amax;
-    }
+//         matrix[k][k] = 1 / amax;
+//     }
 
-    // Restore ordering of matrix
-    for (n = 0; n < 1; n++) {
-        k = nterms - n - 1;
-        j = ik[k];
-        if (j > k) {
-            for (i = 0; i < nterms; i++) {
-                save = matrix[i][k];
-                matrix[i][k] = -matrix[i][j];
-                matrix[i][j] = save;
-            }
-        }
+//     // Restore ordering of matrix
+//     for (n = 0; n < 1; n++) {
+//         k = nterms - n - 1;
+//         j = ik[k];
+//         if (j > k) {
+//             for (i = 0; i < nterms; i++) {
+//                 save = matrix[i][k];
+//                 matrix[i][k] = -matrix[i][j];
+//                 matrix[i][j] = save;
+//             }
+//         }
 
-        i = jk[k];
-        if (i > k) {
-            for (j = 0; j < nterms; j++) {
-                save = matrix[k][j];
-                matrix[k][j] = -matrix[i][j];
-                matrix[i][j] = save;
-            }
-        }
-    }
-};
+//         i = jk[k];
+//         if (i > k) {
+//             for (j = 0; j < nterms; j++) {
+//                 save = matrix[k][j];
+//                 matrix[k][j] = -matrix[i][j];
+//                 matrix[i][j] = save;
+//             }
+//         }
+//     }
+// };

@@ -1,234 +1,231 @@
-var _ = require('lodash');
-var db = require('../helpers/db');
-var utils = require('../helpers/utils');
-var logger = require("../helpers/logger")(module);
+let _ = require('lodash');
+let db = require('../helpers/db');
+let utils = require('../helpers/utils');
 
-exports.get = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var coll = criteria.collection;
-  var limit = (!!criteria.limit) ? criteria.limit : 0;
-  var fields = (!!criteria.fields) ? criteria.fields : {};
-  var sort = (!!criteria.sort) ? criteria.sort : {};
-  var skip = (!!criteria.skip) ? criteria.skip : 0;
-  var collection;
+exports.get = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let coll = criteria.collection;
+    let limit = (!!criteria.limit) ? criteria.limit : 0;
+    let fields = (!!criteria.fields) ? criteria.fields : {};
+    let sort = (!!criteria.sort) ? criteria.sort : {};
+    let skip = (!!criteria.skip) ? criteria.skip : 0;
+    let collection;
 
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  // console.log(query, coll);
-  collection = db.get().collection(coll);
-  collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
-};
-
-exports.getOne = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var coll = criteria.collection;
-  var fields = (!!criteria.fields) ? criteria.fields : {};
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  collection = db.get().collection(coll);
-
-  collection.findOne(query, fields, cb);
-};
-
-exports.aggregate = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var coll = criteria.collection;
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  collection = db.get().collection(coll);
-
-  collection.aggregate(query, cb);
-};
-
-exports.update = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
-  var options = (!!criteria.options) ? criteria.options : {};
-  var coll = criteria.collection;
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  collection = db.get().collection(coll);
-
-  collection.update(query, updateObj, options, cb);
-};
-
-exports.save = function(criteria, cb) {
-  var saveObj = criteria.saveObj;
-  var options = (!!criteria.options) ? criteria.options : {};
-  var coll = criteria.collection;
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  collection = db.get().collection(coll);
-
-  collection.save(saveObj, options, cb);
-};
-
-exports.findAndModify = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var sort = (!!criteria.sort) ? criteria.sort : [];
-  var updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
-  var options = (!!criteria.options) ? criteria.options : {};
-  var coll = criteria.collection;
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  collection = db.get().collection(coll);
-
-  collection.findAndModify(query, sort, updateObj, options, function(err, result) {
-    if (err) {
-      return cb(err);
-    } else {
-      return cb(null, result.value);
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
     }
-  });
+
+    // console.log(query, coll);
+    collection = db.get().collection(coll);
+    collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
 };
 
-exports.count = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var coll = criteria.collection;
-  var collection;
+exports.getOne = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let coll = criteria.collection;
+    let fields = (!!criteria.fields) ? criteria.fields : {};
+    let collection;
 
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
-    });
-  }
-
-  // console.log(query, coll);
-  collection = db.get().collection(coll);
-
-  collection.count(query, cb);
-};
-
-exports.findAndCount = function(criteria, cb) {
-  exports.get(criteria, function(err, points) {
-    if (err) {
-      return cb(err);
-    } else {
-      exports.count(criteria, function(err, count) {
-        cb(err, points, count);
-      });
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
     }
-  });
+
+    collection = db.get().collection(coll);
+
+    collection.findOne(query, fields, cb);
 };
 
-exports.insert = function(criteria, cb) {
-  var insertObj = criteria.insertObj;
-  var coll = criteria.collection;
-  var options = criteria.options;
+exports.aggregate = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let coll = criteria.collection;
+    let collection;
 
-  var collection = db.get().collection(coll);
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
 
-  collection.insert(insertObj, options, cb);
+    collection = db.get().collection(coll);
+
+    collection.aggregate(query, cb);
 };
 
-exports.remove = function(criteria, cb) {
-  var query = criteria.query;
-  var coll = criteria.collection;
-  var options = criteria.options;
+exports.update = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
+    let options = (!!criteria.options) ? criteria.options : {};
+    let coll = criteria.collection;
+    let collection;
 
-  var collection = db.get().collection(coll);
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
 
-  collection.remove(query, options, cb);
+    collection = db.get().collection(coll);
+
+    collection.update(query, updateObj, options, cb);
 };
 
-exports.distinct = function(criteria, cb) {
-  var query = criteria.query || {};
-  var coll = criteria.collection;
-  var field = criteria.field;
-  var options = criteria.options || {};
+exports.save = function (criteria, cb) {
+    let saveObj = criteria.saveObj;
+    let options = (!!criteria.options) ? criteria.options : {};
+    let coll = criteria.collection;
+    let collection;
 
-  var collection = db.get().collection(coll);
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
 
-  collection.distinct(field, query, options, cb);
+    collection = db.get().collection(coll);
+
+    collection.save(saveObj, options, cb);
 };
 
-exports.createCollection = function(criteria, cb) {
-  var coll = criteria.collection;
+exports.findAndModify = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let sort = (!!criteria.sort) ? criteria.sort : [];
+    let updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
+    let options = (!!criteria.options) ? criteria.options : {};
+    let coll = criteria.collection;
+    let collection;
 
-  db.get().createCollection(coll, cb);
-};
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
 
-exports.rename = function(criteria, cb) {
-  var from = criteria.from;
-  var to = criteria.to;
+    collection = db.get().collection(coll);
 
-  var collection = db.get().collection(from);
-  collection.rename(to, cb);
-};
-
-exports.dropCollection = function(criteria, cb) {
-  var coll = criteria.collection;
-
-  db.get().dropCollection(coll, cb);
-};
-
-exports.dropDatabase = function(cb) {
-  db.get().dropDatabase({}, cb);
-};
-
-exports.ensureIndex = function(criteria, cb) {
-  var coll = criteria.collection;
-  var index = criteria.index;
-  var options = criteria.options || {};
-
-  var collection = db.get().collection(coll);
-  collection.ensureIndex(index, options, cb);
-};
-
-exports.getCursor = function(criteria, cb) {
-  var query = (!!criteria.query) ? criteria.query : {};
-  var coll = criteria.collection;
-  var limit = (!!criteria.limit) ? criteria.limit : 0;
-  var fields = (!!criteria.fields) ? criteria.fields : {};
-  var sort = (!!criteria.sort) ? criteria.sort : {};
-  var skip = (!!criteria.skip) ? criteria.skip : 0;
-  var collection;
-
-  if (!coll) {
-    return cb({
-      err: "Please provide a collection."
+    collection.findAndModify(query, sort, updateObj, options, function (err, result) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, result.value);
     });
-  }
+};
 
-  // console.log(query, coll);
-  collection = db.get().collection(coll);
+exports.count = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let coll = criteria.collection;
+    let collection;
 
-  var cursor = collection.find(query, fields).limit(limit).sort(sort).skip(skip);
-  cb(cursor);
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
+
+    // console.log(query, coll);
+    collection = db.get().collection(coll);
+
+    collection.count(query, cb);
+};
+
+exports.findAndCount = function (criteria, cb) {
+    exports.get(criteria, function (err, points) {
+        if (err) {
+            return cb(err);
+        }
+        exports.count(criteria, function (err, count) {
+            cb(err, points, count);
+        });
+    });
+};
+
+exports.insert = function (criteria, cb) {
+    let insertObj = criteria.insertObj;
+    let coll = criteria.collection;
+    let options = criteria.options;
+
+    let collection = db.get().collection(coll);
+
+    collection.insert(insertObj, options, cb);
+};
+
+exports.remove = function (criteria, cb) {
+    let query = criteria.query;
+    let coll = criteria.collection;
+    let options = criteria.options;
+
+    let collection = db.get().collection(coll);
+
+    collection.remove(query, options, cb);
+};
+
+exports.distinct = function (criteria, cb) {
+    let query = criteria.query || {};
+    let coll = criteria.collection;
+    let field = criteria.field;
+    let options = criteria.options || {};
+
+    let collection = db.get().collection(coll);
+
+    collection.distinct(field, query, options, cb);
+};
+
+exports.createCollection = function (criteria, cb) {
+    let coll = criteria.collection;
+
+    db.get().createCollection(coll, cb);
+};
+
+exports.rename = function (criteria, cb) {
+    let from = criteria.from;
+    let to = criteria.to;
+
+    let collection = db.get().collection(from);
+    collection.rename(to, cb);
+};
+
+exports.dropCollection = function (criteria, cb) {
+    let coll = criteria.collection;
+
+    db.get().dropCollection(coll, cb);
+};
+
+exports.dropDatabase = function (cb) {
+    db.get().dropDatabase({}, cb);
+};
+
+exports.ensureIndex = function (criteria, cb) {
+    let coll = criteria.collection;
+    let index = criteria.index;
+    let options = criteria.options || {};
+
+    let collection = db.get().collection(coll);
+    collection.ensureIndex(index, options, cb);
+};
+
+exports.getCursor = function (criteria, cb) {
+    let query = (!!criteria.query) ? criteria.query : {};
+    let coll = criteria.collection;
+    let limit = (!!criteria.limit) ? criteria.limit : 0;
+    let fields = (!!criteria.fields) ? criteria.fields : {};
+    let sort = (!!criteria.sort) ? criteria.sort : {};
+    let skip = (!!criteria.skip) ? criteria.skip : 0;
+    let collection;
+
+    if (!coll) {
+        return cb({
+            err: 'Please provide a collection.'
+        });
+    }
+
+    // console.log(query, coll);
+    collection = db.get().collection(coll);
+
+    let cursor = collection.find(query, fields).limit(limit).sort(sort).skip(skip);
+    cb(cursor);
 };
 
 /*Utility.iterateCursor(criteria, function(err, doc, cb){
@@ -237,94 +234,90 @@ exports.getCursor = function(criteria, cb) {
 }, function(err){
   console.log('done', err);
 });*/
-exports.iterateCursor = function(criteria, fx, done) {
-  var count = 0;
-  exports.getCursor(criteria, function(cursor) {
+exports.iterateCursor = function (criteria, fx, done) {
+    let count = 0;
+    exports.getCursor(criteria, function (cursor) {
+        function processDoc(err, doc) {
+            if (!!err || doc === null) {
+                done(err, count);
+            } else {
+                ++count;
+                fx(err, doc, function (err, stop) {
+                    if (!!err || !!stop) {
+                        done(err, count);
+                    } else {
+                        cursor.nextObject(processDoc);
+                    }
+                });
+            }
+        }
 
-    function processDoc(err, doc) {
-      if (!!err || doc === null) {
-        done(err, count);
-      } else {
-        ++count;
-        fx(err, doc, function(err, stop) {
-          if (!!err || !!stop) {
-            done(err, count);
-          } else {
-            cursor.nextObject(processDoc);
-          }
-        });
-      }
-    }
-
-    cursor.nextObject(processDoc);
-
-  });
+        cursor.nextObject(processDoc);
+    });
 };
 
-exports.getWithSecurity = function(criteria, cb) {
-  var skip = criteria._skip || 0;
-  var limit = criteria._limit || 200;
+exports.getWithSecurity = function (criteria, cb) {
+    let skip = criteria._skip || 0;
+    let limit = criteria._limit || 200;
 
-  var identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
-  var Security = require('../models/security');
+    let identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
+    let Security = require('../models/security');
 
-  Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
-    if (err || permissions === false) {
-      cb(err || permissions);
-    }
-
-    // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
-    // if permissions couldn't actually exceed the returned limit, search with upis as well
-    if (permissions !== true && _.size(permissions) <= limit) {
-      var upis = Object.keys(permissions).map(function(upi) {
-        return parseInt(upi, 10);
-      });
-      if (!criteria.query.hasOwnProperty('_id')) {
-        criteria.query[identifier] = {
-          $in: upis
-        };
-      }
-    }
-    var points = [];
-
-    exports.iterateCursor(criteria, function(err, doc, next) {
-      if (permissions !== true) {
-        if (permissions.hasOwnProperty(doc[identifier])) {
-          doc._pAccess = permissions[doc[identifier]];
-          if (skip > 0) {
-            skip--;
-          } else {
-            points.push(doc);
-          }
+    Security.Utility.getPermissions(criteria.data.user, function (err, permissions) {
+        if (err || permissions === false) {
+            cb(err || permissions);
         }
-      } else {
-        doc._pAccess = 15;
-        if (skip > 0) {
-          skip--;
-        } else {
-          points.push(doc);
-        }
-      }
-      next(err, points.length >= (limit || 50) || false);
 
-    }, function(err, count) {
-
-      if (permissions !== true && permissions !== false) {
-        var upis = [];
-        for (var key in permissions) {
-          upis.push(parseInt(key, 10));
+        // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
+        // if permissions couldn't actually exceed the returned limit, search with upis as well
+        if (permissions !== true && _.size(permissions) <= limit) {
+            let upis = Object.keys(permissions).map(function (upi) {
+                return parseInt(upi, 10);
+            });
+            if (!criteria.query.hasOwnProperty('_id')) {
+                criteria.query[identifier] = {
+                    $in: upis
+                };
+            }
         }
-        criteria.query[identifier] = {
-          $in: upis
-        };
-        exports.count(criteria, function(err, count) {
-          cb(err, points, count);
+        let points = [];
+
+        exports.iterateCursor(criteria, function (err, doc, next) {
+            if (permissions !== true) {
+                if (permissions.hasOwnProperty(doc[identifier])) {
+                    doc._pAccess = permissions[doc[identifier]];
+                    if (skip > 0) {
+                        skip--;
+                    } else {
+                        points.push(doc);
+                    }
+                }
+            } else {
+                doc._pAccess = 15;
+                if (skip > 0) {
+                    skip--;
+                } else {
+                    points.push(doc);
+                }
+            }
+            next(err, points.length >= (limit || 50) || false);
+        }, function (err) {
+            if (permissions !== true && permissions !== false) {
+                let upis = [];
+                for (let key in permissions) {
+                    upis.push(parseInt(key, 10));
+                }
+                criteria.query[identifier] = {
+                    $in: upis
+                };
+                exports.count(criteria, function (err, count) {
+                    cb(err, points, count);
+                });
+            } else {
+                exports.count(criteria, function (err, count) {
+                    cb(err, points, count);
+                });
+            }
         });
-      } else {
-        exports.count(criteria, function(err, count) {
-          cb(err, points, count);
-        });
-      }
     });
-  });
 };

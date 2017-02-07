@@ -1,18 +1,17 @@
-var fs = require('fs');
-var pug = require('pug');
+let fs = require('fs');
+let pug = require('pug');
 
-var Utility = require('./utility');
-var System = require('./system');
-var logger = require('../helpers/logger')(module);
+let Utility = require('./utility');
+let System = require('./system');
 
-var getRates = function(cb) {
-    var criteria = {
+let getRates = function (cb) {
+    let criteria = {
         collection: 'Utilities',
         query: {
-            "Point Type.Value": "Utility"
+            'Point Type.Value': 'Utility'
         },
         fields: {
-            "Point Type": 0,
+            'Point Type': 0,
             _id: 0
         },
         sort: {
@@ -25,12 +24,12 @@ var getRates = function(cb) {
 
 module.exports = {
 
-    index: function(data, cb) {
-        var utilities;
-        var html;
-        var weatherPoints;
-        var completed = 0;
-        var complete = function() {
+    index: function (data, cb) {
+        let utilities;
+        let html;
+        let weatherPoints;
+        let completed = 0;
+        let complete = function () {
             completed++;
             if (completed === fns.length) {
                 return cb(null, {
@@ -41,34 +40,34 @@ module.exports = {
                 });
             }
         };
-        var getWeatherPoints = function() {
-            System.weather(function(err, data) {
+        let getWeatherPoints = function () {
+            System.weather(function (err, data) {
                 weatherPoints = err || data;
                 complete();
             });
         };
-        var callGetRates = function() {
-            getRates(function(err, rawUtilities) {
+        let callGetRates = function () {
+            getRates(function (err, rawUtilities) {
                 utilities = err || rawUtilities;
                 complete();
             });
         };
-        var getUtilityMarkup = function() {
-            module.exports.getUtilityMarkup('Electricity', function(markup) {
+        let getUtilityMarkup = function () {
+            module.exports.getUtilityMarkup('Electricity', function (markup) {
                 html = markup;
                 complete();
             });
         };
 
-        var fns = [getWeatherPoints, callGetRates, getUtilityMarkup];
+        let fns = [getWeatherPoints, callGetRates, getUtilityMarkup];
 
-        fns.forEach(function(fn) {
+        fns.forEach(function (fn) {
             fn();
         });
     },
 
-    getUtility: function(data, cb) {
-        var criteria = {
+    getUtility: function (data, cb) {
+        let criteria = {
             query: {
                 'UtilityName': data.UtilityName
             },
@@ -78,29 +77,28 @@ module.exports = {
         Utility.getOne(criteria, cb);
     },
 
-    saveUtility: function(_data, cb) {
-        var utility = _data.utility;
-        var path = utility.path;
-        var data = utility.data;
-        var remove = utility.remove.toString();
-        var updateObj;
+    saveUtility: function (_data, cb) {
+        let utility = _data.utility;
+        let path = utility.path;
+        let data = utility.data;
+        let remove = utility.remove.toString();
+        let updateObj;
 
         if (remove === 'true' && !!path) {
             updateObj = {
                 $unset: {}
             };
-            updateObj['$unset'][path] = 1;
-
+            updateObj.$unset[path] = 1;
         } else {
             updateObj = {
                 $set: {}
             };
             if (!!path) {
-                updateObj['$set'][path] = data;
+                updateObj.$set[path] = data;
             } else {
                 delete updateObj.path;
-                for (var prop in data) {
-                    updateObj['$set'][prop] = data[prop];
+                for (let prop in data) {
+                    updateObj.$set[prop] = data[prop];
                 }
             }
         }
@@ -108,7 +106,7 @@ module.exports = {
         Utility.update({
             collection: 'Utilities',
             query: {
-                "utilityName": utility.utilityName
+                'utilityName': utility.utilityName
             },
             updateObj: updateObj,
             options: {
@@ -117,9 +115,8 @@ module.exports = {
         }, cb);
     },
 
-    uploadBackground: function(data, cb) {
-        var c,
-            path = [__dirname, '..', 'public', 'img', 'dashboard', 'backgrounds', ''].join('/'),
+    uploadBackground: function (data, cb) {
+        let path = [__dirname, '..', 'public', 'img', 'dashboard', 'backgrounds', ''].join('/'),
             uploadedFiles = data.files,
             list = Object.keys(uploadedFiles),
             obj = uploadedFiles[list[0]];
@@ -127,15 +124,15 @@ module.exports = {
         fs.writeFile(path + obj.originalname, obj.buffer, cb);
     },
 
-    getMarkup: function(data, cb) {
-        var type = data.type;
+    getMarkup: function (data, cb) {
+        let type = data.type;
         module.exports.getUtilityMarkup(type, cb);
     },
 
-    getUtilityMarkup: function(type, cb) {
-        var filename = __dirname + '/../views/dashboard/utility_' + type + '.pug';
-        fs.readFile(filename, 'utf8', function(err, data) {
-            var fn,
+    getUtilityMarkup: function (type, cb) {
+        let filename = __dirname + '/../views/dashboard/utility_' + type + '.pug';
+        fs.readFile(filename, 'utf8', function (err, data) {
+            let fn,
                 html;
 
             fn = pug.compile(data, {
@@ -148,8 +145,8 @@ module.exports = {
         });
     },
 
-    removeUtility: function(data, cb) {
-        var criteria = {
+    removeUtility: function (data, cb) {
+        let criteria = {
             collection: 'Utilities',
             query: {
                 utilityName: data.utilityName

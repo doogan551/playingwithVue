@@ -1,6 +1,7 @@
 let ObjectID = require('mongodb').ObjectID;
 
 let Utility = require('./utility');
+const Common = new(require('./common'))();
 let Model = require('./model');
 
 let Alarm = class Alarm extends Model {
@@ -66,34 +67,11 @@ let Alarm = class Alarm extends Model {
             }]
         };
 
-        if (data.name1 !== undefined) {
-            if (data.name1 !== null) {
-                query.Name1 = new RegExp('^' + data.name1, 'i');
-            } else {
-                query.Name1 = '';
-            }
-        }
-        if (data.name2 !== undefined) {
-            if (data.name2 !== null) {
-                query.Name2 = new RegExp('^' + data.name2, 'i');
-            } else {
-                query.Name2 = '';
-            }
-        }
-        if (data.name3 !== undefined) {
-            if (data.name3 !== null) {
-                query.Name3 = new RegExp('^' + data.name3, 'i');
-            } else {
-                query.Name3 = '';
-            }
-        }
-        if (data.name4 !== undefined) {
-            if (data.name4 !== null) {
-                query.Name4 = new RegExp('^' + data.name4, 'i');
-            } else {
-                query.Name4 = '';
-            }
-        }
+        Common.addNamesToQuery(data, query, 'name1');
+        Common.addNamesToQuery(data, query, 'name2');
+        Common.addNamesToQuery(data, query, 'name3');
+        Common.addNamesToQuery(data, query, 'name4');
+
         if (data.msgCat) {
             query.msgCat = {
                 $in: data.msgCat

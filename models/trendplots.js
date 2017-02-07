@@ -1,18 +1,14 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
+let Utility = require('../models/utility');
 
 module.exports = {
 
-    getPoints: function(data, cb) {
-        var DAY = 60 * 60 * 24;
-        var upi = +data.id;
-        var rows = +data.rows || 1000;
-        var days = +data.numDays;
-        var start = Math.floor(new Date().getTime() / 1000 - (days * DAY));
-        var startReq = new Date();
-        var end = +data.end;
+    getPoints: function (data, cb) {
+        let DAY = 60 * 60 * 24;
+        let upi = +data.id;
+        let days = +data.numDays;
+        let start = Math.floor(new Date().getTime() / 1000 - (days * DAY));
 
-        var criteria = {
+        let criteria = {
             query: {
                 upi: upi,
                 timestamp: {
@@ -28,13 +24,12 @@ module.exports = {
             }
         };
 
-        Utility.get(criteria, function(err, results) {
-            var c = results.length;
-            var ret = [];
-            var row;
-            var ts;
-            var prevDay;
-            var started = new Date();
+        Utility.get(criteria, function (err, results) {
+            let c = results.length;
+            let ret = [];
+            let row;
+            let ts;
+            let prevDay;
 
             results.reverse();
 
@@ -56,10 +51,9 @@ module.exports = {
         });
     },
 
-    getData: function(list, cb) {
+    getData: function (list, cb) {
         if (list) {
-
-            var criteria = {
+            let criteria = {
                 collection: 'historydata',
                 query: {
                     _id: {

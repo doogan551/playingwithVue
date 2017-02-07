@@ -1,27 +1,27 @@
-var utility = require('../models/utility');
-var async = require('async');
-var config = require('config');
-var logger = require('../helpers/logger')(module);
-var Config = require('../public/js/lib/config.js');
-var ObjectID = require('mongodb').ObjectID;
-var Notifier = require('../models/notifierutility');
-var alarmUtility = new(require('../models/alarm.js'))();
-var serverName = require('os').hostname();
+let utility = require('../models/utility');
+let async = require('async');
+let config = require('config');
+let logger = require('../helpers/logger')(module);
+let Config = require('../public/js/lib/config.js');
+let ObjectID = require('mongodb').ObjectID;
+let Notifier = require('../models/notifierutility');
+let alarmUtility = new(require('../models/alarm.js'))();
+let serverName = require('os').hostname();
 
-var notifier = new Notifier();
+let notifier = new Notifier();
 
-var infoscanConfig = config.get('Infoscan');
-var alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
-var alarmsEmailAddress = alarmsEmailAccount + '@' + infoscanConfig.domains[0];
+let infoscanConfig = config.get('Infoscan');
+let alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
+let alarmsEmailAddress = alarmsEmailAccount + '@' + infoscanConfig.domains[0];
 
-var enums = Config.Enums;
-var revEnums = Config.revEnums;
-var ackStatuses = enums['Acknowledge Statuses'];
-var accessFlags = enums['Access Flags'];
-var alarmClasses = enums['Alarm Classes'];
+let enums = Config.Enums;
+let revEnums = Config.revEnums;
+let ackStatuses = enums['Acknowledge Statuses'];
+let accessFlags = enums['Access Flags'];
+let alarmClasses = enums['Alarm Classes'];
 
-var emailHandler = {};
-emailHandler[alarmsEmailAddress] = function (relay_message) {
+let emailHandler = {};
+emailHandler[alarmsEmailAddress] = function (relayMessage) {
     // Our waterfall functions are defined after the waterfall callback
     async.waterfall([
         getUser,
@@ -30,20 +30,19 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         checkUserPermissions,
         ackAlarm
     ], function (err, data) {
-        var html = '',
+        let html = '',
             sendReply = true,
             replyObj = {},
             msgId,
             references,
             getHeader = function (name) {
-                var headers = relay_message.content.headers,
+                let headers = relayMessage.content.headers,
                     len = (headers && headers.length) || 0,
-                    i,
-                    obj;
+                    i;
 
                 for (i = 0; i < len; i++) {
                     // Headers is an array of objects; each object has only 1 key-value pair. We're
-                    // looking for the object that has the key equal to our name variable
+                    // looking for the object that has the key equal to our name letiable
                     if (headers[i][name]) {
                         return headers[i][name];
                     }
@@ -55,14 +54,12 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
                     return '<p>' + content + '</p>';
                 }
                 return '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">' + content + '</p>';
-
             },
             lnk = function (to, mailto) {
                 if (mailto) {
                     return '<a href="mailto:' + to + '" style="color: #15C;">' + to + '</a>';
                 }
                 return '<a href=' + to + ' " style="color: #15C;">' + to + '</a>';
-
             };
 
         if (data.user) {
@@ -70,7 +67,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         }
 
         if (err || data.err) {
-            logger.error('Error processing received email', '/sparkpost/email', err || data.err, relay_message);
+            logger.error('Error processing received email', '/sparkpost/email', err || data.err, relayMessage);
 
             if (err) {
                 html += par('An unexpected error occurred which prevented us from acknowledging this alarm. An error log is attached which you can forward to ' + lnk('engineering@dorsett-tech.com', true) + ' for support. We apologize for the error.');
@@ -82,7 +79,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
                         siteName: infoscanConfig.location.site,
                         serverName: serverName,
                         timestamp: new Date().toString(),
-                        relay_message: relay_message,
+                        relayMessage: relayMessage,
                         error: err
                     })
                 }];
@@ -99,7 +96,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             // Add our sig
             html += par('Thanks,<br />Your Dorsett Technologies InfoScan Team<br /><br />');
             // Quote the original email
-            html += par('<hr>' + relay_message.content.html, true);
+            html += par('<hr>' + relayMessage.content.html, true);
 
             msgId = getHeader('Message-ID');
             references = getHeader('References');
@@ -113,9 +110,9 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
 
             // The following link was used as the basis for our 'inReplyTo' and 'references' object key values
             // http://wesmorgan.blogspot.com/2012/07/understanding-email-headers-part-ii.html
-            replyObj.to = relay_message.msg_from;
+            replyObj.to = relayMessage.msg_from;
             replyObj.fromAccount = alarmsEmailAccount;
-            replyObj.subject = relay_message.content.subject;
+            replyObj.subject = relayMessage.content.subject;
             replyObj.html = html;
             replyObj.generateTextFromHTML = true;
             replyObj.inReplyTo = msgId;
@@ -126,11 +123,11 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
     });
 
     function getUser(cb) {
-        var data = {},
+        let data = {},
             criteria = {
                 collection: 'Users',
                 query: {
-                    'Contact Info.Value.Value': relay_message.msg_from
+                    'Contact Info.Value.Value': relayMessage.msg_from
                 }
             };
 
@@ -153,7 +150,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         }
 
         // Our alarm id is in the email body sandwiched between 'handlebar' characters
-        var text = relay_message.content.text,
+        let text = relayMessage.content.text,
             criteria = {
                 collection: 'Alarms'
             },
@@ -198,7 +195,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             return cb(null, data);
         }
 
-        var criteria = {
+        let criteria = {
             collection: 'User Groups'
         };
 
@@ -223,7 +220,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             return cb(null, data);
         }
 
-        var userId = data.user._id,
+        let userId = data.user._id,
             security = data.alarm.Security,
             group,
             i, len;
@@ -248,7 +245,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
             return cb(null, data);
         }
 
-        var criteria = {
+        let criteria = {
             ackMethod: 'Email',
             ids: [data.alarm._id],
             username: data.user.username
@@ -263,22 +260,22 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
 
 module.exports = {
     sparkpost: function (data) {
-        var _data = Array.isArray(data) ? data[0] : null,
-            relay_message = _data && _data.msys && _data.msys.relay_message,
-            content = relay_message && relay_message.content,
+        let _data = Array.isArray(data) ? data[0] : null,
+            relayMessage = _data && _data.msys && _data.msys.relayMessage,
+            content = relayMessage && relayMessage.content,
             to = content && content.to[0],
             handler = to && emailHandler[to];
 
         // If we have a handler for this 'mailbox'
         if (!!handler) {
-            handler(relay_message);
+            handler(relayMessage);
         }
     },
     twilio: {
         voice: {
             alarms: {
                 answer: function (data, callback) {
-                    var sid = data && data.CallSid;
+                    let sid = data && data.CallSid;
 
                     if (!sid) {
                         return done({
@@ -294,7 +291,7 @@ module.exports = {
 
                     // Waterfall functions
                     function getNotifyLog(cb) {
-                        var info = {},
+                        let info = {},
                             criteria = {
                                 collection: 'NotifyLogs',
                                 query: {
@@ -320,7 +317,7 @@ module.exports = {
                             return cb(null, info);
                         }
 
-                        var criteria = {
+                        let criteria = {
                             collection: 'Alarms',
                             query: {
                                 _id: ObjectID(info.notifyLog.alarmId)
@@ -341,7 +338,7 @@ module.exports = {
                     }
 
                     function done(err, info) {
-                        var ackIsAllowed,
+                        let ackIsAllowed,
                             digits = data && data.Digits,
                             human = data && (data.AnsweredBy === 'human'),
                             alarmClassText = info.alarm && revEnums['Alarm Classes'][info.alarm.almClass],
@@ -349,7 +346,6 @@ module.exports = {
                             alarmNotAcknowledged = info.alarm && (info.alarm.ackStatus === ackStatuses['Not Acknowledged'].enum),
                             xml = '<?xml version="1.0" encoding="UTF-8"?>',
                             numberRepeats = 3,
-                            ackedBy,
                             criteria,
                             getAorAn = function (text) {
                                 return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an' : 'a';
@@ -358,13 +354,13 @@ module.exports = {
                                 return '<Say voice="alice">' + text + '</Say>';
                             },
                             pause = function (length) {
-                                var _length = length > 0 ? length : 1;
+                                let _length = length > 0 ? length : 1;
                                 return '<Pause length="' + _length + '"/>';
                             },
                             // Not using the below function, but keeping in case we ever need to build
                             // verbs into our notify message
                             // getMessageXML = function (msg) {
-                            //  var variables = {
+                            //  let letiables = {
                             //          '{Pause}': pause(1)
                             //      },
                             //      msgXML = '',
@@ -381,7 +377,7 @@ module.exports = {
                             //          msgXML += say(str);
                             //          j = msg.indexOf('}', i);
                             //          if (!!~j) {
-                            //              msgXML += variables[msg.slice(i, j+1)];
+                            //              msgXML += letiables[msg.slice(i, j+1)];
                             //              i = j;
                             //          }
                             //          str = '';
@@ -401,7 +397,7 @@ module.exports = {
                         xml += '<Response>';
 
                         if (err || info.err) {
-                            logger.error('Error processing post request', '/twilio/voice/alarms/answer', err || info.err, req);
+                            logger.error('Error processing post request', '/twilio/voice/alarms/answer', err || info.err);
 
                             if (digits) { // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
                                 xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time.');
@@ -412,10 +408,9 @@ module.exports = {
 
                             xml += '</Response>';
                             sendResponse();
-                        }
-                        // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
-                        // We fall into this case if user supplied the correct acknowledgement digit or if they didn't but the alarm has already been acknowledged by someone else during the call
-                        else if (digits && ((digits === '1') || alarmIsAcknowledged)) {
+                        } else if (digits && ((digits === '1') || alarmIsAcknowledged)) {
+                            // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
+                            // We fall into this case if user supplied the correct acknowledgement digit or if they didn't but the alarm has already been acknowledged by someone else during the call
                             if (alarmIsAcknowledged) {
                                 xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser + '.');
                                 xml += say('Thank you and goodbye.');
@@ -429,7 +424,7 @@ module.exports = {
                                     username: info.notifyLog.username
                                 };
 
-                                alarmUtility.acknowledgeAlarm(criteria, function (err, result) {
+                                alarmUtility.acknowledgeAlarm(criteria, function (err) {
                                     if (err) {
                                         xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
                                     } else {
@@ -449,9 +444,9 @@ module.exports = {
                             if (digits) {
                                 xml += say(digits.split('').join(' ') + ' is an unrecognized input.');
                             } else if (info.alarm.almClass === alarmClasses.Normal.enum) {
-                                xml += say("Hello, this is a message from info-scan.");
+                                xml += say('Hello, this is a message from info-scan.');
                             } else {
-                                xml += say("Hello, this is " + getAorAn(alarmClassText) + " " + alarmClassText + " message from info-scan.");
+                                xml += say('Hello, this is ' + getAorAn(alarmClassText) + ' ' + alarmClassText + ' message from info-scan.');
                             }
 
                             if (human) {
@@ -490,7 +485,7 @@ module.exports = {
                     }
                 },
                 status: function (data) {
-                    var sid = data && data.CallSid,
+                    let sid = data && data.CallSid,
                         criteria;
 
                     if (sid) {
@@ -505,7 +500,7 @@ module.exports = {
                                 }
                             }
                         };
-                        utility.update(criteria, function (err, result) {
+                        utility.update(criteria, function (err) {
                             if (err) {
                                 logger.error('/twilio/voice/alarms/status', err);
                             }

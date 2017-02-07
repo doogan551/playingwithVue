@@ -1,4 +1,5 @@
-const Utility = require('../models/utility');
+const Utility = require('./utility');
+const Common = new(require('./common'))();
 const utils = require('../helpers/utils');
 const activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
@@ -23,18 +24,6 @@ let ActivityLog = class ActivityLog extends Model {
             insertObj: logData
         };
         Utility.insert(criteria, cb);
-    }
-
-    addNamesToQuery(data, query, segment) {
-        if (!!data.hasOwnProperty(segment)) {
-            if (data[segment] !== null) {
-                query[segment] = new RegExp('^' + data[segment], 'i');
-            } else {
-                query[segment] = '';
-            }
-        } else {
-            query[segment] = '';
-        }
     }
 
     get(data, cb) {
@@ -69,10 +58,10 @@ let ActivityLog = class ActivityLog extends Model {
             }]
         };
 
-        this.addNamesToQuery(data, query, 'name1');
-        this.addNamesToQuery(data, query, 'name2');
-        this.addNamesToQuery(data, query, 'name3');
-        this.addNamesToQuery(data, query, 'name4');
+        Common.addNamesToQuery(data, query, 'name1');
+        Common.addNamesToQuery(data, query, 'name2');
+        Common.addNamesToQuery(data, query, 'name3');
+        Common.addNamesToQuery(data, query, 'name4');
 
         /** @type {Array} Point Type enums */
         if (data.pointTypes) {
