@@ -446,25 +446,6 @@ function setupDevCollection(callback) {
 	}, callback);
 }
 
-function setupReportsCollections(db, callback) {
-	var canned = importconfig.cannedReports,
-		templates = importconfig.reportTemplates;
-
-	async.forEachSeries(canned, function(predefined, cb) {
-		db.collection("CannedReports").insert(predefined, function(err, result) {
-			cb(err);
-		});
-	}, function(err) {
-		async.forEachSeries(templates, function(template, cb) {
-			db.collection("ReportTemplates").insert(template, function(err, result) {
-				cb(err);
-			});
-		}, function(err) {
-			callback(err);
-		});
-	});
-}
-
 function setupSystemInfo(db, callback) {
 	var pjson = require('../package.json');
 	var curVersion = pjson.version;

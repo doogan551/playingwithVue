@@ -25,9 +25,6 @@ var reportMainCallback = function(res, err, locals, result) {
           case "Totalizer":
             res.render('reports/index');
             break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
           default:
             res.render("reports/reportErrorNotFound");
             break;
@@ -58,9 +55,6 @@ var scheduledReportCallback = function(res, err, locals, result) {
           case "Totalizer":
             res.render('reports/scheduledReport');
             break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
           default:
             res.render("reports/reportErrorNotFound");
             break;
@@ -263,24 +257,6 @@ router.get('/scheduled/:id', function(req, res, next) {
 
   Reports.reportMain(data, function(err, locals, result) {
     scheduledReportCallback(res, err, locals, result);
-  });
-});
-// NOT CHECKED
-router.get('/cr/pointInvolvement', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.pointInvolvement(data, function(err, locals) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    res.locals = locals;
-    res.render('reports/cannedReports/pointInvolvement');
   });
 });
 
