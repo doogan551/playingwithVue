@@ -267,7 +267,7 @@ html.direports
                                                     // ko if: ($data.canCalculate && !!$data.yaxisGroup)
                                                     .availableAxisGroupsContainer
                                                         .input-field
-                                                            select(data-bind="options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
+                                                            select(data-bind="attr: {disabled: !includeInChart}, options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
                                                             label
                                                     // /ko
                                                 // ko if: ($root.canEdit())
@@ -299,13 +299,49 @@ html.direports
                                                             // /ko
                                                             // ko if: $index() > 0
                                                             // ko if: ($parent.reportType() !== 'Property')
-                                                            div.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
-                                                                // ko if: ($parent.reportType() === 'Totalizer')
-                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
-                                                                // /ko
-                                                                // ko if: ($parent.reportType() === 'History')
-                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
-                                                                // /ko
+                                                            div.card.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
+                                                                .card-content
+                                                                    // ko if: ($parent.reportType() === 'Totalizer')
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
+                                                                    // /ko
+                                                                    // ko if: ($parent.reportType() === 'History')
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
+                                                                    // /ko
+                                                                .card-reveal(style="display: none; transform: translateY(0px)")
+                                                                    .row
+                                                                        label.col.s2 Name:
+                                                                    .row
+                                                                        span.col.s10.columnDisplayName(data-bind="text: colName")
+                                                                    // ko if: ($data.canCalculate)
+                                                                    .row
+                                                                        p(style="display: inline-flex")
+                                                                            label.col.s2 Multiplier:
+                                                                            span.col.s10.multiplier(data-bind="text: multiplier")
+                                                                    // /ko
+                                                                    .row
+                                                                        // ko if: ($root.reportType() === 'Totalizer')
+                                                                        p(style="display: inline-flex")
+                                                                            label.col.s2 Type:
+                                                                            span.col.s10.operator(data-bind="text: operator")
+                                                                        // /ko
+                                                                    .row
+                                                                        // ko if: ($data.canCalculate)
+                                                                        p(style="display: inline-flex")
+                                                                            label.col.s2 Precision:
+                                                                            span.col.s10.precision(data-bind="text: precision")
+                                                                        // /ko
+                                                                    // ko if: ($root.canEdit() && canBeCharted)
+                                                                    .row
+                                                                        p(style="display: inline-flex")
+                                                                            label.col.s2(data-bind="text: 'Chart:', attr: { for: 'cardIncludeInChart_' + $index()}", style="text-align: right;")
+                                                                            input.col.s2.includeInChartColumn.input-md.filled-in(data-bind="checked: $data.includeInChart, enable: false, attr: { id: 'cardIncludeInChart_' + $index()}", type="checkbox")
+                                                                    // /ko
+                                                                    // ko if: ($root.canEdit() && canBeCharted)
+                                                                    .row
+                                                                        p(style="display: inline-flex")
+                                                                            label.col.s2 Group:
+                                                                            span.col.s10.yaxisGroup(data-bind="text: yaxisGroup")
+                                                                    // /ko
                                                             // /ko
                                                             // ko if: ($parent.reportType() === 'Property')
                                                             div.columnPropertyNames
@@ -349,10 +385,14 @@ html.direports
                                                 // ko if: $index() === 0
                                                 td
                                                     .globalCalculationsCell
-                                                        ul.globalCalculations(data-bind="$root.listOfCalculations")
+                                                        // ko if: ($data.canCalculate)
+                                                        ul.globalCalculations
+                                                            // ko foreach: $root.listOfCalculations
                                                             li
                                                                 input.medium.filled-in(data-bind="checked: $root.globalcalculateColumnSelectedvalue().indexOf($data) !== -1, click: function () { return $root.globalCalculationClick($element, $data) }, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
                                                                 label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                            // /ko
+                                                        // /ko
                                                 // /ko
                                                 // ko if: $index() > 0
                                                 // ko if: ($root.listOfCalculations().length > 0)
@@ -548,7 +588,6 @@ html.direports
     include popoverColumnSettings
     include modals/dialogScreens
     include modals/dialogEditColumn
-    include modals/dialogViewColumn
     include modals/dialogGlobalFieldsEditColumn
 
     script#scheduleModalTemplate(type='text/html')
