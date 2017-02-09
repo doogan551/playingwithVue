@@ -1388,6 +1388,8 @@ var reportsViewModel = function () {
         $pointSelectorIframe,
         longClickStart,
         longClickTimer = 100,
+        mouseHoverStart,
+        mouseHoverTimer = 800,
         reportData,
         reportChartData,
         activeDataRequests,
@@ -3595,10 +3597,10 @@ var reportsViewModel = function () {
                     $dataTablePlaceHolder.on("click", ".pointInstance", function () {
                         var $this = $(this),
                             data = {
-                            upi: $this.attr("upi"),
-                            pointType: $this.attr("pointType"),
-                            pointName: $this.text()
-                        };
+                                upi: $this.attr("upi"),
+                                pointType: $this.attr("pointType"),
+                                pointName: $this.text()
+                            };
 
                         self.showPointReview(data);
                     });
@@ -6948,7 +6950,10 @@ var reportsViewModel = function () {
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        // $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        setTimeout(function () {
+            $tabViewReport.find('ul.tabs').find("." + subTabName + " a").click();
+        }, 400);
     };
 
     self.editColumn = function (column, index) {
@@ -6970,19 +6975,36 @@ var reportsViewModel = function () {
     };
 
     self.showColumnSettings = function (element, column) {
-        var $card = $(element),
-            $cardReveal = $card.find(".card-reveal"),
-            delay = 750,
-            setTimeoutConst;
-        self.currentColumnEdit(column);
-        $cardReveal.css("display", "block").css("transform", "translateY(-100%)");
-        return true;
+        var $element = $(element),
+            $card = $element.parent(),
+            $cardReveal = $card.find(".card-reveal");
+
+        mouseHoverStart = moment();
+        setTimeout(function () {
+            if (moment().diff(mouseHoverStart) > mouseHoverTimer) {
+                self.currentColumnEdit(column);
+                $cardReveal
+                    .css("display", "block")
+                    .css("transform", "translateY(-100%)")
+                    .css("top", $card.height() + 280);
+
+                $cardReveal.width(column.colName.length * 8);
+
+                setTimeout(function () {
+                    Materialize.updateTextFields();
+                }, 200);
+            }
+        }, mouseHoverTimer + 10);
+
+        return false;
     };
 
     self.hideColumnSettings = function (element) {
-        var $card = $(element),
+        var $element = $(element),
+            $card = $element.parent(),
             $cardReveal = $card.find(".card-reveal");
         $cardReveal.css("display", "none").css("transform", "translateY(0px)");
+        mouseHoverStart = moment();
         // self.currentColumnEdit({});
         return true;
     };
