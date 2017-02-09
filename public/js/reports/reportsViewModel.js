@@ -1274,61 +1274,33 @@ var initKnockout = function () {
             var $element = $(element),
                 $select = $element.children('select'),
                 config = valueAccessor(),
-                list = (!!config ? config.options() : []),
-                notifier = (!!config ? config.notifier : null),
-                hideEvent = (!!config ? config.hideEvent : null),
                 $liList;
 
-            $select.addClass('select-processed');
-
-            dti.forEachArray(list, function addItemToSelect(item) {
-                $select.append($('<option>', {
-                        value: item.key(),
-                        selected: true
-                    })
-                        .text(item.key())
-                );
-            });
             // Initial initialization:
+            $element.material_select();
+
             $select.material_select({
                 belowOrigin: true,
                 showCount: true,
                 countSuffix: 'Types'
             });
 
-            $liList = $element.find('li');
-
-            dti.forEachArray(list, function syncDropdownStatus(item, idx) {
-                if (item.selected() && item.visible()) {
-                    $($liList[idx]).addClass('active');
-                    $($liList[idx]).find('input').prop('checked', true);
-                }
-            });
-
-            // Find the "options" sub-binding:
-            var boundValue = valueAccessor();
-
-            // Register a callback for when "options" changes:
-            // boundValue.options.subscribe(function () {
-            //     $select.material_select();
-            // });
-
             $select.on('change', function handleMaterialSelectChange(event, target) {
                 var $target = $(target),
                     index = $target.index(),
                     selected = $target.hasClass('active');
 
-                if (!target.skipNofity) {
-                    notifier();
+            });
 
-                    list[index].selected(selected);
+            $element.on('change', function handleMaterialSelectChange(event, target) {
+                var $target = $(event.target);
+
+                if ($target[0].value === "Starts") {
+                    viewModel.precision = 0;
+                    bindingContext.$data.precision = 0;
+                    // console.log("bindingContext = " + bindingContext);
                 }
             });
-
-            $select.siblings('input.select-dropdown').on('close', function doHide() {
-                hideEvent();
-            });
-
         }
     };
 
@@ -1390,7 +1362,6 @@ var reportsViewModel = function () {
         $rightPanel,
         $spinnertext,
         $editColumnModal,
-        $viewColumnModal,
         $viewReportNav,
         $globalEditColumnModal,
         $columnsGrid,
@@ -2872,7 +2843,6 @@ var reportsViewModel = function () {
         getScreenFields = function () {
             $direports = $(document).find(".direports");
             $editColumnModal = $direports.find("#editColumnModal");
-            $viewColumnModal = $direports.find("#viewColumnModal");
             $globalEditColumnModal = $direports.find("#globalEditColumnModal");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
@@ -6981,48 +6951,38 @@ var reportsViewModel = function () {
         $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
     };
 
-    self.materialDropdownClick = function (element) {
-        var $element = $(element),
-            forElementId = $element.attr("data-activates"),
-            $availableAxisGroupsContainer = $element.parent(),
-            $forElement = $availableAxisGroupsContainer.find("#" + forElementId);
-
-        if ($forElement.hasClass("active")) {
-            $element.removeClass("active");
-            $forElement.removeClass("active");
-            $forElement.css("display", "none");
-            $forElement.css("opacity", 0);
-            // $element.dropdown('close');
-        } else {
-            $element.addClass("active");
-            $forElement.addClass("active");
-            $forElement.css("display", "block");
-            $forElement.css("opacity", 1);
-            // $element.dropdown('open');
-        }
-
-        return true;
-    };
-
     self.editColumn = function (column, index) {
         self.currentColumnEdit($.extend(true, {}, column));
         self.currentColumnEditIndex(index);
         $editColumnModal.openModal();
+        setTimeout(function () {
+            Materialize.updateTextFields();
+        }, 200);
         return true;
     };
 
     self.globalEditColumnFields = function () {
         $globalEditColumnModal.openModal();
+        setTimeout(function () {
+            Materialize.updateTextFields();
+        }, 200);
+        return true;
     };
 
     self.showColumnSettings = function (element, column) {
+        var $card = $(element),
+            $cardReveal = $card.find(".card-reveal"),
+            delay = 750,
+            setTimeoutConst;
         self.currentColumnEdit(column);
-        //$viewColumnModal.modal("show");
+        $cardReveal.css("display", "block").css("transform", "translateY(-100%)");
         return true;
     };
 
     self.hideColumnSettings = function (element) {
-        //$viewColumnModal.modal("hide");
+        var $card = $(element),
+            $cardReveal = $card.find(".card-reveal");
+        $cardReveal.css("display", "none").css("transform", "translateY(0px)");
         // self.currentColumnEdit({});
         return true;
     };

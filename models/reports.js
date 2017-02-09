@@ -1187,29 +1187,6 @@ module.exports = Rpt = {
         }
         return concatJSON;
     },
-    pointInvolvement: function(data, cb) {
-        var criteria = {
-            query: {
-                "Name": "Point Involvement"
-            },
-            collection: 'CannedReports'
-        };
-
-        Utility.getOne(criteria, function(err, result) {
-            if (err) {
-                return cb(err);
-            } else {
-
-                return cb(null, {
-                    id: result._id,
-                    isOld: true,
-                    point: JSON.stringify(result),
-                    title: result.Name
-                });
-
-            }
-        });
-    },
     totalizerReport: function(data, cb) {
         //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
         var points = data.upis;

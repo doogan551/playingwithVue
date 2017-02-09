@@ -1416,7 +1416,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     _doFormatPoint: function (args, cb) {
-        if (args.point && args.property !== "Monitor Point" && args.property !== "Control Point") {
+        if (args.point && !!args.property) {
             var tmpData = gpl.formatPoint(args),
                 self = this;
 
@@ -1447,7 +1447,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     "use strict";
                     var answer;
 
-                    if (!(self.blockType !== 'output' && anchor.anchorType === 'Control Point')) {
+                    if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
                         if (!!otherBlock) {
                             answer = otherBlock.getPointData();
                         }
@@ -1458,7 +1458,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 args = {
                     point: newData || self.getPointData(),
                     oldPoint: self._origPointData,
-                    property: self.blockType === 'output' ? otherEnd.anchorType : anchor.anchorType,
+                    property: self.blockType.toLowerCase() === 'output' ? otherEnd.anchorType : anchor.anchorType,
                     refPoint: getRefPoint()
                 };
 

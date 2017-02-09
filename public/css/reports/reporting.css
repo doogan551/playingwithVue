@@ -259,6 +259,10 @@ input.intervalValue {
 .globalCalculations {
     list-style-type: none;
 }
+.globalCalculationsCell {
+    width: 87px;
+    padding-top: 15px;
+}
 .entries.dropdown-content {
     width: 130px;
     min-width: 70px;
@@ -270,9 +274,6 @@ input.intervalValue {
     padding-bottom: 12px;
 }
 .calculations.dropdown-content li {
-    min-height: 10px;
-}
-.availableAxisGroupsContainer .dropdown-content li {
     min-height: 10px;
 }
 .chartTypeSelection {
@@ -650,24 +651,10 @@ td.firstColumn.datetime {
 }
 .availableTotalizerOperatorsContainer {
     height: 25px;
+    width: 90px;
 }
-.availableTotalizerOperatorsContainer a {
-    width: 80px;
-    padding: 0px;
-}
-.availableTotalizerOperatorsContainer li a {
-    width: 78px;
-}
-.availableTotalizerOperatorsContainer a .text {
-}
-.availableAxisGroupsContainer a {
-    width: 31px;
-    padding: 0px;
-    height: 25px;
-    line-height: 26px;
-}
-.availableAxisGroupsContainer a .text {
-    margin-left: 2px;
+.availableAxisGroupsContainer {
+    width: 35px;
 }
 .availableAxisGroupsContainer ul.dropdown-content {
     cursor: pointer;
@@ -689,23 +676,54 @@ td.firstColumn.datetime {
     margin-left: 11px;
     margin-top: -10px;
 }
-.availableGlobalAxisGroupsContainer {
+.gridColumnConfigTable .columnNames .card-reveal {
+    top: 360px !important;
+    height: 320px !important;
+    width: 230px;
+    border-bottom-left-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    color: #7babca !important;
+    box-shadow: 10px 10px 5px #888888;
 }
-.availableGlobalAxisGroupsContainer a.dropdown-button {
-    width: 30px;
-    padding-left: 10px;
-    border-radius: 8px;
+.gridColumnConfigTable .columnNames .card-reveal .row {
+    padding: 0px;
+    margin-bottom: 0px !important;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row p {
+    height: 7px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row label {
+    margin-left: -20px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.multiplier {
+    margin-left: 50px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.operator {
+    margin-left: 20px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.precision {
+    margin-left: 45px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.precision {
+    margin-left: 45px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.yaxisGroup {
+    margin-left: 30px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row [type="checkbox"]:not(:checked), [type="checkbox"]:checked {
+    margin-left: 35px !important;
+    box-sizing: border-box;
+    padding: 0;
+    opacity: 1;
+}
+.availableGlobalAxisGroupsContainer {
+    width: 35px;
 }
 .availableGlobalAxisGroupsContainer ul.dropdown-content {
-    width: 33px;
-    min-width: 8px;
-    margin-left: 7px;
-    margin-top: -5px;
+    cursor: pointer;
+    width: 50px !important;
+    min-width: 30px !important;
 }
-.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
-    padding: 0px;
-}
-
 .filterPointName {
     display: inline-block;
     margin-left: 4px;
@@ -721,10 +739,6 @@ td.firstColumn.datetime {
 }
 .availablePropertiesContainer {
     display: inline-block;
-}
-.availableAxisGroupsContainer button.btn.btn-default.dropdown-button {
-    width: 35px;
-    padding: 6px 2px;
 }
 a.btn.dropdown-button {
     text-transform: none;
@@ -752,10 +766,6 @@ a.btn.dropdown-button.propertySelectForColumn {
 .inputMultiplier::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
-}
-input.form-control.inputPrecision {
-    width: 30px;
-    padding: 2px 2px 2px 5px;
 }
 .precisionColumn:hover {
     cursor: pointer;
@@ -825,6 +835,11 @@ input.form-control.globalIncludeInChart {
     margin-left: 6px;
     width: 215px;
 }
+input.form-control.gridColumnDisplayName {
+    width: 281px;
+    padding-bottom: 4px;
+    height: 2rem;
+}
 input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
@@ -845,10 +860,21 @@ input.form-control.inputMultiplier:focus {
     border-bottom: 1px solid #607d8b;
     box-shadow: 0 1px 0 0 #607d8b;
 }
+input.form-control.gridInputPrecision {
+    /*padding-top: 7px;*/
+    /*padding-bottom: 4px;*/
+    height: 2rem;
+    width: 30px;
+    padding: 2px 2px 2px 5px;
+}
+input.form-control.gridInputPrecision:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
 input.form-control.inputPrecision {
-    padding-top: 7px;
-    padding-bottom: 4px;
     height: 1rem;
+    width: 30px;
+    padding: 7px 2px 4px 5px;
 }
 input.form-control.inputPrecision:focus {
     border-bottom: 1px solid #607d8b;
@@ -956,15 +982,47 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .gridColumnConfigTable .columnItem.globalConfigCell {
     display: block;
 }
+#editColumnModal .modal .modal-content {
+    /*padding-top: 4px;*/
+    /*padding-bottom: 4px;*/
+}
 #editColumnModal .headerInfo {
     background-color: #f1f1f1;
-    padding: 6px;
+    padding: 1px;
     border-radius: 4px;
+}
+#editColumnModal .row {
+    margin-bottom: 0px;
+}
+#editColumnModal .row .precision {
+    margin-top: 26px;
+    margin-left: 100px;
+}
+#editColumnModal .row .includeInChart {
+    margin-top: 14px;
+    margin-left: 12px;
+}
+#editColumnModal .row .includeInChart label {
+    margin-left: -10px;
+}
+#editColumnModal .row .yaxisChartGroup {
+    margin-top: 15px;
+    margin-left: 144px;
+}
+#editColumnModal .row [type="checkbox"]:not(:checked), [type="checkbox"]:checked {
+    margin-top: -15px;
 }
 #globalEditColumnModal .headerInfo {
     background-color: #f1f1f1;
     padding: 6px;
     border-radius: 4px;
+}
+#globalEditColumnModal .row {
+    margin-bottom: 0px;
+}
+
+#globalEditColumnModal .row .yaxisChartGroup {
+    margin-left: 30px;
 }
 .gridColumnConfigTable > thead > tr > th {
     border-top: 1px solid #CCC !important;
