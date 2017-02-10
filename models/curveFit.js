@@ -9,57 +9,226 @@ let CurveFit = class CurveFit {
         let data = _data.data;
 
         if (type === 'Cubic') {
-            polyFit(data, cb);
+            this.polyFit(data, cb);
             //CubicFit(data, callback);
         } else if (type === 'Linear') {
-            LinearFit(data, cb);
+            this.LinearFit(data, cb);
         } else if (type === 'Flow') {
-            FlowFit(data, cb);
+            this.FlowFit(data, cb);
         } else {
             cb({
                 err: 'bad type'
             });
         }
     }
+
+    polyFit(data, callback) {
+        let values = [],
+            degree = data.degree,
+            highTemp = data.highTemp,
+            lowTemp = data.lowTemp,
+            sensorType = data.sensorType;
+        let coeff = [0, 0, 0, 0];
+        if (degree === 'Cubic') {
+            degree = 3;
+        } else if (degree === 'Quadratic') {
+            degree = 2;
+        }
+
+        // fill x,y and count from rtdtable using high and low temp with sensor
+
+        if (rtdTables.hasOwnProperty(sensorType)) {
+            for (let i = 0; i < rtdTables[sensorType].length; i++) {
+                if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
+                    values.push([rtdTables[sensorType][i].R, rtdTables[sensorType][i].T]);
+                }
+            }
+        }
+
+        let result = reg('polynomial', values, degree);
+
+        coeff = result.equation;
+
+        callback({
+            coeffs: coeff
+        });
+    }
+
+    //------------------------------------------------------------------------------
+    //     LinearFit(=> )
+    // Description: This calculates a linear conversio=> n
+    //  Parameters: volt_type  - 0 is Current, 1 is Voltage, 2 is time in seconds
+    //              inputConv - true if conversion is for input, false for output
+    //              lvolts     - Low electrical value (volts, amps, ohms, or seconds)
+    //              hvolts     - High electrical value
+    //              low        - Low engineering units
+    //              high       - High engineering units
+    //              resistor   - Resistance for current in Ohms
+    //              max_counts - Absolute Maximum counts for conversion (4095, 1023, 255)
+    //              c          - Pointer to array of 2 floats to store results. First
+    //                            float gets offset, 2nd one gets slope
+    //     Returns: void
+    // Rev.  0  11-6-98  RWC  Original Issue
+    //------------------------------------------------------------------------------
+    LinearFit(data, callback) {
+        let inputConv = data.input_conv,
+            lvolts = data.lvolts,
+            hvolts = data.hvolts,
+            low = data.low,
+            high = data.high,
+            c = data.c,
+            offset, fhiCount, floCount, oa, ob, slope;
+
+        // Calculate high and low count range. Pulse width requires no calculation
+
+        fhiCount = hvolts;
+        floCount = lvolts;
+
+        /* Calculate slope and offset for linear EU vs counts equation */
+        if (fhiCount !== floCount) {
+            slope = (high - low) / (fhiCount - floCount);
+        } else {
+            slope = 0.0;
+        }
+
+        offset = low - slope * floCount; // check OOO
+
+        /* Get reverse conversion coefficients */
+        if (slope !== 0.0) {
+            oa = -offset / slope;
+            ob = 1.0 / slope;
+        } else {
+            oa = ob = 0.0;
+        }
+
+
+        /* Store conversion coefficients */
+        if (inputConv) {
+            c[0] = offset;
+            c[1] = slope;
+        } else {
+            c[0] = oa;
+            c[1] = ob;
+        }
+
+
+        callback({
+            coeffs: c
+        });
+    }
+
+    //------------------------------------------------------------------------------
+    //     FlowFit(=> )
+    // Description: This takes the linear conversion coefficients for => a
+    //               linear velocity sensor or velocity pressure sensor and
+    //               calculates the coefficients for a infoscan square root
+    //               conversion that computes the volumetric flow. For the linear
+    //               velocity sensor, the duct/pipe geometry and dimensions must be
+    //               supplied. For velocity pressure sensors, a pressure reading
+    //               and the corresponding flow must be supplied.
+    //
+    //  Parameters: lvSensor  - True for linear velocity sensor. False for velocity
+    //                            pressure sensor
+    //              geometry   - eRectangular for rect or square. p1 and p2 will
+    //                            supply length and width.
+    //                           eCircular for a round duct/pipe. p1 will supply
+    //                            diameter
+    //                           eCustom for irregular geometries. p1 will supply
+    //                            cross sectional area of conveyance
+    //              p1         - if lvSensor, supplies parameter indicated in
+    //                            geometry. if !lvSensor, supplies pressure point
+    //              p2         - if lvSensor, supplies parameter indicated in
+    //                            geometry. if !lvSensor, supplies flow at pressure
+    //                            point.
+    //              c          - Pointer to array of 4 floats to store results. On
+    //                            entry, c[0] should be linear conversion offset and
+    //                            c[1] should be linear conversion gain. On exit,
+    //                            c[0], c[1], c[2], and c[3] contain calculated
+    //                            coefficients for flow conversion
+    //     Returns: void
+    // Rev.  0  11-9-98  RWC  Original Issue
+    //------------------------------------------------------------------------------
+    FlowFit(data, callback) {
+        let lvSensor = data.lv_sensor,
+            sensorRef = data.sensorRef,
+            area = data.area,
+            p1 = data.p1,
+            p2 = data.p2,
+            c = [],
+            ia, ib, ic; // temp coefficients for flow calcs
+
+        Utility.getOne({
+            collection: 'points',
+            query: {
+                _id: sensorRef.Value
+            }
+        }, (err, sensor) => {
+            if (err) {
+                return callback({
+                    err: err
+                });
+            }
+
+            c[0] = sensor['Conversion Coefficient 1'].Value;
+            c[1] = sensor['Conversion Coefficient 2'].Value;
+            c[2] = c[3] = 0.0;
+
+            if (lvSensor) {
+                // Compute area from parameters
+
+
+                c[0] *= area;
+                c[1] *= area;
+                c[2] *= area;
+                c[3] *= area;
+            } else {
+                ///////////////////////////////////////////////////////////////////
+                // Convert the default DP conversion to a CFM conversion for a
+                // given installation. Get data entry from user which gives the
+                // DP and the corresponding CFM level for a known point on the
+                // curve. These values are substituted back into the flow
+                // equation to solve for the conversion coefficients. The
+                // resulting conversion is of the form y = A Sqrt( B + Cx )
+                // where the conversion coefficients absorb flow equation
+                // constants and cross sectional area. The flow equation is:
+                //
+                //    Flow = 4005 A Sqrt( Pv / K )
+                //    where A = Cross sectional area
+                //          Pv= Velocity Pressure (differential pressure)
+                //          K = Flow constant for the box
+                //
+                // Calculations make use of the fact that Pv is a linear
+                // equation in counts.
+
+
+                /* Calculate the input coefficients for the velocity equation */
+                if (p1 !== 0.0) {
+                    ia = 1.0;
+                    ib = (c[0] / p1) * p2 * p2;
+                    ic = (c[1] / p1) * p2 * p2;
+                } else {
+                    ia = ib = ic = 0;
+                }
+
+                c[0] = ia;
+                c[1] = ib;
+                c[2] = ic;
+                c[3] = 0.0;
+            }
+
+            callback({
+                coeffs: c
+            });
+        });
+    }
 };
 
 module.exports = CurveFit;
 
-let polyFit = function (data, callback) {
-    let values = [],
-        degree = data.degree,
-        highTemp = data.highTemp,
-        lowTemp = data.lowTemp,
-        sensorType = data.sensorType;
-    let coeff = [0, 0, 0, 0];
-    if (degree === 'Cubic') {
-        degree = 3;
-    } else if (degree === 'Quadratic') {
-        degree = 2;
-    }
-
-    // fill x,y and count from rtdtable using high and low temp with sensor
-
-    if (rtdTables.hasOwnProperty(sensorType)) {
-        for (let i = 0; i < rtdTables[sensorType].length; i++) {
-            if (lowTemp <= rtdTables[sensorType][i].T && highTemp >= rtdTables[sensorType][i].T) {
-                values.push([rtdTables[sensorType][i].R, rtdTables[sensorType][i].T]);
-            }
-        }
-    }
-
-    let result = reg('polynomial', values, degree);
-
-    coeff = result.equation;
-
-    callback({
-        coeffs: coeff
-    });
-};
 
 //------------------------------------------------------------------------------
-//    Function: cubicFit()
-// Description: This function performs a cubic curve fit.
+//     cubicFit(=> )
+// Description: This performs a cubic curve fit=> .
 //  Parameters: int  degree   - Degree of desired curve fit
 //              int  count    - Number of values
 //              float x[64]    - Independent letiable values
@@ -71,7 +240,7 @@ let polyFit = function (data, callback) {
 // Rev.  0  09-18-97  LMH  Original Issue
 //------------------------------------------------------------------------------
 
-// let CubicFit = function (data, callback) {
+// let CubicFit = (data, callback) => {
 //     let degree = data.degree,
 //         highTemp = data.highTemp,
 //         lowTemp = data.lowTemp,
@@ -196,175 +365,8 @@ let polyFit = function (data, callback) {
 //     });
 // };
 
-//------------------------------------------------------------------------------
-//    Function: LinearFit()
-// Description: This function calculates a linear conversion
-//  Parameters: volt_type  - 0 is Current, 1 is Voltage, 2 is time in seconds
-//              inputConv - true if conversion is for input, false for output
-//              lvolts     - Low electrical value (volts, amps, ohms, or seconds)
-//              hvolts     - High electrical value
-//              low        - Low engineering units
-//              high       - High engineering units
-//              resistor   - Resistance for current in Ohms
-//              max_counts - Absolute Maximum counts for conversion (4095, 1023, 255)
-//              c          - Pointer to array of 2 floats to store results. First
-//                            float gets offset, 2nd one gets slope
-//     Returns: void
-// Rev.  0  11-6-98  RWC  Original Issue
-//------------------------------------------------------------------------------
-let LinearFit = function (data, callback) {
-    let inputConv = data.input_conv,
-        lvolts = data.lvolts,
-        hvolts = data.hvolts,
-        low = data.low,
-        high = data.high,
-        c = data.c,
-        offset, fhiCount, floCount, oa, ob, slope;
 
-    // Calculate high and low count range. Pulse width requires no calculation
-
-    fhiCount = hvolts;
-    floCount = lvolts;
-
-    /* Calculate slope and offset for linear EU vs counts equation */
-    if (fhiCount !== floCount) {
-        slope = (high - low) / (fhiCount - floCount);
-    } else {
-        slope = 0.0;
-    }
-
-    offset = low - slope * floCount; // check OOO
-
-    /* Get reverse conversion coefficients */
-    if (slope !== 0.0) {
-        oa = -offset / slope;
-        ob = 1.0 / slope;
-    } else {
-        oa = ob = 0.0;
-    }
-
-
-    /* Store conversion coefficients */
-    if (inputConv) {
-        c[0] = offset;
-        c[1] = slope;
-    } else {
-        c[0] = oa;
-        c[1] = ob;
-    }
-
-
-    callback({
-        coeffs: c
-    });
-};
-
-//------------------------------------------------------------------------------
-//    Function: FlowFit()
-// Description: This function takes the linear conversion coefficients for a
-//               linear velocity sensor or velocity pressure sensor and
-//               calculates the coefficients for a infoscan square root
-//               conversion that computes the volumetric flow. For the linear
-//               velocity sensor, the duct/pipe geometry and dimensions must be
-//               supplied. For velocity pressure sensors, a pressure reading
-//               and the corresponding flow must be supplied.
-//
-//  Parameters: lvSensor  - True for linear velocity sensor. False for velocity
-//                            pressure sensor
-//              geometry   - eRectangular for rect or square. p1 and p2 will
-//                            supply length and width.
-//                           eCircular for a round duct/pipe. p1 will supply
-//                            diameter
-//                           eCustom for irregular geometries. p1 will supply
-//                            cross sectional area of conveyance
-//              p1         - if lvSensor, supplies parameter indicated in
-//                            geometry. if !lvSensor, supplies pressure point
-//              p2         - if lvSensor, supplies parameter indicated in
-//                            geometry. if !lvSensor, supplies flow at pressure
-//                            point.
-//              c          - Pointer to array of 4 floats to store results. On
-//                            entry, c[0] should be linear conversion offset and
-//                            c[1] should be linear conversion gain. On exit,
-//                            c[0], c[1], c[2], and c[3] contain calculated
-//                            coefficients for flow conversion
-//     Returns: void
-// Rev.  0  11-9-98  RWC  Original Issue
-//------------------------------------------------------------------------------
-let FlowFit = function (data, callback) {
-    let lvSensor = data.lv_sensor,
-        sensorRef = data.sensorRef,
-        area = data.area,
-        p1 = data.p1,
-        p2 = data.p2,
-        c = [],
-        ia, ib, ic; // temp coefficients for flow calcs
-
-    Utility.getOne({
-        collection: 'points',
-        query: {
-            _id: sensorRef.Value
-        }
-    }, function (err, sensor) {
-        if (err) {
-            return callback({
-                err: err
-            });
-        }
-
-        c[0] = sensor['Conversion Coefficient 1'].Value;
-        c[1] = sensor['Conversion Coefficient 2'].Value;
-        c[2] = c[3] = 0.0;
-
-        if (lvSensor) {
-            // Compute area from parameters
-
-
-            c[0] *= area;
-            c[1] *= area;
-            c[2] *= area;
-            c[3] *= area;
-        } else {
-            ///////////////////////////////////////////////////////////////////
-            // Convert the default DP conversion to a CFM conversion for a
-            // given installation. Get data entry from user which gives the
-            // DP and the corresponding CFM level for a known point on the
-            // curve. These values are substituted back into the flow
-            // equation to solve for the conversion coefficients. The
-            // resulting conversion is of the form y = A Sqrt( B + Cx )
-            // where the conversion coefficients absorb flow equation
-            // constants and cross sectional area. The flow equation is:
-            //
-            //    Flow = 4005 A Sqrt( Pv / K )
-            //    where A = Cross sectional area
-            //          Pv= Velocity Pressure (differential pressure)
-            //          K = Flow constant for the box
-            //
-            // Calculations make use of the fact that Pv is a linear
-            // equation in counts.
-
-
-            /* Calculate the input coefficients for the velocity equation */
-            if (p1 !== 0.0) {
-                ia = 1.0;
-                ib = (c[0] / p1) * p2 * p2;
-                ic = (c[1] / p1) * p2 * p2;
-            } else {
-                ia = ib = ic = 0;
-            }
-
-            c[0] = ia;
-            c[1] = ib;
-            c[2] = ic;
-            c[3] = 0.0;
-        }
-
-        callback({
-            coeffs: c
-        });
-    });
-};
-
-// let matrixInversion = function (matrix, nterms) {
+// let matrixInversion = (matrix, nterms) => {
 //     let i, j, k, n,
 //         ik = [], // [11]
 //         jk = [], // [11]

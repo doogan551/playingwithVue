@@ -4,11 +4,60 @@ let ObjectId = require('mongodb').ObjectID;
 let Utility = require('../models/utility');
 let Config = require('../public/js/lib/config');
 let utils = require('../helpers/utils');
-let activityLogCollection = utils.CONSTANTS('activityLogCollection');
-let actLogsEnums = Config.Enums['Activity Logs'];
 
-module.exports = {
-    getSystemInfoByName: function (name, cb) {
+let ActivityLog = new(require('./activitylog'))();
+
+let System = class System {
+
+
+    getSeason(data, cb) {
+        let criteria = {
+            query: {
+                Name: 'Preferences'
+            },
+            collection: 'SystemInfo',
+            limit: 1,
+            fields: {
+                _id: 0,
+                'Current Season': 1
+            }
+        };
+
+        Utility.get(criteria, cb);
+    }
+
+    updateSeason(data, cb) {
+        let logData = {
+            user: data.user,
+            timestamp: Date.now()
+        };
+        let season = data['Current Season'];
+        let criteria = {
+            query: {
+                Name: 'Preferences'
+            },
+            updateObj: {
+                $set: {
+                    'Current Season': season
+                }
+            },
+            collection: 'SystemInfo',
+            fields: {
+                _id: 0,
+                'Current Season': 1
+            }
+        };
+
+        Utility.update(criteria, (err) => {
+            logData.activity = 'Season Change';
+            logData.log = 'Season changed to ' + season + '.';
+            ActivityLog.create(logData, (err) => {
+                return cb(null, 'success');
+            });
+        });
+    }
+
+    getSystemInfoByName(name, cb) {
         let criteria = {
             query: {
                 Name: name
@@ -17,8 +66,8 @@ module.exports = {
         };
 
         Utility.getOne(criteria, cb);
-    },
-    getCounts: function (type, cb) {
+    }
+    getCounts(type, cb) {
         let query = {};
         let criteria = {};
 
@@ -31,8 +80,8 @@ module.exports = {
         criteria.collection = 'Alarms';
         criteria.query = query;
         Utility.count(criteria, cb);
-    },
-    updateControlPriorities: function (data, cb) {
+    }
+    updateControlPriorities(data, cb) {
         let searchCriteria = {
             'Name': 'Control Priorities'
         };
@@ -63,18 +112,14 @@ module.exports = {
             let logData = {
                 user: data.user,
                 timestamp: Date.now(),
-                activity: actLogsEnums['Control Priority Labels Edit'].enum,
+                activity: 'Control Priority Labels Edit',
                 log: 'Control priorities edited.'
             };
-            logData = utils.buildActivityLog(logData);
-            Utility.insert({
-                collection: activityLogCollection,
-                insertObj: logData
-            }, function (err) {});
+            ActivityLog.create(logData, () => {});
             return cb(err, result);
         });
-    },
-    getQualityCodes: function (data, cb) {
+    }
+    getQualityCodes(data, cb) {
         let criteria = {
             query: {
                 Name: {
@@ -109,8 +154,8 @@ module.exports = {
 
             return cb(null, returnObj);
         });
-    },
-    updateQualityCodes: function (data, cb) {
+    }
+    updateQualityCodes(data, cb) {
         let codesSearch = {
             'Name': 'Quality Codes'
         };
@@ -163,19 +208,15 @@ module.exports = {
                 let logData = {
                     user: data.user,
                     timestamp: Date.now(),
-                    activity: actLogsEnums['Quality Code Edit'].enum,
+                    activity: 'Quality Code Edit',
                     log: 'Quality Codes edited.'
                 };
-                logData = utils.buildActivityLog(logData);
-                Utility.insert({
-                    collection: activityLogCollection,
-                    insertObj: logData
-                }, function (err) {});
+                ActivityLog.create(logData, () => {});
                 return cb(err, result);
             });
         });
-    },
-    updateControllers: function (data, cb) {
+    }
+    updateControllers(data, cb) {
         let ID = 'Controller ID';
         let searchCriteria = {
             'Name': 'Controllers'
@@ -211,19 +252,15 @@ module.exports = {
             let logData = {
                 user: data.user,
                 timestamp: Date.now(),
-                activity: actLogsEnums['Controllers Edit'].enum,
+                activity: 'Controllers Edit',
                 log: 'Controllers edited.'
             };
-            logData = utils.buildActivityLog(logData);
-            Utility.insert({
-                collection: activityLogCollection,
-                insertObj: logData
-            }, function (err) {});
+            ActivityLog.create(logData, () => {});
             return cb(err, result);
         });
-    },
+    }
 
-    updateTelemetry: function (data, cb) {
+    updateTelemetry(data, cb) {
         let ipSegment = parseInt(data['IP Network Segment'], 10);
         let ipPort = parseInt(data['IP Port'], 10);
         let netConfig = data['Network Configuration'];
@@ -336,21 +373,17 @@ module.exports = {
                         let logData = {
                             user: data.user,
                             timestamp: Date.now(),
-                            activity: actLogsEnums['Telemetry Settings Edit'].enum,
+                            activity: 'Telemetry Settings Edit',
                             log: 'Telemetry Settings edited.'
                         };
-                        logData = utils.buildActivityLog(logData);
-                        Utility.insert({
-                            collection: activityLogCollection,
-                            insertObj: logData
-                        }, function (err) {});
+                        ActivityLog.create(logData, () => {});
                         return cb(err, result);
                     });
                 });
             });
         });
-    },
-    getStatus: function (data, cb) {
+    }
+    getStatus(data, cb) {
         let ackStatus = false;
 
         let criteria = {
@@ -373,8 +406,8 @@ module.exports = {
                 serverStatus: true
             });
         });
-    },
-    getCustomColors: function (data, cb) {
+    }
+    getCustomColors(data, cb) {
         let searchCriteria = {
             'Name': 'Custom Colors'
         };
@@ -390,8 +423,8 @@ module.exports = {
             let entries = data['HTML Colors'];
             return cb(null, entries);
         });
-    },
-    updateCustomColors: function (data, cb) {
+    }
+    updateCustomColors(data, cb) {
         let codesSearch = {
             'Name': 'Custom Colors'
         };
@@ -409,8 +442,8 @@ module.exports = {
         };
 
         Utility.update(criteria, cb);
-    },
-    getAlarmTemplates: function (data, cb) {
+    }
+    getAlarmTemplates(data, cb) {
         let searchCriteria = {};
         let criteria = {
             query: searchCriteria,
@@ -424,10 +457,9 @@ module.exports = {
             let entries = data;
             return cb(null, entries);
         });
-    },
-    updateAlarmTemplate: function (data, cb) {
-        let searchCriteria,
-            criteria;
+    }
+    updateAlarmTemplate(data, cb) {
+        let criteria;
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -451,49 +483,13 @@ module.exports = {
             };
 
             Utility.save(criteria, function (err) {
-                logData.activity = actLogsEnums['Alarm Message Add'].enum;
-                logData.log = 'Alarm Message with text "' + data.newObject.msgFormat + '" added to the system.';
-                logData = utils.buildActivityLog(logData);
-                Utility.insert({
-                    collection: activityLogCollection,
-                    insertObj: logData
-                }, cb);
-            });
-        } else if (!!data.updatedObject) {
-            searchCriteria = {
-                '_id': ObjectId(data.updatedObject._id)
-            };
-
-            let alarmTemplateUpdate = {
-                $set: {
-                    'isSystemMessage': (data.updatedObject.isSystemMessage.toString() === 'true'),
-                    'msgType': parseInt(data.updatedObject.msgType, 10),
-                    'msgCat': parseInt(data.updatedObject.msgCat, 10),
-                    'msgTextColor': data.updatedObject.msgTextColor,
-                    'msgBackColor': data.updatedObject.msgBackColor,
-                    'msgName': data.updatedObject.msgName,
-                    'msgFormat': data.updatedObject.msgFormat
-                }
-            };
-
-            criteria = {
-                query: searchCriteria,
-                collection: 'AlarmDefs',
-                updateObj: alarmTemplateUpdate
-            };
-
-            Utility.update(criteria, function (err) {
-                logData.activity = actLogsEnums['Alarm Message Edit'].enum;
+                logData.activity = 'Alarm Message Edit';
                 logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
-                logData = utils.buildActivityLog(logData);
-                Utility.insert({
-                    collection: activityLogCollection,
-                    insertObj: logData
-                }, cb);
+                ActivityLog.create(logData, () => {});
             });
         }
-    },
-    deleteAlarmTemplate: function (data, cb) {
+    }
+    deleteAlarmTemplate(data, cb) {
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -548,19 +544,15 @@ module.exports = {
             }
             fixPoints(data.deleteObject._id, function (err) {
                 let entries = _data;
-                logData.activity = actLogsEnums['Alarm Message Delete'].enum;
+                logData.activity = 'Alarm Message Delete';
                 logData.log = 'Alarm Message with text "' + data.deleteObject.msgFormat + '" removed from the system.';
-                logData = utils.buildActivityLog(logData);
-                Utility.insert({
-                    collection: activityLogCollection,
-                    insertObj: logData
-                }, function (err) {
+                ActivityLog.create(logData, () => {
                     return cb(null, entries);
                 });
             });
         });
-    },
-    weather: function (cb) {
+    }
+    weather(cb) {
         let returnData;
         let upiMatrix = {};
         let weatherPointData = {};
@@ -638,8 +630,8 @@ module.exports = {
 
             return cb(null, returnData);
         });
-    },
-    updateWeather: function (data, cb) {
+    }
+    updateWeather(data, cb) {
         let search = {
             Name: 'Weather'
         };
@@ -667,8 +659,8 @@ module.exports = {
         };
 
         Utility.update(criteria, cb);
-    },
-    getVersions: function (data, cb) {
+    }
+    getVersions(data, cb) {
         let pjson = require('../package.json');
         let versions = {
             infoscanjs: pjson.version
@@ -689,3 +681,5 @@ module.exports = {
         });
     }
 };
+
+module.exports = System;

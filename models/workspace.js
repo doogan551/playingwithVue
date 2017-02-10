@@ -3,9 +3,9 @@ let Utility = require('../models/utility');
 let utils = require('../helpers/utils');
 let ObjectID = require('mongodb').ObjectID;
 
-module.exports = {
+let Workspace = class Workspace {
 
-    saveWorkspace: function (data, cb) {
+    saveWorkspace(data, cb) {
         let workspace = data.Workspace;
         let id = new ObjectID(data.userid);
 
@@ -22,9 +22,9 @@ module.exports = {
         };
 
         Utility.update(criteria, cb);
-    },
+    }
 
-    resetPassword: function (data, cb) {
+    resetPassword(data, cb) {
         let username = data.username;
         let oldPass = data.oldPass;
         let newPass = utils.encrypt(data.newPass);
@@ -72,3 +72,5 @@ module.exports = {
         });
     }
 };
+
+module.exports = Workspace;

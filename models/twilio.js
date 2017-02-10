@@ -13,8 +13,8 @@ var voiceNumberIndex = 0;
 var client = require('twilio')(accountSid, authToken);
 
 // https://api.twilio.com/2010-04-01/Accounts/
-module.exports = {
-    sendText: function (toNumber, message, cb) {
+let Twilio = class Twilio {
+    sendText(toNumber, message, cb) {
         var fromNumber = phoneNumbers[smsNumberIndex++];
 
         if (smsNumberIndex >= numNumbers) {
@@ -26,9 +26,9 @@ module.exports = {
             from: fromNumber,
             body: message.toString()
         }, cb);
-    },
+    }
 
-    sendVoice: function (options, cb) {
+    sendVoice(options, cb) {
         options.from = phoneNumbers[voiceNumberIndex++];
 
         if (voiceNumberIndex >= numNumbers) {
@@ -36,82 +36,81 @@ module.exports = {
         }
 
         client.makeCall(options, cb);
-    },
+    }
 
-    getLogs: (type, cb) => {
+    getLogs(type, cb) {
         var url = 'https://' + accountSid + ':' + authToken + '@api.twilio.com/2010-04-01/Accounts/' + accountSid + '/' + type;
-        https.get(url, function (res) {
+        https.get(url, (res) => {
             var xml = '';
-            res.on('data', function (chunk) {
+            res.on('data', (chunk) => {
                 xml += chunk;
             });
-            res.on('end', function () {
-                self.parseXml(xml, function (err, result) {
+            res.on('end', () => {
+                self.parseXml(xml, (err, result) => {
                     if (!!result.TwilioResponse.RestException) {
                         return cb(result.TwilioResponse.RestException, null);
                     }
                     return cb(null, result.TwilioResponse);
                 });
             });
-        }).on('error', function (error) {
+        }).on('error', (error) => {
             logger.info('err', error);
         });
-    },
+    }
 
-    getMessages: function () {
-        this.getLogs('Messages', function (err, xml) {
+    getMessages() {
+        this.getLogs('Messages', (err, xml) => {
             if (err) {
                 logger.error(err);
             }
             var messages = xml.Messages[0].Message;
-            messages.forEach(function (msg) {
+            messages.forEach((msg) => {
                 if (msg.To.indexOf('from') > -1) {
                     logger.info(msg.Body);
                 }
             });
         });
-    },
+    }
 
-    getCalls: function () {
-        this.getLogs('Callss', function (err, xml) {
+    getCalls() {
+        this.getLogs('Callss', (err, xml) => {
             if (err) {
                 logger.error(err);
             }
             var calls = xml.Calls[0].Call;
             logger.info(calls);
-            calls.forEach(function (call) {
+            calls.forEach((call) => {
                 if (call.To.indexOf('from') > -1) {
                     logger.info(call);
                 }
             });
         });
-    },
+    }
 
-    parseXml: function (xml, cb) {
+    parseXml(xml, cb) {
         xml2js.parseString(xml, cb);
-    },
+    }
 
-    transferNumbers: function (data, cb) {
-        // This function transfers phone numbers between Twilio subaccounts, or between a subaccount and the master account
+    transferNumbers(data, cb) {
+        // This transfers phone numbers between Twilio subaccounts, or between a subaccount and the master accoun=>t
         // data is expected to be an object with keys fromAccountSid (string), toAccountSid (string), and numberSids (array of strings)
         // cb is optional
         // Twilio's documentation for this API is here: https://www.twilio.com/docs/api/rest/subaccounts
 
-        // !!!!!! The Twilio client must be authenticated using the master account credentials to perform this function
-        //        The data object may optionally include the master account credentials
+        // !!!!!! The Twilio client must be authenticated using the master account credentials to perform this         //        The data object may optionally include the master account credential=>s
 
         var numberSids = Array.isArray(data.numberSids) && data.numberSids;
         var fromAccountSid = data.fromAccountSid;
         var toAccountSid = data.toAccountSid;
         var results = [];
         var localClient;
-        var transfer = function (numberSid, callback) {
+        var transfer = (numberSid, callback) => {
             var number = (localClient || client).accounts(fromAccountSid).incomingPhoneNumbers(numberSid);
             var msg;
 
             number.update({
                 accountSid: toAccountSid
-            }, function (err, result) {
+            }, (err, result) => {
                 if (err) {
                     msg = 'The number associated with sid "' + numberSid + '" was NOT transferred due to an error';
                 } else {
@@ -142,8 +141,10 @@ module.exports = {
             localClient = require('twilio')(data.masterAccountSid, data.masterAuthToken);
         }
 
-        async.each(numberSids, transfer, function done(err) {
+        async.each(numberSids, transfer, (err) => {
             return cb(null, results);
         });
     }
 };
+
+module.exports = Twilio;

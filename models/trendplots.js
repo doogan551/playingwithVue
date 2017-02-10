@@ -1,8 +1,8 @@
 let Utility = require('../models/utility');
 
-module.exports = {
+let TrendPlots = class TrendPlots {
 
-    getPoints: function (data, cb) {
+    getPoints(data, cb) {
         let DAY = 60 * 60 * 24;
         let upi = +data.id;
         let days = +data.numDays;
@@ -24,7 +24,7 @@ module.exports = {
             }
         };
 
-        Utility.get(criteria, function (err, results) {
+        Utility.get(criteria, (err, results) => {
             let c = results.length;
             let ret = [];
             let row;
@@ -49,9 +49,9 @@ module.exports = {
 
             return cb(err, ret);
         });
-    },
+    }
 
-    getData: function (list, cb) {
+    getData(list, cb) {
         if (list) {
             let criteria = {
                 collection: 'historydata',
@@ -75,3 +75,5 @@ module.exports = {
         }
     }
 };
+
+module.exports = TrendPlots;

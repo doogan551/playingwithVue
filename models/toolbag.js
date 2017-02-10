@@ -4,7 +4,7 @@ let _ = require('lodash');
 let Utility = require('../models/utility');
 let utils = require('../helpers/utils.js');
 
-function forEach(obj, fn) {
+let forEach = (obj, fn) => {
     let keys = Object.keys(obj),
         c,
         len = keys.length,
@@ -18,10 +18,10 @@ function forEach(obj, fn) {
     }
 
     return errorFree;
-}
+};
 
-module.exports = {
-    getPoints: function (data, cb) {
+let Toolbag = class Toolbag {
+    getPoints(data, cb) {
         let criteria = {
             collection: 'points',
             query: data,
@@ -29,8 +29,8 @@ module.exports = {
         };
 
         Utility.get(criteria, cb);
-    },
-    generateCppHeaderFile: function (data, cb) {
+    }
+    generateCppHeaderFile(data, cb) {
         // Override Config so we get the latest version - this allows us to generate a new C++ header file after making
         // changes to enumsTemplates.json without having to restart the server
         let Config = require(utils.FileLocationsForControllers('Config'));
@@ -332,7 +332,7 @@ module.exports = {
                 extraKeys: {}
             }
         };
-        let forEach = function (obj, fn) {
+        let forEach = (obj, fn) => {
             let keys = Object.keys(obj),
                 len = keys.length,
                 c;
@@ -341,7 +341,7 @@ module.exports = {
                 fn(obj[keys[c]], keys[c], c);
             }
         };
-        let forEachArray = function (arr, fn) {
+        let forEachArray = (arr, fn) => {
             let list = arr || [],
                 len = list.length,
                 c;
@@ -350,14 +350,14 @@ module.exports = {
                 fn(list[c], c);
             }
         };
-        let newLine = function (n = 1) {
+        let newLine = (n = 1) => {
             let str = '';
             for (let i = 0; i < n; i++) {
                 str += '\r\n';
             }
             return str;
         };
-        let padString = function (obj) {
+        let padString = (obj) => {
             // obj = {
             //	key: string,
             //	value: int,
@@ -374,7 +374,7 @@ module.exports = {
             }
             return str;
         };
-        let addPropertyToBuffer = function (obj) {
+        let addPropertyToBuffer = (obj) => {
             // obj = {
             //	key: string,
             //	value: int,
@@ -389,13 +389,13 @@ module.exports = {
         buffer += '#ifndef __ENUMSJSON_H__' + newLine(1);
         buffer += '#define __ENUMSJSON_H__';
 
-        forEach(map, function (mapObj, mapKey) {
+        forEach(map, (mapObj, mapKey) => {
             let arr = [],
                 maxChars = 0,
                 numChars;
 
             // Get key values
-            forEach(Config.Enums[mapKey], function (enumObj, enumKey) {
+            forEach(Config.Enums[mapKey], (enumObj, enumKey) => {
                 let key = mapObj.keyMap[enumKey] ? mapObj.keyMap[enumKey] : enumKey;
 
                 key = key.replace(/\s+/g, ''); // Strip whitespace
@@ -412,7 +412,7 @@ module.exports = {
             });
 
             // Get extra key values
-            forEach(mapObj.extraKeys, function (extraKeyValue, extraKeyName) {
+            forEach(mapObj.extraKeys, (extraKeyValue, extraKeyName) => {
                 numChars = extraKeyName.length;
 
                 arr.push({
@@ -426,7 +426,7 @@ module.exports = {
             });
 
             // Sort the array by key value
-            arr.sort(function (a, b) {
+            arr.sort((a, b) => {
                 return a.value < b.value ? -1 : 1;
             });
 
@@ -435,7 +435,7 @@ module.exports = {
             buffer += 'enum  ' + mapObj.name + newLine(1) + '{';
 
             // Add all keys
-            forEachArray(arr, function (obj) {
+            forEachArray(arr, (obj) => {
                 addPropertyToBuffer({
                     key: obj.key,
                     value: obj.value,
@@ -455,7 +455,7 @@ module.exports = {
         // Add file footer
         buffer += newLine(2) + '#endif  //  __ENUMSJSON_H__';
 
-        fs.writeFile(filepath + filename, buffer, function (err) {
+        fs.writeFile(filepath + filename, buffer, (err) => {
             let rtnObj = {};
 
             if (err) {
@@ -467,13 +467,13 @@ module.exports = {
             }
             return cb(err, rtnObj);
         });
-    },
-    getTemplateNames: function (cb) {
-        fs.readdir('./public/js/toolbag/dbValidationTemplates', function (err, files) {
+    }
+    getTemplateNames(cb) {
+        fs.readdir('./public/js/toolbag/dbValidationTemplates', (err, files) => {
             cb(err, files);
         });
-    },
-    validatePoints: function (data, cb) {
+    }
+    validatePoints(data, cb) {
         // data = {
         // 	user: obj,
         // 	template: string (i.e. myTemplateName.json)
@@ -481,8 +481,8 @@ module.exports = {
         let filename = './public/js/toolbag/dbValidationTemplates/' + data.template,
             validationProblems = [],
             templateConfig,
-            doValidate = function (path, cfg) {
-                forEach(cfg.referenceObj, function (referenceValue, key) {
+            doValidate = (path, cfg) => {
+                forEach(cfg.referenceObj, (referenceValue, key) => {
                     let targetValue = cfg.targetObj[key],
                         newPath = path ? [path, key].join('.') : key,
                         problem;
@@ -520,7 +520,7 @@ module.exports = {
                     }
                 });
             },
-            validatePoint = function (pointTemplate, callback) {
+            validatePoint = (pointTemplate, callback) => {
                 let criteria = {
                         collection: 'points',
                         query: {
@@ -532,7 +532,7 @@ module.exports = {
                         problems: []
                     };
 
-                Utility.getOne(criteria, function (err, point) {
+                Utility.getOne(criteria, (err, point) => {
                     if (err) {
                         return callback(err);
                     }
@@ -568,7 +568,7 @@ module.exports = {
                 });
             };
 
-        fs.readFile(filename, 'utf8', function (err, content) {
+        fs.readFile(filename, 'utf8', (err, content) => {
             let defaultTemplateConfig = {
                     allowedExtraDbKeys: {},
                     showNoProblemsFound: true,
@@ -595,9 +595,11 @@ module.exports = {
                 templateConfig = _.merge(defaultTemplateConfig, template.config);
             }
 
-            async.eachSeries(templatePoints, validatePoint, function finished(err) {
+            async.eachSeries(templatePoints, validatePoint, (err) => {
                 cb(err, validationProblems);
             });
         });
     }
 };
+
+module.exports = Toolbag;

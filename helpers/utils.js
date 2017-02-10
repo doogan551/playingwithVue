@@ -3,59 +3,6 @@ let Config = require('../public/js/lib/config');
 let Enums = Config.Enums;
 
 let Utils = {
-    buildActivityLog: function (data) {
-        let log = {
-            userId: data.user._id,
-            username: data.user.username,
-            upi: 0,
-            Name: '',
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
-            pointType: null,
-            activity: data.activity,
-            timestamp: data.timestamp,
-            Security: [],
-            log: data.log
-        };
-        let propertyChange = {
-            property: '',
-            valueType: 0,
-            oldValue: {
-                Value: 0,
-                eValue: 0
-            },
-            newValue: {
-                Value: 0,
-                eValue: 0
-            }
-        };
-
-        if (!!data.point) {
-            log.upi = (data.point._id !== undefined) ? data.point._id : '';
-            log.pointType = (data.point['Point Type'].eValue !== undefined) ? data.point['Point Type'].eValue : null;
-            log.Name = (data.point.Name !== undefined) ? data.point.Name : '';
-            log.name1 = (data.point.name1 !== undefined) ? data.point.name1 : '';
-            log.name2 = (data.point.name2 !== undefined) ? data.point.name2 : '';
-            log.name3 = (data.point.name3 !== undefined) ? data.point.name3 : '';
-            log.name4 = (data.point.name4 !== undefined) ? data.point.name4 : '';
-        }
-
-        if ((data.activityEnum === 1 || data.activityEnum === 2)) {
-            if (data.oldValue !== undefined) {
-                propertyChange.oldValue = data.oldValue;
-            } else {
-                delete propertyChange.oldValue;
-            }
-            propertyChange.property = data.prop;
-            propertyChange.newValue = data.newValue;
-            propertyChange.valueType = data.point[data.prop].ValueType;
-            log.propertyChanges = propertyChange;
-        }
-
-        return log;
-    },
     // buildNameSegmentQuery: function(segment, name) {
     //   let beginStr, nameStr;
     //   beginStr = '';
@@ -150,14 +97,14 @@ let Utils = {
 
         convertType: function (n, type) {
             switch (type) {
-            case 'String':
-                return n.toString();
-            case 'Unsigned':
-            case 'UniquePID':
-            case 'BitString':
-                return this.convertNumber(n);
-            default:
-                return this.convertBool(this.convertNumber(n));
+                case 'String':
+                    return n.toString();
+                case 'Unsigned':
+                case 'UniquePID':
+                case 'BitString':
+                    return this.convertNumber(n);
+                default:
+                    return this.convertBool(this.convertNumber(n));
             }
         }
     },

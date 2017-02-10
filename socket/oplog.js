@@ -9,6 +9,7 @@ let notifications = require('../models/notifications');
 let scheduler = require('../helpers/scheduler');
 let utils = require('../helpers/utils');
 let Utility = require('../models/utility');
+let Common = new (require('../models/common'))();
 let Config = require('../public/js/lib/config.js');
 let logger = require('../helpers/logger')(module);
 let dbName = config.get('Infoscan.dbConfig').dbName;
@@ -453,7 +454,7 @@ function checkForPointTail(upi, point, callback) {
 
 function updateValsTail(point, finalCB) {
     if (point) {
-        point = common.setQualityLabel(point);
+        point = Common.setQualityLabel(point);
         if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
             let pv = point.Value;
             for (let prop in pv.ValueOptions) {

@@ -7,6 +7,8 @@ let tmp = require('tmp');
 
 let Utility = require('../models/utility');
 let ArchiveUtility = require('../models/archiveutility');
+const utils = require('../helpers/utils');
+const historyCollection = utils.CONSTANTS('historyCollection');
 let dateFormat = 'ddd, MMM DD, YYYY HH:mm:ss ZZ';
 
 String.prototype.repeat = function (num) {
@@ -293,119 +295,6 @@ let updateRows = function (results, options, rows, callback) {
         }
     }
     callback(null, rows);
-};
-
-let runBackUp = function (upis, limitRange, cb) {
-    let criteria = {};
-    let dates = [];
-    let query = {};
-    let findRangeEnds = function (callback) {
-        Utility.get({
-            collection: 'historydata',
-            query: {},
-            sort: {
-                timestamp: 1
-            },
-            limit: 1
-        }, function (err, first) {
-            Utility.get({
-                collection: 'historydata',
-                query: {},
-                sort: {
-                    timestamp: -1
-                },
-                limit: 1
-            }, function (_err, last) {
-                callback(err, {
-                    start: !!first.length && first[0].timestamp || 0,
-                    end: !!last.length && last[0].timestamp || 0
-                });
-            });
-        });
-    };
-    let buildDates = function (range) {
-        let end = range.end;
-        let tempTime = range.start;
-
-        while (tempTime <= end) {
-            let date = {};
-            date.start = tempTime;
-            tempTime = moment.unix(tempTime).add(1, 'month').unix();
-            date.end = tempTime;
-            dates.push(date);
-        }
-    };
-    findRangeEnds(function (err, range) {
-        buildDates(range);
-        console.log(dates.length);
-        async.eachSeries(dates, function (date, callback) {
-            query = {
-                $and: [{
-                    timestamp: {
-                        $gte: date.start
-                    }
-                }, {
-                    timestamp: {
-                        $lt: date.end
-                    }
-                }]
-            };
-
-            criteria = {
-                collection: 'historydata',
-                query: query,
-                limit: 0
-            };
-
-            Utility.get(criteria, function (err, points) {
-                console.log(moment.unix(date.start).format(), points.length);
-                buildTimeRanges(points);
-            });
-
-            let buildTimeRanges = function (points) {
-                let compare = function (a, b) {
-                    if (a.timestamp < b.timestamp) {
-                        return -1;
-                    }
-                    if (a.timestamp > b.timestamp) {
-                        return 1;
-                    }
-                    return 0;
-                };
-
-                let upsertRange = function (month, year, point) {
-                    let range = {
-                        month: month,
-                        year: year,
-                        points: []
-                    };
-                    for (let j = 0; j < ranges.length; j++) {
-                        if (ranges[j].year === year && ranges[j].month === month) {
-                            ranges[j].points.push(point);
-                            return;
-                        }
-                    }
-                    range.points.push(point);
-                    ranges.push(range);
-                };
-
-                let ranges = [];
-
-                points.sort(compare);
-
-                for (let i = 0; i < points.length; i++) {
-                    let month = moment.unix(points[i].timestamp).format('MM');
-                    let year = moment.unix(points[i].timestamp).format('YYYY');
-
-                    upsertRange(month, year, points[i]);
-                }
-                console.log(ranges.length);
-                addToSQLite(ranges, callback);
-            };
-        }, function (err) {
-            cb(err);
-        });
-    });
 };
 
 let getValues = function (option, callback) {
@@ -1552,8 +1441,11 @@ let removeFromHistorydata = function (ranges, cb) {
     cb();
 };
 
-let historyModel = {
-    getMeters: function (data, cb) {
+let History = class History {
+    constructor() {
+        this.collection = historyCollection;
+    }
+    getMeters(data, cb) {
         let upis = data.upis;
 
         if (!(upis instanceof Array)) {
@@ -1576,8 +1468,8 @@ let historyModel = {
         };
 
         Utility.get(criteria, cb);
-    },
-    getUsage: function (data, cb) {
+    }
+    getUsage(data, cb) {
         let callback = function (err, results) {
             results = unbuildOps(results);
 
@@ -1602,8 +1494,8 @@ let historyModel = {
         });
         reqOptions = buildOps(reqOptions);
         getUsage(reqOptions, callback);
-    },
-    getMissingMeters: function (data, cb) {
+    }
+    getMissingMeters(data, cb) {
         let options = data.options;
         let meters = options.meters;
         let missingMeters = [];
@@ -1665,8 +1557,8 @@ let historyModel = {
         }, function (err) {
             cb(err, missingMeters);
         });
-    },
-    editDatastore: function (data, cb) {
+    }
+    editDatastore(data, cb) {
         let values = data.values;
 
         if (!!values) {
@@ -1674,8 +1566,8 @@ let historyModel = {
         } else {
             cb();
         }
-    },
-    importCSV: function (data, cb) {
+    }
+    importCSV(data, cb) {
         let options = data.options;
         let ranges = [];
         let path = options.path;
@@ -1709,7 +1601,7 @@ let historyModel = {
                             };
                             ranges.push(range);
                         } else {
-							// skip
+                            // skip
                         }
                     }
                 }
@@ -1719,8 +1611,8 @@ let historyModel = {
                     cb(err, result);
                 });
             });
-    },
-    exportCSV: function (data, cb) {
+    }
+    exportCSV(data, cb) {
         let options = data.options;
         let start = parseInt(options.range.start, 10);
         let end = parseInt(options.range.end, 10);
@@ -1777,8 +1669,8 @@ let historyModel = {
                 csvStream.end();
             });
         });
-    },
-    uploadCSV: function (files, cb) {
+    }
+    uploadCSV(files, cb) {
         let path = __dirname + '\\..\\tmp\\uploads\\' + Date.now() + '.csv';
         if (!!files.csv.originalname.match(/\.csv/i)) {
             fs.writeFile(path, files.csv.buffer, function (err) {
@@ -1795,8 +1687,8 @@ let historyModel = {
                 message: 'The uploaded file is not in the correct format. Only CSV files are supported.'
             });
         }
-    },
-    findHistory: function (options, callback) {
+    }
+    findHistory(options, callback) {
         // find history based on upis and exact timestamps
         options.ops = [{
             fx: (!!options.fx) ? options.fx : 'history match'
@@ -1809,8 +1701,8 @@ let historyModel = {
                 });
             });
         });
-    },
-    findLatest: function (options, callback) {
+    }
+    findLatest(options, callback) {
         // find most recent value based on upi and ts, build all months into one statement per year
         let range = options.range;
 
@@ -1824,15 +1716,15 @@ let historyModel = {
                 fixResults(sResults || [], [], function (err, results) {
                     if (!results.length && moment.unix(range.start).year() > 2000) {
                         range.end = range.start - 1;
-                        historyModel.findLatest(options, callback);
+                        this.findLatest(options, callback);
                     } else {
                         return callback(err, results);
                     }
                 });
             });
         });
-    },
-    findEarliest: function (options, callback) {
+    }
+    findEarliest(options, callback) {
         // find oldest value based on upi and ts, build all months into one statement per year
         let range = options.range;
 
@@ -1846,15 +1738,15 @@ let historyModel = {
                 fixResults(sResults || [], [], function (err, results) {
                     if (!results.length && range.end <= moment().unix()) {
                         range.start = range.end + 1;
-                        historyModel.findEarliest(options, callback);
+                        this.findEarliest(options, callback);
                     } else {
                         return callback(err, results);
                     }
                 });
             });
         });
-    },
-    findEarliestAndLatest: (options, callback) => {
+    }
+    findEarliestAndLatest(options, callback) {
         options.range = {
             start: moment(2000, 'YYYY').unix()
         };
@@ -1875,12 +1767,132 @@ let historyModel = {
                 });
             });
         });
-    },
-    doBackUp: runBackUp,
-    buildOps: buildOps,
-    unbuildOps: unbuildOps,
-    getUsageCall: getUsage
+    }
+    doBackUp(upis, limitRange, cb) {
+        let criteria = {};
+        let dates = [];
+        let query = {};
+        let findRangeEnds = function (callback) {
+            Utility.get({
+                collection: 'historydata',
+                query: {},
+                sort: {
+                    timestamp: 1
+                },
+                limit: 1
+            }, function (err, first) {
+                Utility.get({
+                    collection: 'historydata',
+                    query: {},
+                    sort: {
+                        timestamp: -1
+                    },
+                    limit: 1
+                }, function (_err, last) {
+                    callback(err, {
+                        start: !!first.length && first[0].timestamp || 0,
+                        end: !!last.length && last[0].timestamp || 0
+                    });
+                });
+            });
+        };
+        let buildDates = function (range) {
+            let end = range.end;
+            let tempTime = range.start;
+
+            while (tempTime <= end) {
+                let date = {};
+                date.start = tempTime;
+                tempTime = moment.unix(tempTime).add(1, 'month').unix();
+                date.end = tempTime;
+                dates.push(date);
+            }
+        };
+        findRangeEnds(function (err, range) {
+            buildDates(range);
+            console.log(dates.length);
+            async.eachSeries(dates, function (date, callback) {
+                query = {
+                    $and: [{
+                        timestamp: {
+                            $gte: date.start
+                        }
+                    }, {
+                        timestamp: {
+                            $lt: date.end
+                        }
+                    }]
+                };
+
+                criteria = {
+                    collection: 'historydata',
+                    query: query,
+                    limit: 0
+                };
+
+                Utility.get(criteria, function (err, points) {
+                    console.log(moment.unix(date.start).format(), points.length);
+                    buildTimeRanges(points);
+                });
+
+                let buildTimeRanges = function (points) {
+                    let compare = function (a, b) {
+                        if (a.timestamp < b.timestamp) {
+                            return -1;
+                        }
+                        if (a.timestamp > b.timestamp) {
+                            return 1;
+                        }
+                        return 0;
+                    };
+
+                    let upsertRange = function (month, year, point) {
+                        let range = {
+                            month: month,
+                            year: year,
+                            points: []
+                        };
+                        for (let j = 0; j < ranges.length; j++) {
+                            if (ranges[j].year === year && ranges[j].month === month) {
+                                ranges[j].points.push(point);
+                                return;
+                            }
+                        }
+                        range.points.push(point);
+                        ranges.push(range);
+                    };
+
+                    let ranges = [];
+
+                    points.sort(compare);
+
+                    for (let i = 0; i < points.length; i++) {
+                        let month = moment.unix(points[i].timestamp).format('MM');
+                        let year = moment.unix(points[i].timestamp).format('YYYY');
+
+                        upsertRange(month, year, points[i]);
+                    }
+                    console.log(ranges.length);
+                    addToSQLite(ranges, callback);
+                };
+            }, function (err) {
+                cb(err);
+            });
+        });
+    }
+    // buildOps: buildOps,
+    // unbuildOps: unbuildOps,
+    // getUsageCall: getUsage
+    delete(data, cb) {
+        let upi = data.upi;
+        let query = {
+            _id: upi
+        };
+        Utility.remove({
+            collection: this.collection,
+            query: query
+        }, cb);
+    }
 };
 
-
-module.exports = historyModel;
+module.exports = History;

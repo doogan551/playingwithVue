@@ -1,8 +1,8 @@
 let Utility = require('../models/utility');
 let fs = require('fs');
 
-module.exports = {
-    batch: function (data, cb) {
+let Thumbnails = class Thumbnails {
+    batch(data, cb) {
         let locallets = {};
 
         Utility.get({
@@ -26,10 +26,10 @@ module.exports = {
             sort: {
                 'Point Type.Value': -1
             }
-        }, function (err, result) {
+        }, (err, result) => {
             let pageData = [];
             if (!err) {
-                result.forEach(function (point) {
+                result.forEach((point) => {
                     let record = {
                         'id': point._id,
                         'name': point.Name,
@@ -51,8 +51,8 @@ module.exports = {
             return cb(null, locallets);
             // res.render("thumbnailGenerator/batch", locallets);
         });
-    },
-    one: function (data, cb) {
+    }
+    one(data, cb) {
         let locallets = {};
 
         Utility.getOne({
@@ -65,7 +65,7 @@ module.exports = {
                 'Point Type.Value': 1,
                 'Name': 1
             }
-        }, function (err, result) {
+        }, (err, result) => {
             let pageData = [];
             if (!err) {
                 if (result) {
@@ -89,13 +89,13 @@ module.exports = {
             return cb(null, locallets);
             // res.render("thumbnailGenerator/single", locallets);
         });
-    },
-    saveOld: function (data, cb) {
+    }
+    saveOld(data, cb) {
         let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.png',
             base64Data = data.thumb.replace(/^data:image\/png;base64,/, '');
 
         fs.writeFile(thumbDir, base64Data, 'base64', cb
-            /*function(err) {
+            /*err) => {
                         if (!err) {
                             res.json({
                                 "msg": "success",
@@ -108,17 +108,17 @@ module.exports = {
                         }
                     }*/
         );
-    },
-    save: function (data, cb) {
+    }
+    save(data, cb) {
         let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.txt',
             _data = data.bgColorHex + '||' + data.thumb;
 
-        fs.writeFile(thumbDir, _data, 'utf8', function () {
+        fs.writeFile(thumbDir, _data, 'utf8', () => {
             cb(null, {
                 thumbDir: thumbDir
             });
         });
-        /*function(err) {
+        /*err) => {
                    if (!err) {
                        res.json({
                            "msg": "success",
@@ -132,3 +132,5 @@ module.exports = {
                }*/
     }
 };
+
+module.exports = Thumbnails;

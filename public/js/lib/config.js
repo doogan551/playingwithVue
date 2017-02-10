@@ -4136,7 +4136,7 @@ var Config = (function (obj) {
                 max,
                 setChannelOptions = obj.Utility.setChannelOptions,
                 setValueOptions = obj.Utility.setupPropValueOptions,
-                val = "",
+                val = '',
                 channel = point.Channel,
                 openChannel = point['Open Channel'],
                 closeChannel = point['Close Channel'];
@@ -4444,9 +4444,10 @@ var Config = (function (obj) {
                 feedbackType = point['Feedback Type'],
                 outputType = point['Output Type'];
 
-            setDisplayable(point, ['Output Type', 'Momentary Delay', 'Feedback Type', 'Instance', 'Read Only', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 
-                'On Control Data Type', 'On Control Function', 'On Control Register', 'On Control Value', 'Off Control Data Type', 'Off Control Function', 'Off Control Register', 
-                'Off Control Value', 'Channel', 'On Channel', 'Off Channel', 'Polarity', 'Same State Test'], false);
+            setDisplayable(point, ['Output Type', 'Momentary Delay', 'Feedback Type', 'Instance', 'Read Only', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register',
+                'On Control Data Type', 'On Control Function', 'On Control Register', 'On Control Value', 'Off Control Data Type', 'Off Control Function', 'Off Control Register',
+                'Off Control Value', 'Channel', 'On Channel', 'Off Channel', 'Polarity', 'Same State Test'
+            ], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {

@@ -1,15 +1,22 @@
 let Utility = require('../models/utility');
-let Security = require('../models/security');
 let Config = require('../public/js/lib/config.js');
 let async = require('async');
 let ObjectID = require('mongodb').ObjectID;
 let utils = require('../helpers/utils');
+let logger = require('../helpers/logger')(module);
+
+let ActivityLog = new(require('./activitylog'))();
+let History = new(require('./history'))();
+let Schedule = new(require('./schedule'))();
+let Security = new(require('./security'))();
+let Script = new(require('./script'))();
+let Upi = new(require('../helpers/upi'))();
+let ZMQ = new(require('../helpers/zmq'))();
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
-module.exports = {
-
-    getPointById: function (data, cb) {
+let Point = class Point {
+    getPointById(data, cb) {
         let searchCriteria = {};
         let upi = parseInt(data.id, 10);
 
@@ -17,12 +24,12 @@ module.exports = {
         /*searchCriteria._pStatus = {
             $in: [0, 1]
         };*/
-        Security.Utility.getPermissions(data.user, function (err, permissions) {
+        Security.Utility.getPermissions(data.user, (err, permissions) => {
             Utility.get({
                 query: searchCriteria,
                 collection: 'points',
                 limit: 1
-            }, function (err, points) {
+            }, (err, points) => {
                 if (err) {
                     return cb(err, null, null);
                 }
@@ -42,9 +49,9 @@ module.exports = {
                 return cb('Permission Denied', null, null);
             });
         });
-    },
+    }
 
-    newPoint: function (data, cb) {
+    newPoint(data, cb) {
         let id = data.id || null;
         let pointType = !!data.pointType && JSON.stringify(decodeURI(data.pointType));
         let locals = {
@@ -71,32 +78,30 @@ module.exports = {
                 fields: fields,
                 collection: 'points',
                 limit: 1
-            },
-                function (err, points) {
-                    if (err) {
-                        return cb(err, null);
-                    }
-
-                    let point = points[0];
-
-                    if (point.hasOwnProperty('Report Type')) {
-                        locals.subType = JSON.stringify(point['Report Type'].eValue);
-                    } else if (point.hasOwnProperty('Sensor Type')) {
-                        locals.subType = JSON.stringify(point['Sensor Type'].eValue);
-                    }
-
-                    locals.name = JSON.stringify(point.Name.replace('\'', '\\\''));
-                    locals.pointType = JSON.stringify(point['Point Type'].Value);
-
-                    return cb(null, locals);
+            }, (err, points) => {
+                if (err) {
+                    return cb(err, null);
                 }
-            );
+
+                let point = points[0];
+
+                if (point.hasOwnProperty('Report Type')) {
+                    locals.subType = JSON.stringify(point['Report Type'].eValue);
+                } else if (point.hasOwnProperty('Sensor Type')) {
+                    locals.subType = JSON.stringify(point['Sensor Type'].eValue);
+                }
+
+                locals.name = JSON.stringify(point.Name.replace('\'', '\\\''));
+                locals.pointType = JSON.stringify(point['Point Type'].Value);
+
+                return cb(null, locals);
+            });
         } else {
             return cb(null, locals);
         }
-    },
+    }
 
-    pointLookup: function (data, cb) {
+    pointLookup(data, cb) {
         let property = data.property && decodeURI(data.property);
         let pointType = (data.pointType && data.pointType !== 'null' && decodeURI(data.pointType)) || null;
         let pointTypes = Config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
@@ -114,9 +119,9 @@ module.exports = {
         };
 
         cb(locals);
-    },
+    }
 
-    search: function (data, cb) {
+    search(data, cb) {
         // Do we have a device ID?
         let deviceId = data.deviceId || null;
         // Do we have a RU ID?
@@ -133,7 +138,7 @@ module.exports = {
         //limit query to 200 by default
         let limit = data.limit || 200;
         // If no point type array passed in, use default
-        let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
+        let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
             return type.key;
         });
         // Name segments, sort names and values
@@ -169,7 +174,7 @@ module.exports = {
             _name4: 1
         };
 
-        let buildQuery = function () {
+        let buildQuery = () => {
             let query = {},
                 segment,
                 _pStatus = 0;
@@ -242,21 +247,21 @@ module.exports = {
             data: data
         };
 
-        Utility.getWithSecurity(criteria, function (err, points, count) {
-            points.forEach(function (point) {
+        Utility.getWithSecurity(criteria, (err, points, count) => {
+            points.forEach((point) => {
                 point.pointType = point['Point Type'].Value;
             });
             return cb(err, points, count);
         });
-    },
-    getDistinctValues: function (data, cb) {
+    }
+    getDistinctValues(data, cb) {
         // data is an array of objects indicating the properties for which you want unique Values:
         // [{
         //   property: 'Active Value',
         //   valueTypes: [2,5] // Get distincts for these value types; use empty array or do not include for all unique values regardless of value type
         // }]
         let distinct = [];
-        let getDistinct = function (item, cb) {
+        let getDistinct = (item, cb) => {
             if (distinctProperties[item.property]) { // Temporary workaround to improve UI performance on app load
                 distinct.push(distinctProperties[item.property]);
                 return cb(null);
@@ -271,14 +276,14 @@ module.exports = {
 
             if (valueTypes.length) {
                 criteria.query.$or = [];
-                valueTypes.forEach(function (valueType) {
+                valueTypes.forEach((valueType) => {
                     let obj = {};
                     obj[item.property + '.' + 'ValueType'] = valueType;
                     criteria.query.$or.push(obj);
                 });
             }
 
-            Utility.distinct(criteria, function queryResult(err, results) {
+            Utility.distinct(criteria, (err, results) => {
                 let obj = {
                     property: item.property,
                     distinct: results
@@ -289,7 +294,7 @@ module.exports = {
             });
         };
 
-        async.each(data.distinct, getDistinct, function done(err) {
+        async.each(data.distinct, getDistinct, (err) => {
             // cb(err, distinct);
             Utility.update({
                 collection: 'dev',
@@ -301,26 +306,26 @@ module.exports = {
                         values: distinct
                     }
                 }
-            }, function (err) {
+            }, (err) => {
                 cb(err, distinct);
             });
         });
-    },
-    getDistinctValuesTemp: function (data, cb) {
+    }
+    getDistinctValuesTemp(data, cb) {
         Utility.getOne({
             collection: 'dev',
             query: {
                 item: 'distinct'
             }
-        }, function (err, results) {
+        }, (err, results) => {
             if (!results || !results.values.length) {
                 module.exports.getDistinctValues(data, cb);
             } else {
                 cb(err, results.values);
             }
         });
-    },
-    globalSearch: function (data, cb) {
+    }
+    globalSearch(data, cb) {
         // data = {
         //   searchTerms: [{
         //     expression: string,
@@ -412,7 +417,7 @@ module.exports = {
         Utility.getWithSecurity(criteria, cb);
 
         // return cb(null, [data.searchTerms]);
-        // function(req, res, next) {
+        // (req, res, next) =>{
         //   let db, tags, query;
         //   db = req.database;
         //   tags = (!!req.body.tags) ? req.body.tags : [];
@@ -431,23 +436,23 @@ module.exports = {
         //   db.collection(pointsCollection).find(query, {
         //     Name: 1,
         //     "Point Type": 1
-        //   }).limit(25).sort({Name:1}).toArray(function(err, results) {
-        //     async.forEach(results, function(result, cb) {
+        //   }).limit(25).sort({Name:1}).toArray((err, results) =>{
+        //     async.forEach(results, (result, cb) =>{
         //       result.pointType = result["Point Type"].Value;
         //       cb(null);
-        //     }, function(err) {
+        //     }, (err) =>{
         //       return utils.sendResponse(res, results);
         //     });
         //   });
         // }
-    },
-    searchDependencies: function (data, cb) {
+    }
+    searchDependencies(data, cb) {
         let returnObj = {
             target: {},
             'Point Refs': [],
             'Dependencies': []
         };
-        let addAppIndex = function (buildObject, pointRef) {
+        let addAppIndex = (buildObject, pointRef) => {
             let propName = pointRef.PropertyName;
             if (propName === 'Point Register') {
                 buildObject.extendedProperty = [propName, ' ', pointRef.AppIndex].join('');
@@ -464,7 +469,7 @@ module.exports = {
             }
         };
 
-        Utility.getOne(criteria, function (err, targetPoint) {
+        Utility.getOne(criteria, (err, targetPoint) => {
             if (err) {
                 return cb(err);
             }
@@ -475,8 +480,8 @@ module.exports = {
             returnObj.target.Name = targetPoint.Name;
             returnObj.target['Point Type'] = targetPoint['Point Type'].Value;
 
-            async.eachSeries(targetPoint['Point Refs'], function (pointRef, callback) {
-                buildPointRefs(pointRef.Value, function (err, ref, device) {
+            async.eachSeries(targetPoint['Point Refs'], (pointRef, callback) => {
+                buildPointRefs(pointRef.Value, (err, ref, device) => {
                     let obj = {
                         _id: pointRef.Value,
                         Property: pointRef.PropertyName,
@@ -493,7 +498,7 @@ module.exports = {
                     returnObj['Point Refs'].push(obj);
                     callback(err);
                 });
-            }, function (err) {
+            }, (err) => {
                 criteria = {
                     collection: 'points',
                     query: {
@@ -501,12 +506,12 @@ module.exports = {
                         _pStatus: 0
                     }
                 };
-                Utility.get(criteria, function (err, dependencies) {
+                Utility.get(criteria, (err, dependencies) => {
                     if (err) {
                         return cb(err);
                     }
 
-                    async.eachSeries(dependencies, function (dependency, depCB) {
+                    async.eachSeries(dependencies, (dependency, depCB) => {
                         let deviceUpi = 0;
                         let matchedDependencies = [];
 
@@ -521,7 +526,7 @@ module.exports = {
                                 matchedDependencies.push(dependency['Point Refs'][m]);
                             }
                         }
-                        async.eachSeries(matchedDependencies, function (depPointRef, depPRCB) {
+                        async.eachSeries(matchedDependencies, (depPointRef, depPRCB) => {
                             if (depPointRef.Value === upi) {
                                 if (dependency['Point Type'].Value === 'Schedule Entry' && depPointRef.PropertyName === 'Control Point') {
                                     if (dependency._parentUpi === 0) {
@@ -542,7 +547,7 @@ module.exports = {
                                             }
                                         };
 
-                                        Utility.getOne(criteria, function (err, schedule) {
+                                        Utility.getOne(criteria, (err, schedule) => {
                                             returnObj.Dependencies.push({
                                                 _id: schedule._id,
                                                 Property: depPointRef.PropertyName,
@@ -555,7 +560,7 @@ module.exports = {
                                         });
                                     }
                                 } else {
-                                    findDevicePoint(deviceUpi, function (err, device) {
+                                    findDevicePoint(deviceUpi, (err, device) => {
                                         if (err) {
                                             return depPRCB(err);
                                         }
@@ -577,21 +582,21 @@ module.exports = {
                                     });
                                 }
                             } else {
-                                setTimeout(function () {
+                                setTimeout(() => {
                                     depPRCB(null);
                                 }, 0);
                             }
-                        }, function (err) {
+                        }, (err) => {
                             depCB(err);
                         });
-                    }, function (err) {
+                    }, (err) => {
                         return cb(err, returnObj);
                     });
                 });
             });
         });
 
-        function buildPointRefs(upi, callback) {
+        let buildPointRefs = (upi, callback) => {
             let deviceUpi = 0;
             if (upi !== 0) {
                 criteria = {
@@ -605,7 +610,7 @@ module.exports = {
                         'Point Type': 1
                     }
                 };
-                Utility.getOne(criteria, function (err, ref) {
+                Utility.getOne(criteria, (err, ref) => {
                     if (err) {
                         return callback(err);
                     }
@@ -614,16 +619,16 @@ module.exports = {
                             deviceUpi = ref['Point Refs'][m].Value;
                         }
                     }
-                    findDevicePoint(deviceUpi, function (err, device) {
+                    findDevicePoint(deviceUpi, (err, device) => {
                         callback(err, ref, device);
                     });
                 });
             } else {
                 callback(null, null, null);
             }
-        }
+        };
 
-        function findDevicePoint(upi, callback) {
+        let findDevicePoint = (upi, callback) => {
             if (upi !== 0) {
                 criteria = {
                     collection: 'points',
@@ -639,11 +644,11 @@ module.exports = {
             } else {
                 callback(null, null);
             }
-        }
-    },
-    getNames: function (data, cb) {
+        };
+    }
+    getNames(data, cb) {
         let upis = data.upis;
-        async.map(upis, function (upi, callback) {
+        async.map(upis, (upi, callback) => {
             let criteria = {
                 collection: 'points',
                 query: {
@@ -656,8 +661,8 @@ module.exports = {
             };
             Utility.getOne(criteria, callback);
         }, cb);
-    },
-    initPoint: function (data, cb) {
+    }
+    initPoint(data, cb) {
         let criteria = {};
 
         let name1 = data.name1;
@@ -689,7 +694,7 @@ module.exports = {
 
         doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
 
-        function doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, callback) {
+        let doInitPoint = (name1, name2, name3, name4, pointType, targetUpi, subType, callback) => {
             buildName(name1, name2, name3, name4);
 
             criteria = {
@@ -699,7 +704,7 @@ module.exports = {
                 }
             };
 
-            Utility.getOne(criteria, function (err, freeName) {
+            Utility.getOne(criteria, (err, freeName) => {
                 if (err) {
                     return callback(err);
                 }
@@ -714,46 +719,8 @@ module.exports = {
                         Name: 'Preferences'
                     }
                 };
-                Utility.getOne(criteria, function (err, sysInfo) {
-                    if (pointType === 'Device') {
-                        criteria = {
-                            collection: 'upis',
-                            query: {
-                                _pStatus: 1
-                            },
-                            sort: [
-                                ['_id', 'desc']
-                            ],
-                            updateObj: {
-                                $set: {
-                                    _pStatus: 0
-                                }
-                            },
-                            options: {
-                                'new': true
-                            }
-                        };
-                    } else {
-                        criteria = {
-                            collection: 'upis',
-                            query: {
-                                _pStatus: 1
-                            },
-                            sort: [
-                                ['_id', 'asc']
-                            ],
-                            updateObj: {
-                                $set: {
-                                    _pStatus: 0
-                                }
-                            },
-                            options: {
-                                'new': true
-                            }
-                        };
-                    }
-
-                    Utility.findAndModify(criteria, function (err, upiObj) {
+                Utility.getOne(criteria, (err, sysInfo) => {
+                    Upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
                         if (err) {
                             return callback(err);
                         }
@@ -771,7 +738,7 @@ module.exports = {
                                 }
                             };
 
-                            Utility.getOne(criteria, function (err, targetPoint) {
+                            Utility.getOne(criteria, (err, targetPoint) => {
                                 if (err) {
                                     return cb(err);
                                 }
@@ -789,9 +756,9 @@ module.exports = {
                     });
                 });
             });
-        }
+        };
 
-        function buildName(name1, name2, name3, name4) {
+        let buildName = (name1, name2, name3, name4) => {
             _name1 = (name1) ? name1.toLowerCase() : '';
             _name2 = (name2) ? name2.toLowerCase() : '';
             _name3 = (name3) ? name3.toLowerCase() : '';
@@ -813,15 +780,15 @@ module.exports = {
             }
 
             _Name = Name.toLowerCase();
-        }
+        };
 
-        function cloneGPLSequence(oldSequence, callback) {
+        let cloneGPLSequence = (oldSequence, callback) => {
             let oName1;
             let oName2;
             let oName3;
             let oName4;
 
-            async.eachSeries(oldSequence.SequenceData.sequence.block, function (block, acb) {
+            async.eachSeries(oldSequence.SequenceData.sequence.block, (block, acb) => {
                 if (block.upi === undefined || block.upi === 0) {
                     acb(null);
                 } else {
@@ -847,7 +814,7 @@ module.exports = {
                         oName4 = block.label;
                     }
 
-                    doInitPoint(oName1, oName2, oName3, oName4, null, block.upi, null, function (err, point) {
+                    doInitPoint(oName1, oName2, oName3, oName4, null, block.upi, null, (err, point) => {
                         if (err) {
                             acb(err);
                         } else {
@@ -857,9 +824,9 @@ module.exports = {
                     });
                 }
             }, callback);
-        }
+        };
 
-        function setIpPort(point, cb) {
+        let setIpPort = (point, cb) => {
             let criteria = {
                 collection: 'SystemInfo',
                 query: {
@@ -867,7 +834,7 @@ module.exports = {
                 }
             };
 
-            Utility.getOne(criteria, function (err, prefs) {
+            Utility.getOne(criteria, (err, prefs) => {
                 let ipPort = prefs['IP Port'];
                 if (point['Point Type'].Value === 'Device') {
                     point['Ethernet IP Port'].Value = ipPort;
@@ -877,9 +844,9 @@ module.exports = {
                 }
                 return cb();
             });
-        }
+        };
 
-        function fixPoint(upiObj, template, isClone, sysInfo, callback) {
+        let fixPoint = (upiObj, template, isClone, sysInfo, callback) => {
             template.Name = Name;
             template.name1 = (name1) ? name1 : '';
             template.name2 = (name2) ? name2 : '';
@@ -909,7 +876,7 @@ module.exports = {
                 // update device template here
                 // get telemetry ip port and set ethernet ip port and downlink ip port
                 // rmu - model type nin[5, 9, 10, 11, 12, 13, 14, 16] set ethernet ip port
-                setIpPort(template, function () {
+                setIpPort(template, () => {
                     if (template['Point Type'].Value === 'Sensor') {
                         template['Sensor Type'].Value = (subType) ? subType.Value : 'Input';
                         template['Sensor Type'].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
@@ -935,7 +902,7 @@ module.exports = {
                         }
                     };
 
-                    Utility.get(criteria, function (err, alarmDefs) {
+                    Utility.get(criteria, (err, alarmDefs) => {
                         if (err) {
                             return callback(err);
                         }
@@ -960,7 +927,7 @@ module.exports = {
                             }
                         };
 
-                        Utility.getOne(criteria, function (err, defaultQualityCodeMask) {
+                        Utility.getOne(criteria, (err, defaultQualityCodeMask) => {
                             if (err) {
                                 return callback(err);
                             }
@@ -973,7 +940,7 @@ module.exports = {
                 });
             } else {
                 if (template['Point Type'].Value === 'Sequence') {
-                    cloneGPLSequence(template, function () {
+                    cloneGPLSequence(template, () => {
                         addTemplateToDB(template, callback);
                     });
                 } else {
@@ -989,19 +956,19 @@ module.exports = {
                     template['Control Array'] = [];
                 }
             }
-        }
+        };
 
-        function addTemplateToDB(template, callback) {
+        let addTemplateToDB = (template, callback) => {
             criteria = {
                 collection: 'points',
                 insertObj: template
             };
-            Utility.insert(criteria, function (err) {
+            Utility.insert(criteria, (err) => {
                 return callback(err, template);
             });
-        }
-    },
-    getPointRefsSmall: function (data, cb) {
+        };
+    }
+    getPointRefsSmall(data, cb) {
         let searchCriteria = {};
         let filterProps = {
             Name: 1,
@@ -1023,7 +990,7 @@ module.exports = {
             fields: filterProps
         };
 
-        Utility.getOne(criteria, function (err, point) {
+        Utility.getOne(criteria, (err, point) => {
             if (err) {
                 return cb(err);
             }
@@ -1033,9 +1000,9 @@ module.exports = {
 
             return cb(null, null, point);
         });
-    },
-    getPointRefsInstance: function (data, cb) {
-        this.getPointRefsSmall(data, function (err, msg, result) {
+    }
+    getPointRefsInstance(data, cb) {
+        this.getPointRefsSmall(data, (err, msg, result) => {
             if (!!err) {
                 return cb(err);
             } else if (!!result) {
@@ -1062,7 +1029,7 @@ module.exports = {
                 fields: filterProps
             };
 
-            Utility.getOne(criteria, function (err, point) {
+            Utility.getOne(criteria, (err, point) => {
                 if (err) {
                     return cb(err);
                 }
@@ -1073,8 +1040,8 @@ module.exports = {
                 return cb(null, null, point);
             });
         });
-    },
-    findAlarmDisplays: function (data, cb) {
+    }
+    findAlarmDisplays(data, cb) {
         let criteria = {};
         let firstSearch = {};
         let thirdSearch = {};
@@ -1096,7 +1063,7 @@ module.exports = {
             }
         };
 
-        Utility.getOne(criteria, function (err, targetPoint) {
+        Utility.getOne(criteria, (err, targetPoint) => {
             if (err) {
                 cb(err);
             }
@@ -1123,21 +1090,21 @@ module.exports = {
                         }
                     };
 
-                    Security.Utility.getPermissions(data.user, function (err, permissions) {
-                        Utility.getOne(criteria, function (err, point) {
+                    Security.Utility.getPermissions(data.user, (err, permissions) => {
+                        Utility.getOne(criteria, (err, point) => {
                             if (err) {
                                 return cb(err);
                             }
                             if (!point || permissions === false || !permissions.hasOwnProperty(thirdSearch._id)) {
                                 displays = [];
                             }
-                            doSecondSearch(targetPoint, function (err) {
+                            doSecondSearch(targetPoint, (err) => {
                                 return cb(err, displays);
                             });
                         });
                     });
                 } else {
-                    doSecondSearch(targetPoint, function (err) {
+                    doSecondSearch(targetPoint, (err) => {
                         return cb(err, displays);
                     });
                 }
@@ -1146,7 +1113,7 @@ module.exports = {
             }
         });
 
-        function doSecondSearch(targetPoint, callback) {
+        let doSecondSearch = (targetPoint, callback) => {
             secondSearch['Point Refs.Value'] = targetPoint._id;
             criteria = {
                 collection: 'points',
@@ -1156,15 +1123,15 @@ module.exports = {
                 },
                 data: data
             };
-            Utility.getWithSecurity(criteria, function (err, references) {
-                async.eachSeries(references, function (ref, acb) {
+            Utility.getWithSecurity(criteria, (err, references) => {
+                async.eachSeries(references, (ref, acb) => {
                     displays.push(ref);
                     acb(null);
                 }, callback);
             });
-        }
-    },
-    getControls: function (data, cb) {
+        };
+    }
+    getControls(data, cb) {
         let searchCriteria = {};
         let filterProps = {
             'Control Array': 1
@@ -1180,11 +1147,1720 @@ module.exports = {
             fields: filterProps
         };
 
-        Utility.getOne(criteria, function (err, point) {
+        Utility.getOne(criteria, (err, point) => {
             if (err) {
                 return cb(err);
             }
             return cb(null, point);
         });
     }
+    //io, updateSequencePoints, runScheduleEntry(tcp), updateDependencies
+    newUpdate(oldPoint, newPoint, flags, user, callback) {
+        let generateActivityLog = false,
+            updateReferences = false,
+            updateModelType = false,
+            updateCfgReq = false,
+            downloadPoint = false,
+            updateDownlinkNetwk = false,
+            configRequired,
+            updateObject = {},
+            //activityLogObject = {},
+            activityLogObjects = [],
+            readOnlyProps,
+            executeTOD = false,
+            logData = {
+                user: user,
+                timestamp: Date.now(),
+                point: newPoint
+            };
+        readOnlyProps = ['_id', '_cfgDevice', '_updTOD', '_pollTime', '_pAccess',
+            '_forceAllCOV', '_actvAlmId', 'Alarm State', 'Control Pending', 'Device Status',
+            'Last Report Time', 'Point Type', 'Reliability'
+        ];
+        // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
+
+        Utility.getOne({
+            collection: 'points',
+            query: {
+                _id: newPoint._id
+            },
+            fields: {
+                _pStatus: 1,
+                _id: 0
+            }
+        }, (err, dbPoint) => {
+            if (err) {
+                return callback({
+                    err: err
+                }, null);
+            } else if (!dbPoint) {
+                return callback({
+                    err: 'Point not found: ' + newPoint._id
+                }, null);
+            } else if (dbPoint._pStatus === Config.Enums['Point Statuses'].Deleted.enum) {
+                return callback({
+                    err: 'Point deleted: ' + newPoint._id
+                }, null);
+            }
+
+            configRequired = newPoint._cfgRequired;
+
+            // TODO should this be === or !== ? - probably !== since it is used again
+            if (flags.method !== null) {
+                if (oldPoint._pStatus === Config.Enums['Point Statuses'].Active.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Active.enum) {
+                    generateActivityLog = true;
+                } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Active.enum) {
+                    if (flags.method === 'restore') {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: 'Point restored',
+                            activity: 'Point Restore'
+                        })));
+                    } else {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: 'Point added',
+                            activity: 'Point Add'
+                        })));
+                    }
+                } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Active.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                    if (flags.method === 'hard') {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: 'Point destroyed',
+                            activity: 'Point Hard Delete'
+                        })));
+                    } else if (flags.method === 'soft') {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: 'Point deleted',
+                            activity: 'Point Soft Delete'
+                        })));
+                    }
+                } else if (newPoint.Name !== oldPoint.Name) {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        log: 'Point renamed from ' + oldPoint.Name + ' to ' + newPoint.Name,
+                        activity: 'Point Restore'
+                    })));
+                }
+            }
+
+            if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
+                Script.commitScript({
+                    point: newPoint,
+                    path: flags.path
+                }, (response) => {
+                    if (response.err) {
+                        return callback(response.err);
+                    }
+                    updateProperties();
+                });
+            } else {
+                updateProperties();
+            }
+
+            let compare = (a, b) => {
+                return a * 1 > b * 1;
+            };
+
+            let updateProperties = () => {
+                for (let prop in newPoint) {
+                    if (readOnlyProps.indexOf(prop) === -1) {
+                        // sort enums first
+                        if (newPoint[prop].hasOwnProperty('ValueOptions')) {
+                            let options = newPoint[prop].ValueOptions;
+
+                            let newOptions = {};
+                            let temp = [];
+                            for (let stringVal in options) {
+                                temp.push(options[stringVal]);
+                            }
+                            temp.sort(compare);
+                            for (let key = 0; key < temp.length; key++) {
+                                for (let property in options) {
+                                    if (options[property] === temp[key]) {
+                                        newOptions[property] = options[property];
+                                    }
+                                }
+                            }
+                            newPoint[prop].ValueOptions = newOptions;
+                        }
+
+                        // this will compare Slides and Point Refs arrays.
+                        if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
+                            logger.info(newPoint._id, prop);
+                            if (prop === 'Broadcast Enable' && user['System Admin'].Value !== true) {
+                                continue;
+                            }
+
+                            logData.activity = Config.Enums['Activity Logs']['Point Property Edit'].enum;
+                            logData.prop = prop;
+                            logData.oldValue = {
+                                Value: oldPoint[prop].Value
+                            };
+                            logData.newValue = {
+                                Value: newPoint[prop].Value
+                            };
+                            if (newPoint[prop].eValue !== undefined) {
+                                logData.newValue.eValue = newPoint[prop].eValue;
+                            }
+                            if (oldPoint[prop].eValue !== undefined) {
+                                logData.oldValue.eValue = oldPoint[prop].eValue;
+                            }
+
+                            switch (prop) {
+                                case 'Configure Device':
+                                    if (newPoint[prop].Value === true) {
+                                        updateObject._cfgDevice = true;
+                                        if (newPoint['Point Type'].eValue === Config.Enums['Point Types']['Remote Unit'].enum) {
+                                            downloadPoint = true;
+                                        }
+                                    }
+                                    break;
+
+                                case 'Value':
+                                    let propName = '';
+
+                                    if (!_.isEqual(newPoint[prop].ValueOptions, oldPoint[prop].ValueOptions)) {
+                                        updateReferences = true;
+                                        propName = 'Value.ValueOptions';
+                                        updateObject[propName] = newPoint[prop].ValueOptions;
+                                    }
+                                    if (newPoint[prop].isReadOnly !== oldPoint[prop].isReadOnly) {
+                                        propName = 'Value.isReadOnly';
+                                        updateObject[propName] = newPoint[prop].isReadOnly;
+                                    }
+                                    if (newPoint[prop].Value !== oldPoint[prop].Value) {
+                                        propName = 'Value.Value';
+                                        updateObject[propName] = newPoint[prop].Value;
+
+                                        if (newPoint[prop].eValue !== undefined) {
+                                            propName = 'Value.eValue';
+                                            updateObject[propName] = newPoint[prop].eValue;
+                                        }
+
+                                        if (!!newPoint.hasOwnProperty('Out of Service') && newPoint['Out of Service'].Value === true) {
+                                            if (newPoint.Value.oosValue !== undefined) {
+                                                downloadPoint = true;
+                                                if (newPoint[prop].eValue !== undefined) {
+                                                    updateObject['Value.oosValue'] = newPoint[prop].eValue;
+                                                } else {
+                                                    updateObject['Value.oosValue'] = newPoint[prop].Value;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+
+                                case 'Out of Service':
+                                    if (newPoint[prop].Value === true && newPoint.Value.oosValue !== undefined) {
+                                        updateObject['Value.oosValue'] = (newPoint.Value.eValue !== undefined) ? newPoint.Value.eValue : newPoint.Value.Value;
+                                    }
+
+                                    downloadPoint = true;
+                                    break;
+
+                                case 'Name':
+                                case 'Compiled Code':
+                                    updateReferences = true;
+                                    break;
+
+                                case 'Conversion Adjustment':
+                                case 'Conversion Coefficient 1':
+                                case 'Conversion Coefficient 2':
+                                case 'Conversion Coefficient 3':
+                                case 'Conversion Coefficient 4':
+                                case 'Conversion Type':
+                                    if (newPoint['Point Type'].eValue === Config.Enums['Point Types'].Sensor.enum) {
+                                        updateReferences = true;
+                                    } else {
+                                        downloadPoint = true;
+                                    }
+                                    break;
+
+                                case 'Model Type':
+                                    updateReferences = true;
+                                    configRequired = true;
+                                    updateModelType = true;
+                                    break;
+
+                                case 'Firmware Version':
+                                    updateReferences = true;
+                                    configRequired = true;
+                                    break;
+
+                                case '_rmuModel':
+                                case '_devModel':
+                                    configRequired = true;
+                                    break;
+
+                                case 'Active Control':
+                                case 'Active Release':
+                                case 'Active Value':
+                                case 'Alarm Adjust Band':
+                                case 'Alarm Deadband':
+                                case 'APDU Timeout':
+                                case 'APDU Retries':
+                                case 'Broadcast Enable':
+                                case 'Broadcast Period':
+                                case 'Calculation Type':
+                                case 'Calibration Factor':
+                                case 'CFM Deadband':
+                                case 'Close Polarity':
+                                case 'Control Band Value':
+                                case 'Control Priority':
+                                case 'Controller':
+                                case 'Cooling Equipment':
+                                case 'Cooling Gain':
+                                case 'Cooling Setpoint':
+                                case 'COV Period':
+                                case 'COV Enable':
+                                case 'COV Increment':
+                                case 'Damper Max Output':
+                                case 'Damper Min Output':
+                                case 'Damper Proportional Band':
+                                case 'Damper Reset Gain':
+                                case 'Damper Reverse Action':
+                                case 'Damper Run Unoccupied':
+                                case 'Damper Unoccupied Output':
+                                case 'Digital Heat 1 Run Unoccupied':
+                                case 'Digital Heat 1 Start Load':
+                                case 'Digital Heat 1 Stop Load':
+                                case 'Digital Heat 2 Run Unoccupied':
+                                case 'Digital Heat 2 Start Load':
+                                case 'Digital Heat 2 Stop Load':
+                                case 'Digital Heat 3 Run Unoccupied':
+                                case 'Digital Heat 3 Start Load':
+                                case 'Digital Heat 3 Stop Load':
+                                case 'Default Value':
+                                case 'Delay Time':
+                                case 'Demand Enable':
+                                case 'Demand Interval':
+                                case 'Disable Limit Fault':
+                                case 'Downlink Broadcast':
+                                case 'Enable Warning Alarms':
+                                case 'Fail Action':
+                                case 'Fan Off CFM Setpoint':
+                                case 'Fan Off Temp Deadband':
+                                case 'Fan On CFM Setpoint':
+                                case 'Fast Pulse':
+                                case 'Feedback Polarity':
+                                case 'Filter':
+                                case 'Filter Weight':
+                                case 'Heat 1 Max Output':
+                                case 'Heat 1 Min Output':
+                                case 'Heat 1 Proportional Band':
+                                case 'Heat 1 Reset Gain':
+                                case 'Heat 1 Reverse Action':
+                                case 'Heat 1 Run Unoccupied':
+                                case 'Heat 1 Unoccupied Output':
+                                case 'Heating Equipment':
+                                case 'Heating Gain':
+                                case 'Heating Setpoint':
+                                case 'High Alarm Limit':
+                                case 'High Deadband':
+                                case 'High Setpoint':
+                                case 'High Warning Limit':
+                                case 'If Compare 1':
+                                case 'If Compare 2':
+                                case 'If Compare 3':
+                                case 'If Compare 4':
+                                case 'If Compare 5':
+                                case 'If Result 2':
+                                case 'If Result 3':
+                                case 'If Result 4':
+                                case 'If Result 5':
+                                case 'If Value 1':
+                                case 'If Value 2':
+                                case 'If Value 3':
+                                case 'If Value 4':
+                                case 'If Value 5':
+                                case 'In Alarm':
+                                case 'In Fault':
+                                case 'In Out of Service':
+                                case 'In Override':
+                                case 'Inactive Control':
+                                case 'Inactive Release':
+                                case 'Inactive Value':
+                                case 'Interlock State':
+                                case 'Input 1 Constant':
+                                case 'Input 2 Constant':
+                                case 'Input Deadband':
+                                case 'Input High Limit':
+                                case 'Input Low Limit':
+                                case 'Input Range':
+                                case 'Input Rate':
+                                case 'Lead Time':
+                                case 'Low Alarm Limit':
+                                case 'Low Deadband':
+                                case 'Low Setpoint':
+                                case 'Low Warning Limit':
+                                case 'Maximum Change':
+                                case 'Maximum Value':
+                                case 'Minimum Value':
+                                case 'Minimum Off Time':
+                                case 'Minimum On Time':
+                                case 'Modbus Order':
+                                case 'Momentary Delay':
+                                case 'Occupancy Schedule':
+                                case 'Occupied Cool Setpoint Value':
+                                case 'Occupied Heat Setpoint Value':
+                                case 'Occupied Max Cool CFM':
+                                case 'Occupied Max Heat CFM':
+                                case 'Occupied Min Cool CFM':
+                                case 'Occupied Min Heat CFM':
+                                case 'Open Polarity':
+                                case 'Outside Air Gain':
+                                case 'Override Time':
+                                case 'Polarity':
+                                case 'Program Change Request':
+                                case 'Proportional Band':
+                                case 'Pulse Weight':
+                                case 'Rate':
+                                case 'Rate Period':
+                                case 'Reset Gain':
+                                case 'Reset Interval':
+                                case 'Reset Time':
+                                case 'Reverse Action':
+                                case 'Run Total':
+                                case 'Same State Test':
+                                case 'Scale Factor':
+                                case 'Select State':
+                                case 'Setback Controller':
+                                case 'Setback Deadband':
+                                case 'Setback Enable':
+                                case 'Setpoint Value':
+                                case 'Shutdown Control':
+                                case 'Shutdown Enable':
+                                case 'Shutdown Release':
+                                case 'Shutdown State':
+                                case 'Shutdown Value':
+                                case 'Square Root':
+                                case 'Startup Delay':
+                                case 'Stop Gain':
+                                case 'Supervised Input':
+                                case 'Total':
+                                case 'Trend COV Increment':
+                                case 'Trend Enable':
+                                case 'Trend Interval':
+                                case 'Trigger Constant':
+                                case 'Unoccupied Cool Setpoint Value':
+                                case 'Unoccupied Heat Setpoint Value':
+                                case 'Unoccupied Max Cool CFM':
+                                case 'Unoccupied Max Heat CFM':
+                                case 'Unoccupied Min Cool CFM':
+                                case 'Unoccupied Min Heat CFM':
+                                case 'Update Interval':
+                                case 'Value Deadband':
+                                case 'Verify Delay':
+                                case 'Warmup Deadband':
+                                case 'Warning Adjust Band':
+                                case 'Boolean Registers':
+                                case 'Integer Registers':
+                                case 'Real Registers':
+                                case 'Point Registers':
+                                case 'Pump Control Mode': // Lift station point props
+                                case 'Pump Select Mode':
+                                case 'Pump Sequence Delay':
+                                case 'Max Pump Off Time':
+                                case 'Max Pump Run Time':
+                                case 'Light Control Point':
+                                case 'Light Output Configuration':
+                                case 'Horn Control Point':
+                                case 'Horn Output Configuration':
+                                case 'Auxiliary Control Point':
+                                case 'Auxiliary Output Configuration':
+                                case 'High Level Float Point':
+                                case 'Lag Level Float Point':
+                                case 'Lead Level Float Point':
+                                case 'Off Level Float Point':
+                                case 'Low Level Float Point':
+                                case 'Level Sensor Point':
+                                case 'High Level Setpoint':
+                                case 'Lag Level Setpoint':
+                                case 'Lead Level Setpoint':
+                                case 'Off Level Setpoint':
+                                case 'Low Level Setpoint':
+                                case 'Emergency Pump Down Time':
+                                    downloadPoint = true;
+                                    break;
+
+                                case 'Channel':
+                                case 'Close Channel':
+                                case 'Device Address':
+                                case 'Device Port':
+                                case 'Downlink IP Port':
+                                case 'Feedback Channel':
+                                case 'Feedback Type':
+                                case 'Input Type':
+                                case 'Network Segment':
+                                case 'Network Type':
+                                case 'Off Channel':
+                                case 'On Channel':
+                                case 'Open Channel':
+                                case 'Output Type':
+                                case 'Port 1 Address':
+                                case 'Port 1 Maximum Address':
+                                case 'Port 1 Network':
+                                case 'Port 1 Protocol':
+                                case 'Port 2 Address':
+                                case 'Port 2 Maximum Address':
+                                case 'Port 2 Network':
+                                case 'Port 2 Protocol':
+                                case 'Port 3 Address':
+                                case 'Port 3 Maximum Address':
+                                case 'Port 3 Network':
+                                case 'Port 3 Protocol':
+                                case 'Port 4 Address':
+                                case 'Port 4 Maximum Address':
+                                case 'Port 4 Network':
+                                case 'Port 4 Protocol':
+                                case 'Time Zone':
+                                case 'VAV Channel':
+                                    configRequired = true;
+                                    break;
+
+
+                                case 'Boolean Register Names':
+                                case 'Integer Register Names':
+                                case 'Point Register Names':
+                                case 'Real Register Names':
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Script.enum) {
+                                        downloadPoint = true;
+                                    }
+                                    break;
+
+                                case 'Alarm Delay Time':
+                                case 'Stop Scan':
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Device.enum) {
+                                        downloadPoint = true;
+                                    }
+                                    break;
+
+                                case 'Alarm Value':
+                                case 'Alarms Off':
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Device.enum && newPoint['Point Type'].eValue !== Config.Enums['Point Types']['Remote Unit'].enum) {
+                                        downloadPoint = true;
+                                    }
+                                    break;
+
+                                case 'Execute Now':
+                                    executeTOD = true;
+                                    break;
+
+                                case 'Trend Samples':
+                                    if (newPoint._devModel === Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum || newPoint._devModel === Config.Enums['Device Model Types']['MicroScan 5 xTalk'].enum || newPoint._devModel === Config.Enums['Device Model Types']['SCADA Vio'].enum) {
+                                        downloadPoint = true;
+                                    } else {
+                                        configRequired = true;
+                                    }
+                                    break;
+
+                                case 'Point Refs':
+                                    let pointRefProps = Config.Utility.getPointRefProperties(newPoint);
+                                    for (let r = 0; r < pointRefProps.length; r++) {
+                                        if (!_.isEqual(Config.Utility.getPropertyObject(pointRefProps[r], newPoint), Config.Utility.getPropertyObject(pointRefProps[r], oldPoint))) {
+                                            switch (pointRefProps[r]) {
+                                                case 'Alarm Adjust Point':
+                                                case 'CFM Input Point':
+                                                case 'Control Point':
+                                                case 'Damper Control Point':
+                                                case 'Digital Heat 1 Control Point':
+                                                case 'Digital Heat 2 Control Point':
+                                                case 'Digital Heat 3 Control Point':
+                                                case 'Dry Bulb Point':
+                                                case 'Fan Control Point':
+                                                case 'Feedback Point':
+                                                case 'Heat 1 Control Point':
+                                                case 'Humidity Point':
+                                                case 'Input Point 1':
+                                                case 'Input Point 2':
+                                                case 'Input Point 3':
+                                                case 'Input Point 4':
+                                                case 'Input Point 5':
+                                                case 'Interlock Point':
+                                                case 'Lights Control Point':
+                                                case 'Mixed Air Point':
+                                                case 'Monitor Point':
+                                                case 'Occupied Cool Setpoint':
+                                                case 'Occupied Heat Setpoint':
+                                                case 'Occupied Input':
+                                                case 'Occupied Point':
+                                                case 'Outside Air Point':
+                                                case 'Return Air Point':
+                                                case 'Select Input':
+                                                case 'Setpoint Input':
+                                                case 'Shutdown Point':
+                                                case 'Source Air Temp Point':
+                                                case 'Trigger Point':
+                                                case 'Unoccupied Cool Setpoint':
+                                                case 'Unoccupied Heat Setpoint':
+                                                case 'Zone Temp Point':
+                                                case 'Zone Offset Point':
+                                                    downloadPoint = true;
+                                                    break;
+
+                                                case 'Device Point':
+                                                    updateReferences = true;
+                                                    configRequired = true;
+                                                    updateCfgReq = true;
+                                                    break;
+
+                                                case 'Remote Unit Point':
+                                                case 'Script Point':
+                                                    configRequired = true;
+                                                    break;
+
+                                                default:
+                                                    break;
+                                            }
+                                        }
+                                    }
+
+                                    break;
+
+                                case 'Ethernet Network':
+                                    if (newPoint['Point Type'].Value === 'Device') {
+                                        updateDownlinkNetwk = true;
+                                    }
+                                    break;
+                                case 'Downlink Network':
+                                    downloadPoint = true;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            if (prop !== 'Configure Device' && prop !== 'Value') {
+                                if (downloadPoint === false && false) {
+                                    downloadPoint = true;
+                                }
+                                updateObject[prop] = newPoint[prop];
+                            }
+
+                            if (generateActivityLog === true && flags.from === 'ui') {
+                                let oldVal = (oldPoint[prop].Value !== '') ? oldPoint[prop].Value : '[blank]',
+                                    newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : '[blank]';
+                                //if enum, if evalue changed AL, else if not enum, compare value
+                                if (['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0) {
+                                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        log: newPoint['Point Type'].Value + ' updated',
+                                        activity: 'Point Property Edit'
+                                    })));
+                                } else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
+                                    if (prop === 'Configure Device') {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: 'Device configuration requested',
+                                            activity: 'Device Configuration'
+                                        })));
+                                    } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].Bool.enum) {
+                                        if (newPoint[prop].Value === true) {
+                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                                log: prop + ' set',
+                                                activity: 'Point Property Edit'
+                                            })));
+                                        } else {
+                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                                log: prop + ' cleared',
+                                                activity: 'Point Property Edit'
+                                            })));
+                                        }
+                                    } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].UniquePID.enum) {
+                                        if (oldPoint[prop].PointInst !== null && newPoint[prop].PointInst === null) {
+                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                                log: newPoint[prop].Name + ' removed from ' + prop,
+                                                activity: 'Point Property Edit'
+                                            })));
+                                        } else if (oldPoint[prop].PointInst === null && newPoint[prop].PointInst !== null) {
+                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                                log: newPoint[prop].Name + ' added to ' + prop,
+                                                activity: 'Point Property Edit'
+                                            })));
+                                        } else {
+                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                                log: prop + ' changed from ' + oldPoint[prop].Name + ' to ' + newPoint[prop].Name,
+                                                activity: 'Point Property Edit'
+                                            })));
+                                        }
+                                    } else if ([Config.Enums['Value Types'].HourMinSec.enum, Config.Enums['Value Types'].MinSec.enum, Config.Enums['Value Types'].HourMin.enum].indexOf(newPoint[prop].ValueType) > -1) {
+                                        let timeMessage,
+                                            hour = 0,
+                                            min = 0,
+                                            sec = oldPoint[prop].Value;
+                                        switch (newPoint[prop].ValueType) {
+                                            case 12:
+                                                hour = Math.floor(sec / 3600);
+                                                sec %= 3600;
+                                                min = Math.floor(sec / 60);
+                                                sec %= 60;
+                                                hour = hour > 9 ? hour : '0' + hour;
+                                                min = min > 9 ? min : '0' + min;
+                                                sec = sec > 9 ? sec : '0' + sec;
+                                                timeMessage = prop + ' changed from ' + hour + ':' + min + ':' + sec + ' to ';
+                                                sec = newPoint[prop].Value;
+                                                hour = Math.floor(sec / 3600);
+                                                sec %= 3600;
+                                                min = Math.floor(sec / 60);
+                                                sec %= 60;
+                                                hour = hour > 9 ? hour : '0' + hour;
+                                                min = min > 9 ? min : '0' + min;
+                                                sec = sec > 9 ? sec : '0' + sec;
+                                                timeMessage += hour + ':' + min + ':' + sec;
+                                                break;
+                                            case 13:
+                                                min = Math.floor(sec / 60);
+                                                sec %= 60;
+                                                min = min > 9 ? min : '0' + min;
+                                                sec = sec > 9 ? sec : '0' + sec;
+                                                timeMessage = prop + ' changed from ' + min + ':' + sec + ' to ';
+                                                sec = newPoint[prop].Value;
+                                                min = Math.floor(sec / 60);
+                                                sec %= 60;
+                                                min = min > 9 ? min : '0' + min;
+                                                sec = sec > 9 ? sec : '0' + sec;
+                                                timeMessage += min + ':' + sec;
+                                                break;
+                                            case 17:
+                                                hour = Math.floor(sec / 3600);
+                                                sec %= 3600;
+                                                min = Math.floor(sec / 60);
+                                                hour = hour > 9 ? hour : '0' + hour;
+                                                min = min > 9 ? min : '0' + min;
+                                                timeMessage = prop + ' changed from ' + hour + ':' + min + ' to ';
+                                                sec = newPoint[prop].Value;
+                                                hour = Math.floor(sec / 3600);
+                                                sec %= 3600;
+                                                min = Math.floor(sec / 60);
+                                                hour = hour > 9 ? hour : '0' + hour;
+                                                min = min > 9 ? min : '0' + min;
+                                                timeMessage += hour + ':' + min;
+                                                break;
+                                        }
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: timeMessage,
+                                            activity: 'Point Property Edit'
+                                        })));
+                                    } else {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: prop + ' changed from ' + oldVal + ' to ' + newVal,
+                                            activity: 'Point Property Edit'
+                                        })));
+                                    }
+                                } else if (prop === 'Point Refs') {
+                                    if (newPoint['Point Type'].Value === 'Slide Show') {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: 'Slide Show edited',
+                                            activity: 'Slideshow Edit'
+                                        })));
+                                    } else if (newPoint['Point Type'].Value === 'Program') {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: 'Program edited',
+                                            activity: 'Program Edit'
+                                        })));
+                                    } else {
+                                        compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
+                                    }
+                                } else if (prop === 'Alarm Messages' || prop === 'Occupancy Schedule' || prop === 'Sequence Details' || prop === 'Security' || prop === 'Script Source File') {
+                                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        log: prop + ' updated',
+                                        activity: 'Point Property Edit'
+
+                                    })));
+                                } else if (prop === 'Name') {
+                                    if (newPoint[prop] !== oldPoint[prop]) {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: prop + ' changed from ' + oldPoint[prop] + ' to ' + newPoint[prop],
+                                            activity: 'Point Property Edit'
+                                        })));
+                                    }
+                                    /*} else if (prop === "Value") {
+                                      if (newPoint[prop].Value !== oldPoint[prop].Value) {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                          log: prop + " changed from " + oldVal + " to " + newVal,
+                                          activity: "Point Property Edit"
+                                        })));
+                                      }*/
+                                } else if (prop === 'States') {
+                                    if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
+                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            log: prop + ' updated',
+                                            activity: 'Point Property Edit'
+                                        })));
+                                    }
+                                }
+                            } else {
+                                generateActivityLog = false;
+                            }
+                        }
+                    }
+                }
+
+                if (!_.isEmpty(updateObject)) {
+                    if (newPoint['Point Type'].Value === 'Schedule Entry') {
+                        downloadPoint = false;
+                        updateReferences = false;
+                    } else if (newPoint['Point Type'].Value === 'Device') {
+                        utils.updateNetworkAndAddress(newPoint);
+
+                        updateObject['Network Segment.Value'] = newPoint['Network Segment'].Value;
+                        updateObject['Device Address.Value'] = newPoint['Device Address'].Value.toString();
+                    }
+
+                    if (configRequired === true) {
+                        updateObject._cfgRequired = true;
+                        downloadPoint = false;
+                    } else if (newPoint._pStatus !== Config.Enums['Point Statuses'].Active.enum ||
+                        newPoint._devModel === Config.Enums['Device Model Types'].Unknown.enum ||
+                        newPoint._devModel === Config.Enums['Device Model Types']['Central Device'].enum ||
+                        newPoint['Point Type'].Value === 'Sequence' ||
+                        (newPoint['Point Type'].Value !== 'Device' &&
+                            (Config.Utility.getPropertyObject('Device Point', newPoint) === null ||
+                                Config.Utility.getPropertyObject('Device Point', newPoint).PointInst === 0))) {
+                        // not active
+                        // or (central device or unknown)
+                        // or (!device and !device point)
+
+                        downloadPoint = false;
+                    } else if (flags.from === 'updateDependencies') {
+                        updateObject._updPoint = true;
+                        downloadPoint = false;
+                    }
+
+                    Security.updSecurity(newPoint, (err) => {
+                        Utility.findAndModify({
+                            collection: 'points',
+                            query: {
+                                _id: newPoint._id
+                            },
+                            sort: [],
+                            updateObj: {
+                                $set: updateObject
+                            },
+                            options: {
+                                new: true
+                            }
+                        }, (err, result) => {
+                            if (err) {
+                                return callback({
+                                    err: err
+                                }, null);
+                            }
+                            let error = null;
+                            this.updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, (err) => {
+                                if (err) {
+                                    return callback({
+                                        err: err
+                                    }, result);
+                                }
+                                this.updPoint(downloadPoint, newPoint, (err, msg) => {
+                                    if (err) {
+                                        error = err;
+                                    }
+                                    this.signalExecTOD(executeTOD, (err) => {
+                                        if (err) {
+                                            error = error;
+                                        }
+                                        this.doActivityLogs(generateActivityLog, activityLogObjects, (err) => {
+                                            if (err) {
+                                                return callback({
+                                                    err: err
+                                                }, result);
+                                            }
+                                            this.updateModel(updateModelType, newPoint, (err) => {
+                                                if (err) {
+                                                    return callback({
+                                                        err: err
+                                                    }, result);
+                                                }
+                                                this.fixCfgRequired(updateCfgReq, oldPoint, newPoint, (err) => {
+                                                    if (err) {
+                                                        return callback({
+                                                            err: err
+                                                        }, result);
+                                                    }
+                                                    this.updateRefs(updateReferences, newPoint, flags, user, (err) => {
+                                                        if (err) {
+                                                            return callback({
+                                                                err: err
+                                                            }, result);
+                                                        } else if (error) {
+                                                            return callback({
+                                                                err: error
+                                                            }, result);
+                                                        }
+
+                                                        msg = (msg !== undefined && msg !== null) ? msg : 'success';
+                                                        return callback({
+                                                            message: msg
+                                                        }, result);
+                                                    });
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                } else {
+                    return callback({
+                        message: 'success'
+                    }, newPoint);
+                }
+            };
+        });
+
+        let compareArrays = (newArray, oldArray, activityLogObjects) => {
+            for (let i = 0; i < newArray.length; i++) {
+                if (newArray[i].Value !== oldArray[i].Value) {
+                    logData.prop = newArray[i].PropertyName;
+                    if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: logData.prop + ' removed',
+                            activity: 'Point Property Edit'
+                        })));
+                    } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: logData.prop + ' added',
+                            activity: 'Point Property Edit'
+                        })));
+                    } else {
+                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                            log: logData.prop + ' changed from ' + oldArray[i].PointName + ' to ' + newArray[i].PointName,
+                            activity: 'Point Property Edit'
+                        })));
+                    }
+                }
+            }
+        };
+    }
+    // newupdate
+    updateRefs(updateReferences, newPoint, flags, user, callback) {
+        if (updateReferences === true) {
+            this.updateDependencies(newPoint, {
+                from: 'newUpdate',
+                method: (flags.method === null) ? 'update' : flags.method
+            }, user, (err) => {
+                return callback(err);
+            });
+        } else {
+            return callback(null);
+        }
+    }
+    //newupdate
+    fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
+        if (!!updateCfgReq) {
+            let oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
+            let newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
+            // 0 > 0 - no change
+            // N > 0 - cfg old
+            // 0 > N - cfg new
+            // N > M - cfg both
+            let areBothZero = oldDevPoint === 0 && newDevPoint === 0;
+            let isNowOffDevice = oldDevPoint !== 0 && newDevPoint === 0;
+            let isNowOnDevice = oldDevPoint === 0 && newDevPoint !== 0;
+            let didChangeDevice = oldDevPoint !== 0 && newDevPoint !== 0 && oldDevPoint !== newDevPoint;
+
+            if (!areBothZero && (!!isNowOffDevice || !!isNowOnDevice || !!didChangeDevice)) {
+                let upis = [];
+                if (isNowOffDevice || didChangeDevice) {
+                    upis.push(oldDevPoint);
+                }
+                if (isNowOnDevice || didChangeDevice) {
+                    upis.push(newDevPoint);
+                }
+
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _id: {
+                            $in: upis
+                        }
+                    },
+                    updateObj: {
+                        $set: {
+                            _cfgRequired: true
+                        }
+                    }
+                }, callback);
+            } else {
+                callback();
+            }
+        } else {
+            callback();
+        }
+    }
+    //newupdate
+    updateModel(updateModelType, newPoint, callback) {
+        if (!!updateModelType) {
+            let criteria = {
+                collection: 'points',
+                query: {
+                    'Point Refs.Value': newPoint._id
+                }
+            };
+            Utility.iterateCursor(criteria, (err, doc, next) => {
+                if (newPoint['Point Type'].Value === 'Device') {
+                    doc._devModel = newPoint['Model Type'].eValue;
+                } else if (newPoint['Point Type'].Value === 'Remote Unit') {
+                    doc._rmuModel = newPoint['Model Type'].eValue;
+                }
+                Config.Utility.updDevModel({
+                    point: doc
+                });
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _id: doc._id
+                    },
+                    updateObj: doc
+                }, next);
+            }, callback);
+        } else {
+            callback();
+        }
+    }
+    // newupdate
+    updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
+        if (updateDownlinkNetwk) {
+            Utility.update({
+                collection: this.collection,
+                query: {
+                    'Point Type.Value': 'Device',
+                    'Uplink Port.Value': 'Ethernet',
+                    $and: [{
+                        'Downlink Network.Value': {
+                            $ne: 0
+                        }
+                    }, {
+                        $or: [{
+                            'Downlink Network.Value': newPoint['Ethernet Network'].Value
+                        }, {
+                            'Downlink Network.Value': oldPoint['Ethernet Network'].Value
+                        }]
+                    }]
+                },
+                updateObj: {
+                    $set: {
+                        _updPoint: true
+                    }
+                }
+            }, (err) => {
+                callback(err);
+            });
+        } else {
+            callback(null);
+        }
+    }
+    // newupdate
+    updPoint(downloadPoint, newPoint, callback) {
+        if (downloadPoint === true) {
+            //send download point request to c++ module
+            let command = {
+                'Command Type': 6,
+                'upi': newPoint._id
+            };
+            let err;
+            let code;
+            command = JSON.stringify(command);
+
+            ZMQ.sendCommand(command, (error, msg) => {
+                if (!!error) {
+                    err = error.ApduErrorMsg;
+                    code = parseInt(error.ApduError, 10);
+                }
+
+                if (err) {
+                    if (code >= 2300 && code < 2304) {
+                        Utility.update({
+                            collection: this.collection,
+                            query: {
+                                _id: newPoint._id
+                            },
+                            updateObj: {
+                                $set: {
+                                    _updPoint: true
+                                }
+                            }
+                        }, (dberr, result) => {
+                            if (dberr) {
+                                return callback(dberr, null);
+                            }
+                            return callback(err, 'success');
+                        });
+                    } else {
+                        return callback(err, null);
+                    }
+                } else {
+                    return callback(null, 'success');
+                }
+            });
+        } else {
+            callback(null, 'success');
+        }
+    }
+    //renamePoint(depre), deletePoint, restorePoint(io), updateRefs (common)
+    updateDependencies(refPoint, flags, user, callback) {
+        // schedule entries collection - find the control point properties and
+        // run this against those properties that match the upi
+        // create a new  for this and call from within this=>.
+        let error = null;
+        let data = {
+            point: null,
+            refPoint: refPoint,
+            oldPoint: null,
+            property: null,
+            propertyObject: null
+        };
+        let devices = [];
+        let signalTOD = false;
+        let deepClone = (o) => {
+            // Return the value if it's not an object; shallow copy mongo ObjectID objects
+            if ((o === null) || (typeof (o) !== 'object') || (o instanceof ObjectID)) {
+                return o;
+            }
+
+            let temp = o.constructor();
+
+            for (let key in o) {
+                temp[key] = deepClone(o[key]);
+            }
+            return temp;
+        };
+
+        Utility.get({
+            collection: this.collection,
+            query: {
+                'Point Refs.Value': refPoint._id
+                // _parentUpi
+            },
+            fields: {
+                _id: 1
+            }
+        }, (err, dependencies) => {
+            async.eachSeries(dependencies, (dependencyId, depCB) => {
+                Utility.getOne({
+                    collection: this.collection,
+                    query: {
+                        _id: dependencyId._id
+                    }
+                }, (err, dependency) => {
+                    // TODO Check for errors
+                    console.log('waterfall', dependency.Name, dependency['Point Type'].Value, flags.method);
+                    async.waterfall([
+                        (cb1) => {
+                            if (dependency['Point Type'].Value === 'Schedule Entry' && flags.method === 'hard') {
+                                this.updateScheduleEntries(dependency, devices, null, (todSignal) => {
+                                    signalTOD = (signalTOD | todSignal) ? true : false;
+                                    // does deletePoint need to be called here?
+                                    Utility.remove({
+                                        collection: this.collection,
+                                        query: {
+                                            _id: dependency._id
+                                        }
+                                    }, (err, result) => {
+                                        console.log('first err', err);
+                                        cb1(err);
+                                    });
+                                });
+                            } else {
+                                cb1(null);
+                            }
+                        },
+                        (cb2) => {
+                            data.point = dependency;
+                            data.oldPoint = deepClone(dependency);
+
+                            if (dependency['Point Type'].Value !== 'Schedule Entry' || (flags.method !== 'hard')) {
+                                if (dependency['Point Type'].Value === 'Schedule Entry' && dependency._parentUpi === 0 && flags.method === 'soft') {
+                                    dependency._pStatus = 2;
+                                    return cb2(null);
+                                }
+                                // dependency._cfgRequired = false;
+                                // dependency._updPoint = false;
+
+                                for (let i = 0; i < dependency['Point Refs'].length; i++) {
+                                    if (dependency['Point Refs'][i].Value === refPoint._id) {
+                                        data.property = i;
+                                        data.propertyObject = dependency['Point Refs'][i];
+
+                                        switch (flags.method) {
+                                            case 'hard':
+                                                data.propertyObject.Value = 0;
+                                                data.refPoint = null;
+                                                break;
+                                            case 'soft':
+                                                data.propertyObject.PointInst = 0;
+                                                data.refPoint = null;
+                                                break;
+                                            case 'restore':
+                                                data.propertyObject.PointInst = data.propertyObject.Value;
+                                                break;
+                                        }
+
+                                        /*if (dependency["Point Refs"][i]["Point Type"].Value === "Script")
+                                          data.newPoint._cfgRequired = true;*/
+                                        Config.Update.formatPoint(data);
+                                        if (data.err !== undefined) {
+                                            logger.error('data.err: ', data.err);
+                                            error = 'ERROR!';
+                                            cb2(data.err);
+                                        }
+                                    }
+                                }
+                                cb2(null);
+                            } else {
+                                cb2(null);
+                            }
+                        },
+                        (cb3) => {
+                            if (dependency['Point Type'].Value === 'Schedule Entry') {
+                                if (flags.method !== 'hard') {
+                                    this.updateScheduleEntries(dependency, devices, null, (todSignal) => {
+                                        signalTOD = (signalTOD | todSignal) ? true : false;
+                                        // does deletePoint need to be called here?
+                                        this.newUpdate(data.oldPoint, data.point, {
+                                            method: flags.method,
+                                            from: 'updateDependencies'
+                                        }, user, (response, point) => {
+                                            console.log('second err', err);
+                                            cb3(response.err);
+                                        });
+                                    });
+                                } else {
+                                    return cb3();
+                                }
+                            } else {
+                                this.newUpdate(data.oldPoint, data.point, {
+                                    method: flags.method,
+                                    from: 'updateDependencies'
+                                }, user, (response, point) => {
+                                    cb3(null);
+                                });
+                            }
+                        }
+                    ], (err) => {
+                        console.log('err', err);
+                        depCB(err);
+                    });
+                });
+            }, (err) => {
+                this.signalHostTOD(signalTOD, (err) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    this.updateDeviceToDs(devices, (err) => {
+                        callback((error !== null) ? error : err);
+                    });
+                });
+            });
+        });
+    }
+
+    restorePoint(upi, user, callback) {
+        let logData = {
+                user: user,
+                timestamp: Date.now()
+            },
+            pointType;
+
+        Utility.findAndModify({
+            collection: this.pointsCollection,
+            query: {
+                _id: upi
+            },
+            sort: [],
+            updateObj: {
+                $set: {
+                    _pStatus: 0
+                }
+            },
+            options: {
+                new: true
+            }
+        }, (err, point) => {
+            if (err) {
+                return callback({
+                    err: err
+                });
+            }
+
+            logData.activity = 'Point Restore';
+            logData.log = 'Point restored';
+            logData.point = point;
+            ActivityLog.create(logData, (err, result) => {
+                pointType = point['Point Type'].Value;
+                switch (pointType) {
+                    case 'Schedule':
+                    case 'Sequence':
+                        Utility.update({
+                            collection: 'points',
+                            query: {
+                                _parentUpi: point._id
+                            },
+                            updateObj: {
+                                $set: {
+                                    _pStatus: 0
+                                }
+                            },
+                            options: {
+                                multi: true
+                            }
+                        }, (err, result) => {
+                            return callback({
+                                message: 'success'
+                            });
+                        });
+                        break;
+                    case 'Report':
+                        // enable related schedules
+                        // Utility.findAndModify({
+                        //     collection: constants('schedulescollection'),
+                        //     query: {
+                        //         upi: point._id
+                        //     },
+                        //     updateObj: {
+                        //         $set: {
+                        //             enabled: true
+                        //         }
+                        //     }
+                        // },  (err, result) =>{
+                        //     return callback({
+                        //         message: "success"
+                        //     });
+                        // });
+                        break;
+                    default:
+                        this.restoreScheduleEntries(point, user, () => {
+                            this.updateDependencies(point, {
+                                method: 'restore'
+                            }, user, () => {
+                                return callback({
+                                    message: 'success'
+                                });
+                            });
+                        });
+                        break;
+                }
+            });
+        });
+    }
+
+    restoreScheduleEntries(refPoint, user, callback) {
+        let query = {
+            'Point Type.Value': 'Schedule Entry',
+            'Point Refs': {
+                $elemMatch: {
+                    Value: refPoint._id,
+                    PropertyName: 'Control Point'
+                }
+            }
+        };
+
+        Utility.get({
+            collection: this.collection,
+            query: query
+        }, (err, points) => {
+            let devices = [],
+                signalTOD = false;
+            async.eachSeries(points, (point, asyncCB) => {
+                // if host schedule - set flag
+                this.updateScheduleEntries(point, devices, refPoint, (todSignal) => {
+                    signalTOD = (signalTOD | todSignal) ? true : false;
+                    this.restorePoint(point._id, user, (err) => {
+                        asyncCB(err.err);
+                    });
+                });
+            }, (err) => {
+                this.signalHostTOD(signalTOD, (err) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    this.updateDeviceToDs(devices, (err) => {
+                        callback(err);
+                    });
+                });
+            });
+        });
+    }
+
+    //updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
+    deletePoint(upi, method, user, options, callback) {
+        let _point,
+            _updateFromSchedule = !!options && options.from === 'updateSchedules',
+            _upi = parseInt(upi, 10),
+            _logData = {
+                user: user,
+                timestamp: Date.now()
+            },
+            _warning = '',
+            _buildWarning = (msg) => {
+                if (_warning.length) {
+                    _warning += '; ' + msg;
+                } else {
+                    _warning = msg;
+                }
+            },
+            _findPoint = (cb) => {
+                let query = {
+                    _id: _upi
+                };
+                Utility.getOne({
+                    collection: this.collection,
+                    query: query
+                }, (err, point) => {
+                    // Save point reference
+                    _point = point;
+                    // STOP PROCESSING if the the point wasn't found
+                    if (!err && !point) {
+                        err = 'Point not found';
+                    }
+                    cb(err);
+                });
+            },
+            _deletePoint = (cb) => {
+                let query = {
+                        _id: _upi
+                    },
+                    sort = [],
+                    update = {
+                        $set: {
+                            _pStatus: 2
+                        }
+                    },
+                    options = {
+                        new: true
+                    };
+
+                if (method === 'hard') {
+                    Utility.remove({
+                        collection: this.collection,
+                        query: query
+                    }, (err, result) => {
+                        cb(err);
+                    });
+                } else {
+                    query._pStatus = 0;
+                    Utility.findAndModify({
+                        collection: this.collection,
+                        query: query,
+                        sort: sort,
+                        updateObj: update,
+                        options: options
+                    }, (err, point) => {
+                        // Update our point reference
+                        _point = point;
+                        // STOP PROCESSING if we couldn't modify the point or if it wasn't found
+                        if (!err && !point) {
+                            err = 'Point already deleted';
+                        }
+                        cb(err);
+                    });
+                }
+            },
+            _updateUpis = (cb) => {
+                // We only update the upis collection if the point is hard deleted (destroyed)
+                if (method === 'soft') {
+                    return cb(null);
+                }
+
+                Upi.deleteUpi(_upi, (err, result) => {
+                    if (err) {
+                        _buildWarning('could not update the UPI collection');
+                    }
+                    cb(null);
+                });
+            },
+            _deleteHistory = (cb) => {
+                // We only remove entries from the history collection if the point is hard deleted (destroyed)
+                if (method === 'soft') {
+                    return cb(null);
+                }
+                History.remove({
+                    upi: _upi
+                }, (err, result) => {
+                    if (err) {
+                        _buildWarning('could not remove all history entries');
+                    }
+                    cb(null);
+                });
+            },
+            _fromScheduleExitCheck = (cb) => {
+                // STOP PROCESSING if updating from schedules; otherwise continue down the waterfall
+                if (_updateFromSchedule) {
+                    cb('OK');
+                } else {
+                    cb(null);
+                }
+            },
+            _addActivityLog = (cb) => {
+                if (_point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                    return cb(null);
+                }
+                if (method === 'hard') {
+                    _logData.activity = 'Point Hard Delete';
+                    _logData.log = 'Point destroyed';
+                } else {
+                    _logData.activity = 'Point Soft Delete';
+                    _logData.log = 'Point deleted';
+                }
+                _logData.point = _point;
+                ActivityLog.create(_logData, (err, result) => {
+                    if (err) {
+                        _buildWarning('could not create activity log');
+                    }
+                    cb(null);
+                });
+            },
+            _deleteChildren = (cb) => {
+                this.deleteChildren(method, _point['Point Type'].Value, _point._id, null, (err) => {
+                    if (err) {
+                        _buildWarning('could not delete all schedule entries associated with this point');
+                    }
+                    cb(null);
+                });
+            },
+            _updateCfgRequired = (cb) => {
+                this.updateCfgRequired(_point, (err) => {
+                    if (err) {
+                        _buildWarning('could not update the configuration required flag on all point dependencies');
+                    }
+                    cb(null);
+                });
+            },
+            _updateDependencies = (cb) => {
+                let refPoint = {
+                        _id: _upi
+                    },
+                    flags = {
+                        method: method
+                    };
+                this.updateDependencies(refPoint, flags, user, (err) => {
+                    if (err) {
+                        _buildWarning('could not update all point dependencies');
+                    }
+                    cb(null);
+                });
+            },
+            _updateRelatedSchedule = (cb) => {
+                if (method === 'hard') {
+                    Schedule.remove(upi, cb);
+                } else {
+                    Schedule.disable(upi, cb);
+                }
+            },
+            executeFunctions = [_findPoint, _deletePoint, _updateUpis, _deleteHistory, _fromScheduleExitCheck, _addActivityLog,
+                _deleteChildren, _updateCfgRequired, _updateDependencies, _updateRelatedSchedule
+            ];
+
+        async.waterfall(executeFunctions, (err) => {
+            let data = {};
+            // If error is null or 'OK' (we send 'OK' when we need to exit the waterfall before it's completed)
+            if (err === null || err === 'OK') {
+                if (_warning.length) {
+                    data.warning = _warning;
+                } else {
+                    data.message = 'success';
+                }
+            } else {
+                data.err = err;
+            }
+            callback(data);
+        });
+    }
+
+    // deletepoint
+    deleteChildren(method, pointType, upi, user, callback) {
+        let query = {};
+        // Build the query object
+        if (['Schedule', 'Sequence'].indexOf(pointType) >= 0) {
+            query._parentUpi = upi;
+            if (method === 'soft') {
+                Utility.update({
+                    collection: this.collection,
+                    query: query,
+                    updateObj: {
+                        $set: {
+                            _pStatus: 2
+                        }
+                    },
+                    options: {
+                        multi: true
+                    }
+                }, (err, results) => {
+                    callback(err);
+                });
+            } else if (method === 'hard') {
+                Utility.remove({
+                    collection: this.collection,
+                    query: query
+                },
+                    callback);
+            } else {
+                return callback();
+            }
+        } else {
+            return callback();
+        }
+    }
+
+    //updateDependencies, deleteChildren, updateSchedules(io)
+    updateDeviceToDs(devices, callback) {
+        Utility.update({
+            collection: this.collection,
+            query: {
+                _id: {
+                    $in: devices
+                }
+            },
+            updateObj: {
+                $set: {
+                    _updTOD: true
+                }
+            },
+            options: {
+                multi: true
+            }
+        }, (err, result) => {
+            callback(err);
+        });
+    }
+    //updateDependencies, deleteChildren, updateSchedules(io)
+    signalHostTOD(signalTOD, callback) {
+        if (signalTOD === true) {
+            let command = {
+                'Command Type': 9
+            };
+            command = JSON.stringify(command);
+            ZMQ.sendCommand(command, (err, msg) => {
+                return callback(err, msg);
+            });
+        } else {
+            callback(null, 'success');
+        }
+    }
+    //updateDependencies, deleteChildren
+    updateScheduleEntries(scheduleEntry, devices, refPoint, callback) {
+        let signalTOD = false;
+
+        if (refPoint !== null) {
+            scheduleEntry = Config.Update.formatPoint({
+                point: scheduleEntry,
+                oldPoint: scheduleEntry,
+                property: 'Control Point',
+                refPoint: refPoint
+            });
+        }
+
+        if (scheduleEntry['Host Schedule'].Value === true) {
+            signalTOD = true;
+        } else {
+            this.addToDevices(scheduleEntry, devices);
+        }
+
+        return callback(signalTOD);
+    }
+
+
+    //updateSchedules(io), updateScheduleEntries
+    addToDevices(scheduleEntry, devices, oldPoint) {
+        let devInst = Config.Utility.getPropertyObject('Control Point', scheduleEntry).DevInst;
+        if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
+            devices.push(parseInt(devInst, 10));
+        }
+        if (!!oldPoint) {
+            devInst = Config.Utility.getPropertyObject('Control Point', oldPoint).DevInst;
+            if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
+                devices.push(parseInt(devInst, 10));
+            }
+        }
+    }
+    //addpoint (io), deletepoint
+    updateCfgRequired(point, callback) {
+        if (point['Point Type'].Value === 'Device') {
+            point._cfgRequired = true;
+            callback(null);
+        } else if (Config.Utility.getPropertyObject('Device Point', point) !== null) {
+            point._cfgRequired = true;
+            if (Config.Utility.getPropertyObject('Device Point', point).PointInst !== 0) {
+                Utility.update({
+                    collection: this.collection,
+                    query: {
+                        _id: Config.Utility.getPropertyObject('Device Point', point).PointInst
+                    },
+                    updateObj: {
+                        $set: {
+                            _cfgRequired: true
+                        }
+                    }
+                }, (err, result) => {
+                    callback(err);
+                });
+            } else {
+                callback(null);
+            }
+        } else { // TODO Schedule Entry comes to here. Added to progress.
+            callback(null);
+        }
+    }
+
+    addPoint(data, user, options, callback) {
+        let point = data.point;
+        let logData = {
+            user: user,
+            timestamp: Date.now(),
+            point: point,
+            activity: 'Point Add',
+            log: 'Point added'
+        };
+        let updateObj = {
+            $set: {}
+        };
+
+        this.updateCfgRequired(point, (err) => {
+            if (err) {
+                callback(err);
+            }
+
+            updateObj.$set._pStatus = 0;
+
+            let searchQuery = {};
+
+            updateObj.$set.Security = [];
+
+            searchQuery._id = point._id;
+            updateObj.$set._actvAlmId = ObjectID(point._actvAlmId);
+            // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
+
+
+            Utility.update({
+                collection: this.pointsCollection,
+                query: searchQuery,
+                updateObj: updateObj
+            }, (err, freeName) => {
+                if (err) {
+                    callback(err);
+                } else {
+                    point._id = searchQuery._id;
+                    logData.point._id = searchQuery._id;
+                    if (!options || (!!options && options.from !== 'updateSchedules')) {
+                        ActivityLog.create(logData, (err, result) => {});
+                    }
+
+                    if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
+                        this.newUpdate(data.oldPoint, point, {
+                            from: 'addpoint',
+                            path: data.path
+                        }, user, (err, newPoint) => {
+                            callback({
+                                msg: 'success'
+                            }, newPoint);
+                        });
+                    } else {
+                        return callback({
+                            msg: 'success'
+                        }, point);
+                    }
+                }
+            });
+        });
+    }
 };
+
+module.exports = Point;

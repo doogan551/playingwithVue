@@ -13,6 +13,7 @@ let Config = require('../public/js/lib/config.js');
 let compiler = require('../helpers/scriptCompiler.js');
 let Utility = require('../models/utility.js');
 let History = require('../models/history');
+let Common = new (require('../models/common'))();
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
 let Alarm = new(require('../models/alarm.js'))();
@@ -555,7 +556,7 @@ function getInitialVals(id, callback) {
         fields: fields
     }, function (err, point) {
         if (point) {
-            point = common.setQualityLabel(point);
+            point = Common.setQualityLabel(point);
         }
 
         callback(point);

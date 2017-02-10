@@ -258,8 +258,8 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
     }
 };
 
-module.exports = {
-    sparkpost: function (data) {
+let Inbound = class Inbound {
+    sparkpost(data) {
         let _data = Array.isArray(data) ? data[0] : null,
             relayMessage = _data && _data.msys && _data.msys.relayMessage,
             content = relayMessage && relayMessage.content,
@@ -270,244 +270,240 @@ module.exports = {
         if (!!handler) {
             handler(relayMessage);
         }
-    },
-    twilio: {
-        voice: {
-            alarms: {
-                answer: function (data, callback) {
-                    let sid = data && data.CallSid;
+    }
+    twilioVoiceAlarmsAnswer(data, callback) {
+        let sid = data && data.CallSid;
 
-                    if (!sid) {
-                        return done({
-                            err: 'Invalid request data',
-                            data: data
-                        });
+        if (!sid) {
+            return done({
+                err: 'Invalid request data',
+                data: data
+            });
+        }
+
+        async.waterfall([
+            getNotifyLog,
+            getAlarm
+        ], done);
+
+        // Waterfall functions
+        function getNotifyLog(cb) {
+            let info = {},
+                criteria = {
+                    collection: 'NotifyLogs',
+                    query: {
+                        'apiResult.sid': sid
                     }
+                };
 
-                    async.waterfall([
-                        getNotifyLog,
-                        getAlarm
-                    ], done);
-
-                    // Waterfall functions
-                    function getNotifyLog(cb) {
-                        let info = {},
-                            criteria = {
-                                collection: 'NotifyLogs',
-                                query: {
-                                    'apiResult.sid': sid
-                                }
-                            };
-
-                        utility.getOne(criteria, function (err, notifyLog) {
-                            if (err) {
-                                return cb(err);
-                            }
-                            info.notifyLog = notifyLog;
-
-                            if (!notifyLog) {
-                                info.err = 'Notify log not found';
-                            }
-                            cb(null, info);
-                        });
-                    }
-
-                    function getAlarm(info, cb) {
-                        if (info.err) {
-                            return cb(null, info);
-                        }
-
-                        let criteria = {
-                            collection: 'Alarms',
-                            query: {
-                                _id: ObjectID(info.notifyLog.alarmId)
-                            }
-                        };
-
-                        utility.getOne(criteria, function (err, alarm) {
-                            if (err) {
-                                return cb(err);
-                            }
-                            info.alarm = alarm;
-
-                            if (!alarm) {
-                                info.err = 'Alarm id not found';
-                            }
-                            cb(null, info);
-                        });
-                    }
-
-                    function done(err, info) {
-                        let ackIsAllowed,
-                            digits = data && data.Digits,
-                            human = data && (data.AnsweredBy === 'human'),
-                            alarmClassText = info.alarm && revEnums['Alarm Classes'][info.alarm.almClass],
-                            alarmIsAcknowledged = info.alarm && (info.alarm.ackStatus === ackStatuses.Acknowledged.enum),
-                            alarmNotAcknowledged = info.alarm && (info.alarm.ackStatus === ackStatuses['Not Acknowledged'].enum),
-                            xml = '<?xml version="1.0" encoding="UTF-8"?>',
-                            numberRepeats = 3,
-                            criteria,
-                            getAorAn = function (text) {
-                                return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an' : 'a';
-                            },
-                            say = function (text) {
-                                return '<Say voice="alice">' + text + '</Say>';
-                            },
-                            pause = function (length) {
-                                let _length = length > 0 ? length : 1;
-                                return '<Pause length="' + _length + '"/>';
-                            },
-                            // Not using the below function, but keeping in case we ever need to build
-                            // verbs into our notify message
-                            // getMessageXML = function (msg) {
-                            //  let letiables = {
-                            //          '{Pause}': pause(1)
-                            //      },
-                            //      msgXML = '',
-                            //      str = '',
-                            //      _char,
-                            //      i,
-                            //      j,
-                            //      len;
-
-                            //  for (i = 0, len = msg.length; i < len; i++) {
-                            //      _char = msg.charAt(i);
-
-                            //      if (_char === '{') {
-                            //          msgXML += say(str);
-                            //          j = msg.indexOf('}', i);
-                            //          if (!!~j) {
-                            //              msgXML += letiables[msg.slice(i, j+1)];
-                            //              i = j;
-                            //          }
-                            //          str = '';
-                            //      } else {
-                            //          str += _char;
-                            //      }
-                            //  }
-                            //  if (str.length) {
-                            //      msgXML += say(str);
-                            //  }
-                            //  return msgXML;
-                            // },
-                            sendResponse = function () {
-                                callback(xml);
-                            };
-
-                        xml += '<Response>';
-
-                        if (err || info.err) {
-                            logger.error('Error processing post request', '/twilio/voice/alarms/answer', err || info.err);
-
-                            if (digits) { // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
-                                xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time.');
-                            } else {
-                                xml += say('Hello, this is a message from info-scan. We called to notify you about an alarm but we encountered an unexpected error and are unable to do so. Please log in to info-scan and check the alarms.');
-                            }
-                            xml += say('We apologize for the error. Thank you and goodbye.');
-
-                            xml += '</Response>';
-                            sendResponse();
-                        } else if (digits && ((digits === '1') || alarmIsAcknowledged)) {
-                            // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
-                            // We fall into this case if user supplied the correct acknowledgement digit or if they didn't but the alarm has already been acknowledged by someone else during the call
-                            if (alarmIsAcknowledged) {
-                                xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser + '.');
-                                xml += say('Thank you and goodbye.');
-                                xml += pause(1);
-                                xml += '</Response>';
-                                sendResponse();
-                            } else {
-                                criteria = {
-                                    ackMethod: 'Voice',
-                                    ids: [info.alarm._id],
-                                    username: info.notifyLog.username
-                                };
-
-                                alarmUtility.acknowledgeAlarm(criteria, function (err) {
-                                    if (err) {
-                                        xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
-                                    } else {
-                                        xml += say('Alarm acknowledged.');
-                                    }
-
-                                    xml += say('Thank you and goodbye.');
-                                    xml += pause(1);
-                                    xml += '</Response>';
-                                    sendResponse();
-                                });
-                            }
-                        } else {
-                            ackIsAllowed = info.notifyLog.userCanAck && alarmNotAcknowledged;
-
-                            // Presence of digits indicates we're already in an established call with the user and he/she has supplied incorrect digits to ack the alarm
-                            if (digits) {
-                                xml += say(digits.split('').join(' ') + ' is an unrecognized input.');
-                            } else if (info.alarm.almClass === alarmClasses.Normal.enum) {
-                                xml += say('Hello, this is a message from info-scan.');
-                            } else {
-                                xml += say('Hello, this is ' + getAorAn(alarmClassText) + ' ' + alarmClassText + ' message from info-scan.');
-                            }
-
-                            if (human) {
-                                if (ackIsAllowed) {
-                                    xml += '<Gather numDigits="1">';
-                                }
-
-                                while (numberRepeats-- > 0) {
-                                    xml += say(info.notifyLog.message);
-
-                                    if (ackIsAllowed) {
-                                        xml += say('Press 1 to acknowledge this alarm. Hangup to end this call without acknowledging this alarm.');
-                                    } else if (alarmIsAcknowledged) {
-                                        xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser);
-                                    }
-                                    if (numberRepeats > 0) {
-                                        xml += say('Stay on the line to hear this message again.');
-                                        xml += pause(2);
-                                    } else if (ackIsAllowed) {
-                                        xml += pause(2);
-                                    }
-                                }
-
-                                if (ackIsAllowed) {
-                                    xml += '</Gather>';
-                                }
-                            } else {
-                                xml += say(info.notifyLog.message);
-                            }
-
-                            xml += say('Thank you and goodbye.');
-                            xml += pause(1);
-                            xml += '</Response>';
-                            sendResponse();
-                        }
-                    }
-                },
-                status: function (data) {
-                    let sid = data && data.CallSid,
-                        criteria;
-
-                    if (sid) {
-                        criteria = {
-                            collection: 'NotifyLogs',
-                            query: {
-                                'apiResult.sid': sid
-                            },
-                            updateObj: {
-                                '$push': {
-                                    'callStatus': data
-                                }
-                            }
-                        };
-                        utility.update(criteria, function (err) {
-                            if (err) {
-                                logger.error('/twilio/voice/alarms/status', err);
-                            }
-                        });
-                    }
+            utility.getOne(criteria, function (err, notifyLog) {
+                if (err) {
+                    return cb(err);
                 }
+                info.notifyLog = notifyLog;
+
+                if (!notifyLog) {
+                    info.err = 'Notify log not found';
+                }
+                cb(null, info);
+            });
+        }
+
+        function getAlarm(info, cb) {
+            if (info.err) {
+                return cb(null, info);
+            }
+
+            let criteria = {
+                collection: 'Alarms',
+                query: {
+                    _id: ObjectID(info.notifyLog.alarmId)
+                }
+            };
+
+            utility.getOne(criteria, function (err, alarm) {
+                if (err) {
+                    return cb(err);
+                }
+                info.alarm = alarm;
+
+                if (!alarm) {
+                    info.err = 'Alarm id not found';
+                }
+                cb(null, info);
+            });
+        }
+
+        function done(err, info) {
+            let ackIsAllowed,
+                digits = data && data.Digits,
+                human = data && (data.AnsweredBy === 'human'),
+                alarmClassText = info.alarm && revEnums['Alarm Classes'][info.alarm.almClass],
+                alarmIsAcknowledged = info.alarm && (info.alarm.ackStatus === ackStatuses.Acknowledged.enum),
+                alarmNotAcknowledged = info.alarm && (info.alarm.ackStatus === ackStatuses['Not Acknowledged'].enum),
+                xml = '<?xml version="1.0" encoding="UTF-8"?>',
+                numberRepeats = 3,
+                criteria,
+                getAorAn = function (text) {
+                    return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an' : 'a';
+                },
+                say = function (text) {
+                    return '<Say voice="alice">' + text + '</Say>';
+                },
+                pause = function (length) {
+                    let _length = length > 0 ? length : 1;
+                    return '<Pause length="' + _length + '"/>';
+                },
+                // Not using the below function, but keeping in case we ever need to build
+                // verbs into our notify message
+                // getMessageXML = function (msg) {
+                //  let letiables = {
+                //          '{Pause}': pause(1)
+                //      },
+                //      msgXML = '',
+                //      str = '',
+                //      _char,
+                //      i,
+                //      j,
+                //      len;
+
+                //  for (i = 0, len = msg.length; i < len; i++) {
+                //      _char = msg.charAt(i);
+
+                //      if (_char === '{') {
+                //          msgXML += say(str);
+                //          j = msg.indexOf('}', i);
+                //          if (!!~j) {
+                //              msgXML += letiables[msg.slice(i, j+1)];
+                //              i = j;
+                //          }
+                //          str = '';
+                //      } else {
+                //          str += _char;
+                //      }
+                //  }
+                //  if (str.length) {
+                //      msgXML += say(str);
+                //  }
+                //  return msgXML;
+                // },
+                sendResponse = function () {
+                    callback(xml);
+                };
+
+            xml += '<Response>';
+
+            if (err || info.err) {
+                logger.error('Error processing post request', '/twilio/voice/alarms/answer', err || info.err);
+
+                if (digits) { // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
+                    xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time.');
+                } else {
+                    xml += say('Hello, this is a message from info-scan. We called to notify you about an alarm but we encountered an unexpected error and are unable to do so. Please log in to info-scan and check the alarms.');
+                }
+                xml += say('We apologize for the error. Thank you and goodbye.');
+
+                xml += '</Response>';
+                sendResponse();
+            } else if (digits && ((digits === '1') || alarmIsAcknowledged)) {
+                // Presence of digits indicates we're already in an established call with the user and he/she has supplied digits to ack the alarm
+                // We fall into this case if user supplied the correct acknowledgement digit or if they didn't but the alarm has already been acknowledged by someone else during the call
+                if (alarmIsAcknowledged) {
+                    xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser + '.');
+                    xml += say('Thank you and goodbye.');
+                    xml += pause(1);
+                    xml += '</Response>';
+                    sendResponse();
+                } else {
+                    criteria = {
+                        ackMethod: 'Voice',
+                        ids: [info.alarm._id],
+                        username: info.notifyLog.username
+                    };
+
+                    alarmUtility.acknowledgeAlarm(criteria, function (err) {
+                        if (err) {
+                            xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
+                        } else {
+                            xml += say('Alarm acknowledged.');
+                        }
+
+                        xml += say('Thank you and goodbye.');
+                        xml += pause(1);
+                        xml += '</Response>';
+                        sendResponse();
+                    });
+                }
+            } else {
+                ackIsAllowed = info.notifyLog.userCanAck && alarmNotAcknowledged;
+
+                // Presence of digits indicates we're already in an established call with the user and he/she has supplied incorrect digits to ack the alarm
+                if (digits) {
+                    xml += say(digits.split('').join(' ') + ' is an unrecognized input.');
+                } else if (info.alarm.almClass === alarmClasses.Normal.enum) {
+                    xml += say('Hello, this is a message from info-scan.');
+                } else {
+                    xml += say('Hello, this is ' + getAorAn(alarmClassText) + ' ' + alarmClassText + ' message from info-scan.');
+                }
+
+                if (human) {
+                    if (ackIsAllowed) {
+                        xml += '<Gather numDigits="1">';
+                    }
+
+                    while (numberRepeats-- > 0) {
+                        xml += say(info.notifyLog.message);
+
+                        if (ackIsAllowed) {
+                            xml += say('Press 1 to acknowledge this alarm. Hangup to end this call without acknowledging this alarm.');
+                        } else if (alarmIsAcknowledged) {
+                            xml += say('This alarm was just acknowledged by user ' + info.alarm.ackUser);
+                        }
+                        if (numberRepeats > 0) {
+                            xml += say('Stay on the line to hear this message again.');
+                            xml += pause(2);
+                        } else if (ackIsAllowed) {
+                            xml += pause(2);
+                        }
+                    }
+
+                    if (ackIsAllowed) {
+                        xml += '</Gather>';
+                    }
+                } else {
+                    xml += say(info.notifyLog.message);
+                }
+
+                xml += say('Thank you and goodbye.');
+                xml += pause(1);
+                xml += '</Response>';
+                sendResponse();
             }
         }
     }
+    twilioVoiceAlarmStatus(data) {
+        let sid = data && data.CallSid,
+            criteria;
+
+        if (sid) {
+            criteria = {
+                collection: 'NotifyLogs',
+                query: {
+                    'apiResult.sid': sid
+                },
+                updateObj: {
+                    '$push': {
+                        'callStatus': data
+                    }
+                }
+            };
+            utility.update(criteria, function (err) {
+                if (err) {
+                    logger.error('/twilio/voice/alarms/status', err);
+                }
+            });
+        }
+    }
 };
+
+module.exports = Inbound;

@@ -5,15 +5,17 @@ let _ = require('lodash');
 let moment = require('moment');
 let notifications = require('../models/notifications');
 
-let Policies = function () {
-    this.get = function (data, cb) {
+
+let Policies = class Policies {
+    get(data, cb) {
         let criteria = {
             collection: 'NotifyPolicies',
             query: data.data || {}
         };
         Utility.get(criteria, cb);
-    };
-    this.save = function (rawData, cb) {
+    }
+
+    save(rawData, cb) {
         let data;
         let newID;
         let callback = function (err) {
@@ -118,9 +120,9 @@ let Policies = function () {
         }
 
         this.processScheduledTasks(data, doUpdate);
-    };
+    }
 
-    this.delete = function (data, cb) {
+    delete(data, cb) {
         let criteria = {
             collection: 'NotifyPolicies',
             query: {
@@ -145,9 +147,9 @@ let Policies = function () {
             Utility.update(criteria, cb);
         };
         Utility.remove(criteria, updatePoints);
-    };
+    }
 
-    this.processRotateConfig = function (data, config, task, cb) {
+    processRotateConfig(data, config, task, cb) {
         let criteria = {
                 collection: 'NotifyScheduledTasks',
                 query: {
@@ -249,10 +251,9 @@ let Policies = function () {
             //     console.log('new', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
             // }
         });
-    };
+    }
 
-
-    this.processScheduledTasks = (policy, cb) => {
+    processScheduledTasks(policy, cb) {
         let policyID = policy._id.toString(),
             count = 0,
             newTasks = [],
@@ -342,7 +343,7 @@ let Policies = function () {
         if (!found) {
             deleteTasks(cb);
         }
-    };
+    }
 };
 
-module.exports = new Policies();
+module.exports = Policies;

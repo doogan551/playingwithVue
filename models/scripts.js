@@ -5,9 +5,9 @@ let rimraf = require('rimraf');
 let Utility = require('../models/utility');
 let compiler = require('../helpers/scriptCompiler.js');
 
-module.exports = {
+let Script = class Script {
 
-    update: function (data, cb) {
+    update(data, cb) {
         let fileName = data.fileName.replace(/\.dsl$/i, '');
         let script = data.script;
 
@@ -21,8 +21,8 @@ module.exports = {
                 });
             });
         });
-    },
-    commit: function (data, cb) {
+    }
+    commit(data, cb) {
         let upi = parseInt(data.upi, 10);
         let fileName = data.fileName.replace(/\.dsl$/i, '');
         let path = data.path;
@@ -99,8 +99,8 @@ module.exports = {
                 });
             });
         });
-    },
-    read: function (data, cb) {
+    }
+    read(data, cb) {
         let upi = data.upi;
 
         Utility.getOne({
@@ -110,4 +110,90 @@ module.exports = {
             }
         }, cb);
     }
+
+    commitScript(data, callback) {
+        let fileName, path, csv;
+
+        let script = data.point;
+        fileName = script._id;
+        path = data.path;
+
+        fs.readFile(path + '/' + fileName + '.sym', function (err, sym) {
+            if (err) {
+                return callback({
+                    err: err
+                });
+            }
+
+            sym = sym.toString();
+            csv = sym.split(/[\r\n,]/);
+
+            script['Point Register Names'] = [];
+            script['Integer Register Names'] = [];
+            script['Real Register Names'] = [];
+            script['Boolean Register Names'] = [];
+
+            for (let i = 0; i < csv.length; i++) {
+                if (csv[i - 1] !== 'TOTAL') {
+                    if (csv[i] === 'POINT') {
+                        script['Point Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'INTEGER') {
+                        script['Integer Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'REAL') {
+                        script['Real Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'BOOLEAN') {
+                        script['Boolean Register Names'].push(csv[i + 2]);
+                    }
+                }
+            }
+
+            script['Point Register Count'] = script['Point Register Names'].length;
+            script['Integer Register Count'] = script['Integer Register Names'].length;
+            script['Real Register Count'] = script['Real Register Names'].length;
+            script['Boolean Register Count'] = script['Boolean Register Names'].length;
+
+
+            fs.readFile(path + '/' + fileName + '.dsl', function (err, dsl) {
+                if (err) {
+                    return callback({
+                        err: err
+                    });
+                }
+
+                dsl = dsl.toString();
+
+
+                script['Script Source File'] = dsl;
+                //"Script Filename": fileName + '.dsl'
+
+
+                fs.readFile(path + '/' + fileName + '.pcd', function (err, pcd) {
+                    if (err) {
+                        return callback({
+                            err: err
+                        });
+                    }
+
+                    //let buffer = new Buffer(pcd);
+
+                    script['Compiled Code'] = pcd;
+                    script['Compiled Code Size'] = pcd.length;
+
+
+                    rimraf(path, function (err) {
+                        if (err) {
+                            return callback({
+                                err: err
+                            });
+                        }
+                        return callback({
+                            err: false
+                        });
+                    });
+                });
+            });
+        });
+    }
 };
+
+module.exports = Script;

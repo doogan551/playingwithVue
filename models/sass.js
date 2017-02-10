@@ -1,7 +1,7 @@
 let sass = require('node-sass');
 
-module.exports = {
-    renderSass: function (data, cb) {
+let Sass = class Sass {
+    renderSass(data, cb) {
         let dir = data.dir,
             dirs = dir.split('-').join('/'),
             filename = data.filename,
@@ -13,3 +13,5 @@ module.exports = {
         }, cb);
     }
 };
+
+module.exports = Sass;

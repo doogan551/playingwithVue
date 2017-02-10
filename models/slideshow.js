@@ -1,8 +1,8 @@
 let Utility = require('../models/utility');
 
-module.exports = {
+let Slideshow = class Slideshow {
 
-    get: function (data, cb) {
+    get(data, cb) {
         let upi = parseInt(data.id, 10);
 
         Utility.getOne({
@@ -24,3 +24,5 @@ module.exports = {
         }, cb);
     }
 };
+
+module.exports = Slideshow;

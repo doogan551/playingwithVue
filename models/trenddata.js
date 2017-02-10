@@ -3,9 +3,9 @@ let moment = require('moment');
 let Utility = require('../models/utility');
 let History = require('../models/history');
 
-module.exports = {
+let TrendData = class TrendData {
 
-    viewTrend: function (data, cb) {
+    viewTrend(data, cb) {
         let startTime = (!!data.startTime) ? parseInt(data.startTime, 10) : Math.floor(Date.now() / 1000);
         let limit = (!!data.limit) ? parseInt(data.limit, 10) : 200;
         let direction = (!!data.direction) ? parseInt(data.direction, 10) : 1;
@@ -44,7 +44,7 @@ module.exports = {
                 timestamp: direction * -1
             }
         };
-        let compareTS = function (a, b) {
+        let compareTS = (a, b) => {
             if (a.timestamp < b.timestamp) {
                 return 1;
             }
@@ -54,12 +54,12 @@ module.exports = {
             return 0;
         };
 
-        let limitSql = function (options, callback) {
+        let limitSql = (options, callback) => {
             History.findHistory({
                 upis: [upi],
                 range: range,
                 fx: 'history'
-            }, function (err, sqlResults) {
+            }, (err, sqlResults) => {
                 options.results = sqlResults.concat(options.results);
                 if (options.results.length < limit && range.start > options.stopAt) {
                     if (direction > 0) {
@@ -75,7 +75,7 @@ module.exports = {
                 }
             });
         };
-        let fixResults = function (results) {
+        let fixResults = (results) => {
             results.sort(compareTS);
             if (!!results.length) {
                 if (limit < results.length) {
@@ -85,7 +85,7 @@ module.exports = {
             return results;
         };
 
-        Utility.get(criteria, function (err, mongoResults) {
+        Utility.get(criteria, (err, mongoResults) => {
             let stopAt = 0;
             mongoResults.sort(compareTS);
             if (direction > 1) {
@@ -96,14 +96,14 @@ module.exports = {
             limitSql({
                 results: [],
                 stopAt: stopAt
-            }, function (err, results) {
+            }, (err, results) => {
                 results = results.concat(mongoResults);
                 fixResults(results);
                 cb(err, results);
             });
         });
-    },
-    getTrendLimits: function (data, cb) {
+    }
+    getTrendLimits(data, cb) {
         let upi = parseInt(data.upi, 10);
 
         let query = [{
@@ -137,7 +137,7 @@ module.exports = {
             query: query
         };
 
-        Utility.aggregate(criteria, function (err, mongoResults) {
+        Utility.aggregate(criteria, (err, mongoResults) => {
             if (!!mongoResults.length) {
                 mongoResults = mongoResults[0];
             } else {
@@ -151,7 +151,7 @@ module.exports = {
                 range: {
                     start: moment(2000, 'YYYY').unix()
                 }
-            }, function (err, sqlResults) {
+            }, (err, sqlResults) => {
                 mongoResults.max = (sqlResults.max === 0 || mongoResults.max > sqlResults.max) ? mongoResults.max : sqlResults.max;
                 mongoResults.min = (sqlResults.min === 0 || mongoResults.min < sqlResults.min) ? mongoResults.min : sqlResults.min;
                 cb(err, mongoResults);
@@ -159,3 +159,5 @@ module.exports = {
         });
     }
 };
+
+module.exports = TrendData;

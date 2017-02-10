@@ -1,15 +1,16 @@
 let _ = require('lodash');
 
 let Utility = require('../models/utility');
+let System = new(require('./system'))();
 
 let validPortProtocols = [1, 4];
 let validEthProtocols = [1];
 
-let sortArray = function (a, b) {
+let sortArray = (a, b) => {
     return a - b;
 };
 
-let compare = function (a, b) {
+let compare = (a, b) => {
     if (a.networkSegment < b.networkSegment) {
         return -1;
     }
@@ -20,6 +21,10 @@ let compare = function (a, b) {
 };
 
 let DeviceTree = class DeviceTree {
+    constructor() {
+        this.collection = 'points';
+    }
+
     getTree(cb) {
         let tree = [];
         let badNumbers = [];
@@ -28,9 +33,9 @@ let DeviceTree = class DeviceTree {
         ///////////////////////////////////////
         // Gets devices to build device tree //
         ///////////////////////////////////////
-        let getDevices = function (callback) {
+        let getDevices = (callback) => {
             Utility.iterateCursor({
-                collection: 'points',
+                collection: this.collection,
                 query: {
                     'Point Type.Value': 'Device'
                 },
@@ -57,7 +62,7 @@ let DeviceTree = class DeviceTree {
             }, buildTree, callback);
         };
 
-        let buildTree = function (err, device, next) {
+        let buildTree = (err, device, next) => {
             let isAdded = false;
             let deviceBranch = {
                 upi: device._id,
@@ -72,7 +77,7 @@ let DeviceTree = class DeviceTree {
                 branches: []
             };
 
-            let addToNetworks = function (upSegment, downSegment) {
+            let addToNetworks = (upSegment, downSegment) => {
                 if (upSegment !== downSegment && deviceBranch.networks.indexOf(downSegment) < 0 && downSegment !== 0) {
                     deviceBranch.networks.push(downSegment);
                 }
@@ -81,7 +86,7 @@ let DeviceTree = class DeviceTree {
             /////////////////////////////////////////////////////////
             // builds networks that are associated with the device //
             /////////////////////////////////////////////////////////
-            let fixNetworks = function () {
+            let fixNetworks = () => {
                 let deviceNetwork = device['Network Segment'].Value;
                 let currentUplinkPort = device['Uplink Port'].eValue;
                 let portNs = [1, 2];
@@ -111,7 +116,7 @@ let DeviceTree = class DeviceTree {
             //////////////////////////////////////////////////////////////////////
             // searches tree for any childeren that may have already been added //
             //////////////////////////////////////////////////////////////////////
-            let findChildren = function (node, networkNumber) {
+            let findChildren = (node, networkNumber) => {
                 let retChild = null;
                 if (!node.hasOwnProperty('networks') && node.networkSegment === networkNumber) {
                     retChild = node;
@@ -131,7 +136,7 @@ let DeviceTree = class DeviceTree {
             //////////////
             // Not used //
             //////////////
-            let isInTree = function (tree, network) {
+            let isInTree = (tree, network) => {
                 let inTree = false;
                 if (tree.networkSegment === network) {
                     inTree = true;
@@ -150,7 +155,7 @@ let DeviceTree = class DeviceTree {
             /////////////////////////////////////////////////////////////
             // Finds any parent nodes that may have been added already //
             /////////////////////////////////////////////////////////////
-            let findParents = function (index, device) {
+            let findParents = (index, device) => {
                 let removals = [];
                 for (let b = 0; b < device.networks.length; b++) {
                     for (let t = 0; t < tree.length; t++) {
@@ -174,9 +179,9 @@ let DeviceTree = class DeviceTree {
             //////////////////////////////
             // moves nodes around tree  //
             //////////////////////////////
-            let moveChildren = function (deviceIndex, deviceBranch) {
+            let moveChildren = (deviceIndex, deviceBranch) => {
                 let removals = [];
-                tree.forEach(function (node, index) {
+                tree.forEach((node, index) => {
                     if (deviceIndex !== index) {
                         if (deviceBranch.networks.indexOf(node.networkSegment) >= 0) {
                             for (let b = 0; b < node.branches.length; b++) {
@@ -216,15 +221,15 @@ let DeviceTree = class DeviceTree {
         //////////////////////////////////
         // sets up network numbers list //
         //////////////////////////////////
-        let findNumbers = function () {
-            let addNumber = function (number) {
+        let findNumbers = () => {
+            let addNumber = (number) => {
                 if (networkNumbers.indexOf(number) < 0) {
                     networkNumbers.push(number);
                 } else if (badNumbers.indexOf(number) < 0) {
                     badNumbers.push(number);
                 }
             };
-            let loop = function (branch) {
+            let loop = (branch) => {
                 if (!branch.hasOwnProperty('networks')) {
                     addNumber(branch.networkSegment);
                 } else if (branch.hasOwnProperty('networks')) {
@@ -237,7 +242,7 @@ let DeviceTree = class DeviceTree {
                     loop(branch.branches[b]);
                 }
             };
-            tree.forEach(function (branch) {
+            tree.forEach((branch) => {
                 loop(branch);
             });
         };
@@ -245,13 +250,8 @@ let DeviceTree = class DeviceTree {
         /////////////////////////////////////////////////
         // puts default network segment at top of list //
         /////////////////////////////////////////////////
-        let sortTree = function (next) {
-            Utility.getOne({
-                collection: 'SystemInfo',
-                query: {
-                    'Name': 'Preferences'
-                }
-            }, function (err, syspref) {
+        let sortTree = (next) => {
+            System.getSystemInfoByName('Preferences', (err, syspref) => {
                 let serverNetwork = syspref['IP Network Segment'];
                 tree.sort(compare);
                 for (let i = 0; i < tree.length; i++) {
@@ -263,8 +263,8 @@ let DeviceTree = class DeviceTree {
             });
         };
 
-        getDevices(function (err) {
-            sortTree(function (err) {
+        getDevices((err) => {
+            sortTree((err) => {
                 findNumbers();
                 return cb(err, {
                     tree: tree,

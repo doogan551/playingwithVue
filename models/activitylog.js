@@ -2,8 +2,10 @@ const Utility = require('./utility');
 const Common = new(require('./common'))();
 const utils = require('../helpers/utils');
 const activityLogCollection = utils.CONSTANTS('activityLogCollection');
+const Enums = require('../public/js/lib/config').Enums;
 
 const Model = require('../models/model');
+const async = require('async');
 
 let ActivityLog = class ActivityLog extends Model {
     constructor() {
@@ -21,7 +23,7 @@ let ActivityLog = class ActivityLog extends Model {
     create(logData, cb) {
         let criteria = {
             collection: this.collection,
-            insertObj: logData
+            insertObj: this.buildActivityLog(logData)
         };
         Utility.insert(criteria, cb);
     }
@@ -91,6 +93,71 @@ let ActivityLog = class ActivityLog extends Model {
             data: data
         };
         Utility.getWithSecurity(criteria, cb);
+    }
+
+    // newupdate
+    doActivityLogs(generateActivityLog, logs, callback) {
+        if (generateActivityLog) {
+            async.each(logs, (log, cb) => {
+                this.create(log, cb);
+            }, callback);
+        } else {
+            return callback(null);
+        }
+    }
+
+    buildActivityLog(data) {
+        let log = {
+            userId: data.user._id,
+            username: data.user.username,
+            upi: 0,
+            Name: '',
+            name1: '',
+            name2: '',
+            name3: '',
+            name4: '',
+            pointType: null,
+            activity: Enums['Activity Logs'][data.activity].enum,
+            timestamp: data.timestamp,
+            Security: [],
+            log: data.log
+        };
+        let propertyChange = {
+            property: '',
+            valueType: 0,
+            oldValue: {
+                Value: 0,
+                eValue: 0
+            },
+            newValue: {
+                Value: 0,
+                eValue: 0
+            }
+        };
+
+        if (!!data.point) {
+            log.upi = (data.point._id !== undefined) ? data.point._id : '';
+            log.pointType = (data.point['Point Type'].eValue !== undefined) ? data.point['Point Type'].eValue : null;
+            log.Name = (data.point.Name !== undefined) ? data.point.Name : '';
+            log.name1 = (data.point.name1 !== undefined) ? data.point.name1 : '';
+            log.name2 = (data.point.name2 !== undefined) ? data.point.name2 : '';
+            log.name3 = (data.point.name3 !== undefined) ? data.point.name3 : '';
+            log.name4 = (data.point.name4 !== undefined) ? data.point.name4 : '';
+        }
+
+        if ((data.activity === 1 || data.activity === 2)) {
+            if (data.oldValue !== undefined) {
+                propertyChange.oldValue = data.oldValue;
+            } else {
+                delete propertyChange.oldValue;
+            }
+            propertyChange.property = data.prop;
+            propertyChange.newValue = data.newValue;
+            propertyChange.valueType = data.point[data.prop].ValueType;
+            log.propertyChanges = propertyChange;
+        }
+
+        return log;
     }
 };
 

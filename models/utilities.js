@@ -4,7 +4,7 @@ let pug = require('pug');
 let Utility = require('./utility');
 let System = require('./system');
 
-let getRates = function (cb) {
+let getRates = (cb) => {
     let criteria = {
         collection: 'Utilities',
         query: {
@@ -22,14 +22,14 @@ let getRates = function (cb) {
     Utility.get(criteria, cb);
 };
 
-module.exports = {
+let Utilities = class Utilities {
 
-    index: function (data, cb) {
+    index(data, cb) {
         let utilities;
         let html;
         let weatherPoints;
         let completed = 0;
-        let complete = function () {
+        let complete = () => {
             completed++;
             if (completed === fns.length) {
                 return cb(null, {
@@ -40,20 +40,20 @@ module.exports = {
                 });
             }
         };
-        let getWeatherPoints = function () {
-            System.weather(function (err, data) {
+        let getWeatherPoints = () => {
+            System.weather((err, data) => {
                 weatherPoints = err || data;
                 complete();
             });
         };
-        let callGetRates = function () {
-            getRates(function (err, rawUtilities) {
+        let callGetRates = () => {
+            getRates((err, rawUtilities) => {
                 utilities = err || rawUtilities;
                 complete();
             });
         };
-        let getUtilityMarkup = function () {
-            module.exports.getUtilityMarkup('Electricity', function (markup) {
+        let getUtilityMarkup = () => {
+            module.exports.getUtilityMarkup('Electricity', (markup) => {
                 html = markup;
                 complete();
             });
@@ -61,12 +61,12 @@ module.exports = {
 
         let fns = [getWeatherPoints, callGetRates, getUtilityMarkup];
 
-        fns.forEach(function (fn) {
+        fns.forEach((fn) => {
             fn();
         });
-    },
+    }
 
-    getUtility: function (data, cb) {
+    getUtility(data, cb) {
         let criteria = {
             query: {
                 'UtilityName': data.UtilityName
@@ -75,9 +75,9 @@ module.exports = {
         };
 
         Utility.getOne(criteria, cb);
-    },
+    }
 
-    saveUtility: function (_data, cb) {
+    saveUtility(_data, cb) {
         let utility = _data.utility;
         let path = utility.path;
         let data = utility.data;
@@ -113,25 +113,25 @@ module.exports = {
                 upsert: true
             }
         }, cb);
-    },
+    }
 
-    uploadBackground: function (data, cb) {
+    uploadBackground(data, cb) {
         let path = [__dirname, '..', 'public', 'img', 'dashboard', 'backgrounds', ''].join('/'),
             uploadedFiles = data.files,
             list = Object.keys(uploadedFiles),
             obj = uploadedFiles[list[0]];
 
         fs.writeFile(path + obj.originalname, obj.buffer, cb);
-    },
+    }
 
-    getMarkup: function (data, cb) {
+    getMarkup(data, cb) {
         let type = data.type;
         module.exports.getUtilityMarkup(type, cb);
-    },
+    }
 
-    getUtilityMarkup: function (type, cb) {
+    getUtilityMarkup(type, cb) {
         let filename = __dirname + '/../views/dashboard/utility_' + type + '.pug';
-        fs.readFile(filename, 'utf8', function (err, data) {
+        fs.readFile(filename, 'utf8', (err, data) => {
             let fn,
                 html;
 
@@ -143,9 +143,9 @@ module.exports = {
 
             cb(html, err);
         });
-    },
+    }
 
-    removeUtility: function (data, cb) {
+    removeUtility(data, cb) {
         let criteria = {
             collection: 'Utilities',
             query: {
@@ -154,5 +154,6 @@ module.exports = {
         };
         Utility.remove(criteria, cb);
     }
-
 };
+
+module.exports = Utilities;

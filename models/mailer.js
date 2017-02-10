@@ -64,8 +64,8 @@ function sendEmail(options, cb) {
     smtpTransport.sendMail(options, cb);
 }
 
-module.exports = {
-    sendError: function (msg) {
+let Mailer = class Mailer {
+    sendError(msg) {
         let options;
 
         if (siteConfig.email.onError.enabled) {
@@ -76,8 +76,10 @@ module.exports = {
             };
             sendEmail(options, function () {});
         }
-    },
-    sendEmail: function (options, cb) {
+    }
+    sendEmail(options, cb) {
         sendEmail(options, cb);
     }
 };
+
+module.exports = Mailer;

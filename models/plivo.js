@@ -12,8 +12,8 @@ let client = plivo.RestAPI({
     authToken: authToken
 });
 
-module.exports = {
-    sendText: function (toNumber, message, cb) {
+let Plivo = class Plivo {
+    sendText(toNumber, message, cb) {
         toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
 
         let params = {
@@ -32,9 +32,9 @@ module.exports = {
             }
             return cb(err, response);
         });
-    },
+    }
 
-    sendVoice: function (toNumber, message, cb) {
+    sendVoice(toNumber, message, cb) {
         toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
         let url = notifierUtility.buildVoiceUrl(message, 'Plivo');
 
@@ -56,3 +56,5 @@ module.exports = {
         });
     }
 };
+
+module.exports = Plivo;

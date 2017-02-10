@@ -3,9 +3,15 @@ let ObjectID = require('mongodb').ObjectID;
 
 let Utility = require('../models/utility');
 let Reports = require('../models/reports');
+const utils = require('../helpers/utils');
+const schedulesCollection = utils.CONSTANTS('schedulesCollection');
 
-let self = {
-    getSchedules: function (data, callback) {
+let Schedule = class Schedule {
+    constructor() {
+        this.collection = schedulesCollection;
+    }
+
+    getSchedules(data, callback) {
         // data = {
         //     user: user,
         //     upi: int
@@ -34,8 +40,8 @@ let self = {
         };
 
         Utility.get(criteria, callback);
-    },
-    saveSchedules: function (data, callback) {
+    }
+    saveSchedules(data, callback) {
         // data = {
         //     user: user,
         //     schedules: [] (array of schedule objects)
@@ -116,8 +122,8 @@ let self = {
             };
 
         async.eachSeries(data.schedules, processSchedule, callback);
-    },
-    runSchedule: function (data, callback) {
+    }
+    runSchedule(data, callback) {
         Utility.getOne({
             collection: 'Schedules',
             query: {
@@ -133,6 +139,28 @@ let self = {
             }
         });
     }
+    remove(data, callback) {
+        Utility.remove({
+            collection: this.collection,
+            query: {
+                upi: data.upi
+            }
+        }, callback);
+    }
+    disable(data, callback) {
+        Utility.findAndModify({
+            collection: this.collection,
+            query: {
+                upi: data.upi
+            },
+            updateObj: {
+                $set: {
+                    enabled: false
+                }
+            }
+        }, callback);
+    }
 };
 
-module.exports = self;
+
+module.exports = Schedule;

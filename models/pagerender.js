@@ -1,8 +1,10 @@
-var childProcess = require('child_process');
-module.exports = {
-    renderPage: function (url, path, cb) {
-        childProcess.exec('phantomjs apps\\reportRunner.js ' + url + ' ' + path, function (error) {
+let childProcess = require('child_process');
+
+let PageRender = class PageRender {
+    renderPage(url, path, cb) {
+        childProcess.exec('phantomjs apps\\reportRunner.js ' + url + ' ' + path, (error) => {
             cb(error);
         });
     }
 };
+module.exports = PageRender;
