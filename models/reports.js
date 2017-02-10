@@ -1,26 +1,26 @@
-var fs = require('fs');
+let fs = require('fs');
 
-var async = require('async');
-var moment = require('moment');
-var ObjectID = require('mongodb').ObjectID;
-var config = require('config');
+let async = require('async');
+let moment = require('moment');
+let ObjectID = require('mongodb').ObjectID;
+let config = require('config');
 
-var Utility = require('../models/utility');
-var History = require('../models/history');
-var utils = require('../helpers/utils.js');
-var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
-var Config = require('../public/js/lib/config');
-var logger = require('../helpers/logger')(module);
-var pageRender = require('../models/pagerender');
-var mailer = require('../models/mailer');
+let Utility = require('../models/utility');
+let History = require('../models/history');
+let utils = require('../helpers/utils.js');
+let historyCollection = utils.CONSTANTS('HISTORYCOLLECTION'); // points to "historydata"
+let Config = require('../public/js/lib/config');
+let logger = require('../helpers/logger')(module);
+let pageRender = require('../models/pagerender');
+let mailer = require('../models/mailer');
 
-var actLogsEnums = Config.Enums["Activity Logs"];
-var activityLogCollection = utils.CONSTANTS('activityLogCollection');
+let actLogsEnums = Config.Enums['Activity Logs'];
+let activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = Rpt = {
 
-    getMRT: function(data, cb) {
-        var criteria = {
+    getMRT: function (data, cb) {
+        let criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
             },
@@ -30,22 +30,22 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.get(criteria, function (err, result) {
             if (!err) {
                 if (!result) {
-                    return cb("No mrt file found");
+                    return cb('No mrt file found');
                 } else if (result.MRTData) {
                     return cb(null, result.MRTData);
-                } else {
+                } 
                     return cb("No mrt file found");
-                }
+                
             } else {
                 return cb(err);
             }
         });
     },
-    saveMRT: function(data, cb) {
-        var criteria = {
+    saveMRT: function (data, cb) {
+        let criteria = {
             collection: 'points',
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -57,20 +57,18 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.update(criteria, function(err, result) {
-
+        Utility.update(criteria, function (err, result) {
             if (!err) {
                 return cb(null, {
                     _idd: null,
                     id: utils.converters.convertType(data.id),
-                    data: "Data has been saved successfully!!!"
+                    data: 'Data has been saved successfully!!!'
                 });
-            } else
-                return cb(err);
+            } return cb(err);
         });
     },
-    saveSVG: function(data, cb) {
-        var criteria = {
+    saveSVG: function (data, cb) {
+        let criteria = {
             collection: 'points',
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -82,31 +80,30 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.update(criteria, function(err, result) {
-
+        Utility.update(criteria, function (err, result) {
             if (!err) {
                 return cb(null, {
-                    data: "Data has been saved successfully!!!"
+                    data: 'Data has been saved successfully!!!'
                 });
-            } else {
+            } 
                 return cb(err);
-            }
+            
         });
     },
-    saveReport: function(data, cb) {
+    saveReport: function (data, cb) {
         data['Point Type'] = {
             eValue: Config.Enums['Point Types'].Report.enum
         };
 
-        var logData = {
+        let logData = {
             user: data.user,
             timestamp: Date.now(),
             point: data,
-            activity: actLogsEnums["Report Edit"].enum,
-            log: "Report edited."
+            activity: actLogsEnums['Report Edit'].enum,
+            log: 'Report edited.'
         };
 
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {
                 _id: utils.converters.convertType(data._id)
@@ -118,31 +115,31 @@ module.exports = Rpt = {
                     name2: data.name2,
                     name3: data.name3,
                     name4: data.name4,
-                    'Point Refs': data["Point Refs"],
-                    'Report Config': data["Report Config"]
+                    'Point Refs': data['Point Refs'],
+                    'Report Config': data['Report Config']
                 }
             }
         };
 
-        var logObj = utils.buildActivityLog(logData);
+        let logObj = utils.buildActivityLog(logData);
 
-        Utility.update(criteria, function(err, result) {
+        Utility.update(criteria, function (err, result) {
             Utility.insert({
                 collection: activityLogCollection,
                 insertObj: logObj
-            }, function(err, result) {
+            }, function (err, result) {
                 if (!err) {
                     return cb(err, {
-                        data: "Report has been saved successfully!!!"
+                        data: 'Report has been saved successfully!!!'
                     });
-                } else {
+                } 
                     return cb(err, null);
-                }
+                
             });
         });
     },
-    getSVG: function(data, cb) {
-        var criteria = {
+    getSVG: function (data, cb) {
+        let criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
             },
@@ -152,16 +149,16 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.get(criteria, function (err, result) {
             if (!err) {
                 return cb(null, result.SVGData);
-            } else {
+            } 
                 return cb(err);
-            }
+            
         });
     },
-    getHistoryPoints: function(data, cb) {
-        var criteria = {
+    getHistoryPoints: function (data, cb) {
+        let criteria = {
             query: {},
             collection: 'historydata',
             field: 'upi',
@@ -170,25 +167,24 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.get(criteria, function (err, result) {
             if (!err) {
                 if (!result) {
-                    return cb("No results found");
-                } else {
+                    return cb('No results found');
+                } 
                     getPoints(result, cb);
-                }
-
+                
             } else
-                return cb(err);
+                {return cb(err);}
         });
     },
-    historySearch: function(data, cb) {
-        var startTime = data.startTime;
-        var endTime = data.endTime;
+    historySearch: function (data, cb) {
+        let startTime = data.startTime;
+        let endTime = data.endTime;
 
-        var upis = data.upis;
+        let upis = data.upis;
 
-        var criteria = {
+        let criteria = {
             query: {
                 _id: {
                     $in: upis
@@ -196,13 +192,12 @@ module.exports = Rpt = {
             },
             collection: 'points',
             fields: {
-                "Value": 1,
+                'Value': 1,
                 Name: 1
             }
         };
 
-        Utility.get(criteria, function(err, points) {
-
+        Utility.get(criteria, function (err, points) {
             criteria = {
                 query: [{
                     $match: {
@@ -232,22 +227,21 @@ module.exports = Rpt = {
                 }, {
                     $project: {
                         _id: 0,
-                        upi: "$_id",
-                        data: "$data"
+                        upi: '$_id',
+                        data: '$data'
                     }
                 }],
                 collection: 'historydata'
             };
 
-            Utility.aggregate(criteria, function(err, histPoints) {
+            Utility.aggregate(criteria, function (err, histPoints) {
                 if (err)
-                    return cb(err);
+                    {return cb(err);}
 
-                for (var a = 0; a < histPoints.length; a++) {
+                for (let a = 0; a < histPoints.length; a++) {
 
                 }
-                async.eachSeries(histPoints, function(historyPoint, callback) {
-
+                async.eachSeries(histPoints, function (historyPoint, callback) {
                     if (historyPoint.data[historyPoint.data.length - 1].timestamp !== startTime) {
                         criteria = {
                             query: {
@@ -267,7 +261,7 @@ module.exports = Rpt = {
                             }
                         };
 
-                        Utility.get(criteria, function(err, nextOldest) {
+                        Utility.get(criteria, function (err, nextOldest) {
                             historyPoint.data.push(nextOldest);
                             fixHistoryData(historyPoint, points);
                             callback(err);
@@ -276,7 +270,7 @@ module.exports = Rpt = {
                         fixHistoryData(historyPoint, points);
                         callback(null);
                     }
-                }, function(err) {
+                }, function (err) {
                     // JS console.log("historySearch()", new Date() - start);
                     return cb(err, histPoints);
                 });
@@ -284,8 +278,7 @@ module.exports = Rpt = {
         });
 
         function fixHistoryData(histPoint, points) {
-
-            /* 
+            /*
              points - points from the 'points' collection that are represented in the historydata collection's query
              histPoints - points of history data that has been aggregated from the 'historydata' collection
 
@@ -297,8 +290,8 @@ module.exports = Rpt = {
             for (b = 0; b < points.length; b++) {
                 if (histPoint.upi === points[b]._id) {
                     if (points[b].Value.ValueType === 5) {
-                        for (var c = 0; c < histPoint.data.length; c++) {
-                            for (var option in points[b].Value.ValueOptions) {
+                        for (let c = 0; c < histPoint.data.length; c++) {
+                            for (let option in points[b].Value.ValueOptions) {
                                 if (points[b].Value.ValueOptions[option] === histPoint.data[c].Value) {
                                     histPoint.data[c].eValue = histPoint.data[c].Value;
                                     histPoint.data[c].Value = option;
@@ -312,8 +305,8 @@ module.exports = Rpt = {
             return;
         }
     },
-    historyDataSearch: function(data, cb) {
-        var reportConfig = data.reportConfig,
+    historyDataSearch: function (data, cb) {
+        let reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
             endTime = data.range.end,
@@ -333,8 +326,8 @@ module.exports = Rpt = {
             i,
             qualityCodes = global.qualityCodes;
 
-        var makeTimestamps = function(timestampObjects) {
-            var timestamps = timestampObjects.map(function(ts) {
+        let makeTimestamps = function (timestampObjects) {
+            let timestamps = timestampObjects.map(function (ts) {
                 return ts.start;
             });
 
@@ -350,7 +343,7 @@ module.exports = Rpt = {
             checkForOldest[upis[i]] = true;
         }
 
-        justUpis = upis.map(function(res) {
+        justUpis = upis.map(function (res) {
             return res.upi;
         });
 
@@ -388,9 +381,9 @@ module.exports = Rpt = {
         // logger.info("---------");
         // logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
         // logger.info("---------");
-        Utility.get(criteria, function(err, points) {
+        Utility.get(criteria, function (err, points) {
             if (err)
-                return cb(err, null);
+                {return cb(err, null);}
 
             criteria = {
                 query: searchCriteria,
@@ -400,7 +393,7 @@ module.exports = Rpt = {
                 }
             };
 
-            Utility.get(criteria, function(err, histPoints) {
+            Utility.get(criteria, function (err, histPoints) {
                 if (err) {
                     return cb(err, null);
                 }
@@ -411,10 +404,10 @@ module.exports = Rpt = {
                         end: endTime
                     },
                     timestamps: timestamps
-                }, function(err, results) {
-                    for (var h = 0; h < histPoints.length; h++) {
-                        var hadTS = false;
-                        for (var r = 0; r < results.length; r++) {
+                }, function (err, results) {
+                    for (let h = 0; h < histPoints.length; h++) {
+                        let hadTS = false;
+                        for (let r = 0; r < results.length; r++) {
                             if (histPoints[h].upi === results[r].upi) {
                                 if (histPoints[h].timestamp === results[r].timestamp) {
                                     hadTS = true;
@@ -426,16 +419,15 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-                    async.eachSeries(timestamps.reverse(), function(ts, callback1) {
+                    async.eachSeries(timestamps.reverse(), function (ts, callback1) {
                             //convert id to ts and upi
-                            returnObj = {
+                        returnObj = {
                                 timestamp: ts,
                                 HistoryResults: []
                             };
-                            async.eachSeries(justUpis, function(upi, callback2) {
-
+                        async.eachSeries(justUpis, function (upi, callback2) {
                                 if (noOlderTimes.indexOf(upi) !== -1) {
-                                    for (var x = 0; x < points.length; x++) {
+                                    for (let x = 0; x < points.length; x++) {
                                         if (points[x]._id === upi) {
                                             returnObj.HistoryResults.push({
                                                 upi: upi,
@@ -448,9 +440,9 @@ module.exports = Rpt = {
                                     //}, 1);
                                 } else {
                                     getNextOldest = true;
-                                    for (var w = 0; w < histPoints.length; w++) {
+                                    for (let w = 0; w < histPoints.length; w++) {
                                         if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
-                                            for (var y = 0; y < points.length; y++) {
+                                            for (let y = 0; y < points.length; y++) {
                                                 if (points[y]._id === histPoints[w].upi) {
                                                     returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
                                                 }
@@ -473,7 +465,7 @@ module.exports = Rpt = {
                                             },
                                             limit: 1
                                         };
-                                        Utility.get(criteria, function(err, nextOldest) {
+                                        Utility.get(criteria, function (err, nextOldest) {
                                             if (!!err) {
                                                 return callback2(err);
                                             }
@@ -489,7 +481,7 @@ module.exports = Rpt = {
                                                         nextOldest = results;
                                                     }
                                                 }
-                                                for (var x = 0; x < points.length; x++) {
+                                                for (let x = 0; x < points.length; x++) {
                                                     if (points[x]._id === upi) {
                                                         if (nextOldest.length > 0) {
                                                             if (nextOldest[0].upi === points[x]._id) {
@@ -499,7 +491,7 @@ module.exports = Rpt = {
                                                             returnObj.HistoryResults.push({
                                                                 upi: upi,
                                                                 Name: points[x].Name,
-                                                                Value: "No Older Value"
+                                                                Value: 'No Older Value'
                                                             });
                                                             noOlderTimes.push(upi);
                                                         }
@@ -512,31 +504,29 @@ module.exports = Rpt = {
                                         callback2(null);
                                     }
                                 }
-                            }, function(err) {
+                            }, function (err) {
                                 returnPoints.push(returnObj);
                                 if (returnPoints.length % 500 === 0) {
-                                    setTimeout(function() {
+                                    setTimeout(function () {
                                         callback1(err);
                                     }, 0);
                                 } else {
                                     callback1(err);
                                 }
                             });
-                        },
-                        function(err) {
+                    },
+                        function (err) {
                             return cb(err, {
                                 truncated: tooManyFlag,
                                 historyData: returnPoints.reverse()
                             });
                         });
-
                 });
-
             });
         });
 
         function buildHistoryValue(point, historyPoint) {
-            var tempObj = {};
+            let tempObj = {};
             tempObj.upi = historyPoint.upi;
             tempObj.Name = point.Name;
             tempObj.statusflag = setStatusFlag(historyPoint.statusflags);
@@ -547,7 +537,7 @@ module.exports = Rpt = {
             }
 
             if (historyPoint.ValueType === 5) {
-                for (var key in point.Value.ValueOptions) {
+                for (let key in point.Value.ValueOptions) {
                     if (point.Value.ValueOptions[key] === historyPoint.Value) {
                         tempObj.Value = key.toString();
                         tempObj.eValue = historyPoint.Value.toString();
@@ -563,28 +553,28 @@ module.exports = Rpt = {
         function setStatusFlag(statusflag) {
             //4 8 1 2
 
-            if ((statusflag & Config.Enums["Status Flags Bits"]["In Fault"].enum) !== 0) {
-                return getStatusChar("Fault");
-            } else if ((statusflag & Config.Enums["Status Flags Bits"]["In Alarm"].enum) !== 0) {
-                return getStatusChar("Abnormal");
-            } else if ((statusflag & Config.Enums["Status Flags Bits"]["Out of Service"].enum) !== 0) {
-                return getStatusChar("Out of Service");
-            } else if ((statusflag & Config.Enums["Status Flags Bits"]["Override"].enum) !== 0) {
-                return getStatusChar("Override");
-            } else {
+            if ((statusflag & Config.Enums['Status Flags Bits']['In Fault'].enum) !== 0) {
+                return getStatusChar('Fault');
+            } else if ((statusflag & Config.Enums['Status Flags Bits']['In Alarm'].enum) !== 0) {
+                return getStatusChar('Abnormal');
+            } else if ((statusflag & Config.Enums['Status Flags Bits']['Out of Service'].enum) !== 0) {
+                return getStatusChar('Out of Service');
+            } else if ((statusflag & Config.Enums['Status Flags Bits'].Override.enum) !== 0) {
+                return getStatusChar('Override');
+            } 
                 return "";
-            }
+            
 
             function getStatusChar(status) {
-                for (var index in qualityCodes) {
-                    if (qualityCodes[index]["Quality Code Label"] === status)
-                        return qualityCodes[index]["Quality Code"];
+                for (let index in qualityCodes) {
+                    if (qualityCodes[index]['Quality Code Label'] === status)
+                        {return qualityCodes[index]["Quality Code"];}
                 }
             }
         }
 
         function buildTimestamps(startTime, endTime, interval, offset) {
-            var minute = 60,
+            let minute = 60,
                 hour = minute * 60,
                 day = hour * 24,
                 week = day * 7,
@@ -614,7 +604,7 @@ module.exports = Rpt = {
                 case 5: // year
                     break;
                 default:
-                    logger.info(" - - - - - - - - interval is DEFAULT");
+                    logger.info(' - - - - - - - - interval is DEFAULT');
                     break;
             }
 
@@ -628,7 +618,7 @@ module.exports = Rpt = {
                     prevTime += timestampInterval;
                 }
             } else {
-                var prevInterval;
+                let prevInterval;
 
                 if (interval === 4) { //month
                     prevInterval = new Date(startTime * 1000).getMonth();
@@ -659,8 +649,8 @@ module.exports = Rpt = {
             return timestamps;
         }
     },
-    reportMain: function(data, cb) {
-        var reportCriteria = {
+    reportMain: function (data, cb) {
+        let reportCriteria = {
                 query: {
                     _id: utils.converters.convertType(data.id)
                 },
@@ -682,31 +672,31 @@ module.exports = Rpt = {
             scheduleRequestComplete = false,
             reportData,
             getValueTypes = function (data) {
-                "use strict";
-                var i,
+                'use strict';
+                let i,
                     column,
                     filter;
-                if (data["Report Config"].columns) {
-                    for (i = 1; i < data["Report Config"].columns.length; i++) {
-                        column = data["Report Config"].columns[i];
+                if (data['Report Config'].columns) {
+                    for (i = 1; i < data['Report Config'].columns.length; i++) {
+                        column = data['Report Config'].columns[i];
                         column.valueType = Config.Enums.Properties[column.colName].valueType;
                     }
                 }
 
-                if (data["Report Config"].filters) {
-                    for (i = 0; i < data["Report Config"].filters.length; i++) {
-                        filter = data["Report Config"].filters[i];
+                if (data['Report Config'].filters) {
+                    for (i = 0; i < data['Report Config'].filters.length; i++) {
+                        filter = data['Report Config'].filters[i];
                         filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
                     }
                 }
 
                 return data;
             },
-            handleResults = function() {
-                "use strict";
+            handleResults = function () {
+                'use strict';
                 if (scheduled) {
                     if (scheduleRequestComplete && reportRequestComplete) {
-                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig); 
                         return cb(null, reportResults, reportData);
                     }
                 } else {
@@ -715,10 +705,10 @@ module.exports = Rpt = {
             };
 
         if (scheduled) {
-            Utility.get(scheduleCriteria, function(err, scheduleData) {
+            Utility.get(scheduleCriteria, function (err, scheduleData) {
                 if (err) {
                     return cb(err);
-                } else {
+                } 
                     scheduleData = scheduleData[0];
                     if (scheduleData === null) {
                         return cb();
@@ -730,12 +720,12 @@ module.exports = Rpt = {
                     }
                     scheduleRequestComplete = true;
                     handleResults();
-                }
+                
             });
-            Utility.get(reportCriteria, function(err, result) {
+            Utility.get(reportCriteria, function (err, result) {
                 if (err) {
                     return cb(err);
-                } else {
+                } 
                     result = result[0];
                     if (!!result) {
                         if (result["Report Type"].Value === "Property") {
@@ -750,13 +740,13 @@ module.exports = Rpt = {
                     } else {
                         return cb();    // error
                     }
-                }
+                
             });
         } else {
-            Utility.getWithSecurity(reportCriteria, function(err, result) {
+            Utility.getWithSecurity(reportCriteria, function (err, result) {
                 if (err) {
                     return cb(err);
-                } else {
+                } 
                     result = result[0];
                     if (!!result) {
                         if (result["Report Type"].Value === "Property") {
@@ -770,19 +760,19 @@ module.exports = Rpt = {
                     } else {
                         return cb();    // error
                     }
-                }
+                
             });
         }
     },
-    reportSearch: function(data, cb) {
-        var reportConfig = data.reportConfig,
+    reportSearch: function (data, cb) {
+        let reportConfig = data.reportConfig,
             reportType = data.reportType,
-            pointRefs = data["Point Refs"],
+            pointRefs = data['Point Refs'],
             filters = reportConfig.filters,
             pointFilter = reportConfig.pointFilter,
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
+            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
                 return type.key;
             }),
             uniquePIDs = [],
@@ -794,12 +784,12 @@ module.exports = Rpt = {
                 $and: []
             },
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
-            parseNameField = function(paramsField, fieldName) {
-                var parsedNameField = {};
+            parseNameField = function (paramsField, fieldName) {
+                let parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
                     //logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
-                    if (paramsField === "ISBLANK") {
-                        parsedNameField[fieldName] = "";
+                    if (paramsField === 'ISBLANK') {
+                        parsedNameField[fieldName] = '';
                     } else {
                         parsedNameField[fieldName] = {
                             '$regex': '(?i)^' + paramsField
@@ -811,54 +801,54 @@ module.exports = Rpt = {
 
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
-            for (var k = 0; k < properties.length; k++) {
-                // var p = properties[k].colName;
-                var p = utils.getDBProperty(properties[k].colName)
+            for (let k = 0; k < properties.length; k++) {
+                // let p = properties[k].colName;
+                let p = utils.getDBProperty(properties[k].colName);
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    fields["Point Refs"] = true;
+                    fields['Point Refs'] = true;
                     uniquePIDs.push(p);
                     getPointRefs = true;
                 } else {
                     fields[propertyCheckForValue(p)] = true;
                 }
             }
-            fields["Point Type.Value"] = true;
+            fields['Point Type.Value'] = true;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {
-            searchCriteria["$and"].push({
-                "Point Type.Value": {
+            searchCriteria.$and.push({
+                'Point Type.Value': {
                     $in: selectedPointTypes
                 }
             });
         }
 
-        for (var i = 1; i < 5; i++) {
-            key = "name" + i;
+        for (let i = 1; i < 5; i++) {
+            key = 'name' + i;
             if (pointFilter[key]) {
-                nameQuery = parseNameField(pointFilter[key], ("name" + i));
+                nameQuery = parseNameField(pointFilter[key], ('name' + i));
                 if (nameQuery) {
-                    searchCriteria["$and"].push(nameQuery);
+                    searchCriteria.$and.push(nameQuery);
                 }
             }
         }
 
         if (filters && filters.length > 0) {
-            searchCriteria["$and"].push(Rpt.collectFilters(filters, pointRefs));
+            searchCriteria.$and.push(Rpt.collectFilters(filters, pointRefs));
         }
 
         if (sort) {
-            for (var key2 in sort) {
-                sortObject[key2] = (sort[key2] == "ASC") ? 1 : -1;
+            for (let key2 in sort) {
+                sortObject[key2] = (sort[key2] == 'ASC') ? 1 : -1;
             }
         }
 
-        if (searchCriteria["$and"].length === 0) {
+        if (searchCriteria.$and.length === 0) {
             searchCriteria = {};
         }
 
         //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
-        var criteria = {
+        let criteria = {
             query: searchCriteria,
             collection: 'points',
             limit: returnLimit,
@@ -866,25 +856,24 @@ module.exports = Rpt = {
         };
 
         // logger.info("--- Report criteria = " + JSON.stringify(criteria));
-        Utility.get(criteria, function(err, docs) {
-
+        Utility.get(criteria, function (err, docs) {
             if (err) {
                 return cb(err);
             }
 
             if (getPointRefs === true) {
-                for (var i = 0; i < docs.length; i++) {
-                    for (var m = 0; m < docs[i]["Point Refs"].length; m++) {
-                        if (uniquePIDs.indexOf(docs[i]["Point Refs"][m].PropertyName) > -1 && docs[i][docs[i]["Point Refs"][m].PropertyName] === undefined) {
-                            docs[i][docs[i]["Point Refs"][m].PropertyName] = docs[i]["Point Refs"][m];
+                for (let i = 0; i < docs.length; i++) {
+                    for (let m = 0; m < docs[i]['Point Refs'].length; m++) {
+                        if (uniquePIDs.indexOf(docs[i]['Point Refs'][m].PropertyName) > -1 && docs[i][docs[i]['Point Refs'][m].PropertyName] === undefined) {
+                            docs[i][docs[i]['Point Refs'][m].PropertyName] = docs[i]['Point Refs'][m];
                         }
                     }
-                    delete docs[i]["Point Refs"];
+                    delete docs[i]['Point Refs'];
                 }
             }
-            docs.forEach(function(doc) {
-                for (var prop in doc) {
-                    var newPropertyName = utils.getHumanProperty(prop);
+            docs.forEach(function (doc) {
+                for (let prop in doc) {
+                    let newPropertyName = utils.getHumanProperty(prop);
                     if (prop !== newPropertyName) {
                         doc[newPropertyName] = utils.getHumanPropertyObj(prop, doc[prop]);
                         if (prop !== '_id') {
@@ -896,15 +885,15 @@ module.exports = Rpt = {
             return cb(null, docs);
         });
     },
-    collectFilters: function(theFilters, reportPointRefs) {
-        var currentFilter,
+    collectFilters: function (theFilters, reportPointRefs) {
+        let currentFilter,
             localSearchCriteria = {},
             andExpressions = [],
             orExpressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
-            getPointRefByAppIndex = function(appIndex) {
-                var result,
+            getPointRefByAppIndex = function (appIndex) {
+                let result,
                     i;
 
                 for (i = 0; i < reportPointRefs.length; i++) {
@@ -916,36 +905,36 @@ module.exports = Rpt = {
 
                 return result;
             },
-            collectFilter = function(filter) {
-                var searchQuery = {},
+            collectFilter = function (filter) {
+                let searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
                     searchKey = key,
                     searchPart1 = {},
                     searchPart2 = {},
                     pointRef,
-                    filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
+                    filterValueType = (Config.Enums.Properties.hasOwnProperty(key)) ? Config.Enums.Properties[key].valueType : null;
 
                 if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
                     pointRef = getPointRefByAppIndex(filter.AppIndex);
                     switch (filter.operator) {
-                        case "EqualTo":
+                        case 'EqualTo':
                             searchQuery = {
-                                "Point Refs": {
+                                'Point Refs': {
                                     $elemMatch: {
-                                        "PropertyName": key,
-                                        "Value": (!!pointRef ? pointRef.Value : 0)
+                                        'PropertyName': key,
+                                        'Value': (!!pointRef ? pointRef.Value : 0)
                                     }
                                 }
                             };
 
                             break;
-                        case "NotEqualTo":
+                        case 'NotEqualTo':
                             searchQuery = {
-                                "Point Refs": {
+                                'Point Refs': {
                                     $elemMatch: {
-                                        "PropertyName": key,
-                                        "Value": {
+                                        'PropertyName': key,
+                                        'Value': {
                                             $ne: (!!pointRef ? pointRef.Value : 0)
                                         }
                                     }
@@ -955,19 +944,19 @@ module.exports = Rpt = {
                     }
                 } else {
                     switch (filter.operator) {
-                        case "Containing":
+                        case 'Containing':
                             searchQuery[key] = {
                                 $regex: '.*(?i)' + filter.value + '.*'
                             };
                             break;
-                        case "NotContaining":
-                            var re = new RegExp(filter.value, i);
+                        case 'NotContaining':
+                            let re = new RegExp(filter.value, i);
                             searchQuery[key] = {
                                 $not: re
                             };
                             break;
-                        case "EqualTo":
-                            if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                        case 'EqualTo':
+                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
                                 if (filter.evalue === -1) {
                                     searchQuery[propertyCheckForValue(key)] = {
                                         $eq: ''
@@ -980,7 +969,7 @@ module.exports = Rpt = {
                                     }
                                     searchQuery[searchKey] = filter.evalue;
                                 }
-                            } else if (filter.valueType === "Bool") {
+                            } else if (filter.valueType === 'Bool') {
                                 if (utils.converters.isNumber(filter.value)) {
                                     searchQuery[propertyCheckForValue(key)] = {
                                         $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
@@ -992,14 +981,14 @@ module.exports = Rpt = {
                                 }
                             } else if (utils.converters.isNumber(filter.value)) {
                                 searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                            } else if (filter.value.indexOf(",") > -1) {
-                                var splitValues = filter.value.split(",");
+                            } else if (filter.value.indexOf(',') > -1) {
+                                let splitValues = filter.value.split(',');
                                 //if (!searchCriteria.$or)
                                 //    searchCriteria.$or = [];
-                                var new$or = {};
+                                let new$or = {};
                                 new$or.$or = [];
-                                for (var kk = 0; kk < splitValues.length; kk++) {
-                                    var ppp = {};
+                                for (let kk = 0; kk < splitValues.length; kk++) {
+                                    let ppp = {};
                                     if (utils.converters.isNumber(splitValues[kk])) {
                                         ppp[key] = convertType(splitValues[kk]);
                                     } else {
@@ -1007,23 +996,21 @@ module.exports = Rpt = {
                                     }
                                     new$or.$or.push(ppp);
                                 }
-                            } else {
-                                if (utils.converters.isNumber(filter.value)) {
+                            } else if (utils.converters.isNumber(filter.value)) {
                                     searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                                 } else {
                                     searchQuery[propertyCheckForValue(key)] = {
                                         $regex: '(?i)^' + filter.value
                                     };
                                 }
-                            }
                             break;
-                        case "NotEqualTo":
+                        case 'NotEqualTo':
                             searchPart1[key] = {
                                 $exists: true
                             };
                             searchQuery.$and = [];
                             searchQuery.$and.push(searchPart1);
-                            if (filter.valueType === "Enum" && utils.converters.isNumber(filter.evalue)) {
+                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
                                 if (filter.evalue === -1) {
                                     searchPart2[propertyCheckForValue(key)] = {
                                         $ne: ''
@@ -1038,8 +1025,7 @@ module.exports = Rpt = {
                                         $ne: filter.evalue
                                     };
                                 }
-                            } else {
-                                if (filter.valueType === "Bool") {
+                            } else if (filter.valueType === "Bool") {
                                     if (utils.converters.isNumber(filter.value)) {
                                         searchPart2[propertyCheckForValue(key)] = {
                                             $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
@@ -1059,41 +1045,40 @@ module.exports = Rpt = {
                                             //$ne: utils.converters.convertType(filter.value, filter.valueType)
                                     };
                                 }
-                            }
 
                             searchQuery.$and.push(searchPart2);
                             break;
-                        case "LessThan":
+                        case 'LessThan':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $lt: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
-                        case "LessThanOrEqualTo":
+                        case 'LessThanOrEqualTo':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $lte: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
-                        case "GreaterThan":
+                        case 'GreaterThan':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $gt: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
-                        case "GreaterThanOrEqualTo":
+                        case 'GreaterThanOrEqualTo':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $gte: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
-                        case "BeginningWith":
+                        case 'BeginningWith':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '^(?i)' + filter.value + '.*'
                             };
                             break;
-                        case "EndingWith":
+                        case 'EndingWith':
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '(?i)' + filter.value + '*$'
                             };
                             break;
-                        case "Between":
+                        case 'Between':
                             searchQuery[key] = {
                                 $exists: true
                             };
@@ -1102,7 +1087,7 @@ module.exports = Rpt = {
                                 $lte: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
-                        case "NotBetween":
+                        case 'NotBetween':
                             searchQuery[key] = {
                                 $exists: true
                             };
@@ -1118,8 +1103,8 @@ module.exports = Rpt = {
                 }
                 return searchQuery;
             },
-            groupLogic = function(logicType) {
-                var group = [],
+            groupLogic = function (logicType) {
+                let group = [],
                     sameGroup = true;
 
                 while (currentFilter !== undefined && sameGroup) {
@@ -1143,11 +1128,11 @@ module.exports = Rpt = {
                 break;
             } else {
                 switch (currentFilter.condition) {
-                    case "$and":
+                    case '$and':
                         andExpressions.push(collectFilter(currentFilter));
                         break;
-                    case "$or":
-                        orExpressions.push(groupLogic("$or"));
+                    case '$or':
+                        orExpressions.push(groupLogic('$or'));
                         break;
                     default:
                         break;
@@ -1172,14 +1157,14 @@ module.exports = Rpt = {
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
     },
-    groupOrExpression: function(listOfExpressions) {
-        var concatJSON = {},
+    groupOrExpression: function (listOfExpressions) {
+        let concatJSON = {},
             tempObj = {},
             i;
 
         for (i = 0; i < listOfExpressions.length; i++) {
             tempObj = listOfExpressions[i];
-            for (var prop in tempObj) {
+            for (let prop in tempObj) {
                 if (tempObj.hasOwnProperty(prop)) {
                     concatJSON[prop] = tempObj[prop];
                 }
@@ -1187,38 +1172,37 @@ module.exports = Rpt = {
         }
         return concatJSON;
     },
-    totalizerReport: function(data, cb) {
+    totalizerReport: function (data, cb) {
         //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
-        var points = data.upis;
-        var reportConfig = data.reportConfig;
-        var range = data.range;
-        var intervalOptions = reportConfig.interval;
+        let points = data.upis;
+        let reportConfig = data.reportConfig;
+        let range = data.range;
+        let intervalOptions = reportConfig.interval;
 
-        var compare = function(a, b) {
+        let compare = function (a, b) {
             return a.timestamp - b.timestamp;
         };
 
-        var findStarts = function(initial, history) {
-            var totals = [];
-            var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
-            intervals.forEach(function(interval, index) {
+        let findStarts = function (initial, history) {
+            let totals = [];
+            let previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
+            intervals.forEach(function (interval, index) {
+                let starts = 0;
+                let start = interval.start;
+                let end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                var starts = 0;
-                var start = interval.start;
-                var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
-
-                var matches = history.filter(function(data) {
+                let matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
-                for (var i = 0; i < matches.length; i++) {
+                for (let i = 0; i < matches.length; i++) {
                     if (previousValue === 0 && matches[i].Value !== 0) {
                         starts++;
                     }
                     previousValue = matches[i].Value;
                 }
 
-                var result = {
+                let result = {
                     total: starts,
                     range: {
                         start: start,
@@ -1232,25 +1216,25 @@ module.exports = Rpt = {
             return totals;
         };
 
-        var findRuntime = function(initial, history) {
-            var totals = [];
-            var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
+        let findRuntime = function (initial, history) {
+            let totals = [];
+            let previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
-            intervals.forEach(function(interval, index) {
+            intervals.forEach(function (interval, index) {
                 // console.log(interval);
-                var runtime = 0;
-                var now = moment().unix();
-                var intervalLonger = now < interval.end;
-                var start = interval.start;
-                var end = (!!intervalLonger) ? now : interval.end;
+                let runtime = 0;
+                let now = moment().unix();
+                let intervalLonger = now < interval.end;
+                let start = interval.start;
+                let end = (!!intervalLonger) ? now : interval.end;
 
-                var matches = history.filter(function(data) {
+                let matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
                 if (!!matches.length) {
-                    for (var i = 0; i < matches.length; i++) {
-                        var currentValue = matches[i].Value;
+                    for (let i = 0; i < matches.length; i++) {
+                        let currentValue = matches[i].Value;
                         if (previousValue !== 0 && currentValue === 0) {
                             runtime += matches[i].timestamp - start;
                         } else if (i === (matches.length - 1)) {
@@ -1271,7 +1255,7 @@ module.exports = Rpt = {
                     runtime = 0;
                 }
 
-                var result = {
+                let result = {
                     total: runtime,
                     range: interval
                 };
@@ -1281,10 +1265,10 @@ module.exports = Rpt = {
             return totals;
         };
 
-        var findTotal = function(initial, history) {
-            var totals = [];
-            var value = 0;
-            var startValue = 0;
+        let findTotal = function (initial, history) {
+            let totals = [];
+            let value = 0;
+            let startValue = 0;
             if (!!history.length) {
                 if (initial.hasOwnProperty('Value')) {
                     value = initial.Value;
@@ -1296,16 +1280,16 @@ module.exports = Rpt = {
                 value = 0;
             }
 
-            intervals.forEach(function(interval, index) {
-                var total = startValue;
+            intervals.forEach(function (interval, index) {
+                let total = startValue;
                 startValue = 0;
-                var start = interval.start;
-                var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
+                let start = interval.start;
+                let end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                var matches = history.filter(function(data) {
+                let matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
-                for (var i = 0; i < matches.length; i++) {
+                for (let i = 0; i < matches.length; i++) {
                     if (matches[i].Value >= value) {
                         total += matches[i].Value - value;
                         value = matches[i].Value;
@@ -1315,7 +1299,7 @@ module.exports = Rpt = {
                     }
                 }
 
-                var result = {
+                let result = {
                     total: total,
                     range: {
                         start: start,
@@ -1330,11 +1314,11 @@ module.exports = Rpt = {
         };
 
 
-        var intervals = buildIntervals(range, intervalOptions);
+        let intervals = buildIntervals(range, intervalOptions);
 
-        var getInitialDataMongo = function(point, callback) {
-            var history = [];
-            var criteria = { //find initial data per point
+        let getInitialDataMongo = function (point, callback) {
+            let history = [];
+            let criteria = { //find initial data per point
                 collection: 'historydata',
                 query: {
                     timestamp: {
@@ -1347,26 +1331,26 @@ module.exports = Rpt = {
                 },
                 limit: 1
             };
-            Utility.get(criteria, function(err, initial) {
+            Utility.get(criteria, function (err, initial) {
                 callback(err, point, initial[0]);
             });
         };
-        var getInitialDataSql = function(point, initial, callback) {
+        let getInitialDataSql = function (point, initial, callback) {
             History.findLatest({
                 upis: [point.upi],
                 range: { // range object gets overwritten in function, pass new obj
                     end: range.start
                 }
-            }, function(err, results) {
-                var latestSql = results[0];
+            }, function (err, results) {
+                let latestSql = results[0];
                 if (!initial || (!!latestSql && latestSql.timestamp >= initial.timestamp)) {
                     initial = latestSql;
                 }
                 callback(null, point, initial || {});
             });
         };
-        var getRangeDataMongo = function(point, initial, callback) {
-            var criteria = {
+        let getRangeDataMongo = function (point, initial, callback) {
+            let criteria = {
                 collection: 'historydata',
                 query: {
                     upi: point.upi,
@@ -1382,12 +1366,12 @@ module.exports = Rpt = {
                 }
             };
 
-            Utility.get(criteria, function(err, history) {
+            Utility.get(criteria, function (err, history) {
                 callback(null, point, initial, history);
             });
         };
-        var getRangeDataSql = function(point, initial, history, callback) {
-            var exists = false;
+        let getRangeDataSql = function (point, initial, history, callback) {
+            let exists = false;
 
             History.findHistory({
                 upis: [point.upi],
@@ -1396,10 +1380,10 @@ module.exports = Rpt = {
                     end: range.end
                 },
                 fx: 'history'
-            }, function(err, results) {
-                for (var h = 0; h < history.length; h++) {
+            }, function (err, results) {
+                for (let h = 0; h < history.length; h++) {
                     exists = false;
-                    for (var r = 0; r < results.length; r++) {
+                    for (let r = 0; r < results.length; r++) {
                         if (results[r].timestamp === history[h].timestamp) {
                             exists = true;
                         }
@@ -1413,7 +1397,7 @@ module.exports = Rpt = {
             });
         };
 
-        var buildTotal = function(point, initial, history, callback) {
+        let buildTotal = function (point, initial, history, callback) {
             history.sort(compare);
 
             switch (point.op) {
@@ -1431,17 +1415,17 @@ module.exports = Rpt = {
             return callback(null);
         };
 
-        async.eachSeries(points, function(point, seriesCb) {
+        async.eachSeries(points, function (point, seriesCb) {
             async.waterfall([async.apply(getInitialDataMongo, point), getInitialDataSql, getRangeDataMongo, getRangeDataSql, buildTotal], seriesCb);
-        }, function(err) {
+        }, function (err) {
             return cb(err, points);
         });
     },
-    scheduledReport: function(data, cb) {
-        var domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
-        var schedule = data.schedule;
-        var upi = schedule.upi;
-        var emails = [];
+    scheduledReport: function (data, cb) {
+        let domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
+        let schedule = data.schedule;
+        let upi = schedule.upi;
+        let emails = [];
 
         Utility.getOne({
             collection: 'points',
@@ -1451,19 +1435,19 @@ module.exports = Rpt = {
             fields: {
                 Name: 1
             }
-        }, function(err, point) {
+        }, function (err, point) {
             if (!!point) {
-                var reportName = point.Name;
-                var users = schedule.users.map(function(id) {
+                let reportName = point.Name;
+                let users = schedule.users.map(function (id) {
                     return ObjectID(id);
                 });
-                var date = moment().format('YYYY-MM-DD');
-                var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
-                var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
+                let date = moment().format('YYYY-MM-DD');
+                let path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
+                let uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
                 console.log(uri, path);
-                pageRender.renderPage(uri, path, function(err) {
+                pageRender.renderPage(uri, path, function (err) {
                     console.log(1, err);
-                    fs.readFile(path, function(err, data) {
+                    fs.readFile(path, function (err, data) {
                         console.log(2, err);
                         Utility.iterateCursor({
                             collection: 'Users',
@@ -1472,16 +1456,16 @@ module.exports = Rpt = {
                                     $in: users
                                 }
                             }
-                        }, function(err, user, nextUser) {
+                        }, function (err, user, nextUser) {
                             // figure out date/time
-                            emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                            emails = emails.concat(user['Contact Info'].Value.filter(function (info) {
                                 return info.Type === 'Email';
-                            }).map(function(email) {
+                            }).map(function (email) {
                                 return email.Value;
                             }));
 
                             nextUser();
-                        }, function(err, count) {
+                        }, function (err, count) {
                             emails = emails.concat(schedule.emails).join(',');
                             mailer.sendEmail({
                                 to: emails,
@@ -1493,7 +1477,7 @@ module.exports = Rpt = {
                                     contentType: 'application/pdf',
                                     content: data
                                 }]
-                            }, function(err, info) {
+                            }, function (err, info) {
                                 console.log(err, info);
                                 cb(err);
                             });
@@ -1502,19 +1486,19 @@ module.exports = Rpt = {
                     // }, 5000);
                 });
             } else {
-                logger.info("   - -  scheduledReport() schedule._id = " + schedule._id + "  unable to find Report with UPI = " + upi);
+                logger.info('   - -  scheduledReport() schedule._id = ' + schedule._id + '  unable to find Report with UPI = ' + upi);
             }
         });
     }
 };
 
-var buildIntervals = function(range, interval) {
-    var intervalPeriod = interval.period;
-    var intervalValue = interval.value;
-    var intervalRanges = [];
-    var intervalStart;
-    var intervalEnd;
-    var fixLongerInterval = function() {
+let buildIntervals = function (range, interval) {
+    let intervalPeriod = interval.period;
+    let intervalValue = interval.value;
+    let intervalRanges = [];
+    let intervalStart;
+    let intervalEnd;
+    let fixLongerInterval = function () {
         if (intervalEnd > range.end && intervalStart < range.end) {
             intervalEnd = range.end;
         }
@@ -1536,27 +1520,27 @@ var buildIntervals = function(range, interval) {
     return intervalRanges;
 };
 
-var buildPointRef = function(key, regex) {
+let buildPointRef = function (key, regex) {
     return {
-        "Point Refs": {
+        'Point Refs': {
             $elemMatch: {
-                "PropertyName": key,
-                "Value": regex
+                'PropertyName': key,
+                'Value': regex
             }
         }
     };
 };
 
-var propertyCheckForValue = function(prop) {
+let propertyCheckForValue = function (prop) {
     if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
         return prop;
-    } else {
+    } 
         return prop + ".Value";
-    }
+    
 };
 
-var getPoints = function(pointsCol, cb) {
-    var criteria = {
+let getPoints = function (pointsCol, cb) {
+    let criteria = {
         query: {
             _id: {
                 $in: pointsCol

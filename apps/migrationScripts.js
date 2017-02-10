@@ -1,33 +1,33 @@
 // To run from command prompt, run from root infoscan folder as such: 'node apps/migrationScripts.js'
 // if you do not wish to update the version in the DB, pass -n from command prompt
 process.setMaxListeners(0);
-var async = require('async');
-var Utility = require('../models/Utility');
-var db = require('../helpers/db');
-var utils = require('../helpers/utils');
-var config = require('config');
-var Config = require('../public/js/lib/config.js');
-var logger = require('../helpers/logger')(module);
+let async = require('async');
+let Utility = new(require('../models/Utility'))();
+let db = require('../helpers/db');
+let utils = require('../helpers/utils');
+let config = require('config');
+let Config = require('../public/js/lib/config.js');
+let logger = require('../helpers/logger')(module);
 
-var pjson = require('../package.json');
-var compareVersions = require('compare-versions');
-var commandLineArgs = require('command-line-args');
+let pjson = require('../package.json');
+let compareVersions = require('compare-versions');
+let commandLineArgs = require('command-line-args');
 
-var cli = commandLineArgs([{
+let cli = commandLineArgs([{
     name: 'noupdate',
     alias: 'n',
     type: Boolean
 }]);
 
-var options = cli.parse();
+let options = cli.parse();
 
-var curVersion = pjson.version;
-var prevVersion = 0;
+let curVersion = pjson.version;
+let prevVersion = 0;
 
-var dbConfig = config.get('Infoscan.dbConfig');
-var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
+let dbConfig = config.get('Infoscan.dbConfig');
+let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
-var checkVersions = function(version) {
+let checkVersions = function (version) {
     // console.log(version, prevVersion, curVersion);
     // console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
     if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
@@ -35,12 +35,12 @@ var checkVersions = function(version) {
     }
 
     return false;
-}
+};
 
-var scripts = {
+let scripts = {
     // 0.3.10 - TOU Phase 2 - updates committed bills by adding the rate element properties from rate table to the committed bills
-    updateCommittedBills: function(callback) {
-        var afterVersion = '0.3.10';
+    updateCommittedBills: function (callback) {
+        let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateCommittedBills',
@@ -48,28 +48,30 @@ var scripts = {
                 results: null
             });
         }
-        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             results = [],
-            findBillCollection = function(bill, collectionName) {
-                var collections = bill.collections,
+            findBillCollection = function (bill, collectionName) {
+                let collections = bill.collections,
                     len = collections.length,
                     i;
                 for (i = 0; i < len; i++) {
-                    if (collections[i].name === collectionName)
+                    if (collections[i].name === collectionName) {
                         return collections[i];
+                    }
                 }
             },
-            findBillRow = function(collection, rowName) {
-                var rows = collection.rows,
+            findBillRow = function (collection, rowName) {
+                let rows = collection.rows,
                     len = rows.length,
                     i;
                 for (i = 0; i < len; i++) {
-                    if (rows[i].name.displayValue === rowName)
+                    if (rows[i].name.displayValue === rowName) {
                         return rows[i];
+                    }
                 }
             },
-            processRateTable = function(rateTable, touUtility) {
-                var changes = {},
+            processRateTable = function (rateTable, touUtility) {
+                let changes = {},
                     title,
                     collection,
                     collectionName,
@@ -78,6 +80,7 @@ var scripts = {
                     end,
                     season,
                     billCollection,
+                    committedBill,
                     billRow,
                     rateName,
                     i, len,
@@ -85,7 +88,6 @@ var scripts = {
 
                 for (collectionName in rateTable) {
                     collection = rateTable[collectionName];
-                    cnt = 0;
 
                     if (!collection.periods) {
                         continue;
@@ -129,7 +131,7 @@ var scripts = {
                     }
                 }
             },
-            doCallback = function(err, results) {
+            doCallback = function (err, results) {
                 callback(null, {
                     fn: 'updateCommittedBills',
                     errors: err,
@@ -139,13 +141,13 @@ var scripts = {
 
         Utility.get({
             collection: 'Utilities'
-        }, function(err, utilities) {
+        }, function (err, utilities) {
             if (err) {
                 return doCallback(err);
             }
 
             async.eachSeries(utilities, function processUtility(touUtility, cb) {
-                var criteria = {
+                let criteria = {
                     collection: 'Utilities',
                     query: {
                         _id: touUtility._id
@@ -160,7 +162,7 @@ var scripts = {
                 if (Object.keys(touUtility.Billing.committedBills).length === 0) {
                     return cb();
                 }
-                for (var year in touUtility.PreviousRateTables) {
+                for (let year in touUtility.PreviousRateTables) {
                     processRateTable(touUtility.PreviousRateTables[year], touUtility);
                 }
                 processRateTable(touUtility.RateTables, touUtility);
@@ -172,8 +174,8 @@ var scripts = {
     },
 
     // 0.4.1 - GPL Point Ref PropertyEnum Update.  Updated GPLBlock PropertyEnum to be 439 instead of (placeholder) 0
-    updateGPLBlockPointRefEnum: function(callback) {
-        var afterVersion = '0.4.1';
+    updateGPLBlockPointRefEnum: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateGPLBlockPointRefEnum',
@@ -187,7 +189,7 @@ var scripts = {
                 'Point Type.Value': 'Sequence'
             }
         }, function processSequence(err, doc, cb) {
-            var list = doc['Point Refs'];
+            let list = doc['Point Refs'];
 
             list.forEach(function processPointRefs(ref) {
                 if (ref.PropertyName === 'GPLBlock') {
@@ -210,7 +212,6 @@ var scripts = {
 
                 cb(null);
             });
-
         }, function finishUpdatingSequences(err) {
             logger.info('Finished with updateGPLBlockPointRefEnum');
             callback(null, {
@@ -220,8 +221,8 @@ var scripts = {
         });
     },
     // 0.4.1
-    updateGenerateGPLPointRefs: function(callback) {
-        var afterVersion = '0.4.1';
+    updateGenerateGPLPointRefs: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateGenerateGPLPointRefs',
@@ -230,36 +231,36 @@ var scripts = {
             });
         }
         Utility.iterateCursor({
-            collection: "points",
+            collection: 'points',
             query: {
                 // "_id" : 67275,
-                "Point Type.Value": "Sequence"
+                'Point Type.Value': 'Sequence'
             }
         }, function processSequence(err, sequence, cb) {
-            var sequenceNeedsSaving = false;
+            let sequenceNeedsSaving = false;
 
             // logger.info('processSequence() sequence = ', sequence);
             if (!!sequence && !!sequence.SequenceData && !!sequence.SequenceData.sequence && !!sequence.SequenceData.sequence.block) {
                 // logger.info("- - updating sequence:", sequence._id);
-                var blocks = sequence.SequenceData.sequence.block,
+                let blocks = sequence.SequenceData.sequence.block,
                     dynamics = (!!sequence.SequenceData.sequence.dynamic ? sequence.SequenceData.sequence.dynamic : []),
                     pointRef,
-                    pRefs = sequence["Point Refs"],
+                    pRefs = sequence['Point Refs'],
                     deviceId = !!pRefs[0] ? pRefs[0].PointInst : null,
-                    saveSequence = function() {
+                    saveSequence = function () {
                         if (sequenceNeedsSaving) {
                             // logger.info("   ___ sequenceNeedsSaving ___");
                             sequenceNeedsSaving = false;
 
                             Utility.update({
-                                collection: "points",
+                                collection: 'points',
                                 query: {
                                     _id: sequence._id
                                 },
                                 updateObj: sequence
                             }, function updatedSequenceHandler(err) {
                                 if (err) {
-                                    logger.debug("Update err:", err);
+                                    logger.debug('Update err:', err);
                                 }
 
                                 cb(null);
@@ -268,26 +269,25 @@ var scripts = {
                             cb(null);
                         }
                     },
-                    adjustSequence = function() {
+                    adjustSequence = function () {
                         adjustBlocksAndDynamics();
                     },
-                    adjustBlocksAndDynamics = function() {
+                    adjustBlocksAndDynamics = function () {
                         // logger.info("- blocks.length:", blocks.length);
                         async.eachSeries(blocks, function processBlocks(block, seriesCallback) {
                             if (block.upi > 0 || block.pointRefIndex !== undefined) {
                                 sequenceNeedsSaving = true;
 
                                 // logger.info("block.upi:" + block.upi + "   block.pointRefIndex:" + block.pointRefIndex);
-                                pointRef = getPointReference(block, "GPLBlock");
+                                pointRef = getPointReference(block, 'GPLBlock');
 
                                 // logger.info("pointRef.AppIndex = " + (!!pointRef ? pointRef.AppIndex : null));
                                 if (pointRef !== undefined && pointRef !== null) {
                                     block.pointRefIndex = pointRef.AppIndex;
                                     delete block.upi;
                                     return seriesCallback();
-                                } else {
-                                    createPointRef(block, "GPLBlock", 439, seriesCallback);
                                 }
+                                createPointRef(block, 'GPLBlock', 439, seriesCallback);
                             } else {
                                 return seriesCallback();
                             }
@@ -296,22 +296,21 @@ var scripts = {
                             adjustDynamics();
                         });
                     },
-                    adjustDynamics = function() {
+                    adjustDynamics = function () {
                         async.eachSeries(dynamics, function processDynamics(dynamic, seriesCallback) {
                             if (dynamic.upi > 0 || dynamic.pointRefIndex !== undefined) {
                                 sequenceNeedsSaving = true;
 
                                 // logger.info("dynamic.upi:" + dynamic.upi + "   dynamic.pointRefIndex:" + dynamic.pointRefIndex);
-                                pointRef = getPointReference(dynamic, "GPLDynamic");
+                                pointRef = getPointReference(dynamic, 'GPLDynamic');
 
                                 // logger.info("pointRef.AppIndex = " + (!!pointRef ? pointRef.AppIndex : null));
                                 if (pointRef !== undefined && pointRef !== null) {
                                     dynamic.pointRefIndex = pointRef.AppIndex;
                                     delete dynamic.upi;
                                     return seriesCallback();
-                                } else {
-                                    createPointRef(dynamic, "GPLDynamic", 440, seriesCallback);
                                 }
+                                createPointRef(dynamic, 'GPLDynamic', 440, seriesCallback);
                             } else {
                                 return seriesCallback();
                             }
@@ -319,8 +318,8 @@ var scripts = {
                             saveSequence();
                         });
                     },
-                    getGplBlockObject = function(upi, cb2) {
-                        var criteria = {
+                    getGplBlockObject = function (upi, cb2) {
+                        let criteria = {
                             collection: 'points',
                             query: {
                                 _id: upi
@@ -329,29 +328,28 @@ var scripts = {
                                 _id: 1,
                                 Name: 1,
                                 Value: 1,
-                                "Point Type": 1
+                                'Point Type': 1
                             }
                         };
 
                         // logger.info("criteria = " + criteria);
-                        Utility.getOne(criteria, function(err, referencedObj) {
+                        Utility.getOne(criteria, function (err, referencedObj) {
                             if (err) {
-                                logger.info("Utility.getOne err = " + err);
+                                logger.info('Utility.getOne err = ' + err);
                                 return cb2(err);
+                            }
+                            // logger.info("getGplBlockObject()  referencedObj = " + referencedObj);
+                            if (referencedObj === null) {
+                                // logger.info("        - - UPI Not Found: " + upi);
+                                cb2(null, referencedObj);
                             } else {
-                                // logger.info("getGplBlockObject()  referencedObj = " + referencedObj);
-                                if (referencedObj === null) {
-                                    // logger.info("        - - UPI Not Found: " + upi);
-                                    cb2(null, referencedObj);
-                                } else {
-                                    // logger.info("Utility.getOne found it = " + referencedObj);
-                                    cb2(null, referencedObj);
-                                }
+                                // logger.info("Utility.getOne found it = " + referencedObj);
+                                cb2(null, referencedObj);
                             }
                         });
                     },
-                    getPointReference = function(gplobject, refType) {
-                        var answer = null;
+                    getPointReference = function (gplobject, refType) {
+                        let answer = null;
 
                         // logger.info('gplobject.upi:'+ gplobject.upi + '   gplobject.pointRefIndex:' + gplobject.pointRefIndex);
                         if (gplobject.pointRefIndex !== undefined && gplobject.pointRefIndex !== null) {
@@ -363,29 +361,28 @@ var scripts = {
                         // logger.info('getPointReference()  answer =  ' + answer);
                         return answer;
                     },
-                    createPointRef = function(gplobject, refType, refEnum, createCallBack) {
-                        var createNewPointRef = function(err, referencedPoint) {
-                            var objRef,
+                    createPointRef = function (gplobject, refType, refEnum, createCallBack) {
+                        let createNewPointRef = function (err, referencedPoint) {
+                            let objRef,
                                 thePointRef = null;
                             if (err) {
-                                logger.info("err = " + err);
+                                logger.info('err = ' + err);
                                 return createCallBack(err);
-                            } else {
-                                if (referencedPoint !== null) {
-                                    objRef = {
-                                        upi: referencedPoint._id,
-                                        name: referencedPoint.Name,
-                                        pointType: referencedPoint["Point Type"].Value
-                                    };
-                                    thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
-                                    if (!!thePointRef) {
-                                        gplobject.pointRefIndex = thePointRef.AppIndex;
-                                        // delete gplobject.upi;  // TODO to clear out duplicate data (point ref contains the UPI)
-                                    }
-                                }
-                                // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
-                                return createCallBack(null, thePointRef);
                             }
+                            if (referencedPoint !== null) {
+                                objRef = {
+                                    upi: referencedPoint._id,
+                                    name: referencedPoint.Name,
+                                    pointType: referencedPoint['Point Type'].Value
+                                };
+                                thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
+                                if (!!thePointRef) {
+                                    gplobject.pointRefIndex = thePointRef.AppIndex;
+                                    // delete gplobject.upi;  // TODO to clear out duplicate data (point ref contains the UPI)
+                                }
+                            }
+                            // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
+                            return createCallBack(null, thePointRef);
                         };
 
                         // logger.info(" createNewPointRef() gplobject.upi = " + gplobject.upi);
@@ -395,10 +392,10 @@ var scripts = {
                             return createCallBack(null);
                         }
                     },
-                    getPointRefByAppindex = function(pointRefIndex, referenceType) {
-                        var answer;
+                    getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                        let answer;
                         if (pointRefIndex > -1) {
-                            answer = pRefs.filter(function(pointRef) {
+                            answer = pRefs.filter(function (pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
 
@@ -406,18 +403,18 @@ var scripts = {
                         }
                         return answer;
                     },
-                    getPointRefByUpi = function(upi, referenceType) {
-                        var answer;
+                    getPointRefByUpi = function (upi, referenceType) {
+                        let answer;
                         if (!!upi && !isNaN(upi)) {
-                            answer = pRefs.filter(function(pointRef) {
+                            answer = pRefs.filter(function (pointRef) {
                                 return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
                             });
                             answer = (!!answer && answer.length > 0 ? answer[0] : null);
                         }
                         return answer;
                     },
-                    getNextAppIndex = function() {
-                        var answer = 0,
+                    getNextAppIndex = function () {
+                        let answer = 0,
                             i;
                         for (i = 0; i < pRefs.length; i++) {
                             if (answer < pRefs[i].AppIndex) {
@@ -426,18 +423,18 @@ var scripts = {
                         }
                         return answer + 1;
                     },
-                    makePointRef = function(theBlock, devInst, referenceType, referenceEnum) {
-                        var pointRef = {
-                            "PropertyName": referenceType,
-                            "PropertyEnum": referenceEnum,
-                            "Value": theBlock.upi,
-                            "AppIndex": getNextAppIndex(),
-                            "isDisplayable": true,
-                            "isReadOnly": true,
-                            "PointName": theBlock.name,
-                            "PointInst": theBlock.upi,
-                            "DevInst": devInst, // TODO   what about external references?
-                            "PointType": Config.Enums['Point Types'][theBlock.pointType].enum
+                    makePointRef = function (theBlock, devInst, referenceType, referenceEnum) {
+                        let pointRef = {
+                            'PropertyName': referenceType,
+                            'PropertyEnum': referenceEnum,
+                            'Value': theBlock.upi,
+                            'AppIndex': getNextAppIndex(),
+                            'isDisplayable': true,
+                            'isReadOnly': true,
+                            'PointName': theBlock.name,
+                            'PointInst': theBlock.upi,
+                            'DevInst': devInst, // TODO   what about external references?
+                            'PointType': Config.Enums['Point Types'][theBlock.pointType].enum
                         };
 
                         pRefs.push(pointRef);
@@ -445,25 +442,24 @@ var scripts = {
                     };
 
                 if (!!pRefs[0]) {
-                    pRefs[0].PropertyName = "Device Point";
+                    pRefs[0].PropertyName = 'Device Point';
                 }
 
                 adjustSequence();
-
             } else {
                 cb();
             }
-        }, function(err) {
-            logger.info("Finished with updateGenerateGPLPointRefs");
+        }, function (err) {
+            logger.info('Finished with updateGenerateGPLPointRefs');
             callback(null, {
-                fn: "updateGenerateGPLPointRefs",
+                fn: 'updateGenerateGPLPointRefs',
                 errors: err
             });
         });
     },
     // 0.4.1
-    updateGenerateDisplayPointRefs: function(callback) {
-        var afterVersion = '0.4.1';
+    updateGenerateDisplayPointRefs: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateGenerateDisplayPointRefs',
@@ -472,53 +468,53 @@ var scripts = {
             });
         }
         Utility.iterateCursor({
-            collection: "points",
+            collection: 'points',
             query: {
                 // "_id" : 54349,
-                "Point Type.Value": "Display"
+                'Point Type.Value': 'Display'
             }
         }, function processDisplay(err, display, cb) {
-            var displayNeedsSaving = false,
+            let displayNeedsSaving = false,
                 prop;
 
             // logger.info('processDisplay() display = ', display);
-            if (!!display && !!display["Screen Objects"]) {
+            if (!!display && !!display['Screen Objects']) {
                 // logger.info("- - updating display:", display._id);
-                var screenObjects = display["Screen Objects"],
+                let screenObjects = display['Screen Objects'],
                     pointRef,
-                    pRefs = display["Point Refs"],
+                    pRefs = display['Point Refs'],
                     deviceId = 0,
-                    reIndexAppIndex = function() {
-                        var i,
+                    reIndexAppIndex = function () {
+                        let i,
                             appIndex = 0;
                         for (i = 0; i < pRefs.length; i++) {
                             pRefs[i].AppIndex = appIndex++;
                         }
                     },
-                    getScreenObjectType = function(screenObjectType) {
-                        var propEnum = 0,
-                            propName = "";
+                    getScreenObjectType = function (screenObjectType) {
+                        let propEnum = 0,
+                            propName = '';
 
                         switch (screenObjectType) {
                             case 0:
-                                propEnum = Config.Enums.Properties["Display Dynamic"].enum;
-                                propName = "Display Dynamic";
+                                propEnum = Config.Enums.Properties['Display Dynamic'].enum;
+                                propName = 'Display Dynamic';
                                 break;
                             case 1:
-                                propEnum = Config.Enums.Properties["Display Button"].enum;
-                                propName = "Display Button";
+                                propEnum = Config.Enums.Properties['Display Button'].enum;
+                                propName = 'Display Button';
                                 break;
                             case 3:
-                                propEnum = Config.Enums.Properties["Display Animation"].enum;
-                                propName = "Display Animation";
+                                propEnum = Config.Enums.Properties['Display Animation'].enum;
+                                propName = 'Display Animation';
                                 break;
                             case 7:
-                                propEnum = Config.Enums.Properties["Display Trend"].enum;
-                                propName = "Display Trend";
+                                propEnum = Config.Enums.Properties['Display Trend'].enum;
+                                propName = 'Display Trend';
                                 break;
                             default:
                                 propEnum = 0;
-                                propName = "";
+                                propName = '';
                                 break;
                         }
 
@@ -527,20 +523,20 @@ var scripts = {
                             enum: propEnum
                         };
                     },
-                    saveDisplay = function() {
+                    saveDisplay = function () {
                         if (displayNeedsSaving) {
                             // logger.info("   ___ displayNeedsSaving ___");
                             displayNeedsSaving = false;
 
                             Utility.update({
-                                collection: "points",
+                                collection: 'points',
                                 query: {
                                     _id: display._id
                                 },
                                 updateObj: display
                             }, function updatedDisplayHandler(err) {
                                 if (err) {
-                                    logger.debug("Update err:", err);
+                                    logger.debug('Update err:', err);
                                 }
 
                                 cb(null);
@@ -549,14 +545,14 @@ var scripts = {
                             cb(null);
                         }
                     },
-                    adjustScreenObjects = function() {
+                    adjustScreenObjects = function () {
                         reIndexAppIndex(); // existing point refs have invalid AppIndex values.
 
                         // logger.info("- screenObjects.length:", screenObjects.length);
                         async.eachSeries(screenObjects, function processDisplays(screenObject, seriesCallback) {
                             if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
                                 displayNeedsSaving = true;
-                                prop = getScreenObjectType(screenObject["Screen Object"]);
+                                prop = getScreenObjectType(screenObject['Screen Object']);
 
                                 //logger.info("screenObject.upi:" + screenObject.upi + "   screenObject.pointRefIndex:" + screenObject.pointRefIndex);
                                 pointRef = getPointReference(screenObject, prop.name);
@@ -566,9 +562,8 @@ var scripts = {
                                     screenObject.pointRefIndex = pointRef.AppIndex;
                                     // delete screenObject.upi; // TODO remove UPI and reference pointRefIndex instead
                                     return seriesCallback();
-                                } else {
-                                    createPointRef(screenObject, prop.name, prop.enum, seriesCallback);
                                 }
+                                createPointRef(screenObject, prop.name, prop.enum, seriesCallback);
                             } else {
                                 return seriesCallback();
                             }
@@ -577,8 +572,8 @@ var scripts = {
                             saveDisplay();
                         });
                     },
-                    getDisplayReferencedObject = function(upi, cb2) {
-                        var criteria = {
+                    getDisplayReferencedObject = function (upi, cb2) {
+                        let criteria = {
                             collection: 'points',
                             query: {
                                 _id: upi
@@ -587,29 +582,28 @@ var scripts = {
                                 _id: 1,
                                 Name: 1,
                                 Value: 1,
-                                "Point Type": 1
+                                'Point Type': 1
                             }
                         };
 
                         // logger.info("criteria = " + criteria);
-                        Utility.getOne(criteria, function(err, referencedObj) {
+                        Utility.getOne(criteria, function (err, referencedObj) {
                             if (err) {
-                                logger.info("Utility.getOne err = " + err);
+                                logger.info('Utility.getOne err = ' + err);
                                 return cb2(err);
+                            }
+                            // logger.info("getDisplayReferencedObject()  referencedObj = " + referencedObj);
+                            if (referencedObj === null) {
+                                // logger.info("        - - UPI Not Found: " + upi);
+                                cb2(null, referencedObj);
                             } else {
-                                // logger.info("getDisplayReferencedObject()  referencedObj = " + referencedObj);
-                                if (referencedObj === null) {
-                                    // logger.info("        - - UPI Not Found: " + upi);
-                                    cb2(null, referencedObj);
-                                } else {
-                                    // logger.info("Utility.getOne found it = " + referencedObj);
-                                    cb2(null, referencedObj);
-                                }
+                                // logger.info("Utility.getOne found it = " + referencedObj);
+                                cb2(null, referencedObj);
                             }
                         });
                     },
-                    getPointReference = function(screenObject, refType) {
-                        var answer = null;
+                    getPointReference = function (screenObject, refType) {
+                        let answer = null;
 
                         // logger.info('screenObject.upi:'+ screenObject.upi + '   screenObject.pointRefIndex:' + screenObject.pointRefIndex);
                         if (screenObject.pointRefIndex !== undefined && screenObject.pointRefIndex !== null) {
@@ -621,29 +615,28 @@ var scripts = {
                         // logger.info('getPointReference()  answer =  ' + answer);
                         return answer;
                     },
-                    createPointRef = function(screenObject, refType, refEnum, createCallBack) {
-                        var createNewPointRef = function(err, referencedPoint) {
-                            var objRef,
+                    createPointRef = function (screenObject, refType, refEnum, createCallBack) {
+                        let createNewPointRef = function (err, referencedPoint) {
+                            let objRef,
                                 thePointRef = null;
                             if (err) {
-                                logger.info("err = " + err);
+                                logger.info('err = ' + err);
                                 return createCallBack(err);
-                            } else {
-                                if (referencedPoint !== null) {
-                                    objRef = {
-                                        upi: referencedPoint._id,
-                                        name: referencedPoint.Name,
-                                        pointType: referencedPoint["Point Type"].Value
-                                    };
-                                    thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
-                                    if (!!thePointRef) {
-                                        screenObject.pointRefIndex = thePointRef.AppIndex;
-                                        //delete screenObject.upi;  // TODO remove UPI and reference pointRefIndex instead
-                                    }
-                                }
-                                // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
-                                return createCallBack(null, thePointRef);
                             }
+                            if (referencedPoint !== null) {
+                                objRef = {
+                                    upi: referencedPoint._id,
+                                    name: referencedPoint.Name,
+                                    pointType: referencedPoint['Point Type'].Value
+                                };
+                                thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
+                                if (!!thePointRef) {
+                                    screenObject.pointRefIndex = thePointRef.AppIndex;
+                                    //delete screenObject.upi;  // TODO remove UPI and reference pointRefIndex instead
+                                }
+                            }
+                            // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
+                            return createCallBack(null, thePointRef);
                         };
 
                         // logger.info(" createNewPointRef() screenObject.upi = " + screenObject.upi);
@@ -653,10 +646,10 @@ var scripts = {
                             return createCallBack(null);
                         }
                     },
-                    getPointRefByAppindex = function(pointRefIndex, referenceType) {
-                        var answer;
+                    getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                        let answer;
                         if (pointRefIndex > -1) {
-                            answer = pRefs.filter(function(pointRef) {
+                            answer = pRefs.filter(function (pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
 
@@ -664,18 +657,18 @@ var scripts = {
                         }
                         return answer;
                     },
-                    getPointRefByUpi = function(upi, referenceType) {
-                        var answer;
+                    getPointRefByUpi = function (upi, referenceType) {
+                        let answer;
                         if (!!upi && !isNaN(upi)) {
-                            answer = pRefs.filter(function(pointRef) {
+                            answer = pRefs.filter(function (pointRef) {
                                 return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
                             });
                             answer = (!!answer && answer.length > 0 ? answer[0] : null);
                         }
                         return answer;
                     },
-                    getNextAppIndex = function() {
-                        var answer = 0,
+                    getNextAppIndex = function () {
+                        let answer = 0,
                             i;
                         for (i = 0; i < pRefs.length; i++) {
                             if (answer < pRefs[i].AppIndex) {
@@ -684,18 +677,18 @@ var scripts = {
                         }
                         return answer + 1;
                     },
-                    makePointRef = function(theObject, devInst, referenceType, referenceEnum) {
-                        var pointRef = {
-                            "PropertyName": referenceType,
-                            "PropertyEnum": referenceEnum,
-                            "Value": theObject.upi,
-                            "AppIndex": getNextAppIndex(),
-                            "isDisplayable": true,
-                            "isReadOnly": true,
-                            "PointName": theObject.name,
-                            "PointInst": theObject.upi,
-                            "DevInst": devInst, // TODO   what about external references?
-                            "PointType": Config.Enums['Point Types'][theObject.pointType].enum
+                    makePointRef = function (theObject, devInst, referenceType, referenceEnum) {
+                        let pointRef = {
+                            'PropertyName': referenceType,
+                            'PropertyEnum': referenceEnum,
+                            'Value': theObject.upi,
+                            'AppIndex': getNextAppIndex(),
+                            'isDisplayable': true,
+                            'isReadOnly': true,
+                            'PointName': theObject.name,
+                            'PointInst': theObject.upi,
+                            'DevInst': devInst, // TODO   what about external references?
+                            'PointType': Config.Enums['Point Types'][theObject.pointType].enum
                         };
 
                         pRefs.push(pointRef);
@@ -703,21 +696,20 @@ var scripts = {
                     };
 
                 adjustScreenObjects();
-
             } else {
                 cb();
             }
-        }, function(err) {
-            logger.info("Finished with updateGenerateGPLPointRefs");
+        }, function (err) {
+            logger.info('Finished with updateGenerateGPLPointRefs');
             callback(null, {
-                fn: "updateGenerateGPLPointRefs",
+                fn: 'updateGenerateGPLPointRefs',
                 errors: err
             });
         });
     },
     // 0.5.1 - GPL precision moving to object...
-    updateGPLBlockPrecision: function(callback) {
-        var afterVersion = '0.5.1';
+    updateGPLBlockPrecision: function (callback) {
+        let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateGPLBlockPrecision',
@@ -731,7 +723,7 @@ var scripts = {
                 'Point Type.Value': 'Sequence'
             }
         }, function processSequence(err, doc, cb) {
-            var blocks = doc.SequenceData && doc.SequenceData.sequence && doc.SequenceData.sequence.block,
+            let blocks = doc.SequenceData && doc.SequenceData.sequence && doc.SequenceData.sequence.block,
                 oldPrecision,
                 chars,
                 decimals,
@@ -740,38 +732,37 @@ var scripts = {
             if (!!blocks) {
                 // logger.info("working on " + doc.Name );
                 blocks.forEach(function processPrecision(block) {
-
-                    if (block.presentValueVisible !== undefined) {  // convert to Bool
-                        block.presentValueVisible = (block.presentValueVisible == true || block.presentValueVisible == 1);
+                    if (block.presentValueVisible !== undefined) { // convert to Bool
+                        block.presentValueVisible = (block.presentValueVisible === true || block.presentValueVisible === 1);
                         updateMe = true;
                     }
 
                     if (block.presentvalueVisible !== undefined) {
-                        block.presentValueVisible = (block.presentvalueVisible == true || block.presentvalueVisible == 1);
+                        block.presentValueVisible = (block.presentvalueVisible === true || block.presentvalueVisible === 1);
                         delete block.presentvalueVisible;
                         updateMe = true;
                     }
 
                     if (block.labelVisible !== undefined) { // convert to Bool
-                        block.labelVisible = (block.labelVisible == true || block.labelVisible == 1);
+                        block.labelVisible = (block.labelVisible === true || block.labelVisible === 1);
                         updateMe = true;
                     }
 
                     // logger.info('block.precision:', block.precision);
-                    if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== "object")) {
+                    if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== 'object')) {
                         oldPrecision = block.precision;
-                        chars = 3;  // defaults
-                        decimals = 1;  // defaults
+                        chars = 3; // defaults
+                        decimals = 1; // defaults
                         block.precision = {};
                         updateMe = true;
 
                         if (!isNaN(oldPrecision)) {
-                            if (String(oldPrecision).indexOf(".") > -1) {
-                                if (!isNaN(String(oldPrecision).split(".")[0])) {
-                                    chars = parseInt(String(oldPrecision).split(".")[0]);
+                            if (String(oldPrecision).indexOf('.') > -1) {
+                                if (!isNaN(String(oldPrecision).split('.')[0])) {
+                                    chars = parseInt(String(oldPrecision).split('.')[0], 10);
                                 }
-                                if (!isNaN(String(oldPrecision).split(".")[1])) {
-                                    decimals = parseInt(String(oldPrecision).split(".")[1]);
+                                if (!isNaN(String(oldPrecision).split('.')[1])) {
+                                    decimals = parseInt(String(oldPrecision).split('.')[1], 10);
                                 }
                             } else {
                                 chars = oldPrecision;
@@ -801,11 +792,11 @@ var scripts = {
                         cb(null);
                     });
                 } else {
-                    logger.info("nothing change for " + doc.Name );
+                    logger.info('nothing change for ' + doc.Name);
                     cb(null);
                 }
             } else {
-                logger.info("no SequenceData for " + doc.Name );
+                logger.info('no SequenceData for ' + doc.Name);
                 cb(null);
             }
         }, function finishUpdatingSequences(err) {
@@ -818,8 +809,8 @@ var scripts = {
     },
 
     // 0.4.2 - Report schema change
-    updateReportsDurationInterval: function(callback) {
-        var afterVersion = '0.4.1';
+    updateReportsDurationInterval: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateReportsDurationInterval',
@@ -827,17 +818,17 @@ var scripts = {
                 results: null
             });
         }
-        logger.info("     - - - updateReportsDurationInterval() called - - - ");
-        var collectionName = 'points',
+        logger.info('     - - - updateReportsDurationInterval() called - - - ');
+        let collectionName = 'points',
             query = {
                 'Point Type.Value': 'Report'
             },
             reportUpdateCounter = 0,
-            processDoc = function(reportDoc, cb) {
-                var reportConfig = reportDoc["Report Config"],
+            processDoc = function (reportDoc, cb) {
+                let reportConfig = reportDoc['Report Config'],
                     duration,
                     interval,
-                    updateReport = function(docToUpdate, cb) {
+                    updateReport = function (docToUpdate, cb) {
                         // logger.info("Updating report ._id = " + docToUpdate._id);
                         Utility.update({
                             collection: 'points',
@@ -845,7 +836,7 @@ var scripts = {
                                 _id: docToUpdate._id
                             },
                             updateObj: docToUpdate
-                        }, function(err) {
+                        }, function (err) {
                             if (!!err) {
                                 logger.info('Update err:' + err);
                                 cb(err);
@@ -862,18 +853,18 @@ var scripts = {
                     interval = reportConfig.interval;
                     if (!!duration && !!interval) {
                         delete duration.duration; // removing a reference
-                        interval.period = interval.period || interval.text || "Day";
+                        interval.period = interval.period || interval.text || 'Day';
                         if (!!interval.text) {
                             delete interval.text; // removing a reference
                         }
 
                         updateReport(reportDoc, cb);
                     } else {
-                        logger.info("- - - - - No 'duration' and/or No 'interval'  reportDoc._id = " + reportDoc._id);
+                        logger.info('- - - - - No \'duration\' and/or No \'interval\'  reportDoc._id = ' + reportDoc._id);
                         cb(null);
                     }
                 } else {
-                    logger.info("- - - - No 'reportConfig'  reportDoc._id = " + reportDoc._id + "  Report Name = '" + reportDoc.Name + "'");
+                    logger.info('- - - - No \'reportConfig\'  reportDoc._id = ' + reportDoc._id + '  Report Name = \'' + reportDoc.Name + '\'');
                     cb(null);
                 }
             };
@@ -883,12 +874,11 @@ var scripts = {
             query: query
         }, function processReport(err, doc, cb) {
             if (!!err) {
-                logger.info(" ERROR  err = " + err);
+                logger.info(' ERROR  err = ' + err);
                 cb(err);
             } else {
                 processDoc(doc, cb);
             }
-
         }, function finishUpdatingReports(err) {
             logger.info('Finished with updateReportsDurationInterval updated ' + reportUpdateCounter + ' reports');
             callback(null, {
@@ -899,8 +889,8 @@ var scripts = {
     },
 
     // 0.3.10 - new Report fields
-    updateExistingReports: function(callback) {
-        var afterVersion = '0.3.10';
+    updateExistingReports: function (callback) {
+        let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateExistingReports',
@@ -908,17 +898,17 @@ var scripts = {
                 results: null
             });
         }
-        logger.info("     - - - updateExistingReports() called - - - ");
-        var collectionName = 'points',
+        logger.info('     - - - updateExistingReports() called - - - ');
+        let collectionName = 'points',
             query = {
                 'Point Type.Value': 'Report'
             },
             reportUpdateCounter = 0,
-            processDoc = function(reportDoc, cb) {
-                var reportConfig = reportDoc["Report Config"],
+            processDoc = function (reportDoc, cb) {
+                let reportConfig = reportDoc['Report Config'],
                     columns,
                     updateDoc = false,
-                    updateReport = function(docToUpdate, cb) {
+                    updateReport = function (docToUpdate, cb) {
                         // logger.info("Updating report ._id = " + docToUpdate._id);
                         Utility.update({
                             collection: 'points',
@@ -926,7 +916,7 @@ var scripts = {
                                 _id: docToUpdate._id
                             },
                             updateObj: docToUpdate
-                        }, function(err) {
+                        }, function (err) {
                             if (!!err) {
                                 logger.info('Update err:' + err);
                                 cb(err);
@@ -937,42 +927,42 @@ var scripts = {
                             }
                         });
                     },
-                    getMaxAppIndexUsed = function() {
-                        var answer = 0,
+                    getMaxAppIndexUsed = function () {
+                        let answer = 0,
                             i;
-                        for (i = 0; i < reportDoc["Point Refs"].length; i++) {
-                            if (answer < reportDoc["Point Refs"][i].AppIndex) {
-                                answer = reportDoc["Point Refs"][i].AppIndex;
+                        for (i = 0; i < reportDoc['Point Refs'].length; i++) {
+                            if (answer < reportDoc['Point Refs'][i].AppIndex) {
+                                answer = reportDoc['Point Refs'][i].AppIndex;
                             }
                         }
                         return answer;
                     },
-                    getPointRef = function(item, referenceType) {
-                        var result,
+                    getPointRef = function (item, referenceType) {
+                        let result,
                             upi = item.upi;
 
                         if (!!upi) {
-                            result = reportDoc["Point Refs"].filter(function(pointRef) {
+                            result = reportDoc['Point Refs'].filter(function (pointRef) {
                                 return pointRef.Value === upi && pointRef.PropertyName === referenceType;
                             });
                         }
 
                         return (result.length === 0 ? null : result[0]);
                     },
-                    updateColumnFromPointRefs = function(column) {
-                        var property = "Column Point",
-                            setColumn = function(theCol, pRef) {
+                    updateColumnFromPointRefs = function (column) {
+                        let property = 'Column Point',
+                            setColumn = function (theCol, pRef) {
                                 updateDoc = true;
                                 theCol.AppIndex = pRef.AppIndex;
                                 // theCol.upi = pRef.Value;
                                 theCol.colName = pRef.PointName;
                                 delete theCol.upi;
                             },
-                            pushNewPointRef = function(refPointID) {
+                            pushNewPointRef = function (refPointID) {
                                 if (!!refPointID) {
-                                    var tempRef;
+                                    let tempRef;
                                     tempRef = {};
-                                    tempRef.PropertyEnum = Config.Enums.Properties["Column Point"].enum;
+                                    tempRef.PropertyEnum = Config.Enums.Properties['Column Point'].enum;
                                     tempRef.PropertyName = property;
                                     tempRef.Value = refPointID;
                                     tempRef.AppIndex = getMaxAppIndexUsed() + 1;
@@ -981,12 +971,12 @@ var scripts = {
                                     tempRef.PointName = column.colName;
                                     // tempRef.PointType = Config.Enums["Point Types"][pointType].enum;
                                     tempRef.PointType = 0;
-                                    reportDoc["Point Refs"].push(tempRef);
+                                    reportDoc['Point Refs'].push(tempRef);
                                     setColumn(column, tempRef);
                                 } else {
-                                    logger.info("ERROR - updateColumnFromPointRefs() could not locate Point Ref for upi = " + column.upi);
-                                    logger.info("         ------- reportDoc._id = " + reportDoc._id + "   reportDoc.Name = " + reportDoc.Name);
-                                    logger.info("---------------------------------------------------------------");
+                                    logger.info('ERROR - updateColumnFromPointRefs() could not locate Point Ref for upi = ' + column.upi);
+                                    logger.info('         ------- reportDoc._id = ' + reportDoc._id + '   reportDoc.Name = ' + reportDoc.Name);
+                                    logger.info('---------------------------------------------------------------');
                                 }
                             },
                             existingPointRef = getPointRef(column, property);
@@ -1013,7 +1003,7 @@ var scripts = {
                                 updateDoc = true;
                             }
                             if (col.yaxisGroup === undefined) {
-                                col.yaxisGroup = "A";
+                                col.yaxisGroup = 'A';
                                 updateDoc = true;
                             }
 
@@ -1029,11 +1019,11 @@ var scripts = {
                             cb(null);
                         }
                     } else {
-                        logger.info("- - - - - No 'columns'  reportDoc._id = " + reportDoc._id);
+                        logger.info('- - - - - No \'columns\'  reportDoc._id = ' + reportDoc._id);
                         cb(null);
                     }
                 } else {
-                    logger.info("- - - - No 'reportConfig'  reportDoc._id = " + reportDoc._id + "  Report Name = '" + reportDoc.Name + "'");
+                    logger.info('- - - - No \'reportConfig\'  reportDoc._id = ' + reportDoc._id + '  Report Name = \'' + reportDoc.Name + '\'');
                     cb(null);
                 }
             };
@@ -1043,12 +1033,11 @@ var scripts = {
             query: query
         }, function processReport(err, doc, cb) {
             if (!!err) {
-                logger.info(" ERROR  err = " + err);
+                logger.info(' ERROR  err = ' + err);
                 cb(err);
             } else {
                 processDoc(doc, cb);
             }
-
         }, function finishUpdatingReports(err) {
             logger.info('Finished with updateExistingReports updated ' + reportUpdateCounter + ' reports');
             callback(null, {
@@ -1059,8 +1048,8 @@ var scripts = {
     },
 
     // 0.3.10
-    updateDevices: function(callback) {
-        var afterVersion = '0.5.1';
+    updateDevices: function (callback) {
+        let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateDevices',
@@ -1068,14 +1057,14 @@ var scripts = {
                 results: null
             });
         }
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {
                 'Point Type.Value': 'Device'
             }
         };
-        Utility.iterateCursor(criteria, function(err, doc, cb) {
-            doc['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
+        Utility.iterateCursor(criteria, function (err, doc, cb) {
+            doc['Firmware 2 Version'] = Config.Templates.getTemplate('Device')['Firmware 2 Version'];
             if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(doc['Model Type'].eValue) >= 0) {
                 doc['Firmware 2 Version'].isDisplayable = true;
             } else {
@@ -1086,8 +1075,8 @@ var scripts = {
             doc['Ethernet IP Port'].isDisplayable = false;
             doc['Downlink IP Port'].isReadOnly = false;
             doc['Downlink IP Port'].isDisplayable = false;
-            doc["Ethernet Gateway"] = Config.Templates.getTemplate("Device")["Ethernet Gateway"];
-            doc["Ethernet Subnet"] = Config.Templates.getTemplate("Device")["Ethernet Subnet"];
+            doc['Ethernet Gateway'] = Config.Templates.getTemplate('Device')['Ethernet Gateway'];
+            doc['Ethernet Subnet'] = Config.Templates.getTemplate('Device')['Ethernet Subnet'];
 
             Utility.update({
                 collection: 'points',
@@ -1095,10 +1084,10 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function(err, results) {
+            }, function (err, results) {
                 cb(err);
             });
-        }, function(err, count) {
+        }, function (err, count) {
             logger.info('Firmware 2 Version added to ', count, ' devices');
             callback(null, {
                 fn: 'updateDevices',
@@ -1108,8 +1097,8 @@ var scripts = {
     },
 
     // 0.3.10
-    removePointInstance: function(callback) {
-        var afterVersion = '0.3.10';
+    removePointInstance: function (callback) {
+        let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'removePointInstance',
@@ -1117,7 +1106,7 @@ var scripts = {
                 results: null
             });
         }
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {},
             updateObj: {
@@ -1129,7 +1118,7 @@ var scripts = {
                 multi: true
             }
         };
-        Utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function (err, results) {
             logger.info('Point Instance removed from points');
             callback(null, {
                 fn: 'removePointInstance',
@@ -1139,8 +1128,8 @@ var scripts = {
     },
 
     // 0.4.1
-    updateGatewayReadOnlyRouterAddress: function(callback) {
-        var afterVersion = '0.4.1';
+    updateGatewayReadOnlyRouterAddress: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateGatewayReadOnlyRouterAddress',
@@ -1148,7 +1137,7 @@ var scripts = {
                 results: null
             });
         }
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {
                 'Point Type.eValue': {
@@ -1160,17 +1149,17 @@ var scripts = {
             },
             updateObj: {
                 $set: {
-                    "Gateway": {
-                        "isDisplayable": true,
-                        "isReadOnly": false,
-                        "ValueType": 7,
-                        "Value": false
+                    'Gateway': {
+                        'isDisplayable': true,
+                        'isReadOnly': false,
+                        'ValueType': 7,
+                        'Value': false
                     },
-                    "Router Address": {
-                        "isDisplayable": true,
-                        "isReadOnly": false,
-                        "ValueType": 2,
-                        "Value": "0"
+                    'Router Address': {
+                        'isDisplayable': true,
+                        'isReadOnly': false,
+                        'ValueType': 2,
+                        'Value': '0'
                     }
                 }
             },
@@ -1179,7 +1168,7 @@ var scripts = {
             }
         };
 
-        Utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function (err, results) {
             logger.info('Gateway and Router Address added to Remote Units.');
             criteria = {
                 collection: 'points',
@@ -1193,11 +1182,11 @@ var scripts = {
                 },
                 updateObj: {
                     $set: {
-                        "Read Only": {
-                            "isDisplayable": true,
-                            "isReadOnly": false,
-                            "ValueType": 7,
-                            "Value": false
+                        'Read Only': {
+                            'isDisplayable': true,
+                            'isReadOnly': false,
+                            'ValueType': 7,
+                            'Value': false
                         }
                     }
                 },
@@ -1206,7 +1195,7 @@ var scripts = {
                 }
             };
 
-            Utility.update(criteria, function(err, results) {
+            Utility.update(criteria, function (err, results) {
                 logger.info('Read Only added to I/O points.');
                 callback(null, {
                     fn: 'updateGatewayReadOnlyRouterAddress',
@@ -1217,8 +1206,8 @@ var scripts = {
     },
 
     // 0.4.1
-    updateNetworkProps: function(callback) {
-        var afterVersion = '0.4.1';
+    updateNetworkProps: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateNetworkProps',
@@ -1226,7 +1215,7 @@ var scripts = {
                 results: null
             });
         }
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {},
             updateObj: {
@@ -1245,7 +1234,7 @@ var scripts = {
                 multi: true
             }
         };
-        Utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function (err, results) {
             logger.info('Network Properties updated.');
             criteria = {
                 collection: 'SystemInfo',
@@ -1253,8 +1242,8 @@ var scripts = {
                     'Name': 'Preferences'
                 }
             };
-            Utility.getOne(criteria, function(err, prefs) {
-                var netConfig = [{
+            Utility.getOne(criteria, function (err, prefs) {
+                let netConfig = [{
                     isDefault: true,
                     'IP Network Segment': prefs['IP Network Segment'],
                     'IP Port': prefs['IP Port']
@@ -1264,7 +1253,7 @@ var scripts = {
                         'Network Configuration': netConfig
                     }
                 };
-                Utility.update(criteria, function(err, results) {
+                Utility.update(criteria, function (err, results) {
                     logger.info('System Info updated.');
                     callback(null, {
                         fn: 'updateNetworkProps',
@@ -1276,8 +1265,8 @@ var scripts = {
     },
 
     // 0.4.1
-    fixDorsDB: function(callback) {
-        var afterVersion = '0.0.1';
+    fixDorsDB: function (callback) {
+        let afterVersion = '0.0.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'fixDorsDB',
@@ -1285,7 +1274,7 @@ var scripts = {
                 results: null
             });
         }
-        var criteria = {
+        let criteria = {
             collection: 'points',
             query: {},
             updateObj: {
@@ -1298,18 +1287,18 @@ var scripts = {
                 multi: true
             }
         };
-        Utility.update(criteria, function(err, results) {
+        Utility.update(criteria, function (err, results) {
             logger.info('Network Properties updated.');
             criteria = {
                 collection: 'Users',
                 query: {}
-            }
-            Utility.get(criteria, function(err, users) {
-                async.eachSeries(users, function(user, cb) {
-                    updateControllers("add", user.username, function(err) {
+            };
+            Utility.get(criteria, function (err, users) {
+                async.eachSeries(users, function (user, cb) {
+                    updateControllers('add', user.username, function (err) {
                         cb(err);
                     });
-                }, function(err, result) {
+                }, function (err, result) {
                     callback(null, {
                         fn: 'fixDorsDB',
                         errors: err
@@ -1318,24 +1307,24 @@ var scripts = {
             });
 
             function updateControllers(op, username, cb) {
-                var criteria = {
+                let criteria = {
                     collection: 'SystemInfo',
                     query: {
-                        Name: "Controllers"
+                        Name: 'Controllers'
                     }
                 };
-                Utility.getOne(criteria, function(err, controllers) {
-                    if (op === "add") {
-                        var id = 0,
+                Utility.getOne(criteria, function (err, controllers) {
+                    if (op === 'add') {
+                        let id = 0,
                             ids = [],
                             maxId = 0;
 
-                        for (var a = 0; a < controllers.Entries.length; a++) {
-                            ids.push(controllers.Entries[a]["Controller ID"]);
-                            maxId = (controllers.Entries[a]["Controller ID"] > maxId) ? controllers.Entries[a]["Controller ID"] : maxId;
+                        for (let a = 0; a < controllers.Entries.length; a++) {
+                            ids.push(controllers.Entries[a]['Controller ID']);
+                            maxId = (controllers.Entries[a]['Controller ID'] > maxId) ? controllers.Entries[a]['Controller ID'] : maxId;
                         }
 
-                        for (var i = 0; i < ids.length; i++) {
+                        for (let i = 0; i < ids.length; i++) {
                             if (ids[i] !== i + 1) {
                                 id = i + 1;
 
@@ -1344,16 +1333,16 @@ var scripts = {
                                 } else {
                                     id = 0;
                                 }
-
                             }
                         }
 
-                        if (id === 0)
+                        if (id === 0) {
                             id = maxId + 1;
+                        }
                         controllers.Entries.push({
-                            "Controller ID": id,
-                            "Controller Name": username,
-                            "Description": username,
+                            'Controller ID': id,
+                            'Controller Name': username,
+                            'Description': username,
                             isUser: true
                         });
                         criteria.updateObj = {
@@ -1361,12 +1350,12 @@ var scripts = {
                                 Entries: controllers.Entries
                             }
                         };
-                        Utility.update(criteria, function(err, result) {
+                        Utility.update(criteria, function (err, result) {
                             cb(err);
                         });
                     } else {
-                        for (var j = 0; j < controllers.Entries.length; j++) {
-                            if (controllers.Entries[j]["Controller Name"] === username) {
+                        for (let j = 0; j < controllers.Entries.length; j++) {
+                            if (controllers.Entries[j]['Controller Name'] === username) {
                                 controllers.Entries.splice(j, 1);
                                 break;
                             }
@@ -1377,19 +1366,17 @@ var scripts = {
                             }
                         };
 
-                        Utility.update(criteria, function(err, result) {
+                        Utility.update(criteria, function (err, result) {
                             cb(err);
                         });
                     }
-
                 });
             }
-
         });
     },
 
-    fixSequenceDevicePropertyName: function(callback) {
-        var afterVersion = '0.4.1';
+    fixSequenceDevicePropertyName: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'fixSequenceDevicePropertyName',
@@ -1404,7 +1391,7 @@ var scripts = {
                 'Point Refs.PropertyName': 'Sequence Device'
             }
         }, function processSequence(err, doc, cb) {
-            var list = doc['Point Refs'];
+            let list = doc['Point Refs'];
 
             list.forEach(function processPointRefs(ref) {
                 if (ref.PropertyName === 'Sequence Device') {
@@ -1427,7 +1414,6 @@ var scripts = {
 
                 cb(null);
             });
-
         }, function finishUpdatingSequences(err) {
             logger.info('Finished with fixSequenceDevicePropertyName');
             callback(null, {
@@ -1437,8 +1423,8 @@ var scripts = {
         });
     },
 
-    addDownlinkProtocol: function(callback) {
-        var afterVersion = '0.4.1';
+    addDownlinkProtocol: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'addDownlinkProtocol',
@@ -1451,11 +1437,11 @@ var scripts = {
             query: {
                 'Point Type.Value': 'Device'
             }
-        }, function(err, doc, cb) {
+        }, function (err, doc, cb) {
             doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
             if (doc['Downlink Network'].Value !== 0) {
-                doc['Downlink Protocol'].Value = 'IP'
-                doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
+                doc['Downlink Protocol'].Value = 'IP';
+                doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols'].IP.enum;
             }
 
             Utility.update({
@@ -1464,15 +1450,14 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function(err) {
+            }, function (err) {
                 if (err) {
                     logger.debug('Update err:', err);
                 }
 
                 cb(null);
             });
-
-        }, function(err) {
+        }, function (err) {
             logger.info('Finished with addDownlinkProtocol');
             callback(null, {
                 fn: 'addDownlinkProtocol',
@@ -1481,8 +1466,8 @@ var scripts = {
         });
     },
 
-    switchModbusOrder: function(callback) {
-        var afterVersion = '0.4.1';
+    switchModbusOrder: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'switchModbusOrder',
@@ -1500,18 +1485,18 @@ var scripts = {
             updateObj: {
                 $set: {
                     'Modbus Order': {
-                        "isDisplayable": false,
-                        "isReadOnly": false,
-                        "ValueType": 5,
-                        "Value": "Both",
-                        "eValue": 3
+                        'isDisplayable': false,
+                        'isReadOnly': false,
+                        'ValueType': 5,
+                        'Value': 'Both',
+                        'eValue': 3
                     }
                 }
             },
             options: {
                 multi: true
             }
-        }, function(err, results) {
+        }, function (err, results) {
             Utility.update({
                 collection: 'points',
                 query: {
@@ -1530,18 +1515,18 @@ var scripts = {
                 updateObj: {
                     $set: {
                         'Modbus Order': {
-                            "isDisplayable": false,
-                            "isReadOnly": false,
-                            "ValueType": 5,
-                            "Value": "Bytes",
-                            "eValue": 2
+                            'isDisplayable': false,
+                            'isReadOnly': false,
+                            'ValueType': 5,
+                            'Value': 'Bytes',
+                            'eValue': 2
                         }
                     }
                 },
                 options: {
                     multi: true
                 }
-            }, function(err, results) {
+            }, function (err, results) {
                 Utility.update({
                     collection: 'points',
                     query: {
@@ -1552,13 +1537,13 @@ var scripts = {
                             'Modbus Order': 1
                         },
                         $set: {
-                            'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"]
+                            'Modbus Unit Id': Config.Templates.getTemplate('Remote Unit')['Modbus Unit Id']
                         }
                     },
                     options: {
                         multi: true
                     }
-                }, function(err, results) {
+                }, function (err, results) {
                     logger.info('Finished with switchModbusOrder');
                     callback(null, {
                         fn: 'switchModbusOrder',
@@ -1569,8 +1554,8 @@ var scripts = {
         });
     },
 
-    updateSecurity: function(callback) {
-        var afterVersion = '0.5.1';
+    updateSecurity: function (callback) {
+        let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateSecurity',
@@ -1587,7 +1572,7 @@ var scripts = {
                     'Security': []
                 }
             }
-        }, function(err) {
+        }, function (err) {
             Utility.update({
                 collection: 'User Groups',
                 query: {},
@@ -1596,7 +1581,7 @@ var scripts = {
                         Points: {}
                     }
                 }
-            }, function(err) {
+            }, function (err) {
                 logger.info('Finished with updateSecurity');
                 callback(null, {
                     fn: 'updateSecurity',
@@ -1606,8 +1591,8 @@ var scripts = {
         });
     },
 
-    addMissingProperties: function(callback) {
-        var afterVersion = '0.4.1';
+    addMissingProperties: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'addMissingProperties',
@@ -1616,20 +1601,20 @@ var scripts = {
             });
         }
 
-        var properties = [{
+        let properties = [{
             key: '_pAccess',
             val: 0
         }];
-        async.eachSeries(properties, function(property, cb) {
-            var query = {};
-            var updateObj = {
+        async.eachSeries(properties, function (property, cb) {
+            let query = {};
+            let updateObj = {
                 $set: {}
             };
 
             query[property.key] = {
                 $exists: 0
             };
-            updateObj['$set'][property.key] = property.val;
+            updateObj.$set[property.key] = property.val;
 
             Utility.update({
                 collection: 'points',
@@ -1639,7 +1624,7 @@ var scripts = {
                     multi: true
                 }
             }, cb);
-        }, function(err) {
+        }, function (err) {
             logger.info('Finished with addMissingProperties');
             callback(null, {
                 fn: 'addMissingProperties',
@@ -1648,8 +1633,8 @@ var scripts = {
         });
     },
 
-    removeProperties: function(callback) {
-        var afterVersion = '0.4.1';
+    removeProperties: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'removeProperties',
@@ -1658,7 +1643,7 @@ var scripts = {
             });
         }
 
-        var properties = ['VAV Channel', 'Port 1 Timeout', 'Port 2 Timeout', 'Port 3 Timeout', 'Port 4 Timeout', 'Channel.Min', 'Channel.Max',
+        let properties = ['VAV Channel', 'Port 1 Timeout', 'Port 2 Timeout', 'Port 3 Timeout', 'Port 4 Timeout', 'Channel.Min', 'Channel.Max',
             'Close Channel.Min', 'Close Channel.Max', 'Open Channel.Min', 'Open Channel.Max', 'Feedback Channel.Min', 'Feedback Channel.Max',
             'On Channel.Min', 'On Channel.Max', 'Off Channel.Min', 'Off Channel.Max', 'Device Address.Min', 'Device Address.Max', 'Repeat Count.Min', 'Repeat Count.Max',
             'Modbus Order.ValueOptions', {
@@ -1666,22 +1651,22 @@ var scripts = {
                 prop: 'Modbus Order'
             }
         ];
-        async.eachSeries(properties, function(property, cb) {
-            var query = {};
-            var updateObj = {
+        async.eachSeries(properties, function (property, cb) {
+            let query = {};
+            let updateObj = {
                 $unset: {}
             };
             if (typeof property === 'string') {
                 query[property] = {
                     $exists: 1
                 };
-                updateObj['$unset'][property] = 1;
+                updateObj.$unset[property] = 1;
             } else {
                 query[property.prop] = {
                     $exists: 1
                 };
                 query['Point Type.Value'] = property.pointType;
-                updateObj['$unset'][property.prop] = 1;
+                updateObj.$unset[property.prop] = 1;
             }
 
             Utility.update({
@@ -1692,7 +1677,7 @@ var scripts = {
                     multi: true
                 }
             }, cb);
-        }, function(err) {
+        }, function (err) {
             logger.info('Finished with removeProperties');
             callback(null, {
                 fn: 'removeProperties',
@@ -1701,8 +1686,8 @@ var scripts = {
         });
     },
 
-    applyDevModel: function(callback) {
-        var afterVersion = '0.4.1';
+    applyDevModel: function (callback) {
+        let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'applyDevModel',
@@ -1717,7 +1702,7 @@ var scripts = {
                     $in: ['Analog Input', 'Analog Output', 'Binary Input', 'Binary Output', 'Accumulator']
                 }
             }
-        }, function(err, doc, cb) {
+        }, function (err, doc, cb) {
             Config.Utility.updDevModel({
                 point: doc
             });
@@ -1728,10 +1713,10 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function(err, result) {
+            }, function (err, result) {
                 cb(err);
             });
-        }, function(err, count) {
+        }, function (err, count) {
             logger.info('Finished with applyDevModel');
             callback(null, {
                 fn: 'applyDevModel',
@@ -1740,8 +1725,8 @@ var scripts = {
         });
     },
 
-    addFeedbackInstance: function(callback) {
-        var afterVersion = '0.5.1';
+    addFeedbackInstance: function (callback) {
+        let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'addFeedbackInstance',
@@ -1754,8 +1739,7 @@ var scripts = {
             query: {
                 'Point Type.Value': 'Binary Output'
             }
-        }, function(err, doc, cb) {
-
+        }, function (err, doc, cb) {
             doc['Feedback Instance'] = Config.Templates.getTemplate('Binary Output')['Feedback Instance'];
             doc['Feedback Instance'].Value = doc['Feedback Channel'].eValue;
             doc = Config.EditChanges.applyBinaryOutputTypeFeedbackType({
@@ -1767,10 +1751,10 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function(err, result) {
+            }, function (err, result) {
                 cb(err);
             });
-        }, function(err, count) {
+        }, function (err, count) {
             logger.info('Finished with addFeedbackInstance');
             callback(null, {
                 fn: 'addFeedbackInstance',
@@ -1781,13 +1765,13 @@ var scripts = {
 };
 
 
-db.connect(connectionString, function(err) {
+db.connect(connectionString, function (err) {
     if (err) {
         return logger.debug(err);
     }
     // Array of tasks that should be run
-    var tasks = [];
-    for (var task in scripts) {
+    let tasks = [];
+    for (let task in scripts) {
         tasks.push(scripts[task]);
     }
 
@@ -1809,18 +1793,18 @@ db.connect(connectionString, function(err) {
     Utility.getOne({
         collection: 'SystemInfo',
         query: {
-            "Name": "Preferences"
+            'Name': 'Preferences'
         },
         fields: {
             'InfoscanJS Version': 1
         }
-    }, function(err, prefVersion) {
+    }, function (err, prefVersion) {
         prevVersion = prefVersion['InfoscanJS Version'] || 0;
         async.series(tasks, function done(err, results) {
             if (err) {
-                logger.info("Error: ", err);
+                logger.info('Error: ', err);
             }
-            console.log("Results: ", results);
+            console.log('Results: ', results);
 
             if (!!options.noupdate) {
                 logger.info('not updating db version.');
@@ -1830,14 +1814,14 @@ db.connect(connectionString, function(err) {
                 Utility.update({
                     collection: 'SystemInfo',
                     query: {
-                        "Name": "Preferences"
+                        'Name': 'Preferences'
                     },
                     updateObj: {
                         $set: {
                             'InfoscanJS Version': curVersion
                         }
                     }
-                }, function(err, result) {
+                }, function (err, result) {
                     process.exit(0);
                 });
             }

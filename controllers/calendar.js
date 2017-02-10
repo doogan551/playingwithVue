@@ -2,7 +2,8 @@ let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
 let utils = require('../helpers/utils.js');
-let Calendar = require('../models/calendar');
+let Calendar = new(require('../models/calendar'))();
+
 // Checked
 router.post('/getyear', function (req, res) {
     let data = _.merge(req.params, req.body);

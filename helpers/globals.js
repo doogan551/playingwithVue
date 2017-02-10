@@ -1,4 +1,4 @@
-var System = require('../models/system');
+var System = new(require('../models/system'))();
 let Alarm = new(require('../models/alarm'))();
 
 module.exports = {

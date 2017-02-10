@@ -1,21 +1,21 @@
-var https = require('https');
-var async = require('async');
-var xml2js = require('xml2js');
-var config = require('config');
-var logger = require('../helpers/logger')(module);
-var accountSid = config.get('Twilio').accountSid;
-var authToken = config.get('Twilio').authToken;
-var phoneNumbers = config.get('Twilio').phoneNumbers;
-var numNumbers = phoneNumbers.length;
-var smsNumberIndex = 0;
-var voiceNumberIndex = 0;
+let https = require('https');
+let async = require('async');
+let xml2js = require('xml2js');
+let config = require('config');
+let logger = require('../helpers/logger')(module);
+let accountSid = config.get('Twilio').accountSid;
+let authToken = config.get('Twilio').authToken;
+let phoneNumbers = config.get('Twilio').phoneNumbers;
+let numNumbers = phoneNumbers.length;
+let smsNumberIndex = 0;
+let voiceNumberIndex = 0;
 
-var client = require('twilio')(accountSid, authToken);
+let client = require('twilio')(accountSid, authToken);
 
 // https://api.twilio.com/2010-04-01/Accounts/
 let Twilio = class Twilio {
     sendText(toNumber, message, cb) {
-        var fromNumber = phoneNumbers[smsNumberIndex++];
+        let fromNumber = phoneNumbers[smsNumberIndex++];
 
         if (smsNumberIndex >= numNumbers) {
             smsNumberIndex = 0;
@@ -39,9 +39,9 @@ let Twilio = class Twilio {
     }
 
     getLogs(type, cb) {
-        var url = 'https://' + accountSid + ':' + authToken + '@api.twilio.com/2010-04-01/Accounts/' + accountSid + '/' + type;
+        let url = 'https://' + accountSid + ':' + authToken + '@api.twilio.com/2010-04-01/Accounts/' + accountSid + '/' + type;
         https.get(url, (res) => {
-            var xml = '';
+            let xml = '';
             res.on('data', (chunk) => {
                 xml += chunk;
             });
@@ -63,7 +63,7 @@ let Twilio = class Twilio {
             if (err) {
                 logger.error(err);
             }
-            var messages = xml.Messages[0].Message;
+            let messages = xml.Messages[0].Message;
             messages.forEach((msg) => {
                 if (msg.To.indexOf('from') > -1) {
                     logger.info(msg.Body);
@@ -77,7 +77,7 @@ let Twilio = class Twilio {
             if (err) {
                 logger.error(err);
             }
-            var calls = xml.Calls[0].Call;
+            let calls = xml.Calls[0].Call;
             logger.info(calls);
             calls.forEach((call) => {
                 if (call.To.indexOf('from') > -1) {
@@ -99,14 +99,14 @@ let Twilio = class Twilio {
 
         // !!!!!! The Twilio client must be authenticated using the master account credentials to perform this         //        The data object may optionally include the master account credential=>s
 
-        var numberSids = Array.isArray(data.numberSids) && data.numberSids;
-        var fromAccountSid = data.fromAccountSid;
-        var toAccountSid = data.toAccountSid;
-        var results = [];
-        var localClient;
-        var transfer = (numberSid, callback) => {
-            var number = (localClient || client).accounts(fromAccountSid).incomingPhoneNumbers(numberSid);
-            var msg;
+        let numberSids = Array.isArray(data.numberSids) && data.numberSids;
+        let fromAccountSid = data.fromAccountSid;
+        let toAccountSid = data.toAccountSid;
+        let results = [];
+        let localClient;
+        let transfer = (numberSid, callback) => {
+            let number = (localClient || client).accounts(fromAccountSid).incomingPhoneNumbers(numberSid);
+            let msg;
 
             number.update({
                 accountSid: toAccountSid

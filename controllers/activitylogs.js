@@ -1,12 +1,12 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var ActivityLog = new(require('../models/activitylog'))();
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let ActivityLog = new(require('../models/activitylog'))();
 
 // Checked
 router.post('/get', function (req, res) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
     ActivityLog.get(data, function (err, logs, count) {

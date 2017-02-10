@@ -1,25 +1,18 @@
-let Tester = class Tester {
-    test() {
-        let method = () => {
-            console.log(this);
+class Test {
+
+    f1() {
+        let state;
+        let nums = [1, 2, 3];
+        let tester = function (num) {
+            console.log(state);
+            return false;
         };
-        method();
+        for (var i = 0; i < 5; i++) {
+            state = i;
+            nums.filter(tester);
+        }
     }
-    stcTest() {
-        this.test();
-        console.log('static');
-    }
-};
+}
 
-let Test2 = class Test2 {
-    constructor() {
-        // this.tester = new Tester();
-    }
-    testing() {
-        Tester.stcTest();
-        console.log('testing');
-    }
-};
-
-let test2 = new Test2();
-test2.testing();
+let test = new Test();
+test.f1();

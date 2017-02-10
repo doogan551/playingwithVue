@@ -1,15 +1,15 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var passport = require('passport');
-var utils = require('../helpers/utils');
-var Workspace = require('../models/workspace');
-var ActivityLog = new(require('../models/activitylog'))();
-var actLogsEnums = require('../public/js/lib/config').Enums['Activity Logs'];
-var logger = require('../helpers/logger')(module);
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let passport = require('passport');
+let utils = require('../helpers/utils');
+let Workspace = new(require('../models/workspace'))();
+let ActivityLog = new(require('../models/activitylog'))();
+let actLogsEnums = require('../public/js/lib/config').Enums['Activity Logs'];
+let logger = require('../helpers/logger')(module);
 // Checked
 router.get('/', function (req, res) {
-    var _user = req.user;
+    let _user = req.user;
 
     if (!_user) {
         _user = {};
@@ -23,7 +23,7 @@ router.get('/', function (req, res) {
 });
 // NOT CHECKED
 router.get('/home', function (req, res) {
-    var _user = req.user;
+    let _user = req.user;
 
     if (!_user) {
         _user = {};
@@ -53,7 +53,7 @@ router.post('/authenticate', function (req, res, next) {
             if (err2) {
                 return next(err2);
             }
-            var logData = {
+            let logData = {
                 user: user,
                 timestamp: Date.now(),
                 activity: actLogsEnums['User Logon'].enum,
@@ -66,7 +66,7 @@ router.post('/authenticate', function (req, res, next) {
 });
 // NOT CHECKED
 router.post('/saveworkspace', function (req, res) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
     Workspace.saveWorkspace(data, function (err) {
@@ -82,7 +82,7 @@ router.post('/saveworkspace', function (req, res) {
 });
 // NOT CHECKED
 router.post('/lost-password', function (req, res) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
     return utils.sendResponse(res, {
@@ -91,7 +91,7 @@ router.post('/lost-password', function (req, res) {
 });
 // NOT CHECKED
 router.post('/reset-password', function (req, res) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
     logger.info('reset password');
     Workspace.resetPassword(data, function (err) {
@@ -107,7 +107,7 @@ router.post('/reset-password', function (req, res) {
 });
 // NOT CHECKED
 router.post('/lost-password', function (req, res) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
     Workspace.resetPassword(data, function (err) {
@@ -123,10 +123,10 @@ router.post('/lost-password', function (req, res) {
 });
 // Checked
 router.get('/logout', function (req, res) {
-    var user = req.user;
+    let user = req.user;
     req.logout();
 
-    var logData = {
+    let logData = {
         user: user,
         timestamp: Date.now(),
         activity: actLogsEnums['User Logoff'].enum,
