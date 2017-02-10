@@ -19,57 +19,7 @@ var activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = Rpt = {
 
-    getMRT: function(data, cb) {
-        var criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
-            },
-            collection: 'points',
-            fields: {
-                'MRTData': 1
-            }
-        };
-
-        Utility.get(criteria, function(err, result) {
-            if (!err) {
-                if (!result) {
-                    return cb("No mrt file found");
-                } else if (result.MRTData) {
-                    return cb(null, result.MRTData);
-                } else {
-                    return cb("No mrt file found");
-                }
-            } else {
-                return cb(err);
-            }
-        });
-    },
-    saveMRT: function(data, cb) {
-        var criteria = {
-            collection: 'points',
-            query: {
-                _id: utils.converters.convertType(data.id)
-            },
-            updateObj: {
-                $set: {
-                    'MRTData': data.MRTData
-                }
-            }
-        };
-
-        Utility.update(criteria, function(err, result) {
-
-            if (!err) {
-                return cb(null, {
-                    _idd: null,
-                    id: utils.converters.convertType(data.id),
-                    data: "Data has been saved successfully!!!"
-                });
-            } else
-                return cb(err);
-        });
-    },
-    saveSVG: function(data, cb) {
+    saveSVG: function (data, cb) {
         var criteria = {
             collection: 'points',
             query: {
@@ -82,7 +32,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.update(criteria, function(err, result) {
+        Utility.update(criteria, function (err, result) {
 
             if (!err) {
                 return cb(null, {
@@ -93,7 +43,7 @@ module.exports = Rpt = {
             }
         });
     },
-    saveReport: function(data, cb) {
+    saveReport: function (data, cb) {
         data['Point Type'] = {
             eValue: Config.Enums['Point Types'].Report.enum
         };
@@ -126,11 +76,11 @@ module.exports = Rpt = {
 
         var logObj = utils.buildActivityLog(logData);
 
-        Utility.update(criteria, function(err, result) {
+        Utility.update(criteria, function (err, result) {
             Utility.insert({
                 collection: activityLogCollection,
                 insertObj: logObj
-            }, function(err, result) {
+            }, function (err, result) {
                 if (!err) {
                     return cb(err, {
                         data: "Report has been saved successfully!!!"
@@ -141,7 +91,7 @@ module.exports = Rpt = {
             });
         });
     },
-    getSVG: function(data, cb) {
+    getSVG: function (data, cb) {
         var criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -152,7 +102,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.get(criteria, function (err, result) {
             if (!err) {
                 return cb(null, result.SVGData);
             } else {
@@ -160,159 +110,7 @@ module.exports = Rpt = {
             }
         });
     },
-    getHistoryPoints: function(data, cb) {
-        var criteria = {
-            query: {},
-            collection: 'historydata',
-            field: 'upi',
-            options: {
-                limit: 50
-            }
-        };
-
-        Utility.get(criteria, function(err, result) {
-            if (!err) {
-                if (!result) {
-                    return cb("No results found");
-                } else {
-                    getPoints(result, cb);
-                }
-
-            } else
-                return cb(err);
-        });
-    },
-    historySearch: function(data, cb) {
-        var startTime = data.startTime;
-        var endTime = data.endTime;
-
-        var upis = data.upis;
-
-        var criteria = {
-            query: {
-                _id: {
-                    $in: upis
-                }
-            },
-            collection: 'points',
-            fields: {
-                "Value": 1,
-                Name: 1
-            }
-        };
-
-        Utility.get(criteria, function(err, points) {
-
-            criteria = {
-                query: [{
-                    $match: {
-                        timestamp: {
-                            '$gte': startTime,
-                            '$lte': endTime
-                        },
-                        upi: {
-                            '$in': upis
-                        }
-                    }
-                }, {
-                    $sort: {
-                        timestamp: -1
-                    }
-                }, {
-                    $group: {
-                        _id: '$upi',
-                        data: {
-                            $push: {
-                                timestamp: '$timestamp',
-                                Value: '$value'
-                            }
-                        }
-
-                    }
-                }, {
-                    $project: {
-                        _id: 0,
-                        upi: "$_id",
-                        data: "$data"
-                    }
-                }],
-                collection: 'historydata'
-            };
-
-            Utility.aggregate(criteria, function(err, histPoints) {
-                if (err)
-                    return cb(err);
-
-                for (var a = 0; a < histPoints.length; a++) {
-
-                }
-                async.eachSeries(histPoints, function(historyPoint, callback) {
-
-                    if (historyPoint.data[historyPoint.data.length - 1].timestamp !== startTime) {
-                        criteria = {
-                            query: {
-                                upi: historyPoint.upi,
-                                timestamp: {
-                                    $lt: startTime
-                                }
-                            },
-                            collection: 'historydata',
-                            fields: {
-                                timestamp: 1,
-                                value: 1
-                            },
-                            limit: 1,
-                            sort: {
-                                timestamp: -1
-                            }
-                        };
-
-                        Utility.get(criteria, function(err, nextOldest) {
-                            historyPoint.data.push(nextOldest);
-                            fixHistoryData(historyPoint, points);
-                            callback(err);
-                        });
-                    } else {
-                        fixHistoryData(historyPoint, points);
-                        callback(null);
-                    }
-                }, function(err) {
-                    // JS console.log("historySearch()", new Date() - start);
-                    return cb(err, histPoints);
-                });
-            });
-        });
-
-        function fixHistoryData(histPoint, points) {
-
-            /* 
-             points - points from the 'points' collection that are represented in the historydata collection's query
-             histPoints - points of history data that has been aggregated from the 'historydata' collection
-
-             while iterating though the histPoints
-             for each of the return points, when the historydata point's match has been found, check if the point's value is an enum.
-             for every value in the historydata's data array, update the value to be the enum option from the point's valueoptions
-             */
-
-            for (b = 0; b < points.length; b++) {
-                if (histPoint.upi === points[b]._id) {
-                    if (points[b].Value.ValueType === 5) {
-                        for (var c = 0; c < histPoint.data.length; c++) {
-                            for (var option in points[b].Value.ValueOptions) {
-                                if (points[b].Value.ValueOptions[option] === histPoint.data[c].Value) {
-                                    histPoint.data[c].eValue = histPoint.data[c].Value;
-                                    histPoint.data[c].Value = option;
-                                }
-                            }
-                        }
-                    }
-                    histPoint.Name = points[b].Name;
-                }
-            }
-            return;
-        }
-    },
-    historyDataSearch: function(data, cb) {
+    historyDataSearch: function (data, cb) {
         var reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
@@ -333,8 +131,8 @@ module.exports = Rpt = {
             i,
             qualityCodes = global.qualityCodes;
 
-        var makeTimestamps = function(timestampObjects) {
-            var timestamps = timestampObjects.map(function(ts) {
+        var makeTimestamps = function (timestampObjects) {
+            var timestamps = timestampObjects.map(function (ts) {
                 return ts.start;
             });
 
@@ -350,7 +148,7 @@ module.exports = Rpt = {
             checkForOldest[upis[i]] = true;
         }
 
-        justUpis = upis.map(function(res) {
+        justUpis = upis.map(function (res) {
             return res.upi;
         });
 
@@ -388,7 +186,7 @@ module.exports = Rpt = {
         // logger.info("---------");
         // logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
         // logger.info("---------");
-        Utility.get(criteria, function(err, points) {
+        Utility.get(criteria, function (err, points) {
             if (err)
                 return cb(err, null);
 
@@ -400,7 +198,7 @@ module.exports = Rpt = {
                 }
             };
 
-            Utility.get(criteria, function(err, histPoints) {
+            Utility.get(criteria, function (err, histPoints) {
                 if (err) {
                     return cb(err, null);
                 }
@@ -411,7 +209,7 @@ module.exports = Rpt = {
                         end: endTime
                     },
                     timestamps: timestamps
-                }, function(err, results) {
+                }, function (err, results) {
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -426,13 +224,13 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-                    async.eachSeries(timestamps.reverse(), function(ts, callback1) {
+                    async.eachSeries(timestamps.reverse(), function (ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
                                 timestamp: ts,
                                 HistoryResults: []
                             };
-                            async.eachSeries(justUpis, function(upi, callback2) {
+                            async.eachSeries(justUpis, function (upi, callback2) {
 
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
@@ -473,7 +271,7 @@ module.exports = Rpt = {
                                             },
                                             limit: 1
                                         };
-                                        Utility.get(criteria, function(err, nextOldest) {
+                                        Utility.get(criteria, function (err, nextOldest) {
                                             if (!!err) {
                                                 return callback2(err);
                                             }
@@ -512,10 +310,10 @@ module.exports = Rpt = {
                                         callback2(null);
                                     }
                                 }
-                            }, function(err) {
+                            }, function (err) {
                                 returnPoints.push(returnObj);
                                 if (returnPoints.length % 500 === 0) {
-                                    setTimeout(function() {
+                                    setTimeout(function () {
                                         callback1(err);
                                     }, 0);
                                 } else {
@@ -523,7 +321,7 @@ module.exports = Rpt = {
                                 }
                             });
                         },
-                        function(err) {
+                        function (err) {
                             return cb(err, {
                                 truncated: tooManyFlag,
                                 historyData: returnPoints.reverse()
@@ -659,7 +457,7 @@ module.exports = Rpt = {
             return timestamps;
         }
     },
-    reportMain: function(data, cb) {
+    reportMain: function (data, cb) {
         var reportCriteria = {
                 query: {
                     _id: utils.converters.convertType(data.id)
@@ -702,11 +500,12 @@ module.exports = Rpt = {
 
                 return data;
             },
-            handleResults = function() {
+            handleResults = function () {
                 "use strict";
                 if (scheduled) {
                     if (scheduleRequestComplete && reportRequestComplete) {
-                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
+                        ;
                         return cb(null, reportResults, reportData);
                     }
                 } else {
@@ -715,7 +514,7 @@ module.exports = Rpt = {
             };
 
         if (scheduled) {
-            Utility.get(scheduleCriteria, function(err, scheduleData) {
+            Utility.get(scheduleCriteria, function (err, scheduleData) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -732,7 +531,7 @@ module.exports = Rpt = {
                     handleResults();
                 }
             });
-            Utility.get(reportCriteria, function(err, result) {
+            Utility.get(reportCriteria, function (err, result) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -753,7 +552,7 @@ module.exports = Rpt = {
                 }
             });
         } else {
-            Utility.getWithSecurity(reportCriteria, function(err, result) {
+            Utility.getWithSecurity(reportCriteria, function (err, result) {
                 if (err) {
                     return cb(err);
                 } else {
@@ -774,7 +573,7 @@ module.exports = Rpt = {
             });
         }
     },
-    reportSearch: function(data, cb) {
+    reportSearch: function (data, cb) {
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             pointRefs = data["Point Refs"],
@@ -782,9 +581,9 @@ module.exports = Rpt = {
             pointFilter = reportConfig.pointFilter,
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
-                return type.key;
-            }),
+            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
+                    return type.key;
+                }),
             uniquePIDs = [],
             properties = reportConfig.columns,
             sort = data.Sort,
@@ -794,7 +593,7 @@ module.exports = Rpt = {
                 $and: []
             },
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
-            parseNameField = function(paramsField, fieldName) {
+            parseNameField = function (paramsField, fieldName) {
                 var parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
                     //logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
@@ -866,7 +665,7 @@ module.exports = Rpt = {
         };
 
         // logger.info("--- Report criteria = " + JSON.stringify(criteria));
-        Utility.get(criteria, function(err, docs) {
+        Utility.get(criteria, function (err, docs) {
 
             if (err) {
                 return cb(err);
@@ -882,7 +681,7 @@ module.exports = Rpt = {
                     delete docs[i]["Point Refs"];
                 }
             }
-            docs.forEach(function(doc) {
+            docs.forEach(function (doc) {
                 for (var prop in doc) {
                     var newPropertyName = utils.getHumanProperty(prop);
                     if (prop !== newPropertyName) {
@@ -896,14 +695,14 @@ module.exports = Rpt = {
             return cb(null, docs);
         });
     },
-    collectFilters: function(theFilters, reportPointRefs) {
+    collectFilters: function (theFilters, reportPointRefs) {
         var currentFilter,
             localSearchCriteria = {},
             andExpressions = [],
             orExpressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
-            getPointRefByAppIndex = function(appIndex) {
+            getPointRefByAppIndex = function (appIndex) {
                 var result,
                     i;
 
@@ -916,7 +715,7 @@ module.exports = Rpt = {
 
                 return result;
             },
-            collectFilter = function(filter) {
+            collectFilter = function (filter) {
                 var searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
@@ -1056,7 +855,7 @@ module.exports = Rpt = {
                                 } else {
                                     searchPart2[propertyCheckForValue(key)] = {
                                         $regex: '(?i)^(?!' + filter.value + ")"
-                                            //$ne: utils.converters.convertType(filter.value, filter.valueType)
+                                        //$ne: utils.converters.convertType(filter.value, filter.valueType)
                                     };
                                 }
                             }
@@ -1118,7 +917,7 @@ module.exports = Rpt = {
                 }
                 return searchQuery;
             },
-            groupLogic = function(logicType) {
+            groupLogic = function (logicType) {
                 var group = [],
                     sameGroup = true;
 
@@ -1172,7 +971,7 @@ module.exports = Rpt = {
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
     },
-    groupOrExpression: function(listOfExpressions) {
+    groupOrExpression: function (listOfExpressions) {
         var concatJSON = {},
             tempObj = {},
             i;
@@ -1187,27 +986,27 @@ module.exports = Rpt = {
         }
         return concatJSON;
     },
-    totalizerReport: function(data, cb) {
+    totalizerReport: function (data, cb) {
         //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
         var intervalOptions = reportConfig.interval;
 
-        var compare = function(a, b) {
+        var compare = function (a, b) {
             return a.timestamp - b.timestamp;
         };
 
-        var findStarts = function(initial, history) {
+        var findStarts = function (initial, history) {
             var totals = [];
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
-            intervals.forEach(function(interval, index) {
+            intervals.forEach(function (interval, index) {
 
                 var starts = 0;
                 var start = interval.start;
                 var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                var matches = history.filter(function(data) {
+                var matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
@@ -1232,11 +1031,11 @@ module.exports = Rpt = {
             return totals;
         };
 
-        var findRuntime = function(initial, history) {
+        var findRuntime = function (initial, history) {
             var totals = [];
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
-            intervals.forEach(function(interval, index) {
+            intervals.forEach(function (interval, index) {
                 // console.log(interval);
                 var runtime = 0;
                 var now = moment().unix();
@@ -1244,7 +1043,7 @@ module.exports = Rpt = {
                 var start = interval.start;
                 var end = (!!intervalLonger) ? now : interval.end;
 
-                var matches = history.filter(function(data) {
+                var matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
@@ -1281,7 +1080,7 @@ module.exports = Rpt = {
             return totals;
         };
 
-        var findTotal = function(initial, history) {
+        var findTotal = function (initial, history) {
             var totals = [];
             var value = 0;
             var startValue = 0;
@@ -1296,13 +1095,13 @@ module.exports = Rpt = {
                 value = 0;
             }
 
-            intervals.forEach(function(interval, index) {
+            intervals.forEach(function (interval, index) {
                 var total = startValue;
                 startValue = 0;
                 var start = interval.start;
                 var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                var matches = history.filter(function(data) {
+                var matches = history.filter(function (data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
                 for (var i = 0; i < matches.length; i++) {
@@ -1332,7 +1131,7 @@ module.exports = Rpt = {
 
         var intervals = buildIntervals(range, intervalOptions);
 
-        var getInitialDataMongo = function(point, callback) {
+        var getInitialDataMongo = function (point, callback) {
             var history = [];
             var criteria = { //find initial data per point
                 collection: 'historydata',
@@ -1347,17 +1146,17 @@ module.exports = Rpt = {
                 },
                 limit: 1
             };
-            Utility.get(criteria, function(err, initial) {
+            Utility.get(criteria, function (err, initial) {
                 callback(err, point, initial[0]);
             });
         };
-        var getInitialDataSql = function(point, initial, callback) {
+        var getInitialDataSql = function (point, initial, callback) {
             History.findLatest({
                 upis: [point.upi],
                 range: { // range object gets overwritten in function, pass new obj
                     end: range.start
                 }
-            }, function(err, results) {
+            }, function (err, results) {
                 var latestSql = results[0];
                 if (!initial || (!!latestSql && latestSql.timestamp >= initial.timestamp)) {
                     initial = latestSql;
@@ -1365,7 +1164,7 @@ module.exports = Rpt = {
                 callback(null, point, initial || {});
             });
         };
-        var getRangeDataMongo = function(point, initial, callback) {
+        var getRangeDataMongo = function (point, initial, callback) {
             var criteria = {
                 collection: 'historydata',
                 query: {
@@ -1382,11 +1181,11 @@ module.exports = Rpt = {
                 }
             };
 
-            Utility.get(criteria, function(err, history) {
+            Utility.get(criteria, function (err, history) {
                 callback(null, point, initial, history);
             });
         };
-        var getRangeDataSql = function(point, initial, history, callback) {
+        var getRangeDataSql = function (point, initial, history, callback) {
             var exists = false;
 
             History.findHistory({
@@ -1396,7 +1195,7 @@ module.exports = Rpt = {
                     end: range.end
                 },
                 fx: 'history'
-            }, function(err, results) {
+            }, function (err, results) {
                 for (var h = 0; h < history.length; h++) {
                     exists = false;
                     for (var r = 0; r < results.length; r++) {
@@ -1413,7 +1212,7 @@ module.exports = Rpt = {
             });
         };
 
-        var buildTotal = function(point, initial, history, callback) {
+        var buildTotal = function (point, initial, history, callback) {
             history.sort(compare);
 
             switch (point.op) {
@@ -1431,13 +1230,13 @@ module.exports = Rpt = {
             return callback(null);
         };
 
-        async.eachSeries(points, function(point, seriesCb) {
+        async.eachSeries(points, function (point, seriesCb) {
             async.waterfall([async.apply(getInitialDataMongo, point), getInitialDataSql, getRangeDataMongo, getRangeDataSql, buildTotal], seriesCb);
-        }, function(err) {
+        }, function (err) {
             return cb(err, points);
         });
     },
-    scheduledReport: function(data, cb) {
+    scheduledReport: function (data, cb) {
         var domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
         var schedule = data.schedule;
         var upi = schedule.upi;
@@ -1451,19 +1250,19 @@ module.exports = Rpt = {
             fields: {
                 Name: 1
             }
-        }, function(err, point) {
+        }, function (err, point) {
             if (!!point) {
                 var reportName = point.Name;
-                var users = schedule.users.map(function(id) {
+                var users = schedule.users.map(function (id) {
                     return ObjectID(id);
                 });
                 var date = moment().format('YYYY-MM-DD');
                 var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
                 var uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
                 console.log(uri, path);
-                pageRender.renderPage(uri, path, function(err) {
+                pageRender.renderPage(uri, path, function (err) {
                     console.log(1, err);
-                    fs.readFile(path, function(err, data) {
+                    fs.readFile(path, function (err, data) {
                         console.log(2, err);
                         Utility.iterateCursor({
                             collection: 'Users',
@@ -1472,16 +1271,16 @@ module.exports = Rpt = {
                                     $in: users
                                 }
                             }
-                        }, function(err, user, nextUser) {
+                        }, function (err, user, nextUser) {
                             // figure out date/time
-                            emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                            emails = emails.concat(user['Contact Info'].Value.filter(function (info) {
                                 return info.Type === 'Email';
-                            }).map(function(email) {
+                            }).map(function (email) {
                                 return email.Value;
                             }));
 
                             nextUser();
-                        }, function(err, count) {
+                        }, function (err, count) {
                             emails = emails.concat(schedule.emails).join(',');
                             mailer.sendEmail({
                                 to: emails,
@@ -1493,7 +1292,7 @@ module.exports = Rpt = {
                                     contentType: 'application/pdf',
                                     content: data
                                 }]
-                            }, function(err, info) {
+                            }, function (err, info) {
                                 console.log(err, info);
                                 cb(err);
                             });
@@ -1508,13 +1307,13 @@ module.exports = Rpt = {
     }
 };
 
-var buildIntervals = function(range, interval) {
+var buildIntervals = function (range, interval) {
     var intervalPeriod = interval.period;
     var intervalValue = interval.value;
     var intervalRanges = [];
     var intervalStart;
     var intervalEnd;
-    var fixLongerInterval = function() {
+    var fixLongerInterval = function () {
         if (intervalEnd > range.end && intervalStart < range.end) {
             intervalEnd = range.end;
         }
@@ -1536,7 +1335,7 @@ var buildIntervals = function(range, interval) {
     return intervalRanges;
 };
 
-var buildPointRef = function(key, regex) {
+var buildPointRef = function (key, regex) {
     return {
         "Point Refs": {
             $elemMatch: {
@@ -1547,7 +1346,7 @@ var buildPointRef = function(key, regex) {
     };
 };
 
-var propertyCheckForValue = function(prop) {
+var propertyCheckForValue = function (prop) {
     if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
         return prop;
     } else {
@@ -1555,7 +1354,7 @@ var propertyCheckForValue = function(prop) {
     }
 };
 
-var getPoints = function(pointsCol, cb) {
+var getPoints = function (pointsCol, cb) {
     var criteria = {
         query: {
             _id: {

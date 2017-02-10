@@ -301,6 +301,8 @@ input.intervalValue {
 }
 .dropdown-content li>a, .dropdown-content li>span {
     color: #607d8b !important;
+    font-family: "Roboto", sans-serif;
+    font-weight: normal;
 }
 .operator {
     cursor: pointer;

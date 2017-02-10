@@ -65,41 +65,11 @@ var scheduledReportCallback = function(res, err, locals, result) {
 };
 
 // NOT CHECKED
-router.get('/getMRT/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.getMRT(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
 router.get('/reportSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
   Reports.reportSearch(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
-router.post('/saveMRT', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.saveMRT(data, function(err, trends) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -170,21 +140,6 @@ router.post('/reportSearch', function(req, res, next) {
   });
 });
 // NOT CHECKED
-router.get('/getHistoryPoints', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.getHistoryPoints(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
 router.post('/historyDataSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -197,21 +152,6 @@ router.post('/historyDataSearch', function(req, res, next) {
     }
 
     return utils.sendResponse(res, results);
-  });
-});
-// NOT CHECKED
-router.post('/historySearch', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.historySearch(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
   });
 });
 // NOT CHECKED
