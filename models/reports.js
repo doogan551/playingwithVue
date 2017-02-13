@@ -5,71 +5,20 @@ let moment = require('moment');
 let ObjectID = require('mongodb').ObjectID;
 let config = require('config');
 
-let Utility = require('../models/utility');
-let History = require('../models/history');
 let utils = require('../helpers/utils.js');
-let historyCollection = utils.CONSTANTS('HISTORYCOLLECTION'); // points to "historydata"
 let Config = require('../public/js/lib/config');
 let logger = require('../helpers/logger')(module);
-let pageRender = require('../models/pagerender');
-let mailer = require('../models/mailer');
+let PageRender = new(require('./pagerender'))();
+let Mailer = new(require('./mailer'))();
+let Schedule = new(require('./schedule'))();
+let History = new(require('./history'))();
+let Point = new(require('./point'))();
+let User = new(require('./user'))();
+let ActivityLog = new(require('./activitylog'))();
 
-let actLogsEnums = Config.Enums['Activity Logs'];
-let activityLogCollection = utils.CONSTANTS('activityLogCollection');
-
-module.exports = Rpt = {
-
-    getMRT: function (data, cb) {
+let Report = class Report {
+    saveSVG(data, cb) {
         let criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
-            },
-            collection: 'points',
-            fields: {
-                'MRTData': 1
-            }
-        };
-
-        Utility.get(criteria, function (err, result) {
-            if (!err) {
-                if (!result) {
-                    return cb('No mrt file found');
-                } else if (result.MRTData) {
-                    return cb(null, result.MRTData);
-                } 
-                    return cb("No mrt file found");
-                
-            } else {
-                return cb(err);
-            }
-        });
-    },
-    saveMRT: function (data, cb) {
-        let criteria = {
-            collection: 'points',
-            query: {
-                _id: utils.converters.convertType(data.id)
-            },
-            updateObj: {
-                $set: {
-                    'MRTData': data.MRTData
-                }
-            }
-        };
-
-        Utility.update(criteria, function (err, result) {
-            if (!err) {
-                return cb(null, {
-                    _idd: null,
-                    id: utils.converters.convertType(data.id),
-                    data: 'Data has been saved successfully!!!'
-                });
-            } return cb(err);
-        });
-    },
-    saveSVG: function (data, cb) {
-        let criteria = {
-            collection: 'points',
             query: {
                 _id: utils.converters.convertType(data.id)
             },
@@ -79,18 +28,16 @@ module.exports = Rpt = {
                 }
             }
         };
-
-        Utility.update(criteria, function (err, result) {
+        Point.updateOne(criteria, function (err, result) {
             if (!err) {
                 return cb(null, {
                     data: 'Data has been saved successfully!!!'
                 });
-            } 
-                return cb(err);
-            
+            }
+            return cb(err);
         });
-    },
-    saveReport: function (data, cb) {
+    }
+    saveReport(data, cb) {
         data['Point Type'] = {
             eValue: Config.Enums['Point Types'].Report.enum
         };
@@ -99,12 +46,11 @@ module.exports = Rpt = {
             user: data.user,
             timestamp: Date.now(),
             point: data,
-            activity: actLogsEnums['Report Edit'].enum,
+            activity: 'Report Edit',
             log: 'Report edited.'
         };
 
         let criteria = {
-            collection: 'points',
             query: {
                 _id: utils.converters.convertType(data._id)
             },
@@ -123,202 +69,39 @@ module.exports = Rpt = {
 
         let logObj = utils.buildActivityLog(logData);
 
-        Utility.update(criteria, function (err, result) {
-            Utility.insert({
-                collection: activityLogCollection,
-                insertObj: logObj
-            }, function (err, result) {
+        Point.updateOne(criteria, function (err, result) {
+            ActivityLog.create(logObj, function (err, result) {
                 if (!err) {
                     return cb(err, {
                         data: 'Report has been saved successfully!!!'
                     });
-                } 
-                    return cb(err, null);
-                
+                }
+                return cb(err, null);
             });
         });
-    },
-    getSVG: function (data, cb) {
-        let criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
-            },
-            collection: 'points',
-            fields: {
-                'SVGData': 1
-            }
-        };
-
-        Utility.get(criteria, function (err, result) {
+    }
+    getSVG(data, cb) {
+        Point.getPointById({
+            _id: utils.converters.convertType(data.id)
+        }, function (err, result) {
             if (!err) {
                 return cb(null, result.SVGData);
-            } 
-                return cb(err);
-            
-        });
-    },
-    getHistoryPoints: function (data, cb) {
-        let criteria = {
-            query: {},
-            collection: 'historydata',
-            field: 'upi',
-            options: {
-                limit: 50
             }
-        };
-
-        Utility.get(criteria, function (err, result) {
-            if (!err) {
-                if (!result) {
-                    return cb('No results found');
-                } 
-                    getPoints(result, cb);
-                
-            } else
-                {return cb(err);}
+            return cb(err);
         });
-    },
-    historySearch: function (data, cb) {
-        let startTime = data.startTime;
-        let endTime = data.endTime;
-
-        let upis = data.upis;
-
-        let criteria = {
-            query: {
-                _id: {
-                    $in: upis
-                }
-            },
-            collection: 'points',
-            fields: {
-                'Value': 1,
-                Name: 1
-            }
-        };
-
-        Utility.get(criteria, function (err, points) {
-            criteria = {
-                query: [{
-                    $match: {
-                        timestamp: {
-                            '$gte': startTime,
-                            '$lte': endTime
-                        },
-                        upi: {
-                            '$in': upis
-                        }
-                    }
-                }, {
-                    $sort: {
-                        timestamp: -1
-                    }
-                }, {
-                    $group: {
-                        _id: '$upi',
-                        data: {
-                            $push: {
-                                timestamp: '$timestamp',
-                                Value: '$value'
-                            }
-                        }
-
-                    }
-                }, {
-                    $project: {
-                        _id: 0,
-                        upi: '$_id',
-                        data: '$data'
-                    }
-                }],
-                collection: 'historydata'
-            };
-
-            Utility.aggregate(criteria, function (err, histPoints) {
-                if (err)
-                    {return cb(err);}
-
-                for (let a = 0; a < histPoints.length; a++) {
-
-                }
-                async.eachSeries(histPoints, function (historyPoint, callback) {
-                    if (historyPoint.data[historyPoint.data.length - 1].timestamp !== startTime) {
-                        criteria = {
-                            query: {
-                                upi: historyPoint.upi,
-                                timestamp: {
-                                    $lt: startTime
-                                }
-                            },
-                            collection: 'historydata',
-                            fields: {
-                                timestamp: 1,
-                                value: 1
-                            },
-                            limit: 1,
-                            sort: {
-                                timestamp: -1
-                            }
-                        };
-
-                        Utility.get(criteria, function (err, nextOldest) {
-                            historyPoint.data.push(nextOldest);
-                            fixHistoryData(historyPoint, points);
-                            callback(err);
-                        });
-                    } else {
-                        fixHistoryData(historyPoint, points);
-                        callback(null);
-                    }
-                }, function (err) {
-                    // JS console.log("historySearch()", new Date() - start);
-                    return cb(err, histPoints);
-                });
-            });
-        });
-
-        function fixHistoryData(histPoint, points) {
-            /*
-             points - points from the 'points' collection that are represented in the historydata collection's query
-             histPoints - points of history data that has been aggregated from the 'historydata' collection
-
-             while iterating though the histPoints
-             for each of the return points, when the historydata point's match has been found, check if the point's value is an enum.
-             for every value in the historydata's data array, update the value to be the enum option from the point's valueoptions
-             */
-
-            for (b = 0; b < points.length; b++) {
-                if (histPoint.upi === points[b]._id) {
-                    if (points[b].Value.ValueType === 5) {
-                        for (let c = 0; c < histPoint.data.length; c++) {
-                            for (let option in points[b].Value.ValueOptions) {
-                                if (points[b].Value.ValueOptions[option] === histPoint.data[c].Value) {
-                                    histPoint.data[c].eValue = histPoint.data[c].Value;
-                                    histPoint.data[c].Value = option;
-                                }
-                            }
-                        }
-                    }
-                    histPoint.Name = points[b].Name;
-                }
-            }
-            return;
-        }
-    },
-    historyDataSearch: function (data, cb) {
+    }
+    historyDataSearch(data, cb) {
         let reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
             endTime = data.range.end,
             getNextOldest,
             intervalOptions = reportConfig.interval,
-            returnLimit = (reportConfig.limit) ? reportConfig.limit : 200,
             noOlderTimes = [],
             returnObj = {},
             returnPoints = [],
             searchCriteria = {},
             startTime = data.range.start,
-            timeSlotLimit = 200,
             timestamps,
             tooManyFlag = false,
             upis = data.upis,
@@ -349,7 +132,7 @@ module.exports = Rpt = {
 
         // make timestamps as normal then convert to new id. find all between min/max and any that match
         //timestamps = buildTimestamps(startTime, endTime, interval, offset);
-        timestamps = makeTimestamps(buildIntervals(data.range, intervalOptions));
+        timestamps = makeTimestamps(this.buildIntervals(data.range, intervalOptions));
 
         searchCriteria = {
             upi: {
@@ -375,25 +158,20 @@ module.exports = Rpt = {
                 _id: {
                     $in: justUpis
                 }
-            },
-            collection: 'points'
+            }
         };
-        // logger.info("---------");
-        // logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
-        // logger.info("---------");
-        Utility.get(criteria, function (err, points) {
-            if (err)
-                {return cb(err, null);}
+        Point.getAll(criteria, function (err, points) {
+            if (err) {
+                return cb(err, null);
+            }
 
             criteria = {
                 query: searchCriteria,
-                collection: 'historydata',
                 sort: {
                     timestamp: -1
                 }
             };
-
-            Utility.get(criteria, function (err, histPoints) {
+            History.getAll(criteria, function (err, histPoints) {
                 if (err) {
                     return cb(err, null);
                 }
@@ -420,107 +198,105 @@ module.exports = Rpt = {
                     }
                     histPoints = results;
                     async.eachSeries(timestamps.reverse(), function (ts, callback1) {
-                            //convert id to ts and upi
+                        //convert id to ts and upi
                         returnObj = {
-                                timestamp: ts,
-                                HistoryResults: []
-                            };
+                            timestamp: ts,
+                            HistoryResults: []
+                        };
                         async.eachSeries(justUpis, function (upi, callback2) {
-                                if (noOlderTimes.indexOf(upi) !== -1) {
-                                    for (let x = 0; x < points.length; x++) {
-                                        if (points[x]._id === upi) {
-                                            returnObj.HistoryResults.push({
-                                                upi: upi,
-                                                Name: points[x].Name
-                                            });
-                                        }
-                                    }
-                                    //setTimeout(function() {
-                                    callback2(null);
-                                    //}, 1);
-                                } else {
-                                    getNextOldest = true;
-                                    for (let w = 0; w < histPoints.length; w++) {
-                                        if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
-                                            for (let y = 0; y < points.length; y++) {
-                                                if (points[y]._id === histPoints[w].upi) {
-                                                    returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
-                                                }
-                                            }
-                                            getNextOldest = false;
-                                        }
-                                    }
-
-                                    if (getNextOldest) {
-                                        criteria = {
-                                            query: {
-                                                upi: upi,
-                                                timestamp: {
-                                                    $lt: ts //use id
-                                                }
-                                            },
-                                            collection: historyCollection,
-                                            sort: {
-                                                timestamp: -1
-                                            },
-                                            limit: 1
-                                        };
-                                        Utility.get(criteria, function (err, nextOldest) {
-                                            if (!!err) {
-                                                return callback2(err);
-                                            }
-
-                                            History.findLatest({
-                                                upis: [upi],
-                                                range: {
-                                                    end: ts
-                                                }
-                                            }, function (err, results) {
-                                                if (!!results.length) {
-                                                    if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
-                                                        nextOldest = results;
-                                                    }
-                                                }
-                                                for (let x = 0; x < points.length; x++) {
-                                                    if (points[x]._id === upi) {
-                                                        if (nextOldest.length > 0) {
-                                                            if (nextOldest[0].upi === points[x]._id) {
-                                                                returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
-                                                            }
-                                                        } else {
-                                                            returnObj.HistoryResults.push({
-                                                                upi: upi,
-                                                                Name: points[x].Name,
-                                                                Value: 'No Older Value'
-                                                            });
-                                                            noOlderTimes.push(upi);
-                                                        }
-                                                    }
-                                                }
-                                                callback2(err);
-                                            });
+                            if (noOlderTimes.indexOf(upi) !== -1) {
+                                for (let x = 0; x < points.length; x++) {
+                                    if (points[x]._id === upi) {
+                                        returnObj.HistoryResults.push({
+                                            upi: upi,
+                                            Name: points[x].Name
                                         });
-                                    } else {
-                                        callback2(null);
                                     }
                                 }
-                            }, function (err) {
-                                returnPoints.push(returnObj);
-                                if (returnPoints.length % 500 === 0) {
-                                    setTimeout(function () {
-                                        callback1(err);
-                                    }, 0);
-                                } else {
-                                    callback1(err);
+                                //setTimeout(function() {
+                                callback2(null);
+                                //}, 1);
+                            } else {
+                                getNextOldest = true;
+                                for (let w = 0; w < histPoints.length; w++) {
+                                    if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
+                                        for (let y = 0; y < points.length; y++) {
+                                            if (points[y]._id === histPoints[w].upi) {
+                                                returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
+                                            }
+                                        }
+                                        getNextOldest = false;
+                                    }
                                 }
-                            });
-                    },
-                        function (err) {
-                            return cb(err, {
-                                truncated: tooManyFlag,
-                                historyData: returnPoints.reverse()
-                            });
+
+                                if (getNextOldest) {
+                                    criteria = {
+                                        query: {
+                                            upi: upi,
+                                            timestamp: {
+                                                $lt: ts //use id
+                                            }
+                                        },
+                                        sort: {
+                                            timestamp: -1
+                                        },
+                                        limit: 1
+                                    };
+                                    History.getAll(criteria, function (err, nextOldest) {
+                                        if (!!err) {
+                                            return callback2(err);
+                                        }
+
+                                        History.findLatest({
+                                            upis: [upi],
+                                            range: {
+                                                end: ts
+                                            }
+                                        }, function (err, results) {
+                                            if (!!results.length) {
+                                                if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
+                                                    nextOldest = results;
+                                                }
+                                            }
+                                            for (let x = 0; x < points.length; x++) {
+                                                if (points[x]._id === upi) {
+                                                    if (nextOldest.length > 0) {
+                                                        if (nextOldest[0].upi === points[x]._id) {
+                                                            returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
+                                                        }
+                                                    } else {
+                                                        returnObj.HistoryResults.push({
+                                                            upi: upi,
+                                                            Name: points[x].Name,
+                                                            Value: 'No Older Value'
+                                                        });
+                                                        noOlderTimes.push(upi);
+                                                    }
+                                                }
+                                            }
+                                            callback2(err);
+                                        });
+                                    });
+                                } else {
+                                    callback2(null);
+                                }
+                            }
+                        }, function (err) {
+                            returnPoints.push(returnObj);
+                            if (returnPoints.length % 500 === 0) {
+                                setTimeout(function () {
+                                    callback1(err);
+                                }, 0);
+                            } else {
+                                callback1(err);
+                            }
                         });
+                    }, function (err) {
+                        return cb(err, {
+                            truncated: tooManyFlag,
+                            historyData: returnPoints.reverse()
+                        });
+                    });
                 });
             });
         });
@@ -561,110 +337,105 @@ module.exports = Rpt = {
                 return getStatusChar('Out of Service');
             } else if ((statusflag & Config.Enums['Status Flags Bits'].Override.enum) !== 0) {
                 return getStatusChar('Override');
-            } 
-                return "";
-            
+            }
+            return '';
+
 
             function getStatusChar(status) {
                 for (let index in qualityCodes) {
-                    if (qualityCodes[index]['Quality Code Label'] === status)
-                        {return qualityCodes[index]["Quality Code"];}
+                    if (qualityCodes[index]['Quality Code Label'] === status) {
+                        return qualityCodes[index]['Quality Code'];
+                    }
                 }
             }
         }
 
-        function buildTimestamps(startTime, endTime, interval, offset) {
-            let minute = 60,
-                hour = minute * 60,
-                day = hour * 24,
-                week = day * 7,
-                timestampInterval = 0,
-                timestamps = [],
-                prevTime = parseInt(startTime, 10);
+        // function buildTimestamps(startTime, endTime, interval, offset) {
+        //     let minute = 60,
+        //         hour = minute * 60,
+        //         day = hour * 24,
+        //         week = day * 7,
+        //         timestampInterval = 0,
+        //         timestamps = [],
+        //         prevTime = parseInt(startTime, 10);
 
-            endTime = parseInt(endTime, 10);
-            offset = (offset) ? parseInt(offset, 10) : 1;
-            interval = (interval) ? parseInt(interval, 10) : 0;
+        //     endTime = parseInt(endTime, 10);
+        //     offset = (offset) ? parseInt(offset, 10) : 1;
+        //     interval = (interval) ? parseInt(interval, 10) : 0;
 
-            switch (interval) {
-                case 0: //minute
-                    timestampInterval = minute * offset;
-                    break;
-                case 1: //hour
-                    timestampInterval = hour * offset;
-                    break;
-                case 2: //day
-                    timestampInterval = day * offset;
-                    break;
-                case 3: //week
-                    timestampInterval = week * offset;
-                    break;
-                case 4: // month
-                    break;
-                case 5: // year
-                    break;
-                default:
-                    logger.info(' - - - - - - - - interval is DEFAULT');
-                    break;
-            }
+        //     switch (interval) {
+        //         case 0: //minute
+        //             timestampInterval = minute * offset;
+        //             break;
+        //         case 1: //hour
+        //             timestampInterval = hour * offset;
+        //             break;
+        //         case 2: //day
+        //             timestampInterval = day * offset;
+        //             break;
+        //         case 3: //week
+        //             timestampInterval = week * offset;
+        //             break;
+        //         case 4: // month
+        //             break;
+        //         case 5: // year
+        //             break;
+        //         default:
+        //             logger.info(' - - - - - - - - interval is DEFAULT');
+        //             break;
+        //     }
 
-            //logger.info(" - - - - - - - - interval = " + interval + "  timestampInterval = " + timestampInterval);
+        //     //logger.info(" - - - - - - - - interval = " + interval + "  timestampInterval = " + timestampInterval);
 
-            if (timestampInterval !== 0) {
-                //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
-                while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
-                    //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
-                    timestamps.push(prevTime);
-                    prevTime += timestampInterval;
-                }
-            } else {
-                let prevInterval;
+        //     if (timestampInterval !== 0) {
+        //         //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
+        //         while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
+        //             //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
+        //             timestamps.push(prevTime);
+        //             prevTime += timestampInterval;
+        //         }
+        //     } else {
+        //         let prevInterval;
 
-                if (interval === 4) { //month
-                    prevInterval = new Date(startTime * 1000).getMonth();
+        //         if (interval === 4) { //month
+        //             prevInterval = new Date(startTime * 1000).getMonth();
 
-                    while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
-                        timestamps.push(prevTime);
+        //             while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
+        //                 timestamps.push(prevTime);
 
-                        if (prevInterval == 11) {
-                            prevInterval = 0;
-                            prevTime = Math.floor(new Date(new Date(prevTime * 1000).setMonth(prevInterval)).setFullYear(new Date(prevTime * 1000).getFullYear() + 1) / 1000);
-                        } else {
-                            prevTime = Math.floor(new Date(prevTime * 1000).setMonth(++prevInterval) / 1000);
-                        }
-                    }
-                } else if (interval === 5) { //year
-                    prevInterval = new Date(startTime * 1000).getFullYear();
+        //                 if (prevInterval == 11) {
+        //                     prevInterval = 0;
+        //                     prevTime = Math.floor(new Date(new Date(prevTime * 1000).setMonth(prevInterval)).setFullYear(new Date(prevTime * 1000).getFullYear() + 1) / 1000);
+        //                 } else {
+        //                     prevTime = Math.floor(new Date(prevTime * 1000).setMonth(++prevInterval) / 1000);
+        //                 }
+        //             }
+        //         } else if (interval === 5) { //year
+        //             prevInterval = new Date(startTime * 1000).getFullYear();
 
-                    while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
-                        timestamps.push(prevTime);
-                        prevTime = Math.floor(new Date(prevTime * 1000).setFullYear(++prevInterval) / 1000);
-                    }
-                } else {
-                    //bad interval
-                }
-            }
+        //             while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
+        //                 timestamps.push(prevTime);
+        //                 prevTime = Math.floor(new Date(prevTime * 1000).setFullYear(++prevInterval) / 1000);
+        //             }
+        //         } else {
+        //             //bad interval
+        //         }
+        //     }
 
-            tooManyFlag = (timestamps.length < timeSlotLimit);
-            return timestamps;
-        }
-    },
-    reportMain: function (data, cb) {
+        //     tooManyFlag = (timestamps.length < timeSlotLimit);
+        //     return timestamps;
+        // }
+    }
+    reportMain(data, cb) {
         let reportCriteria = {
-                query: {
-                    _id: utils.converters.convertType(data.id)
-                },
-                collection: 'points',
-                data: data,
-                limit: 1
+                id: utils.converters.convertType(data.id),
+                data: data
             },
             scheduleCriteria = {
                 query: {
                     _id: new ObjectID(data.scheduleID)
                 },
-                collection: 'Schedules',
-                data: data,
-                limit: 1
+                data: data
             },
             scheduled = (!!data.scheduleID),
             reportResults = {},
@@ -693,10 +464,9 @@ module.exports = Rpt = {
                 return data;
             },
             handleResults = function () {
-                'use strict';
                 if (scheduled) {
                     if (scheduleRequestComplete && reportRequestComplete) {
-                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig); 
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
                         return cb(null, reportResults, reportData);
                     }
                 } else {
@@ -705,68 +475,44 @@ module.exports = Rpt = {
             };
 
         if (scheduled) {
-            Utility.get(scheduleCriteria, function (err, scheduleData) {
+            Schedule.get(scheduleCriteria, function (err, scheduleData) {
                 if (err) {
                     return cb(err);
-                } 
-                    scheduleData = scheduleData[0];
-                    if (scheduleData === null) {
-                        return cb();
-                    } else {
-                        reportResults.scheduledConfig = {};
-                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
-                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
-                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
-                    }
-                    scheduleRequestComplete = true;
-                    handleResults();
-                
-            });
-            Utility.get(reportCriteria, function (err, result) {
-                if (err) {
-                    return cb(err);
-                } 
-                    result = result[0];
-                    if (!!result) {
-                        if (result["Report Type"].Value === "Property") {
-                            result = getValueTypes(result);
-                        }
-                        reportResults.id = data.id;
-                        reportResults.point = JSON.stringify(result);
+                }
+                if (scheduleData === null) {
+                    return cb();
+                }
+                reportResults.scheduledConfig = {};
+                reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
 
-                        reportData = result;
-                        reportRequestComplete = true;
-                        handleResults();
-                    } else {
-                        return cb();    // error
-                    }
-                
-            });
-        } else {
-            Utility.getWithSecurity(reportCriteria, function (err, result) {
-                if (err) {
-                    return cb(err);
-                } 
-                    result = result[0];
-                    if (!!result) {
-                        if (result["Report Type"].Value === "Property") {
-                            result = getValueTypes(result);
-                        }
-                        reportResults.id = data.id;
-                        reportResults.point = JSON.stringify(result);
-                        reportData = result;
-                        reportRequestComplete = true;
-                        handleResults();
-                    } else {
-                        return cb();    // error
-                    }
-                
+                scheduleRequestComplete = true;
+                handleResults();
             });
         }
-    },
-    reportSearch: function (data, cb) {
+        // this is weird. change it to be nested instead of relying on flags in handlResults()
+        Point.getPointById(reportCriteria, function (err, result) {
+            if (err) {
+                return cb(err);
+            }
+            if (!!result) {
+                if (result['Report Type'].Value === 'Property') {
+                    result = getValueTypes(result);
+                }
+                reportResults.id = data.id;
+                reportResults.point = JSON.stringify(result);
+
+                reportData = result;
+                reportRequestComplete = true;
+                handleResults();
+            } else {
+                return cb(); // error
+            }
+        });
+    }
+    reportSearch(data, cb) {
         let reportConfig = data.reportConfig,
-            reportType = data.reportType,
             pointRefs = data['Point Refs'],
             filters = reportConfig.filters,
             pointFilter = reportConfig.pointFilter,
@@ -809,7 +555,7 @@ module.exports = Rpt = {
                     uniquePIDs.push(p);
                     getPointRefs = true;
                 } else {
-                    fields[propertyCheckForValue(p)] = true;
+                    fields[this.propertyCheckForValue(p)] = true;
                 }
             }
             fields['Point Type.Value'] = true;
@@ -824,7 +570,7 @@ module.exports = Rpt = {
         }
 
         for (let i = 1; i < 5; i++) {
-            key = 'name' + i;
+            let key = 'name' + i;
             if (pointFilter[key]) {
                 nameQuery = parseNameField(pointFilter[key], ('name' + i));
                 if (nameQuery) {
@@ -834,12 +580,12 @@ module.exports = Rpt = {
         }
 
         if (filters && filters.length > 0) {
-            searchCriteria.$and.push(Rpt.collectFilters(filters, pointRefs));
+            searchCriteria.$and.push(Report.collectFilters(filters, pointRefs));
         }
 
         if (sort) {
             for (let key2 in sort) {
-                sortObject[key2] = (sort[key2] == 'ASC') ? 1 : -1;
+                sortObject[key2] = (sort[key2] === 'ASC') ? 1 : -1;
             }
         }
 
@@ -850,13 +596,10 @@ module.exports = Rpt = {
         //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         let criteria = {
             query: searchCriteria,
-            collection: 'points',
             limit: returnLimit,
             fields: fields
         };
-
-        // logger.info("--- Report criteria = " + JSON.stringify(criteria));
-        Utility.get(criteria, function (err, docs) {
+        Point.getAll(criteria, function (err, docs) {
             if (err) {
                 return cb(err);
             }
@@ -884,8 +627,8 @@ module.exports = Rpt = {
             });
             return cb(null, docs);
         });
-    },
-    collectFilters: function (theFilters, reportPointRefs) {
+    }
+    collectFilters(theFilters, reportPointRefs) {
         let currentFilter,
             localSearchCriteria = {},
             andExpressions = [],
@@ -950,7 +693,7 @@ module.exports = Rpt = {
                             };
                             break;
                         case 'NotContaining':
-                            let re = new RegExp(filter.value, i);
+                            let re = new RegExp(filter.value, 'i');
                             searchQuery[key] = {
                                 $not: re
                             };
@@ -958,7 +701,7 @@ module.exports = Rpt = {
                         case 'EqualTo':
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
                                 if (filter.evalue === -1) {
-                                    searchQuery[propertyCheckForValue(key)] = {
+                                    searchQuery[this.propertyCheckForValue(key)] = {
                                         $eq: ''
                                     };
                                 } else {
@@ -971,16 +714,16 @@ module.exports = Rpt = {
                                 }
                             } else if (filter.valueType === 'Bool') {
                                 if (utils.converters.isNumber(filter.value)) {
-                                    searchQuery[propertyCheckForValue(key)] = {
+                                    searchQuery[this.propertyCheckForValue(key)] = {
                                         $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                     };
                                 } else {
-                                    searchQuery[propertyCheckForValue(key)] = {
+                                    searchQuery[this.propertyCheckForValue(key)] = {
                                         $eq: filter.value
                                     };
                                 }
                             } else if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                                searchQuery[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             } else if (filter.value.indexOf(',') > -1) {
                                 let splitValues = filter.value.split(',');
                                 //if (!searchCriteria.$or)
@@ -990,19 +733,19 @@ module.exports = Rpt = {
                                 for (let kk = 0; kk < splitValues.length; kk++) {
                                     let ppp = {};
                                     if (utils.converters.isNumber(splitValues[kk])) {
-                                        ppp[key] = convertType(splitValues[kk]);
+                                        ppp[key] = utils.converters.convertType(splitValues[kk]);
                                     } else {
                                         ppp[key] = splitValues[kk];
                                     }
                                     new$or.$or.push(ppp);
                                 }
                             } else if (utils.converters.isNumber(filter.value)) {
-                                    searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
-                                } else {
-                                    searchQuery[propertyCheckForValue(key)] = {
-                                        $regex: '(?i)^' + filter.value
-                                    };
-                                }
+                                searchQuery[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                            } else {
+                                searchQuery[this.propertyCheckForValue(key)] = {
+                                    $regex: '(?i)^' + filter.value
+                                };
+                            }
                             break;
                         case 'NotEqualTo':
                             searchPart1[key] = {
@@ -1012,7 +755,7 @@ module.exports = Rpt = {
                             searchQuery.$and.push(searchPart1);
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
                                 if (filter.evalue === -1) {
-                                    searchPart2[propertyCheckForValue(key)] = {
+                                    searchPart2[this.propertyCheckForValue(key)] = {
                                         $ne: ''
                                     };
                                 } else {
@@ -1025,56 +768,56 @@ module.exports = Rpt = {
                                         $ne: filter.evalue
                                     };
                                 }
-                            } else if (filter.valueType === "Bool") {
-                                    if (utils.converters.isNumber(filter.value)) {
-                                        searchPart2[propertyCheckForValue(key)] = {
-                                            $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
-                                        };
-                                    } else {
-                                        searchPart2[propertyCheckForValue(key)] = {
-                                            $ne: filter.value
-                                        };
-                                    }
-                                } else if (utils.converters.isNumber(filter.value)) {
-                                    searchPart2[propertyCheckForValue(key)] = {
-                                        $ne: utils.converters.convertType(filter.value, filter.valueType)
+                            } else if (filter.valueType === 'Bool') {
+                                if (utils.converters.isNumber(filter.value)) {
+                                    searchPart2[this.propertyCheckForValue(key)] = {
+                                        $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                     };
                                 } else {
-                                    searchPart2[propertyCheckForValue(key)] = {
-                                        $regex: '(?i)^(?!' + filter.value + ")"
-                                            //$ne: utils.converters.convertType(filter.value, filter.valueType)
+                                    searchPart2[this.propertyCheckForValue(key)] = {
+                                        $ne: filter.value
                                     };
                                 }
+                            } else if (utils.converters.isNumber(filter.value)) {
+                                searchPart2[this.propertyCheckForValue(key)] = {
+                                    $ne: utils.converters.convertType(filter.value, filter.valueType)
+                                };
+                            } else {
+                                searchPart2[this.propertyCheckForValue(key)] = {
+                                    $regex: '(?i)^(?!' + filter.value + ')'
+                                    //$ne: utils.converters.convertType(filter.value, filter.valueType)
+                                };
+                            }
 
                             searchQuery.$and.push(searchPart2);
                             break;
                         case 'LessThan':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $lt: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
                         case 'LessThanOrEqualTo':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $lte: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
                         case 'GreaterThan':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $gt: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
                         case 'GreaterThanOrEqualTo':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $gte: utils.converters.convertType(filter.value, filter.valueType)
                             };
                             break;
                         case 'BeginningWith':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $regex: '^(?i)' + filter.value + '.*'
                             };
                             break;
                         case 'EndingWith':
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $regex: '(?i)' + filter.value + '*$'
                             };
                             break;
@@ -1082,7 +825,7 @@ module.exports = Rpt = {
                             searchQuery[key] = {
                                 $exists: true
                             };
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $gte: utils.converters.convertType(filter.value, filter.valueType),
                                 $lte: utils.converters.convertType(filter.value, filter.valueType)
                             };
@@ -1092,7 +835,7 @@ module.exports = Rpt = {
                                 $exists: true
                             };
                             //{$nin:{$gte:2,$lt:5}}
-                            searchQuery[propertyCheckForValue(key)] = {
+                            searchQuery[this.propertyCheckForValue(key)] = {
                                 $nin: {
                                     $gte: utils.converters.convertType(filter.value, filter.valueType),
                                     $lt: utils.converters.convertType(filter.value, filter.valueType)
@@ -1116,9 +859,8 @@ module.exports = Rpt = {
                         currentFilter = theFilters[currentIndex++];
                     }
                 }
-                done = (currentFilter === undefined);
 
-                return Rpt.groupOrExpression(group);
+                return Report.groupOrExpression(group);
             };
 
         localSearchCriteria.$or = [];
@@ -1156,8 +898,8 @@ module.exports = Rpt = {
 
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
-    },
-    groupOrExpression: function (listOfExpressions) {
+    }
+    groupOrExpression(listOfExpressions) {
         let concatJSON = {},
             tempObj = {},
             i;
@@ -1171,8 +913,8 @@ module.exports = Rpt = {
             }
         }
         return concatJSON;
-    },
-    totalizerReport: function (data, cb) {
+    }
+    totalizerReport(data, cb) {
         //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
         let points = data.upis;
         let reportConfig = data.reportConfig;
@@ -1314,12 +1056,10 @@ module.exports = Rpt = {
         };
 
 
-        let intervals = buildIntervals(range, intervalOptions);
+        let intervals = this.buildIntervals(range, intervalOptions);
 
         let getInitialDataMongo = function (point, callback) {
-            let history = [];
             let criteria = { //find initial data per point
-                collection: 'historydata',
                 query: {
                     timestamp: {
                         $lte: range.start
@@ -1331,7 +1071,8 @@ module.exports = Rpt = {
                 },
                 limit: 1
             };
-            Utility.get(criteria, function (err, initial) {
+
+            History.getAll(criteria, function (err, initial) {
                 callback(err, point, initial[0]);
             });
         };
@@ -1351,7 +1092,6 @@ module.exports = Rpt = {
         };
         let getRangeDataMongo = function (point, initial, callback) {
             let criteria = {
-                collection: 'historydata',
                 query: {
                     upi: point.upi,
                     $and: [{
@@ -1366,7 +1106,7 @@ module.exports = Rpt = {
                 }
             };
 
-            Utility.get(criteria, function (err, history) {
+            History.getAll(criteria, function (err, history) {
                 callback(null, point, initial, history);
             });
         };
@@ -1420,15 +1160,14 @@ module.exports = Rpt = {
         }, function (err) {
             return cb(err, points);
         });
-    },
-    scheduledReport: function (data, cb) {
+    }
+    scheduledReport(data, cb) {
         let domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
         let schedule = data.schedule;
         let upi = schedule.upi;
         let emails = [];
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: upi
             },
@@ -1444,13 +1183,9 @@ module.exports = Rpt = {
                 let date = moment().format('YYYY-MM-DD');
                 let path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
                 let uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
-                console.log(uri, path);
-                pageRender.renderPage(uri, path, function (err) {
-                    console.log(1, err);
+                PageRender.renderPage(uri, path, function (err) {
                     fs.readFile(path, function (err, data) {
-                        console.log(2, err);
-                        Utility.iterateCursor({
-                            collection: 'Users',
+                        User.iterateCursor({
                             query: {
                                 _id: {
                                     $in: users
@@ -1467,7 +1202,7 @@ module.exports = Rpt = {
                             nextUser();
                         }, function (err, count) {
                             emails = emails.concat(schedule.emails).join(',');
-                            mailer.sendEmail({
+                            Mailer.sendEmail({
                                 to: emails,
                                 fromAccount: 'infoscan',
                                 subject: [reportName, ' for ', date].join(''),
@@ -1490,68 +1225,41 @@ module.exports = Rpt = {
             }
         });
     }
-};
 
-let buildIntervals = function (range, interval) {
-    let intervalPeriod = interval.period;
-    let intervalValue = interval.value;
-    let intervalRanges = [];
-    let intervalStart;
-    let intervalEnd;
-    let fixLongerInterval = function () {
-        if (intervalEnd > range.end && intervalStart < range.end) {
-            intervalEnd = range.end;
-        }
-    };
+    buildIntervals(range, interval) {
+        let intervalPeriod = interval.period;
+        let intervalValue = interval.value;
+        let intervalRanges = [];
+        let intervalStart;
+        let intervalEnd;
+        let fixLongerInterval = function () {
+            if (intervalEnd > range.end && intervalStart < range.end) {
+                intervalEnd = range.end;
+            }
+        };
 
-    intervalStart = moment.unix(range.start).unix();
-    intervalEnd = moment.unix(range.start).add(intervalValue, intervalPeriod).unix();
-    fixLongerInterval();
-    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalPeriod).startOf(intervalPeriod).unix()) {
-        intervalRanges.push({
-            start: intervalStart,
-            end: intervalEnd
-        });
-        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalPeriod).unix();
-        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalPeriod).unix();
+        intervalStart = moment.unix(range.start).unix();
+        intervalEnd = moment.unix(range.start).add(intervalValue, intervalPeriod).unix();
         fixLongerInterval();
+        while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalPeriod).startOf(intervalPeriod).unix()) {
+            intervalRanges.push({
+                start: intervalStart,
+                end: intervalEnd
+            });
+            intervalStart = moment.unix(intervalStart).add(intervalValue, intervalPeriod).unix();
+            intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalPeriod).unix();
+            fixLongerInterval();
+        }
+
+        return intervalRanges;
     }
 
-    return intervalRanges;
-};
-
-let buildPointRef = function (key, regex) {
-    return {
-        'Point Refs': {
-            $elemMatch: {
-                'PropertyName': key,
-                'Value': regex
-            }
+    propertyCheckForValue(prop) {
+        if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
+            return prop;
         }
-    };
+        return prop + '.Value';
+    }
 };
 
-let propertyCheckForValue = function (prop) {
-    if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
-        return prop;
-    } 
-        return prop + ".Value";
-    
-};
-
-let getPoints = function (pointsCol, cb) {
-    let criteria = {
-        query: {
-            _id: {
-                $in: pointsCol
-            }
-        },
-        collection: 'points',
-        fields: {
-            Name: 1
-        },
-        limit: 50
-    };
-
-    Utility.get(criteria, cb);
-};
+module.exports = Report;

@@ -1,9 +1,9 @@
 let ObjectID = require('mongodb').ObjectID;
-let Utility = require('./utility');
+let Utility = new(require('./utility'))();
 
-let User = class User {
+let User = class User extends Utility {
     constructor() {
-        this.collection = 'Users';
+        super('Users');
     }
 
     get(criteria, cb) {

@@ -1,7 +1,7 @@
 let fs = require('fs');
 let async = require('async');
 let _ = require('lodash');
-let Utility = require('../models/utility');
+let Point = new(require('./point'))();
 let utils = require('../helpers/utils.js');
 
 let forEach = (obj, fn) => {
@@ -28,7 +28,7 @@ let Toolbag = class Toolbag {
             limit: 25 // g_limit
         };
 
-        Utility.get(criteria, cb);
+        Point.get(criteria, cb);
     }
     generateCppHeaderFile(data, cb) {
         // Override Config so we get the latest version - this allows us to generate a new C++ header file after making
@@ -522,7 +522,6 @@ let Toolbag = class Toolbag {
             },
             validatePoint = (pointTemplate, callback) => {
                 let criteria = {
-                        collection: 'points',
                         query: {
                             _Name: pointTemplate._Name
                         }
@@ -532,7 +531,7 @@ let Toolbag = class Toolbag {
                         problems: []
                     };
 
-                Utility.getOne(criteria, (err, point) => {
+                Point.getOne(criteria, (err, point) => {
                     if (err) {
                         return callback(err);
                     }

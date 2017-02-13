@@ -2,7 +2,7 @@ let tmp = require('tmp');
 let fs = require('fs');
 let rimraf = require('rimraf');
 
-let Utility = require('../models/utility');
+let Point = new(require('../models/point'))();
 let compiler = require('../helpers/scriptCompiler.js');
 
 let Script = class Script {
@@ -27,11 +27,8 @@ let Script = class Script {
         let fileName = data.fileName.replace(/\.dsl$/i, '');
         let path = data.path;
 
-        Utility.getOne({
-            collection: 'points',
-            query: {
-                _id: upi
-            }
+        Point.getPointById({
+            id: upi
         }, function (err, script) {
             fs.readFile(path + '/' + fileName + '.sym', function (err, sym) {
                 if (err) {
@@ -103,11 +100,8 @@ let Script = class Script {
     read(data, cb) {
         let upi = data.upi;
 
-        Utility.getOne({
-            collection: 'points',
-            query: {
-                _id: upi
-            }
+        Point.getPointById({
+            id: upi
         }, cb);
     }
 

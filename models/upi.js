@@ -2,9 +2,9 @@ let Utility = new(require('../models/utility'))();
 const utils = require('../helpers/utils');
 const upisCollection = utils.CONSTANTS('upis');
 
-let Upi = class Upi {
+let Upi = class Upi extends Utility {
     constructor() {
-        this.collection = upisCollection;
+        super(upisCollection);
     }
 
     getNextUpi(isDevice, cb) {

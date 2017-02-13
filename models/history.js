@@ -4,7 +4,7 @@ let csv = require('fast-csv');
 let _ = require('lodash');
 let fs = require('fs');
 let tmp = require('tmp');
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let ArchiveUtility = new(require('../models/archivetility'))();
 let Utilities = new(require('../models/utilities'))();
 
@@ -52,9 +52,9 @@ Array.prototype.equals = (array) => {
 //     ranges.forEach(formatRange);
 // };
 
-let History = class History {
+let History = class History extends Utility {
     costructor() {
-        this.collection = historyCollection;
+        super(historyCollection);
     }
     buildOps(options) {
         let newOptions = [];
@@ -1833,6 +1833,10 @@ let History = class History {
             collection: this.collection,
             query: query
         }, cb);
+    }
+    getAll(criteria, cb) {
+        criteria.collection = this.collection;
+        Utility.get(criteria, cb);
     }
 };
 

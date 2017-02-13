@@ -1,4 +1,4 @@
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let logger = require('../helpers/logger')(module);
 let ObjectID = require('mongodb').ObjectID;
 let _ = require('lodash');

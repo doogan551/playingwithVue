@@ -1,7 +1,7 @@
 let async = require('async');
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let Reports = require('../models/reports');
 const utils = require('../helpers/utils');
 const schedulesCollection = utils.CONSTANTS('schedulesCollection');
@@ -33,7 +33,7 @@ let Schedule = class Schedule {
         // }
 
         let criteria = {
-            collection: 'Schedules',
+            collection: this.collection,
             query: {
                 upi: data.upi
             }
@@ -47,7 +47,7 @@ let Schedule = class Schedule {
         //     schedules: [] (array of schedule objects)
         // }
         let criteria = {
-                collection: 'Schedules',
+                collection: this.collection,
                 query: {}
             },
             getOldSchedule = function (idata, cb) { // idata...'data' was already taken =/
@@ -125,7 +125,7 @@ let Schedule = class Schedule {
     }
     runSchedule(data, callback) {
         Utility.getOne({
-            collection: 'Schedules',
+            collection: this.collection,
             query: {
                 _id: ObjectID(data._id)
             }

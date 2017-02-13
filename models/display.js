@@ -7,7 +7,7 @@ let pointsCollection = 'points';
 let versionsCollection = 'versions';
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let utils = require('../helpers/utils.js');
 let Config = require('../public/js/lib/config.js');
 
@@ -152,10 +152,10 @@ module.exports = {
                                 sendSingleFrame();
                             } else { //invalid frame
                                 if (frame < 0) {
-                                        frame = 0;
-                                    } else {
-                                        frame = files.length - 1;
-                                    }
+                                    frame = 0;
+                                } else {
+                                    frame = files.length - 1;
+                                }
 
                                 console.log('Displays: Invalid frame (' + oldFrame + ') for', filename, 'sending', frame);
 
@@ -246,7 +246,7 @@ module.exports = {
             }
 
             if (data.upoint !== '{{tab.upi}}') {
-                    Utility.get({
+                Utility.get({
                         collection: versionsCollection,
                         query: {
                             '_id': new ObjectID(data.upoint)
@@ -257,13 +257,12 @@ module.exports = {
                                 upi: docs[0].vid,
                                 displayJson: docs[0]
                             });
-                        } 
-                            return cb('Display not found');
-                        
+                        }
+                        return cb('Display not found');
                     });
-                } else {
-                    return cb('tab.upi sent');
-                }
+            } else {
+                return cb('tab.upi sent');
+            }
         });
     },
     getName: function (data, cb) {
@@ -375,15 +374,14 @@ module.exports = {
                         delete oldVersion._id;
                         delete oldVersion.version;
                         Utility.save({
-                                collection: versionsCollection,
-                                saveObj: oldVersion
-                            }, function (saveNewErr, saveNewRes) {
-                                if (saveNewErr) {
+                            collection: versionsCollection,
+                            saveObj: oldVersion
+                        }, function (saveNewErr, saveNewRes) {
+                            if (saveNewErr) {
                                     return cb(saveNewErr);
-                                } 
-                                    return cb(null, 'Saved and Published');
-                                
-                            });
+                                }
+                            return cb(null, 'Saved and Published');
+                        });
                     });
                 });
         });

@@ -1,8 +1,8 @@
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 
-let UserGroups = class UserGroups {
+let UserGroups = class UserGroups extends Utility {
     constructor() {
-        this.collection = 'User Groups';
+        super('User Groups');
     }
     getGroupsWithUser(userid, cb) {
         let query = {};

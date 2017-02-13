@@ -1,5 +1,5 @@
 let bcrypt = require('bcrypt-nodejs');
-let Utility = require('../models/utility');
+let User = new(require('./user'))();
 let utils = require('../helpers/utils');
 let ObjectID = require('mongodb').ObjectID;
 
@@ -10,7 +10,6 @@ let Workspace = class Workspace {
         let id = new ObjectID(data.userid);
 
         let criteria = {
-            collection: 'Users',
             query: {
                 _id: id
             },
@@ -21,7 +20,7 @@ let Workspace = class Workspace {
             }
         };
 
-        Utility.update(criteria, cb);
+        User.update(criteria, cb);
     }
 
     resetPassword(data, cb) {
@@ -30,7 +29,6 @@ let Workspace = class Workspace {
         let newPass = utils.encrypt(data.newPass);
 
         let criteria = {
-            collection: 'Users',
             query: {
                 username: {
                     '$regex': new RegExp(['^', username, '$'].join(''), 'i')
@@ -38,7 +36,7 @@ let Workspace = class Workspace {
             }
         };
 
-        Utility.getOne(criteria, function (err, user) {
+        User.getOne(criteria, function (err, user) {
             if (!user) {
                 return cb('User not found');
             }
@@ -54,7 +52,6 @@ let Workspace = class Workspace {
                     return cb('Current password and old password do not match');
                 }
                 criteria = {
-                    collection: 'Users',
                     query: {
                         username: {
                             '$regex': new RegExp(['^', username, '$'].join(''), 'i')
@@ -67,7 +64,7 @@ let Workspace = class Workspace {
                         }
                     }
                 };
-                Utility.update(criteria, cb);
+                User.update(criteria, cb);
             });
         });
     }

@@ -1,4 +1,4 @@
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 
 let GPL = class GPL {
     getGplInfo(data, cb) {

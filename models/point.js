@@ -1,4 +1,4 @@
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let Config = require('../public/js/lib/config.js');
 let async = require('async');
 let ObjectID = require('mongodb').ObjectID;
@@ -16,15 +16,12 @@ let ZMQ = new(require('../helpers/zmq'))();
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
-let Point = class Point {
+let Point = class Point extends Utility {
     constructor() {
-        this.collection = 'points';
+        super('points');
     }
-    updateOne(data, cb) {
-        let criteria = {
-            collection: this.collection
-
-        };
+    updateOne(criteria, cb) {
+        criteria.collection = this.collection;
         Utility.update(criteria, cb);
     }
     getPointById(data, cb) {
@@ -60,6 +57,11 @@ let Point = class Point {
                 return cb('Permission Denied', null, null);
             });
         });
+    }
+
+    getAll(criteria, cb) {
+        criteria.collection = this.collection;
+        Utility.get(criteria, cb);
     }
 
     newPoint(data, cb) {

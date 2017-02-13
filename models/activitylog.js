@@ -4,10 +4,9 @@ const utils = require('../helpers/utils');
 const activityLogCollection = utils.CONSTANTS('activityLogCollection');
 const Enums = require('../public/js/lib/config').Enums;
 
-const Model = require('../models/model');
 const async = require('async');
 
-let ActivityLog = class ActivityLog extends Model {
+let ActivityLog = class ActivityLog {
     constructor() {
         super();
         this.collection = activityLogCollection;

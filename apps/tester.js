@@ -1,18 +1,25 @@
-class Test {
+class Parent {
+    constructor(coll) {
+        this._coll = coll;
+    }
+    set coll(coll) {
+        this._coll = coll;
+    }
+    get coll() {
+        return this._coll;
+    }
+}
 
-    f1() {
-        let state;
-        let nums = [1, 2, 3];
-        let tester = function (num) {
-            console.log(state);
-            return false;
-        };
-        for (var i = 0; i < 5; i++) {
-            state = i;
-            nums.filter(tester);
-        }
+class Test extends Parent {
+    constructor() {
+        super('test');
+        this.coll = 'as';
+    }
+
+    test() {
+        console.log(this.coll);
     }
 }
 
 let test = new Test();
-test.f1();
+test.test();

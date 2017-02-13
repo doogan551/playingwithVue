@@ -1,4 +1,4 @@
-let Utility = require('../models/utility');
+let Point = new(require('./point'))();
 
 let TrendPlots = class TrendPlots {
 
@@ -16,7 +16,6 @@ let TrendPlots = class TrendPlots {
                     $lt: new Date().getTime() / 1000
                 }
             },
-            collection: 'historydata',
             fields: {
                 _id: 0,
                 Value: 1,
@@ -24,7 +23,7 @@ let TrendPlots = class TrendPlots {
             }
         };
 
-        Utility.get(criteria, (err, results) => {
+        Point.getAll(criteria, (err, results) => {
             let c = results.length;
             let ret = [];
             let row;
@@ -54,7 +53,6 @@ let TrendPlots = class TrendPlots {
     getData(list, cb) {
         if (list) {
             let criteria = {
-                collection: 'historydata',
                 query: {
                     _id: {
                         $in: list
@@ -69,7 +67,7 @@ let TrendPlots = class TrendPlots {
                 }
             };
 
-            Utility.get(criteria, cb);
+            Point.getAll(criteria, cb);
         } else {
             cb(null, []);
         }

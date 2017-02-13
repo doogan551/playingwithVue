@@ -1,6 +1,6 @@
 let reg = require('regression');
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let rtdTables = require('../lib/rtdTables');
 
 let CurveFit = class CurveFit {

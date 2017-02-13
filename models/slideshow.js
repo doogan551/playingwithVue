@@ -1,12 +1,11 @@
-let Utility = require('../models/utility');
+let Point = new(require('./point'))();
 
 let Slideshow = class Slideshow {
 
     get(data, cb) {
         let upi = parseInt(data.id, 10);
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: upi
             },

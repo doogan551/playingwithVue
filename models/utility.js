@@ -3,7 +3,12 @@ let db = require('../helpers/db');
 let utils = require('../helpers/utils');
 
 let Utility = class Utility {
-
+    constructor(collection) {
+        this.collection = null;
+        if (collection) {
+            this.collection = collection;
+        }
+    }
     get(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
         let coll = criteria.collection;
@@ -22,6 +27,10 @@ let Utility = class Utility {
         // console.log(query, coll);
         collection = db.get().collection(coll);
         collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
+    }
+
+    getAll(criteria, cb) {
+        this.get(criteria, cb);
     }
 
     getOne(criteria, cb) {
@@ -73,6 +82,13 @@ let Utility = class Utility {
         collection = db.get().collection(coll);
 
         collection.update(query, updateObj, options, cb);
+    }
+
+    updateAll(criteria, cb) {
+        criteria.options = {
+            multi: true
+        };
+        this.update(criteria, cb);
     }
 
     save(criteria, cb) {
@@ -210,7 +226,7 @@ let Utility = class Utility {
 
     getCursor(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let limit = (!!criteria.limit) ? criteria.limit : 0;
         let fields = (!!criteria.fields) ? criteria.fields : {};
         let sort = (!!criteria.sort) ? criteria.sort : {};

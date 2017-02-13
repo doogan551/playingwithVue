@@ -1,6 +1,6 @@
 let _ = require('lodash');
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let System = new(require('./system'))();
 
 let validPortProtocols = [1, 4];

@@ -1,6 +1,5 @@
 let moment = require('moment');
 
-let Utility = require('../models/utility');
 let History = require('../models/history');
 
 let TrendData = class TrendData {
@@ -38,7 +37,6 @@ let TrendData = class TrendData {
         }
         let criteria = {
             query: query,
-            collection: 'historydata',
             limit: limit,
             sort: {
                 timestamp: direction * -1
@@ -85,7 +83,7 @@ let TrendData = class TrendData {
             return results;
         };
 
-        Utility.get(criteria, (err, mongoResults) => {
+        History.getAll(criteria, (err, mongoResults) => {
             let stopAt = 0;
             mongoResults.sort(compareTS);
             if (direction > 1) {
@@ -133,11 +131,10 @@ let TrendData = class TrendData {
         }
 
         let criteria = {
-            collection: 'historydata',
             query: query
         };
 
-        Utility.aggregate(criteria, (err, mongoResults) => {
+        History.aggregate(criteria, (err, mongoResults) => {
             if (!!mongoResults.length) {
                 mongoResults = mongoResults[0];
             } else {

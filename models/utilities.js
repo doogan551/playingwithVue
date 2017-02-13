@@ -4,26 +4,28 @@ let pug = require('pug');
 let Utility = require('./utility');
 let System = require('./system');
 
-let getRates = (cb) => {
-    let criteria = {
-        collection: 'Utilities',
-        query: {
-            'Point Type.Value': 'Utility'
-        },
-        fields: {
-            'Point Type': 0,
-            _id: 0
-        },
-        sort: {
-            _id: 1
-        }
-    };
-
-    Utility.get(criteria, cb);
-};
 
 let Utilities = class Utilities {
+    constructor() {
+        super('Utilities');
+    }
+    getRates(cb) {
+        let criteria = {
+            collection: this.collection,
+            query: {
+                'Point Type.Value': 'Utility'
+            },
+            fields: {
+                'Point Type': 0,
+                _id: 0
+            },
+            sort: {
+                _id: 1
+            }
+        };
 
+        Utility.get(criteria, cb);
+    }
     index(data, cb) {
         let utilities;
         let html;
@@ -47,7 +49,7 @@ let Utilities = class Utilities {
             });
         };
         let callGetRates = () => {
-            getRates((err, rawUtilities) => {
+            this.getRates((err, rawUtilities) => {
                 utilities = err || rawUtilities;
                 complete();
             });
@@ -71,7 +73,7 @@ let Utilities = class Utilities {
             query: {
                 'UtilityName': data.UtilityName
             },
-            collection: 'Utilities'
+            collection: this.collection
         };
 
         Utility.getOne(criteria, cb);
@@ -104,7 +106,7 @@ let Utilities = class Utilities {
         }
 
         Utility.update({
-            collection: 'Utilities',
+            collection: this.collection,
             query: {
                 'utilityName': utility.utilityName
             },
@@ -147,7 +149,7 @@ let Utilities = class Utilities {
 
     removeUtility(data, cb) {
         let criteria = {
-            collection: 'Utilities',
+            collection: this.collection,
             query: {
                 utilityName: data.utilityName
             }

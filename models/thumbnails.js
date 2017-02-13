@@ -1,12 +1,11 @@
-let Utility = require('../models/utility');
+let Point = new(require('./point'))();
 let fs = require('fs');
 
 let Thumbnails = class Thumbnails {
     batch(data, cb) {
         let locallets = {};
 
-        Utility.get({
-            collection: 'points',
+        Point.getAll({
             query: {
                 _pStatus: 0,
                 $or: [{
@@ -55,8 +54,7 @@ let Thumbnails = class Thumbnails {
     one(data, cb) {
         let locallets = {};
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: parseInt(data.id, 10)
             },

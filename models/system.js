@@ -1,20 +1,24 @@
 let async = require('async');
 let ObjectId = require('mongodb').ObjectID;
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let Config = require('../public/js/lib/config');
 
 let ActivityLog = new(require('./activitylog'))();
+let Alarm = new(require('./alarm'))();
+let Point = new(require('./point'))();
 
-let System = class System {
-
+let System = class System extends Utility {
+    constructor() {
+        super('SystemInfo');
+    }
 
     getSeason(data, cb) {
         let criteria = {
             query: {
                 Name: 'Preferences'
             },
-            collection: 'SystemInfo',
+            collection: this.collection,
             limit: 1,
             fields: {
                 _id: 0,
@@ -40,7 +44,7 @@ let System = class System {
                     'Current Season': season
                 }
             },
-            collection: 'SystemInfo',
+            collection: this.collection,
             fields: {
                 _id: 0,
                 'Current Season': 1
@@ -61,7 +65,7 @@ let System = class System {
             query: {
                 Name: name
             },
-            collection: 'SystemInfo'
+            collection: this.collection
         };
 
         Utility.getOne(criteria, cb);
@@ -103,7 +107,7 @@ let System = class System {
 
         let criteria = {
             query: searchCriteria,
-            collection: 'SystemInfo',
+            collection: this.collection,
             updateObj: updateCriteria
         };
 
@@ -125,7 +129,7 @@ let System = class System {
                     $in: ['Quality Codes', 'Preferences']
                 }
             },
-            collection: 'SystemInfo'
+            collection: this.collection
         };
 
         Utility.get(criteria, function (err, result) {
@@ -189,7 +193,7 @@ let System = class System {
 
         let criteria = {
             query: codesSearch,
-            collection: 'SystemInfo',
+            collection: this.collection,
             updateObj: codesUpdate
         };
 
@@ -200,7 +204,7 @@ let System = class System {
 
             criteria = {
                 query: maskSearch,
-                collection: 'SystemInfo',
+                collection: this.collection,
                 updateObj: prefUpdate
             };
             Utility.update(criteria, function (err, result) {
@@ -243,7 +247,7 @@ let System = class System {
 
         let criteria = {
             query: searchCriteria,
-            collection: 'SystemInfo',
+            collection: this.collection,
             updateObj: updateCriteria
         };
 
@@ -267,7 +271,6 @@ let System = class System {
         let updateNetworks = function (networks, callback) {
             async.eachSeries(networks, function (network, acb) {
                 let criteria = {
-                    collection: 'points',
                     query: {},
                     updateObj: {},
                     options: {
@@ -314,7 +317,7 @@ let System = class System {
                 async.eachSeries(updates, function (update, acb2) {
                     criteria.query = update.query;
                     criteria.updateObj = update.updateObj;
-                    Utility.update(criteria, acb2);
+                    Point.update(criteria, acb2);
                 }, acb);
             }, callback);
         };
@@ -344,17 +347,16 @@ let System = class System {
         let criteria = {
             query: searchCriteria,
             updateObj: updateCriteria,
-            collection: 'SystemInfo'
+            collection: this.collection
         };
         Utility.getOne({
-            collection: 'SystemInfo',
+            collection: this.collection,
             query: {
                 Name: 'Preferences'
             }
         }, function (err, _data) {
             let centralUpi = _data['Central Device UPI'];
-            Utility.update({
-                collection: 'points',
+            Point.update({
                 query: {
                     _id: centralUpi
                 },
@@ -386,20 +388,18 @@ let System = class System {
         let ackStatus = false;
 
         let criteria = {
-            collection: 'Alarms',
             query: {
                 ackStatus: 1
             },
             fields: {
                 _id: 1
-            },
-            limit: 1
+            }
         };
-        Utility.get(criteria, function (err, alarm) {
+        Alarm.getOne(criteria, function (err, alarm) {
             if (err) {
                 return cb(err);
             }
-            ackStatus = (alarm.length > 0) ? true : false;
+            ackStatus = (!!alarm) ? true : false;
             return cb(null, {
                 ackStatus: ackStatus,
                 serverStatus: true
@@ -412,7 +412,7 @@ let System = class System {
         };
         let criteria = {
             query: searchCriteria,
-            collection: 'SystemInfo'
+            collection: this.collection
         };
         Utility.getOne(criteria, function (err, data) {
             if (err) {
@@ -436,7 +436,7 @@ let System = class System {
 
         let criteria = {
             query: codesSearch,
-            collection: 'SystemInfo',
+            collection: this.collection,
             updateObj: colorsUpdate
         };
 
@@ -529,8 +529,7 @@ let System = class System {
             Utility.get({
                 collection: 'AlarmDefs'
             }, function (err, alarmDefs) {
-                Utility.iterateCursor({
-                    collection: 'points',
+                Point.iterateCursor({
                     query: {
                         'Alarm Messages.msgId': id
                     }
@@ -540,8 +539,7 @@ let System = class System {
                             msg.msgId = findAlarmDef(msg.msgType, alarmDefs);
                         }
                     });
-                    Utility.update({
-                        collection: 'points',
+                    Point.update({
                         query: {
                             _id: point._id
                         },
@@ -584,7 +582,7 @@ let System = class System {
             let criteria = {
                 query: search,
                 fields: fields,
-                collection: 'SystemInfo'
+                collection: this.collection
             };
 
             Utility.getOne(criteria, function (err, _data) {
@@ -622,11 +620,10 @@ let System = class System {
             };
             let criteria = {
                 query: search,
-                fields: fields,
-                collection: 'points'
+                fields: fields
             };
 
-            Utility.get(criteria, function (err, _data) {
+            Point.getAll(criteria, function (err, _data) {
                 for (let i = 0, len = _data.length, point; i < len; i++) {
                     point = _data[i];
                     weatherPointData[upiMatrix[point._id]] = point;
@@ -670,7 +667,7 @@ let System = class System {
         let criteria = {
             query: search,
             updateObj: update,
-            collection: 'SystemInfo'
+            collection: this.collection
         };
 
         Utility.update(criteria, cb);
@@ -681,7 +678,7 @@ let System = class System {
             infoscanjs: pjson.version
         };
         let criteria = {
-            collection: 'SystemInfo',
+            collection: this.collection,
             query: {
                 Name: 'Preferences'
             }

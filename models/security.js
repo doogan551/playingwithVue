@@ -1,6 +1,6 @@
 let async = require('async');
 
-let Utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let User = require('../models/user');
 let config = require('../public/js/lib/config.js');
 let actLogsEnums = config.Enums['Activity Logs'];
