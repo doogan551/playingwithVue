@@ -385,6 +385,14 @@ let Alarm = class Alarm {
         });
     }
 
+    getAlarm(query, callback) {
+        let criteria = {
+            collection: this.collection,
+            query: query
+        };
+        Utility.getOne(criteria, callback);
+    }
+
 };
 
 module.exports = Alarm;

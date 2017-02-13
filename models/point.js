@@ -10,12 +10,23 @@ let History = new(require('./history'))();
 let Schedule = new(require('./schedule'))();
 let Security = new(require('./security'))();
 let Script = new(require('./script'))();
+let System = new(require('./system'))();
 let Upi = new(require('../helpers/upi'))();
 let ZMQ = new(require('../helpers/zmq'))();
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
 let Point = class Point {
+    constructor() {
+        this.collection = 'points';
+    }
+    updateOne(data, cb) {
+        let criteria = {
+            collection: this.collection
+
+        };
+        Utility.update(criteria, cb);
+    }
     getPointById(data, cb) {
         let searchCriteria = {};
         let upi = parseInt(data.id, 10);
@@ -27,7 +38,7 @@ let Point = class Point {
         Security.Utility.getPermissions(data.user, (err, permissions) => {
             Utility.get({
                 query: searchCriteria,
-                collection: 'points',
+                collection: this.collection,
                 limit: 1
             }, (err, points) => {
                 if (err) {
@@ -76,7 +87,7 @@ let Point = class Point {
             Utility.get({
                 query: query,
                 fields: fields,
-                collection: 'points',
+                collection: this.collection,
                 limit: 1
             }, (err, points) => {
                 if (err) {
@@ -239,7 +250,7 @@ let Point = class Point {
 
 
         let criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: buildQuery(),
             sort: sort,
             _limit: limit,
@@ -268,7 +279,7 @@ let Point = class Point {
             }
 
             let criteria = {
-                    collection: 'points',
+                    collection: this.collection,
                     field: item.property + '.Value',
                     query: {}
                 },
@@ -341,7 +352,7 @@ let Point = class Point {
         // }
 
         let criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: {
                 $and: []
             },
@@ -463,7 +474,7 @@ let Point = class Point {
         let upi = parseInt(data.upi, 10);
 
         let criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: {
                 _id: upi
             }
@@ -500,7 +511,7 @@ let Point = class Point {
                 });
             }, (err) => {
                 criteria = {
-                    collection: 'points',
+                    collection: this.collection,
                     query: {
                         'Point Refs.PointInst': upi,
                         _pStatus: 0
@@ -541,7 +552,7 @@ let Point = class Point {
                                         depPRCB(null);
                                     } else {
                                         criteria = {
-                                            collection: 'points',
+                                            collection: this.collection,
                                             query: {
                                                 _id: dependency._parentUpi
                                             }
@@ -600,7 +611,7 @@ let Point = class Point {
             let deviceUpi = 0;
             if (upi !== 0) {
                 criteria = {
-                    collection: 'points',
+                    collection: this.collection,
                     query: {
                         _id: upi
                     },
@@ -631,7 +642,7 @@ let Point = class Point {
         let findDevicePoint = (upi, callback) => {
             if (upi !== 0) {
                 criteria = {
-                    collection: 'points',
+                    collection: this.collection,
                     query: {
                         _id: upi
                     },
@@ -650,7 +661,7 @@ let Point = class Point {
         let upis = data.upis;
         async.map(upis, (upi, callback) => {
             let criteria = {
-                collection: 'points',
+                collection: this.collection,
                 query: {
                     _id: upi * 1,
                     _pStatus: 0
@@ -698,7 +709,7 @@ let Point = class Point {
             buildName(name1, name2, name3, name4);
 
             criteria = {
-                collection: 'points',
+                collection: this.collection,
                 query: {
                     _Name: _Name
                 }
@@ -713,13 +724,7 @@ let Point = class Point {
                     return callback('Name already exists.');
                 }
 
-                criteria = {
-                    collection: 'SystemInfo',
-                    query: {
-                        Name: 'Preferences'
-                    }
-                };
-                Utility.getOne(criteria, (err, sysInfo) => {
+                System.getSystemInfoByName('Preferences', (err, sysInfo) => {
                     Upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
                         if (err) {
                             return callback(err);
@@ -732,7 +737,7 @@ let Point = class Point {
 
                         if (targetUpi && targetUpi !== 0) {
                             criteria = {
-                                collection: 'points',
+                                collection: this.collection,
                                 query: {
                                     _id: targetUpi
                                 }
@@ -827,14 +832,7 @@ let Point = class Point {
         };
 
         let setIpPort = (point, cb) => {
-            let criteria = {
-                collection: 'SystemInfo',
-                query: {
-                    Name: 'Preferences'
-                }
-            };
-
-            Utility.getOne(criteria, (err, prefs) => {
+            System.getSystemInfoByName('Preferences', (err, prefs) => {
                 let ipPort = prefs['IP Port'];
                 if (point['Point Type'].Value === 'Device') {
                     point['Ethernet IP Port'].Value = ipPort;
@@ -892,17 +890,7 @@ let Point = class Point {
 
                     template._parentUpi = parentUpi;
 
-                    criteria = {
-                        collection: 'AlarmDefs',
-                        query: {
-                            isSystemMessage: true
-                        },
-                        fields: {
-                            msgType: 1
-                        }
-                    };
-
-                    Utility.get(criteria, (err, alarmDefs) => {
+                    System.getSystemAlarms((err, alarmDefs) => {
                         if (err) {
                             return callback(err);
                         }
@@ -916,23 +904,13 @@ let Point = class Point {
                             }
                         }
 
-                        criteria = {
-                            collection: 'SystemInfo',
-                            query: {
-                                Name: 'Preferences'
-                            },
-                            fields: {
-                                'Quality Code Default Mask': 1,
-                                _id: 0
-                            }
-                        };
 
-                        Utility.getOne(criteria, (err, defaultQualityCodeMask) => {
+                        System.getSystemInfoByName('Preferences', (err, sysInfo) => {
                             if (err) {
                                 return callback(err);
                             }
                             if (template['Quality Code Enable'] !== undefined) {
-                                template['Quality Code Enable'].Value = defaultQualityCodeMask['Quality Code Default Mask'];
+                                template['Quality Code Enable'].Value = sysInfo['Quality Code Default Mask'];
                             }
                             addTemplateToDB(template, callback);
                         });
@@ -960,7 +938,7 @@ let Point = class Point {
 
         let addTemplateToDB = (template, callback) => {
             criteria = {
-                collection: 'points',
+                collection: this.collection,
                 insertObj: template
             };
             Utility.insert(criteria, (err) => {
@@ -985,7 +963,7 @@ let Point = class Point {
         };
 
         let criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: searchCriteria,
             fields: filterProps
         };
@@ -1015,7 +993,7 @@ let Point = class Point {
                 'Point Refs': 1
             };
             let criteria = {
-                collection: 'points',
+                collection: this.collection,
                 query: {
                     'Instance.Value': parseInt(data.upi, 10),
                     'Point Type.Value': 'Remote Unit',
@@ -1055,7 +1033,7 @@ let Point = class Point {
         };
 
         criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: firstSearch,
             fields: {
                 Name: 1,
@@ -1083,7 +1061,7 @@ let Point = class Point {
                 thirdSearch._id = (displays.length > 0) ? displays[0]._id : 0;
                 if (thirdSearch._id !== 0) {
                     criteria = {
-                        collection: 'points',
+                        collection: this.collection,
                         query: thirdSearch,
                         fields: {
                             _id: 1
@@ -1116,7 +1094,7 @@ let Point = class Point {
         let doSecondSearch = (targetPoint, callback) => {
             secondSearch['Point Refs.Value'] = targetPoint._id;
             criteria = {
-                collection: 'points',
+                collection: this.collection,
                 query: secondSearch,
                 fields: {
                     Name: 1
@@ -1142,7 +1120,7 @@ let Point = class Point {
         searchCriteria._id = parseInt(upi, 10);
 
         let criteria = {
-            collection: 'points',
+            collection: this.collection,
             query: searchCriteria,
             fields: filterProps
         };
@@ -1180,7 +1158,7 @@ let Point = class Point {
         // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
         Utility.getOne({
-            collection: 'points',
+            collection: this.collection,
             query: {
                 _id: newPoint._id
             },
@@ -1924,7 +1902,7 @@ let Point = class Point {
 
                     Security.updSecurity(newPoint, (err) => {
                         Utility.findAndModify({
-                            collection: 'points',
+                            collection: this.collection,
                             query: {
                                 _id: newPoint._id
                             },
@@ -2067,7 +2045,7 @@ let Point = class Point {
                 }
 
                 Utility.update({
-                    collection: 'points',
+                    collection: this.collection,
                     query: {
                         _id: {
                             $in: upis
@@ -2090,7 +2068,7 @@ let Point = class Point {
     updateModel(updateModelType, newPoint, callback) {
         if (!!updateModelType) {
             let criteria = {
-                collection: 'points',
+                collection: this.collection,
                 query: {
                     'Point Refs.Value': newPoint._id
                 }
@@ -2105,7 +2083,7 @@ let Point = class Point {
                     point: doc
                 });
                 Utility.update({
-                    collection: 'points',
+                    collection: this.collection,
                     query: {
                         _id: doc._id
                     },
@@ -2390,7 +2368,7 @@ let Point = class Point {
                     case 'Schedule':
                     case 'Sequence':
                         Utility.update({
-                            collection: 'points',
+                            collection: this.collection,
                             query: {
                                 _parentUpi: point._id
                             },
@@ -2757,7 +2735,6 @@ let Point = class Point {
         return callback(signalTOD);
     }
 
-
     //updateSchedules(io), updateScheduleEntries
     addToDevices(scheduleEntry, devices, oldPoint) {
         let devInst = Config.Utility.getPropertyObject('Control Point', scheduleEntry).DevInst;
@@ -2860,6 +2837,51 @@ let Point = class Point {
                 }
             });
         });
+    }
+
+    ////////////////////////////////////////////
+    // Gets remote units attached to a device //
+    ////////////////////////////////////////////
+    getRemoteUnits(data, cb) {
+        let upi = parseInt(data.deviceUpi, 10);
+
+        Utility.get({
+            collection: this.collection,
+            query: {
+                'Point Type.Value': 'Remote Unit',
+                'Point Refs': {
+                    $elemMatch: {
+                        'Value': upi,
+                        'PropertyName': 'Device Point'
+                    }
+                }
+            }
+        }, cb);
+    }
+
+    getMeters(data, cb) {
+        let upis = data.upis;
+
+        if (!(upis instanceof Array)) {
+            upis = JSON.parse(upis);
+        }
+        upis = upis.map(function (upi) {
+            return parseInt(upi, 10);
+        });
+
+        let criteria = {
+            query: {
+                _id: {
+                    $in: upis
+                }
+            },
+            fields: {
+                Name: 1
+            },
+            collection: this.collection
+        };
+
+        Utility.get(criteria, cb);
     }
 };
 

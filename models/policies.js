@@ -4,6 +4,7 @@ let ObjectID = require('mongodb').ObjectID;
 let _ = require('lodash');
 let moment = require('moment');
 let notifications = require('../models/notifications');
+let Point = new(require('./point'))();
 
 
 let Policies = class Policies {
@@ -134,7 +135,6 @@ let Policies = class Policies {
                 return cb(err);
             }
             let criteria = {
-                collection: 'points',
                 query: {
                     'Notify Policies': data._id.toString()
                 },
@@ -144,7 +144,7 @@ let Policies = class Policies {
                     }
                 }
             };
-            Utility.update(criteria, cb);
+            Point.updateOne(criteria, cb);
         };
         Utility.remove(criteria, updatePoints);
     }

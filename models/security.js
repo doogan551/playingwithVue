@@ -1876,7 +1876,7 @@ let Points = class Points {
 let Util = class Util {
 
     getPermissions(user, cb) {
-        if (!!user['System Admin'].Value) {
+        if (!!user['System Admin'].Value || !user) {
             return cb(null, true);
         }
         let userId = ObjectID(user._id);

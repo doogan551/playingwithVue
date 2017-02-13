@@ -4,13 +4,14 @@ let router = express.Router();
 let _ = require('lodash');
 let utils = require('../helpers/utils');
 let History = new(require('../models/history'))();
+let Point = new(require('../models/point'))();
 
 // NOT CHECKED
 router.post('/getMeters', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    History.getMeters(data, function (err, meters) {
+    Point.getMeters(data, function (err, meters) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

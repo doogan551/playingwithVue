@@ -1,11 +1,13 @@
-let utility = require('../models/utility');
+let Utility = new(require('../models/utility'))();
 let async = require('async');
 let config = require('config');
 let logger = require('../helpers/logger')(module);
 let Config = require('../public/js/lib/config.js');
 let ObjectID = require('mongodb').ObjectID;
-let Notifier = require('../models/notifierutility');
-let alarmUtility = new(require('../models/alarm.js'))();
+let Notifier = new(require('../models/notifierutility'))();
+let User = new(require('./user'))();
+let UserGroups = new(require('./userGroup'))();
+let Alarm = new(require('./alarm'))();
 let serverName = require('os').hostname();
 
 let notifier = new Notifier();
@@ -123,15 +125,11 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
     });
 
     function getUser(cb) {
-        let data = {},
-            criteria = {
-                collection: 'Users',
-                query: {
-                    'Contact Info.Value.Value': relayMessage.msg_from
-                }
-            };
+        let data = {};
 
-        utility.getOne(criteria, function (err, user) {
+        User.getUser({
+            'Contact Info.Value.Value': relayMessage.msg_from
+        }, function (err, user) {
             if (err) {
                 return cb(err);
             }
@@ -151,20 +149,15 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
 
         // Our alarm id is in the email body sandwiched between 'handlebar' characters
         let text = relayMessage.content.text,
-            criteria = {
-                collection: 'Alarms'
-            },
             alarmId;
 
         alarmId = text && text.split('{')[1];
         alarmId = alarmId && alarmId.split('}')[0];
 
         if (alarmId) {
-            criteria.query = {
+            Alarm.getAlarm({
                 _id: ObjectID(alarmId)
-            };
-
-            utility.getOne(criteria, function (err, alarm) {
+            }, function (err, alarm) {
                 if (err) {
                     return cb(err);
                 }
@@ -195,11 +188,7 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
             return cb(null, data);
         }
 
-        let criteria = {
-            collection: 'User Groups'
-        };
-
-        utility.get(criteria, function (err, groups) {
+        UserGroups.getGroups(function (err, groups) {
             if (err) {
                 return cb(err);
             }
@@ -251,7 +240,7 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
             username: data.user.username
         };
 
-        alarmUtility.acknowledgeAlarm(criteria, function (err, result) {
+        Alarm.acknowledgeAlarm(criteria, function (err, result) {
             data.result = result;
             cb(err, data);
         });
@@ -296,7 +285,7 @@ let Inbound = class Inbound {
                     }
                 };
 
-            utility.getOne(criteria, function (err, notifyLog) {
+            Utility.getOne(criteria, function (err, notifyLog) {
                 if (err) {
                     return cb(err);
                 }
@@ -314,14 +303,9 @@ let Inbound = class Inbound {
                 return cb(null, info);
             }
 
-            let criteria = {
-                collection: 'Alarms',
-                query: {
-                    _id: ObjectID(info.notifyLog.alarmId)
-                }
-            };
-
-            utility.getOne(criteria, function (err, alarm) {
+            Alarm.getAlarm({
+                _id: ObjectID(info.notifyLog.alarmId)
+            }, function (err, alarm) {
                 if (err) {
                     return cb(err);
                 }
@@ -421,7 +405,7 @@ let Inbound = class Inbound {
                         username: info.notifyLog.username
                     };
 
-                    alarmUtility.acknowledgeAlarm(criteria, function (err) {
+                    Alarm.acknowledgeAlarm(criteria, function (err) {
                         if (err) {
                             xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
                         } else {
@@ -497,7 +481,7 @@ let Inbound = class Inbound {
                     }
                 }
             };
-            utility.update(criteria, function (err) {
+            Utility.update(criteria, function (err) {
                 if (err) {
                     logger.error('/twilio/voice/alarms/status', err);
                 }

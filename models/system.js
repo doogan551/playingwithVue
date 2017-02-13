@@ -3,7 +3,6 @@ let ObjectId = require('mongodb').ObjectID;
 
 let Utility = require('../models/utility');
 let Config = require('../public/js/lib/config');
-let utils = require('../helpers/utils');
 
 let ActivityLog = new(require('./activitylog'))();
 
@@ -447,6 +446,22 @@ let System = class System {
         let searchCriteria = {};
         let criteria = {
             query: searchCriteria,
+            collection: 'AlarmDefs'
+        };
+        Utility.get(criteria, function (err, data) {
+            if (err) {
+                return cb(err.message);
+            }
+
+            let entries = data;
+            return cb(null, entries);
+        });
+    }
+    getSystemAlarms(cb) {
+        let criteria = {
+            query: {
+                isSystemMessage: true
+            },
             collection: 'AlarmDefs'
         };
         Utility.get(criteria, function (err, data) {

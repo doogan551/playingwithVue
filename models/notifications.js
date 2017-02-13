@@ -1,22 +1,23 @@
 let async = require('async'),
-    utility = require('../models/utility'),
-    utils = require('../helpers/utils'),
-    calendar = require('../models/calendar'),
     config = require('config'),
     Config = require('../public/js/lib/config.js'),
     appConfig = require('config'),
     CronJob = require('./cronjob'),
     ObjectID = require('mongodb').ObjectID,
     logger = require('../helpers/logger')(module),
-    Notifier = require('../models/notifierutility');
+    Utility = new(require('./utility'))(),
+    Calendar = new(require('./calendar'))(),
+    Notifier = new(require('./notifierutility'))(),
+    User = new(require('./user'))(),
+    UserGroup = new(require('./usergroup'))(),
+    Point = new(require('./point'))(),
+    Alarm = new(require('./alarm'))();
 
 let siteConfig = config.get('Infoscan'),
     siteDomain = siteConfig.domains[0],
     alarmsEmailAccount = siteConfig.email.accounts.alarms;
 
 let notifier = new Notifier();
-
-let alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
 let enums = Config.Enums,
     revEnums = Config.revEnums,
@@ -72,7 +73,7 @@ let dbAlarmQueueLocked = false,
                 let query = {
                     year: new Date().getFullYear()
                 };
-                calendar.getYear(query, function (err, result) {
+                Calendar.getYear(query, function (err, result) {
                     if (!!err) {
                         return cb(err);
                     }
@@ -101,7 +102,7 @@ let dbAlarmQueueLocked = false,
                 let query = {
                     collection: 'NotifyScheduledTasks'
                 };
-                utility.get(query, cb);
+                Utility.get(query, cb);
             },
             dbUpdate: function (data, cb) {
                 actions.utility.log('actions.scheduledTasks.dbUpdate');
@@ -120,7 +121,7 @@ let dbAlarmQueueLocked = false,
                             },
                             updateObj: task
                         };
-                        utility.update(criteria, doUpdateCB);
+                        Utility.update(criteria, doUpdateCB);
                     },
                     deleteTasks = function (deleteCB) {
                         actions.utility.log('\tDeleting ' + deleteIds.length + ' task(s)');
@@ -132,7 +133,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        utility.remove(criteria, deleteCB);
+                        Utility.remove(criteria, deleteCB);
                     };
 
                 data.scheduledTasks.forEach(function (task) {
@@ -252,13 +253,13 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     };
-                utility.get(criteria, cb);
+                Utility.get(criteria, cb);
             },
             dbGetAll: function (cb) {
                 let criteria = {
                     collection: 'NotifyPolicies'
                 };
-                utility.get(criteria, cb);
+                Utility.get(criteria, cb);
             },
             dbUpdateConfigs: function (data, cb) {
                 let numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
@@ -289,7 +290,7 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     };
-                    utility.update(criteria, doUpdateCB);
+                    Utility.update(criteria, doUpdateCB);
                 }
             },
             dbUpdateThreads: function (data, cb) {
@@ -321,7 +322,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        utility.update(criteria, doUpdateCB);
+                        Utility.update(criteria, doUpdateCB);
                     },
                     doInsert = function (threads, policyId, doInsertCB) {
                         let criteria = {
@@ -337,7 +338,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        utility.update(criteria, doInsertCB);
+                        Utility.update(criteria, doInsertCB);
                     },
                     doDelete = function (deleteIds, policyId, doDeleteCB) {
                         let criteria = {
@@ -355,7 +356,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        utility.update(criteria, doDeleteCB);
+                        Utility.update(criteria, doDeleteCB);
                     },
                     getPolicyThreadChanges = function (policy) {
                         let policyId = policy._id,
@@ -421,7 +422,7 @@ let dbAlarmQueueLocked = false,
                         }
                     }
                 };
-                utility.update(criteria, cb);
+                Utility.update(criteria, cb);
             },
             process: function (data, cb) {
                 actions.utility.log('policies.process');
@@ -1041,8 +1042,7 @@ let dbAlarmQueueLocked = false,
                     return cb(null, policiesAckList[alarmId] === isAcknowledgedEnum);
                 }
 
-                utility.getOne({
-                    collection: alarmsCollection,
+                Alarm.getAlarm({
                     query: query,
                     fields: fields
                 }, function (err, alarm) { // alarm is null if not found
@@ -1090,14 +1090,14 @@ let dbAlarmQueueLocked = false,
                 let query = {
                     collection: 'NotifyAlarmQueue'
                 };
-                utility.get(query, cb);
+                Utility.get(query, cb);
             },
             dbInsert: function (queueEntries, cb) {
                 let criteria = {
                     collection: 'NotifyAlarmQueue',
                     insertObj: queueEntries
                 };
-                utility.insert(criteria, cb);
+                Utility.insert(criteria, cb);
             },
             dbRemoveAll: function (data, cb) {
                 actions.utility.log('alarmQueue.dbRemoveAll');
@@ -1129,7 +1129,7 @@ let dbAlarmQueueLocked = false,
                         validateCB(null);
                     },
                     function remove(removeCB) {
-                        utility.remove(criteria, removeCB);
+                        Utility.remove(criteria, removeCB);
                     }
                 ], function complete(err) {
                     cb(err, data);
@@ -1581,7 +1581,7 @@ let dbAlarmQueueLocked = false,
                             log.err = err;
                             log.apiResult = result;
 
-                            utility.insert(criteria, function (err) {
+                            Utility.insert(criteria, function (err) {
                                 if (!!err) {
                                     actions.utility.sendError(err);
                                 }
@@ -1710,11 +1710,7 @@ let dbAlarmQueueLocked = false,
             }
         },
         dbGetAllUsersObj: function (cb) {
-            let query = {
-                collection: 'Users'
-            };
-
-            utility.get(query, function (err, users) {
+            User.getUsers(function (err, users) {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1727,11 +1723,7 @@ let dbAlarmQueueLocked = false,
             });
         },
         dbGetAllGroupsObj: function (cb) {
-            let query = {
-                collection: 'User Groups'
-            };
-
-            utility.get(query, function (err, groups) {
+            UserGroup.getGroups(function (err, groups) {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1791,13 +1783,9 @@ let dbAlarmQueueLocked = false,
 
 
             function getPoint(cb) {
-                let criteria = {
-                    collection: 'points',
-                    query: {
-                        _id: alarm.upi
-                    }
-                };
-                utility.getOne(criteria, function (err, point) {
+                Point.getPointById({
+                    _id: alarm.upi
+                }, function (err, point) {
                     cb(err, point);
                 });
             }
