@@ -17,3 +17,4 @@ apps/backup.log
 *.DS_Store
 !*.exe
 !*.dll
+debug.log
