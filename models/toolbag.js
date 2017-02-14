@@ -23,7 +23,6 @@ let forEach = (obj, fn) => {
 let Toolbag = class Toolbag {
     getPoints(data, cb) {
         let criteria = {
-            collection: 'points',
             query: data,
             limit: 25 // g_limit
         };

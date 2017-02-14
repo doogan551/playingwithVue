@@ -40,12 +40,12 @@ let smtpConfig = {
     auth: smtpAuth
 };
 
-function closeTransport() {
+let closeTransport = () => {
     smtpTransport.close();
     transportStatus = CLOSED;
-}
+};
 
-function getTransport() {
+let getTransport = () => {
     clearTimeout(timeoutObj); // Clear the timeout
     timeoutObj = setTimeout(closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
 
@@ -53,16 +53,16 @@ function getTransport() {
         smtpTransport = nodemailer.createTransport(smtpConfig);
         transportStatus = OPEN;
     }
-}
+};
 
-function sendEmail(options, cb) {
+let sendEmail = (options, cb) => {
     let fromName = '"' + (options.fromName || 'InfoScan') + '"',
         fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
 
     getTransport();
     options.from = fromName + ' <' + fromAddr + '>';
     smtpTransport.sendMail(options, cb);
-}
+};
 
 let Mailer = class Mailer {
     sendError(msg) {
@@ -74,7 +74,7 @@ let Mailer = class Mailer {
                 subject: 'Error: ' + serverName + ' (Site: ' + siteName + ')',
                 text: ['Site: ' + siteName, 'Time: ' + new Date().toString(), '', msg].join('\n')
             };
-            sendEmail(options, function () {});
+            sendEmail(options, () => {});
         }
     }
     sendEmail(options, cb) {

@@ -84,6 +84,10 @@ let Utility = class Utility {
         collection.update(query, updateObj, options, cb);
     }
 
+    updateOne(criteria, cb) {
+        this.update(criteria, cb);
+    }
+
     updateAll(criteria, cb) {
         criteria.options = {
             multi: true
@@ -124,7 +128,7 @@ let Utility = class Utility {
 
         collection = db.get().collection(coll);
 
-        collection.findAndModify(query, sort, updateObj, options, function (err, result) {
+        collection.findAndModify(query, sort, updateObj, options, (err, result) => {
             if (err) {
                 return cb(err);
             }
@@ -150,11 +154,11 @@ let Utility = class Utility {
     }
 
     findAndCount(criteria, cb) {
-        this.get(criteria, function (err, points) {
+        this.get(criteria, (err, points) => {
             if (err) {
                 return cb(err);
             }
-            this.count(criteria, function (err, count) {
+            this.count(criteria, (err, count) => {
                 cb(err, points, count);
             });
         });
@@ -254,13 +258,13 @@ let Utility = class Utility {
     });*/
     iterateCursor(criteria, fx, done) {
         let count = 0;
-        this.getCursor(criteria, function (cursor) {
-            function processDoc(err, doc) {
+        this.getCursor(criteria, (cursor) => {
+            let processDoc = (err, doc) => {
                 if (!!err || doc === null) {
                     done(err, count);
                 } else {
                     ++count;
-                    fx(err, doc, function (err, stop) {
+                    fx(err, doc, (err, stop) => {
                         if (!!err || !!stop) {
                             done(err, count);
                         } else {
@@ -268,7 +272,7 @@ let Utility = class Utility {
                         }
                     });
                 }
-            }
+            };
 
             cursor.nextObject(processDoc);
         });
@@ -281,7 +285,7 @@ let Utility = class Utility {
         let identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
         let Security = require('../models/security');
 
-        Security.Utility.getPermissions(criteria.data.user, function (err, permissions) {
+        Security.Utility.getPermissions(criteria.data.user, (err, permissions) => {
             if (err || permissions === false) {
                 cb(err || permissions);
             }
@@ -289,7 +293,7 @@ let Utility = class Utility {
             // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
             // if permissions couldn't actually exceed the returned limit, search with upis as well
             if (permissions !== true && _.size(permissions) <= limit) {
-                let upis = Object.keys(permissions).map(function (upi) {
+                let upis = Object.keys(permissions).map((upi) => {
                     return parseInt(upi, 10);
                 });
                 if (!criteria.query.hasOwnProperty('_id')) {
@@ -300,7 +304,7 @@ let Utility = class Utility {
             }
             let points = [];
 
-            this.iterateCursor(criteria, function (err, doc, next) {
+            this.iterateCursor(criteria, (err, doc, next) => {
                 if (permissions !== true) {
                     if (permissions.hasOwnProperty(doc[identifier])) {
                         doc._pAccess = permissions[doc[identifier]];
@@ -319,7 +323,7 @@ let Utility = class Utility {
                     }
                 }
                 next(err, points.length >= (limit || 50) || false);
-            }, function (err) {
+            }, (err) => {
                 if (permissions !== true && permissions !== false) {
                     let upis = [];
                     for (let key in permissions) {
@@ -328,11 +332,11 @@ let Utility = class Utility {
                     criteria.query[identifier] = {
                         $in: upis
                     };
-                    this.count(criteria, function (err, count) {
+                    this.count(criteria, (err, count) => {
                         cb(err, points, count);
                     });
                 } else {
-                    this.count(criteria, function (err, count) {
+                    this.count(criteria, (err, count) => {
                         cb(err, points, count);
                     });
                 }

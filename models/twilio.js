@@ -131,7 +131,7 @@ let Twilio = class Twilio {
         };
 
         // Make sure the callback is defined
-        cb = cb || function () {};
+        cb = cb || (() => {});
 
         if (!numberSids) {
             return cb('Property "numberSids is not present or invalid (should be an array)');

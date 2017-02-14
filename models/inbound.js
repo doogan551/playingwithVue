@@ -23,21 +23,21 @@ let accessFlags = enums['Access Flags'];
 let alarmClasses = enums['Alarm Classes'];
 
 let emailHandler = {};
-emailHandler[alarmsEmailAddress] = function (relayMessage) {
-    // Our waterfall functions are defined after the waterfall callback
+emailHandler[alarmsEmailAddress] = (relayMessage) => {
+    // Our waterfall fxs are defined after the waterfall callback
     async.waterfall([
         getUser,
         getAlarm,
         getGroups,
         checkUserPermissions,
         ackAlarm
-    ], function (err, data) {
+    ], (err, data) => {
         let html = '',
             sendReply = true,
             replyObj = {},
             msgId,
             references,
-            getHeader = function (name) {
+            getHeader = (name) => {
                 let headers = relayMessage.content.headers,
                     len = (headers && headers.length) || 0,
                     i;
@@ -51,13 +51,13 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
                 }
                 return '';
             },
-            par = function (content, noStyle) {
+            par = (content, noStyle) => {
                 if (noStyle) {
                     return '<p>' + content + '</p>';
                 }
                 return '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">' + content + '</p>';
             },
-            lnk = function (to, mailto) {
+            lnk = (to, mailto) => {
                 if (mailto) {
                     return '<a href="mailto:' + to + '" style="color: #15C;">' + to + '</a>';
                 }
@@ -124,12 +124,12 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
         }
     });
 
-    function getUser(cb) {
+    let getUser = (cb) => {
         let data = {};
 
         User.getUser({
             'Contact Info.Value.Value': relayMessage.msg_from
-        }, function (err, user) {
+        }, (err, user) => {
             if (err) {
                 return cb(err);
             }
@@ -140,9 +140,9 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
             }
             cb(null, data);
         });
-    }
+    };
 
-    function getAlarm(data, cb) {
+    let getAlarm = (data, cb) => {
         if (data.err) {
             return cb(null, data);
         }
@@ -157,7 +157,7 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
         if (alarmId) {
             Alarm.getAlarm({
                 _id: ObjectID(alarmId)
-            }, function (err, alarm) {
+            }, (err, alarm) => {
                 if (err) {
                     return cb(err);
                 }
@@ -181,14 +181,14 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
             data.err = 'Alarm id not found';
             cb(null, data);
         }
-    }
+    };
 
-    function getGroups(data, cb) {
+    let getGroups = (data, cb) => {
         if (data.err || data.user['System Admin'].Value) {
             return cb(null, data);
         }
 
-        UserGroups.getGroups(function (err, groups) {
+        UserGroups.getGroups((err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -196,15 +196,15 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
 
             // Generate a groups object
             data.groupsObj = {};
-            groups.forEach(function (group) {
+            groups.forEach((group) => {
                 data.groupsObj[group._id] = group;
             });
 
             cb(null, data);
         });
-    }
+    };
 
-    function checkUserPermissions(data, cb) {
+    let checkUserPermissions = (data, cb) => {
         if (data.err || data.user['System Admin'].Value) {
             return cb(null, data);
         }
@@ -227,9 +227,9 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
         // Tell the user why we're not acking the alarm
         data.replyErr = true;
         cb(null, data);
-    }
+    };
 
-    function ackAlarm(data, cb) {
+    let ackAlarm = (data, cb) => {
         if (data.err) {
             return cb(null, data);
         }
@@ -240,11 +240,11 @@ emailHandler[alarmsEmailAddress] = function (relayMessage) {
             username: data.user.username
         };
 
-        Alarm.acknowledgeAlarm(criteria, function (err, result) {
+        Alarm.acknowledgeAlarm(criteria, (err, result) => {
             data.result = result;
             cb(err, data);
         });
-    }
+    };
 };
 
 let Inbound = class Inbound {
@@ -275,8 +275,8 @@ let Inbound = class Inbound {
             getAlarm
         ], done);
 
-        // Waterfall functions
-        function getNotifyLog(cb) {
+        // Waterfall=>
+        let getNotifyLog = (cb) => {
             let info = {},
                 criteria = {
                     collection: 'NotifyLogs',
@@ -285,7 +285,7 @@ let Inbound = class Inbound {
                     }
                 };
 
-            Utility.getOne(criteria, function (err, notifyLog) {
+            Utility.getOne(criteria, (err, notifyLog) => {
                 if (err) {
                     return cb(err);
                 }
@@ -296,16 +296,16 @@ let Inbound = class Inbound {
                 }
                 cb(null, info);
             });
-        }
+        };
 
-        function getAlarm(info, cb) {
+        let getAlarm = (info, cb) => {
             if (info.err) {
                 return cb(null, info);
             }
 
             Alarm.getAlarm({
                 _id: ObjectID(info.notifyLog.alarmId)
-            }, function (err, alarm) {
+            }, (err, alarm) => {
                 if (err) {
                     return cb(err);
                 }
@@ -316,9 +316,9 @@ let Inbound = class Inbound {
                 }
                 cb(null, info);
             });
-        }
+        };
 
-        function done(err, info) {
+        let done = (err, info) => {
             let ackIsAllowed,
                 digits = data && data.Digits,
                 human = data && (data.AnsweredBy === 'human'),
@@ -328,19 +328,19 @@ let Inbound = class Inbound {
                 xml = '<?xml version="1.0" encoding="UTF-8"?>',
                 numberRepeats = 3,
                 criteria,
-                getAorAn = function (text) {
+                getAorAn = (text) => {
                     return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an' : 'a';
                 },
-                say = function (text) {
+                say = (text) => {
                     return '<Say voice="alice">' + text + '</Say>';
                 },
-                pause = function (length) {
+                pause = (length) => {
                     let _length = length > 0 ? length : 1;
                     return '<Pause length="' + _length + '"/>';
                 },
-                // Not using the below function, but keeping in case we ever need to build
+                // Not using the below  but keeping in case we ever need to buil=> d
                 // verbs into our notify message
-                // getMessageXML = function (msg) {
+                // getMessageXML = (msg) => {
                 //  let letiables = {
                 //          '{Pause}': pause(1)
                 //      },
@@ -371,7 +371,7 @@ let Inbound = class Inbound {
                 //  }
                 //  return msgXML;
                 // },
-                sendResponse = function () {
+                sendResponse = () => {
                     callback(xml);
                 };
 
@@ -405,7 +405,7 @@ let Inbound = class Inbound {
                         username: info.notifyLog.username
                     };
 
-                    Alarm.acknowledgeAlarm(criteria, function (err) {
+                    Alarm.acknowledgeAlarm(criteria, (err) => {
                         if (err) {
                             xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
                         } else {
@@ -463,7 +463,7 @@ let Inbound = class Inbound {
                 xml += '</Response>';
                 sendResponse();
             }
-        }
+        };
     }
     twilioVoiceAlarmStatus(data) {
         let sid = data && data.CallSid,
@@ -481,7 +481,7 @@ let Inbound = class Inbound {
                     }
                 }
             };
-            Utility.update(criteria, function (err) {
+            Utility.update(criteria, (err) => {
                 if (err) {
                     logger.error('/twilio/voice/alarms/status', err);
                 }

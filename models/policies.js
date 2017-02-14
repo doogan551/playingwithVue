@@ -19,8 +19,8 @@ let Policies = class Policies {
     save(rawData, cb) {
         let data;
         let newID;
-        let callback = function (err) {
-            let complete = function (removeErr) {
+        let callback = (err) => {
+            let complete = (removeErr) => {
                 if (removeErr) {
                     logger.debug('Error removing threads for policy:', newID, removeErr);
                 }
@@ -36,16 +36,16 @@ let Policies = class Policies {
                 complete();
             }
         };
-        let convertStrings = function (obj) {
+        let convertStrings = (obj) => {
             let key,
                 prop,
                 type,
                 c,
                 matrix = {
-                    object: function (o) {
+                    object: (o) => {
                         return convertStrings(o);
                     },
-                    string: function (o) {
+                    string: (o) => {
                         let ret;
 
                         if (!o.match(/[^\d.]/g)) { //no characters, must be number
@@ -60,7 +60,7 @@ let Policies = class Policies {
 
                         return ret;
                     },
-                    array: function (o) {
+                    array: (o) => {
                         let arr = [];
                         for (c = 0; c < o.length; c++) {
                             arr[c] = convertStrings(o[c]);
@@ -85,7 +85,7 @@ let Policies = class Policies {
             }
             return obj;
         };
-        let doUpdate = function () {
+        let doUpdate = () => {
             let criteria = {
                 collection: 'NotifyPolicies',
                 query: {
@@ -130,7 +130,7 @@ let Policies = class Policies {
                 _id: data._id
             }
         };
-        let updatePoints = function (err) {
+        let updatePoints = (err) => {
             if (err) {
                 return cb(err);
             }
@@ -173,11 +173,11 @@ let Policies = class Policies {
                 lastAction: null
             };
 
-        Utility.get(criteria, function (err, docs) {
+        Utility.get(criteria, (err, docs) => {
             let nextAction,
                 now = moment(),
                 taskList = [],
-                setLastAction = function (last) {
+                setLastAction = (last) => {
                     if (last) {
                         nextAction = moment(last);
                         nextAction.seconds(0).milliseconds(0);
@@ -230,7 +230,7 @@ let Policies = class Policies {
                 //no updates
                 setLastAction();
             } else {
-                _.each(docs, function (doc) {
+                _.each(docs, (doc) => {
                     // if (doc) {
                     setLastAction(doc.lastAction);
                     // taskTemplate.nextAction = nextAction.add(config.scale, 'w');
@@ -258,14 +258,14 @@ let Policies = class Policies {
             count = 0,
             newTasks = [],
             found = false,
-            insertTasks = function () {
+            insertTasks = () => {
                 let criteria = {
                     collection: 'NotifyScheduledTasks',
                     insertObj: newTasks
                 };
 
                 // console.log('Inserting for policy', policyID);
-                Utility.insert(criteria, function (err) {
+                Utility.insert(criteria, (err) => {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
@@ -275,7 +275,7 @@ let Policies = class Policies {
                     // console.log('Done with policy', policyID);
                 });
             },
-            deleteTasks = function (callback) {
+            deleteTasks = (callback) => {
                 let criteria = {
                     collection: 'NotifyScheduledTasks',
                     query: {
@@ -284,7 +284,7 @@ let Policies = class Policies {
                 };
 
                 // console.log('Deleting from policy', typeof policyID, policyID);
-                Utility.remove(criteria, function (err) {
+                Utility.remove(criteria, (err) => {
                     if (err) {
                         logger.debug('Remove err', JSON.stringify(err));
                     }
@@ -297,7 +297,7 @@ let Policies = class Policies {
                     }
                 });
             },
-            handleTaskList = function (tasks) {
+            handleTaskList = (tasks) => {
                 // console.log('handling tasks');
                 newTasks = newTasks.concat(tasks);
                 count--;
@@ -307,7 +307,7 @@ let Policies = class Policies {
                 }
             };
 
-        _.each(policy.alertConfigs, function (alertConfig) {
+        _.each(policy.alertConfigs, (alertConfig) => {
             let data = {
                 policyID: policyID,
                 alertConfigID: alertConfig.id,
@@ -321,8 +321,8 @@ let Policies = class Policies {
                 self.processRotateConfig(data, alertConfig.rotateConfig, 'rotateGroup', handleTaskList);
             }
 
-            _.each(alertConfig.groups, function (group) {
-                _.each(group.escalations, function (escalation) {
+            _.each(alertConfig.groups, (group) => {
+                _.each(group.escalations, (escalation) => {
                     let rotateConfig = escalation.rotateConfig,
                         data = {
                             policyID: policyID,

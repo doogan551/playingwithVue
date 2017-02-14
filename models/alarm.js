@@ -4,9 +4,9 @@ let Utility = require('./utility');
 let utils = require('../helpers/utils');
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
-let Alarm = class Alarm {
+let Alarm = class Alarm extends Utility {
     constructor() {
-        this.collection = alarmsCollection;
+        super(alarmsCollection);
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,7 @@ let Alarm = class Alarm {
 
         sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
-        Utility.getWithSecurity({
-            collection: this.collection,
+        this.getWithSecurity({
             query: query,
             sort: sort,
             _skip: (currentPage - 1) * itemsPerPage,
@@ -148,7 +147,6 @@ let Alarm = class Alarm {
         }
 
         let criteria = {
-            collection: 'Alarms',
             query: {
                 _id: {
                     $in: ids
@@ -162,16 +160,13 @@ let Alarm = class Alarm {
                     ackMethod: ackMethod,
                     ackTime: time
                 }
-            },
-            options: {
-                multi: true
             }
         };
 
 
-        Utility.update(criteria, (err, result) => {
+        this.updateAll(criteria, (err, result) => {
             criteria.collection = 'ActiveAlarms';
-            Utility.update(criteria, (err2) => {
+            this.updateAll(criteria, (err2) => {
                 cb(err || err2, result);
             });
         });
@@ -250,8 +245,7 @@ let Alarm = class Alarm {
 
         sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
-        Utility.getWithSecurity({
-            collection: this.collection,
+        this.getWithSecurity({
             query: query,
             sort: sort,
             _skip: (currentPage - 1) * itemsPerPage,
@@ -346,7 +340,7 @@ let Alarm = class Alarm {
 
         sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
-        Utility.getWithSecurity({
+        this.getWithSecurity({
             collection: 'ActiveAlarms',
             query: query,
             sort: sort,
@@ -362,8 +356,7 @@ let Alarm = class Alarm {
         let now, twentyFourHoursAgo;
         now = Math.floor(Date.now() / 1000);
         twentyFourHoursAgo = now - 86400;
-        Utility.update({
-            collection: this.collection,
+        this.updateAll({
             query: {
                 msgTime: {
                     $lte: twentyFourHoursAgo
@@ -376,9 +369,6 @@ let Alarm = class Alarm {
                     ackTime: now,
                     ackStatus: 2
                 }
-            },
-            options: {
-                multi: true
             }
         }, (err, result) => {
             callback(result);
@@ -387,10 +377,9 @@ let Alarm = class Alarm {
 
     getAlarm(query, callback) {
         let criteria = {
-            collection: this.collection,
             query: query
         };
-        Utility.getOne(criteria, callback);
+        this.getOne(criteria, callback);
     }
 
 };

@@ -11,14 +11,7 @@ let UserGroups = class UserGroups extends Utility {
         };
 
         let criteria = {
-            collection: this.collection,
             query: query
-        };
-        Utility.get(criteria, cb);
-    }
-    getGroups(cb) {
-        let criteria = {
-            collection: this.collection
         };
         Utility.get(criteria, cb);
     }

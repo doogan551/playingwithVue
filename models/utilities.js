@@ -5,13 +5,12 @@ let Utility = require('./utility');
 let System = require('./system');
 
 
-let Utilities = class Utilities {
+let Utilities = class Utilities extends Utility {
     constructor() {
         super('Utilities');
     }
     getRates(cb) {
         let criteria = {
-            collection: this.collection,
             query: {
                 'Point Type.Value': 'Utility'
             },
@@ -24,7 +23,7 @@ let Utilities = class Utilities {
             }
         };
 
-        Utility.get(criteria, cb);
+        this.getAll(criteria, cb);
     }
     index(data, cb) {
         let utilities;
@@ -72,11 +71,10 @@ let Utilities = class Utilities {
         let criteria = {
             query: {
                 'UtilityName': data.UtilityName
-            },
-            collection: this.collection
+            }
         };
 
-        Utility.getOne(criteria, cb);
+        this.getOne(criteria, cb);
     }
 
     saveUtility(_data, cb) {
@@ -105,8 +103,7 @@ let Utilities = class Utilities {
             }
         }
 
-        Utility.update({
-            collection: this.collection,
+        this.updateOne({
             query: {
                 'utilityName': utility.utilityName
             },
@@ -149,12 +146,11 @@ let Utilities = class Utilities {
 
     removeUtility(data, cb) {
         let criteria = {
-            collection: this.collection,
             query: {
                 utilityName: data.utilityName
             }
         };
-        Utility.remove(criteria, cb);
+        this.remove(criteria, cb);
     }
 };
 

@@ -68,7 +68,7 @@ let Groups = class Groups {
             query: searchCriteria
         };
 
-        Utility.get(criteria, function (err, groups) {
+        Utility.get(criteria, (err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -78,7 +78,7 @@ let Groups = class Groups {
                     insertObj: insertCriteria
                 };
 
-                Utility.insert(criteria, function (err) {
+                Utility.insert(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
@@ -123,7 +123,7 @@ let Groups = class Groups {
 
             updateCriteria.$set.Users = {};
             if (users.length !== 0) { // users on group obj
-                users.forEach(function (user) {
+                users.forEach((user) => {
                     updateCriteria.$set.Users[user.userid] = {};
                     updateCriteria.$set.Users[user.userid]['Group Admin'] = (user['Group Admin'] !== undefined && user['Group Admin'] === true) ? user['Group Admin'] : false;
                 });
@@ -141,7 +141,7 @@ let Groups = class Groups {
                 }
             };
 
-            Utility.update(criteria, function (err) {
+            Utility.update(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -198,11 +198,11 @@ let Groups = class Groups {
             }
             let groupCount = 0;
 
-            groupIds.forEach(function (groupId) {
-                users.forEach(function (user) {
+            groupIds.forEach((groupId) => {
+                users.forEach((user) => {
                     async.waterfall([
 
-                        function (callback) {
+                        (callback) => {
                             let searchCriteria, updateCriteria,
                                 adminString, options;
                             searchCriteria = {
@@ -230,7 +230,7 @@ let Groups = class Groups {
                                 updateObj: updateCriteria,
                                 options: options
                             };
-                            Utility.update(criteria, function (err, result) {
+                            Utility.update(criteria, (err, result) => {
                                 if (err) {
                                     callback(err, null);
                                 }
@@ -244,7 +244,7 @@ let Groups = class Groups {
                                 }
                             });
                         },
-                        function (group, callback) {
+                        (group, callback) => {
                             let usersString, searchCriteria, updateCriteria;
                             usersString = 'User Groups.' + group._id;
                             searchCriteria = {};
@@ -267,13 +267,13 @@ let Groups = class Groups {
                                 }
                             };
 
-                            Utility.update(criteria, function (err) {
+                            Utility.update(criteria, (err) => {
                                 callback(err, {
                                     'message': 'success'
                                 });
                             });
                         }
-                    ], function (err, result) {
+                    ], (err, result) => {
                         if (err) {
                             return cb(err);
                         }
@@ -304,12 +304,12 @@ let Groups = class Groups {
             }
             let groupCount = 0;
 
-            groupIds.forEach(function (groupId) {
+            groupIds.forEach((groupId) => {
                 let count = 0;
-                users.forEach(function (user) {
+                users.forEach((user) => {
                     async.waterfall([
 
-                        function (callback) {
+                        (callback) => {
                             let searchCriteria = {
                                 _id: groupId
                             };
@@ -322,7 +322,7 @@ let Groups = class Groups {
                                 query: searchCriteria
                             };
 
-                            Utility.getOne(criteria, function (err, group) {
+                            Utility.getOne(criteria, (err, group) => {
                                 if (group.Users[user]) {
                                     delete group.Users[user];
                                 }
@@ -334,7 +334,7 @@ let Groups = class Groups {
                                     updateObj: searchCriteria
                                 };
 
-                                Utility.update(criteria, function (err, result) {
+                                Utility.update(criteria, (err, result) => {
                                     if (err) {
                                         callback(err, null);
                                     }
@@ -347,14 +347,14 @@ let Groups = class Groups {
                                             query: result
                                         };
 
-                                        Utility.getOne(criteria, function (err, group) {
+                                        Utility.getOne(criteria, (err, group) => {
                                             callback(null, group);
                                         });
                                     }
                                 });
                             });
                         },
-                        function (group, callback) {
+                        (group, callback) => {
                             let usersString = 'User Groups.' + group._id;
                             let searchCriteria = {};
                             searchCriteria[usersString] = {
@@ -374,7 +374,7 @@ let Groups = class Groups {
                                     multi: true
                                 }
                             };
-                            Utility.getOne(criteria, function (err) {
+                            Utility.getOne(criteria, (err) => {
                                 if (err) {
                                     return callback(err, null);
                                 }
@@ -383,7 +383,7 @@ let Groups = class Groups {
                                 });
                             });
                         }
-                    ], function (err, result) {
+                    ], (err, result) => {
                         if (err) {
                             return cb(err);
                         }
@@ -419,7 +419,7 @@ let Groups = class Groups {
                 collection: userGroupsCollection,
                 query: removeCriteria
             };
-            Utility.remove(criteria, function (err) {
+            Utility.remove(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -459,7 +459,7 @@ let Groups = class Groups {
             query: searchCriteria
         };
 
-        Utility.get(criteria, function (err, groups) {
+        Utility.get(criteria, (err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -512,7 +512,7 @@ let Groups = class Groups {
             collection: pointsCollection,
             query: searchCriteria
         };
-        Utility.get(criteria, function (err, points) {
+        Utility.get(criteria, (err, points) => {
             if (err) {
                 return cb(err);
             }
@@ -573,7 +573,7 @@ let Groups = class Groups {
         let filename = data.name;
         let imgData = image.replace(/^data:image\/\w+;base64,/, '');
 
-        fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function (err) {
+        fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', (err) => {
             if (!err) {
                 let criteria = {
                     collection: userGroupsCollection,
@@ -586,7 +586,7 @@ let Groups = class Groups {
                         }
                     }
                 };
-                Utility.update(criteria, function (err) {
+                Utility.update(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
@@ -600,7 +600,7 @@ let Groups = class Groups {
     updatePermissions(data, cb) {
         let groups = data.groups;
 
-        async.each(groups, function (group, callback) {
+        async.each(groups, (group, callback) => {
             Utility.update({
                 collection: 'User Groups',
                 query: {
@@ -632,7 +632,7 @@ let Users = class Users {
             query: {}
         };
 
-        User.get(criteria, function (err, users) {
+        User.get(criteria, (err, users) => {
             if (err) {
                 return cb(err);
             }
@@ -677,7 +677,7 @@ let Users = class Users {
             collection: userGroupsCollection,
             query: searchCriteria
         };
-        Utility.get(criteria, function (err, groups) {
+        Utility.get(criteria, (err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -716,8 +716,8 @@ let Users = class Users {
                 username: 1
             }
         };
-        Utility.getOne(criteria, function (err, username) {
-            Utility.remove(criteria, function (err) {
+        Utility.getOne(criteria, (err, username) => {
+            Utility.remove(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -732,15 +732,15 @@ let Users = class Users {
                 Utility.insert({
                     collection: activityLogCollection,
                     insertObj: logData
-                }, function (err) {});
+                }, (err) => {});
 
                 async.waterfall([
 
-                    function (callback) {
+                    (callback) => {
                         // TODO Add fx
                         this.Util.updateControllers('remove', username.username, callback);
                     },
-                    function (callback) {
+                    (callback) => {
                         let groupSearch = {};
                         let groupSearchString = 'Users.' + userid;
                         groupSearch[groupSearchString] = {
@@ -751,13 +751,13 @@ let Users = class Users {
                             collection: userGroupsCollection,
                             query: groupSearch
                         };
-                        Utility.get(criteria, function (err, groups) {
+                        Utility.get(criteria, (err, groups) => {
                             if (err) {
                                 return cb(err);
                             }
 
                             if (groups.length > 0) {
-                                groups.forEach(function (group) {
+                                groups.forEach((group) => {
                                     delete group.Users[userid];
                                     let groupUpdate = {
                                         $set: {}
@@ -771,7 +771,7 @@ let Users = class Users {
                                         },
                                         updateObj: groupUpdate
                                     };
-                                    Utility.update(criteria, function (err) {
+                                    Utility.update(criteria, (err) => {
                                         if (err) {
                                             return callback(err, null);
                                         }
@@ -786,7 +786,7 @@ let Users = class Users {
                             }
                         });
                     },
-                    function (groups, callback) {
+                    (groups, callback) => {
                         let updateSearch, updateCriteria;
                         updateSearch = {
                             Security: {
@@ -812,7 +812,7 @@ let Users = class Users {
                                 multi: true
                             }
                         };
-                        Utility.update(criteria, function (err) {
+                        Utility.update(criteria, (err) => {
                             return callback(err, {
                                 'message': 'success'
                             });
@@ -858,7 +858,7 @@ let Users = class Users {
         let filename = data.name;
         let imgData = image.replace(/^data:image\/\w+;base64,/, '');
 
-        fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function (err) {
+        fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', (err) => {
             if (!err) {
                 let criteria = {
                     collection: usersCollection,
@@ -871,7 +871,7 @@ let Users = class Users {
                         }
                     }
                 };
-                Utility.update(criteria, function (err) {
+                Utility.update(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
@@ -1004,7 +1004,7 @@ let Users = class Users {
             }
         };
 
-        Utility.get(criteria, function (err, conts) {
+        Utility.get(criteria, (err, conts) => {
             for (let i = 0; i < conts[0].Entries.length; i++) {
                 if (conts[0].Entries[i]['Controller Name'] === username) {
                     return cb(null, {
@@ -1017,7 +1017,7 @@ let Users = class Users {
                 collection: usersCollection,
                 query: searchCriteria
             };
-            Utility.get(criteria, function (err, docs) {
+            Utility.get(criteria, (err, docs) => {
                 if (docs.length > 0) {
                     return cb(null, {
                         message: 'This username already exists.'
@@ -1028,7 +1028,7 @@ let Users = class Users {
                     insertObj: userTemplate
                 };
 
-                Utility.insert(criteria, function (err, userArray) {
+                Utility.insert(criteria, (err, userArray) => {
                     let logData = {
                         user: data.user,
                         timestamp: Date.now(),
@@ -1040,136 +1040,134 @@ let Users = class Users {
                     Utility.insert({
                         collection: activityLogCollection,
                         insertObj: logData
-                    }, function (err) {});
+                    }, (err) => {});
 
                     if (err) {
                         return cb(err);
                     }
-                    // TODO Add function
-                    this.Util.updateControllers('add', userTemplate.username, function (err) {
-                        if (userArray) {
-                            user = userArray.ops[0];
-                        }
+                    // TODO Add                     this.Util.updateControllers('add', userTemplate.username, (err) => {
+                    if (userArray) {
+                        user = userArray.ops[0];
+                    }
 
-                        if (groups.length > 0) {
-                            let groupCount = 0;
-                            groups.forEach(function (group) {
-                                if (group.groupid.length < 12) {
-                                    group.groupid = parseInt(group.groupid, 10);
-                                } else {
-                                    group.groupid = new ObjectID(group.groupid);
-                                }
+                    if (groups.length > 0) {
+                        let groupCount = 0;
+                        groups.forEach((group) => {
+                            if (group.groupid.length < 12) {
+                                group.groupid = parseInt(group.groupid, 10);
+                            } else {
+                                group.groupid = new ObjectID(group.groupid);
+                            }
 
-                                async.waterfall([
+                            async.waterfall([
 
-                                    function (callback) {
-                                        searchCriteria = {
-                                            _id: group.groupId
-                                        };
-                                        let updateCriteria = {
-                                            $set: {}
-                                        };
-                                        let adminString = 'Users.' + user._id + '.Group Admin';
-                                        if (group['Group Admin'] === true || group['Group Admin'] === 'true') {
-                                            updateCriteria.$set[adminString] = true;
-                                        } else {
-                                            updateCriteria.$set[adminString] = false;
+                                (callback) => {
+                                    searchCriteria = {
+                                        _id: group.groupId
+                                    };
+                                    let updateCriteria = {
+                                        $set: {}
+                                    };
+                                    let adminString = 'Users.' + user._id + '.Group Admin';
+                                    if (group['Group Admin'] === true || group['Group Admin'] === 'true') {
+                                        updateCriteria.$set[adminString] = true;
+                                    } else {
+                                        updateCriteria.$set[adminString] = false;
+                                    }
+
+                                    let options = {
+                                        upsert: true
+                                    };
+
+                                    criteria = {
+                                        collection: userGroupsCollection,
+                                        query: searchCriteria,
+                                        updateObj: updateCriteria,
+                                        options: options
+                                    };
+                                    Utility.update(criteria, (err) => {
+                                        if (err) {
+                                            return callback(err);
                                         }
-
-                                        let options = {
-                                            upsert: true
-                                        };
 
                                         criteria = {
                                             collection: userGroupsCollection,
-                                            query: searchCriteria,
-                                            updateObj: updateCriteria,
-                                            options: options
-                                        };
-                                        Utility.update(criteria, function (err) {
-                                            if (err) {
-                                                return callback(err);
+                                            query: {
+                                                _id: group.groupId
                                             }
+                                        };
 
-                                            criteria = {
-                                                collection: userGroupsCollection,
-                                                query: {
-                                                    _id: group.groupId
+                                        Utility.getOne(criteria, callback);
+                                    });
+                                },
+                                (newGroup, callback) => {
+                                    searchCriteria = {
+                                        'Security': {
+                                            $elemMatch: {
+                                                'groupId': newGroup._id
+                                            }
+                                        }
+                                    };
+
+                                    criteria = {
+                                        collection: pointsCollection,
+                                        query: searchCriteria
+                                    };
+
+                                    Utility.get(criteria, (err, points) => {
+                                        async.eachSeries(points, (point, eachCB) => {
+                                            let updateCriteria = {
+                                                $push: {
+                                                    'Security': {
+                                                        'groupId': newGroup._id,
+                                                        'userId': user._id
+                                                    }
                                                 }
                                             };
 
-                                            Utility.getOne(criteria, callback);
-                                        });
-                                    },
-                                    function (newGroup, callback) {
-                                        searchCriteria = {
-                                            'Security': {
-                                                $elemMatch: {
-                                                    'groupId': newGroup._id
-                                                }
-                                            }
-                                        };
+                                            criteria = {
+                                                collection: pointsCollection,
+                                                query: {
+                                                    _id: point._id
+                                                },
+                                                updateObj: updateCriteria
+                                            };
 
-                                        criteria = {
-                                            collection: pointsCollection,
-                                            query: searchCriteria
-                                        };
-
-                                        Utility.get(criteria, function (err, points) {
-                                            async.eachSeries(points, function (point, eachCB) {
-                                                let updateCriteria = {
-                                                    $push: {
-                                                        'Security': {
-                                                            'groupId': newGroup._id,
-                                                            'userId': user._id
-                                                        }
-                                                    }
-                                                };
-
-                                                criteria = {
-                                                    collection: pointsCollection,
-                                                    query: {
-                                                        _id: point._id
-                                                    },
-                                                    updateObj: updateCriteria
-                                                };
-
-                                                Utility.udpate(criteria, function (err) {
-                                                    eachCB(err);
-                                                });
-                                            }, callback);
-                                        });
-                                    }
-                                ], function (err) {
-                                    if (err) {
-                                        return cb(err);
-                                    }
-
-                                    groupCount++;
-
-                                    if (groupCount === groups.length) {
-                                        criteria = {
-                                            collection: usersCollection,
-                                            query: {
-                                                _id: user._id
-                                            }
-                                        };
-
-                                        Utility.getOne(criteria, cb);
-                                    }
-                                });
-                            });
-                        } else {
-                            criteria = {
-                                collection: usersCollection,
-                                query: {
-                                    _id: user._id
+                                            Utility.udpate(criteria, (err) => {
+                                                eachCB(err);
+                                            });
+                                        }, callback);
+                                    });
                                 }
-                            };
+                            ], (err) => {
+                                if (err) {
+                                    return cb(err);
+                                }
 
-                            Utility.getOne(criteria, cb);
-                        }
-                    });
+                                groupCount++;
+
+                                if (groupCount === groups.length) {
+                                    criteria = {
+                                        collection: usersCollection,
+                                        query: {
+                                            _id: user._id
+                                        }
+                                    };
+
+                                    Utility.getOne(criteria, cb);
+                                }
+                            });
+                        });
+                    } else {
+                        criteria = {
+                            collection: usersCollection,
+                            query: {
+                                _id: user._id
+                            }
+                        };
+
+                        Utility.getOne(criteria, cb);
+                    }
                 });
             });
         });
@@ -1197,7 +1195,7 @@ let Users = class Users {
         Utility.getOne({
             collection: usersCollection,
             query: searchCriteria
-        }, function (err, dbUser) {
+        }, (err, dbUser) => {
             for (let key in updateData) {
                 if (key === 'Contact Info') {
                     let contact = updateData[key];
@@ -1256,7 +1254,7 @@ let Users = class Users {
                 query: searchCriteria,
                 updateObj: updateCriteria
             };
-            Utility.update(criteria, function (err) {
+            Utility.update(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -1271,7 +1269,7 @@ let Users = class Users {
                 Utility.insert({
                     collection: activityLogCollection,
                     insertObj: logData
-                }, function (err) {});
+                }, (err) => {});
 
                 let deleteSearch = {};
                 deleteSearch['Point Type'] = {};
@@ -1287,7 +1285,7 @@ let Users = class Users {
                     collection: userGroupsCollection,
                     query: deleteSearch
                 };
-                Utility.get(criteria, function (err, delGroups) {
+                Utility.get(criteria, (err, delGroups) => {
                     let i;
                     let groupsToRemove = [];
                     if (groups.length > 0) {
@@ -1306,10 +1304,10 @@ let Users = class Users {
                     }
 
                     if (groupsToRemove.length > 0) {
-                        groupsToRemove.forEach(function (groupToRemove) {
+                        groupsToRemove.forEach((groupToRemove) => {
                             async.waterfall([
 
-                                function (callback) {
+                                (callback) => {
                                     let delSearch = {
                                         _id: groupToRemove._id
                                     };
@@ -1318,7 +1316,7 @@ let Users = class Users {
                                         collection: userGroupsCollection,
                                         query: delSearch
                                     };
-                                    Utility.getOne(criteria, function (err, delGroup) {
+                                    Utility.getOne(criteria, (err, delGroup) => {
                                         delete delGroup.Users[userid];
 
                                         criteria = {
@@ -1326,12 +1324,12 @@ let Users = class Users {
                                             query: delSearch,
                                             updateObj: delGroup
                                         };
-                                        Utility.update(criteria, function (err) {
+                                        Utility.update(criteria, (err) => {
                                             callback(err, delGroup);
                                         });
                                     });
                                 },
-                                function (delGroup, callback) {
+                                (delGroup, callback) => {
                                     let delGroupSearch = {
                                         'Security': {
                                             $elemMatch: {
@@ -1356,11 +1354,11 @@ let Users = class Users {
                                             multi: true
                                         }
                                     };
-                                    Utility.update(criteria, function (err) {
+                                    Utility.update(criteria, (err) => {
                                         callback(err, delGroup);
                                     });
                                 }
-                            ], function (err) {
+                            ], (err) => {
                                 delCount++;
                                 if (delCount === groupsToRemove.length) {
                                     updateUsers(searchCriteria, groups, userid, cb);
@@ -1374,7 +1372,7 @@ let Users = class Users {
             });
         });
 
-        function updateUsers(searchCriteria, groups, userid, cb) {
+        let updateUsers = (searchCriteria, groups, userid, cb) => {
             let count = 0;
             let criteria = {};
 
@@ -1384,11 +1382,11 @@ let Users = class Users {
                     query: searchCriteria
                 };
 
-                Utility.getOne(criteria, function (err, user) {
+                Utility.getOne(criteria, (err, user) => {
                     if (err) {
                         return cb(err);
                     }
-                    groups.forEach(function (group) {
+                    groups.forEach((group) => {
                         if (group.groupid.length < 12) {
                             group.groupid = parseInt(group.groupid, 10);
                         } else {
@@ -1397,7 +1395,7 @@ let Users = class Users {
 
                         async.waterfall([
 
-                            function (callback) {
+                            (callback) => {
                                 searchCriteria = {
                                     _id: group.groupid
                                 };
@@ -1423,7 +1421,7 @@ let Users = class Users {
                                     updateObj: updateCriteria,
                                     options: options
                                 };
-                                Utility.update(criteria, function (err) {
+                                Utility.update(criteria, (err) => {
                                     if (err) {
                                         return callback(err);
                                     }
@@ -1437,7 +1435,7 @@ let Users = class Users {
                                     Utility.getOne(criteria, callback);
                                 });
                             },
-                            function (newGroup, callback) {
+                            (newGroup, callback) => {
                                 searchCriteria = {
                                     'Security': {
                                         $elemMatch: {
@@ -1450,11 +1448,11 @@ let Users = class Users {
                                     collection: pointsCollection,
                                     query: searchCriteria
                                 };
-                                Utility.get(criteria, function (err, points) {
+                                Utility.get(criteria, (err, points) => {
                                     if (err) {
                                         return callback(err);
                                     }
-                                    async.eachSeries(points, function (point, eachCB) {
+                                    async.eachSeries(points, (point, eachCB) => {
                                         updateCriteria = {
                                             $push: {
                                                 'Security': {
@@ -1471,13 +1469,13 @@ let Users = class Users {
                                             },
                                             updateObj: updateCriteria
                                         };
-                                        Utility.update(criteria, function (err) {
+                                        Utility.update(criteria, (err) => {
                                             eachCB(err);
                                         });
                                     }, callback);
                                 });
                             }
-                        ], function (err) {
+                        ], (err) => {
                             if (err) {
                                 return cb(err);
                             }
@@ -1504,7 +1502,7 @@ let Users = class Users {
                 };
                 Utility.getOne(criteria, cb);
             }
-        }
+        };
     }
 };
 
@@ -1546,21 +1544,21 @@ let Points = class Points {
         }
 
 
-        async.eachSeries(newGroups, function (newGroup, callback) {
+        async.eachSeries(newGroups, (newGroup, callback) => {
             async.waterfall([
 
-                function (wfCb) {
+                (wfCb) => {
                     criteria = {
                         collection: userGroupsCollection,
                         query: {
                             _id: newGroup.groupId
                         }
                     };
-                    Utility.getOne(criteria, function (err, group) {
+                    Utility.getOne(criteria, (err, group) => {
                         wfCb(err, (group !== null) ? group.Users : null);
                     });
                 },
-                function (users, wfCb) {
+                (users, wfCb) => {
                     if (searchFilters) {
                         let searchCriteria = {};
                         searchCriteria.name1 = {
@@ -1590,11 +1588,11 @@ let Points = class Points {
                                 multi: true
                             }
                         };
-                        Utility.update(criteria, function (err) {
+                        Utility.update(criteria, (err) => {
                             wfCb(err, true);
                         });
                     } else {
-                        async.eachSeries(points, function (upi, cb2) {
+                        async.eachSeries(points, (upi, cb2) => {
                             let id;
                             if (upi.length < 12) {
                                 id = parseInt(upi, 10);
@@ -1619,18 +1617,18 @@ let Points = class Points {
                                     multi: true
                                 }
                             };
-                            Utility.update(criteria, function (err) {
+                            Utility.update(criteria, (err) => {
                                 cb2(err);
                             });
-                        }, function (err) {
+                        }, (err) => {
                             wfCb(err, true);
                         });
                     }
                 }
-            ], function (err) {
+            ], (err) => {
                 callback(err);
             });
-        }, function (err) {
+        }, (err) => {
             return cb(err);
         });
     }
@@ -1657,7 +1655,7 @@ let Points = class Points {
             });
         }
 
-        async.eachSeries(points, function (upi, callback) {
+        async.eachSeries(points, (upi, callback) => {
             if (upi.length < 12) {
                 id = parseInt(upi, 10);
             } else {
@@ -1674,7 +1672,7 @@ let Points = class Points {
                 updateObj: updateCriteria
             };
 
-            Utility.update(criteria, function (err) {
+            Utility.update(criteria, (err) => {
                 callback(err);
             });
         }, cb);
@@ -1743,7 +1741,7 @@ let Points = class Points {
         }
         db.collection(pointsCollection).update(searchCriteria, updateCriteria, {
         multi: 1
-        }, function(err, result) {
+        }, err, result) => {
         if (err) return Utils.sendResponse(res, {
         err: err
         });
@@ -1752,7 +1750,7 @@ let Points = class Points {
         });
         });
         } else {
-        async.eachSeries(points, function(upi, callback) {
+        async.eachSeries(points, upi, callback) => {
 
         if (upi.length < 12) {
         id = parseInt(upi, 10);
@@ -1764,7 +1762,7 @@ let Points = class Points {
         "_id": id
         };
 
-        db.collection(pointsCollection).findOne(searchCriteria, function(err, point) {
+        db.collection(pointsCollection).findOne(searchCriteria, err, point) => {
 
         for (j = 0; j < point.Security.length; j++) {
         for (m = 0; m < newUsers.length; m++) {
@@ -1780,9 +1778,9 @@ let Points = class Points {
         updateCriteria.$addToSet.Security.$each.push(newUsers[n]);
         }
 
-        db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
+        db.collection(pointsCollection).update(searchCriteria, updateCriteria, err, result) => {
         if (updateUsers.length > 0) {
-          async.eachSeries(updateUsers, function(user, cb) {
+          async.eachSeries(updateUsers, user, cb) => {
             permSearch = {
               _id: id,
               "Security.userId": user.userId
@@ -1792,10 +1790,10 @@ let Points = class Points {
                 "Security.$.Permissions": user.Permissions
               }
             };
-            db.collection(pointsCollection).update(permSearch, permUpdate, function(err, result) {
+            db.collection(pointsCollection).update(permSearch, permUpdate, err, result) => {
               cb(err);
             });
-          }, function(err) {
+          }, err) => {
             callback(err);
           });
         } else {
@@ -1805,7 +1803,7 @@ let Points = class Points {
         });
 
         },
-        function(err) {
+        err) => {
         if (err) return Utils.sendResponse(res, {
         err: err
         });
@@ -1845,7 +1843,7 @@ let Points = class Points {
         count = 0;
 
 
-        async.each(points, function(upi, callback) {
+        async.each(points, upi, callback) => {
 
         if (upi.length < 12) {
         id = parseInt(upi, 10);
@@ -1857,11 +1855,11 @@ let Points = class Points {
         "_id": id
         };
 
-        db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
+        db.collection(pointsCollection).update(searchCriteria, updateCriteria, err, result) => {
         callback(err);
         });
 
-        }, function(err) {
+        }, err) => {
         if (err) return Utils.sendResponse(res, {
         err: err
         });
@@ -1881,7 +1879,7 @@ let Util = class Util {
         }
         let userId = ObjectID(user._id);
 
-        let calcPermissions = function (groups) {
+        let calcPermissions = (groups) => {
             let points = {};
             for (let g = 0; g < groups.length; g++) {
                 let pAccess = groups[g]._pAccess;
@@ -1902,7 +1900,7 @@ let Util = class Util {
         Utility.get({
             collection: 'User Groups',
             query: query
-        }, function (err, groups) {
+        }, (err, groups) => {
             if (err || !groups.length) {
                 console.log(err || 'no groups');
                 return cb(err, false);
@@ -1916,7 +1914,7 @@ let Util = class Util {
         // if (!point.hasOwnProperty('Security')) {
         return callback();
         // }
-        // point.Security = point.Security.map(function (groupId) {
+        // point.Security = point.Security.map((groupId) => {
         //     return ObjectID(groupId);
         // });
 
@@ -1933,7 +1931,7 @@ let Util = class Util {
         //         }
         //     },
         //     updateObj: updateObj
-        // }, function (err, group) {
+        // }, (err, group) => {
         //     let updateObj = {
         //         $unset: {}
         //     };
@@ -1946,7 +1944,7 @@ let Util = class Util {
         //             }
         //         },
         //         updateObj: updateObj
-        //     }, function (err, group) {
+        //     }, (err, group) => {
         //         point.Security = [];
         //         return callback(err);
         //     });
@@ -1962,7 +1960,7 @@ let Util = class Util {
             query: searchCriteria
         };
 
-        Utility.getOne(criteria, function (err, controllers) {
+        Utility.getOne(criteria, (err, controllers) => {
             if (op === 'add') {
                 let id = 0;
                 let ids = [];
@@ -2006,7 +2004,7 @@ let Util = class Util {
                     }
                 };
                 console.log(criteria);
-                Utility.update(criteria, function (err) {
+                Utility.update(criteria, (err) => {
                     callback(err);
                 });
             } else if (op === 'remove') {
@@ -2024,7 +2022,7 @@ let Util = class Util {
                         }
                     }
                 };
-                Utility.update(criteria, function (err) {
+                Utility.update(criteria, (err) => {
                     callback(err);
                 });
             }

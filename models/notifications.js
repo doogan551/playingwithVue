@@ -32,7 +32,7 @@ let enums = Config.Enums,
     ackStatusEnums = enums['Acknowledge Statuses'],
     isAcknowledgedEnum = ackStatusEnums.Acknowledged.enum,
     alarmTypesEnums = enums['Alarm Types'],
-    returnToNormalEnumsObj = (function () {
+    returnToNormalEnumsObj = (() => {
         let obj = {},
             entry,
             alarmType;
@@ -43,7 +43,7 @@ let enums = Config.Enums,
             }
         }
         return obj;
-    }());
+    })();
 
 let ADDED = 1, // Thread states
     UPDATED = 2,
@@ -69,11 +69,11 @@ let dbAlarmQueueLocked = false,
     tempAlarmQueue = [],
     actions = {
         calendar: {
-            dbGetHolidaysObj: function (cb) {
+            dbGetHolidaysObj: (cb) => {
                 let query = {
                     year: new Date().getFullYear()
                 };
-                Calendar.getYear(query, function (err, result) {
+                Calendar.getYear(query, (err, result) => {
                     if (!!err) {
                         return cb(err);
                     }
@@ -90,7 +90,7 @@ let dbAlarmQueueLocked = false,
                     cb(null, obj);
                 });
             },
-            isHoliday: function (info) {
+            isHoliday: (info) => {
                 // info is an object with keys: policy, queueEntry, and data
                 let date = info.data.date,
                     todaysDate = [date.getMonth() + 1, date.getDate()].join('-');
@@ -98,22 +98,22 @@ let dbAlarmQueueLocked = false,
             }
         },
         scheduledTasks: {
-            dbGetAll: function (cb) {
+            dbGetAll: (cb) => {
                 let query = {
                     collection: 'NotifyScheduledTasks'
                 };
                 Utility.get(query, cb);
             },
-            dbUpdate: function (data, cb) {
+            dbUpdate: (data, cb) => {
                 actions.utility.log('actions.scheduledTasks.dbUpdate');
 
                 let updates = [],
                     deleteIds = [],
-                    updateTasks = function (updateCB) {
+                    updateTasks = (updateCB) => {
                         actions.utility.log('\tUpdating ' + updates.length + ' task(s)');
                         async.each(updates, doUpdate, updateCB);
                     },
-                    doUpdate = function (task, doUpdateCB) {
+                    doUpdate = (task, doUpdateCB) => {
                         let criteria = {
                             collection: 'NotifyScheduledTasks',
                             query: {
@@ -123,7 +123,7 @@ let dbAlarmQueueLocked = false,
                         };
                         Utility.update(criteria, doUpdateCB);
                     },
-                    deleteTasks = function (deleteCB) {
+                    deleteTasks = (deleteCB) => {
                         actions.utility.log('\tDeleting ' + deleteIds.length + ' task(s)');
                         let criteria = {
                             collection: 'NotifyScheduledTasks',
@@ -136,7 +136,7 @@ let dbAlarmQueueLocked = false,
                         Utility.remove(criteria, deleteCB);
                     };
 
-                data.scheduledTasks.forEach(function (task) {
+                data.scheduledTasks.forEach((task) => {
                     if (task._state === UPDATED) {
                         updates.push(task);
                         delete task._state;
@@ -151,13 +151,13 @@ let dbAlarmQueueLocked = false,
                 async.parallel([
                     updateTasks,
                     deleteTasks
-                ], function (err) {
+                ], (err) => {
                     cb(err, data);
                 });
             },
-            process: function (data, cb) {
+            process: (data, cb) => {
                 actions.utility.log('actions.scheduledTasks.process');
-                let rotateMembers = function (task) {
+                let rotateMembers = (task) => {
                         let policy = actions.policies.getPolicy(data.policies, task.policyID),
                             alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
                             group = alertConfig && actions.policies.getGroup(alertConfig.groups, task.config.groupID),
@@ -182,7 +182,7 @@ let dbAlarmQueueLocked = false,
                             task._state = DELETED;
                         }
                     },
-                    rotateGroup = function (task) {
+                    rotateGroup = (task) => {
                         let policy = actions.policies.getPolicy(data.policies, task.policyID),
                             alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
                             groups = alertConfig && alertConfig.groups,
@@ -216,7 +216,7 @@ let dbAlarmQueueLocked = false,
                 // after it's finished
                 data.policyConfigUpdates = {};
 
-                data.scheduledTasks.forEach(function (task) {
+                data.scheduledTasks.forEach((task) => {
                     let nextAction;
                     if (data.now >= task.nextAction) {
                         if (task.type === RECURRING) {
@@ -241,8 +241,8 @@ let dbAlarmQueueLocked = false,
             }
         },
         policies: {
-            dbGet: function (idList, cb) {
-                let objectIdList = idList.map(function (id) {
+            dbGet: (idList, cb) => {
+                let objectIdList = idList.map((id) => {
                         return new ObjectID(id);
                     }),
                     criteria = {
@@ -255,13 +255,13 @@ let dbAlarmQueueLocked = false,
                     };
                 Utility.get(criteria, cb);
             },
-            dbGetAll: function (cb) {
+            dbGetAll: (cb) => {
                 let criteria = {
                     collection: 'NotifyPolicies'
                 };
                 Utility.get(criteria, cb);
             },
-            dbUpdateConfigs: function (data, cb) {
+            dbUpdateConfigs: (data, cb) => {
                 let numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
 
                 actions.utility.log('actions.policies.dbUpdateConfigs');
@@ -272,12 +272,12 @@ let dbAlarmQueueLocked = false,
                     return cb(null, data);
                 }
 
-                async.forEachOf(data.policyConfigUpdates, doUpdate, function done(err) {
+                async.forEachOf(data.policyConfigUpdates, doUpdate, (err) => {
                     delete data.policyConfigUpdates;
                     return cb(err, data);
                 });
 
-                function doUpdate(policy, policyId, doUpdateCB) {
+                let doUpdate = (policy, policyId, doUpdateCB) => {
                     let criteria = {
                         collection: 'NotifyPolicies',
                         query: {
@@ -291,25 +291,25 @@ let dbAlarmQueueLocked = false,
                         }
                     };
                     Utility.update(criteria, doUpdateCB);
-                }
+                };
             },
-            dbUpdateThreads: function (data, cb) {
+            dbUpdateThreads: (data, cb) => {
                 actions.utility.log('policies.dbUpdateThreads');
 
                 let updates = [],
                     inserts = {},
                     deletes = {},
                     collection = 'NotifyPolicies',
-                    updateThreads = function (updateThreadsCB) {
+                    updateThreads = (updateThreadsCB) => {
                         async.each(updates, doUpdate, updateThreadsCB);
                     },
-                    insertThreads = function (insertThreadsCB) {
+                    insertThreads = (insertThreadsCB) => {
                         async.forEachOf(inserts, doInsert, insertThreadsCB);
                     },
-                    deleteThreads = function (deleteThreadsCB) {
+                    deleteThreads = (deleteThreadsCB) => {
                         async.forEachOf(deletes, doDelete, deleteThreadsCB);
                     },
-                    doUpdate = function (update, doUpdateCB) {
+                    doUpdate = (update, doUpdateCB) => {
                         let criteria = {
                             collection: collection,
                             query: {
@@ -324,7 +324,7 @@ let dbAlarmQueueLocked = false,
                         };
                         Utility.update(criteria, doUpdateCB);
                     },
-                    doInsert = function (threads, policyId, doInsertCB) {
+                    doInsert = (threads, policyId, doInsertCB) => {
                         let criteria = {
                             collection: collection,
                             query: {
@@ -340,7 +340,7 @@ let dbAlarmQueueLocked = false,
                         };
                         Utility.update(criteria, doInsertCB);
                     },
-                    doDelete = function (deleteIds, policyId, doDeleteCB) {
+                    doDelete = (deleteIds, policyId, doDeleteCB) => {
                         let criteria = {
                             collection: collection,
                             query: {
@@ -358,12 +358,12 @@ let dbAlarmQueueLocked = false,
                         };
                         Utility.update(criteria, doDeleteCB);
                     },
-                    getPolicyThreadChanges = function (policy) {
+                    getPolicyThreadChanges = (policy) => {
                         let policyId = policy._id,
                             _numberOfDeletes = 0,
                             _numberOfInserts = 0,
                             _numberOfUpdates = 0,
-                            processThread = function (thread) {
+                            processThread = (thread) => {
                                 if (!thread.hasOwnProperty('_state')) {
                                     return;
                                 }
@@ -404,11 +404,11 @@ let dbAlarmQueueLocked = false,
                     updateThreads,
                     insertThreads,
                     deleteThreads
-                ], function (err) {
+                ], (err) => {
                     cb(err, data);
                 });
             },
-            dbRemoveThreads: function (policyId, cb) {
+            dbRemoveThreads: (policyId, cb) => {
                 actions.utility.log('policies.dbRemoveThreads');
                 actions.utility.log('\tRemoving threads for policy id: ' + policyId);
                 let criteria = {
@@ -424,36 +424,36 @@ let dbAlarmQueueLocked = false,
                 };
                 Utility.update(criteria, cb);
             },
-            process: function (data, cb) {
+            process: (data, cb) => {
                 actions.utility.log('policies.process');
 
-                function processPolicy(policy, policyCB) {
-                    function processThread(thread, threadCB) {
+                let processPolicy = (policy, policyCB) => {
+                    let processThread = (thread, threadCB) => {
                         let info = {
                             policy: policy,
                             thread: thread,
                             data: data
                         };
                         actions.policies.processThread(info, threadCB);
-                    }
+                    };
                     actions.utility.log('\tPolicy ' + policy.name + ' - ' + policy.threads.length + ' thread(s)');
 
-                    async.each(policy.threads, processThread, function (err) {
+                    async.each(policy.threads, processThread, (err) => {
                         policyCB(err);
                     });
-                }
+                };
 
-                async.each(data.policies, processPolicy, function (err) {
+                async.each(data.policies, processPolicy, (err) => {
                     cb(err, data);
                 });
             },
-            getActiveAlertConfigIds: function (info) {
+            getActiveAlertConfigIds: (info) => {
                 // info is an object with keys: policy, thread, queueEntry, and data
                 let activeAlertConfigIds = [],
                     added = {};
 
-                actions.policies.getActiveScheduleLayers(info).forEach(function (scheduleLayer) {
-                    scheduleLayer.alertConfigs.forEach(function (id) {
+                actions.policies.getActiveScheduleLayers(info).forEach((scheduleLayer) => {
+                    scheduleLayer.alertConfigs.forEach((id) => {
                         if (!added[id]) {
                             added[id] = true;
                             activeAlertConfigIds.push(id);
@@ -462,17 +462,17 @@ let dbAlarmQueueLocked = false,
                 });
                 return activeAlertConfigIds;
             },
-            getActiveScheduleLayers: function (info) {
+            getActiveScheduleLayers: (info) => {
                 // info is an object with keys: policy, thread, queueEntry, and data
                 let activeScheduleLayers = [],
                     date = info.data.date,
                     todayIsHoliday = actions.calendar.isHoliday(info),
                     curDay = daysOfWeek[date.getDay()],
-                    getMinutes = function () {
+                    getMinutes = () => {
                         let minutes = date.getMinutes();
                         return ((minutes < 10) ? '0' + minutes : minutes);
                     },
-                    inScheduledTime = function (schedule) {
+                    inScheduledTime = (schedule) => {
                         let startTime = schedule.startTime,
                             endTime = schedule.endTime;
 
@@ -491,7 +491,7 @@ let dbAlarmQueueLocked = false,
                     },
                     curTime = parseInt([date.getHours(), getMinutes()].join(''), 10);
 
-                info.policy.scheduleLayers.forEach(function (scheduleLayer) {
+                info.policy.scheduleLayers.forEach((scheduleLayer) => {
                     let found = false,
                         schedule;
                     for (let i = 0, len = scheduleLayer.schedules.length; i < len && !found; i++) {
@@ -511,7 +511,7 @@ let dbAlarmQueueLocked = false,
                 });
                 return activeScheduleLayers;
             },
-            getPolicyLookupTable: function (policies) {
+            getPolicyLookupTable: (policies) => {
                 let obj = {},
                     len = policies.length,
                     policy,
@@ -522,7 +522,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return obj;
             },
-            getPolicy: function (policies, id) {
+            getPolicy: (policies, id) => {
                 let len = policies.length,
                     i;
                 for (i = 0; i < len; i++) {
@@ -534,7 +534,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return null;
             },
-            getAlertConfig: function (alertConfigs, id) {
+            getAlertConfig: (alertConfigs, id) => {
                 for (let i = 0, len = alertConfigs.length; i < len; i++) {
                     // Use == compare because IDK if id is a string or number
                     if (alertConfigs[i].id == id) {
@@ -543,7 +543,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return null;
             },
-            getGroup: function (groups, id) {
+            getGroup: (groups, id) => {
                 for (let i = 0, len = groups.length; i < len; i++) {
                     // Use == compare because IDK if id is a string or number
                     if (groups[i].id == id) {
@@ -552,7 +552,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return null;
             },
-            getEscalation: function (escalations, id) {
+            getEscalation: (escalations, id) => {
                 for (let i = 0, len = escalations.length; i < len; i++) {
                     // Use == compare because IDK if id is a string or number
                     if (escalations[i].id == id) {
@@ -561,7 +561,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return null;
             },
-            getUserAlerts: function (user, alarmClassName) {
+            getUserAlerts: (user, alarmClassName) => {
                 let alerts = [];
 
                 if (!!user) {
@@ -583,8 +583,8 @@ let dbAlarmQueueLocked = false,
                 }
                 return alerts;
             },
-            // Thread functions
-            processThread: function (info, cb) {
+            // Thread=>
+            processThread: (info, cb) => {
                 // info is an object with keys: policy, thread, data
                 let thread = info.thread,
                     isUpdated = false,
@@ -592,7 +592,7 @@ let dbAlarmQueueLocked = false,
                     now = info.data.now,
                     doNotifyReturnNormal = false,
                     doNotifyAlarmMutated = false,
-                    notifyLookup = (function () {
+                    notifyLookup = (() => {
                         let notifyQueue = thread.notifyQueue,
                             key,
                             notify,
@@ -603,8 +603,8 @@ let dbAlarmQueueLocked = false,
                             obj[key] = notify;
                         }
                         return obj;
-                    }()),
-                    getUserPermissions = function (userId) {
+                    })(),
+                    getUserPermissions = (userId) => {
                         // This routine returns a _pAccess value for the userId associated with the notifying point
                         let user = info.data.usersObj[userId],
                             security = thread.trigger.Security, // Array of group ids
@@ -615,7 +615,7 @@ let dbAlarmQueueLocked = false,
                             if (user['System Admin'].Value === true) {
                                 _pAccess = accessFlagsEnums.All;
                             } else {
-                                security.forEach(function (groupId) {
+                                security.forEach((groupId) => {
                                     group = info.data.groupsObj[groupId];
 
                                     // If our user is a member of this group
@@ -627,7 +627,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return _pAccess;
                     },
-                    notifyAlarmStateChange = function (change) {
+                    notifyAlarmStateChange = (change) => {
                         let i,
                             history,
                             userId,
@@ -657,7 +657,7 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     },
-                    addNotifications = function (userIds) {
+                    addNotifications = (userIds) => {
                         let len = userIds.length,
                             alarmClassName = alarmClassRevEnums[thread.trigger.almClass],
                             i,
@@ -696,7 +696,7 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     },
-                    processEscalation = function (escalation) {
+                    processEscalation = (escalation) => {
                         let recepients;
                         if (escalation.alertStyle === 'Everyone') {
                             recepients = escalation.recepients;
@@ -724,7 +724,7 @@ let dbAlarmQueueLocked = false,
                         isUpdated = true;
                         escalation.lastAction = now;
                     },
-                    processAlertGroup = function (alertGroup) {
+                    processAlertGroup = (alertGroup) => {
                         let resetEscalations = false;
 
                         // If the alert group is ready to repeat
@@ -736,7 +736,7 @@ let dbAlarmQueueLocked = false,
                             }
                         }
 
-                        alertGroup.escalations.forEach(function (escalation) {
+                        alertGroup.escalations.forEach((escalation) => {
                             // If the alert group has escalated through all escalations
                             if (resetEscalations) {
                                 // If the escalation is finished (an escalation can can continue spinning while the alert continues to escalate)
@@ -786,7 +786,7 @@ let dbAlarmQueueLocked = false,
                 }
 
                 // Get thread acknowledged status & process accordingly
-                actions.policies.isThreadAcknowledged(info, function (err, isAcknowledged) {
+                actions.policies.isThreadAcknowledged(info, (err, isAcknowledged) => {
                     if (!!err) {
                         return cb(err);
                     }
@@ -827,14 +827,14 @@ let dbAlarmQueueLocked = false,
                     return cb();
                 });
             },
-            createThread: function (info) {
+            createThread: (info) => {
                 // info is an object with keys: policy, data, and queueEntry; it may also have 'thread' but it's irrelevant
                 let alertConfigIds = actions.policies.getActiveAlertConfigIds(info),
                     numberOfAlertConfigIds = alertConfigIds.length,
                     queueEntry = info.queueEntry,
                     trigger = {},
                     key,
-                    getGroupRepeatTime = function (group) {
+                    getGroupRepeatTime = (group) => {
                         if (!group.repeatConfig.enabled) {
                             return 0;
                         }
@@ -849,7 +849,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return time;
                     },
-                    getRecepients = function (members) {
+                    getRecepients = (members) => {
                         // members is an array of user ids
                         let recepients = [],
                             id,
@@ -864,7 +864,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return recepients;
                     },
-                    getEscalations = function (group) {
+                    getEscalations = (group) => {
                         let escalations = [],
                             len = group.escalations.length,
                             time = parseInt(group.alertDelay, 10),
@@ -895,12 +895,12 @@ let dbAlarmQueueLocked = false,
                         }
                         return escalations;
                     },
-                    getAlertGroups = function () {
+                    getAlertGroups = () => {
                         let groups = [],
                             alertConfig,
                             i,
                             activeAlertGroup,
-                            getActiveGroupConfig = function (alertConfig) {
+                            getActiveGroupConfig = (alertConfig) => {
                                 let groups = alertConfig.groups,
                                     len = groups.length,
                                     i;
@@ -910,7 +910,7 @@ let dbAlarmQueueLocked = false,
                                     }
                                 }
                             },
-                            getAlertGroup = function (group) {
+                            getAlertGroup = (group) => {
                                 let repeatTime;
                                 // Get the initial repeat time
                                 repeatTime = getGroupRepeatTime(group); // minutes
@@ -967,7 +967,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return null;
             },
-            updateThread: function (info) {
+            updateThread: (info) => {
                 // info is an object with keys: policy, thread, data, and queueEntry
                 let thread = info.thread,
                     queueEntry = info.queueEntry,
@@ -1001,7 +1001,7 @@ let dbAlarmQueueLocked = false,
                 status.isReturnedNormal = false;
                 status.isWaitingReturnNormal = false;
             },
-            mutateThread: function (info) {
+            mutateThread: (info) => {
                 // info is an object with keys: policy, thread, data, and queueEntry
 
                 // The mutated flag is a temporary flag that tells us to notify the recepient history of the new alarm state
@@ -1009,7 +1009,7 @@ let dbAlarmQueueLocked = false,
                 info.thread._notifyAlarmMutated = true;
                 actions.policies.updateThread(info);
             },
-            setThreadState: function (thread, requestedState) {
+            setThreadState: (thread, requestedState) => {
                 let _state = thread._state;
 
                 if ((_state === DELETED) || ((requestedState === UPDATED) && (_state === ADDED))) {
@@ -1019,10 +1019,10 @@ let dbAlarmQueueLocked = false,
 
                 return thread._state;
             },
-            isThreadActive: function (thread) {
+            isThreadActive: (thread) => {
                 return ((thread._state !== DELETED) && (thread.trigger.msgCat !== maintenanceCategoryEnum));
             },
-            isThreadAcknowledged: function (info, cb) {
+            isThreadAcknowledged: (info, cb) => {
                 // info is an object with keys policy, thread, data, and sometimes queueEntry
                 let thread = info.thread,
                     alarmId = thread.trigger.alarmId,
@@ -1045,7 +1045,7 @@ let dbAlarmQueueLocked = false,
                 Alarm.getAlarm({
                     query: query,
                     fields: fields
-                }, function (err, alarm) { // alarm is null if not found
+                }, (err, alarm) => { // alarm is null if not found
                     let ackStatus = (alarm && alarm.ackStatus) || isAcknowledgedEnum, // If we can't find the alarm (shouldn't happen), we treat it like it has been acknowledged
                         isAcknowledged = (ackStatus === isAcknowledgedEnum);
 
@@ -1057,7 +1057,7 @@ let dbAlarmQueueLocked = false,
                     return cb(err, isAcknowledged);
                 });
             },
-            getThreadCounter: function (repeatConfig, isGroupConfig) {
+            getThreadCounter: (repeatConfig, isGroupConfig) => {
                 let counter = 1,
                     repeatCount = parseInt(repeatConfig.repeatCount, 10);
 
@@ -1071,7 +1071,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return counter;
             },
-            getActiveThread: function (threads, upi) {
+            getActiveThread: (threads, upi) => {
                 let len = threads.length,
                     thread,
                     i;
@@ -1086,20 +1086,20 @@ let dbAlarmQueueLocked = false,
             }
         },
         alarmQueue: {
-            dbGetAll: function (cb) {
+            dbGetAll: (cb) => {
                 let query = {
                     collection: 'NotifyAlarmQueue'
                 };
                 Utility.get(query, cb);
             },
-            dbInsert: function (queueEntries, cb) {
+            dbInsert: (queueEntries, cb) => {
                 let criteria = {
                     collection: 'NotifyAlarmQueue',
                     insertObj: queueEntries
                 };
                 Utility.insert(criteria, cb);
             },
-            dbRemoveAll: function (data, cb) {
+            dbRemoveAll: (data, cb) => {
                 actions.utility.log('alarmQueue.dbRemoveAll');
 
                 // If the alarm queue was empty there's nothing for us to do
@@ -1120,7 +1120,7 @@ let dbAlarmQueueLocked = false,
                 // 4. The alarm that came in finishes inserting into the alarmQueue db collection
                 async.waterfall([
                     actions.alarmQueue.dbGetAll,
-                    function validate(alarmQueue, validateCB) {
+                    (alarmQueue, validateCB) => {
                         if (alarmQueue.length > data.alarmQueue.length) {
                             for (let i = data.alarmQueue.length; i < alarmQueue.length; i++) {
                                 tempAlarmQueue.push(alarmQueue[i]);
@@ -1128,31 +1128,31 @@ let dbAlarmQueueLocked = false,
                         }
                         validateCB(null);
                     },
-                    function remove(removeCB) {
+                    (removeCB) => {
                         Utility.remove(criteria, removeCB);
                     }
-                ], function complete(err) {
+                ], (err) => {
                     cb(err, data);
                 });
             },
-            lock: function (data, cb) {
+            lock: (data, cb) => {
                 dbAlarmQueueLocked = true;
                 if (cb) {
                     cb(null, data);
                 }
             },
-            unlock: function (data, cb) {
+            unlock: (data, cb) => {
                 dbAlarmQueueLocked = false;
                 if (cb) {
                     cb(null, data);
                 }
             },
-            process: function (data, cb) {
+            process: (data, cb) => {
                 actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue');
                 let policyLookup = actions.policies.getPolicyLookupTable(data.policies);
 
-                function alarmQueueIteratee(queueEntry, queueCB) {
-                    function policyIdsIteratee(policyId, policyCB) {
+                let alarmQueueIteratee = (queueEntry, queueCB) => {
+                    let policyIdsIteratee = (policyId, policyCB) => {
                         let policy = policyLookup[policyId],
                             info = {
                                 queueEntry: queueEntry,
@@ -1170,25 +1170,25 @@ let dbAlarmQueueLocked = false,
                             actions.utility.log('\tPolicy not found');
                             policyCB();
                         }
-                    }
+                    };
 
-                    async.eachSeries(queueEntry.policyIds, policyIdsIteratee, function (err) {
+                    async.eachSeries(queueEntry.policyIds, policyIdsIteratee, (err) => {
                         queueCB(err);
                     });
-                }
+                };
 
                 // Process the queue
-                async.eachSeries(data.alarmQueue, alarmQueueIteratee, function (err) {
+                async.eachSeries(data.alarmQueue, alarmQueueIteratee, (err) => {
                     cb(err, data);
                 });
             },
-            processNew: function (info, cb) {
+            processNew: (info, cb) => {
                 actions.utility.log('\tProcessing new alarm entry from NotifyAlarmQueue');
                 // info is an object with keys: policy, queueEntry, and data
                 let queueEntry = info.queueEntry,
                     policy = info.policy,
                     thread,
-                    createNewThread = function () {
+                    createNewThread = () => {
                         thread = actions.policies.createThread(info);
                         if (!!thread) {
                             actions.utility.log('\tAdded new thread to policy ' + policy.name);
@@ -1214,7 +1214,7 @@ let dbAlarmQueueLocked = false,
                     // the thread.
 
                     // Get isAcknowledged status
-                    actions.policies.isThreadAcknowledged(info, function (err, isAcknowledged) {
+                    actions.policies.isThreadAcknowledged(info, (err, isAcknowledged) => {
                         if (!!err) {
                             return cb(err);
                         }
@@ -1257,7 +1257,7 @@ let dbAlarmQueueLocked = false,
                     return cb();
                 }
             },
-            processReturn: function (info, cb) {
+            processReturn: (info, cb) => {
                 actions.utility.log('\tProcessing new return entry from NotifyAlarmQueue');
                 // info is an object with keys: policy, queueEntry, and data
                 let queueEntry = info.queueEntry,
@@ -1279,7 +1279,7 @@ let dbAlarmQueueLocked = false,
                 }
                 return cb();
             },
-            processTempAlarmQueue: function (data, cb) {
+            processTempAlarmQueue: (data, cb) => {
                 actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue');
 
                 let tempAlarmQueueLength = tempAlarmQueue.length;
@@ -1289,14 +1289,14 @@ let dbAlarmQueueLocked = false,
                 }
 
                 // Save the temp alarm queue to the database & empty the temp alarm queue
-                actions.alarmQueue.dbInsert(tempAlarmQueue, function (err) {
+                actions.alarmQueue.dbInsert(tempAlarmQueue, (err) => {
                     if (!!err) {
                         return cb(err);
                     }
                     // We could just clear the tempAlarmQueue but the following guarantees we do not miss any entries @ the
                     // dbAlarmQueueLocked transition; see comments in actions.alarmQueue.dbRemoveAll for a thorough explanation
                     if (tempAlarmQueue.length > tempAlarmQueueLength) {
-                        actions.alarmQueue.dbInsert(tempAlarmQueue.splice(tempAlarmQueueLength, tempAlarmQueue.length), function (err) {
+                        actions.alarmQueue.dbInsert(tempAlarmQueue.splice(tempAlarmQueueLength, tempAlarmQueue.length), (err) => {
                             if (!!err) {
                                 return cb(err);
                             }
@@ -1311,7 +1311,7 @@ let dbAlarmQueueLocked = false,
             }
         },
         notifications: {
-            buildNotifyList: function (data, cb) {
+            buildNotifyList: (data, cb) => {
                 actions.utility.log('notifications.buildNotifyList');
 
                 let policy,
@@ -1322,7 +1322,7 @@ let dbAlarmQueueLocked = false,
                     isUpdated,
                     i, j, k,
                     ilen, jlen, klen,
-                    getReturnNormals = function (notification) {
+                    getReturnNormals = (notification) => {
                         return notification.change === 'return';
                     };
 
@@ -1383,7 +1383,7 @@ let dbAlarmQueueLocked = false,
                 }
                 cb(null, data);
             },
-            sendNotifications: function (data, cb) {
+            sendNotifications: (data, cb) => {
                 actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now');
                 // data.notifyList is of the form:
                 // [{
@@ -1428,7 +1428,7 @@ let dbAlarmQueueLocked = false,
                     to,
                     notifyingReturnNormal,
                     showReplyToAckMsg,
-                    recepientHistoryLookup = (function () {
+                    recepientHistoryLookup = (() => {
                         let obj = {},
                             thread,
                             history,
@@ -1450,17 +1450,17 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                         return obj;
-                    }()),
-                    formatMinutes = function (minutes) {
+                    })(),
+                    formatMinutes = (minutes) => {
                         return minutes < 10 ? ('0' + minutes) : minutes;
                     },
-                    formatHours = function (hours) {
+                    formatHours = (hours) => {
                         return hours > 12 ? (hours - 12) : hours;
                     },
-                    getPeriod = function (hours) {
+                    getPeriod = (hours) => {
                         return hours > 12 ? 'PM' : 'AM';
                     },
-                    getVoiceMsgDate = function (timestamp) {
+                    getVoiceMsgDate = (timestamp) => {
                         let date = new Date(timestamp);
 
                         if ((date.getMonth() === data.date.getMonth()) && (date.getDate() === data.date.getDate())) {
@@ -1468,23 +1468,23 @@ let dbAlarmQueueLocked = false,
                         }
                         return ['on', date.getMonth() + '/' + date.getDate()];
                     },
-                    getMsgDate = function (timestamp) {
+                    getMsgDate = (timestamp) => {
                         let date = new Date(timestamp);
                         return [date.getMonth() + 1, '/', date.getDate()].join('');
                     },
-                    getMsgTime = function (timestamp) {
+                    getMsgTime = (timestamp) => {
                         let date = new Date(timestamp),
                             hours = date.getHours(),
                             minutes = date.getMinutes();
                         return [formatHours(hours), ':', formatMinutes(minutes), ' ', getPeriod(hours)].join('');
                     },
-                    getVoiceReturnNormalMessage = function (timestamp) {
+                    getVoiceReturnNormalMessage = (timestamp) => {
                         return ['It returned normal' + getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.'].join(' ');
                     },
-                    getReturnNormalMessage = function (timestamp) {
+                    getReturnNormalMessage = (timestamp) => {
                         return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join(' ');
                     },
-                    getEmailSubject = function () {
+                    getEmailSubject = () => {
                         // thread letiables were set before this routine was called
                         let isNormalAlarmClass = thread.trigger.almClass === alarmClassEnums.Normal.enum,
                             alarmClassText = alarmClassRevEnums[thread.trigger.almClass],
@@ -1495,7 +1495,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return subject + thread.trigger.Name;
                     },
-                    getColor = function () {
+                    getColor = () => {
                         // notifyingReturnNormal letiable was set before this routine was called
                         let color;
                         if (notifyingReturnNormal) {
@@ -1505,7 +1505,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return color;
                     },
-                    getMessage = function () {
+                    getMessage = () => {
                         // thread, notification, and notifyingReturnNormal letiables were set before this routine was called
                         let trigger = thread.trigger,
                             msg = '',
@@ -1537,7 +1537,7 @@ let dbAlarmQueueLocked = false,
                         }
                         return msg;
                     },
-                    createCallback = function (notifyEntry) {
+                    createCallback = (notifyEntry) => {
                         let notification = notifyEntry.notification,
                             policy = notifyEntry.policy,
                             trigger = notifyEntry.thread.trigger,
@@ -1577,11 +1577,11 @@ let dbAlarmQueueLocked = false,
                                 insertObj: log
                             };
 
-                        return function (err, result) {
+                        return (err, result) => {
                             log.err = err;
                             log.apiResult = result;
 
-                            Utility.insert(criteria, function (err) {
+                            Utility.insert(criteria, (err) => {
                                 if (!!err) {
                                     actions.utility.sendError(err);
                                 }
@@ -1682,17 +1682,17 @@ let dbAlarmQueueLocked = false,
             }
         },
         utility: {
-            getTimestamp: function (info, offset) {
+            getTimestamp: (info, offset) => {
                 // info is an object with keys: policy, thread, data and probably more
                 // info.data.now is in milliseconds; offset is in minutes
                 return (parseInt(info.data.now + (offset * MSPM), 10));
             },
-            log: function () {
+            log: () => {
                 for (let i = 0; i < arguments.length; i++) {
                     console.log(arguments[i]);
                 }
             },
-            sendError: function (err) {
+            sendError: (err) => {
                 let siteName = siteConfig.location.site,
                     text = [
                         'Site: ' + siteName,
@@ -1706,11 +1706,11 @@ let dbAlarmQueueLocked = false,
                     subject: 'Error: Notifications (Site: ' + siteName + ')',
                     text: text
                 });
-                notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function () {});
+                notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', () => {});
             }
         },
-        dbGetAllUsersObj: function (cb) {
-            User.getUsers(function (err, users) {
+        dbGetAllUsersObj: (cb) => {
+            User.getUsers((err, users) => {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1722,8 +1722,8 @@ let dbAlarmQueueLocked = false,
                 cb(null, obj);
             });
         },
-        dbGetAllGroupsObj: function (cb) {
-            UserGroup.getGroups(function (err, groups) {
+        dbGetAllGroupsObj: (cb) => {
+            UserGroup.getAll((err, groups) => {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1735,13 +1735,13 @@ let dbAlarmQueueLocked = false,
                 cb(null, obj);
             });
         },
-        processIncomingAlarm: function (alarm) {
+        processIncomingAlarm: (alarm) => {
             if (!appConfig.runNotifications) {
                 return;
             }
 
             let startTime = new Date().getTime(),
-                name = (function () {
+                name = (() => {
                     let str = alarm.Name1;
                     if (alarm.Name2) {
                         str += '_' + alarm.Name2;
@@ -1753,7 +1753,7 @@ let dbAlarmQueueLocked = false,
                         }
                     }
                     return str;
-                }());
+                })();
 
             actions.utility.log('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
 
@@ -1774,7 +1774,7 @@ let dbAlarmQueueLocked = false,
                 getQueueEntryObj,
                 processImmediates,
                 insertNotifyAlarmQueue
-            ], function (err) {
+            ], (err) => {
                 if (!!err) {
                     actions.utility.sendError(err);
                 }
@@ -1782,15 +1782,15 @@ let dbAlarmQueueLocked = false,
             });
 
 
-            function getPoint(cb) {
+            let getPoint = (cb) => {
                 Point.getPointById({
                     _id: alarm.upi
-                }, function (err, point) {
+                }, (err, point) => {
                     cb(err, point);
                 });
-            }
+            };
 
-            function getNotifyPolicies(point, cb) {
+            let getNotifyPolicies = (point, cb) => {
                 let info = {
                         point: point,
                         policyIds: [],
@@ -1803,7 +1803,7 @@ let dbAlarmQueueLocked = false,
                     policy;
 
                 if (notifyPolicies && notifyPolicies.length) {
-                    actions.policies.dbGet(point['Notify Policies'], function (err, policies) {
+                    actions.policies.dbGet(point['Notify Policies'], (err, policies) => {
                         if (!!err) {
                             cb(err);
                         }
@@ -1820,15 +1820,15 @@ let dbAlarmQueueLocked = false,
                 } else {
                     return cb(null, info);
                 }
-            }
+            };
 
-            function getNotifyIdsByUrgency(info, cb) {
+            let getNotifyIdsByUrgency = (info, cb) => {
                 // info is an object with keys: point, policyIds, policies, and policiesObj
-                let getScheduledAlertConfigIdsObj = function (policy) {
+                let getScheduledAlertConfigIdsObj = (policy) => {
                         let alertConfigIdsObj = {},
                             i,
                             len;
-                        policy.scheduleLayers.forEach(function (scheduleLayer) {
+                        policy.scheduleLayers.forEach((scheduleLayer) => {
                             len = scheduleLayer.alertConfigs.length;
                             for (i = 0; i < len; i++) {
                                 alertConfigIdsObj[scheduleLayer.alertConfigs[i]] = true;
@@ -1836,7 +1836,7 @@ let dbAlarmQueueLocked = false,
                         });
                         return alertConfigIdsObj;
                     },
-                    isImmediate = function (policyId) {
+                    isImmediate = (policyId) => {
                         let policy = info.policiesObj[policyId],
                             threadExists = !!actions.policies.getActiveThread(policy.threads, alarm.upi);
 
@@ -1877,7 +1877,7 @@ let dbAlarmQueueLocked = false,
                 info.immediatePolicyIds = [];
                 info.delayedPolicyIds = [];
 
-                info.policyIds.forEach(function (policyId) {
+                info.policyIds.forEach((policyId) => {
                     if (isImmediate(policyId)) {
                         info.immediatePolicyIds.push(policyId);
                     } else {
@@ -1886,10 +1886,10 @@ let dbAlarmQueueLocked = false,
                 });
 
                 cb(null, info);
-            }
+            };
 
-            function getQueueEntryObj(info, cb) {
-                let getNotifyReturnNormal = function (alarmMessages) {
+            let getQueueEntryObj = (info, cb) => {
+                let getNotifyReturnNormal = (alarmMessages) => {
                     // Maintenance alarms never return normal so we never set the return to normal flag
                     // regardless of the point setting
                     if (alarm.msgCat === maintenanceCategoryEnum) {
@@ -1930,9 +1930,9 @@ let dbAlarmQueueLocked = false,
                     notifyReturnNormal: getNotifyReturnNormal(info.point['Alarm Messages'])
                 };
                 cb(null, info);
-            }
+            };
 
-            function processImmediates(info, cb) {
+            let processImmediates = (info, cb) => {
                 if (!info.immediatePolicyIds.length) {
                     return cb(null, info);
                 }
@@ -1945,13 +1945,13 @@ let dbAlarmQueueLocked = false,
                     holidaysObj: actions.calendar.dbGetHolidaysObj,
                     usersObj: actions.dbGetAllUsersObj,
                     groupsObj: actions.dbGetAllGroupsObj
-                }, function complete(err, data) {
+                }, (err, data) => {
                     if (!!err) {
                         return cb(err);
                     }
 
                     // Remove all existing policy threads so we don't inadvertantly update or delete them
-                    info.policies.forEach(function (policy) {
+                    info.policies.forEach((policy) => {
                         policy.threads.length = 0;
                     });
 
@@ -1977,7 +1977,7 @@ let dbAlarmQueueLocked = false,
 
                     // Processing tasks
                     async.waterfall([
-                        function start(cb) {
+                        (cb) => {
                             cb(null, data);
                         },
                         actions.alarmQueue.process,
@@ -1985,7 +1985,7 @@ let dbAlarmQueueLocked = false,
                         actions.notifications.buildNotifyList,
                         actions.notifications.sendNotifications,
                         actions.policies.dbUpdateThreads
-                    ], function (err) {
+                    ], (err) => {
                         if (!!err) {
                             return cb(err);
                         }
@@ -1993,9 +1993,9 @@ let dbAlarmQueueLocked = false,
                         return cb(null, info);
                     });
                 });
-            }
+            };
 
-            function insertNotifyAlarmQueue(info, cb) {
+            let insertNotifyAlarmQueue = (info, cb) => {
                 if (!info.delayedPolicyIds.length) {
                     return cb(null, info);
                 }
@@ -2008,22 +2008,22 @@ let dbAlarmQueueLocked = false,
                     return cb(null, info);
                 }
                 actions.utility.log('\tAdding to NotifyAlarmQueue');
-                actions.alarmQueue.dbInsert(info.queueEntry, function (err) {
+                actions.alarmQueue.dbInsert(info.queueEntry, (err) => {
                     if (!!err) {
                         return cb(err);
                     }
 
                     return cb(null, info);
                 });
-            }
+            };
         }
     };
 
-function run() {
+let run = () => {
     let date = new Date(),
         startTime = date.getTime(),
         startMessage = ['RUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('');
-    let terminate = function (err) {
+    let terminate = (err) => {
         actions.alarmQueue.unlock();
         actions.utility.sendError(err);
     };
@@ -2045,12 +2045,12 @@ function run() {
         usersObj: actions.dbGetAllUsersObj,
         groupsObj: actions.dbGetAllGroupsObj,
         scheduledTasks: actions.scheduledTasks.dbGetAll
-    }, function (err, data) {
+    }, (err, data) => {
         if (!!err) {
             return terminate(err);
         }
 
-        let start = function (cb) {
+        let start = (cb) => {
             cb(null, data);
         };
 
@@ -2085,14 +2085,14 @@ function run() {
             actions.alarmQueue.dbRemoveAll,
             actions.alarmQueue.unlock,
             actions.alarmQueue.processTempAlarmQueue
-        ], function (err) {
+        ], (err) => {
             if (!!err) {
                 actions.utility.sendError(err);
             }
             actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)');
         });
     });
-}
+};
 
 module.exports = {
     run: run,

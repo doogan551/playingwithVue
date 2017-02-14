@@ -32,7 +32,7 @@ let NotifierUtility = class NotifierUtility {
     }
 
     sendText(number, message, cb) {
-        this.Twilio.sendText(this.fixPhoneNumbers(number), message, function (err, response) {
+        this.Twilio.sendText(this.fixPhoneNumbers(number), message, (err, response) => {
             if (cb) {
                 return cb(err, response);
             }
@@ -54,7 +54,7 @@ let NotifierUtility = class NotifierUtility {
             queryString = '',
             key,
             twilioOptions,
-            buildOptions = function () {
+            buildOptions = () => {
                 let obj = {},
                     keyValue;
                 for (let key in app) {
@@ -96,7 +96,7 @@ let NotifierUtility = class NotifierUtility {
         }
 
         // Do voice notification
-        this.Twilio.sendVoice(twilioOptions, function (err, response) {
+        this.Twilio.sendVoice(twilioOptions, (err, response) => {
             // TODO Check for error and fallback to Plivo if necessary
             if (cb) {
                 return cb(err, response);
@@ -111,7 +111,7 @@ let NotifierUtility = class NotifierUtility {
         // If not used, 'fromAccount' defaults to 'infoscan', and 'fromUser' defaults to 'InfoScan', combining to yield a from address of:
         // '"InfoScan" <infoscan@[domain]>', where domain is the site domain defined in the config file
         // Typically, the 'fromAccount' will be sourced from one listed in the config file (Infoscan.email.accounts)
-        this.Mailer.sendEmail(options, function (err, response) {
+        this.Mailer.sendEmail(options, (err, response) => {
             if (cb) {
                 cb(err, response);
             }

@@ -72,7 +72,7 @@ let Common = class Common {
                 'Command Type': 10
             };
             command = JSON.stringify(command);
-            zmq.sendCommand(command, function (err, msg) {
+            zmq.sendCommand(command, (err, msg) => {
                 return callback(err, msg);
             });
         } else {

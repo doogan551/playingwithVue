@@ -22,27 +22,22 @@ let Point = class Point extends Utility {
     }
     updateOne(criteria, cb) {
         criteria.collection = this.collection;
-        Utility.update(criteria, cb);
+        this.update(criteria, cb);
     }
     getPointById(data, cb) {
         let searchCriteria = {};
         let upi = parseInt(data.id, 10);
 
         searchCriteria._id = upi;
-        /*searchCriteria._pStatus = {
-            $in: [0, 1]
-        };*/
+
         Security.Utility.getPermissions(data.user, (err, permissions) => {
-            Utility.get({
-                query: searchCriteria,
-                collection: this.collection,
-                limit: 1
-            }, (err, points) => {
+            this.getOne({
+                query: searchCriteria
+            }, (err, point) => {
                 if (err) {
                     return cb(err, null, null);
                 }
 
-                let point = points[0];
                 if (permissions === true || permissions.hasOwnProperty(upi) || point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                     if (!point) {
                         return cb(null, 'No Point Found', null);
@@ -59,11 +54,6 @@ let Point = class Point extends Utility {
         });
     }
 
-    getAll(criteria, cb) {
-        criteria.collection = this.collection;
-        Utility.get(criteria, cb);
-    }
-
     newPoint(data, cb) {
         let id = data.id || null;
         let pointType = !!data.pointType && JSON.stringify(decodeURI(data.pointType));
@@ -72,7 +62,7 @@ let Point = class Point extends Utility {
             name: JSON.stringify(''),
             pointType: pointType,
             selectedPointType: data.selectedPointType,
-            pointTypes: JSON.stringify(Config.Utility.pointTypes.getAllowedPointTypes()),
+            pointTypes: JSON.stringify(Config.this.pointTypes.getAllowedPointTypes()),
             subType: (!!data.subType ? data.subType : -1)
         };
         let query = {
@@ -86,17 +76,13 @@ let Point = class Point extends Utility {
         };
 
         if (id) {
-            Utility.get({
+            this.getOne({
                 query: query,
-                fields: fields,
-                collection: this.collection,
-                limit: 1
-            }, (err, points) => {
+                fields: fields
+            }, (err, point) => {
                 if (err) {
                     return cb(err, null);
                 }
-
-                let point = points[0];
 
                 if (point.hasOwnProperty('Report Type')) {
                     locals.subType = JSON.stringify(point['Report Type'].eValue);
@@ -117,7 +103,7 @@ let Point = class Point extends Utility {
     pointLookup(data, cb) {
         let property = data.property && decodeURI(data.property);
         let pointType = (data.pointType && data.pointType !== 'null' && decodeURI(data.pointType)) || null;
-        let pointTypes = Config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
+        let pointTypes = Config.this.pointTypes.getAllowedPointTypes(property, pointType);
         let deviceId = data.deviceId || null;
         let remoteUnitId = data.remoteUnitId || null;
         let locals = {
@@ -151,7 +137,7 @@ let Point = class Point extends Utility {
         //limit query to 200 by default
         let limit = data.limit || 200;
         // If no point type array passed in, use default
-        let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
+        let pointTypes = data.pointTypes || Config.this.pointTypes.getAllowedPointTypes().map((type) => {
             return type.key;
         });
         // Name segments, sort names and values
@@ -252,7 +238,6 @@ let Point = class Point extends Utility {
 
 
         let criteria = {
-            collection: this.collection,
             query: buildQuery(),
             sort: sort,
             _limit: limit,
@@ -260,7 +245,7 @@ let Point = class Point extends Utility {
             data: data
         };
 
-        Utility.getWithSecurity(criteria, (err, points, count) => {
+        this.getWithSecurity(criteria, (err, points, count) => {
             points.forEach((point) => {
                 point.pointType = point['Point Type'].Value;
             });
@@ -281,7 +266,6 @@ let Point = class Point extends Utility {
             }
 
             let criteria = {
-                    collection: this.collection,
                     field: item.property + '.Value',
                     query: {}
                 },
@@ -296,7 +280,7 @@ let Point = class Point extends Utility {
                 });
             }
 
-            Utility.distinct(criteria, (err, results) => {
+            this.distinct(criteria, (err, results) => {
                 let obj = {
                     property: item.property,
                     distinct: results
@@ -309,7 +293,7 @@ let Point = class Point extends Utility {
 
         async.each(data.distinct, getDistinct, (err) => {
             // cb(err, distinct);
-            Utility.update({
+            this.update({
                 collection: 'dev',
                 query: {
                     item: 'distinct'
@@ -325,7 +309,7 @@ let Point = class Point extends Utility {
         });
     }
     getDistinctValuesTemp(data, cb) {
-        Utility.getOne({
+        this.getOne({
             collection: 'dev',
             query: {
                 item: 'distinct'
@@ -354,7 +338,6 @@ let Point = class Point extends Utility {
         // }
 
         let criteria = {
-            collection: this.collection,
             query: {
                 $and: []
             },
@@ -427,7 +410,7 @@ let Point = class Point extends Utility {
             $and.push(query);
         }
 
-        Utility.getWithSecurity(criteria, cb);
+        this.getWithSecurity(criteria, cb);
 
         // return cb(null, [data.searchTerms]);
         // (req, res, next) =>{
@@ -476,13 +459,12 @@ let Point = class Point extends Utility {
         let upi = parseInt(data.upi, 10);
 
         let criteria = {
-            collection: this.collection,
             query: {
                 _id: upi
             }
         };
 
-        Utility.getOne(criteria, (err, targetPoint) => {
+        this.getOne(criteria, (err, targetPoint) => {
             if (err) {
                 return cb(err);
             }
@@ -513,13 +495,12 @@ let Point = class Point extends Utility {
                 });
             }, (err) => {
                 criteria = {
-                    collection: this.collection,
                     query: {
                         'Point Refs.PointInst': upi,
                         _pStatus: 0
                     }
                 };
-                Utility.get(criteria, (err, dependencies) => {
+                this.get(criteria, (err, dependencies) => {
                     if (err) {
                         return cb(err);
                     }
@@ -554,13 +535,12 @@ let Point = class Point extends Utility {
                                         depPRCB(null);
                                     } else {
                                         criteria = {
-                                            collection: this.collection,
                                             query: {
                                                 _id: dependency._parentUpi
                                             }
                                         };
 
-                                        Utility.getOne(criteria, (err, schedule) => {
+                                        this.getOne(criteria, (err, schedule) => {
                                             returnObj.Dependencies.push({
                                                 _id: schedule._id,
                                                 Property: depPointRef.PropertyName,
@@ -613,7 +593,6 @@ let Point = class Point extends Utility {
             let deviceUpi = 0;
             if (upi !== 0) {
                 criteria = {
-                    collection: this.collection,
                     query: {
                         _id: upi
                     },
@@ -623,7 +602,7 @@ let Point = class Point extends Utility {
                         'Point Type': 1
                     }
                 };
-                Utility.getOne(criteria, (err, ref) => {
+                this.getOne(criteria, (err, ref) => {
                     if (err) {
                         return callback(err);
                     }
@@ -644,7 +623,6 @@ let Point = class Point extends Utility {
         let findDevicePoint = (upi, callback) => {
             if (upi !== 0) {
                 criteria = {
-                    collection: this.collection,
                     query: {
                         _id: upi
                     },
@@ -653,7 +631,7 @@ let Point = class Point extends Utility {
                         _pStatus: 1
                     }
                 };
-                Utility.getOne(criteria, callback);
+                this.getOne(criteria, callback);
             } else {
                 callback(null, null);
             }
@@ -663,7 +641,6 @@ let Point = class Point extends Utility {
         let upis = data.upis;
         async.map(upis, (upi, callback) => {
             let criteria = {
-                collection: this.collection,
                 query: {
                     _id: upi * 1,
                     _pStatus: 0
@@ -672,7 +649,7 @@ let Point = class Point extends Utility {
                     Name: 1
                 }
             };
-            Utility.getOne(criteria, callback);
+            this.getOne(criteria, callback);
         }, cb);
     }
     initPoint(data, cb) {
@@ -711,13 +688,12 @@ let Point = class Point extends Utility {
             buildName(name1, name2, name3, name4);
 
             criteria = {
-                collection: this.collection,
                 query: {
                     _Name: _Name
                 }
             };
 
-            Utility.getOne(criteria, (err, freeName) => {
+            this.getOne(criteria, (err, freeName) => {
                 if (err) {
                     return callback(err);
                 }
@@ -739,13 +715,12 @@ let Point = class Point extends Utility {
 
                         if (targetUpi && targetUpi !== 0) {
                             criteria = {
-                                collection: this.collection,
                                 query: {
                                     _id: targetUpi
                                 }
                             };
 
-                            Utility.getOne(criteria, (err, targetPoint) => {
+                            this.getOne(criteria, (err, targetPoint) => {
                                 if (err) {
                                     return cb(err);
                                 }
@@ -940,10 +915,9 @@ let Point = class Point extends Utility {
 
         let addTemplateToDB = (template, callback) => {
             criteria = {
-                collection: this.collection,
                 insertObj: template
             };
-            Utility.insert(criteria, (err) => {
+            this.insert(criteria, (err) => {
                 return callback(err, template);
             });
         };
@@ -965,12 +939,11 @@ let Point = class Point extends Utility {
         };
 
         let criteria = {
-            collection: this.collection,
             query: searchCriteria,
             fields: filterProps
         };
 
-        Utility.getOne(criteria, (err, point) => {
+        this.getOne(criteria, (err, point) => {
             if (err) {
                 return cb(err);
             }
@@ -995,7 +968,6 @@ let Point = class Point extends Utility {
                 'Point Refs': 1
             };
             let criteria = {
-                collection: this.collection,
                 query: {
                     'Instance.Value': parseInt(data.upi, 10),
                     'Point Type.Value': 'Remote Unit',
@@ -1009,7 +981,7 @@ let Point = class Point extends Utility {
                 fields: filterProps
             };
 
-            Utility.getOne(criteria, (err, point) => {
+            this.getOne(criteria, (err, point) => {
                 if (err) {
                     return cb(err);
                 }
@@ -1035,7 +1007,6 @@ let Point = class Point extends Utility {
         };
 
         criteria = {
-            collection: this.collection,
             query: firstSearch,
             fields: {
                 Name: 1,
@@ -1043,7 +1014,7 @@ let Point = class Point extends Utility {
             }
         };
 
-        Utility.getOne(criteria, (err, targetPoint) => {
+        this.getOne(criteria, (err, targetPoint) => {
             if (err) {
                 cb(err);
             }
@@ -1063,7 +1034,6 @@ let Point = class Point extends Utility {
                 thirdSearch._id = (displays.length > 0) ? displays[0]._id : 0;
                 if (thirdSearch._id !== 0) {
                     criteria = {
-                        collection: this.collection,
                         query: thirdSearch,
                         fields: {
                             _id: 1
@@ -1071,7 +1041,7 @@ let Point = class Point extends Utility {
                     };
 
                     Security.Utility.getPermissions(data.user, (err, permissions) => {
-                        Utility.getOne(criteria, (err, point) => {
+                        this.getOne(criteria, (err, point) => {
                             if (err) {
                                 return cb(err);
                             }
@@ -1096,14 +1066,13 @@ let Point = class Point extends Utility {
         let doSecondSearch = (targetPoint, callback) => {
             secondSearch['Point Refs.Value'] = targetPoint._id;
             criteria = {
-                collection: this.collection,
                 query: secondSearch,
                 fields: {
                     Name: 1
                 },
                 data: data
             };
-            Utility.getWithSecurity(criteria, (err, references) => {
+            this.getWithSecurity(criteria, (err, references) => {
                 async.eachSeries(references, (ref, acb) => {
                     displays.push(ref);
                     acb(null);
@@ -1122,12 +1091,11 @@ let Point = class Point extends Utility {
         searchCriteria._id = parseInt(upi, 10);
 
         let criteria = {
-            collection: this.collection,
             query: searchCriteria,
             fields: filterProps
         };
 
-        Utility.getOne(criteria, (err, point) => {
+        this.getOne(criteria, (err, point) => {
             if (err) {
                 return cb(err);
             }
@@ -1159,8 +1127,7 @@ let Point = class Point extends Utility {
         ];
         // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
-        Utility.getOne({
-            collection: this.collection,
+        this.getOne({
             query: {
                 _id: newPoint._id
             },
@@ -1633,9 +1600,9 @@ let Point = class Point extends Utility {
                                     break;
 
                                 case 'Point Refs':
-                                    let pointRefProps = Config.Utility.getPointRefProperties(newPoint);
+                                    let pointRefProps = Config.this.getPointRefProperties(newPoint);
                                     for (let r = 0; r < pointRefProps.length; r++) {
-                                        if (!_.isEqual(Config.Utility.getPropertyObject(pointRefProps[r], newPoint), Config.Utility.getPropertyObject(pointRefProps[r], oldPoint))) {
+                                        if (!_.isEqual(Config.this.getPropertyObject(pointRefProps[r], newPoint), Config.this.getPropertyObject(pointRefProps[r], oldPoint))) {
                                             switch (pointRefProps[r]) {
                                                 case 'Alarm Adjust Point':
                                                 case 'CFM Input Point':
@@ -1890,8 +1857,8 @@ let Point = class Point extends Utility {
                         newPoint._devModel === Config.Enums['Device Model Types']['Central Device'].enum ||
                         newPoint['Point Type'].Value === 'Sequence' ||
                         (newPoint['Point Type'].Value !== 'Device' &&
-                            (Config.Utility.getPropertyObject('Device Point', newPoint) === null ||
-                                Config.Utility.getPropertyObject('Device Point', newPoint).PointInst === 0))) {
+                            (Config.this.getPropertyObject('Device Point', newPoint) === null ||
+                                Config.this.getPropertyObject('Device Point', newPoint).PointInst === 0))) {
                         // not active
                         // or (central device or unknown)
                         // or (!device and !device point)
@@ -1903,8 +1870,7 @@ let Point = class Point extends Utility {
                     }
 
                     Security.updSecurity(newPoint, (err) => {
-                        Utility.findAndModify({
-                            collection: this.collection,
+                        this.findAndModify({
                             query: {
                                 _id: newPoint._id
                             },
@@ -2026,8 +1992,8 @@ let Point = class Point extends Utility {
     //newupdate
     fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
         if (!!updateCfgReq) {
-            let oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
-            let newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
+            let oldDevPoint = Config.this.getPropertyObject('Device Point', oldPoint).Value;
+            let newDevPoint = Config.this.getPropertyObject('Device Point', newPoint).Value;
             // 0 > 0 - no change
             // N > 0 - cfg old
             // 0 > N - cfg new
@@ -2046,8 +2012,7 @@ let Point = class Point extends Utility {
                     upis.push(newDevPoint);
                 }
 
-                Utility.update({
-                    collection: this.collection,
+                this.update({
                     query: {
                         _id: {
                             $in: upis
@@ -2070,22 +2035,20 @@ let Point = class Point extends Utility {
     updateModel(updateModelType, newPoint, callback) {
         if (!!updateModelType) {
             let criteria = {
-                collection: this.collection,
                 query: {
                     'Point Refs.Value': newPoint._id
                 }
             };
-            Utility.iterateCursor(criteria, (err, doc, next) => {
+            this.iterateCursor(criteria, (err, doc, next) => {
                 if (newPoint['Point Type'].Value === 'Device') {
                     doc._devModel = newPoint['Model Type'].eValue;
                 } else if (newPoint['Point Type'].Value === 'Remote Unit') {
                     doc._rmuModel = newPoint['Model Type'].eValue;
                 }
-                Config.Utility.updDevModel({
+                Config.this.updDevModel({
                     point: doc
                 });
-                Utility.update({
-                    collection: this.collection,
+                this.updateOne({
                     query: {
                         _id: doc._id
                     },
@@ -2099,8 +2062,7 @@ let Point = class Point extends Utility {
     // newupdate
     updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
         if (updateDownlinkNetwk) {
-            Utility.update({
-                collection: this.collection,
+            this.updateOne({
                 query: {
                     'Point Type.Value': 'Device',
                     'Uplink Port.Value': 'Ethernet',
@@ -2148,8 +2110,7 @@ let Point = class Point extends Utility {
 
                 if (err) {
                     if (code >= 2300 && code < 2304) {
-                        Utility.update({
-                            collection: this.collection,
+                        this.update({
                             query: {
                                 _id: newPoint._id
                             },
@@ -2204,8 +2165,7 @@ let Point = class Point extends Utility {
             return temp;
         };
 
-        Utility.get({
-            collection: this.collection,
+        this.getAll({
             query: {
                 'Point Refs.Value': refPoint._id
                 // _parentUpi
@@ -2215,8 +2175,7 @@ let Point = class Point extends Utility {
             }
         }, (err, dependencies) => {
             async.eachSeries(dependencies, (dependencyId, depCB) => {
-                Utility.getOne({
-                    collection: this.collection,
+                this.getOne({
                     query: {
                         _id: dependencyId._id
                     }
@@ -2229,8 +2188,7 @@ let Point = class Point extends Utility {
                                 this.updateScheduleEntries(dependency, devices, null, (todSignal) => {
                                     signalTOD = (signalTOD | todSignal) ? true : false;
                                     // does deletePoint need to be called here?
-                                    Utility.remove({
-                                        collection: this.collection,
+                                    this.remove({
                                         query: {
                                             _id: dependency._id
                                         }
@@ -2340,8 +2298,7 @@ let Point = class Point extends Utility {
             },
             pointType;
 
-        Utility.findAndModify({
-            collection: this.pointsCollection,
+        this.findAndModify({
             query: {
                 _id: upi
             },
@@ -2369,8 +2326,7 @@ let Point = class Point extends Utility {
                 switch (pointType) {
                     case 'Schedule':
                     case 'Sequence':
-                        Utility.update({
-                            collection: this.collection,
+                        this.updateAll({
                             query: {
                                 _parentUpi: point._id
                             },
@@ -2378,9 +2334,6 @@ let Point = class Point extends Utility {
                                 $set: {
                                     _pStatus: 0
                                 }
-                            },
-                            options: {
-                                multi: true
                             }
                         }, (err, result) => {
                             return callback({
@@ -2390,7 +2343,7 @@ let Point = class Point extends Utility {
                         break;
                     case 'Report':
                         // enable related schedules
-                        // Utility.findAndModify({
+                        // this.findAndModify({
                         //     collection: constants('schedulescollection'),
                         //     query: {
                         //         upi: point._id
@@ -2433,8 +2386,7 @@ let Point = class Point extends Utility {
             }
         };
 
-        Utility.get({
-            collection: this.collection,
+        this.getAll({
             query: query
         }, (err, points) => {
             let devices = [],
@@ -2481,8 +2433,7 @@ let Point = class Point extends Utility {
                 let query = {
                     _id: _upi
                 };
-                Utility.getOne({
-                    collection: this.collection,
+                this.getOne({
                     query: query
                 }, (err, point) => {
                     // Save point reference
@@ -2509,16 +2460,14 @@ let Point = class Point extends Utility {
                     };
 
                 if (method === 'hard') {
-                    Utility.remove({
-                        collection: this.collection,
+                    this.remove({
                         query: query
                     }, (err, result) => {
                         cb(err);
                     });
                 } else {
                     query._pStatus = 0;
-                    Utility.findAndModify({
-                        collection: this.collection,
+                    this.findAndModify({
                         query: query,
                         sort: sort,
                         updateObj: update,
@@ -2652,26 +2601,20 @@ let Point = class Point extends Utility {
         if (['Schedule', 'Sequence'].indexOf(pointType) >= 0) {
             query._parentUpi = upi;
             if (method === 'soft') {
-                Utility.update({
-                    collection: this.collection,
+                this.updateAll({
                     query: query,
                     updateObj: {
                         $set: {
                             _pStatus: 2
                         }
-                    },
-                    options: {
-                        multi: true
                     }
                 }, (err, results) => {
                     callback(err);
                 });
             } else if (method === 'hard') {
-                Utility.remove({
-                    collection: this.collection,
+                this.remove({
                     query: query
-                },
-                    callback);
+                }, callback);
             } else {
                 return callback();
             }
@@ -2682,8 +2625,7 @@ let Point = class Point extends Utility {
 
     //updateDependencies, deleteChildren, updateSchedules(io)
     updateDeviceToDs(devices, callback) {
-        Utility.update({
-            collection: this.collection,
+        this.updateAll({
             query: {
                 _id: {
                     $in: devices
@@ -2693,9 +2635,6 @@ let Point = class Point extends Utility {
                 $set: {
                     _updTOD: true
                 }
-            },
-            options: {
-                multi: true
             }
         }, (err, result) => {
             callback(err);
@@ -2739,12 +2678,12 @@ let Point = class Point extends Utility {
 
     //updateSchedules(io), updateScheduleEntries
     addToDevices(scheduleEntry, devices, oldPoint) {
-        let devInst = Config.Utility.getPropertyObject('Control Point', scheduleEntry).DevInst;
+        let devInst = Config.this.getPropertyObject('Control Point', scheduleEntry).DevInst;
         if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
             devices.push(parseInt(devInst, 10));
         }
         if (!!oldPoint) {
-            devInst = Config.Utility.getPropertyObject('Control Point', oldPoint).DevInst;
+            devInst = Config.this.getPropertyObject('Control Point', oldPoint).DevInst;
             if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
                 devices.push(parseInt(devInst, 10));
             }
@@ -2755,13 +2694,12 @@ let Point = class Point extends Utility {
         if (point['Point Type'].Value === 'Device') {
             point._cfgRequired = true;
             callback(null);
-        } else if (Config.Utility.getPropertyObject('Device Point', point) !== null) {
+        } else if (Config.this.getPropertyObject('Device Point', point) !== null) {
             point._cfgRequired = true;
-            if (Config.Utility.getPropertyObject('Device Point', point).PointInst !== 0) {
-                Utility.update({
-                    collection: this.collection,
+            if (Config.this.getPropertyObject('Device Point', point).PointInst !== 0) {
+                this.updateOne({
                     query: {
-                        _id: Config.Utility.getPropertyObject('Device Point', point).PointInst
+                        _id: Config.this.getPropertyObject('Device Point', point).PointInst
                     },
                     updateObj: {
                         $set: {
@@ -2808,8 +2746,7 @@ let Point = class Point extends Utility {
             // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
 
 
-            Utility.update({
-                collection: this.pointsCollection,
+            this.updateOne({
                 query: searchQuery,
                 updateObj: updateObj
             }, (err, freeName) => {
@@ -2847,8 +2784,7 @@ let Point = class Point extends Utility {
     getRemoteUnits(data, cb) {
         let upi = parseInt(data.deviceUpi, 10);
 
-        Utility.get({
-            collection: this.collection,
+        this.getAll({
             query: {
                 'Point Type.Value': 'Remote Unit',
                 'Point Refs': {
@@ -2867,7 +2803,7 @@ let Point = class Point extends Utility {
         if (!(upis instanceof Array)) {
             upis = JSON.parse(upis);
         }
-        upis = upis.map(function (upi) {
+        upis = upis.map((upi) => {
             return parseInt(upi, 10);
         });
 
@@ -2879,11 +2815,10 @@ let Point = class Point extends Utility {
             },
             fields: {
                 Name: 1
-            },
-            collection: this.collection
+            }
         };
 
-        Utility.get(criteria, cb);
+        this.getAll(criteria, cb);
     }
 };
 

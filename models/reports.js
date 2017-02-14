@@ -28,7 +28,7 @@ let Report = class Report {
                 }
             }
         };
-        Point.updateOne(criteria, function (err, result) {
+        Point.updateOne(criteria, (err, result) => {
             if (!err) {
                 return cb(null, {
                     data: 'Data has been saved successfully!!!'
@@ -69,8 +69,8 @@ let Report = class Report {
 
         let logObj = utils.buildActivityLog(logData);
 
-        Point.updateOne(criteria, function (err, result) {
-            ActivityLog.create(logObj, function (err, result) {
+        Point.updateOne(criteria, (err, result) => {
+            ActivityLog.create(logObj, (err, result) => {
                 if (!err) {
                     return cb(err, {
                         data: 'Report has been saved successfully!!!'
@@ -83,7 +83,7 @@ let Report = class Report {
     getSVG(data, cb) {
         Point.getPointById({
             _id: utils.converters.convertType(data.id)
-        }, function (err, result) {
+        }, (err, result) => {
             if (!err) {
                 return cb(null, result.SVGData);
             }
@@ -109,8 +109,8 @@ let Report = class Report {
             i,
             qualityCodes = global.qualityCodes;
 
-        let makeTimestamps = function (timestampObjects) {
-            let timestamps = timestampObjects.map(function (ts) {
+        let makeTimestamps = (timestampObjects) => {
+            let timestamps = timestampObjects.map((ts) => {
                 return ts.start;
             });
 
@@ -126,7 +126,7 @@ let Report = class Report {
             checkForOldest[upis[i]] = true;
         }
 
-        justUpis = upis.map(function (res) {
+        justUpis = upis.map((res) => {
             return res.upi;
         });
 
@@ -160,7 +160,7 @@ let Report = class Report {
                 }
             }
         };
-        Point.getAll(criteria, function (err, points) {
+        Point.getAll(criteria, (err, points) => {
             if (err) {
                 return cb(err, null);
             }
@@ -171,7 +171,7 @@ let Report = class Report {
                     timestamp: -1
                 }
             };
-            History.getAll(criteria, function (err, histPoints) {
+            History.getAll(criteria, (err, histPoints) => {
                 if (err) {
                     return cb(err, null);
                 }
@@ -182,7 +182,7 @@ let Report = class Report {
                         end: endTime
                     },
                     timestamps: timestamps
-                }, function (err, results) {
+                }, (err, results) => {
                     for (let h = 0; h < histPoints.length; h++) {
                         let hadTS = false;
                         for (let r = 0; r < results.length; r++) {
@@ -197,13 +197,13 @@ let Report = class Report {
                         }
                     }
                     histPoints = results;
-                    async.eachSeries(timestamps.reverse(), function (ts, callback1) {
+                    async.eachSeries(timestamps.reverse(), (ts, callback1) => {
                         //convert id to ts and upi
                         returnObj = {
                             timestamp: ts,
                             HistoryResults: []
                         };
-                        async.eachSeries(justUpis, function (upi, callback2) {
+                        async.eachSeries(justUpis, (upi, callback2) => {
                             if (noOlderTimes.indexOf(upi) !== -1) {
                                 for (let x = 0; x < points.length; x++) {
                                     if (points[x]._id === upi) {
@@ -213,7 +213,7 @@ let Report = class Report {
                                         });
                                     }
                                 }
-                                //setTimeout(function() {
+                                //setTimeout() => {
                                 callback2(null);
                                 //}, 1);
                             } else {
@@ -242,7 +242,7 @@ let Report = class Report {
                                         },
                                         limit: 1
                                     };
-                                    History.getAll(criteria, function (err, nextOldest) {
+                                    History.getAll(criteria, (err, nextOldest) => {
                                         if (!!err) {
                                             return callback2(err);
                                         }
@@ -252,7 +252,7 @@ let Report = class Report {
                                             range: {
                                                 end: ts
                                             }
-                                        }, function (err, results) {
+                                        }, (err, results) => {
                                             if (!!results.length) {
                                                 if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                     nextOldest = results;
@@ -281,17 +281,17 @@ let Report = class Report {
                                     callback2(null);
                                 }
                             }
-                        }, function (err) {
+                        }, (err) => {
                             returnPoints.push(returnObj);
                             if (returnPoints.length % 500 === 0) {
-                                setTimeout(function () {
+                                setTimeout(() => {
                                     callback1(err);
                                 }, 0);
                             } else {
                                 callback1(err);
                             }
                         });
-                    }, function (err) {
+                    }, (err) => {
                         return cb(err, {
                             truncated: tooManyFlag,
                             historyData: returnPoints.reverse()
@@ -301,7 +301,7 @@ let Report = class Report {
             });
         });
 
-        function buildHistoryValue(point, historyPoint) {
+        let buildHistoryValue = (point, historyPoint) => {
             let tempObj = {};
             tempObj.upi = historyPoint.upi;
             tempObj.Name = point.Name;
@@ -324,10 +324,18 @@ let Report = class Report {
             }
             // console.log(tempObj);
             return tempObj;
-        }
+        };
 
-        function setStatusFlag(statusflag) {
+        let setStatusFlag = (statusflag) => {
             //4 8 1 2
+
+            let getStatusChar = (status) => {
+                for (let index in qualityCodes) {
+                    if (qualityCodes[index]['Quality Code Label'] === status) {
+                        return qualityCodes[index]['Quality Code'];
+                    }
+                }
+            };
 
             if ((statusflag & Config.Enums['Status Flags Bits']['In Fault'].enum) !== 0) {
                 return getStatusChar('Fault');
@@ -339,18 +347,9 @@ let Report = class Report {
                 return getStatusChar('Override');
             }
             return '';
+        };
 
-
-            function getStatusChar(status) {
-                for (let index in qualityCodes) {
-                    if (qualityCodes[index]['Quality Code Label'] === status) {
-                        return qualityCodes[index]['Quality Code'];
-                    }
-                }
-            }
-        }
-
-        // function buildTimestamps(startTime, endTime, interval, offset) {
+        // buildTimestamps(startTime, endTime, interval, offset) => {
         //     let minute = 60,
         //         hour = minute * 60,
         //         day = hour * 24,
@@ -442,7 +441,7 @@ let Report = class Report {
             reportRequestComplete = false,
             scheduleRequestComplete = false,
             reportData,
-            getValueTypes = function (data) {
+            getValueTypes = (data) => {
                 'use strict';
                 let i,
                     column,
@@ -463,7 +462,7 @@ let Report = class Report {
 
                 return data;
             },
-            handleResults = function () {
+            handleResults = () => {
                 if (scheduled) {
                     if (scheduleRequestComplete && reportRequestComplete) {
                         reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
@@ -475,7 +474,7 @@ let Report = class Report {
             };
 
         if (scheduled) {
-            Schedule.get(scheduleCriteria, function (err, scheduleData) {
+            Schedule.get(scheduleCriteria, (err, scheduleData) => {
                 if (err) {
                     return cb(err);
                 }
@@ -492,7 +491,7 @@ let Report = class Report {
             });
         }
         // this is weird. change it to be nested instead of relying on flags in handlResults()
-        Point.getPointById(reportCriteria, function (err, result) {
+        Point.getPointById(reportCriteria, (err, result) => {
             if (err) {
                 return cb(err);
             }
@@ -518,7 +517,7 @@ let Report = class Report {
             pointFilter = reportConfig.pointFilter,
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
+            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
                 return type.key;
             }),
             uniquePIDs = [],
@@ -530,7 +529,7 @@ let Report = class Report {
                 $and: []
             },
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
-            parseNameField = function (paramsField, fieldName) {
+            parseNameField = (paramsField, fieldName) => {
                 let parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
                     //logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
@@ -599,7 +598,7 @@ let Report = class Report {
             limit: returnLimit,
             fields: fields
         };
-        Point.getAll(criteria, function (err, docs) {
+        Point.getAll(criteria, (err, docs) => {
             if (err) {
                 return cb(err);
             }
@@ -614,7 +613,7 @@ let Report = class Report {
                     delete docs[i]['Point Refs'];
                 }
             }
-            docs.forEach(function (doc) {
+            docs.forEach((doc) => {
                 for (let prop in doc) {
                     let newPropertyName = utils.getHumanProperty(prop);
                     if (prop !== newPropertyName) {
@@ -635,7 +634,7 @@ let Report = class Report {
             orExpressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
-            getPointRefByAppIndex = function (appIndex) {
+            getPointRefByAppIndex = (appIndex) => {
                 let result,
                     i;
 
@@ -648,7 +647,7 @@ let Report = class Report {
 
                 return result;
             },
-            collectFilter = function (filter) {
+            collectFilter = (filter) => {
                 let searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
@@ -846,7 +845,7 @@ let Report = class Report {
                 }
                 return searchQuery;
             },
-            groupLogic = function (logicType) {
+            groupLogic = (logicType) => {
                 let group = [],
                     sameGroup = true;
 
@@ -921,19 +920,19 @@ let Report = class Report {
         let range = data.range;
         let intervalOptions = reportConfig.interval;
 
-        let compare = function (a, b) {
+        let compare = (a, b) => {
             return a.timestamp - b.timestamp;
         };
 
-        let findStarts = function (initial, history) {
+        let findStarts = (initial, history) => {
             let totals = [];
             let previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
-            intervals.forEach(function (interval, index) {
+            intervals.forEach((interval, index) => {
                 let starts = 0;
                 let start = interval.start;
                 let end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                let matches = history.filter(function (data) {
+                let matches = history.filter((data) => {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
@@ -958,11 +957,11 @@ let Report = class Report {
             return totals;
         };
 
-        let findRuntime = function (initial, history) {
+        let findRuntime = (initial, history) => {
             let totals = [];
             let previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
-            intervals.forEach(function (interval, index) {
+            intervals.forEach((interval, index) => {
                 // console.log(interval);
                 let runtime = 0;
                 let now = moment().unix();
@@ -970,7 +969,7 @@ let Report = class Report {
                 let start = interval.start;
                 let end = (!!intervalLonger) ? now : interval.end;
 
-                let matches = history.filter(function (data) {
+                let matches = history.filter((data) => {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
@@ -1007,7 +1006,7 @@ let Report = class Report {
             return totals;
         };
 
-        let findTotal = function (initial, history) {
+        let findTotal = (initial, history) => {
             let totals = [];
             let value = 0;
             let startValue = 0;
@@ -1022,13 +1021,13 @@ let Report = class Report {
                 value = 0;
             }
 
-            intervals.forEach(function (interval, index) {
+            intervals.forEach((interval, index) => {
                 let total = startValue;
                 startValue = 0;
                 let start = interval.start;
                 let end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
 
-                let matches = history.filter(function (data) {
+                let matches = history.filter((data) => {
                     return data.timestamp > start && data.timestamp <= end;
                 });
                 for (let i = 0; i < matches.length; i++) {
@@ -1058,7 +1057,7 @@ let Report = class Report {
 
         let intervals = this.buildIntervals(range, intervalOptions);
 
-        let getInitialDataMongo = function (point, callback) {
+        let getInitialDataMongo = (point, callback) => {
             let criteria = { //find initial data per point
                 query: {
                     timestamp: {
@@ -1072,17 +1071,17 @@ let Report = class Report {
                 limit: 1
             };
 
-            History.getAll(criteria, function (err, initial) {
+            History.getAll(criteria, (err, initial) => {
                 callback(err, point, initial[0]);
             });
         };
-        let getInitialDataSql = function (point, initial, callback) {
+        let getInitialDataSql = (point, initial, callback) => {
             History.findLatest({
                 upis: [point.upi],
-                range: { // range object gets overwritten in function, pass new obj
+                range: { // range object gets overwritten in  pass new ob=> j
                     end: range.start
                 }
-            }, function (err, results) {
+            }, (err, results) => {
                 let latestSql = results[0];
                 if (!initial || (!!latestSql && latestSql.timestamp >= initial.timestamp)) {
                     initial = latestSql;
@@ -1090,7 +1089,7 @@ let Report = class Report {
                 callback(null, point, initial || {});
             });
         };
-        let getRangeDataMongo = function (point, initial, callback) {
+        let getRangeDataMongo = (point, initial, callback) => {
             let criteria = {
                 query: {
                     upi: point.upi,
@@ -1106,11 +1105,11 @@ let Report = class Report {
                 }
             };
 
-            History.getAll(criteria, function (err, history) {
+            History.getAll(criteria, (err, history) => {
                 callback(null, point, initial, history);
             });
         };
-        let getRangeDataSql = function (point, initial, history, callback) {
+        let getRangeDataSql = (point, initial, history, callback) => {
             let exists = false;
 
             History.findHistory({
@@ -1120,7 +1119,7 @@ let Report = class Report {
                     end: range.end
                 },
                 fx: 'history'
-            }, function (err, results) {
+            }, (err, results) => {
                 for (let h = 0; h < history.length; h++) {
                     exists = false;
                     for (let r = 0; r < results.length; r++) {
@@ -1137,7 +1136,7 @@ let Report = class Report {
             });
         };
 
-        let buildTotal = function (point, initial, history, callback) {
+        let buildTotal = (point, initial, history, callback) => {
             history.sort(compare);
 
             switch (point.op) {
@@ -1155,9 +1154,9 @@ let Report = class Report {
             return callback(null);
         };
 
-        async.eachSeries(points, function (point, seriesCb) {
+        async.eachSeries(points, (point, seriesCb) => {
             async.waterfall([async.apply(getInitialDataMongo, point), getInitialDataSql, getRangeDataMongo, getRangeDataSql, buildTotal], seriesCb);
-        }, function (err) {
+        }, (err) => {
             return cb(err, points);
         });
     }
@@ -1174,33 +1173,33 @@ let Report = class Report {
             fields: {
                 Name: 1
             }
-        }, function (err, point) {
+        }, (err, point) => {
             if (!!point) {
                 let reportName = point.Name;
-                let users = schedule.users.map(function (id) {
+                let users = schedule.users.map((id) => {
                     return ObjectID(id);
                 });
                 let date = moment().format('YYYY-MM-DD');
                 let path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
                 let uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
-                PageRender.renderPage(uri, path, function (err) {
-                    fs.readFile(path, function (err, data) {
+                PageRender.renderPage(uri, path, (err) => {
+                    fs.readFile(path, (err, data) => {
                         User.iterateCursor({
                             query: {
                                 _id: {
                                     $in: users
                                 }
                             }
-                        }, function (err, user, nextUser) {
+                        }, (err, user, nextUser) => {
                             // figure out date/time
-                            emails = emails.concat(user['Contact Info'].Value.filter(function (info) {
+                            emails = emails.concat(user['Contact Info'].Value.filter((info) => {
                                 return info.Type === 'Email';
-                            }).map(function (email) {
+                            }).map((email) => {
                                 return email.Value;
                             }));
 
                             nextUser();
-                        }, function (err, count) {
+                        }, (err, count) => {
                             emails = emails.concat(schedule.emails).join(',');
                             Mailer.sendEmail({
                                 to: emails,
@@ -1212,7 +1211,7 @@ let Report = class Report {
                                     contentType: 'application/pdf',
                                     content: data
                                 }]
-                            }, function (err, info) {
+                            }, (err, info) => {
                                 console.log(err, info);
                                 cb(err);
                             });
@@ -1232,7 +1231,7 @@ let Report = class Report {
         let intervalRanges = [];
         let intervalStart;
         let intervalEnd;
-        let fixLongerInterval = function () {
+        let fixLongerInterval = () => {
             if (intervalEnd > range.end && intervalStart < range.end) {
                 intervalEnd = range.end;
             }

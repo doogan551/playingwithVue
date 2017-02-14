@@ -1,10 +1,9 @@
-let Utility = new (require('../models/utility'))();
+let Point = new(require('./point'))();
 
 let Sequence = class Sequence {
 
     getBlockTypes(cb) {
         let criteria = {
-            collection: 'points',
             query: {
                 SequenceData: {
                     $exists: true
@@ -15,7 +14,7 @@ let Sequence = class Sequence {
             }
         };
 
-        Utility.get(criteria, (err, results) => {
+        Point.get(criteria, (err, results) => {
             let c;
             let cc;
             let len = results.length;
@@ -41,7 +40,6 @@ let Sequence = class Sequence {
     doRefreshSequence(data) {
         let _id = data.sequenceID;
         let criteria = {
-            collection: 'points',
             query: {
                 _id: _id
             },
@@ -52,7 +50,7 @@ let Sequence = class Sequence {
             }
         };
 
-        Utility.update(criteria, (err) => {
+        Point.updateOne(criteria, (err) => {
             if (err) {
                 // log it!
             }
@@ -63,7 +61,6 @@ let Sequence = class Sequence {
         let name = data.sequenceName;
         let sequenceData = data.sequenceData;
         let criteria = {
-            collection: 'points',
             query: {
                 'Name': name
             },
@@ -74,7 +71,7 @@ let Sequence = class Sequence {
             }
         };
 
-        Utility.update(criteria, (err) => {
+        Point.updateOne(criteria, (err) => {
             if (err) {
                 cb('Error: ' + err.err);
             } else {

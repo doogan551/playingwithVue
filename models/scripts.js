@@ -13,10 +13,10 @@ let Script = class Script {
 
         tmp.dir({
             dir: __dirname + '/../tmp/'
-        }, function _tempDirCreated(err, path) {
+        }, (err, path) => {
             let filepath = path + '/' + fileName + '.dsl';
-            fs.writeFile(filepath, script, function (err) {
-                compiler.compile(filepath, path + '/' + fileName, function (err) {
+            fs.writeFile(filepath, script, (err) => {
+                compiler.compile(filepath, path + '/' + fileName, (err) => {
                     fs.readFile(path + '/' + fileName + '.err', cb);
                 });
             });
@@ -29,8 +29,8 @@ let Script = class Script {
 
         Point.getPointById({
             id: upi
-        }, function (err, script) {
-            fs.readFile(path + '/' + fileName + '.sym', function (err, sym) {
+        }, (err, script) => {
+            fs.readFile(path + '/' + fileName + '.sym', (err, sym) => {
                 if (err) {
                     return cb(err);
                 }
@@ -64,7 +64,7 @@ let Script = class Script {
                 script['Real Register Count'] = script['Real Register Names'].length;
                 script['Boolean Register Count'] = script['Boolean Register Names'].length;
 
-                fs.readFile(path + '/' + fileName + '.dsl', function (err, dsl) {
+                fs.readFile(path + '/' + fileName + '.dsl', (err, dsl) => {
                     if (err) {
                         return cb(err);
                     }
@@ -75,7 +75,7 @@ let Script = class Script {
                     script['Script Source File'] = dsl;
                     //"Script Filename": fileName + '.dsl'
 
-                    fs.readFile(path + '/' + fileName + '.pcd', function (err, pcd) {
+                    fs.readFile(path + '/' + fileName + '.pcd', (err, pcd) => {
                         if (err) {
                             return cb(err);
                         }
@@ -86,7 +86,7 @@ let Script = class Script {
                         script['Compiled Code Size'] = pcd.length;
 
 
-                        rimraf(path, function (err) {
+                        rimraf(path, (err) => {
                             if (err) {
                                 return cb(err);
                             }
@@ -106,85 +106,20 @@ let Script = class Script {
     }
 
     commitScript(data, callback) {
-        let fileName, path, csv;
+        let fileName, path;
 
         let script = data.point;
         fileName = script._id;
         path = data.path;
 
-        fs.readFile(path + '/' + fileName + '.sym', function (err, sym) {
+        fs.readFile(path + '/' + fileName + '.sym', (err) => {
             if (err) {
                 return callback({
                     err: err
                 });
             }
-
-            sym = sym.toString();
-            csv = sym.split(/[\r\n,]/);
-
-            script['Point Register Names'] = [];
-            script['Integer Register Names'] = [];
-            script['Real Register Names'] = [];
-            script['Boolean Register Names'] = [];
-
-            for (let i = 0; i < csv.length; i++) {
-                if (csv[i - 1] !== 'TOTAL') {
-                    if (csv[i] === 'POINT') {
-                        script['Point Register Names'].push(csv[i + 2]);
-                    } else if (csv[i] === 'INTEGER') {
-                        script['Integer Register Names'].push(csv[i + 2]);
-                    } else if (csv[i] === 'REAL') {
-                        script['Real Register Names'].push(csv[i + 2]);
-                    } else if (csv[i] === 'BOOLEAN') {
-                        script['Boolean Register Names'].push(csv[i + 2]);
-                    }
-                }
-            }
-
-            script['Point Register Count'] = script['Point Register Names'].length;
-            script['Integer Register Count'] = script['Integer Register Names'].length;
-            script['Real Register Count'] = script['Real Register Names'].length;
-            script['Boolean Register Count'] = script['Boolean Register Names'].length;
-
-
-            fs.readFile(path + '/' + fileName + '.dsl', function (err, dsl) {
-                if (err) {
-                    return callback({
-                        err: err
-                    });
-                }
-
-                dsl = dsl.toString();
-
-
-                script['Script Source File'] = dsl;
-                //"Script Filename": fileName + '.dsl'
-
-
-                fs.readFile(path + '/' + fileName + '.pcd', function (err, pcd) {
-                    if (err) {
-                        return callback({
-                            err: err
-                        });
-                    }
-
-                    //let buffer = new Buffer(pcd);
-
-                    script['Compiled Code'] = pcd;
-                    script['Compiled Code Size'] = pcd.length;
-
-
-                    rimraf(path, function (err) {
-                        if (err) {
-                            return callback({
-                                err: err
-                            });
-                        }
-                        return callback({
-                            err: false
-                        });
-                    });
-                });
+            return callback({
+                err: false
             });
         });
     }

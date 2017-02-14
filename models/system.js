@@ -18,15 +18,13 @@ let System = class System extends Utility {
             query: {
                 Name: 'Preferences'
             },
-            collection: this.collection,
-            limit: 1,
             fields: {
                 _id: 0,
                 'Current Season': 1
             }
         };
 
-        Utility.get(criteria, cb);
+        this.getOne(criteria, cb);
     }
 
     updateSeason(data, cb) {
@@ -44,14 +42,13 @@ let System = class System extends Utility {
                     'Current Season': season
                 }
             },
-            collection: this.collection,
             fields: {
                 _id: 0,
                 'Current Season': 1
             }
         };
 
-        Utility.update(criteria, (err) => {
+        this.updateOne(criteria, (err) => {
             logData.activity = 'Season Change';
             logData.log = 'Season changed to ' + season + '.';
             ActivityLog.create(logData, (err) => {
@@ -64,11 +61,10 @@ let System = class System extends Utility {
         let criteria = {
             query: {
                 Name: name
-            },
-            collection: this.collection
+            }
         };
 
-        Utility.getOne(criteria, cb);
+        this.getOne(criteria, cb);
     }
     getCounts(type, cb) {
         let query = {};
@@ -82,7 +78,7 @@ let System = class System extends Utility {
 
         criteria.collection = 'Alarms';
         criteria.query = query;
-        Utility.count(criteria, cb);
+        this.count(criteria, cb);
     }
     updateControlPriorities(data, cb) {
         let searchCriteria = {
@@ -95,7 +91,7 @@ let System = class System extends Utility {
             return cb('Please send array for entries');
         }
 
-        entries.forEach(function (entry) {
+        entries.forEach((entry) => {
             entry['Priority Level'] = parseInt(entry['Priority Level'], 10);
         });
 
@@ -107,11 +103,10 @@ let System = class System extends Utility {
 
         let criteria = {
             query: searchCriteria,
-            collection: this.collection,
             updateObj: updateCriteria
         };
 
-        Utility.update(criteria, function (err, result) {
+        this.updateOne(criteria, (err, result) => {
             let logData = {
                 user: data.user,
                 timestamp: Date.now(),
@@ -128,11 +123,10 @@ let System = class System extends Utility {
                 Name: {
                     $in: ['Quality Codes', 'Preferences']
                 }
-            },
-            collection: this.collection
+            }
         };
 
-        Utility.get(criteria, function (err, result) {
+        this.getAll(criteria, (err, result) => {
             if (err) {
                 return cb(err);
             }
@@ -193,21 +187,19 @@ let System = class System extends Utility {
 
         let criteria = {
             query: codesSearch,
-            collection: this.collection,
             updateObj: codesUpdate
         };
 
-        Utility.update(criteria, function (err, data) {
+        this.updateOne(criteria, (err, data) => {
             if (err) {
                 return cb(err.message);
             }
 
             criteria = {
                 query: maskSearch,
-                collection: this.collection,
                 updateObj: prefUpdate
             };
-            Utility.update(criteria, function (err, result) {
+            this.updateOne(criteria, (err, result) => {
                 let logData = {
                     user: data.user,
                     timestamp: Date.now(),
@@ -247,11 +239,10 @@ let System = class System extends Utility {
 
         let criteria = {
             query: searchCriteria,
-            collection: this.collection,
             updateObj: updateCriteria
         };
 
-        Utility.update(criteria, function (err, result) {
+        this.updateOne(criteria, (err, result) => {
             let logData = {
                 user: data.user,
                 timestamp: Date.now(),
@@ -268,8 +259,8 @@ let System = class System extends Utility {
         let ipPort = parseInt(data['IP Port'], 10);
         let netConfig = data['Network Configuration'];
 
-        let updateNetworks = function (networks, callback) {
-            async.eachSeries(networks, function (network, acb) {
+        let updateNetworks = (networks, callback) => {
+            async.eachSeries(networks, (network, acb) => {
                 let criteria = {
                     query: {},
                     updateObj: {},
@@ -314,7 +305,7 @@ let System = class System extends Utility {
                         }
                     }
                 }];
-                async.eachSeries(updates, function (update, acb2) {
+                async.eachSeries(updates, (update, acb2) => {
                     criteria.query = update.query;
                     criteria.updateObj = update.updateObj;
                     Point.update(criteria, acb2);
@@ -346,17 +337,15 @@ let System = class System extends Utility {
 
         let criteria = {
             query: searchCriteria,
-            updateObj: updateCriteria,
-            collection: this.collection
+            updateObj: updateCriteria
         };
-        Utility.getOne({
-            collection: this.collection,
+        this.getOne({
             query: {
                 Name: 'Preferences'
             }
-        }, function (err, _data) {
+        }, (err, _data) => {
             let centralUpi = _data['Central Device UPI'];
-            Point.update({
+            Point.updateOne({
                 query: {
                     _id: centralUpi
                 },
@@ -365,12 +354,12 @@ let System = class System extends Utility {
                         'Ethernet IP Port.Value': ipPort
                     }
                 }
-            }, function (err) {
-                Utility.update(criteria, function (err) {
+            }, (err) => {
+                this.updateOne(criteria, (err) => {
                     if (err) {
                         return cb(err.message);
                     }
-                    updateNetworks(netConfig, function (err, result) {
+                    updateNetworks(netConfig, (err, result) => {
                         let logData = {
                             user: data.user,
                             timestamp: Date.now(),
@@ -395,7 +384,7 @@ let System = class System extends Utility {
                 _id: 1
             }
         };
-        Alarm.getOne(criteria, function (err, alarm) {
+        Alarm.getOne(criteria, (err, alarm) => {
             if (err) {
                 return cb(err);
             }
@@ -411,10 +400,9 @@ let System = class System extends Utility {
             'Name': 'Custom Colors'
         };
         let criteria = {
-            query: searchCriteria,
-            collection: this.collection
+            query: searchCriteria
         };
-        Utility.getOne(criteria, function (err, data) {
+        this.getOne(criteria, (err, data) => {
             if (err) {
                 return cb(err.message);
             }
@@ -436,19 +424,17 @@ let System = class System extends Utility {
 
         let criteria = {
             query: codesSearch,
-            collection: this.collection,
             updateObj: colorsUpdate
         };
 
-        Utility.update(criteria, cb);
+        this.updateOne(criteria, cb);
     }
     getAlarmTemplates(data, cb) {
         let searchCriteria = {};
         let criteria = {
-            query: searchCriteria,
-            collection: 'AlarmDefs'
+            query: searchCriteria
         };
-        Utility.get(criteria, function (err, data) {
+        this.get(criteria, (err, data) => {
             if (err) {
                 return cb(err.message);
             }
@@ -464,7 +450,7 @@ let System = class System extends Utility {
             },
             collection: 'AlarmDefs'
         };
-        Utility.get(criteria, function (err, data) {
+        this.get(criteria, (err, data) => {
             if (err) {
                 return cb(err.message);
             }
@@ -497,7 +483,7 @@ let System = class System extends Utility {
                 saveObj: alarmTemplateNew
             };
 
-            Utility.save(criteria, function (err) {
+            this.save(criteria, (err) => {
                 logData.activity = 'Alarm Message Edit';
                 logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
                 ActivityLog.create(logData, () => {});
@@ -517,8 +503,8 @@ let System = class System extends Utility {
             collection: 'AlarmDefs'
         };
 
-        let fixPoints = function (id, cb) {
-            let findAlarmDef = function (type, alarms) {
+        let fixPoints = (id, cb) => {
+            let findAlarmDef = (type, alarms) => {
                 for (let i = 0; i < alarms.length; i++) {
                     if (!!alarms[i].isSystemMessage && type === alarms[i].msgType) {
                         console.log(typeof alarms[i]._id);
@@ -526,15 +512,15 @@ let System = class System extends Utility {
                     }
                 }
             };
-            Utility.get({
+            this.get({
                 collection: 'AlarmDefs'
-            }, function (err, alarmDefs) {
+            }, (err, alarmDefs) => {
                 Point.iterateCursor({
                     query: {
                         'Alarm Messages.msgId': id
                     }
-                }, function (err, point, next) {
-                    point['Alarm Messages'].forEach(function (msg) {
+                }, (err, point, next) => {
+                    point['Alarm Messages'].forEach((msg) => {
                         if (msg.msgId === id) {
                             msg.msgId = findAlarmDef(msg.msgType, alarmDefs);
                         }
@@ -544,18 +530,18 @@ let System = class System extends Utility {
                             _id: point._id
                         },
                         updateObj: point
-                    }, function (err) {
+                    }, (err) => {
                         next(err);
                     });
                 }, cb);
             });
         };
 
-        Utility.remove(criteria, function (err, _data) {
+        this.remove(criteria, (err, _data) => {
             if (err) {
                 return cb(err.message);
             }
-            fixPoints(data.deleteObject._id, function (err) {
+            fixPoints(data.deleteObject._id, (err) => {
                 let entries = _data;
                 logData.activity = 'Alarm Message Delete';
                 logData.log = 'Alarm Message with text "' + data.deleteObject.msgFormat + '" removed from the system.';
@@ -570,7 +556,7 @@ let System = class System extends Utility {
         let upiMatrix = {};
         let weatherPointData = {};
         let weatherPointUpis = [];
-        let getWeather = function (callback) {
+        let getWeather = (callback) => {
             let search = {
                 Name: 'Weather'
             };
@@ -585,7 +571,7 @@ let System = class System extends Utility {
                 collection: this.collection
             };
 
-            Utility.getOne(criteria, function (err, _data) {
+            this.getOne(criteria, (err, _data) => {
                 let upi;
                 let key;
                 // Our data structure is like this:
@@ -606,7 +592,7 @@ let System = class System extends Utility {
                 callback(err);
             });
         };
-        let getPoints = function (callback) {
+        let getPoints = (callback) => {
             let search = {
                 _id: {
                     $in: weatherPointUpis
@@ -623,7 +609,7 @@ let System = class System extends Utility {
                 fields: fields
             };
 
-            Point.getAll(criteria, function (err, _data) {
+            Point.getAll(criteria, (err, _data) => {
                 for (let i = 0, len = _data.length, point; i < len; i++) {
                     point = _data[i];
                     weatherPointData[upiMatrix[point._id]] = point;
@@ -635,7 +621,7 @@ let System = class System extends Utility {
 
         let executeFns = [getWeather, getPoints];
 
-        async.waterfall(executeFns, function (err) {
+        async.waterfall(executeFns, (err) => {
             if (err) {
                 return cb(err.message);
             }
@@ -651,7 +637,7 @@ let System = class System extends Utility {
             $set: {}
         };
         let $set = update.$set;
-        let getSetData = function (upi) {
+        let getSetData = (upi) => {
             if (upi === 'null') {
                 upi = null;
             } else {
@@ -670,7 +656,7 @@ let System = class System extends Utility {
             collection: this.collection
         };
 
-        Utility.update(criteria, cb);
+        this.update(criteria, cb);
     }
     getVersions(data, cb) {
         let pjson = require('../package.json');
@@ -684,7 +670,7 @@ let System = class System extends Utility {
             }
         };
 
-        Utility.getOne(criteria, function (err, result) {
+        this.getOne(criteria, (err, result) => {
             if (err) {
                 return cb(err);
             }

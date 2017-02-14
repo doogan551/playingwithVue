@@ -1,4 +1,4 @@
-let Utility = new(require('../models/utility'))();
+let Point = new(require('./point'))();
 
 let GPL = class GPL {
     getGplInfo(data, cb) {
@@ -17,8 +17,7 @@ let GPL = class GPL {
                 }, sendToJade);
             };
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: data.upi
             }
@@ -35,8 +34,7 @@ let GPL = class GPL {
     getReferences(data, cb) {
         let upoint = parseInt(data.upoint, 10);
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: upoint
             },
@@ -92,8 +90,7 @@ let GPL = class GPL {
                 }
             }
 
-            Utility.getWithSecurity({
-                collection: 'points',
+            Point.getWithSecurity({
                 query: {
                     _id: {
                         $in: upis

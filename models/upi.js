@@ -9,7 +9,6 @@ let Upi = class Upi extends Utility {
 
     getNextUpi(isDevice, cb) {
         let criteria = {
-            collection: this.collection,
             query: {
                 _pStatus: 1
             },
@@ -49,7 +48,6 @@ let Upi = class Upi extends Utility {
         // Not specifiying new: true because we don't need the updated document after the update
 
         Utility.findAndModify({
-            collection: this.collection,
             query: query,
             sort: sort,
             updateObj: update

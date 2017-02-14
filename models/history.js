@@ -129,10 +129,9 @@ let History = class History extends Utility {
             }
 
             criteria = {
-                collection: this.collection,
                 query: query
             };
-            Utility.getOne(criteria, (err, point) => {
+            this.getOne(criteria, (err, point) => {
                 if (!!point) {
                     if (point.userEdited) {
                         let updateObj = {
@@ -143,11 +142,10 @@ let History = class History extends Utility {
                         };
                         updatedCount++;
                         criteria = {
-                            collection: this.collection,
                             query: query,
                             updateObj: updateObj
                         };
-                        Utility.update(criteria, callback);
+                        this.updateOne(criteria, callback);
                     } else {
                         //ignored
                         return callback();
@@ -1714,16 +1712,14 @@ let History = class History extends Utility {
         let dates = [];
         let query = {};
         let findRangeEnds = (callback) => {
-            Utility.get({
-                collection: this.collection,
+            this.get({
                 query: {},
                 sort: {
                     timestamp: 1
                 },
                 limit: 1
             }, (err, first) => {
-                Utility.get({
-                    collection: this.collection,
+                this.get({
                     query: {},
                     sort: {
                         timestamp: -1
@@ -1751,7 +1747,6 @@ let History = class History extends Utility {
         };
         findRangeEnds((err, range) => {
             buildDates(range);
-            console.log(dates.length);
             async.eachSeries(dates, (date, callback) => {
                 query = {
                     $and: [{
@@ -1766,13 +1761,10 @@ let History = class History extends Utility {
                 };
 
                 criteria = {
-                    collection: this.collection,
-                    query: query,
-                    limit: 0
+                    query: query
                 };
 
-                Utility.get(criteria, (err, points) => {
-                    console.log(moment.unix(date.start).format(), points.length);
+                this.get(criteria, (err, points) => {
                     buildTimeRanges(points);
                 });
 
@@ -1829,14 +1821,13 @@ let History = class History extends Utility {
         let query = {
             _id: upi
         };
-        Utility.remove({
-            collection: this.collection,
+        this.remove({
             query: query
         }, cb);
     }
     getAll(criteria, cb) {
         criteria.collection = this.collection;
-        Utility.get(criteria, cb);
+        this.get(criteria, cb);
     }
 };
 

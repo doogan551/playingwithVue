@@ -1,6 +1,6 @@
 let _ = require('lodash');
 
-let Utility = new(require('../models/utility'))();
+let Point = new(require('./point'))();
 let System = new(require('./system'))();
 
 let validPortProtocols = [1, 4];
@@ -21,9 +21,6 @@ let compare = (a, b) => {
 };
 
 let DeviceTree = class DeviceTree {
-    constructor() {
-        this.collection = 'points';
-    }
 
     getTree(cb) {
         let tree = [];
@@ -34,7 +31,7 @@ let DeviceTree = class DeviceTree {
         // Gets devices to build device tree //
         ///////////////////////////////////////
         let getDevices = (callback) => {
-            Utility.iterateCursor({
+            Point.iterateCursor({
                 collection: this.collection,
                 query: {
                     'Point Type.Value': 'Device'

@@ -247,19 +247,19 @@ module.exports = {
 
             if (data.upoint !== '{{tab.upi}}') {
                 Utility.get({
-                        collection: versionsCollection,
-                        query: {
+                    collection: versionsCollection,
+                    query: {
                             '_id': new ObjectID(data.upoint)
                         }
-                    }, function (err, docs) {
-                        if (docs.length > 0) {
+                }, function (err, docs) {
+                    if (docs.length > 0) {
                             return cb(null, {
                                 upi: docs[0].vid,
                                 displayJson: docs[0]
                             });
                         }
-                        return cb('Display not found');
-                    });
+                    return cb('Display not found');
+                });
             } else {
                 return cb('tab.upi sent');
             }
@@ -378,8 +378,8 @@ module.exports = {
                             saveObj: oldVersion
                         }, function (saveNewErr, saveNewRes) {
                             if (saveNewErr) {
-                                    return cb(saveNewErr);
-                                }
+                                return cb(saveNewErr);
+                            }
                             return cb(null, 'Saved and Published');
                         });
                     });

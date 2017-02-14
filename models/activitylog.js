@@ -6,25 +6,16 @@ const Enums = require('../public/js/lib/config').Enums;
 
 const async = require('async');
 
-let ActivityLog = class ActivityLog {
+let ActivityLog = class ActivityLog extends Utility {
     constructor() {
-        super();
-        this.collection = activityLogCollection;
-    }
-
-    getOne(criteria, cb) {
-        this.assignObjects(criteria, {
-            collection: this.collection
-        });
-        Utility.getOne(criteria, cb);
+        super(activityLogCollection);
     }
 
     create(logData, cb) {
         let criteria = {
-            collection: this.collection,
             insertObj: this.buildActivityLog(logData)
         };
-        Utility.insert(criteria, cb);
+        this.insert(criteria, cb);
     }
 
     get(data, cb) {
@@ -85,13 +76,12 @@ let ActivityLog = class ActivityLog {
         let skip = (currentPage - 1) * itemsPerPage;
         let criteria = {
             query: query,
-            collection: activityLogCollection,
             sort: sort,
             _skip: skip,
             _limit: numberItems,
             data: data
         };
-        Utility.getWithSecurity(criteria, cb);
+        this.getWithSecurity(criteria, cb);
     }
 
     // newupdate

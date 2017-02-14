@@ -23,7 +23,7 @@ let Plivo = class Plivo {
             method: 'GET'
         };
 
-        client.send_message(params, function (code, response) {
+        client.send_message(params, (code, response) => {
             let err = null;
             if (code >= 400) {
                 err = {
@@ -45,7 +45,7 @@ let Plivo = class Plivo {
             'answer_method': 'GET'
         };
 
-        client.make_call(params, function (code, response) {
+        client.make_call(params, (code, response) => {
             let err = null;
             if (code >= 400) {
                 err = {

@@ -6,9 +6,9 @@ let Reports = require('../models/reports');
 const utils = require('../helpers/utils');
 const schedulesCollection = utils.CONSTANTS('schedulesCollection');
 
-let Schedule = class Schedule {
+let Schedule = class Schedule extends Utility {
     constructor() {
-        this.collection = schedulesCollection;
+        super(schedulesCollection);
     }
 
     getSchedules(data, callback) {
@@ -33,13 +33,12 @@ let Schedule = class Schedule {
         // }
 
         let criteria = {
-            collection: this.collection,
             query: {
                 upi: data.upi
             }
         };
 
-        Utility.get(criteria, callback);
+        this.getAll(criteria, callback);
     }
     saveSchedules(data, callback) {
         // data = {
@@ -47,16 +46,15 @@ let Schedule = class Schedule {
         //     schedules: [] (array of schedule objects)
         // }
         let criteria = {
-                collection: this.collection,
                 query: {}
             },
-            getOldSchedule = function (idata, cb) { // idata...'data' was already taken =/
+            getOldSchedule = (idata, cb) => { // idata...'data' was already taken =/
                 if (idata.schedule._id) { // If this is an existing point
                     idata.schedule._id = ObjectID(idata.schedule._id);
                     criteria.query._id = idata.schedule._id;
 
                     if (!idata.schedule.deleteMe) {
-                        Utility.get(criteria, function (err, oldSchedule) {
+                        this.get(criteria, (err, oldSchedule) => {
                             idata.oldSchedule = oldSchedule;
                             cb(err, idata);
                         });
@@ -66,23 +64,23 @@ let Schedule = class Schedule {
 
                 cb(null, idata);
             },
-            doSave = function (idata, cb) {
+            doSave = (idata, cb) => {
                 let fn;
 
                 if (idata.schedule.deleteMe) {
                     fn = 'remove';
                 } else if (idata.oldSchedule) {
-                    fn = 'update';
+                    fn = 'updateOne';
                     criteria.updateObj = idata.schedule;
                 } else {
                     fn = 'insert';
                     criteria.insertObj = idata.schedule;
                 }
-                Utility[fn](criteria, function (err) {
+                this[fn](criteria, (err) => {
                     cb(err, idata);
                 });
             },
-            doCronMaintenance = function (idata, cb) {
+            doCronMaintenance = (idata, cb) => {
                 let createCron = false,
                     deleteCron = false,
                     modifyCron = false;
@@ -111,8 +109,8 @@ let Schedule = class Schedule {
 
                 cb(null, idata);
             },
-            processSchedule = function (schedule, cb) {
-                let start = function (cb) {
+            processSchedule = (schedule, cb) => {
+                let start = (cb) => {
                     cb(null, {
                         schedule: schedule
                     });
@@ -124,12 +122,11 @@ let Schedule = class Schedule {
         async.eachSeries(data.schedules, processSchedule, callback);
     }
     runSchedule(data, callback) {
-        Utility.getOne({
-            collection: this.collection,
+        this.getOne({
             query: {
                 _id: ObjectID(data._id)
             }
-        }, function (err, schedule) {
+        }, (err, schedule) => {
             data.schedule = schedule;
             switch (data.schedule.type) {
                 case 1:
@@ -140,16 +137,14 @@ let Schedule = class Schedule {
         });
     }
     remove(data, callback) {
-        Utility.remove({
-            collection: this.collection,
+        this.remove({
             query: {
                 upi: data.upi
             }
         }, callback);
     }
     disable(data, callback) {
-        Utility.findAndModify({
-            collection: this.collection,
+        this.findAndModify({
             query: {
                 upi: data.upi
             },

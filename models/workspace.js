@@ -36,7 +36,7 @@ let Workspace = class Workspace {
             }
         };
 
-        User.getOne(criteria, function (err, user) {
+        User.getOne(criteria, (err, user) => {
             if (!user) {
                 return cb('User not found');
             }
@@ -44,7 +44,7 @@ let Workspace = class Workspace {
                 return cb(err);
             }
 
-            bcrypt.compare(oldPass, user.Password.Value, function (err, result) {
+            bcrypt.compare(oldPass, user.Password.Value, (err, result) => {
                 if (!!err) {
                     return cb(err);
                 }

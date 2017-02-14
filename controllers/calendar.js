@@ -9,14 +9,14 @@ router.post('/getyear', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Calendar.getYear(data, function (err, years) {
+    Calendar.getYear(data, function (err, year) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
             });
         }
 
-        return utils.sendResponse(res, years[0]);
+        return utils.sendResponse(res, year);
     });
 });
 // Checked
@@ -24,14 +24,14 @@ router.post('/getseason', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Calendar.getSeason(data, function (err, seasons) {
+    Calendar.getSeason(data, function (err, season) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
             });
         }
 
-        return utils.sendResponse(res, seasons[0]);
+        return utils.sendResponse(res, season);
     });
 });
 // Checked

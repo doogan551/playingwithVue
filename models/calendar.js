@@ -3,10 +3,10 @@ let ActivityLog = new(require('./activitylog'))();
 let utils = require('../helpers/utils');
 const calendarCollection = utils.CONSTANTS('calendarCollection');
 
-let Calendar = class Calendar {
+let Calendar = class Calendar extends Utility {
 
     constructor() {
-        this.collection = calendarCollection;
+        super(calendarCollection);
     }
 
     getYear(data, cb) {
@@ -14,14 +14,12 @@ let Calendar = class Calendar {
             query: {
                 year: parseInt(data.year, 10)
             },
-            collection: this.collection,
-            limit: 1,
             fields: {
                 _id: 0
             }
         };
 
-        Utility.get(criteria, cb);
+        this.getOne(criteria, cb);
     }
 
     newDate(data, cb) {
@@ -47,7 +45,6 @@ let Calendar = class Calendar {
         let criteria = {
             query: query,
             updateObj: updateObj,
-            collection: this.collection,
             sort: [],
             options: {
                 new: true,
@@ -55,7 +52,7 @@ let Calendar = class Calendar {
             }
         };
 
-        Utility.findAndModify(criteria, (err, yearResult) => {
+        this.findAndModify(criteria, (err, yearResult) => {
             if (err) {
                 return cb(err);
             }
@@ -69,7 +66,6 @@ let Calendar = class Calendar {
 
             if (new Date().getFullYear() === year) {
                 criteria = {
-                    collection: 'points',
                     query: {
                         'Point Type.Value': 'Device'
                     },
@@ -77,13 +73,10 @@ let Calendar = class Calendar {
                         $set: {
                             _updPoint: true
                         }
-                    },
-                    options: {
-                        multi: true
                     }
                 };
 
-                Utility.update(criteria, (err) => {
+                this.updateAll(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
