@@ -1,10 +1,10 @@
-let Utility = new(require('../models/utility'))();
 let async = require('async');
 let config = require('config');
 let logger = require('../helpers/logger')(module);
 let Config = require('../public/js/lib/config.js');
 let ObjectID = require('mongodb').ObjectID;
 let Notifier = new(require('../models/notifierutility'))();
+let NotifyLogs = new(require('./notifylogs'))();
 let User = new(require('./user'))();
 let UserGroups = new(require('./userGroup'))();
 let Alarm = new(require('./alarm'))();
@@ -279,13 +279,12 @@ let Inbound = class Inbound {
         let getNotifyLog = (cb) => {
             let info = {},
                 criteria = {
-                    collection: 'NotifyLogs',
                     query: {
                         'apiResult.sid': sid
                     }
                 };
 
-            Utility.getOne(criteria, (err, notifyLog) => {
+            NotifyLogs.getOne(criteria, (err, notifyLog) => {
                 if (err) {
                     return cb(err);
                 }
@@ -471,7 +470,6 @@ let Inbound = class Inbound {
 
         if (sid) {
             criteria = {
-                collection: 'NotifyLogs',
                 query: {
                     'apiResult.sid': sid
                 },
@@ -481,7 +479,7 @@ let Inbound = class Inbound {
                     }
                 }
             };
-            Utility.update(criteria, (err) => {
+            NotifyLogs.updateOne(criteria, (err) => {
                 if (err) {
                     logger.error('/twilio/voice/alarms/status', err);
                 }

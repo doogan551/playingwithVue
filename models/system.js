@@ -6,6 +6,7 @@ let Config = require('../public/js/lib/config');
 
 let ActivityLog = new(require('./activitylog'))();
 let Alarm = new(require('./alarm'))();
+let AlarmDefs = new(require('./alarmdefs'))();
 let Point = new(require('./point'))();
 
 let System = class System extends Utility {
@@ -443,22 +444,6 @@ let System = class System extends Utility {
             return cb(null, entries);
         });
     }
-    getSystemAlarms(cb) {
-        let criteria = {
-            query: {
-                isSystemMessage: true
-            },
-            collection: 'AlarmDefs'
-        };
-        this.get(criteria, (err, data) => {
-            if (err) {
-                return cb(err.message);
-            }
-
-            let entries = data;
-            return cb(null, entries);
-        });
-    }
     updateAlarmTemplate(data, cb) {
         let criteria;
         let logData = {
@@ -479,11 +464,10 @@ let System = class System extends Utility {
             };
 
             criteria = {
-                collection: 'AlarmDefs',
                 saveObj: alarmTemplateNew
             };
 
-            this.save(criteria, (err) => {
+            AlarmDefs.save(criteria, (err) => {
                 logData.activity = 'Alarm Message Edit';
                 logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
                 ActivityLog.create(logData, () => {});
@@ -499,8 +483,7 @@ let System = class System extends Utility {
             '_id': ObjectId(data.deleteObject._id)
         };
         let criteria = {
-            query: searchCriteria,
-            collection: 'AlarmDefs'
+            query: searchCriteria
         };
 
         let fixPoints = (id, cb) => {
@@ -512,9 +495,7 @@ let System = class System extends Utility {
                     }
                 }
             };
-            this.get({
-                collection: 'AlarmDefs'
-            }, (err, alarmDefs) => {
+            AlarmDefs.get({}, (err, alarmDefs) => {
                 Point.iterateCursor({
                     query: {
                         'Alarm Messages.msgId': id
@@ -537,7 +518,7 @@ let System = class System extends Utility {
             });
         };
 
-        this.remove(criteria, (err, _data) => {
+        AlarmDefs.remove(criteria, (err, _data) => {
             if (err) {
                 return cb(err.message);
             }
@@ -567,8 +548,7 @@ let System = class System extends Utility {
 
             let criteria = {
                 query: search,
-                fields: fields,
-                collection: this.collection
+                fields: fields
             };
 
             this.getOne(criteria, (err, _data) => {
@@ -652,8 +632,7 @@ let System = class System extends Utility {
 
         let criteria = {
             query: search,
-            updateObj: update,
-            collection: this.collection
+            updateObj: update
         };
 
         this.update(criteria, cb);
@@ -664,7 +643,6 @@ let System = class System extends Utility {
             infoscanjs: pjson.version
         };
         let criteria = {
-            collection: this.collection,
             query: {
                 Name: 'Preferences'
             }

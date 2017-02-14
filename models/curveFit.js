@@ -1,6 +1,6 @@
 let reg = require('regression');
 
-let Utility = new(require('../models/utility'))();
+let Point = new(require('./point'))();
 let rtdTables = require('../lib/rtdTables');
 
 let CurveFit = class CurveFit {
@@ -157,8 +157,7 @@ let CurveFit = class CurveFit {
             c = [],
             ia, ib, ic; // temp coefficients for flow calcs
 
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: sensorRef.Value
             }

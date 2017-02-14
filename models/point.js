@@ -6,6 +6,7 @@ let utils = require('../helpers/utils');
 let logger = require('../helpers/logger')(module);
 
 let ActivityLog = new(require('./activitylog'))();
+let AlarmDefs = new(require('./alarmdefs'))();
 let History = new(require('./history'))();
 let Schedule = new(require('./schedule'))();
 let Security = new(require('./security'))();
@@ -13,6 +14,11 @@ let Script = new(require('./script'))();
 let System = new(require('./system'))();
 let Upi = new(require('../helpers/upi'))();
 let ZMQ = new(require('../helpers/zmq'))();
+
+let READ = utils.CONSTANTS('READ');
+let ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
+let CONTROL = utils.CONSTANTS('CONTROL');
+let WRITE = utils.CONSTANTS('WRITE');
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
@@ -867,7 +873,7 @@ let Point = class Point extends Utility {
 
                     template._parentUpi = parentUpi;
 
-                    System.getSystemAlarms((err, alarmDefs) => {
+                    AlarmDefs.getSystemAlarms((err, alarmDefs) => {
                         if (err) {
                             return callback(err);
                         }
@@ -2819,6 +2825,167 @@ let Point = class Point extends Utility {
         };
 
         this.getAll(criteria, cb);
+    }
+
+
+    addGroups(data, cb) {
+        let newGroups = (data.Groups) ? data.Groups : [];
+        let points = (data.Points) ? data.Points : [];
+        let searchFilters = (data.searchFilters) ? data.searchFilters : null;
+        let criteria = {};
+
+        if (points.length < 1 || !searchFilters) {
+            return cb('No points or filters given.');
+        }
+
+        let updateCriteria = {
+            $addToSet: {
+                Security: {
+                    $each: []
+                }
+            }
+        };
+
+        for (let m = 0; m < newGroups.length; m++) {
+            newGroups[m].groupId = new ObjectID(newGroups[m].groupId);
+
+            newGroups[m].Permissions = parseInt(newGroups[m].Permissions, 10);
+            if ((newGroups[m].Permissions & WRITE) !== 0) { // If write, get read, ack and control
+                newGroups[m].Permissions = newGroups[m].Permissions | READ | ACKNOWLEDGE | CONTROL;
+            }
+            if ((newGroups[m].Permissions & CONTROL) !== 0) { // If control, get read
+                newGroups[m].Permissions |= READ;
+            }
+            if (newGroups[m].Permissions === undefined) {
+                newGroups[m].Permissions = 0;
+            }
+
+            updateCriteria.$addToSet.Security.$each.push(newGroups[m]);
+        }
+
+
+        async.eachSeries(newGroups, (newGroup, callback) => {
+            async.waterfall([
+
+                (wfCb) => {
+                    criteria = {
+                        query: {
+                            _id: newGroup.groupId
+                        }
+                    };
+                    this.getOne(criteria, (err, group) => {
+                        wfCb(err, (group !== null) ? group.Users : null);
+                    });
+                },
+                (users, wfCb) => {
+                    if (searchFilters) {
+                        let searchCriteria = {};
+                        searchCriteria.name1 = {
+                            '$regex': '(?i)' + '^' + searchFilters.name1
+                        };
+                        searchCriteria.name2 = {
+                            '$regex': '(?i)' + '^' + searchFilters.name2
+                        };
+                        searchCriteria.name3 = {
+                            '$regex': '(?i)' + '^' + searchFilters.name3
+                        };
+                        searchCriteria.name4 = {
+                            '$regex': '(?i)' + '^' + searchFilters.name4
+                        };
+
+                        for (let user in users) {
+                            updateCriteria.$addToSet.Security.$each.push({
+                                userId: new ObjectID(user),
+                                groupId: newGroup.groupId
+                            });
+                        }
+                        criteria = {
+                            query: searchCriteria,
+                            updateObj: updateCriteria
+                        };
+                        this.updateAll(criteria, (err) => {
+                            wfCb(err, true);
+                        });
+                    } else {
+                        async.eachSeries(points, (upi, cb2) => {
+                            let id;
+                            if (upi.length < 12) {
+                                id = parseInt(upi, 10);
+                            } else {
+                                id = new ObjectID(upi);
+                            }
+                            let searchCriteria = {
+                                '_id': id
+                            };
+
+                            for (let user in users) {
+                                updateCriteria.$addToSet.Security.$each.push({
+                                    userId: new ObjectID(user),
+                                    groupId: newGroup.groupId
+                                });
+                            }
+                            criteria = {
+                                query: searchCriteria,
+                                updateObj: updateCriteria
+                            };
+                            this.updateAll(criteria, (err) => {
+                                cb2(err);
+                            });
+                        }, (err) => {
+                            wfCb(err, true);
+                        });
+                    }
+                }
+            ], (err) => {
+                callback(err);
+            });
+        }, (err) => {
+            return cb(err);
+        });
+    }
+    removeGroups(data, cb) {
+        let groupUpis = (data['User Group Upis']) ? data['User Group Upis'] : [];
+        let points = (data.Points) ? data.Points : [];
+        let id;
+
+        if (points.length < 1) {
+            return cb('No points given.');
+        }
+
+        let updateCriteria = {
+            $pull: {
+                'Security': {
+                    $and: []
+                }
+            }
+        };
+
+        for (let i = 0; i < groupUpis.length; i++) {
+            updateCriteria.$pull.Security.$and.push({
+                groupId: new ObjectID(groupUpis[i])
+            });
+        }
+
+        async.eachSeries(points, (upi, callback) => {
+            if (upi.length < 12) {
+                id = parseInt(upi, 10);
+            } else {
+                id = new ObjectID(upi);
+            }
+
+            let searchCriteria = {
+                '_id': id
+            };
+
+            let criteria = {
+                query: searchCriteria,
+                updateObj: updateCriteria
+            };
+
+            this.updateOne(criteria, (err) => {
+                callback(err);
+            });
+        }, cb);
     }
 };
 

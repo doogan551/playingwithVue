@@ -32,7 +32,6 @@ let DeviceTree = class DeviceTree {
         ///////////////////////////////////////
         let getDevices = (callback) => {
             Point.iterateCursor({
-                collection: this.collection,
                 query: {
                     'Point Type.Value': 'Device'
                 },

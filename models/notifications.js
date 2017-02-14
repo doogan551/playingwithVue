@@ -8,6 +8,10 @@ let async = require('async'),
     Utility = new(require('./utility'))(),
     Calendar = new(require('./calendar'))(),
     Notifier = new(require('./notifierutility'))(),
+    NotifyAlarmQueue = new(require('./notifyalarmqueue'))(),
+    NotifyLogs = new(require('./notifylogs'))(),
+    NotifyScheduledTasks = new(require('./notifyscheduledtasks'))(),
+    NotifyPolicies = new(require('./notifypolicies'))(),
     User = new(require('./user'))(),
     UserGroup = new(require('./usergroup'))(),
     Point = new(require('./point'))(),
@@ -99,10 +103,8 @@ let dbAlarmQueueLocked = false,
         },
         scheduledTasks: {
             dbGetAll: (cb) => {
-                let query = {
-                    collection: 'NotifyScheduledTasks'
-                };
-                Utility.get(query, cb);
+                let query = {};
+                NotifyScheduledTasks.get(query, cb);
             },
             dbUpdate: (data, cb) => {
                 actions.utility.log('actions.scheduledTasks.dbUpdate');
@@ -115,25 +117,23 @@ let dbAlarmQueueLocked = false,
                     },
                     doUpdate = (task, doUpdateCB) => {
                         let criteria = {
-                            collection: 'NotifyScheduledTasks',
                             query: {
                                 _id: task._id
                             },
                             updateObj: task
                         };
-                        Utility.update(criteria, doUpdateCB);
+                        NotifyScheduledTasks.updateOne(criteria, doUpdateCB);
                     },
                     deleteTasks = (deleteCB) => {
                         actions.utility.log('\tDeleting ' + deleteIds.length + ' task(s)');
                         let criteria = {
-                            collection: 'NotifyScheduledTasks',
                             query: {
                                 _id: {
                                     '$in': deleteIds
                                 }
                             }
                         };
-                        Utility.remove(criteria, deleteCB);
+                        NotifyScheduledTasks.remove(criteria, deleteCB);
                     };
 
                 data.scheduledTasks.forEach((task) => {
@@ -246,20 +246,17 @@ let dbAlarmQueueLocked = false,
                         return new ObjectID(id);
                     }),
                     criteria = {
-                        collection: 'NotifyPolicies',
                         query: {
                             _id: {
                                 $in: objectIdList
                             }
                         }
                     };
-                Utility.get(criteria, cb);
+                NotifyPolicies.getAll(criteria, cb);
             },
             dbGetAll: (cb) => {
-                let criteria = {
-                    collection: 'NotifyPolicies'
-                };
-                Utility.get(criteria, cb);
+                let criteria = {};
+                NotifyPolicies.getAll(criteria, cb);
             },
             dbUpdateConfigs: (data, cb) => {
                 let numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
@@ -279,7 +276,6 @@ let dbAlarmQueueLocked = false,
 
                 let doUpdate = (policy, policyId, doUpdateCB) => {
                     let criteria = {
-                        collection: 'NotifyPolicies',
                         query: {
                             _id: new ObjectID(policyId)
                         },
@@ -299,7 +295,6 @@ let dbAlarmQueueLocked = false,
                 let updates = [],
                     inserts = {},
                     deletes = {},
-                    collection = 'NotifyPolicies',
                     updateThreads = (updateThreadsCB) => {
                         async.each(updates, doUpdate, updateThreadsCB);
                     },
@@ -311,7 +306,6 @@ let dbAlarmQueueLocked = false,
                     },
                     doUpdate = (update, doUpdateCB) => {
                         let criteria = {
-                            collection: collection,
                             query: {
                                 '_id': new ObjectID(update.policyId),
                                 'threads.id': update.thread.id
@@ -322,11 +316,10 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        Utility.update(criteria, doUpdateCB);
+                        NotifyPolicies.updateOne(criteria, doUpdateCB);
                     },
                     doInsert = (threads, policyId, doInsertCB) => {
                         let criteria = {
-                            collection: collection,
                             query: {
                                 '_id': new ObjectID(policyId)
                             },
@@ -338,11 +331,10 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        Utility.update(criteria, doInsertCB);
+                        NotifyPolicies.updateOne(criteria, doInsertCB);
                     },
                     doDelete = (deleteIds, policyId, doDeleteCB) => {
                         let criteria = {
-                            collection: collection,
                             query: {
                                 '_id': new ObjectID(policyId)
                             },
@@ -356,7 +348,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        Utility.update(criteria, doDeleteCB);
+                        NotifyPolicies.updateOne(criteria, doDeleteCB);
                     },
                     getPolicyThreadChanges = (policy) => {
                         let policyId = policy._id,
@@ -412,7 +404,6 @@ let dbAlarmQueueLocked = false,
                 actions.utility.log('policies.dbRemoveThreads');
                 actions.utility.log('\tRemoving threads for policy id: ' + policyId);
                 let criteria = {
-                    collection: 'NotifyPolicies',
                     query: {
                         _id: new ObjectID(policyId)
                     },
@@ -422,7 +413,7 @@ let dbAlarmQueueLocked = false,
                         }
                     }
                 };
-                Utility.update(criteria, cb);
+                Utility.updateOne(criteria, cb);
             },
             process: (data, cb) => {
                 actions.utility.log('policies.process');
@@ -1087,17 +1078,13 @@ let dbAlarmQueueLocked = false,
         },
         alarmQueue: {
             dbGetAll: (cb) => {
-                let query = {
-                    collection: 'NotifyAlarmQueue'
-                };
-                Utility.get(query, cb);
+                NotifyAlarmQueue.getAll({}, cb);
             },
             dbInsert: (queueEntries, cb) => {
                 let criteria = {
-                    collection: 'NotifyAlarmQueue',
                     insertObj: queueEntries
                 };
-                Utility.insert(criteria, cb);
+                NotifyAlarmQueue.insert(criteria, cb);
             },
             dbRemoveAll: (data, cb) => {
                 actions.utility.log('alarmQueue.dbRemoveAll');
@@ -1108,7 +1095,6 @@ let dbAlarmQueueLocked = false,
                 }
 
                 let criteria = {
-                    collection: 'NotifyAlarmQueue',
                     query: {}
                 };
 
@@ -1129,7 +1115,7 @@ let dbAlarmQueueLocked = false,
                         validateCB(null);
                     },
                     (removeCB) => {
-                        Utility.remove(criteria, removeCB);
+                        NotifyAlarmQueue.remove(criteria, removeCB);
                     }
                 ], (err) => {
                     cb(err, data);
@@ -1573,7 +1559,6 @@ let dbAlarmQueueLocked = false,
                                 message: notifyEntry.notifyMsg
                             },
                             criteria = {
-                                collection: 'NotifyLogs',
                                 insertObj: log
                             };
 
@@ -1581,7 +1566,7 @@ let dbAlarmQueueLocked = false,
                             log.err = err;
                             log.apiResult = result;
 
-                            Utility.insert(criteria, (err) => {
+                            NotifyLogs.insert(criteria, (err) => {
                                 if (!!err) {
                                     actions.utility.sendError(err);
                                 }

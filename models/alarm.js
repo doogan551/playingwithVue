@@ -1,6 +1,7 @@
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = require('./utility');
+let Utility = new(require('./utility'))();
+let ActiveAlarm = new(require('./activealarm'))();
 let utils = require('../helpers/utils');
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
@@ -340,8 +341,7 @@ let Alarm = class Alarm extends Utility {
 
         sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
-        this.getWithSecurity({
-            collection: 'ActiveAlarms',
+        ActiveAlarm.getWithSecurity({
             query: query,
             sort: sort,
             _skip: (currentPage - 1) * itemsPerPage,

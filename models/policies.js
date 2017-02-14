@@ -1,19 +1,19 @@
-let Utility = new(require('../models/utility'))();
 let logger = require('../helpers/logger')(module);
 let ObjectID = require('mongodb').ObjectID;
 let _ = require('lodash');
 let moment = require('moment');
 let notifications = require('../models/notifications');
+let NotifyPolicies = new(require('./notifypolicies'))();
+let NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
 let Point = new(require('./point'))();
 
 
 let Policies = class Policies {
     get(data, cb) {
         let criteria = {
-            collection: 'NotifyPolicies',
             query: data.data || {}
         };
-        Utility.get(criteria, cb);
+        NotifyPolicies.get(criteria, cb);
     }
 
     save(rawData, cb) {
@@ -87,7 +87,6 @@ let Policies = class Policies {
         };
         let doUpdate = () => {
             let criteria = {
-                collection: 'NotifyPolicies',
                 query: {
                     _id: data._id
                 },
@@ -99,7 +98,7 @@ let Policies = class Policies {
                 }
             };
 
-            Utility.update(criteria, callback);
+            NotifyPolicies.update(criteria, callback);
         };
 
         data = convertStrings(rawData);
@@ -125,7 +124,6 @@ let Policies = class Policies {
 
     delete(data, cb) {
         let criteria = {
-            collection: 'NotifyPolicies',
             query: {
                 _id: data._id
             }
@@ -146,12 +144,11 @@ let Policies = class Policies {
             };
             Point.updateOne(criteria, cb);
         };
-        Utility.remove(criteria, updatePoints);
+        NotifyPolicies.remove(criteria, updatePoints);
     }
 
     processRotateConfig(data, config, task, cb) {
         let criteria = {
-                collection: 'NotifyScheduledTasks',
                 query: {
                     policyID: data.policyID.toString(),
                     'config.alertConfigID': data.alertConfigID,
@@ -173,7 +170,7 @@ let Policies = class Policies {
                 lastAction: null
             };
 
-        Utility.get(criteria, (err, docs) => {
+        NotifyScheduledTasks.getAll(criteria, (err, docs) => {
             let nextAction,
                 now = moment(),
                 taskList = [],
@@ -260,12 +257,11 @@ let Policies = class Policies {
             found = false,
             insertTasks = () => {
                 let criteria = {
-                    collection: 'NotifyScheduledTasks',
                     insertObj: newTasks
                 };
 
                 // console.log('Inserting for policy', policyID);
-                Utility.insert(criteria, (err) => {
+                NotifyScheduledTasks.insert(criteria, (err) => {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
@@ -277,14 +273,13 @@ let Policies = class Policies {
             },
             deleteTasks = (callback) => {
                 let criteria = {
-                    collection: 'NotifyScheduledTasks',
                     query: {
                         policyID: policyID
                     }
                 };
 
                 // console.log('Deleting from policy', typeof policyID, policyID);
-                Utility.remove(criteria, (err) => {
+                NotifyScheduledTasks.remove(criteria, (err) => {
                     if (err) {
                         logger.debug('Remove err', JSON.stringify(err));
                     }
