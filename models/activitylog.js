@@ -1,11 +1,12 @@
-const Common = new(require('./common'))();
-const utils = require('../helpers/utils');
-const activityLogCollection = utils.CONSTANTS('activityLogCollection');
-const Enums = require('../public/js/lib/config').Enums;
-
 const async = require('async');
 
-let ActivityLog = class ActivityLog extends Common {
+const Common = new(require('./common'))();
+const Enums = require('../public/js/lib/config').Enums;
+const utils = require('../helpers/utils');
+
+const activityLogCollection = utils.CONSTANTS('activityLogCollection');
+
+const ActivityLog = class ActivityLog extends Common {
     constructor() {
         super(activityLogCollection);
     }

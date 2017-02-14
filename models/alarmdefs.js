@@ -1,6 +1,6 @@
 const Common = new(require('./common'))();
 
-let AlarmDefs = class AlarmDefs extends Common {
+const AlarmDefs = class AlarmDefs extends Common {
 
     constructor() {
         super('AlarmDefs');

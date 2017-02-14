@@ -1,9 +1,10 @@
 const Common = new(require('./common'))();
-let ActivityLog = new(require('./activitylog'))();
-let utils = require('../helpers/utils');
+const ActivityLog = new(require('./activitylog'))();
+const utils = require('../helpers/utils');
+
 const calendarCollection = utils.CONSTANTS('calendarCollection');
 
-let Calendar = class Calendar extends Common {
+const Calendar = class Calendar extends Common {
 
     constructor() {
         super(calendarCollection);

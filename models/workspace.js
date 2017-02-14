@@ -1,9 +1,10 @@
-let bcrypt = require('bcrypt-nodejs');
-let User = new(require('./user'))();
-let utils = require('../helpers/utils');
-let ObjectID = require('mongodb').ObjectID;
+const bcrypt = require('bcrypt-nodejs');
+const ObjectID = require('mongodb').ObjectID;
 
-let Workspace = class Workspace {
+const User = new(require('./user'))();
+const utils = require('../helpers/utils');
+
+const Workspace = class Workspace {
 
     saveWorkspace(data, cb) {
         let workspace = data.Workspace;

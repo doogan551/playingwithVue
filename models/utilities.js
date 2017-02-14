@@ -1,10 +1,11 @@
-let fs = require('fs');
-let pug = require('pug');
+const fs = require('fs');
+
+const pug = require('pug');
 
 const Common = new(require('./common'))();
-let System = require('./system');
+const System = require('./system');
 
-let Utilities = class Utilities extends Common {
+const Utilities = class Utilities extends Common {
     constructor() {
         super('Utilities');
     }

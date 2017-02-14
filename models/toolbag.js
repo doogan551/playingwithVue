@@ -1,10 +1,12 @@
-let fs = require('fs');
-let async = require('async');
-let _ = require('lodash');
-let Point = new(require('./point'))();
-let utils = require('../helpers/utils.js');
+const fs = require('fs');
 
-let forEach = (obj, fn) => {
+const async = require('async');
+const _ = require('lodash');
+
+const Point = new(require('./point'))();
+const utils = require('../helpers/utils.js');
+
+const forEach = (obj, fn) => {
     let keys = Object.keys(obj),
         c,
         len = keys.length,
@@ -20,7 +22,7 @@ let forEach = (obj, fn) => {
     return errorFree;
 };
 
-let Toolbag = class Toolbag {
+const Toolbag = class Toolbag {
     getPoints(data, cb) {
         let criteria = {
             query: data,

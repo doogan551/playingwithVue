@@ -1,18 +1,19 @@
-let plivo = require('plivo');
-let config = require('config');
-let authId = config.get('Plivo').authId;
-let authToken = config.get('Plivo').authToken;
-let src = config.get('Plivo').phoneNumber;
+const plivo = require('plivo');
+const config = require('config');
 
-let NotifierUtility = require('./notifierutility');
-let notifierUtility = new NotifierUtility();
+const NotifierUtility = require('./notifierutility');
+const notifierUtility = new NotifierUtility();
 
-let client = plivo.RestAPI({
+const authId = config.get('Plivo').authId;
+const authToken = config.get('Plivo').authToken;
+const src = config.get('Plivo').phoneNumber;
+
+const client = plivo.RestAPI({
     authId: authId,
     authToken: authToken
 });
 
-let Plivo = class Plivo {
+const Plivo = class Plivo {
     sendText(toNumber, message, cb) {
         toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
 

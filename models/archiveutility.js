@@ -6,19 +6,18 @@
  * https://github.com/mapbox/node-sqlite3
  */
 
-let sqlite3 = require('sqlite3').verbose();
-let config = require('config');
-let fs = require('fs');
-let async = require('async');
-let moment = require('moment');
-let logger = require('../helpers/logger')(module);
+const sqlite3 = require('sqlite3').verbose();
+const config = require('config');
+const fs = require('fs');
+const async = require('async');
+const moment = require('moment');
+const logger = require('../helpers/logger')(module);
 
+const archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
 let sqliteDB = {};
 
-let archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
 
-
-let ArchiveUtility = class ArchiveUtility {
+const ArchiveUtility = class ArchiveUtility {
 
     constructor() {
         //////////////////////////////////////////////////////////////////////////////////////////////////////

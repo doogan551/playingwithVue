@@ -1,9 +1,8 @@
-let Config = require('../public/js/lib/config.js');
-let zmq = require('../helpers/zmq');
+const Config = require('../public/js/lib/config.js');
+const zmq = require('../helpers/zmq');
+const Utility = new(require('./utility'))();
 
-let Utility = new(require('./utility'))();
-
-let Common = class Common extends Utility {
+const Common = class Common extends Utility {
 
     /**
      * Building name search

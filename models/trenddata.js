@@ -1,8 +1,8 @@
-let moment = require('moment');
+const moment = require('moment');
 
-let History = require('../models/history');
+const History = require('./history');
 
-let TrendData = class TrendData {
+const TrendData = class TrendData {
 
     viewTrend(data, cb) {
         let startTime = (!!data.startTime) ? parseInt(data.startTime, 10) : Math.floor(Date.now() / 1000);

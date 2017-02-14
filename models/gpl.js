@@ -1,6 +1,6 @@
-let Point = new(require('./point'))();
+const Point = new(require('./point'))();
 
-let GPL = class GPL {
+const GPL = class GPL {
     getGplInfo(data, cb) {
         let seqData,
             sendToJade = (err, pointdata) => {

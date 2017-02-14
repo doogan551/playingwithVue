@@ -1,22 +1,22 @@
-let fs = require('fs');
+const fs = require('fs');
 
-let async = require('async');
-let moment = require('moment');
-let ObjectID = require('mongodb').ObjectID;
-let config = require('config');
+const async = require('async');
+const moment = require('moment');
+const ObjectID = require('mongodb').ObjectID;
+const config = require('config');
 
-let utils = require('../helpers/utils.js');
-let Config = require('../public/js/lib/config');
-let logger = require('../helpers/logger')(module);
-let PageRender = new(require('./pagerender'))();
-let Mailer = new(require('./mailer'))();
-let Schedule = new(require('./schedule'))();
-let History = new(require('./history'))();
-let Point = new(require('./point'))();
-let User = new(require('./user'))();
-let ActivityLog = new(require('./activitylog'))();
+const utils = require('../helpers/utils.js');
+const Config = require('../public/js/lib/config');
+const logger = require('../helpers/logger')(module);
+const PageRender = new(require('./pagerender'))();
+const Mailer = new(require('./mailer'))();
+const Schedule = new(require('./schedule'))();
+const History = new(require('./history'))();
+const Point = new(require('./point'))();
+const User = new(require('./user'))();
+const ActivityLog = new(require('./activitylog'))();
 
-let Report = class Report {
+const Report = class Report {
     saveSVG(data, cb) {
         let criteria = {
             query: {

@@ -1,19 +1,22 @@
-let https = require('https');
-let async = require('async');
-let xml2js = require('xml2js');
-let config = require('config');
-let logger = require('../helpers/logger')(module);
-let accountSid = config.get('Twilio').accountSid;
-let authToken = config.get('Twilio').authToken;
-let phoneNumbers = config.get('Twilio').phoneNumbers;
-let numNumbers = phoneNumbers.length;
-let smsNumberIndex = 0;
-let voiceNumberIndex = 0;
+const https = require('https');
 
-let client = require('twilio')(accountSid, authToken);
+const async = require('async');
+const xml2js = require('xml2js');
+const config = require('config');
+
+const logger = require('../helpers/logger')(module);
+
+const accountSid = config.get('Twilio').accountSid;
+const authToken = config.get('Twilio').authToken;
+const phoneNumbers = config.get('Twilio').phoneNumbers;
+const numNumbers = phoneNumbers.length;
+const smsNumberIndex = 0;
+const voiceNumberIndex = 0;
+
+const client = require('twilio')(accountSid, authToken);
 
 // https://api.twilio.com/2010-04-01/Accounts/
-let Twilio = class Twilio {
+const Twilio = class Twilio {
     sendText(toNumber, message, cb) {
         let fromNumber = phoneNumbers[smsNumberIndex++];
 

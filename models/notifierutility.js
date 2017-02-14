@@ -1,13 +1,13 @@
-let config = require('config');
+const config = require('config');
 
-let infoscanConfig = config.get('Infoscan');
-let twilioConfig = config.get('Twilio');
-// let plivoConfig = config.get('Plivo');
+const infoscanConfig = config.get('Infoscan');
+const twilioConfig = config.get('Twilio');
+// const plivoConfig = config.get('Plivo');
 
-let inboundId = infoscanConfig.siteConfig.inboundId;
-let inboundUrl = (infoscanConfig.letsencrypt.enabled ? 'https://' : 'http://') + infoscanConfig.domains[0] + '/' + inboundId;
+const inboundId = infoscanConfig.siteConfig.inboundId;
+const inboundUrl = (infoscanConfig.letsencrypt.enabled ? 'https://' : 'http://') + infoscanConfig.domains[0] + '/' + inboundId;
 
-let NotifierUtility = class NotifierUtility {
+const NotifierUtility = class NotifierUtility {
     constructor() {
         this.Twilio = require('./twilio');
         this.Plivo = require('./plivo');

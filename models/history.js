@@ -1,16 +1,18 @@
-let async = require('async');
-let moment = require('moment');
-let csv = require('fast-csv');
-let _ = require('lodash');
-let fs = require('fs');
-let tmp = require('tmp');
-const Common = new(require('./common'))();
-let ArchiveUtility = new(require('../models/archivetility'))();
-let Utilities = new(require('../models/utilities'))();
+const async = require('async');
+const moment = require('moment');
+const csv = require('fast-csv');
+const _ = require('lodash');
+const fs = require('fs');
+const tmp = require('tmp');
 
+const Common = new(require('./common'))();
+const ArchiveUtility = new(require('./archivetility'))();
+const Utilities = new(require('./utilities'))();
 const utils = require('../helpers/utils');
+
 const historyCollection = utils.CONSTANTS('historyCollection');
-let dateFormat = 'ddd, MMM DD, YYYY HH: mm: ss ZZ ';
+const dateFormat = 'ddd, MMM DD, YYYY HH: mm: ss ZZ ';
+
 String.prototype.repeat = (num) => {
     return new Array(num + 1).join(this);
 };
@@ -52,7 +54,7 @@ Array.prototype.equals = (array) => {
 //     ranges.forEach(formatRange);
 // };
 
-let History = class History extends Common {
+const History = class History extends Common {
     costructor() {
         super(historyCollection);
     }

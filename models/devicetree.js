@@ -1,16 +1,16 @@
-let _ = require('lodash');
+const _ = require('lodash');
 
-let Point = new(require('./point'))();
-let System = new(require('./system'))();
+const Point = new(require('./point'))();
+const System = new(require('./system'))();
 
-let validPortProtocols = [1, 4];
-let validEthProtocols = [1];
+const validPortProtocols = [1, 4];
+const validEthProtocols = [1];
 
-let sortArray = (a, b) => {
+const sortArray = (a, b) => {
     return a - b;
 };
 
-let compare = (a, b) => {
+const compare = (a, b) => {
     if (a.networkSegment < b.networkSegment) {
         return -1;
     }
@@ -20,7 +20,7 @@ let compare = (a, b) => {
     return 0;
 };
 
-let DeviceTree = class DeviceTree {
+const DeviceTree = class DeviceTree {
 
     getTree(cb) {
         let tree = [];

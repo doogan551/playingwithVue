@@ -1,4 +1,4 @@
-let CronJob = require('cron').CronJob;
+const CronJob = require('cron').CronJob;
 
 /////////////////////////////////////////////////////
 // Second Minute Hour DayOfMonth Month DayOfWeek   //
@@ -9,7 +9,7 @@ let CronJob = require('cron').CronJob;
 // will run every minute, 1 second past the minute //
 /////////////////////////////////////////////////////
 
-let Cron = class Cron {
+const Cron = class Cron {
     /**
      * Creates an instance of Cron.
      *

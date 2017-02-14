@@ -1,11 +1,12 @@
-let tmp = require('tmp');
-let fs = require('fs');
-let rimraf = require('rimraf');
+const fs = require('fs');
 
-let Point = new(require('../models/point'))();
-let compiler = require('../helpers/scriptCompiler.js');
+const tmp = require('tmp');
+const rimraf = require('rimraf');
 
-let Script = class Script {
+const Point = new(require('./point'))();
+const compiler = require('../helpers/scriptCompiler.js');
+
+const Script = class Script {
 
     update(data, cb) {
         let fileName = data.fileName.replace(/\.dsl$/i, '');

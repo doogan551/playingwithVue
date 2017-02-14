@@ -1,11 +1,12 @@
-let ObjectID = require('mongodb').ObjectID;
+const ObjectID = require('mongodb').ObjectID;
 
 const Common = new(require('./common'))();
-let ActiveAlarm = new(require('./activealarm'))();
-let utils = require('../helpers/utils');
+const ActiveAlarm = new(require('./activealarm'))();
+const utils = require('../helpers/utils');
+
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
-let Alarm = class Alarm extends Common {
+const Alarm = class Alarm extends Common {
     constructor() {
         super(alarmsCollection);
     }

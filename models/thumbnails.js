@@ -1,7 +1,8 @@
-let Point = new(require('./point'))();
-let fs = require('fs');
+const fs = require('fs');
 
-let Thumbnails = class Thumbnails {
+const Point = new(require('./point'))();
+
+const Thumbnails = class Thumbnails {
     batch(data, cb) {
         let locallets = {};
 

@@ -1,9 +1,9 @@
-let reg = require('regression');
+const reg = require('regression');
 
-let Point = new(require('./point'))();
-let rtdTables = require('../lib/rtdTables');
+const Point = new(require('./point'))();
+const rtdTables = require('../lib/rtdTables');
 
-let CurveFit = class CurveFit {
+const CurveFit = class CurveFit {
     doFit(_data, cb) {
         let type = _data.type;
         let data = _data.data;

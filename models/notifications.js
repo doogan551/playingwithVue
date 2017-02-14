@@ -1,73 +1,73 @@
-let async = require('async'),
-    config = require('config'),
-    Config = require('../public/js/lib/config.js'),
-    appConfig = require('config'),
-    CronJob = require('./cronjob'),
-    ObjectID = require('mongodb').ObjectID,
-    logger = require('../helpers/logger')(module),
-    Utility = new(require('./utility'))(),
-    Calendar = new(require('./calendar'))(),
-    Notifier = new(require('./notifierutility'))(),
-    NotifyAlarmQueue = new(require('./notifyalarmqueue'))(),
-    NotifyLogs = new(require('./notifylogs'))(),
-    NotifyScheduledTasks = new(require('./notifyscheduledtasks'))(),
-    NotifyPolicies = new(require('./notifypolicies'))(),
-    User = new(require('./user'))(),
-    UserGroup = new(require('./usergroup'))(),
-    Point = new(require('./point'))(),
-    Alarm = new(require('./alarm'))();
+const async = require('async');
+const config = require('config');
+const Config = require('../public/js/lib/config.js');
+const appConfig = require('config');
+const CronJob = require('./cronjob');
+const ObjectID = require('mongodb').ObjectID;
+const logger = require('../helpers/logger')(module);
+const Utility = new(require('./utility'))();
+const Calendar = new(require('./calendar'))();
+const Notifier = new(require('./notifierutility'))();
+const NotifyAlarmQueue = new(require('./notifyalarmqueue'))();
+const NotifyLogs = new(require('./notifylogs'))();
+const NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
+const NotifyPolicies = new(require('./notifypolicies'))();
+const User = new(require('./user'))();
+const UserGroup = new(require('./usergroup'))();
+const Point = new(require('./point'))();
+const Alarm = new(require('./alarm'))();
 
-let siteConfig = config.get('Infoscan'),
-    siteDomain = siteConfig.domains[0],
-    alarmsEmailAccount = siteConfig.email.accounts.alarms;
+const siteConfig = config.get('Infoscan');
+const siteDomain = siteConfig.domains[0];
+const alarmsEmailAccount = siteConfig.email.accounts.alarms;
 
 let notifier = new Notifier();
 
-let enums = Config.Enums,
-    revEnums = Config.revEnums,
-    alarmClassRevEnums = revEnums['Alarm Classes'],
-    alarmClassEnums = enums['Alarm Classes'],
-    alarmCategoryEnums = enums['Alarm Categories'],
-    accessFlagsEnums = enums['Access Flags'],
-    alarmCategoryRevEnums = revEnums['Alarm Categories'],
-    eventCategoryEnum = alarmCategoryEnums.Event.enum,
-    maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum,
-    returnCategoryEnum = alarmCategoryEnums.Return.enum,
-    ackStatusEnums = enums['Acknowledge Statuses'],
-    isAcknowledgedEnum = ackStatusEnums.Acknowledged.enum,
-    alarmTypesEnums = enums['Alarm Types'],
-    returnToNormalEnumsObj = (() => {
-        let obj = {},
-            entry,
-            alarmType;
-        for (alarmType in alarmTypesEnums) {
-            entry = alarmTypesEnums[alarmType];
-            if (entry.cat === returnCategoryEnum) {
-                obj[entry.enum] = alarmType;
-            }
+let enums = Config.Enums;
+const revEnums = Config.revEnums;
+const alarmClassRevEnums = revEnums['Alarm Classes'];
+const alarmClassEnums = enums['Alarm Classes'];
+const alarmCategoryEnums = enums['Alarm Categories'];
+const accessFlagsEnums = enums['Access Flags'];
+const alarmCategoryRevEnums = revEnums['Alarm Categories'];
+const eventCategoryEnum = alarmCategoryEnums.Event.enum;
+const maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum;
+const returnCategoryEnum = alarmCategoryEnums.Return.enum;
+const ackStatusEnums = enums['Acknowledge Statuses'];
+const isAcknowledgedEnum = ackStatusEnums.Acknowledged.enum;
+const alarmTypesEnums = enums['Alarm Types'];
+const returnToNormalEnumsObj = (() => {
+    let obj = {},
+        entry,
+        alarmType;
+    for (alarmType in alarmTypesEnums) {
+        entry = alarmTypesEnums[alarmType];
+        if (entry.cat === returnCategoryEnum) {
+            obj[entry.enum] = alarmType;
         }
-        return obj;
-    })();
+    }
+    return obj;
+})();
 
-let ADDED = 1, // Thread states
-    UPDATED = 2,
-    DELETED = 3,
-    NEW = 'NEW', // Queue entry types
-    RETURN = 'RETURN',
-    SMS = 'SMS', // Notification types
-    EMAIL = 'Email',
-    VOICE = 'Voice',
-    RECURRING = 'RECURRING', // Scheduled task types
-    ONETIME = 'ONETIME',
-    MSPM = 60000, // Number of milliseconds per minute
-    RUNINTERVAL = MSPM; // How often the CRON task runs
+const ADDED = 1; // Thread states
+const UPDATED = 2;
+const DELETED = 3;
+const NEW = 'NEW'; // Queue entry types
+const RETURN = 'RETURN';
+const SMS = 'SMS'; // Notification types
+const EMAIL = 'Email';
+const VOICE = 'Voice';
+const RECURRING = 'RECURRING'; // Scheduled task types
+const ONETIME = 'ONETIME';
+const MSPM = 60000; // Number of milliseconds per minute
+const RUNINTERVAL = MSPM; // How often the CRON task runs
 
 let notifierFnLookup = {};
 notifierFnLookup[SMS] = 'sendText';
 notifierFnLookup[VOICE] = 'sendVoice';
 notifierFnLookup[EMAIL] = 'sendEmail';
 
-let daysOfWeek = ['sun', 'mon', 'tues', 'wed', 'thur', 'fri', 'sat']; // Entries correspond to Date().getDay()
+const daysOfWeek = ['sun', 'mon', 'tues', 'wed', 'thur', 'fri', 'sat']; // Entries correspond to Date().getDay()
 
 let dbAlarmQueueLocked = false,
     tempAlarmQueue = [],

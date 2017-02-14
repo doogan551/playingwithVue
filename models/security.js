@@ -1,10 +1,11 @@
-let Point = new(require('./point'))();
-let User = new(require('./user'))();
-let UserGroup = new(require('./usergroup'))();
-let System = new(require('./system'))();
-let ObjectID = require('mongodb').ObjectID;
+const ObjectID = require('mongodb').ObjectID;
 
-let Util = class Util {
+const Point = new(require('./point'))();
+const User = new(require('./user'))();
+const UserGroup = new(require('./usergroup'))();
+const System = new(require('./system'))();
+
+const Util = class Util {
 
     getPermissions(user, cb) {
         if (!!user['System Admin'].Value || !user) {

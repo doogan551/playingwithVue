@@ -1,28 +1,28 @@
+const async = require('async');
+const ObjectID = require('mongodb').ObjectID;
+
+const utils = require('../helpers/utils');
+const logger = require('../helpers/logger')(module);
 const Common = new(require('./common'))();
-let Config = require('../public/js/lib/config.js');
-let async = require('async');
-let ObjectID = require('mongodb').ObjectID;
-let utils = require('../helpers/utils');
-let logger = require('../helpers/logger')(module);
+const Config = require('../public/js/lib/config.js');
+const ActivityLog = new(require('./activitylog'))();
+const AlarmDefs = new(require('./alarmdefs'))();
+const History = new(require('./history'))();
+const Schedule = new(require('./schedule'))();
+const Security = new(require('./security'))();
+const Script = new(require('./script'))();
+const System = new(require('./system'))();
+const Upi = new(require('../helpers/upi'))();
+const ZMQ = new(require('../helpers/zmq'))();
 
-let ActivityLog = new(require('./activitylog'))();
-let AlarmDefs = new(require('./alarmdefs'))();
-let History = new(require('./history'))();
-let Schedule = new(require('./schedule'))();
-let Security = new(require('./security'))();
-let Script = new(require('./script'))();
-let System = new(require('./system'))();
-let Upi = new(require('../helpers/upi'))();
-let ZMQ = new(require('../helpers/zmq'))();
-
-let READ = utils.CONSTANTS('READ');
-let ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
-let CONTROL = utils.CONSTANTS('CONTROL');
-let WRITE = utils.CONSTANTS('WRITE');
+const READ = utils.CONSTANTS('READ');
+const ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
+const CONTROL = utils.CONSTANTS('CONTROL');
+const WRITE = utils.CONSTANTS('WRITE');
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
-let Point = class Point extends Common {
+const Point = class Point extends Common {
     constructor() {
         super('points');
     }

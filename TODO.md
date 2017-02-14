@@ -1,5 +1,5 @@
-change logging params
-rearrange initializations - let > const
+*change logging params
+*rearrange initializations - let > const
 *add notification models per collection
 *add alarmdefs model
 *split out security model

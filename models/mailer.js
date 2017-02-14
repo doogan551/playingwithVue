@@ -1,16 +1,16 @@
-let nodemailer = require('nodemailer');
-let config = require('config');
+const nodemailer = require('nodemailer');
+const config = require('config');
+const serverName = require('os').hostname();
 
-let serverName = require('os').hostname();
-let siteConfig = config.get('Infoscan');
-let siteDomain = siteConfig.domains[0];
-let siteName = siteConfig.location.site;
-let defaultAccount = siteConfig.email.accounts.default;
-let smtpAuth = config.get('SparkPost').smtpAuth;
+const siteConfig = config.get('Infoscan');
+const siteDomain = siteConfig.domains[0];
+const siteName = siteConfig.location.site;
+const defaultAccount = siteConfig.email.accounts.default;
+const smtpAuth = config.get('SparkPost').smtpAuth;
 
-let OPEN = 1;
-let CLOSED = 2;
-let TIMEOUT = 30000; // 30 seconds
+const OPEN = 1;
+const CLOSED = 2;
+const TIMEOUT = 30000; // 30 seconds
 
 // Initially we used a 5min 30sec timeout. Often, our transport object would receive our email requests but the emails
 // were never sent and our callback was never called. It appears the transport was prematurely closing due to a problem with

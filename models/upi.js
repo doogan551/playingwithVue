@@ -2,7 +2,7 @@ const Common = new(require('./common'))();
 const utils = require('../helpers/utils');
 const upisCollection = utils.CONSTANTS('upis');
 
-let Upi = class Upi extends Common {
+const Upi = class Upi extends Common {
     constructor() {
         super(upisCollection);
     }

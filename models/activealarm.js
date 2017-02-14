@@ -1,6 +1,6 @@
-let Common = new(require('./common'))();
+const Common = new(require('./common'))();
 
-let ActiveAlarm = class ActiveAlarm extends Common {
+const ActiveAlarm = class ActiveAlarm extends Common {
 
     constructor() {
         super('ActiveAlarm');

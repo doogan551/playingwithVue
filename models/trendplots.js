@@ -1,6 +1,6 @@
-let Point = new(require('./point'))();
+const Point = new(require('./point'))();
 
-let TrendPlots = class TrendPlots {
+const TrendPlots = class TrendPlots {
 
     getPoints(data, cb) {
         let DAY = 60 * 60 * 24;

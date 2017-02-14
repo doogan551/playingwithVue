@@ -1,14 +1,15 @@
-let logger = require('../helpers/logger')(module);
-let ObjectID = require('mongodb').ObjectID;
-let _ = require('lodash');
-let moment = require('moment');
-let notifications = require('../models/notifications');
-let NotifyPolicies = new(require('./notifypolicies'))();
-let NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
-let Point = new(require('./point'))();
+const ObjectID = require('mongodb').ObjectID;
+const _ = require('lodash');
+const moment = require('moment');
+
+const logger = require('../helpers/logger')(module);
+const notifications = require('./notifications');
+const NotifyPolicies = new(require('./notifypolicies'))();
+const NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
+const Point = new(require('./point'))();
 
 
-let Policies = class Policies {
+const Policies = class Policies {
     get(data, cb) {
         let criteria = {
             query: data.data || {}

@@ -1,15 +1,14 @@
-let async = require('async');
-let ObjectId = require('mongodb').ObjectID;
+const async = require('async');
+const ObjectId = require('mongodb').ObjectID;
 
 const Common = new(require('./common'))();
-let Config = require('../public/js/lib/config');
+const Config = require('../public/js/lib/config');
+const ActivityLog = new(require('./activitylog'))();
+const Alarm = new(require('./alarm'))();
+const AlarmDefs = new(require('./alarmdefs'))();
+const Point = new(require('./point'))();
 
-let ActivityLog = new(require('./activitylog'))();
-let Alarm = new(require('./alarm'))();
-let AlarmDefs = new(require('./alarmdefs'))();
-let Point = new(require('./point'))();
-
-let System = class System extends Common {
+const System = class System extends Common {
     constructor() {
         super('SystemInfo');
     }

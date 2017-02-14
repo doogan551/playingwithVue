@@ -1,26 +1,25 @@
-let async = require('async');
-let config = require('config');
-let logger = require('../helpers/logger')(module);
-let Config = require('../public/js/lib/config.js');
-let ObjectID = require('mongodb').ObjectID;
-let Notifier = new(require('../models/notifierutility'))();
-let NotifyLogs = new(require('./notifylogs'))();
-let User = new(require('./user'))();
-let UserGroups = new(require('./userGroup'))();
-let Alarm = new(require('./alarm'))();
-let serverName = require('os').hostname();
+const async = require('async');
+const serverName = require('os').hostname();
+const config = require('config');
+const ObjectID = require('mongodb').ObjectID;
 
-let notifier = new Notifier();
+const logger = require('../helpers/logger')(module);
+const Config = require('../public/js/lib/config.js');
+const Notifier = new(require('./notifierutility'))();
+const NotifyLogs = new(require('./notifylogs'))();
+const User = new(require('./user'))();
+const UserGroups = new(require('./userGroup'))();
+const Alarm = new(require('./alarm'))();
 
-let infoscanConfig = config.get('Infoscan');
-let alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
-let alarmsEmailAddress = alarmsEmailAccount + '@' + infoscanConfig.domains[0];
+const infoscanConfig = config.get('Infoscan');
+const alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
+const alarmsEmailAddress = alarmsEmailAccount + '@' + infoscanConfig.domains[0];
 
-let enums = Config.Enums;
-let revEnums = Config.revEnums;
-let ackStatuses = enums['Acknowledge Statuses'];
-let accessFlags = enums['Access Flags'];
-let alarmClasses = enums['Alarm Classes'];
+const enums = Config.Enums;
+const revEnums = Config.revEnums;
+const ackStatuses = enums['Acknowledge Statuses'];
+const accessFlags = enums['Access Flags'];
+const alarmClasses = enums['Alarm Classes'];
 
 let emailHandler = {};
 emailHandler[alarmsEmailAddress] = (relayMessage) => {
@@ -120,7 +119,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
             replyObj.inReplyTo = msgId;
             replyObj.references = references;
 
-            notifier.sendEmail(replyObj);
+            Notifier.sendEmail(replyObj);
         }
     });
 
@@ -247,7 +246,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
     };
 };
 
-let Inbound = class Inbound {
+const Inbound = class Inbound {
     sparkpost(data) {
         let _data = Array.isArray(data) ? data[0] : null,
             relayMessage = _data && _data.msys && _data.msys.relayMessage,

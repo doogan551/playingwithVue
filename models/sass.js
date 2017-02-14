@@ -1,6 +1,6 @@
-let sass = require('node-sass');
+const sass = require('node-sass');
 
-let Sass = class Sass {
+const Sass = class Sass {
     renderSass(data, cb) {
         let dir = data.dir,
             dirs = dir.split('-').join('/'),

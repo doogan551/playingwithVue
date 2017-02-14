@@ -1,6 +1,6 @@
-let Point = new(require('./point'))();
+const Point = new(require('./point'))();
 
-let Slideshow = class Slideshow {
+const Slideshow = class Slideshow {
 
     get(data, cb) {
         let upi = parseInt(data.id, 10);

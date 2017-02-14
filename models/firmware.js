@@ -1,8 +1,7 @@
-let fs = require('fs');
-let config = require('config');
+const fs = require('fs');
+const config = require('config');
 
-
-let Firmware = class Firmware {
+const Firmware = class Firmware {
 
     //////////////////////////////////////////////////////////////////////////
     // Firmware files are stored in filesystem and file names are retrieved //

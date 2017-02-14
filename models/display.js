@@ -1,17 +1,17 @@
-let path = require('path');
-let fs = require('fs');
-let ce = require('cloneextend');
-let gm = require('gm');
-let glob = require('glob');
-let pointsCollection = 'points';
-let versionsCollection = 'versions';
-let ObjectID = require('mongodb').ObjectID;
+const path = require('path');
+const fs = require('fs');
+const ce = require('cloneextend');
+const gm = require('gm');
+const glob = require('glob');
+const ObjectID = require('mongodb').ObjectID;
 
-let ActivityLog = new(require('./activitylog'))();
-let Utility = new(require('./utility'))();
-let Config = require('../public/js/lib/config.js');
+const ActivityLog = new(require('./activitylog'))();
+const Utility = new(require('./utility'))();
+const Config = require('../public/js/lib/config.js');
 
-let actLogsEnums = Config.Enums['Activity Logs'];
+const actLogsEnums = Config.Enums['Activity Logs'];
+const pointsCollection = 'points';
+const versionsCollection = 'versions';
 
 module.exports = {
 

@@ -1,6 +1,6 @@
-let Point = new(require('./point'))();
+const Point = new(require('./point'))();
 
-let Sequence = class Sequence {
+const Sequence = class Sequence {
 
     getBlockTypes(cb) {
         let criteria = {

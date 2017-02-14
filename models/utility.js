@@ -1,8 +1,9 @@
-let _ = require('lodash');
-let db = require('../helpers/db');
-let utils = require('../helpers/utils');
+const _ = require('lodash');
 
-let Utility = class Utility {
+const db = require('../helpers/db');
+const utils = require('../helpers/utils');
+
+const Utility = class Utility {
     constructor(collection) {
         this.collection = null;
         if (collection) {
@@ -283,7 +284,7 @@ let Utility = class Utility {
         let limit = criteria._limit || 200;
 
         let identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
-        let Security = require('../models/security');
+        let Security = require('./security');
 
         Security.Utility.getPermissions(criteria.data.user, (err, permissions) => {
             if (err || permissions === false) {
