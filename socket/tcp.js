@@ -9,16 +9,16 @@ var zmq = require('../helpers/zmq');
 var common;
 var io;
 
-module.exports = function(_common) {
+module.exports = function (_common) {
     common = _common;
     io = _common.sockets.get().io;
     var tcp = common.sockets.get().tcp;
 
-    tcp.on('connection', function(socket) {
+    tcp.on('connection', function (socket) {
         // logger.info("connected tcpServer");
         socket.setEncoding('utf8');
 
-        socket.on('data', function(buf) {
+        socket.on('data', function (buf) {
             logger.info(buf);
             var jbuf = JSON.parse(buf);
 
@@ -27,10 +27,10 @@ module.exports = function(_common) {
                 var date = new Date(),
                     dateString = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDay() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 
-                runScheduleEntry(jbuf.point, function(err, point) {
+                runScheduleEntry(jbuf.point, function (err, point) {
                     err = (err) ? err : "Success";
                     var nameString = (point.name1) ? (point.name2) ? (point.name3) ? (point.name4) ? point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4 : point.name1 + "_" + point.name2 + "_" + point.name3 : point.name1 + "_" + point.name2 : point.name1 : "";
-                    writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function(err) {
+                    writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function (err) {
                         // logger.info(err);
                     });
                 });
@@ -38,17 +38,17 @@ module.exports = function(_common) {
                 io.sockets.emit('statusUpdate', jbuf.msg);
             }
         });
-        socket.on('close', function(data) {
+        socket.on('close', function (data) {
             logger.info("closing tcpServer", data);
         });
-        socket.on('error', function(error) {
+        socket.on('error', function (error) {
             logger.error("error on tcpServer", error);
         });
     });
 };
 
 function writeToLogs(msg, callback) {
-    fs.appendFile('./logs/activitylogs.txt', msg, function(err) {
+    fs.appendFile('./logs/activitylogs.txt', msg, function (err) {
         callback(err);
     });
 }
@@ -65,15 +65,15 @@ function runScheduleEntry(entryUpi, callback) {
         query: {
             _id: parseInt(entryUpi._id, 10)
         }
-    }, function(err, scheduleEntry) {
-		
+    }, function (err, scheduleEntry) {
+        logger.info('runScheduleEntry', entryUpi._id, scheduleEntry._id)
         Utility.getOne({
             collection: 'points',
             query: {
                 _id: Config.Utility.getPropertyObject("Control Point", scheduleEntry).Value,
                 _pStatus: 0
             }
-        }, function(err, point) {
+        }, function (err, point) {
             if (err)
                 return callback(err, scheduleEntry);
             else if (!point)
@@ -91,8 +91,8 @@ function runScheduleEntry(entryUpi, callback) {
                                 "Execute Now.Value": true
                             }
                         }
-                    }, function(err, result) {
-                        common.signalExecTOD(true, function(err, msg) {
+                    }, function (err, result) {
+                        common.signalExecTOD(true, function (err, msg) {
                             callback(err, scheduleEntry);
                         });
                     });
@@ -110,7 +110,7 @@ function runScheduleEntry(entryUpi, callback) {
 
                     control = JSON.stringify(control);
 
-                    zmq.sendCommand(control, function(err, msg) {
+                    zmq.sendCommand(control, function (err, msg) {
                         if (!!err) {
                             callback(err, scheduleEntry);
                         } else {
@@ -135,7 +135,7 @@ function runScheduleEntry(entryUpi, callback) {
                             from: "updateToD"
                         }, {
                             username: "ToD Schedule"
-                        }, function(response, point) {
+                        }, function (response, point) {
                             callback(response.err, scheduleEntry);
                         });
                     }
