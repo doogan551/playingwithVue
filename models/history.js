@@ -4,7 +4,7 @@ let csv = require('fast-csv');
 let _ = require('lodash');
 let fs = require('fs');
 let tmp = require('tmp');
-let Utility = new(require('../models/utility'))();
+const Common = new(require('./common'))();
 let ArchiveUtility = new(require('../models/archivetility'))();
 let Utilities = new(require('../models/utilities'))();
 
@@ -52,7 +52,7 @@ Array.prototype.equals = (array) => {
 //     ranges.forEach(formatRange);
 // };
 
-let History = class History extends Utility {
+let History = class History extends Common {
     costructor() {
         super(historyCollection);
     }

@@ -1,12 +1,12 @@
 let async = require('async');
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = new(require('../models/utility'))();
+const Common = new(require('./common'))();
 let Reports = require('../models/reports');
 const utils = require('../helpers/utils');
 const schedulesCollection = utils.CONSTANTS('schedulesCollection');
 
-let Schedule = class Schedule extends Utility {
+let Schedule = class Schedule extends Common {
     constructor() {
         super(schedulesCollection);
     }

@@ -4,9 +4,9 @@ let ObjectID = require('mongodb').ObjectID;
 
 let ActivityLog = new(require('./activitylog'))();
 let utils = require('../helpers/utils');
-let Utility = new(require('./utility'))();
+const Common = new(require('./common'))();
 
-let User = class User extends Utility {
+let User = class User extends Common {
     constructor() {
         super('Users');
     }
@@ -15,14 +15,14 @@ let User = class User extends Utility {
         let criteria = {
             query: query
         };
-        Utility.getOne(criteria, cb);
+        this.getOne(criteria, cb);
     }
 
     getUsers(query, cb) {
         let criteria = {
             query: query
         };
-        Utility.getAll(criteria, cb);
+        this.getAll(criteria, cb);
     }
     getAllUsers(data, cb) {
         let properties;
@@ -79,7 +79,7 @@ let User = class User extends Utility {
         let criteria = {
             query: searchCriteria
         };
-        Utility.get(criteria, (err, groups) => {
+        this.get(criteria, (err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -117,8 +117,8 @@ let User = class User extends Utility {
                 username: 1
             }
         };
-        Utility.getOne(criteria, (err, username) => {
-            Utility.remove(criteria, (err) => {
+        this.getOne(criteria, (err, username) => {
+            this.remove(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -148,7 +148,7 @@ let User = class User extends Utility {
                         criteria = {
                             query: groupSearch
                         };
-                        Utility.get(criteria, (err, groups) => {
+                        this.get(criteria, (err, groups) => {
                             if (err) {
                                 return cb(err);
                             }
@@ -167,7 +167,7 @@ let User = class User extends Utility {
                                         },
                                         updateObj: groupUpdate
                                     };
-                                    Utility.update(criteria, (err) => {
+                                    this.update(criteria, (err) => {
                                         if (err) {
                                             return callback(err, null);
                                         }
@@ -207,7 +207,7 @@ let User = class User extends Utility {
                                 multi: true
                             }
                         };
-                        Utility.update(criteria, (err) => {
+                        this.update(criteria, (err) => {
                             return callback(err, {
                                 'message': 'success'
                             });
@@ -234,7 +234,7 @@ let User = class User extends Utility {
         let criteria = {
             query: searchCriteria
         };
-        Utility.getOne(criteria, cb);
+        this.getOne(criteria, cb);
     }
     createPassword(data, cb) {
         let text = '';
@@ -264,7 +264,7 @@ let User = class User extends Utility {
                         }
                     }
                 };
-                Utility.update(criteria, (err) => {
+                this.update(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
@@ -396,7 +396,7 @@ let User = class User extends Utility {
             }
         };
 
-        Utility.get(criteria, (err, conts) => {
+        this.get(criteria, (err, conts) => {
             for (let i = 0; i < conts[0].Entries.length; i++) {
                 if (conts[0].Entries[i]['Controller Name'] === username) {
                     return cb(null, {
@@ -408,7 +408,7 @@ let User = class User extends Utility {
             criteria = {
                 query: searchCriteria
             };
-            Utility.get(criteria, (err, docs) => {
+            this.get(criteria, (err, docs) => {
                 if (docs.length > 0) {
                     return cb(null, {
                         message: 'This username already exists.'
@@ -418,7 +418,7 @@ let User = class User extends Utility {
                     insertObj: userTemplate
                 };
 
-                Utility.insert(criteria, (err, userArray) => {
+                this.insert(criteria, (err, userArray) => {
                     let logData = {
                         user: data.user,
                         timestamp: Date.now(),
@@ -471,7 +471,7 @@ let User = class User extends Utility {
                                         updateObj: updateCriteria,
                                         options: options
                                     };
-                                    Utility.update(criteria, (err) => {
+                                    this.update(criteria, (err) => {
                                         if (err) {
                                             return callback(err);
                                         }
@@ -482,7 +482,7 @@ let User = class User extends Utility {
                                             }
                                         };
 
-                                        Utility.getOne(criteria, callback);
+                                        this.getOne(criteria, callback);
                                     });
                                 },
                                 (newGroup, callback) => {
@@ -498,7 +498,7 @@ let User = class User extends Utility {
                                         query: searchCriteria
                                     };
 
-                                    Utility.get(criteria, (err, points) => {
+                                    this.get(criteria, (err, points) => {
                                         async.eachSeries(points, (point, eachCB) => {
                                             let updateCriteria = {
                                                 $push: {
@@ -516,7 +516,7 @@ let User = class User extends Utility {
                                                 updateObj: updateCriteria
                                             };
 
-                                            Utility.udpate(criteria, (err) => {
+                                            this.udpate(criteria, (err) => {
                                                 eachCB(err);
                                             });
                                         }, callback);
@@ -536,7 +536,7 @@ let User = class User extends Utility {
                                         }
                                     };
 
-                                    Utility.getOne(criteria, cb);
+                                    this.getOne(criteria, cb);
                                 }
                             });
                         });
@@ -547,7 +547,7 @@ let User = class User extends Utility {
                             }
                         };
 
-                        Utility.getOne(criteria, cb);
+                        this.getOne(criteria, cb);
                     }
                 });
             });
@@ -573,7 +573,7 @@ let User = class User extends Utility {
         let updateCriteria = {
             $set: {}
         };
-        Utility.getOne({
+        this.getOne({
             query: searchCriteria
         }, (err, dbUser) => {
             for (let key in updateData) {
@@ -633,7 +633,7 @@ let User = class User extends Utility {
                 query: searchCriteria,
                 updateObj: updateCriteria
             };
-            Utility.update(criteria, (err) => {
+            this.update(criteria, (err) => {
                 if (err) {
                     return cb(err);
                 }
@@ -660,7 +660,7 @@ let User = class User extends Utility {
                 criteria = {
                     query: deleteSearch
                 };
-                Utility.get(criteria, (err, delGroups) => {
+                this.get(criteria, (err, delGroups) => {
                     let i;
                     let groupsToRemove = [];
                     if (groups.length > 0) {
@@ -690,14 +690,14 @@ let User = class User extends Utility {
                                     criteria = {
                                         query: delSearch
                                     };
-                                    Utility.getOne(criteria, (err, delGroup) => {
+                                    this.getOne(criteria, (err, delGroup) => {
                                         delete delGroup.Users[userid];
 
                                         criteria = {
                                             query: delSearch,
                                             updateObj: delGroup
                                         };
-                                        Utility.update(criteria, (err) => {
+                                        this.update(criteria, (err) => {
                                             callback(err, delGroup);
                                         });
                                     });
@@ -726,7 +726,7 @@ let User = class User extends Utility {
                                             multi: true
                                         }
                                     };
-                                    Utility.update(criteria, (err) => {
+                                    this.update(criteria, (err) => {
                                         callback(err, delGroup);
                                     });
                                 }
@@ -753,7 +753,7 @@ let User = class User extends Utility {
                     query: searchCriteria
                 };
 
-                Utility.getOne(criteria, (err, user) => {
+                this.getOne(criteria, (err, user) => {
                     if (err) {
                         return cb(err);
                     }
@@ -791,7 +791,7 @@ let User = class User extends Utility {
                                     updateObj: updateCriteria,
                                     options: options
                                 };
-                                Utility.update(criteria, (err) => {
+                                this.update(criteria, (err) => {
                                     if (err) {
                                         return callback(err);
                                     }
@@ -801,7 +801,7 @@ let User = class User extends Utility {
                                             _id: group.groupid
                                         }
                                     };
-                                    Utility.getOne(criteria, callback);
+                                    this.getOne(criteria, callback);
                                 });
                             },
                             (newGroup, callback) => {
@@ -816,7 +816,7 @@ let User = class User extends Utility {
                                 criteria = {
                                     query: searchCriteria
                                 };
-                                Utility.get(criteria, (err, points) => {
+                                this.get(criteria, (err, points) => {
                                     if (err) {
                                         return callback(err);
                                     }
@@ -836,7 +836,7 @@ let User = class User extends Utility {
                                             },
                                             updateObj: updateCriteria
                                         };
-                                        Utility.update(criteria, (err) => {
+                                        this.update(criteria, (err) => {
                                             eachCB(err);
                                         });
                                     }, callback);
@@ -854,7 +854,7 @@ let User = class User extends Utility {
                                         _id: user._id
                                     }
                                 };
-                                Utility.getOne(criteria, cb);
+                                this.getOne(criteria, cb);
                             }
                         });
                     });
@@ -865,7 +865,7 @@ let User = class User extends Utility {
                         _id: userid
                     }
                 };
-                Utility.getOne(criteria, cb);
+                this.getOne(criteria, cb);
             }
         };
     }

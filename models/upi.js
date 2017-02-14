@@ -1,8 +1,8 @@
-let Utility = new(require('../models/utility'))();
+const Common = new(require('./common'))();
 const utils = require('../helpers/utils');
 const upisCollection = utils.CONSTANTS('upis');
 
-let Upi = class Upi extends Utility {
+let Upi = class Upi extends Common {
     constructor() {
         super(upisCollection);
     }
@@ -32,7 +32,7 @@ let Upi = class Upi extends Utility {
             ];
         }
 
-        Utility.findAndModify(criteria, cb);
+        this.findAndModify(criteria, cb);
     }
 
     deleteUpi(upi, cb) {
@@ -47,7 +47,7 @@ let Upi = class Upi extends Utility {
             };
         // Not specifiying new: true because we don't need the updated document after the update
 
-        Utility.findAndModify({
+        this.findAndModify({
             query: query,
             sort: sort,
             updateObj: update

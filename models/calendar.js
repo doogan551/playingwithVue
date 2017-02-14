@@ -1,9 +1,9 @@
-let Utility = require('./utility');
+const Common = new(require('./common'))();
 let ActivityLog = new(require('./activitylog'))();
 let utils = require('../helpers/utils');
 const calendarCollection = utils.CONSTANTS('calendarCollection');
 
-let Calendar = class Calendar extends Utility {
+let Calendar = class Calendar extends Common {
 
     constructor() {
         super(calendarCollection);

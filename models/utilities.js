@@ -1,11 +1,10 @@
 let fs = require('fs');
 let pug = require('pug');
 
-let Utility = require('./utility');
+const Common = new(require('./common'))();
 let System = require('./system');
 
-
-let Utilities = class Utilities extends Utility {
+let Utilities = class Utilities extends Common {
     constructor() {
         super('Utilities');
     }

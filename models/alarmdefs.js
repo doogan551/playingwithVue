@@ -1,6 +1,6 @@
-let Utility = require('./utility');
+const Common = new(require('./common'))();
 
-let AlarmDefs = class AlarmDefs extends Utility {
+let AlarmDefs = class AlarmDefs extends Common {
 
     constructor() {
         super('AlarmDefs');

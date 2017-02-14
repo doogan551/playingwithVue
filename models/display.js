@@ -7,12 +7,11 @@ let pointsCollection = 'points';
 let versionsCollection = 'versions';
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = new(require('../models/utility'))();
-let utils = require('../helpers/utils.js');
+let ActivityLog = new(require('./activitylog'))();
+let Utility = new(require('./utility'))();
 let Config = require('../public/js/lib/config.js');
 
 let actLogsEnums = Config.Enums['Activity Logs'];
-let activityLogCollection = utils.CONSTANTS('activityLogCollection');
 
 module.exports = {
 
@@ -36,8 +35,7 @@ module.exports = {
                     'Point Type.Value': 1
                 }
             }, function (err, docs) {
-                let ret = {},
-                    names = {},
+                let names = {},
                     pointTypes = {},
                     c,
                     len = docs.length;
@@ -120,19 +118,6 @@ module.exports = {
         //create frame dir if doesn't exist
         fs.exists(assetPath + frameDir, function (dexists) {
             let retried = false,
-                complete = function () {
-                    if (isNaN(frame)) {
-                        sendFullImage();
-                    } else {
-                        fs.exists(assetPath + frameDir + filename + frame, function (exists) {
-                            if (exists) {
-                                sendSingleFrame();
-                            } else {
-                                splitIntoFrames(sendSingleFrame);
-                            }
-                        });
-                    }
-                },
                 getFiles = function () {
                     if (isNaN(frame)) {
                         sendFullImage();
@@ -185,47 +170,46 @@ module.exports = {
                 version: -1,
                 eDate: -1
             }
-        },
-            function (err, versions) {
-                console.log('err', err);
-                console.log('# of display versions for ', data.upoint, ': ', versions.length);
+        }, function (err, versions) {
+            console.log('err', err);
+            console.log('# of display versions for ', data.upoint, ': ', versions.length);
 
 
-                Utility.get({
-                    collection: pointsCollection,
-                    query: {
-                        '_id': +data.upoint
-                    }
-                }, function (err, production) {
-                    let disp;
+            Utility.get({
+                collection: pointsCollection,
+                query: {
+                    '_id': +data.upoint
+                }
+            }, function (err, production) {
+                let disp;
 
-                    production[0].version = 'Production';
+                production[0].version = 'Production';
 
-                    if (versions.length < 1) { //if no staging versions
-                        disp = ce.clone(production[0]);
-                        disp.version = 'Staging';
-                        disp.vid = +disp._id;
-                        versions.push(disp);
+                if (versions.length < 1) { //if no staging versions
+                    disp = ce.clone(production[0]);
+                    disp.version = 'Staging';
+                    disp.vid = +disp._id;
+                    versions.push(disp);
 
-                        disp._actvAlmId = 0;
-                        disp.vid = disp._id;
-                        delete disp._id;
-                        disp.eDate = Math.round(+new Date() / 1000);
+                    disp._actvAlmId = 0;
+                    disp.vid = disp._id;
+                    delete disp._id;
+                    disp.eDate = Math.round(+new Date() / 1000);
 
-                        console.log('saving staging version', disp.version);
-                        Utility.save({
-                            collection: versionsCollection,
-                            saveObj: disp
-                        }, function (err, result) {
-                            console.log('save version error', err);
-                            renderDisplay(data, versions.slice(-1)[0], versions, cb);
-                        });
-                    } else {
-                        versions.unshift(production[0]);
-                        renderDisplay(data, versions[1], versions, cb);
-                    }
-                });
+                    console.log('saving staging version', disp.version);
+                    Utility.save({
+                        collection: versionsCollection,
+                        saveObj: disp
+                    }, function (err, result) {
+                        console.log('save version error', err);
+                        renderDisplay(data, versions.slice(-1)[0], versions, cb);
+                    });
+                } else {
+                    versions.unshift(production[0]);
+                    renderDisplay(data, versions[1], versions, cb);
+                }
             });
+        });
     },
     previewDisplay: function (data, cb) {
         Utility.get({
@@ -249,15 +233,15 @@ module.exports = {
                 Utility.get({
                     collection: versionsCollection,
                     query: {
-                            '_id': new ObjectID(data.upoint)
-                        }
+                        '_id': new ObjectID(data.upoint)
+                    }
                 }, function (err, docs) {
                     if (docs.length > 0) {
-                            return cb(null, {
-                                upi: docs[0].vid,
-                                displayJson: docs[0]
-                            });
-                        }
+                        return cb(null, {
+                            upi: docs[0].vid,
+                            displayJson: docs[0]
+                        });
+                    }
                     return cb('Display not found');
                 });
             } else {
@@ -331,59 +315,55 @@ module.exports = {
                     '_id': displayObject._id
                 },
                 updateObj: displayObject
-            },
-                function (err, docs) {
-                    let logData = {
-                        user: data.user,
-                        timestamp: Date.now(),
-                        point: displayObject,
-                        activity: actLogsEnums['Display Edit'].enum,
-                        log: 'Display edited.'
-                    };
-                    logData = utils.buildActivityLog(logData);
-                    Utility.insert({
-                        collection: activityLogCollection,
-                        insertObj: logData
-                    }, function (err, result) {});
+            }, function (err, docs) {
+                let logData = {
+                    user: data.user,
+                    timestamp: Date.now(),
+                    point: displayObject,
+                    activity: actLogsEnums['Display Edit'].enum,
+                    log: 'Display edited.'
+                };
 
-                    console.log('display publish err', err);
-                    console.log('displays: updated display');
-                    console.log('displays: removing display');
+                ActivityLog.create(logData, function (err, result) {});
 
-                    displayObject.vid = dId;
-                    displayObject.version = 'Staging';
-                    oldVersion.vid = dId;
+                console.log('display publish err', err);
+                console.log('displays: updated display');
+                console.log('displays: removing display');
 
-                    //set version in previous production version
-                    console.log('displays: updating staging version');
-                    delete displayObject._id;
+                displayObject.vid = dId;
+                displayObject.version = 'Staging';
+                oldVersion.vid = dId;
 
-                    Utility.update({
-                        collection: pointsCollection,
-                        query: {
-                            vid: dId,
-                            version: 'Staging'
-                        },
-                        updateObj: displayObject
-                    }, function (saveOldErr, saveOldRes) {
-                        console.log('displays saveOld err:', saveOldErr);
-                        if (saveOldErr) {
-                            return cb(saveOldErr);
+                //set version in previous production version
+                console.log('displays: updating staging version');
+                delete displayObject._id;
+
+                Utility.update({
+                    collection: pointsCollection,
+                    query: {
+                        vid: dId,
+                        version: 'Staging'
+                    },
+                    updateObj: displayObject
+                }, function (saveOldErr, saveOldRes) {
+                    console.log('displays saveOld err:', saveOldErr);
+                    if (saveOldErr) {
+                        return cb(saveOldErr);
+                    }
+                    console.log('displays: saving display in versions');
+                    delete oldVersion._id;
+                    delete oldVersion.version;
+                    Utility.save({
+                        collection: versionsCollection,
+                        saveObj: oldVersion
+                    }, function (saveNewErr, saveNewRes) {
+                        if (saveNewErr) {
+                            return cb(saveNewErr);
                         }
-                        console.log('displays: saving display in versions');
-                        delete oldVersion._id;
-                        delete oldVersion.version;
-                        Utility.save({
-                            collection: versionsCollection,
-                            saveObj: oldVersion
-                        }, function (saveNewErr, saveNewRes) {
-                            if (saveNewErr) {
-                                return cb(saveNewErr);
-                            }
-                            return cb(null, 'Saved and Published');
-                        });
+                        return cb(null, 'Saved and Published');
                     });
                 });
+            });
         });
     },
 
@@ -410,14 +390,13 @@ module.exports = {
                 version: 'Staging'
             },
             updateObj: displayObject
-        },
-            function (err, docs) {
-                // console.log('displays savelater docs', docs);
-                if (err) {
-                    return cb(err);
-                }
-                return cb(null, 'Saved for later');
-            });
+        }, function (err, docs) {
+            // console.log('displays savelater docs', docs);
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, 'Saved for later');
+        });
     },
     browse: function (data, cb) { //bmp
         let files,

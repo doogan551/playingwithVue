@@ -2,11 +2,11 @@ let async = require('async');
 let fs = require('fs');
 let ObjectID = require('mongodb').ObjectID;
 
-let Utility = new(require('./utility'))();
+const Common = new(require('./common'))();
 let utils = require('../helpers/utils.js');
 let READ = utils.CONSTANTS('READ');
 
-let UserGroups = class UserGroups extends Utility {
+let UserGroups = class UserGroups extends Common {
     constructor() {
         super('User Groups');
     }

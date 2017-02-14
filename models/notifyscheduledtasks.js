@@ -1,6 +1,6 @@
-let Utility = require('./utility');
+const Common = new(require('./common'))();
 
-let NotifyScheduledTasks = class NotifyScheduledTasks extends Utility {
+let NotifyScheduledTasks = class NotifyScheduledTasks extends Common {
 
     constructor() {
         super('NotifyScheduledTasks');

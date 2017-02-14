@@ -67,10 +67,8 @@ let Report = class Report {
             }
         };
 
-        let logObj = utils.buildActivityLog(logData);
-
         Point.updateOne(criteria, (err, result) => {
-            ActivityLog.create(logObj, (err, result) => {
+            ActivityLog.create(logData, (err, result) => {
                 if (!err) {
                     return cb(err, {
                         data: 'Report has been saved successfully!!!'

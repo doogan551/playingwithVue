@@ -1,4 +1,4 @@
-let Utility = new(require('../models/utility'))();
+const Common = new(require('./common'))();
 let Config = require('../public/js/lib/config.js');
 let async = require('async');
 let ObjectID = require('mongodb').ObjectID;
@@ -22,7 +22,7 @@ let WRITE = utils.CONSTANTS('WRITE');
 
 let distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
-let Point = class Point extends Utility {
+let Point = class Point extends Common {
     constructor() {
         super('points');
     }
@@ -1164,33 +1164,33 @@ let Point = class Point extends Utility {
                     generateActivityLog = true;
                 } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Active.enum) {
                     if (flags.method === 'restore') {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: 'Point restored',
                             activity: 'Point Restore'
-                        })));
+                        }));
                     } else {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: 'Point added',
                             activity: 'Point Add'
-                        })));
+                        }));
                     }
                 } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Active.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                     if (flags.method === 'hard') {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: 'Point destroyed',
                             activity: 'Point Hard Delete'
-                        })));
+                        }));
                     } else if (flags.method === 'soft') {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: 'Point deleted',
                             activity: 'Point Soft Delete'
-                        })));
+                        }));
                     }
                 } else if (newPoint.Name !== oldPoint.Name) {
-                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(_.merge(logData, {
                         log: 'Point renamed from ' + oldPoint.Name + ' to ' + newPoint.Name,
                         activity: 'Point Restore'
-                    })));
+                    }));
                 }
             }
 
@@ -1692,44 +1692,44 @@ let Point = class Point extends Utility {
                                     newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : '[blank]';
                                 //if enum, if evalue changed AL, else if not enum, compare value
                                 if (['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0) {
-                                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                    activityLogObjects.push(_.merge(logData, {
                                         log: newPoint['Point Type'].Value + ' updated',
                                         activity: 'Point Property Edit'
-                                    })));
+                                    }));
                                 } else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
                                     if (prop === 'Configure Device') {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: 'Device configuration requested',
                                             activity: 'Device Configuration'
-                                        })));
+                                        }));
                                     } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].Bool.enum) {
                                         if (newPoint[prop].Value === true) {
-                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(logData, {
                                                 log: prop + ' set',
                                                 activity: 'Point Property Edit'
-                                            })));
+                                            }));
                                         } else {
-                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(logData, {
                                                 log: prop + ' cleared',
                                                 activity: 'Point Property Edit'
-                                            })));
+                                            }));
                                         }
                                     } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].UniquePID.enum) {
                                         if (oldPoint[prop].PointInst !== null && newPoint[prop].PointInst === null) {
-                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(logData, {
                                                 log: newPoint[prop].Name + ' removed from ' + prop,
                                                 activity: 'Point Property Edit'
-                                            })));
+                                            }));
                                         } else if (oldPoint[prop].PointInst === null && newPoint[prop].PointInst !== null) {
-                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(logData, {
                                                 log: newPoint[prop].Name + ' added to ' + prop,
                                                 activity: 'Point Property Edit'
-                                            })));
+                                            }));
                                         } else {
-                                            activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(logData, {
                                                 log: prop + ' changed from ' + oldPoint[prop].Name + ' to ' + newPoint[prop].Name,
                                                 activity: 'Point Property Edit'
-                                            })));
+                                            }));
                                         }
                                     } else if ([Config.Enums['Value Types'].HourMinSec.enum, Config.Enums['Value Types'].MinSec.enum, Config.Enums['Value Types'].HourMin.enum].indexOf(newPoint[prop].ValueType) > -1) {
                                         let timeMessage,
@@ -1785,56 +1785,55 @@ let Point = class Point extends Utility {
                                                 timeMessage += hour + ':' + min;
                                                 break;
                                         }
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: timeMessage,
                                             activity: 'Point Property Edit'
-                                        })));
+                                        }));
                                     } else {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: prop + ' changed from ' + oldVal + ' to ' + newVal,
                                             activity: 'Point Property Edit'
-                                        })));
+                                        }));
                                     }
                                 } else if (prop === 'Point Refs') {
                                     if (newPoint['Point Type'].Value === 'Slide Show') {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: 'Slide Show edited',
                                             activity: 'Slideshow Edit'
-                                        })));
+                                        }));
                                     } else if (newPoint['Point Type'].Value === 'Program') {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: 'Program edited',
                                             activity: 'Program Edit'
-                                        })));
+                                        }));
                                     } else {
                                         compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                                     }
                                 } else if (prop === 'Alarm Messages' || prop === 'Occupancy Schedule' || prop === 'Sequence Details' || prop === 'Security' || prop === 'Script Source File') {
-                                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                    activityLogObjects.push(_.merge(logData, {
                                         log: prop + ' updated',
                                         activity: 'Point Property Edit'
-
-                                    })));
+                                    }));
                                 } else if (prop === 'Name') {
                                     if (newPoint[prop] !== oldPoint[prop]) {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: prop + ' changed from ' + oldPoint[prop] + ' to ' + newPoint[prop],
                                             activity: 'Point Property Edit'
-                                        })));
+                                        }));
                                     }
                                     /*} else if (prop === "Value") {
                                       if (newPoint[prop].Value !== oldPoint[prop].Value) {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                           log: prop + " changed from " + oldVal + " to " + newVal,
                                           activity: "Point Property Edit"
-                                        })));
+                                        }));
                                       }*/
                                 } else if (prop === 'States') {
                                     if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
-                                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(logData, {
                                             log: prop + ' updated',
                                             activity: 'Point Property Edit'
-                                        })));
+                                        }));
                                     }
                                 }
                             } else {
@@ -1963,20 +1962,20 @@ let Point = class Point extends Utility {
                 if (newArray[i].Value !== oldArray[i].Value) {
                     logData.prop = newArray[i].PropertyName;
                     if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: logData.prop + ' removed',
                             activity: 'Point Property Edit'
-                        })));
+                        }));
                     } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: logData.prop + ' added',
                             activity: 'Point Property Edit'
-                        })));
+                        }));
                     } else {
-                        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                        activityLogObjects.push(_.merge(logData, {
                             log: logData.prop + ' changed from ' + oldArray[i].PointName + ' to ' + newArray[i].PointName,
                             activity: 'Point Property Edit'
-                        })));
+                        }));
                     }
                 }
             }

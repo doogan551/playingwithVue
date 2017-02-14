@@ -1,7 +1,7 @@
 let async = require('async');
 let ObjectId = require('mongodb').ObjectID;
 
-let Utility = new(require('../models/utility'))();
+const Common = new(require('./common'))();
 let Config = require('../public/js/lib/config');
 
 let ActivityLog = new(require('./activitylog'))();
@@ -9,7 +9,7 @@ let Alarm = new(require('./alarm'))();
 let AlarmDefs = new(require('./alarmdefs'))();
 let Point = new(require('./point'))();
 
-let System = class System extends Utility {
+let System = class System extends Common {
     constructor() {
         super('SystemInfo');
     }
