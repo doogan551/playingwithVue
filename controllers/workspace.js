@@ -56,10 +56,10 @@ router.post('/authenticate', function (req, res, next) {
             let logData = {
                 user: user,
                 timestamp: Date.now(),
-                activity: actLogsEnums['User Logon'].enum,
+                activity: 'User Logon',
                 log: 'User Logged In.'
             };
-            ActivityLog.create(utils.buildActivityLog(logData), function () {});
+            ActivityLog.create(logData, function () {});
             return res.json(user);
         });
     })(req, res, next);

@@ -12,7 +12,7 @@ const Utility = class Utility {
     }
     get(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let limit = (!!criteria.limit) ? criteria.limit : 0;
         let fields = (!!criteria.fields) ? criteria.fields : {};
         let sort = (!!criteria.sort) ? criteria.sort : {};
@@ -36,7 +36,7 @@ const Utility = class Utility {
 
     getOne(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let fields = (!!criteria.fields) ? criteria.fields : {};
         let collection;
 
@@ -53,7 +53,7 @@ const Utility = class Utility {
 
     aggregate(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let collection;
 
         if (!coll) {
@@ -71,7 +71,7 @@ const Utility = class Utility {
         let query = (!!criteria.query) ? criteria.query : {};
         let updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
         let options = (!!criteria.options) ? criteria.options : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let collection;
 
         if (!coll) {
@@ -99,7 +99,7 @@ const Utility = class Utility {
     save(criteria, cb) {
         let saveObj = criteria.saveObj;
         let options = (!!criteria.options) ? criteria.options : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let collection;
 
         if (!coll) {
@@ -118,7 +118,7 @@ const Utility = class Utility {
         let sort = (!!criteria.sort) ? criteria.sort : [];
         let updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
         let options = (!!criteria.options) ? criteria.options : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let collection;
 
         if (!coll) {
@@ -139,7 +139,7 @@ const Utility = class Utility {
 
     count(criteria, cb) {
         let query = (!!criteria.query) ? criteria.query : {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let collection;
 
         if (!coll) {
@@ -167,7 +167,7 @@ const Utility = class Utility {
 
     insert(criteria, cb) {
         let insertObj = criteria.insertObj;
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let options = criteria.options;
 
         let collection = db.get().collection(coll);
@@ -177,7 +177,7 @@ const Utility = class Utility {
 
     remove(criteria, cb) {
         let query = criteria.query;
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let options = criteria.options;
 
         let collection = db.get().collection(coll);
@@ -187,7 +187,7 @@ const Utility = class Utility {
 
     distinct(criteria, cb) {
         let query = criteria.query || {};
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let field = criteria.field;
         let options = criteria.options || {};
 
@@ -197,7 +197,7 @@ const Utility = class Utility {
     }
 
     createCollection(criteria, cb) {
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
 
         db.get().createCollection(coll, cb);
     }
@@ -211,7 +211,7 @@ const Utility = class Utility {
     }
 
     dropCollection(criteria, cb) {
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
 
         db.get().dropCollection(coll, cb);
     }
@@ -221,7 +221,7 @@ const Utility = class Utility {
     }
 
     ensureIndex(criteria, cb) {
-        let coll = criteria.collection;
+        let coll = criteria.collection || this.collection;
         let index = criteria.index;
         let options = criteria.options || {};
 
@@ -285,8 +285,9 @@ const Utility = class Utility {
 
         let identifier = (!!~utils.CONSTANTS('upiscollections').indexOf(criteria.collection)) ? 'upi' : '_id';
         let Security = require('./security');
+        let security = new Security();
 
-        Security.Utility.getPermissions(criteria.data.user, (err, permissions) => {
+        security.getPermissions(criteria.data.user, (err, permissions) => {
             if (err || permissions === false) {
                 cb(err || permissions);
             }

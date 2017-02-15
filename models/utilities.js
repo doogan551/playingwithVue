@@ -2,8 +2,9 @@ const fs = require('fs');
 
 const pug = require('pug');
 
-const Common = new(require('./common'))();
+const Common = require('./common');
 const System = require('./system');
+const system = new System();
 
 const Utilities = class Utilities extends Common {
     constructor() {
@@ -42,7 +43,7 @@ const Utilities = class Utilities extends Common {
             }
         };
         let getWeatherPoints = () => {
-            System.weather((err, data) => {
+            system.weather((err, data) => {
                 weatherPoints = err || data;
                 complete();
             });

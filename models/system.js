@@ -1,12 +1,16 @@
 const async = require('async');
 const ObjectId = require('mongodb').ObjectID;
 
-const Common = new(require('./common'))();
+const Common = require('./common');
 const Config = require('../public/js/lib/config');
-const ActivityLog = new(require('./activitylog'))();
-const Alarm = new(require('./alarm'))();
-const AlarmDefs = new(require('./alarmdefs'))();
-const Point = new(require('./point'))();
+const ActivityLog = require('./activitylog');
+const Alarm = require('./alarm');
+const AlarmDefs = require('./alarmdefs');
+const Point = require('./point');
+console.log(Point);
+const activityLog = new ActivityLog();
+const alarm = new Alarm();
+const alarmDefs = new AlarmDefs();
 
 const System = class System extends Common {
     constructor() {
@@ -51,7 +55,7 @@ const System = class System extends Common {
         this.updateOne(criteria, (err) => {
             logData.activity = 'Season Change';
             logData.log = 'Season changed to ' + season + '.';
-            ActivityLog.create(logData, (err) => {
+            activityLog.create(logData, (err) => {
                 return cb(null, 'success');
             });
         });
@@ -113,7 +117,7 @@ const System = class System extends Common {
                 activity: 'Control Priority Labels Edit',
                 log: 'Control priorities edited.'
             };
-            ActivityLog.create(logData, () => {});
+            activityLog.create(logData, () => {});
             return cb(err, result);
         });
     }
@@ -206,7 +210,7 @@ const System = class System extends Common {
                     activity: 'Quality Code Edit',
                     log: 'Quality Codes edited.'
                 };
-                ActivityLog.create(logData, () => {});
+                activityLog.create(logData, () => {});
                 return cb(err, result);
             });
         });
@@ -249,12 +253,13 @@ const System = class System extends Common {
                 activity: 'Controllers Edit',
                 log: 'Controllers edited.'
             };
-            ActivityLog.create(logData, () => {});
+            activityLog.create(logData, () => {});
             return cb(err, result);
         });
     }
 
     updateTelemetry(data, cb) {
+        const point = new Point();
         let ipSegment = parseInt(data['IP Network Segment'], 10);
         let ipPort = parseInt(data['IP Port'], 10);
         let netConfig = data['Network Configuration'];
@@ -308,7 +313,7 @@ const System = class System extends Common {
                 async.eachSeries(updates, (update, acb2) => {
                     criteria.query = update.query;
                     criteria.updateObj = update.updateObj;
-                    Point.update(criteria, acb2);
+                    point.update(criteria, acb2);
                 }, acb);
             }, callback);
         };
@@ -345,7 +350,7 @@ const System = class System extends Common {
             }
         }, (err, _data) => {
             let centralUpi = _data['Central Device UPI'];
-            Point.updateOne({
+            point.updateOne({
                 query: {
                     _id: centralUpi
                 },
@@ -366,7 +371,7 @@ const System = class System extends Common {
                             activity: 'Telemetry Settings Edit',
                             log: 'Telemetry Settings edited.'
                         };
-                        ActivityLog.create(logData, () => {});
+                        activityLog.create(logData, () => {});
                         return cb(err, result);
                     });
                 });
@@ -384,7 +389,7 @@ const System = class System extends Common {
                 _id: 1
             }
         };
-        Alarm.getOne(criteria, (err, alarm) => {
+        alarm.getOne(criteria, (err, alarm) => {
             if (err) {
                 return cb(err);
             }
@@ -466,14 +471,15 @@ const System = class System extends Common {
                 saveObj: alarmTemplateNew
             };
 
-            AlarmDefs.save(criteria, (err) => {
+            alarmDefs.save(criteria, (err) => {
                 logData.activity = 'Alarm Message Edit';
                 logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
-                ActivityLog.create(logData, () => {});
+                activityLog.create(logData, () => {});
             });
         }
     }
     deleteAlarmTemplate(data, cb) {
+        const point = new Point();
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -494,8 +500,8 @@ const System = class System extends Common {
                     }
                 }
             };
-            AlarmDefs.get({}, (err, alarmDefs) => {
-                Point.iterateCursor({
+            alarmDefs.get({}, (err, alarmDefs) => {
+                point.iterateCursor({
                     query: {
                         'Alarm Messages.msgId': id
                     }
@@ -505,7 +511,7 @@ const System = class System extends Common {
                             msg.msgId = findAlarmDef(msg.msgType, alarmDefs);
                         }
                     });
-                    Point.update({
+                    point.update({
                         query: {
                             _id: point._id
                         },
@@ -517,7 +523,7 @@ const System = class System extends Common {
             });
         };
 
-        AlarmDefs.remove(criteria, (err, _data) => {
+        alarmDefs.remove(criteria, (err, _data) => {
             if (err) {
                 return cb(err.message);
             }
@@ -525,13 +531,14 @@ const System = class System extends Common {
                 let entries = _data;
                 logData.activity = 'Alarm Message Delete';
                 logData.log = 'Alarm Message with text "' + data.deleteObject.msgFormat + '" removed from the system.';
-                ActivityLog.create(logData, () => {
+                activityLog.create(logData, () => {
                     return cb(null, entries);
                 });
             });
         });
     }
     weather(cb) {
+        const point = new Point();
         let returnData;
         let upiMatrix = {};
         let weatherPointData = {};
@@ -588,7 +595,7 @@ const System = class System extends Common {
                 fields: fields
             };
 
-            Point.getAll(criteria, (err, _data) => {
+            point.getAll(criteria, (err, _data) => {
                 for (let i = 0, len = _data.length, point; i < len; i++) {
                     point = _data[i];
                     weatherPointData[upiMatrix[point._id]] = point;

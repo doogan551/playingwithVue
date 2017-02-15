@@ -1,6 +1,6 @@
 const async = require('async');
 
-const Common = new(require('./common'))();
+const Common = require('./common');
 const Enums = require('../public/js/lib/config').Enums;
 const utils = require('../helpers/utils');
 

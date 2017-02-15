@@ -1,6 +1,6 @@
 const Config = require('../public/js/lib/config.js');
 const zmq = require('../helpers/zmq');
-const Utility = new(require('./utility'))();
+const Utility = require('./utility');
 
 const Common = class Common extends Utility {
 

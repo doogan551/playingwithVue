@@ -3,17 +3,20 @@ const ObjectID = require('mongodb').ObjectID;
 
 const utils = require('../helpers/utils');
 const logger = require('../helpers/logger')(module);
-const Common = new(require('./common'))();
+const Common = require('./common');
 const Config = require('../public/js/lib/config.js');
 const ActivityLog = new(require('./activitylog'))();
 const AlarmDefs = new(require('./alarmdefs'))();
 const History = new(require('./history'))();
 const Schedule = new(require('./schedule'))();
-const Security = new(require('./security'))();
-const Script = new(require('./script'))();
-const System = new(require('./system'))();
-const Upi = new(require('../helpers/upi'))();
-const ZMQ = new(require('../helpers/zmq'))();
+const Security = require('./security');
+const Script = new(require('./scripts'))();
+const System = require('./system');
+const Upi = new(require('./upi'))();
+const ZMQ = require('../helpers/zmq');
+
+
+const system = new System();
 
 const READ = utils.CONSTANTS('READ');
 const ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
@@ -31,12 +34,13 @@ const Point = class Point extends Common {
         this.update(criteria, cb);
     }
     getPointById(data, cb) {
+        const security = new Security();
         let searchCriteria = {};
         let upi = parseInt(data.id, 10);
 
         searchCriteria._id = upi;
 
-        Security.Utility.getPermissions(data.user, (err, permissions) => {
+        security.getPermissions(data.user, (err, permissions) => {
             this.getOne({
                 query: searchCriteria
             }, (err, point) => {
@@ -322,7 +326,7 @@ const Point = class Point extends Common {
             }
         }, (err, results) => {
             if (!results || !results.values.length) {
-                module.exports.getDistinctValues(data, cb);
+                this.getDistinctValues(data, cb);
             } else {
                 cb(err, results.values);
             }
@@ -708,7 +712,7 @@ const Point = class Point extends Common {
                     return callback('Name already exists.');
                 }
 
-                System.getSystemInfoByName('Preferences', (err, sysInfo) => {
+                system.getSystemInfoByName('Preferences', (err, sysInfo) => {
                     Upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
                         if (err) {
                             return callback(err);
@@ -815,7 +819,7 @@ const Point = class Point extends Common {
         };
 
         let setIpPort = (point, cb) => {
-            System.getSystemInfoByName('Preferences', (err, prefs) => {
+            system.getSystemInfoByName('Preferences', (err, prefs) => {
                 let ipPort = prefs['IP Port'];
                 if (point['Point Type'].Value === 'Device') {
                     point['Ethernet IP Port'].Value = ipPort;
@@ -888,7 +892,7 @@ const Point = class Point extends Common {
                         }
 
 
-                        System.getSystemInfoByName('Preferences', (err, sysInfo) => {
+                        system.getSystemInfoByName('Preferences', (err, sysInfo) => {
                             if (err) {
                                 return callback(err);
                             }
@@ -1000,6 +1004,7 @@ const Point = class Point extends Common {
         });
     }
     findAlarmDisplays(data, cb) {
+        const security = new Security();
         let criteria = {};
         let firstSearch = {};
         let thirdSearch = {};
@@ -1046,7 +1051,7 @@ const Point = class Point extends Common {
                         }
                     };
 
-                    Security.Utility.getPermissions(data.user, (err, permissions) => {
+                    security.getPermissions(data.user, (err, permissions) => {
                         this.getOne(criteria, (err, point) => {
                             if (err) {
                                 return cb(err);
@@ -1110,6 +1115,7 @@ const Point = class Point extends Common {
     }
     //io, updateSequencePoints, runScheduleEntry(tcp), updateDependencies
     newUpdate(oldPoint, newPoint, flags, user, callback) {
+        const security = new Security();
         let generateActivityLog = false,
             updateReferences = false,
             updateModelType = false,
@@ -1874,7 +1880,7 @@ const Point = class Point extends Common {
                         downloadPoint = false;
                     }
 
-                    Security.updSecurity(newPoint, (err) => {
+                    security.updSecurity(newPoint, (err) => {
                         this.findAndModify({
                             query: {
                                 _id: newPoint._id
@@ -2097,6 +2103,7 @@ const Point = class Point extends Common {
     }
     // newupdate
     updPoint(downloadPoint, newPoint, callback) {
+        const zmq = new ZMQ();
         if (downloadPoint === true) {
             //send download point request to c++ module
             let command = {
@@ -2107,7 +2114,7 @@ const Point = class Point extends Common {
             let code;
             command = JSON.stringify(command);
 
-            ZMQ.sendCommand(command, (error, msg) => {
+            zmq.sendCommand(command, (error, msg) => {
                 if (!!error) {
                     err = error.ApduErrorMsg;
                     code = parseInt(error.ApduError, 10);
@@ -2647,12 +2654,13 @@ const Point = class Point extends Common {
     }
     //updateDependencies, deleteChildren, updateSchedules(io)
     signalHostTOD(signalTOD, callback) {
+        const zmq = new ZMQ();
         if (signalTOD === true) {
             let command = {
                 'Command Type': 9
             };
             command = JSON.stringify(command);
-            ZMQ.sendCommand(command, (err, msg) => {
+            zmq.sendCommand(command, (err, msg) => {
                 return callback(err, msg);
             });
         } else {
@@ -2859,7 +2867,7 @@ const Point = class Point extends Common {
                 newGroups[m].Permissions = 0;
             }
 
-            updateCriteria.$addToSet.Security.$each.push(newGroups[m]);
+            updateCriteria.$addToSet.security.$each.push(newGroups[m]);
         }
 
 
@@ -2893,7 +2901,7 @@ const Point = class Point extends Common {
                         };
 
                         for (let user in users) {
-                            updateCriteria.$addToSet.Security.$each.push({
+                            updateCriteria.$addToSet.security.$each.push({
                                 userId: new ObjectID(user),
                                 groupId: newGroup.groupId
                             });
@@ -2918,7 +2926,7 @@ const Point = class Point extends Common {
                             };
 
                             for (let user in users) {
-                                updateCriteria.$addToSet.Security.$each.push({
+                                updateCriteria.$addToSet.security.$each.push({
                                     userId: new ObjectID(user),
                                     groupId: newGroup.groupId
                                 });
@@ -2960,7 +2968,7 @@ const Point = class Point extends Common {
         };
 
         for (let i = 0; i < groupUpis.length; i++) {
-            updateCriteria.$pull.Security.$and.push({
+            updateCriteria.$pull.security.$and.push({
                 groupId: new ObjectID(groupUpis[i])
             });
         }

@@ -3,7 +3,7 @@ const fs = require('fs');
 const tmp = require('tmp');
 const rimraf = require('rimraf');
 
-const Point = new(require('./point'))();
+const Point = require('./point');
 const compiler = require('../helpers/scriptCompiler.js');
 
 const Script = class Script {
@@ -24,11 +24,12 @@ const Script = class Script {
         });
     }
     commit(data, cb) {
+        const point = new Point();
         let upi = parseInt(data.upi, 10);
         let fileName = data.fileName.replace(/\.dsl$/i, '');
         let path = data.path;
 
-        Point.getPointById({
+        point.getPointById({
             id: upi
         }, (err, script) => {
             fs.readFile(path + '/' + fileName + '.sym', (err, sym) => {
@@ -99,9 +100,10 @@ const Script = class Script {
         });
     }
     read(data, cb) {
+        const point = new Point();
         let upi = data.upi;
 
-        Point.getPointById({
+        point.getPointById({
             id: upi
         }, cb);
     }

@@ -1,11 +1,9 @@
 const ObjectID = require('mongodb').ObjectID;
 
-const Point = new(require('./point'))();
-const User = new(require('./user'))();
 const UserGroup = new(require('./usergroup'))();
 const System = new(require('./system'))();
 
-const Util = class Util {
+const Security = class Security {
 
     getPermissions(user, cb) {
         if (!!user['System Admin'].Value || !user) {
@@ -159,9 +157,4 @@ const Util = class Util {
     }
 };
 
-module.exports = {
-    Users: User,
-    Groups: UserGroup,
-    Points: Point,
-    Utility: Util
-};
+module.exports = Security;

@@ -1,18 +1,21 @@
 let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
-let utils = require('../helpers/utils.js');
-let Security = require('../models/security');
-let Users = new Security.Users();
-let Groups = new Security.Groups();
-let Points = new Security.Points();
+let utils = require('../helpers/utils');
+let User = require('../models/user');
+let UserGroup = require('../models/usergroup');
+let Point = require('../models/point');
+
+let user = new User();
+let userGroup = new UserGroup();
+let point = new Point();
 
 // Checked
 router.post('/groups/savegroup', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.saveGroup(data, function (err, newGroup) {
+    userGroup.saveGroup(data, function (err, newGroup) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -26,7 +29,7 @@ router.post('/groups/getusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.getUsers(data, function (err, group) {
+    userGroup.getUsers(data, function (err, group) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -42,7 +45,7 @@ router.post('/groups/addusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.addUsers(data, function (err, result) {
+    userGroup.addUsers(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -56,7 +59,7 @@ router.post('/groups/removeusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.removeUsers(data, function (err, result) {
+    userGroup.removeUsers(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -70,7 +73,7 @@ router.post('/groups/removegroup', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.removeGroup(data, function (err, users) {
+    userGroup.removeGroup(data, function (err, users) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -86,7 +89,7 @@ router.post('/groups/getallgroups', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.getAllGroups(data, function (err, groups) {
+    userGroup.getAllGroups(data, function (err, groups) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -100,7 +103,7 @@ router.post('/groups/getpoints', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.getPoints(data, function (err, points) {
+    userGroup.getPoints(data, function (err, points) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -113,7 +116,7 @@ router.post('/groups/updatePermissions', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.updatePermissions(data, function (err, results) {
+    userGroup.updatePermissions(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -129,7 +132,7 @@ router.post('/users/getgroups', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.getGroups(data, function (err, groups) {
+    user.getGroups(data, function (err, groups) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -143,7 +146,7 @@ router.post('/users/removeuser', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.removeUser(data, function (err) {
+    user.removeUser(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -159,7 +162,7 @@ router.post('/users/getallusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.getAllUsers(data, function (err, users) {
+    user.getAllUsers(data, function (err, users) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -173,7 +176,7 @@ router.post('/points/addgroups', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Points.addGroups(data, function (err) {
+    point.addGroups(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -189,7 +192,7 @@ router.post('/points/removegroups', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Points.removeGroups(data, function (err) {
+    point.removeGroups(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -205,7 +208,7 @@ router.post('/points/addusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Points.addUsers(data, function (err, users) {
+    point.addUsers(data, function (err, users) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -219,7 +222,7 @@ router.post('/points/removeusers', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Points.removeUsers(data, function (err, users) {
+    point.removeUsers(data, function (err, users) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -234,7 +237,7 @@ router.post('/users/createpassword', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.createPassword(data, function (err, text) {
+    user.createPassword(data, function (err, text) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -250,7 +253,7 @@ router.post('/users/saveuser', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.saveUser(data, function (err, result) {
+    user.saveUser(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -264,7 +267,7 @@ router.post('/users/editPhoto', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data._user = req.user;
 
-    Users.editPhoto(data, function (err, filename) {
+    user.editPhoto(data, function (err, filename) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -280,7 +283,7 @@ router.post('/groups/editPhoto', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data._user = req.user;
 
-    Groups.editPhoto(data, function (err, filename) {
+    userGroup.editPhoto(data, function (err, filename) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -296,7 +299,7 @@ router.post('/users/newuser', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.newUser(data, function (err, newUser) {
+    user.newUser(data, function (err, newUser) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -310,7 +313,7 @@ router.post('/users/updateuser', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.updateUser(data, function (err, newUser) {
+    user.updateUser(data, function (err, newUser) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -324,7 +327,7 @@ router.post('/groups/updategroup', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.updateGroup(data, function (err, newGroup) {
+    userGroup.updateGroup(data, function (err, newGroup) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -338,7 +341,7 @@ router.post('/groups/newgroup', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.newGroup(data, function (err, newGroup) {
+    userGroup.newGroup(data, function (err, newGroup) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -352,7 +355,7 @@ router.post('/groups/:id', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Groups.getGroup(data, function (err, group) {
+    userGroup.getGroup(data, function (err, group) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -366,7 +369,7 @@ router.post('/users/:id', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Users.getUser(data, function (err, user) {
+    user.getUser(data, function (err, user) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

@@ -5,13 +5,18 @@ let _ = require('lodash');
 let config = require('config');
 
 // OTHERS
-let notifications = require('../models/notifications');
+let Config = require('../public/js/lib/config.js');
 let scheduler = require('../helpers/scheduler');
 let utils = require('../helpers/utils');
-let Utility = require('../models/utility');
-let Common = new (require('../models/common'))();
-let Config = require('../public/js/lib/config.js');
+let Notifications = require('../models/notifications');
+let Point = new(require('../models/point'))();
+let History = new(require('../models/history'))();
+let Schedule = new(require('../models/schedule'))();
+let Alarm = new(require('../models/alarm'))();
+let ActiveAlarm = new(require('../models/activealarm'))();
+let Common = new(require('../models/common'))();
 let logger = require('../helpers/logger')(module);
+
 let dbName = config.get('Infoscan.dbConfig').dbName;
 let io;
 let common;
@@ -56,6 +61,7 @@ module.exports = model = function (_common) {
     };
 
     oplog.on('insert', function (doc) {
+        let notifications = new Notifications();
         let startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -136,11 +142,10 @@ module.exports = model = function (_common) {
 
             async.waterfall([
                 function (wfcb) {
-                    Utility.getOne({
+                    Point.getOne({
                         query: {
                             _id: doc.o2._id
                         },
-                        collection: 'points',
                         fields: fields
                     }, function (err, point) {
                         wfcb(err, point);
@@ -245,8 +250,7 @@ module.exports = model = function (_common) {
                 }
             }
         } else if (doc.ns === dbName + '.historydata') {
-            Utility.getOne({
-                collection: 'historydata',
+            History.getOne({
                 query: {
                     _id: doc.o2._id
                 }
@@ -254,8 +258,7 @@ module.exports = model = function (_common) {
                 // module.exports.updateDashboard(historyPoint);
             });
         } else if (doc.ns === dbName + '.Schedules') {
-            Utility.getOne({
-                collection: 'Schedules',
+            Schedule.getOne({
                 query: {
                     _id: doc.o2._id
                 }
@@ -367,15 +370,13 @@ model.updateDashboard = function (doc, callback) {
 };
 
 function addActiveAlarm(alarmId, callback) {
-    Utility.getOne({
+    Alarm.getOne({
         query: {
             _id: alarmId
-        },
-        collection: 'Alarms'
+        }
     }, function (err1, alarm) {
         if (alarm !== null) {
-            Utility.insert({
-                collection: 'ActiveAlarms',
+            ActiveAlarm.insert({
                 insertObj: alarm
             }, function (err2, result) {
                 callback(err1
@@ -388,11 +389,10 @@ function addActiveAlarm(alarmId, callback) {
 }
 
 function removeActiveAlarm(upi, callback) {
-    Utility.remove({
+    ActiveAlarm.remove({
         query: {
             upi: upi
-        },
-        collection: 'ActiveAlarms'
+        }
     }, function (err, result) {
         callback(err);
     });
@@ -413,16 +413,14 @@ function updateFromTail(_id, value, reliability) {
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
 
-    Utility.update({
+    Point.updateOne({
         query: {
             _id: _id
         },
-        updateObj: updateObj,
-        collection: 'points'
-    },
-        function (err, result) {
+        updateObj: updateObj
+    }, function (err, result) {
 
-        });
+    });
 }
 
 
@@ -492,12 +490,11 @@ function getChangedVals(id, callback) {
         'Control Pending': 1,
         'Quality Code Enable': 1
     };
-    Utility.getOne({
+    Point.getOne({
         query: {
             _id: parseInt(id, 10)
         },
-        fields: fields,
-        collection: 'points'
+        fields: fields
     }, function (err, point) {
         callback(point);
     });

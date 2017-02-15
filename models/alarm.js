@@ -1,8 +1,10 @@
 const ObjectID = require('mongodb').ObjectID;
 
-const Common = new(require('./common'))();
-const ActiveAlarm = new(require('./activealarm'))();
+const Common = require('./common');
+const ActiveAlarm = require('./activealarm');
 const utils = require('../helpers/utils');
+
+const activeAlarm = new ActiveAlarm();
 
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
@@ -342,7 +344,7 @@ const Alarm = class Alarm extends Common {
 
         sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
-        ActiveAlarm.getWithSecurity({
+        activeAlarm.getWithSecurity({
             query: query,
             sort: sort,
             _skip: (currentPage - 1) * itemsPerPage,

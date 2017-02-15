@@ -5,7 +5,7 @@ const ObjectID = require('mongodb').ObjectID;
 
 const ActivityLog = new(require('./activitylog'))();
 const utils = require('../helpers/utils');
-const Common = new(require('./common'))();
+const Common = require('./common');
 
 const User = class User extends Common {
     constructor() {

@@ -8,23 +8,22 @@ let tmp = require('tmp');
 let config = require('config');
 
 // OTHERS
-let utils = require('../helpers/utils.js');
-let Config = require('../public/js/lib/config.js');
-let compiler = require('../helpers/scriptCompiler.js');
-let Utility = require('../models/utility.js');
+let Config = require('../public/js/lib/config');
+let compiler = require('../helpers/scriptCompiler');
 let History = require('../models/history');
-let Common = new (require('../models/common'))();
+let Common = new(require('../models/common'))();
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
-let Alarm = new(require('../models/alarm.js'))();
+let Alarm = new(require('../models/alarm'))();
+let ActivityLog = new(require('../models/activitylog'))();
+let ActiveAlarm = new(require('../models/activealarm'))();
+let Point = new(require('../models/point'))();
 
-let pointsCollection = utils.CONSTANTS('pointsCollection');
-let activityLogCollection = utils.CONSTANTS('activityLogCollection');
 let controlPriorities = [];
 
-let common = {};
 let io = {};
 let rooms = {};
+let common = {};
 
 module.exports = function socketio(_common) {
     common = _common;
@@ -86,7 +85,7 @@ module.exports = function socketio(_common) {
             }
             rooms.recentAlarms.views[socket.id] = data;
 
-            common.getRecentAlarms(data, function (err, alarms, count) {
+            Point.getRecentAlarms(data, function (err, alarms, count) {
                 sock.emit('recentAlarms', {
                     alarms: alarms,
                     count: count,
@@ -108,7 +107,7 @@ module.exports = function socketio(_common) {
             }
             rooms.unacknowledged.views[socket.id] = data;
 
-            common.getUnacknowledged(data, function (err, alarms, count) {
+            Alarm.getUnacknowledged(data, function (err, alarms, count) {
                 sock.emit('unacknowledged', {
                     alarms: alarms,
                     count: count,
@@ -130,7 +129,7 @@ module.exports = function socketio(_common) {
             }
             rooms.activeAlarms.views[socket.id] = data;
 
-            common.getActiveAlarmsNew(data, function (err, alarms, count) {
+            ActiveAlarm.getActiveAlarmsNew(data, function (err, alarms, count) {
                 sock.emit('activeAlarms', {
                     alarms: alarms,
                     count: count,
@@ -213,11 +212,7 @@ module.exports = function socketio(_common) {
             data = JSON.stringify(jsonData);
 
             if ([2, 7].indexOf(jsonData['Command Type']) > -1) {
-                logData = utils.buildActivityLog(logData);
-                Utility.insert({
-                    collection: activityLogCollection,
-                    insertObj: logData
-                }, function (err, result) {});
+                ActivityLog.create(logData, function (err, result) {});
             }
             logger.info('fieldCommand', data);
             zmq.sendCommand(data, function (err, msg) {
@@ -265,11 +260,7 @@ module.exports = function socketio(_common) {
                     });
                 },
                 logMessage = function (logData) {
-                    logData = utils.buildActivityLog(logData);
-                    Utility.insert({
-                        collection: activityLogCollection,
-                        insertObj: logData
-                    }, function (err, result) {});
+                    ActivityLog.create(logData, function (err, result) {});
                 };
 
             if (data.uploadFile !== undefined) {
@@ -369,7 +360,7 @@ module.exports = function socketio(_common) {
             async.waterfall([
                 function (callback) {
                     async.mapSeries(data.adds, function (point, callback) {
-                        common.addPoint({
+                        Point.addPoint({
                             point: point
                         }, user, null, function (response, updatedPoint) {
                             callback(response.err, updatedPoint);
@@ -417,7 +408,7 @@ module.exports = function socketio(_common) {
         // Checked
         sock.on('addPoint', function (data) {
             logger.debug('addPoint');
-            common.addPoint({
+            Point.addPoint({
                 point: data.newPoint,
                 oldPoint: data.oldPoint,
                 path: data.path
@@ -548,8 +539,7 @@ function getInitialVals(id, callback) {
         'Quality Code Enable': 1
     };
 
-    Utility.getOne({
-        collection: pointsCollection,
+    Point.getOne({
         query: {
             _id: parseInt(id, 10)
         },
@@ -564,8 +554,7 @@ function getInitialVals(id, callback) {
 }
 
 function getBlockTypes(cb) {
-    Utility.get({
-        collection: pointsCollection,
+    Point.getAll({
         query: {
             SequenceData: {
                 $exists: true
@@ -600,8 +589,7 @@ function getBlockTypes(cb) {
 function doRefreshSequence(data, socket) {
     let _id = data.sequenceID;
 
-    Utility.update({
-        collection: pointsCollection,
+    Point.updateOne({
         query: {
             _id: _id
         },
@@ -633,8 +621,7 @@ function doUpdateSequence(data, cb) {
 
     //         if(!err) {
 
-    Utility.update({
-        collection: pointsCollection,
+    Point.updateOne({
         query: {
             'Name': name
         },
@@ -655,11 +642,7 @@ function doUpdateSequence(data, cb) {
               activity: actLogsEnums["GPL Edit"].enum,
               log: "Sequence edited."
             };
-            logData = utils.buildActivityLog(logData);
-            Utility.insert({
-              collection: activityLogCollection,
-              insertObj: logData
-            }, function(err, result) {});*/
+            ActivityLog.create(logData, function(err, result) {});*/
             return cb('success');
         }
     });
@@ -789,12 +772,11 @@ function updateSchedules(data, callback) {
                     signalTOD = true;
                 }
                 if (updateSched['Host Schedule'].Value === false || oldPoint['Host Schedule'].Value === false) {
-                    common.addToDevices(updateSched, devices, oldPoint);
+                    Point.addToDevices(updateSched, devices, oldPoint);
                 }
 
                 if (!_.isEmpty(updateObj.$set)) {
-                    Utility.update({
-                        collection: pointsCollection,
+                    Point.updateOne({
                         query: {
                             _id: updateSched._id
                         },
@@ -805,8 +787,7 @@ function updateSchedules(data, callback) {
                         }
 
                         ctrlPoint = Config.Utility.getPropertyObject('Control Point', updateSched);
-                        Utility.getOne({
-                            collection: pointsCollection,
+                        Point.getOne({
                             query: {
                                 _id: ctrlPoint.Value
                             }
@@ -814,11 +795,7 @@ function updateSchedules(data, callback) {
                             logData.point = point;
                             logData.activity = Config.Enums['Activity Logs']['Schedule Entry Edit'].enum;
                             logData.log = 'Schedule entry edited';
-                            logData = utils.buildActivityLog(logData);
-                            Utility.insert({
-                                collection: activityLogCollection,
-                                insertObj: logData
-                            }, function (err, result) {
+                            ActivityLog.create(logData, function (err, result) {
                                 feCB(err);
                             });
                         });
@@ -839,7 +816,7 @@ function updateSchedules(data, callback) {
                 if (newSched['Host Schedule'].Value === true) {
                     signalTOD = true;
                 } else {
-                    common.addToDevices(newSched, devices);
+                    Point.addToDevices(newSched, devices);
                 }
                 options = {
                     from: 'updateSchedules',
@@ -853,7 +830,7 @@ function updateSchedules(data, callback) {
                     }
                 }
 
-                common.addPoint({
+                Point.addPoint({
                     point: newSched,
                     oldPoint: oldPoint
                 }, user, options, function (returnData) {
@@ -862,8 +839,7 @@ function updateSchedules(data, callback) {
                     }
 
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', newSched);
-                    Utility.getOne({
-                        collection: pointsCollection,
+                    Point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -871,11 +847,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Add'].enum;
                         logData.log = 'Schedule entry added';
-                        logData = utils.buildActivityLog(logData);
-                        Utility.insert({
-                            collection: activityLogCollection,
-                            insertObj: logData
-                        }, function (err, result) {
+                        ActivityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -891,7 +863,7 @@ function updateSchedules(data, callback) {
                     user: user
                 };
 
-                common.deletePoint(cancelSched._id, 'hard', user, null, function (returnData) {
+                Point.deletePoint(cancelSched._id, 'hard', user, null, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }
@@ -899,8 +871,7 @@ function updateSchedules(data, callback) {
                         return feCB(null);
                     }
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', cancelSched);
-                    Utility.getOne({
-                        collection: pointsCollection,
+                    Point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -908,11 +879,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
                         logData.log = 'Schedule entry deleted';
-                        logData = utils.buildActivityLog(logData);
-                        Utility.insert({
-                            collection: activityLogCollection,
-                            insertObj: logData
-                        }, function (err, result) {
+                        ActivityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -934,10 +901,10 @@ function updateSchedules(data, callback) {
                 if (hardSched['Host Schedule'].Value === true) {
                     signalTOD = true;
                 } else {
-                    common.addToDevices(hardSched, devices);
+                    Point.addToDevices(hardSched, devices);
                 }
 
-                common.deletePoint(hardSched._id, 'hard', user, options, function (returnData) {
+                Point.deletePoint(hardSched._id, 'hard', user, options, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }
@@ -946,8 +913,7 @@ function updateSchedules(data, callback) {
                     }
 
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', hardSched);
-                    Utility.getOne({
-                        collection: pointsCollection,
+                    Point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -955,11 +921,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
                         logData.log = 'Schedule entry deleted';
-                        logData = utils.buildActivityLog(logData);
-                        Utility.insert({
-                            collection: activityLogCollection,
-                            insertObj: logData
-                        }, function (err, result) {
+                        ActivityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -969,11 +931,11 @@ function updateSchedules(data, callback) {
             });
         }
     ], function (err) {
-        common.signalHostTOD(signalTOD, function (err) {
+        Point.signalHostTOD(signalTOD, function (err) {
             if (err) {
                 return callback(err);
             }
-            common.updateDeviceToDs(devices, function (err) {
+            Point.updateDeviceToDs(devices, function (err) {
                 return callback((err !== null) ? err : 'success');
             });
         });
@@ -985,15 +947,13 @@ function getScheduleEntries(data, callback) {
         upi = data.upi;
 
     if (isSchedule) {
-        Utility.get({
-            collection: pointsCollection,
+        Point.getAll({
             query: {
                 'Point Type.Value': 'Schedule Entry'
             }
         }, callback);
     } else {
-        Utility.get({
-            collection: pointsCollection,
+        Point.getAll({
             query: {
                 'Point Type.Value': 'Schedule Entry',
                 'Point Refs': {
@@ -1049,8 +1009,7 @@ function checkProperties(data, callback) {
     data.errMsg = '';
 
     if (template !== undefined) {
-        Utility.iterateCursor({
-            collection: pointsCollection,
+        Point.iterateCursor({
             query: {
                 'Point Type.Value': data.pointType
             }

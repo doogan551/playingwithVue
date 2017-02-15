@@ -1,4 +1,4 @@
-const Common = new(require('./common'))();
+const Common = require('./common');
 
 const NotifyPolicies = class NotifyPolicies extends Common {
 

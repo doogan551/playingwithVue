@@ -5,8 +5,8 @@ const _ = require('lodash');
 const fs = require('fs');
 const tmp = require('tmp');
 
-const Common = new(require('./common'))();
-const ArchiveUtility = new(require('./archivetility'))();
+const Common = require('./common');
+const ArchiveUtility = new(require('./archiveutility'))();
 const Utilities = new(require('./utilities'))();
 const utils = require('../helpers/utils');
 
@@ -55,7 +55,7 @@ Array.prototype.equals = (array) => {
 // };
 
 const History = class History extends Common {
-    costructor() {
+    constructor() {
         super(historyCollection);
     }
     buildOps(options) {

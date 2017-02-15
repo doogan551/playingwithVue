@@ -1,7 +1,7 @@
 const async = require('async');
 const ObjectID = require('mongodb').ObjectID;
 
-const Common = new(require('./common'))();
+const Common = require('./common');
 const Reports = require('./reports');
 const utils = require('../helpers/utils');
 

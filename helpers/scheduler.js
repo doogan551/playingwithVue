@@ -2,13 +2,13 @@
 // get all schedules from db
 // for each, setup cron job
 
-var CronJob = new(require('../models/cronjob'))();
-var Utility = new(require('../models/utility'))();
-var Schedule = new(require('../models/schedule'))();
+const CronJob = require('../models/cronjob');
+const Utility = new(require('../models/utility'))();
+const Schedule = new(require('../models/schedule'))();
 
-var scheduleContainer = {};
+let scheduleContainer = {};
 
-var Scheduler = {
+const Scheduler = {
     buildAll: function (cb) {
         Utility.iterateCursor({
             collection: 'Schedules',
@@ -22,7 +22,7 @@ var Scheduler = {
         Scheduler.stopSchedule(schedule);
 
         if (!!schedule.enabled) {
-            var time = schedule.runTime;
+            let time = schedule.runTime;
             scheduleContainer[schedule._id] = new CronJob(time, function () {
                 Schedule.runSchedule(schedule, function () {});
             });

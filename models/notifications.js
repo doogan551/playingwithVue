@@ -21,8 +21,6 @@ const siteConfig = config.get('Infoscan');
 const siteDomain = siteConfig.domains[0];
 const alarmsEmailAccount = siteConfig.email.accounts.alarms;
 
-let notifier = new Notifier();
-
 let enums = Config.Enums;
 const revEnums = Config.revEnums;
 const alarmClassRevEnums = revEnums['Alarm Classes'];
@@ -1661,7 +1659,7 @@ let dbAlarmQueueLocked = false,
                     } else {
                         notifyParams = [to, notifyMsg, createCallback(notifyEntry)];
                     }
-                    notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
+                    Notifier[notifierFnLookup[notification.Type]].apply(Notifier, notifyParams);
                 }
                 cb(null, data);
             }
@@ -1686,12 +1684,12 @@ let dbAlarmQueueLocked = false,
                         err
                     ].join('\n');
 
-                notifier.sendEmail({
+                Notifier.sendEmail({
                     to: 'johnny.dr@gmail.com',
                     subject: 'Error: Notifications (Site: ' + siteName + ')',
                     text: text
                 });
-                notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', () => {});
+                Notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', () => {});
             }
         },
         dbGetAllUsersObj: (cb) => {

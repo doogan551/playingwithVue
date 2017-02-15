@@ -2,7 +2,7 @@
 let fs = require('fs');
 
 let Config = require('../public/js/lib/config');
-let Utility = require('../models/utility');
+let Point = new(require('../models/point'))();
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
 
@@ -58,14 +58,12 @@ function runScheduleEntry(entryUpi, callback) {
     // if pass
     // switch on control property
 
-    Utility.getOne({
-        collection: 'points',
+    Point.getOne({
         query: {
             _id: parseInt(entryUpi._id, 10)
         }
     }, function (err, scheduleEntry) {
-        Utility.getOne({
-            collection: 'points',
+        Point.getOne({
             query: {
                 _id: Config.Utility.getPropertyObject('Control Point', scheduleEntry).Value,
                 _pStatus: 0
@@ -79,8 +77,7 @@ function runScheduleEntry(entryUpi, callback) {
             let controlProperty = scheduleEntry['Control Property'].Value;
             if (Config.Enums['Point Types'][point['Point Type'].Value].schedProps.indexOf(controlProperty) !== -1) {
                 if (controlProperty === 'Execute Now') {
-                    Utility.update({
-                        collection: 'points',
+                    Point.updateOne({
                         query: {
                             _id: point._id
                         },

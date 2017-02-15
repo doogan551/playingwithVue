@@ -5,6 +5,7 @@
 *split out security model
 rename holiday collection or calendar model
 *fix activitylogs calls
+*make utility collections dynamic
 
 *models extend common and common extends utility
     add logger.info to common

@@ -3,7 +3,7 @@ const fs = require('fs');
 const async = require('async');
 const ObjectID = require('mongodb').ObjectID;
 
-const Common = new(require('./common'))();
+const Common = require('./common');
 const utils = require('../helpers/utils.js');
 
 const READ = utils.CONSTANTS('READ');

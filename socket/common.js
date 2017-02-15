@@ -1,6 +1,5 @@
-
 // OTHERS
-let Utility = require('../models/utility');
+let System = new(require('../models/system'))();
 
 let common = {
     sockets: require('../helpers/sockets.js')
@@ -11,19 +10,9 @@ let rooms = io.sockets.adapter.rooms;
 common.rooms = rooms;
 
 let socket = function () {
-    Utility.getOne({
-        collection: 'SystemInfo',
-        query: {
-            Name: 'Quality Codes'
-        }
-    }, function (err, codes) {
+    System.getSystemInfoByName('Quality Codes', function (err, codes) {
         common.qualityCodes = codes.Entries;
-        Utility.getOne({
-            collection: 'SystemInfo',
-            query: {
-                Name: 'Control Priorities'
-            }
-        }, function (err, priorities) {
+        System.getSystemInfoByName('Control Priorities', function (err, priorities) {
             common.controlPriorities = priorities.Entries;
             loader();
         });

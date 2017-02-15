@@ -4,7 +4,7 @@ var mongodb = require('mongodb');
 var errorMsg = 'Invalid username or password';
 var Utility = new(require('../models/utility.js'))();
 var Security = require('../models/security');
-let SUtility = new Security.Utility();
+let security = new Security();
 
 module.exports = function (passport) {
     passport.serializeUser(function (user, done) {
@@ -38,7 +38,7 @@ module.exports = function (passport) {
                 return done(err, false);
             }
             var user = users[0];
-            SUtility.getPermissions(user, function (err, permissions) {
+            security.getPermissions(user, function (err, permissions) {
                 user.permissions = permissions;
                 done(err, user);
             });
@@ -95,7 +95,7 @@ module.exports = function (passport) {
                             '$exists': true
                         };
 
-                        SUtility.getPermissions(user, function (err, permissions) {
+                        security.getPermissions(user, function (err, permissions) {
                             user.permissions = permissions;
                             user.password = '';
 

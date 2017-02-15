@@ -1,4 +1,4 @@
-const Common = new(require('./common'))();
+const Common = require('./common');
 const utils = require('../helpers/utils');
 const upisCollection = utils.CONSTANTS('upis');
 

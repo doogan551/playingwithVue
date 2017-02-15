@@ -10,14 +10,16 @@ const Config = require('../public/js/lib/config');
 const logger = require('../helpers/logger')(module);
 const PageRender = new(require('./pagerender'))();
 const Mailer = new(require('./mailer'))();
-const Schedule = new(require('./schedule'))();
+const Schedule = require('./schedule');
 const History = new(require('./history'))();
-const Point = new(require('./point'))();
+const Point = require('./point');
 const User = new(require('./user'))();
 const ActivityLog = new(require('./activitylog'))();
 
+
 const Report = class Report {
     saveSVG(data, cb) {
+        const point = new Point();
         let criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -28,7 +30,7 @@ const Report = class Report {
                 }
             }
         };
-        Point.updateOne(criteria, (err, result) => {
+        point.updateOne(criteria, (err, result) => {
             if (!err) {
                 return cb(null, {
                     data: 'Data has been saved successfully!!!'
@@ -38,6 +40,7 @@ const Report = class Report {
         });
     }
     saveReport(data, cb) {
+        const point = new Point();
         data['Point Type'] = {
             eValue: Config.Enums['Point Types'].Report.enum
         };
@@ -67,7 +70,7 @@ const Report = class Report {
             }
         };
 
-        Point.updateOne(criteria, (err, result) => {
+        point.updateOne(criteria, (err, result) => {
             ActivityLog.create(logData, (err, result) => {
                 if (!err) {
                     return cb(err, {
@@ -79,7 +82,8 @@ const Report = class Report {
         });
     }
     getSVG(data, cb) {
-        Point.getPointById({
+        const point = new Point();
+        point.getPointById({
             _id: utils.converters.convertType(data.id)
         }, (err, result) => {
             if (!err) {
@@ -89,6 +93,7 @@ const Report = class Report {
         });
     }
     historyDataSearch(data, cb) {
+        const point = new Point();
         let reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
@@ -158,7 +163,7 @@ const Report = class Report {
                 }
             }
         };
-        Point.getAll(criteria, (err, points) => {
+        point.getAll(criteria, (err, points) => {
             if (err) {
                 return cb(err, null);
             }
@@ -424,6 +429,8 @@ const Report = class Report {
         // }
     }
     reportMain(data, cb) {
+        const point = new Point();
+        const schedule = new Schedule();
         let reportCriteria = {
                 id: utils.converters.convertType(data.id),
                 data: data
@@ -472,7 +479,7 @@ const Report = class Report {
             };
 
         if (scheduled) {
-            Schedule.get(scheduleCriteria, (err, scheduleData) => {
+            schedule.get(scheduleCriteria, (err, scheduleData) => {
                 if (err) {
                     return cb(err);
                 }
@@ -489,7 +496,7 @@ const Report = class Report {
             });
         }
         // this is weird. change it to be nested instead of relying on flags in handlResults()
-        Point.getPointById(reportCriteria, (err, result) => {
+        point.getPointById(reportCriteria, (err, result) => {
             if (err) {
                 return cb(err);
             }
@@ -509,6 +516,7 @@ const Report = class Report {
         });
     }
     reportSearch(data, cb) {
+        const point = new Point();
         let reportConfig = data.reportConfig,
             pointRefs = data['Point Refs'],
             filters = reportConfig.filters,
@@ -596,7 +604,7 @@ const Report = class Report {
             limit: returnLimit,
             fields: fields
         };
-        Point.getAll(criteria, (err, docs) => {
+        point.getAll(criteria, (err, docs) => {
             if (err) {
                 return cb(err);
             }
@@ -1159,12 +1167,13 @@ const Report = class Report {
         });
     }
     scheduledReport(data, cb) {
+        const point = new Point();
         let domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
         let schedule = data.schedule;
         let upi = schedule.upi;
         let emails = [];
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: upi
             },
