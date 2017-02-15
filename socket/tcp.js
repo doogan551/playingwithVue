@@ -87,7 +87,7 @@ function runScheduleEntry(entryUpi, callback) {
                             }
                         }
                     }, function (err, result) {
-                        common.signalExecTOD(true, function (err, msg) {
+                        this.signalExecTOD(true, function (err, msg) {
                             callback(err, scheduleEntry);
                         });
                     });

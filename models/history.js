@@ -1827,10 +1827,6 @@ const History = class History extends Common {
             query: query
         }, cb);
     }
-    getAll(criteria, cb) {
-        criteria.collection = this.collection;
-        this.get(criteria, cb);
-    }
 };
 
 module.exports = History;

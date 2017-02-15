@@ -129,7 +129,7 @@ module.exports = function socketio(_common) {
             }
             rooms.activeAlarms.views[socket.id] = data;
 
-            ActiveAlarm.getActiveAlarmsNew(data, function (err, alarms, count) {
+            ActiveAlarm.getActiveAlarms(data, function (err, alarms, count) {
                 sock.emit('activeAlarms', {
                     alarms: alarms,
                     count: count,

@@ -29,10 +29,7 @@ const Point = class Point extends Common {
     constructor() {
         super('points');
     }
-    updateOne(criteria, cb) {
-        criteria.collection = this.collection;
-        this.update(criteria, cb);
-    }
+
     getPointById(data, cb) {
         const security = new Security();
         let searchCriteria = {};

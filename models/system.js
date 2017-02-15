@@ -80,9 +80,8 @@ const System = class System extends Common {
             };
         }
 
-        criteria.collection = 'Alarms';
         criteria.query = query;
-        this.count(criteria, cb);
+        alarm.count(criteria, cb);
     }
     updateControlPriorities(data, cb) {
         let searchCriteria = {
