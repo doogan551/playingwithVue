@@ -678,18 +678,6 @@ const Point = class Point extends Common {
         let pointType = data.pointType;
         let targetUpi = (data.targetUpi) ? parseInt(data.targetUpi, 10) : 0;
         let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
-        if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
-            return cb('No type defined');
-        }
-        subType.Value = data.subType;
-        if (pointType === 'Report') {
-            subType.eValue = Config.Enums['Report Types'][data.subType].enum;
-        } else {
-            subType.eValue = 0; // TODO
-        }
-
-
-        doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
 
         let doInitPoint = (name1, name2, name3, name4, pointType, targetUpi, subType, callback) => {
             buildName(name1, name2, name3, name4);
@@ -928,6 +916,18 @@ const Point = class Point extends Common {
                 return callback(err, template);
             });
         };
+
+        if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
+            return cb('No type defined');
+        }
+        subType.Value = data.subType;
+        if (pointType === 'Report') {
+            subType.eValue = Config.Enums['Report Types'][data.subType].enum;
+        } else {
+            subType.eValue = 0; // TODO
+        }
+
+        doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
     }
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};

@@ -7,7 +7,7 @@ const ActivityLog = require('./activitylog');
 const Alarm = require('./alarm');
 const AlarmDefs = require('./alarmdefs');
 const Point = require('./point');
-console.log(Point);
+
 const activityLog = new ActivityLog();
 const alarm = new Alarm();
 const alarmDefs = new AlarmDefs();

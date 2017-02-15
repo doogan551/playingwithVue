@@ -11,7 +11,7 @@ const AlarmDefs = class AlarmDefs extends Common {
                 isSystemMessage: true
             }
         };
-        AlarmDefs.get(criteria, (err, data) => {
+        this.getAll(criteria, (err, data) => {
             if (err) {
                 return cb(err.message);
             }

@@ -9,3 +9,5 @@ rename holiday collection or calendar model
 
 *models extend common and common extends utility
     add logger.info to common
+
+split out model functionality (Point -> System -> Point)

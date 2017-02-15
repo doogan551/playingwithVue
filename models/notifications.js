@@ -5,17 +5,29 @@ const appConfig = require('config');
 const CronJob = require('./cronjob');
 const ObjectID = require('mongodb').ObjectID;
 const logger = require('../helpers/logger')(module);
-const Utility = new(require('./utility'))();
-const Calendar = new(require('./calendar'))();
-const Notifier = new(require('./notifierutility'))();
-const NotifyAlarmQueue = new(require('./notifyalarmqueue'))();
-const NotifyLogs = new(require('./notifylogs'))();
-const NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
-const NotifyPolicies = new(require('./notifypolicies'))();
-const User = new(require('./user'))();
-const UserGroup = new(require('./usergroup'))();
-const Point = new(require('./point'))();
-const Alarm = new(require('./alarm'))();
+const Utility = require('./utility');
+const Calendar = require('./calendar');
+const Notifier = require('./notifierutility');
+const NotifyAlarmQueue = require('./notifyalarmqueue');
+const NotifyLogs = require('./notifylogs');
+const NotifyScheduledTasks = require('./notifyscheduledtasks');
+const NotifyPolicies = require('./notifypolicies');
+const User = require('./user');
+const UserGroup = require('./usergroup');
+const Point = require('./point');
+const Alarm = require('./alarm');
+
+const utility = new Utility();
+const calendar = new Calendar();
+const notifier = new Notifier();
+const notifyAlarmQueue = new NotifyAlarmQueue();
+const notifyLogs = new NotifyLogs();
+const notifyScheduledTasks = new NotifyScheduledTasks();
+const notifyPolicies = new NotifyPolicies();
+const user = new User();
+const userGroup = new UserGroup();
+const point = new Point();
+const alarm = new Alarm();
 
 const siteConfig = config.get('Infoscan');
 const siteDomain = siteConfig.domains[0];
@@ -75,7 +87,7 @@ let dbAlarmQueueLocked = false,
                 let query = {
                     year: new Date().getFullYear()
                 };
-                Calendar.getYear(query, (err, result) => {
+                calendar.getYear(query, (err, result) => {
                     if (!!err) {
                         return cb(err);
                     }
@@ -102,7 +114,7 @@ let dbAlarmQueueLocked = false,
         scheduledTasks: {
             dbGetAll: (cb) => {
                 let query = {};
-                NotifyScheduledTasks.get(query, cb);
+                notifyScheduledTasks.get(query, cb);
             },
             dbUpdate: (data, cb) => {
                 actions.utility.log('actions.scheduledTasks.dbUpdate');
@@ -120,7 +132,7 @@ let dbAlarmQueueLocked = false,
                             },
                             updateObj: task
                         };
-                        NotifyScheduledTasks.updateOne(criteria, doUpdateCB);
+                        notifyScheduledTasks.updateOne(criteria, doUpdateCB);
                     },
                     deleteTasks = (deleteCB) => {
                         actions.utility.log('\tDeleting ' + deleteIds.length + ' task(s)');
@@ -131,7 +143,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        NotifyScheduledTasks.remove(criteria, deleteCB);
+                        notifyScheduledTasks.remove(criteria, deleteCB);
                     };
 
                 data.scheduledTasks.forEach((task) => {
@@ -250,11 +262,11 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     };
-                NotifyPolicies.getAll(criteria, cb);
+                notifyPolicies.getAll(criteria, cb);
             },
             dbGetAll: (cb) => {
                 let criteria = {};
-                NotifyPolicies.getAll(criteria, cb);
+                notifyPolicies.getAll(criteria, cb);
             },
             dbUpdateConfigs: (data, cb) => {
                 let numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
@@ -284,7 +296,7 @@ let dbAlarmQueueLocked = false,
                             }
                         }
                     };
-                    Utility.update(criteria, doUpdateCB);
+                    utility.update(criteria, doUpdateCB);
                 };
             },
             dbUpdateThreads: (data, cb) => {
@@ -314,7 +326,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        NotifyPolicies.updateOne(criteria, doUpdateCB);
+                        notifyPolicies.updateOne(criteria, doUpdateCB);
                     },
                     doInsert = (threads, policyId, doInsertCB) => {
                         let criteria = {
@@ -329,7 +341,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        NotifyPolicies.updateOne(criteria, doInsertCB);
+                        notifyPolicies.updateOne(criteria, doInsertCB);
                     },
                     doDelete = (deleteIds, policyId, doDeleteCB) => {
                         let criteria = {
@@ -346,7 +358,7 @@ let dbAlarmQueueLocked = false,
                                 }
                             }
                         };
-                        NotifyPolicies.updateOne(criteria, doDeleteCB);
+                        notifyPolicies.updateOne(criteria, doDeleteCB);
                     },
                     getPolicyThreadChanges = (policy) => {
                         let policyId = policy._id,
@@ -411,7 +423,7 @@ let dbAlarmQueueLocked = false,
                         }
                     }
                 };
-                Utility.updateOne(criteria, cb);
+                utility.updateOne(criteria, cb);
             },
             process: (data, cb) => {
                 actions.utility.log('policies.process');
@@ -1031,7 +1043,7 @@ let dbAlarmQueueLocked = false,
                     return cb(null, policiesAckList[alarmId] === isAcknowledgedEnum);
                 }
 
-                Alarm.getAlarm({
+                alarm.getAlarm({
                     query: query,
                     fields: fields
                 }, (err, alarm) => { // alarm is null if not found
@@ -1076,13 +1088,13 @@ let dbAlarmQueueLocked = false,
         },
         alarmQueue: {
             dbGetAll: (cb) => {
-                NotifyAlarmQueue.getAll({}, cb);
+                notifyAlarmQueue.getAll({}, cb);
             },
             dbInsert: (queueEntries, cb) => {
                 let criteria = {
                     insertObj: queueEntries
                 };
-                NotifyAlarmQueue.insert(criteria, cb);
+                notifyAlarmQueue.insert(criteria, cb);
             },
             dbRemoveAll: (data, cb) => {
                 actions.utility.log('alarmQueue.dbRemoveAll');
@@ -1113,7 +1125,7 @@ let dbAlarmQueueLocked = false,
                         validateCB(null);
                     },
                     (removeCB) => {
-                        NotifyAlarmQueue.remove(criteria, removeCB);
+                        notifyAlarmQueue.remove(criteria, removeCB);
                     }
                 ], (err) => {
                     cb(err, data);
@@ -1564,7 +1576,7 @@ let dbAlarmQueueLocked = false,
                             log.err = err;
                             log.apiResult = result;
 
-                            NotifyLogs.insert(criteria, (err) => {
+                            notifyLogs.insert(criteria, (err) => {
                                 if (!!err) {
                                     actions.utility.sendError(err);
                                 }
@@ -1684,16 +1696,16 @@ let dbAlarmQueueLocked = false,
                         err
                     ].join('\n');
 
-                Notifier.sendEmail({
+                notifier.sendEmail({
                     to: 'johnny.dr@gmail.com',
                     subject: 'Error: Notifications (Site: ' + siteName + ')',
                     text: text
                 });
-                Notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', () => {});
+                notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', () => {});
             }
         },
         dbGetAllUsersObj: (cb) => {
-            User.getUsers((err, users) => {
+            user.getUsers((err, users) => {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1706,7 +1718,7 @@ let dbAlarmQueueLocked = false,
             });
         },
         dbGetAllGroupsObj: (cb) => {
-            UserGroup.getAll((err, groups) => {
+            userGroup.getAll((err, groups) => {
                 if (!!err) {
                     return cb(err);
                 }
@@ -1766,8 +1778,10 @@ let dbAlarmQueueLocked = false,
 
 
             let getPoint = (cb) => {
-                Point.getPointById({
-                    _id: alarm.upi
+                point.getOne({
+                    query: {
+                        _id: alarm.upi
+                    }
                 }, (err, point) => {
                     cb(err, point);
                 });
