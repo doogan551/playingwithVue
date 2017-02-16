@@ -72,34 +72,11 @@ const Alarm = class Alarm extends Common {
             }]
         };
 
-        if (data.name1 !== undefined) {
-            if (data.name1 !== null) {
-                query.Name1 = new RegExp('^' + data.name1, 'i');
-            } else {
-                query.Name1 = '';
-            }
-        }
-        if (data.name2 !== undefined) {
-            if (data.name2 !== null) {
-                query.Name2 = new RegExp('^' + data.name2, 'i');
-            } else {
-                query.Name2 = '';
-            }
-        }
-        if (data.name3 !== undefined) {
-            if (data.name3 !== null) {
-                query.Name3 = new RegExp('^' + data.name3, 'i');
-            } else {
-                query.Name3 = '';
-            }
-        }
-        if (data.name4 !== undefined) {
-            if (data.name4 !== null) {
-                query.Name4 = new RegExp('^' + data.name4, 'i');
-            } else {
-                query.Name4 = '';
-            }
-        }
+        this.addNamesToQuery(data, query, 'name1', 'Name1');
+        this.addNamesToQuery(data, query, 'name2', 'Name2');
+        this.addNamesToQuery(data, query, 'name3', 'Name3');
+        this.addNamesToQuery(data, query, 'name4', 'Name4');
+
         if (data.msgCat) {
             query.msgCat = {
                 $in: data.msgCat
@@ -197,34 +174,10 @@ const Alarm = class Alarm extends Common {
             ackStatus: 1
         };
 
-        if (data.name1 !== undefined) {
-            if (data.name1 !== null) {
-                query.Name1 = new RegExp('^' + data.name1, 'i');
-            } else {
-                query.Name1 = '';
-            }
-        }
-        if (data.name2 !== undefined) {
-            if (data.name2 !== null) {
-                query.Name2 = new RegExp('^' + data.name2, 'i');
-            } else {
-                query.Name2 = '';
-            }
-        }
-        if (data.name3 !== undefined) {
-            if (data.name3 !== null) {
-                query.Name3 = new RegExp('^' + data.name3, 'i');
-            } else {
-                query.Name3 = '';
-            }
-        }
-        if (data.name4 !== undefined) {
-            if (data.name4 !== null) {
-                query.Name4 = new RegExp('^' + data.name4, 'i');
-            } else {
-                query.Name4 = '';
-            }
-        }
+        this.addNamesToQuery(data, query, 'name1', 'Name1');
+        this.addNamesToQuery(data, query, 'name2', 'Name2');
+        this.addNamesToQuery(data, query, 'name3', 'Name3');
+        this.addNamesToQuery(data, query, 'name4', 'Name4');
 
         if (data.msgCat) {
             query.msgCat = {

@@ -1,25 +1,5 @@
-class Parent {
-    constructor(coll) {
-        this._coll = coll;
-    }
-    set coll(coll) {
-        this._coll = coll;
-    }
-    get coll() {
-        return this._coll;
-    }
-}
+const Common = require('../models/common');
 
-class Test extends Parent {
-    constructor() {
-        super('test');
-        this.coll = 'as';
-    }
+let common = new Common();
 
-    test() {
-        console.log(this.coll);
-    }
-}
-
-let test = new Test();
-test.test();
+console.log(common.getDefault(1.2, null), typeof common.getDefault(1.2, null));

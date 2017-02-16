@@ -73,7 +73,7 @@
         "grunt-contrib-copy": "^1.0.0"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "mocha tests",
         "start": "node app.js",
         "build": "echo \"install grunt\" && exit 1"
     },

@@ -4,23 +4,106 @@ const Utility = require('./utility');
 
 const Common = class Common extends Utility {
 
+    isInt(n) {
+        return Number(n) === n && n % 1 === 0;
+    }
+
+    isFloat(n) {
+        return Number(n) === n && n % 1 !== 0;
+    }
+
+    isNumber(n) {
+        let val = parseFloat(n);
+        return typeof val === 'number' && !isNaN(val);
+    }
+
+    /**
+     * method to get default values.
+     * if val can be converted to same type as def, it will be, otherwise val as given is returned
+     * if val is undefined, def is returned
+     * if def is undefined, val is returned
+     *
+     * @param {any} val value to be checked
+     * @param {any} def default value compared against or returned if val is undefined
+     * @returns {any} see above
+     */
+    getDefault(val, def) {
+        if (typeof def === 'number') {
+            if (val !== undefined) {
+                if (this.isNumber(val)) {
+                    return parseFloat(val);
+                }
+                return val;
+            }
+            return def;
+        }
+
+        if (typeof def === 'boolean') {
+            if (val !== undefined) {
+                if(val === null) {
+                    return val;
+                }
+                return (val.toString() === 'true') ? true : (val.toString() === 'false') ? false : val;
+            }
+            return def;
+        }
+
+        if (Array.isArray(def)) {
+            // this is just to keep arrays from being objects
+            if (val !== undefined) {
+                return val;
+            }
+            return def;
+        }
+
+        if (typeof def === 'string') {
+            if (val !== undefined) {
+                if (val === null) {
+                    return val;
+                }
+                return val.toString();
+            }
+            return def;
+        }
+
+        if (typeof def === 'object') {
+            if (val !== undefined) {
+                if (typeof val === 'object' || def === null) {
+                    return val;
+                }
+                return JSON.parse(val);
+            }
+            return def;
+        }
+
+        if (val !== undefined) {
+            return val;
+        }
+        return def;
+    }
+
     /**
      * Building name search
      *
      * @param {Object} data    request obj containing query info
      * @param {Object} query   query object being build
      * @param {String} segment which segment (name1-4)
+     * @param {String} toSegment which segment on query (name1-4)
      * @return {undefined} undefined
      */
-    addNamesToQuery(data, query, segment) {
+    addNamesToQuery(data, query, segment, toSegment) {
+        if (!toSegment) {
+            toSegment = segment;
+        }
+
         if (!!data.hasOwnProperty(segment)) {
             if (data[segment] !== null) {
-                query[segment] = new RegExp('^' + data[segment], 'i');
+                query[toSegment] = new RegExp('^' + data[segment], 'i');
             } else {
-                query[segment] = '';
+                query[toSegment] = '';
             }
         } else {
-            query[segment] = '';
+            query[toSegment] = '';
         }
     }
 
