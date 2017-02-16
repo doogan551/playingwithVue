@@ -2253,18 +2253,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             gplId: this.gplId
         };
 
-        // if(this.labelVisible === undefined) {
-        //     this.labelVisible = gpl.json.Show_Label;
-        // } else {
-        if (this.labelVisible === 0) { //take sequence option?
-            this.labelVisible = gpl.json.Show_Label;
-        } else {
-            if (this.labelVisible === undefined) {
-                this.labelVisible = false;
-            }
+        if (this.labelVisible === 0 || this.labelVisible === false || this.labelVisible === undefined) {
+            this.labelVisible = gpl.json.Show_Label;  // use global sequence option for Show Label
         }
-        // }
-
 
         if (this.labelVisible === false) {
             // this.labelVisible = false;
@@ -2284,10 +2275,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         this.labelText = new fabric.Text(this.label || '', config);
-
-        // if(this.labelVisible === 0) {//legacy
-        //     this.labelText._wasHidden = true;
-        // }
 
         if (this.labelText.width < this.minLabelWidth) {
             this.labelText.set('width', this.minLabelWidth);
@@ -2319,12 +2306,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config.originX = 'right';
         }
 
-        if (this.presentValueVisible === 0) { //take sequence option?
+        if (this.presentValueVisible === 0 || this.presentValueVisible === false || this.presentValueVisible === undefined) {
             this.presentValueVisible = gpl.json.Show_Value;
-        } else {
-            if (this.presentValueVisible === undefined) {
-                this.presentValueVisible = false;
-            }
         }
 
         if (this.presentValueVisible === false || this.config.showValue === false) {
