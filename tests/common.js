@@ -178,4 +178,81 @@ describe('Common', function () {
         expect(query.Name3).to.equal('');
         expect(query.Name4).to.deep.equal(new RegExp(/^Name4/i));
     });
+
+    it('should test for Integer', function () {
+        expect(common.isInt(1)).to.be.equal(true);
+        expect(common.isInt(0)).to.be.equal(true);
+        expect(common.isInt(0.0)).to.be.equal(true);
+        expect(common.isInt(-1)).to.be.equal(true);
+        expect(common.isInt(4294967295)).to.be.equal(true);
+
+        expect(common.isInt(1.1)).to.be.equal(false);
+        expect(common.isInt('3')).to.be.equal(false);
+        expect(common.isInt(undefined)).to.be.equal(false);
+        expect(common.isInt({})).to.be.equal(false);
+        expect(common.isInt(null)).to.be.equal(false);
+    });
+
+    it('should test for Float', function () {
+        expect(common.isFloat(1.1)).to.be.equal(true);
+        expect(common.isFloat(0.1)).to.be.equal(true);
+        expect(common.isFloat(-1.1)).to.be.equal(true);
+        expect(common.isFloat(4294967295.4294967295)).to.be.equal(true);
+
+        expect(common.isFloat(1)).to.be.equal(false);
+        expect(common.isFloat(0)).to.be.equal(false);
+        expect(common.isFloat(0.0)).to.be.equal(false);
+        expect(common.isFloat(-1)).to.be.equal(false);
+        expect(common.isFloat(4294967295)).to.be.equal(false);
+        expect(common.isFloat('3')).to.be.equal(false);
+        expect(common.isFloat(undefined)).to.be.equal(false);
+        expect(common.isFloat({})).to.be.equal(false);
+        expect(common.isFloat(null)).to.be.equal(false);
+    });
+
+    it('should test for Number', function () {
+        expect(common.isNumber(1.1)).to.be.equal(true);
+        expect(common.isNumber(0.1)).to.be.equal(true);
+        expect(common.isNumber(-1.1)).to.be.equal(true);
+        expect(common.isNumber(4294967295.4294967295)).to.be.equal(true);
+        expect(common.isNumber(1)).to.be.equal(true);
+        expect(common.isNumber(0)).to.be.equal(true);
+        expect(common.isNumber(0.0)).to.be.equal(true);
+        expect(common.isNumber(-1)).to.be.equal(true);
+        expect(common.isNumber(4294967295)).to.be.equal(true);
+        expect(common.isNumber('3')).to.be.equal(true);
+
+        expect(common.isNumber(undefined)).to.be.equal(false);
+        expect(common.isNumber({})).to.be.equal(false);
+        expect(common.isNumber(null)).to.be.equal(false);
+    });
+
+    it('should set quality label', function () {
+        let point = {
+            _relDevice: 0,
+            _relRMY: 0,
+            _relPoint: 0,
+            'COV Enable': {
+                Value: false
+            },
+            'Alarm States': {
+                Value: false
+            },
+            'Status Flags': {
+                Value: false
+            },
+            'Quality Code Enable': {
+                Value: false
+            },
+            'Alarms Off': {
+                Value: false
+            },
+            'Control Pending': {
+                Value: false
+            },
+            'Quality Label': ''
+        };
+
+        expect(common.setQualityLabel(point)['Quality Label']).to.be.equal('none');
+    });
 });

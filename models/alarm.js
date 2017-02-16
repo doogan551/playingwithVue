@@ -39,72 +39,37 @@ const Alarm = class Alarm extends Common {
     // Queries for alarms that would show in a Recent Alarms window //
     //////////////////////////////////////////////////////////////////
     getRecentAlarms(data, callback) {
-        let currentPage, itemsPerPage, numberItems, startDate, endDate, query, sort;
-
         if (typeof data === 'string') {
             data = JSON.parse(data);
         }
-        currentPage = parseInt(data.currentPage, 10);
-        itemsPerPage = parseInt(data.itemsPerPage, 10);
-        startDate = (typeof parseInt(data.startDate, 10) === 'number') ? data.startDate : 0;
-        endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
 
-        sort = {};
-
-        if (!itemsPerPage) {
-            itemsPerPage = 200;
-        }
-        if (!currentPage || currentPage < 1) {
-            currentPage = 1;
-        }
-
-        numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-        query = {
-            $and: [{
-                msgTime: {
-                    $gte: startDate
-                }
-            }, {
-                msgTime: {
-                    $lte: endDate
-                }
-            }]
-        };
-
-        this.addNamesToQuery(data, query, 'name1', 'Name1');
-        this.addNamesToQuery(data, query, 'name2', 'Name2');
-        this.addNamesToQuery(data, query, 'name3', 'Name3');
-        this.addNamesToQuery(data, query, 'name4', 'Name4');
-
-        if (data.msgCat) {
-            query.msgCat = {
-                $in: data.msgCat
-            };
-        }
-        if (data.almClass) {
-            query.almClass = {
-                $in: data.almClass
-            };
-        }
-
-        if (data.pointTypes) {
-            query.PointType = {
-                $in: data.pointTypes
-            };
-        }
-
-        sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+        let alarmQuery = this.buildAlarmQuery(data, 'Recent');
 
         this.getWithSecurity({
-            query: query,
-            sort: sort,
-            _skip: (currentPage - 1) * itemsPerPage,
-            _limit: numberItems,
+            query: alarmQuery.query,
+            sort: alarmQuery.sort,
+            _skip: alarmQuery.skip,
+            _limit: alarmQuery.numberItems,
             data: data
         }, (err, alarms, count) => {
             callback(err, alarms, count);
         });
+    }
+
+    getUnacknowledged(data, callback) {
+        if (typeof data === 'string') {
+            data = JSON.parse(data);
+        }
+
+        let alarmQuery = this.buildAlarmQuery(data, 'Unacknowledged');
+
+        this.getWithSecurity({
+            query: alarmQuery.query,
+            sort: alarmQuery.sort,
+            _skip: alarmQuery.skip,
+            _limit: alarmQuery.numberItems,
+            data: data
+        }, callback);
     }
 
     //////////////////////////////////////////////////
@@ -112,15 +77,11 @@ const Alarm = class Alarm extends Common {
     //////////////////////////////////////////////////
     acknowledgeAlarm(data, cb) {
         const activeAlarm = new ActiveAlarm();
-        let ids;
-        let username;
-        let time;
-        let ackMethod;
 
-        ids = data.ids;
-        username = data.username;
-        time = Math.floor(new Date().getTime() / 1000);
-        ackMethod = data.ackMethod || 'Console';
+        let ids = data.ids;
+        let username = data.username;
+        let time = Math.floor(new Date().getTime() / 1000);
+        let ackMethod = data.ackMethod || 'Console';
 
         for (let j = 0; j < ids.length; j++) {
             ids[j] = ObjectID(ids[j]);
@@ -131,11 +92,11 @@ const Alarm = class Alarm extends Common {
                 _id: {
                     $in: ids
                 },
-                ackStatus: 1
+                ackStatus: this.getTemplateEnum('Acknowledge Statuses', 'Not Acknowledged')
             },
             updateObj: {
                 $set: {
-                    ackStatus: 2,
+                    ackStatus: this.getTemplateEnum('Acknowledge Statuses', 'Acknowledged'),
                     ackUser: username,
                     ackMethod: ackMethod,
                     ackTime: time
@@ -150,73 +111,10 @@ const Alarm = class Alarm extends Common {
         });
     }
 
-    getUnacknowledged(data, callback) {
-        let currentPage, itemsPerPage, numberItems, query, sort;
-
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-
-        currentPage = parseInt(data.currentPage, 10);
-        itemsPerPage = parseInt(data.itemsPerPage, 10);
-        sort = {};
-
-        if (!itemsPerPage) {
-            itemsPerPage = 200;
-        }
-        if (!currentPage || currentPage < 1) {
-            currentPage = 1;
-        }
-
-        numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-        query = {
-            ackStatus: 1
-        };
-
-        this.addNamesToQuery(data, query, 'name1', 'Name1');
-        this.addNamesToQuery(data, query, 'name2', 'Name2');
-        this.addNamesToQuery(data, query, 'name3', 'Name3');
-        this.addNamesToQuery(data, query, 'name4', 'Name4');
-
-        if (data.msgCat) {
-            query.msgCat = {
-                $in: data.msgCat
-            };
-        }
-
-        if (data.almClass) {
-            query.almClass = {
-                $in: data.almClass
-            };
-        }
-
-        if (data.pointTypes) {
-            query.PointType = {
-                $in: data.pointTypes
-            };
-        }
-
-        sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-        this.getWithSecurity({
-            query: query,
-            sort: sort,
-            _skip: (currentPage - 1) * itemsPerPage,
-            _limit: numberItems,
-            data: data
-        }, (err, alarms, count) => {
-            if (err) {
-                callback(err, null, null);
-            }
-            callback(err, alarms, count);
-        });
-    }
-
     autoAcknowledgeAlarms(callback) {
-        let now, twentyFourHoursAgo;
-        now = Math.floor(Date.now() / 1000);
-        twentyFourHoursAgo = now - 86400;
+        let now = Math.floor(Date.now() / 1000);
+        let twentyFourHoursAgo = now - 86400;
+
         this.updateAll({
             query: {
                 msgTime: {
@@ -228,7 +126,7 @@ const Alarm = class Alarm extends Common {
                 $set: {
                     ackUser: 'System',
                     ackTime: now,
-                    ackStatus: 2
+                    ackStatus: this.getTemplateEnum('Acknowledge Statuses', 'Acknowledged')
                 }
             }
         }, (err, result) => {

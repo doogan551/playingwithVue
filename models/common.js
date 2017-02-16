@@ -1,4 +1,5 @@
 const Config = require('../public/js/lib/config.js');
+const Enums = Config.Enums;
 const zmq = require('../helpers/zmq');
 const Utility = require('./utility');
 
@@ -40,7 +41,7 @@ const Common = class Common extends Utility {
 
         if (typeof def === 'boolean') {
             if (val !== undefined) {
-                if(val === null) {
+                if (val === null) {
                     return val;
                 }
                 return (val.toString() === 'true') ? true : (val.toString() === 'false') ? false : val;
@@ -80,6 +81,79 @@ const Common = class Common extends Utility {
             return val;
         }
         return def;
+    }
+
+    getSort(val) {
+        if (!!~['desc', -1, '-1'].indexOf(val)) {
+            return -1;
+        }
+        return 0;
+    }
+
+    getTemplateEnum(set, prop) {
+        return Enums[set][prop].enum;
+    }
+
+    buildAlarmQuery(data, view) {
+        let currentPage = this.getDefault(data.currentPage, 1);
+        let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
+        let startDate = this.getDefault(data.startDate, 0);
+        let endDate = (this.getInt(data.endDate) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+        let sort = {};
+        let query = {};
+
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        let numberItems = this.getDefault(data.numberItems, itemsPerPage);
+
+        if (view === 'Unacknowledged') {
+            query.ackStatus = this.getTemplateEnum('Acknowledge Statuses', 'Not Acknowledged');
+        } else {
+            query.$and = [{
+                msgTime: {
+                    $gte: startDate
+                }
+            }, {
+                msgTime: {
+                    $lte: endDate
+                }
+            }];
+        }
+
+        this.addNamesToQuery(data, query, 'name1', 'Name1');
+        this.addNamesToQuery(data, query, 'name2', 'Name2');
+        this.addNamesToQuery(data, query, 'name3', 'Name3');
+        this.addNamesToQuery(data, query, 'name4', 'Name4');
+
+        if (data.msgCat) {
+            query.msgCat = {
+                $in: data.msgCat
+            };
+        }
+        if (data.almClass) {
+            query.almClass = {
+                $in: data.almClass
+            };
+        }
+
+        if (data.pointTypes) {
+            if (data.pointTypes.length > 0) {
+                query.PointType = {
+                    $in: data.pointTypes
+                };
+            }
+        }
+
+        sort.msgTime = this.getSort(data.sort);
+        let skip = (currentPage - 1) * itemsPerPage;
+        return {
+            query: query,
+            sort: sort,
+            skip: skip,
+            numberItems
+        };
     }
 
     /**
