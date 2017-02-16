@@ -4873,6 +4873,7 @@ var reportsViewModel = function () {
 
                     adjustViewReportTabHeightWidth();
                     self.activeRequestDataDrawn(true);
+                    self.selectViewReportTabSubTab("gridData");
                 }
             }
         },
@@ -6952,8 +6953,8 @@ var reportsViewModel = function () {
     self.selectViewReportTabSubTab = function (subTabName) {
         // $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
         setTimeout(function () {
-            $tabViewReport.find('ul.tabs').find("." + subTabName + " a").click();
-        }, 400);
+            $tabViewReport.find("ul.tabs").find("." + subTabName + " a").click();
+        }, 200);
     };
 
     self.editColumn = function (column, index) {
