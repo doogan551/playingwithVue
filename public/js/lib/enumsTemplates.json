@@ -538,8 +538,7 @@
             },
             "Get System Status": {
                 "enum": 19
-            },
-
+            }
         },
         "Conversion Types": {
             "Flow": {
