@@ -43,46 +43,37 @@ Array.prototype.equals = (array) => {
     return true;
 };
 
-// let formatRange = (range) => {
-//     console.log(JSON.stringify({
-//         start: moment.unix(range.start).format(),
-//         end: moment.unix(range.end).format()
-//     }));
-// };
-
-// let formatRanges = (ranges) => {
-//     ranges.forEach(formatRange);
-// };
-
 const History = class History extends Common {
     constructor() {
         super(historyCollection);
     }
+
+    addOp(operation, newOptions) {
+        let op = {};
+        for (let prop in operation) {
+            if (['range', 'upis', 'secondUpis'].indexOf(prop) < 0) {
+                op[prop] = operation[prop];
+            }
+        }
+
+        newOptions.push({
+            range: operation.range,
+            upis: operation.upis,
+            secondUpis: operation.secondUpis,
+            ops: [op]
+        });
+    }
+
+    loopOptions(options) {
+        for (let i = 0; i < options.length; i++) {
+            this.addOp(options[i]);
+        }
+    }
     buildOps(options) {
         let newOptions = [];
 
-        let addOp = (operation) => {
-            let op = {};
-            for (let prop in operation) {
-                if (['range', 'upis', 'secondUpis'].indexOf(prop) < 0) {
-                    op[prop] = operation[prop];
-                }
-            }
+        this.loopOptions(newOptions);
 
-            newOptions.push({
-                range: operation.range,
-                upis: operation.upis,
-                secondUpis: operation.secondUpis,
-                ops: [op]
-            });
-        };
-
-        let loopOptions = () => {
-            for (let i = 0; i < options.length; i++) {
-                addOp(options[i]);
-            }
-        };
-        loopOptions();
         return newOptions;
     }
     unbuildOps(options) {
@@ -379,7 +370,6 @@ const History = class History extends Common {
             this.getTables(option, (err, tables) => {
                 this.findInSql(option, tables, (err, sResults) => {
                     if (err) {
-                        console.log('error', err);
                         return callback(err);
                     }
                     // findInMongo(mdb, option, err, mResults) => {
@@ -391,6 +381,26 @@ const History = class History extends Common {
             });
         });
     }
+    getMonths(range, callback) {
+        let months = [];
+        let monthStart = moment.unix(range.start).startOf('month').unix();
+        let monthEnd = moment.unix(monthStart).add(1, 'month').unix();
+
+        months.push({
+            start: monthStart,
+            end: monthEnd
+        });
+
+        while (monthEnd <= range.end) {
+            monthStart = moment.unix(monthStart).add(1, 'month').unix();
+            monthEnd = moment.unix(monthEnd).add(1, 'month').unix();
+            months.push({
+                start: monthStart,
+                end: monthEnd
+            });
+        }
+        callback(null, months);
+    }
     getTables(option, callback) {
         let tables = [];
         let range = option.range;
@@ -399,30 +409,10 @@ const History = class History extends Common {
                 tables.push(table);
             }
         };
-        let getMonths = (range, callback) => {
-            let months = [];
-            let monthStart = moment.unix(range.start).startOf('month').unix();
-            let monthEnd = moment.unix(monthStart).add(1, 'month').unix();
-
-            months.push({
-                start: monthStart,
-                end: monthEnd
-            });
-
-            while (monthEnd <= range.end) {
-                monthStart = moment.unix(monthStart).add(1, 'month').unix();
-                monthEnd = moment.unix(monthEnd).add(1, 'month').unix();
-                months.push({
-                    start: monthStart,
-                    end: monthEnd
-                });
-            }
-            callback(null, months);
-        };
 
         let startString = 'History_';
 
-        getMonths(range, (err, months) => {
+        this.getMonths(range, (err, months) => {
             for (let m = 0; m < months.length; m++) {
                 let month = months[m];
                 let start = moment.unix(month.start);
@@ -446,7 +436,6 @@ const History = class History extends Common {
                     	count: mongoCounts
                     });*/
                     if (err) {
-                        console.log('error', err);
                         return callback(err);
                     }
                     this.findMissing(sqlCounts, _options, (err, result) => {
@@ -590,6 +579,38 @@ const History = class History extends Common {
             }
         };
 
+        let findLowest = (ranges) => {
+            let lowest = ranges[0];
+            for (let i = 0; i < ranges.length; i++) {
+                if (ranges[i].start < lowest.start) {
+                    lowest = ranges[i];
+                }
+            }
+
+            return lowest;
+        };
+
+        let newRanges = [];
+
+        let buildNewRanges = (ranges) => {
+            let lowest = findLowest(ranges);
+            for (let k = 0; k < ranges.length; k++) {
+                if (lowest.start <= ranges[k].start && lowest.end >= ranges[k].start && lowest.end < ranges[k].end) {
+                    lowest.end = ranges[k].end;
+                }
+            }
+            newRanges.push(lowest);
+            for (let m = 0; m < ranges.length; m++) {
+                if (lowest.start <= ranges[m].start && lowest.end >= ranges[m].end) {
+                    ranges.splice(m, 1);
+                    m--;
+                }
+            }
+            if (!!ranges.length) {
+                buildNewRanges(ranges);
+            }
+        };
+
         for (let p = 0; p < periods.length; p++) {
             let period = periods[p];
             let periodStart = moment(period.start.date, 'M-D-YYYY').startOf('month').unix();
@@ -624,44 +645,39 @@ const History = class History extends Common {
                 loopRanges(period, currentRangeStart, currentRangeEnd);
             }
         }
-
-        let findLowest = (ranges) => {
-            let lowest = ranges[0];
-            for (let i = 0; i < ranges.length; i++) {
-                if (ranges[i].start < lowest.start) {
-                    lowest = ranges[i];
-                }
-            }
-
-            return lowest;
-        };
-
-        let newRanges = [];
-
-        let buildNewRanges = (ranges) => {
-            let lowest = findLowest(ranges);
-            for (let k = 0; k < ranges.length; k++) {
-                if (lowest.start <= ranges[k].start && lowest.end >= ranges[k].start && lowest.end < ranges[k].end) {
-                    lowest.end = ranges[k].end;
-                }
-            }
-            newRanges.push(lowest);
-            for (let m = 0; m < ranges.length; m++) {
-                if (lowest.start <= ranges[m].start && lowest.end >= ranges[m].end) {
-                    ranges.splice(m, 1);
-                    m--;
-                }
-            }
-            if (!!ranges.length) {
-                buildNewRanges(ranges);
-            }
-        };
-
-        if (ranges.length > 0) {
-            // buildNewRanges(ranges);
-        }
         newRanges = ranges;
         callback(null, newRanges);
+    }
+    getScaleSums(scaleRanges, ranges, values, sums, option) {
+        for (let s = 0; s < scaleRanges.length; s++) {
+            let scaleRange = scaleRanges[s];
+            let newResult = {
+                sum: 0,
+                range: {
+                    start: scaleRange.start,
+                    end: scaleRange.end
+                }
+            };
+            for (let r = 0; r < ranges.length; r++) {
+                let periodRange = ranges[r];
+                for (let v = 0; v < values.length; v++) {
+                    let value = values[v];
+                    if (option.ops[0].fx === 'weather') {
+                        if (value.timestamp >= scaleRange.start && value.timestamp < scaleRange.end && value.timestamp >= periodRange.start && value.timestamp < periodRange.end) {
+                            newResult.sum += value.Value;
+                            values.splice(v, 1);
+                            v--;
+                        }
+                    } else if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
+                        newResult.sum += value.value;
+                        values.splice(v, 1);
+                        v--;
+                    }
+                }
+            }
+
+            sums.push(newResult);
+        }
     }
     getSums(operation, option, values, range, callback) {
         let ranges = operation.ranges;
@@ -675,38 +691,6 @@ const History = class History extends Common {
                 return 1;
             }
             return 0;
-        };
-
-        let getScaleSums = (scaleRanges) => {
-            for (let s = 0; s < scaleRanges.length; s++) {
-                let scaleRange = scaleRanges[s];
-                let newResult = {
-                    sum: 0,
-                    range: {
-                        start: scaleRange.start,
-                        end: scaleRange.end
-                    }
-                };
-                for (let r = 0; r < ranges.length; r++) {
-                    let periodRange = ranges[r];
-                    for (let v = 0; v < values.length; v++) {
-                        let value = values[v];
-                        if (option.ops[0].fx === 'weather') {
-                            if (value.timestamp >= scaleRange.start && value.timestamp < scaleRange.end && value.timestamp >= periodRange.start && value.timestamp < periodRange.end) {
-                                newResult.sum += value.Value;
-                                values.splice(v, 1);
-                                v--;
-                            }
-                        } else if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
-                            newResult.sum += value.value;
-                            values.splice(v, 1);
-                            v--;
-                        }
-                    }
-                }
-
-                sums.push(newResult);
-            }
         };
 
         ranges = ranges.sort(compare);
@@ -729,7 +713,7 @@ const History = class History extends Common {
         } else {
             sums = [];
             if (scale !== 'half-hour') {
-                getScaleSums(this.buildScaleRanges(range, scale));
+                this.getScaleSums(this.buildScaleRanges(range, scale), ranges, values, sums, option);
             } else {
                 sums = values;
             }
@@ -739,6 +723,45 @@ const History = class History extends Common {
             sums: sums
         };
         callback(null, sums);
+    }
+    getScaleMaxes(scaleRanges, ranges, values, operation, maxes) {
+        for (let s = 0; s < scaleRanges.length; s++) {
+            let scaleRange = scaleRanges[s];
+            let newResult = {
+                max: undefined,
+                timestamp: 0,
+                range: {
+                    start: scaleRange.start,
+                    end: scaleRange.end
+                }
+            };
+            for (let r = 0; r < ranges.length; r++) {
+                let periodRange = ranges[r];
+                periodRange.start = parseInt(periodRange.start, 10);
+                periodRange.end = parseInt(periodRange.end, 10);
+
+                for (let v = 0; v < values.length; v++) {
+                    let value = values[v];
+                    if (!!operation.timestamp) {
+                        if (value.timestamp === operation.timestamp) {
+                            newResult.max = value.value;
+                            newResult.timestamp = value.timestamp;
+                            break;
+                        }
+                    } else if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
+                        if (newResult.max === undefined || value.value > newResult.max) {
+                            newResult.max = value.value;
+                            newResult.timestamp = value.timestamp;
+                        }
+
+                        values.splice(v, 1);
+                        v--;
+                    }
+                }
+            }
+
+            maxes.push(newResult);
+        }
     }
     getMax(operation, values, range, callback) {
         let ranges = operation.ranges;
@@ -755,54 +778,14 @@ const History = class History extends Common {
             return 0;
         };
 
-        let getScaleMaxes = (scaleRanges) => {
-            for (let s = 0; s < scaleRanges.length; s++) {
-                let scaleRange = scaleRanges[s];
-                let newResult = {
-                    max: undefined,
-                    timestamp: 0,
-                    range: {
-                        start: scaleRange.start,
-                        end: scaleRange.end
-                    }
-                };
-                for (let r = 0; r < ranges.length; r++) {
-                    let periodRange = ranges[r];
-                    periodRange.start = parseInt(periodRange.start, 10);
-                    periodRange.end = parseInt(periodRange.end, 10);
-
-                    for (let v = 0; v < values.length; v++) {
-                        let value = values[v];
-                        if (!!operation.timestamp) {
-                            if (value.timestamp === operation.timestamp) {
-                                newResult.max = value.value;
-                                newResult.timestamp = value.timestamp;
-                                break;
-                            }
-                        } else if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
-                            if (newResult.max === undefined || value.value > newResult.max) {
-                                newResult.max = value.value;
-                                newResult.timestamp = value.timestamp;
-                            }
-
-                            values.splice(v, 1);
-                            v--;
-                        }
-                    }
-                }
-
-                maxes.push(newResult);
-            }
-        };
-
         ranges = ranges.sort(compare);
         if (!!operation.scale.match(/latest/)) {
-            getScaleMaxes(operation.ranges);
+            this.getScaleMaxes(operation.ranges, ranges, values, operation, maxes);
         } else if (operation.scale === 'half-hour') {
-            // getScaleMaxes(operation.ranges);
+            // this.getScaleMaxes(operation.ranges, ranges, values, operation, maxes);
             maxes = values;
         } else {
-            getScaleMaxes(this.buildScaleRanges(range, scale));
+            this.getScaleMaxes(this.buildScaleRanges(range, scale), ranges, values, operation, maxes);
         }
 
         operation.results = {
@@ -936,14 +919,13 @@ const History = class History extends Common {
         };
         callback(null, missingData);
     }
+    testFunctions(op) {
+        return ['sum', 'max', 'reactiveCharge'].indexOf(op.fx) >= 0 && (!op.hasOwnProperty('splitUpis') || op.splitUpis.toString() !== 'true');
+    }
     findInSql(options, tables, callback) {
         let upis = options.upis;
         let years = [];
         let results = [];
-
-        let testFunctions = () => {
-            return ['sum', 'max', 'reactiveCharge'].indexOf(options.ops[0].fx) >= 0 && (!options.ops[0].hasOwnProperty('splitUpis') || options.ops[0].splitUpis.toString() !== 'true');
-        };
 
         for (let i = 0; i < tables.length; i++) {
             if (years.indexOf(tables[i].substring(8, 12)) < 0) {
@@ -953,7 +935,7 @@ const History = class History extends Common {
 
         async.eachSeries(years, (year, cb) => {
             let columns;
-            if (testFunctions()) {
+            if (this.testFunctions(options.ops[0])) {
                 columns = ['SUM(VALUE) as VALUE', 'TIMESTAMP', 'COUNT(UPI) as UPIS'];
             } else {
                 columns = ['UPI', 'TIMESTAMP', 'VALUE', 'VALUETYPE', 'STATUSFLAGS', 'USEREDITED'];
@@ -1001,7 +983,7 @@ const History = class History extends Common {
                         statement.push(options.timestamps);
                         statement.push(')');
                     }
-                    if (testFunctions()) {
+                    if (this.testFunctions(options.ops[0])) {
                         statement.push('GROUP BY timestamp');
                     }
                 }
@@ -1321,93 +1303,89 @@ const History = class History extends Common {
             callback(err, options);
         });
     }
-    addToSQLite(ranges, cb) {
-        let criteria = {};
-        let doMonth = (range, cb2) => {
-            ArchiveUtility.serialize(range, () => {
+    doMonth(range, cb2) {
+        ArchiveUtility.serialize(range, () => {
+            let criteria = {
+                year: range.year,
+                statement: 'PRAGMA synchronous = OFF'
+            };
+            ArchiveUtility.exec(criteria, () => {
+                let tableName = 'History_' + range.year.toString() + range.month.toString();
                 criteria = {
                     year: range.year,
-                    statement: 'PRAGMA synchronous = OFF'
+                    statement: 'BEGIN TRANSACTION'
                 };
-                ArchiveUtility.exec(criteria, () => {
-                    let tableName = 'History_' + range.year.toString() + range.month.toString();
-                    criteria = {
-                        year: range.year,
-                        statement: 'BEGIN TRANSACTION'
-                    };
-                    ArchiveUtility.runDB(criteria, () => {
-                        let batchSize = 100;
-                        let count = 0;
-                        let parameterPlaceholder = '?,?,?,?,?,?';
-                        let additionalParameter = ',(' + parameterPlaceholder + ')';
-                        let params = [];
+                ArchiveUtility.runDB(criteria, () => {
+                    let batchSize = 100;
+                    let count = 0;
+                    let parameterPlaceholder = '?,?,?,?,?,?';
+                    let additionalParameter = ',(' + parameterPlaceholder + ')';
+                    let params = [];
 
-                        let processPoint = (_cb) => {
-                            let statement = 'INSERT INTO ' + tableName + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED) VALUES  (' + parameterPlaceholder + ')' + additionalParameter.repeat(params.length / 6 - 1);
+                    let processPoint = (_cb) => {
+                        let statement = 'INSERT INTO ' + tableName + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED) VALUES  (' + parameterPlaceholder + ')' + additionalParameter.repeat(params.length / 6 - 1);
 
+                        criteria = {
+                            year: range.year,
+                            statement: statement
+                        };
+                        ArchiveUtility.prepare(criteria, (stmt) => {
                             criteria = {
                                 year: range.year,
-                                statement: statement
+                                statement: stmt,
+                                parameters: params
                             };
-                            ArchiveUtility.prepare(criteria, (stmt) => {
-                                criteria = {
-                                    year: range.year,
-                                    statement: stmt,
-                                    parameters: params
-                                };
-                                ArchiveUtility.runStatement(criteria, () => {
-                                    ArchiveUtility.finalizeStatement(criteria, () => {
-                                        params = [];
-                                        return _cb();
-                                    });
+                            ArchiveUtility.runStatement(criteria, () => {
+                                ArchiveUtility.finalizeStatement(criteria, () => {
+                                    params = [];
+                                    return _cb();
                                 });
                             });
-                        };
+                        });
+                    };
 
-                        async.eachSeries(range.points, (point, callback) => {
-                            let userEdited = (point.hasOwnProperty('userEdited')) ? point.userEdited : false;
+                    async.eachSeries(range.points, (point, callback) => {
+                        let userEdited = (point.hasOwnProperty('userEdited')) ? point.userEdited : false;
 
-                            params.push(point.upi, point.timestamp, point.Value, point.ValueType, point.statusflags, userEdited);
-                            if (++count % batchSize === 0) {
-                                processPoint(() => {
-                                    callback();
-                                });
-                            } else {
+                        params.push(point.upi, point.timestamp, point.Value, point.ValueType, point.statusflags, userEdited);
+                        if (++count % batchSize === 0) {
+                            processPoint(() => {
                                 callback();
-                            }
-                        }, (err) => {
-                            if (!!params.length) {
-                                processPoint(() => {
-                                    criteria = {
-                                        year: range.year,
-                                        statement: 'END TRANSACTION'
-                                    };
-                                    ArchiveUtility.runDB(criteria, cb2);
-                                });
-                            } else {
+                            });
+                        } else {
+                            callback();
+                        }
+                    }, (err) => {
+                        if (!!params.length) {
+                            processPoint(() => {
                                 criteria = {
                                     year: range.year,
                                     statement: 'END TRANSACTION'
                                 };
                                 ArchiveUtility.runDB(criteria, cb2);
-                            }
-                        });
+                            });
+                        } else {
+                            criteria = {
+                                year: range.year,
+                                statement: 'END TRANSACTION'
+                            };
+                            ArchiveUtility.runDB(criteria, cb2);
+                        }
                     });
                 });
             });
-        };
-
-
+        });
+    }
+    addToSQLite(ranges, cb) {
         async.eachSeries(ranges, (range, callback) => {
-            console.log(range.year, range.month);
-            doMonth(range, callback);
+            this.doMonth(range, callback);
         }, (err) => {
             this.removeFromHistorydata(ranges, cb);
         });
     }
     removeFromHistorydata(ranges, cb) {
         // no longer removing data by mongo.remove()
-        // keeping in case mongo.drop and ensureIndex needs to be added late=> r
+        // keeping in case mongo.drop and ensureIndex function needs to be added later
         cb();
     }
     getUsage(data, cb) {
@@ -1592,7 +1570,6 @@ const History = class History extends Common {
                 postfix: '.csv',
                 prefix: startDate.format('YYYYMM-') + options.meterName + '-'
             }, (err, path) => {
-                console.log(err, path);
                 let writableStream = fs.createWriteStream(path);
 
                 writableStream.on('finish', (err) => {
@@ -1634,7 +1611,6 @@ const History = class History extends Common {
         options.ops = [{
             fx: (!!options.fx) ? options.fx : 'history match'
         }];
-        // JS console.log('%%%%%%%%%%%', JSON.stringify(options));
         this.getTables(options, (err, tables) => {
             this.findInSql(options, tables, (err, sResults) => {
                 this.fixResults(sResults || [], [], (err, results) => {
@@ -1709,46 +1685,85 @@ const History = class History extends Common {
             });
         });
     }
-    doBackUp(upis, limitRange, cb) {
-        let criteria = {};
-        let dates = [];
-        let query = {};
-        let findRangeEnds = (callback) => {
+    findRangeEnds(callback) {
+        this.get({
+            query: {},
+            sort: {
+                timestamp: 1
+            },
+            limit: 1
+        }, (err, first) => {
             this.get({
                 query: {},
                 sort: {
-                    timestamp: 1
+                    timestamp: -1
                 },
                 limit: 1
-            }, (err, first) => {
-                this.get({
-                    query: {},
-                    sort: {
-                        timestamp: -1
-                    },
-                    limit: 1
-                }, (_err, last) => {
-                    callback(err, {
-                        start: !!first.length && first[0].timestamp || 0,
-                        end: !!last.length && last[0].timestamp || 0
-                    });
+            }, (_err, last) => {
+                callback(err, {
+                    start: !!first.length && first[0].timestamp || 0,
+                    end: !!last.length && last[0].timestamp || 0
                 });
             });
-        };
-        let buildDates = (range) => {
-            let end = range.end;
-            let tempTime = range.start;
+        });
+    }
+    buildDates(range) {
+        let dates = [];
+        let end = range.end;
+        let tempTime = range.start;
 
-            while (tempTime <= end) {
-                let date = {};
-                date.start = tempTime;
-                tempTime = moment.unix(tempTime).add(1, 'month').unix();
-                date.end = tempTime;
-                dates.push(date);
-            }
+        while (tempTime <= end) {
+            let date = {};
+            date.start = tempTime;
+            tempTime = moment.unix(tempTime).add(1, 'month').unix();
+            date.end = tempTime;
+            dates.push(date);
+        }
+        return dates;
+    }
+    upsertRange(ranges, month, year, point) {
+        let range = {
+            month: month,
+            year: year,
+            points: []
         };
-        findRangeEnds((err, range) => {
-            buildDates(range);
+        for (let j = 0; j < ranges.length; j++) {
+            if (ranges[j].year === year && ranges[j].month === month) {
+                ranges[j].points.push(point);
+                return;
+            }
+        }
+        range.points.push(point);
+        ranges.push(range);
+    }
+    buildTimeRanges(points, cb) {
+        let compare = (a, b) => {
+            if (a.timestamp < b.timestamp) {
+                return -1;
+            }
+            if (a.timestamp > b.timestamp) {
+                return 1;
+            }
+            return 0;
+        };
+
+        let ranges = [];
+
+        points.sort(compare);
+
+        for (let i = 0; i < points.length; i++) {
+            let month = moment.unix(points[i].timestamp).format('MM');
+            let year = moment.unix(points[i].timestamp).format('YYYY');
+
+            this.upsertRange(ranges, month, year, points[i]);
+        }
+        this.addToSQLite(ranges, cb);
+    }
+    doBackUp(upis, limitRange, cb) {
+        let criteria = {};
+        let query = {};
+        this.findRangeEnds((err, range) => {
+            let dates = this.buildDates(range);
             async.eachSeries(dates, (date, callback) => {
                 query = {
                     $and: [{
@@ -1767,49 +1782,8 @@ const History = class History extends Common {
                 };
 
                 this.get(criteria, (err, points) => {
-                    buildTimeRanges(points);
+                    this.buildTimeRanges(points, callback);
                 });
-
-                let buildTimeRanges = (points) => {
-                    let compare = (a, b) => {
-                        if (a.timestamp < b.timestamp) {
-                            return -1;
-                        }
-                        if (a.timestamp > b.timestamp) {
-                            return 1;
-                        }
-                        return 0;
-                    };
-
-                    let upsertRange = (month, year, point) => {
-                        let range = {
-                            month: month,
-                            year: year,
-                            points: []
-                        };
-                        for (let j = 0; j < ranges.length; j++) {
-                            if (ranges[j].year === year && ranges[j].month === month) {
-                                ranges[j].points.push(point);
-                                return;
-                            }
-                        }
-                        range.points.push(point);
-                        ranges.push(range);
-                    };
-
-                    let ranges = [];
-
-                    points.sort(compare);
-
-                    for (let i = 0; i < points.length; i++) {
-                        let month = moment.unix(points[i].timestamp).format('MM');
-                        let year = moment.unix(points[i].timestamp).format('YYYY');
-
-                        upsertRange(month, year, points[i]);
-                    }
-                    console.log(ranges.length);
-                    this.addToSQLite(ranges, callback);
-                };
             }, (err) => {
                 cb(err);
             });

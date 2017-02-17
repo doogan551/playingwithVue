@@ -63,7 +63,7 @@ const Utilities = class Utilities extends Common {
 
         let fns = [getWeatherPoints, callGetRates, getUtilityMarkup];
 
-        fns.forEach((fn) => {
+        fns.forEach((fn) => { // TODO change this to be async.series
             fn();
         });
     }

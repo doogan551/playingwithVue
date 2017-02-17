@@ -32,39 +32,17 @@ const TIMEOUT = 30000; // 30 seconds
 let transportStatus = CLOSED;
 let smtpTransport;
 let timeoutObj;
-let smtpConfig = {
-    transport: 'SMTP',
-    host: 'smtp.sparkpostmail.com', // hostname
-    secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
-    port: 587, // port for secure SMTP
-    auth: smtpAuth
-};
-
-let closeTransport = () => {
-    smtpTransport.close();
-    transportStatus = CLOSED;
-};
-
-let getTransport = () => {
-    clearTimeout(timeoutObj); // Clear the timeout
-    timeoutObj = setTimeout(closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
-
-    if (transportStatus === CLOSED) {
-        smtpTransport = nodemailer.createTransport(smtpConfig);
-        transportStatus = OPEN;
-    }
-};
-
-let sendEmail = (options, cb) => {
-    let fromName = '"' + (options.fromName || 'InfoScan') + '"',
-        fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
-
-    getTransport();
-    options.from = fromName + ' <' + fromAddr + '>';
-    smtpTransport.sendMail(options, cb);
-};
 
 let Mailer = class Mailer {
+    constructor() {
+        this.smtpConfig = {
+            transport: 'SMTP',
+            host: 'smtp.sparkpostmail.com', // hostname
+            secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
+            port: 587, // port for secure SMTP
+            auth: smtpAuth
+        };
+    }
     sendError(msg) {
         let options;
 
@@ -74,11 +52,31 @@ let Mailer = class Mailer {
                 subject: 'Error: ' + serverName + ' (Site: ' + siteName + ')',
                 text: ['Site: ' + siteName, 'Time: ' + new Date().toString(), '', msg].join('\n')
             };
-            sendEmail(options, () => {});
+            this.sendEmail(options, () => {});
         }
     }
+    closeTransport() {
+        smtpTransport.close();
+        transportStatus = CLOSED;
+    }
+
+    getTransport() {
+        clearTimeout(timeoutObj); // Clear the timeout
+        timeoutObj = setTimeout(this.closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
+
+        if (transportStatus === CLOSED) {
+            smtpTransport = nodemailer.createTransport(this.smtpConfig);
+            transportStatus = OPEN;
+        }
+    }
+
     sendEmail(options, cb) {
-        sendEmail(options, cb);
+        let fromName = '"' + (options.fromName || 'InfoScan') + '"',
+            fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
+
+        this.getTransport();
+        options.from = fromName + ' <' + fromAddr + '>';
+        smtpTransport.sendMail(options, cb);
     }
 };
 

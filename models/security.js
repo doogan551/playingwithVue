@@ -5,23 +5,22 @@ const System = new(require('./system'))();
 
 const Security = class Security {
 
+    calcPermissions(groups) {
+        let points = {};
+        for (let g = 0; g < groups.length; g++) {
+            let pAccess = groups[g]._pAccess;
+            let gPoints = groups[g].Points;
+            for (let gPoint in gPoints) {
+                points[gPoint] |= pAccess;
+            }
+        }
+        return points;
+    }
     getPermissions(user, cb) {
         if (!!user['System Admin'].Value || !user) {
             return cb(null, true);
         }
         let userId = ObjectID(user._id);
-
-        let calcPermissions = (groups) => {
-            let points = {};
-            for (let g = 0; g < groups.length; g++) {
-                let pAccess = groups[g]._pAccess;
-                let gPoints = groups[g].Points;
-                for (let gPoint in gPoints) {
-                    points[gPoint] |= pAccess;
-                }
-            }
-            return points;
-        };
 
         let queryStr = 'Users.' + userId;
         let query = {};
@@ -36,7 +35,7 @@ const Security = class Security {
                 console.log(err || 'no groups');
                 return cb(err, false);
             }
-            let pointPerm = calcPermissions(groups);
+            let pointPerm = this.calcPermissions(groups);
             return cb(err, pointPerm);
         });
     }

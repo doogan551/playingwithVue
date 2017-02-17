@@ -256,66 +256,64 @@ const System = class System extends Common {
             return cb(err, result);
         });
     }
-
+    updateNetworks(point, networks, callback) {
+        async.eachSeries(networks, (network, acb) => {
+            let criteria = {
+                query: {},
+                updateObj: {},
+                options: {
+                    multi: true
+                }
+            };
+            let updates = [{
+                query: {
+                    'Point Type.Value': 'Device',
+                    'Ethernet Network.Value': network['IP Network Segment']
+                },
+                updateObj: {
+                    $set: {
+                        'Ethernet IP Port.Value': network['IP Port']
+                    }
+                }
+            }, {
+                query: {
+                    'Point Type.Value': 'Device',
+                    'Downlink Network.Value': network['IP Network Segment']
+                },
+                updateObj: {
+                    $set: {
+                        'Downlink IP Port.Value': network['IP Port']
+                    }
+                }
+            }, {
+                query: {
+                    'Point Type.Value': 'Remote Unit',
+                    'Model Type.Value': 'BACnet',
+                    'Network Segment.Value': network['IP Network Segment'],
+                    $or: [{
+                        'Gateway.isDisplayable': false
+                    }, {
+                        'Gateway.Value': false
+                    }]
+                },
+                updateObj: {
+                    $set: {
+                        'Ethernet IP Port.Value': network['IP Port']
+                    }
+                }
+            }];
+            async.eachSeries(updates, (update, acb2) => {
+                criteria.query = update.query;
+                criteria.updateObj = update.updateObj;
+                point.update(criteria, acb2);
+            }, acb);
+        }, callback);
+    }
     updateTelemetry(data, cb) {
         const point = new Point();
         let ipSegment = parseInt(data['IP Network Segment'], 10);
         let ipPort = parseInt(data['IP Port'], 10);
         let netConfig = data['Network Configuration'];
-
-        let updateNetworks = (networks, callback) => {
-            async.eachSeries(networks, (network, acb) => {
-                let criteria = {
-                    query: {},
-                    updateObj: {},
-                    options: {
-                        multi: true
-                    }
-                };
-                let updates = [{
-                    query: {
-                        'Point Type.Value': 'Device',
-                        'Ethernet Network.Value': network['IP Network Segment']
-                    },
-                    updateObj: {
-                        $set: {
-                            'Ethernet IP Port.Value': network['IP Port']
-                        }
-                    }
-                }, {
-                    query: {
-                        'Point Type.Value': 'Device',
-                        'Downlink Network.Value': network['IP Network Segment']
-                    },
-                    updateObj: {
-                        $set: {
-                            'Downlink IP Port.Value': network['IP Port']
-                        }
-                    }
-                }, {
-                    query: {
-                        'Point Type.Value': 'Remote Unit',
-                        'Model Type.Value': 'BACnet',
-                        'Network Segment.Value': network['IP Network Segment'],
-                        $or: [{
-                            'Gateway.isDisplayable': false
-                        }, {
-                            'Gateway.Value': false
-                        }]
-                    },
-                    updateObj: {
-                        $set: {
-                            'Ethernet IP Port.Value': network['IP Port']
-                        }
-                    }
-                }];
-                async.eachSeries(updates, (update, acb2) => {
-                    criteria.query = update.query;
-                    criteria.updateObj = update.updateObj;
-                    point.update(criteria, acb2);
-                }, acb);
-            }, callback);
-        };
 
         for (let n = 0; n < netConfig.length; n++) {
             netConfig[n]['IP Network Segment'] = parseInt(netConfig[n]['IP Network Segment'], 10);
@@ -363,7 +361,7 @@ const System = class System extends Common {
                     if (err) {
                         return cb(err.message);
                     }
-                    updateNetworks(netConfig, (err, result) => {
+                    this.updateNetworks(point, netConfig, (err, result) => {
                         let logData = {
                             user: data.user,
                             timestamp: Date.now(),
