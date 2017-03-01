@@ -1,13 +1,7 @@
+// TODO need to seperate functions and not call DB ever
 var DeviceTree = new (require('../models/devicetree.js'))();
-var data;
 
 describe('Device Tree Model', function () {
-    beforeEach(function () {
-        data = {
-            user: global.adminUser
-        };
-    });
-
     it('should build tree', function (done) {
         DeviceTree.getTree(function (err, result) {
             expect(err).to.be.equal(undefined);

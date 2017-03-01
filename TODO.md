@@ -11,3 +11,5 @@ rename holiday collection or calendar model
     add logger.info to common
 
 split out model functionality (Point -> System -> Point)
+
+add default log text to Activity Logs enumset

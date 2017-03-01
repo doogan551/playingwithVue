@@ -100,7 +100,7 @@ const ActivityLog = class ActivityLog extends Common {
             name4: '',
             pointType: null,
             activity: Enums['Activity Logs'][data.activity].enum,
-            timestamp: data.timestamp,
+            timestamp: data.timestamp || Date.now(),
             Security: [],
             log: data.log
         };
@@ -127,7 +127,7 @@ const ActivityLog = class ActivityLog extends Common {
             log.name4 = (data.point.name4 !== undefined) ? data.point.name4 : '';
         }
 
-        if ((data.activity === 1 || data.activity === 2)) {
+        if ((log.activity === 1 || log.activity === 2)) {
             if (data.oldValue !== undefined) {
                 propertyChange.oldValue = data.oldValue;
             } else {

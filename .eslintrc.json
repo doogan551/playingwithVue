@@ -45,7 +45,8 @@
         "define": true,
         "CustomColorsPicker": true,
         "checkValues": true,
-        "$": true
+        "$": true,
+        "chai": true
     },
 
     "rules": {
