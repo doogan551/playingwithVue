@@ -1850,10 +1850,10 @@ var historyModel = module.exports = {
 
 		});
 	},
-	uploadCSV: function(files, cb) {
+	uploadCSV: function(file, cb) {
 		var path = __dirname + '\\..\\tmp\\uploads\\' + Date.now() + '.csv';
-		if (!!files.csv.originalname.match(/\.csv/i)) {
-			fs.writeFile(path, files.csv.buffer, function(err) {
+		if (!!file.originalname.match(/\.csv/i)) {
+			fs.writeFile(path, file.buffer, function(err) {
 				if (err) {
 					return cb({
 						err: err

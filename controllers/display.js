@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var app = express();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Display = require('../models/display');
@@ -114,6 +115,11 @@ router.post('/later', function(req, res, next) {
 	});
 });
 // Checked
+let multer = require('multer');
+let upload = multer({
+	storage: multer.memoryStorage()
+});
+let type = upload.array();
 router.post('/publish', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

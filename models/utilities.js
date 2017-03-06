@@ -120,11 +120,8 @@ module.exports = {
     uploadBackground: function(data, cb) {
         var c,
             path = [__dirname, '..', 'public', 'img', 'dashboard', 'backgrounds', ''].join('/'),
-            uploadedFiles = data.files,
-            list = Object.keys(uploadedFiles),
-            obj = uploadedFiles[list[0]];
-
-        fs.writeFile(path + obj.originalname, obj.buffer, cb);
+            uploadedFile = data.file;
+        fs.writeFile(path + uploadedFile.originalname, uploadedFile.buffer, cb);
     },
 
     getMarkup: function(data, cb) {
