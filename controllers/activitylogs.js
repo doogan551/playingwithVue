@@ -4,7 +4,7 @@ let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let ActivityLog = new(require('../models/activitylog'))();
 
-// Checked
+// POSTMAN
 router.post('/get', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;

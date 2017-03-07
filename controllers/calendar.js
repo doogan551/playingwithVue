@@ -3,8 +3,9 @@ let router = express.Router();
 let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let Calendar = new(require('../models/calendar'))();
+let System = new(require('../models/system'))();
 
-// Checked
+// POSTMAN
 router.post('/getyear', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -19,12 +20,12 @@ router.post('/getyear', function (req, res) {
         return utils.sendResponse(res, year);
     });
 });
-// Checked
+// POSTMAN
 router.post('/getseason', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Calendar.getSeason(data, function (err, season) {
+    System.getSeason(data, function (err, season) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -34,12 +35,12 @@ router.post('/getseason', function (req, res) {
         return utils.sendResponse(res, season);
     });
 });
-// Checked
+// POSTMAN
 router.post('/updateseason', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Calendar.updateSeason(data, function (err) {
+    System.updateSeason(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -51,7 +52,7 @@ router.post('/updateseason', function (req, res) {
         });
     });
 });
-// Checked - Shouldn't be called if season changes in year that doesn't have dates
+// POSTMAN - Shouldn't be called if season changes in year that doesn't have dates
 router.post('/newdate', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;

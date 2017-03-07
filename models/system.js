@@ -3,14 +3,6 @@ const ObjectId = require('mongodb').ObjectID;
 
 const Common = require('./common');
 const Config = require('../public/js/lib/config');
-const ActivityLog = require('./activitylog');
-const Alarm = require('./alarm');
-const AlarmDefs = require('./alarmdefs');
-const Point = require('./point');
-
-const activityLog = new ActivityLog();
-const alarm = new Alarm();
-const alarmDefs = new AlarmDefs();
 
 const System = class System extends Common {
     constructor() {
@@ -32,6 +24,7 @@ const System = class System extends Common {
     }
 
     updateSeason(data, cb) {
+        const activityLog = new ActivityLog();
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -71,6 +64,7 @@ const System = class System extends Common {
         this.getOne(criteria, cb);
     }
     getCounts(type, cb) {
+        const alarm = new Alarm();
         let query = {};
         let criteria = {};
 
@@ -84,6 +78,7 @@ const System = class System extends Common {
         alarm.count(criteria, cb);
     }
     updateControlPriorities(data, cb) {
+        const activityLog = new ActivityLog();
         let searchCriteria = {
             'Name': 'Control Priorities'
         };
@@ -156,6 +151,7 @@ const System = class System extends Common {
         });
     }
     updateQualityCodes(data, cb) {
+        const activityLog = new ActivityLog();
         let codesSearch = {
             'Name': 'Quality Codes'
         };
@@ -215,6 +211,7 @@ const System = class System extends Common {
         });
     }
     updateControllers(data, cb) {
+        const activityLog = new ActivityLog();
         let ID = 'Controller ID';
         let searchCriteria = {
             'Name': 'Controllers'
@@ -310,6 +307,7 @@ const System = class System extends Common {
         }, callback);
     }
     updateTelemetry(data, cb) {
+        const activityLog = new ActivityLog();
         const point = new Point();
         let ipSegment = parseInt(data['IP Network Segment'], 10);
         let ipPort = parseInt(data['IP Port'], 10);
@@ -376,6 +374,7 @@ const System = class System extends Common {
         });
     }
     getStatus(data, cb) {
+        const alarm = new Alarm();
         let ackStatus = false;
 
         let criteria = {
@@ -446,6 +445,8 @@ const System = class System extends Common {
         });
     }
     updateAlarmTemplate(data, cb) {
+        const alarmDefs = new AlarmDefs();
+        const activityLog = new ActivityLog();
         let criteria;
         let logData = {
             user: data.user,
@@ -476,6 +477,8 @@ const System = class System extends Common {
         }
     }
     deleteAlarmTemplate(data, cb) {
+        const alarmDefs = new AlarmDefs();
+        const activityLog = new ActivityLog();
         const point = new Point();
         let logData = {
             user: data.user,
@@ -662,3 +665,8 @@ const System = class System extends Common {
 };
 
 module.exports = System;
+
+const Point = require('./point');
+const ActivityLog = require('./activitylog');
+const Alarm = require('./alarm');
+const AlarmDefs = require('./alarmdefs');

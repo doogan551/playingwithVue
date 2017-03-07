@@ -1,9 +1,10 @@
-var System = new(require('../models/system'))();
+var System = require('../models/system');
 let Alarm = new(require('../models/alarm'))();
 
 module.exports = {
     setGlobals: function (cb) {
-        System.getQualityCodes({}, function (err, codes) {
+        const system = new System();
+        system.getQualityCodes({}, function (err, codes) {
             global.qualityCodes = codes.Entries;
             return cb();
         });

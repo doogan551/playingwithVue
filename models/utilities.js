@@ -3,8 +3,6 @@ const fs = require('fs');
 const pug = require('pug');
 
 const Common = require('./common');
-const System = require('./system');
-const system = new System();
 
 const Utilities = class Utilities extends Common {
     constructor() {
@@ -27,6 +25,7 @@ const Utilities = class Utilities extends Common {
         this.getAll(criteria, cb);
     }
     index(data, cb) {
+        const system = new System();
         let utilities;
         let html;
         let weatherPoints;
@@ -55,7 +54,7 @@ const Utilities = class Utilities extends Common {
             });
         };
         let getUtilityMarkup = () => {
-            module.exports.getUtilityMarkup('Electricity', (markup) => {
+            this.getUtilityMarkup('Electricity', (markup) => {
                 html = markup;
                 complete();
             });
@@ -126,7 +125,7 @@ const Utilities = class Utilities extends Common {
 
     getMarkup(data, cb) {
         let type = data.type;
-        module.exports.getUtilityMarkup(type, cb);
+        this.getUtilityMarkup(type, cb);
     }
 
     getUtilityMarkup(type, cb) {
@@ -156,3 +155,5 @@ const Utilities = class Utilities extends Common {
 };
 
 module.exports = Utilities;
+
+const System = require('./system');

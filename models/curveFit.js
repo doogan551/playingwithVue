@@ -3,13 +3,13 @@
 
 const reg = require('regression');
 
-const Point = new(require('./point'))();
+const Point = require('./point');
 const rtdTables = require('../lib/rtdTables');
 
 const CurveFit = class CurveFit {
     doFit(_data, cb) {
         let type = _data.type;
-        let data = _data.data;
+        let data = _data;
 
         if (type === 'Cubic') {
             this.polyFit(data, cb);
@@ -152,6 +152,7 @@ const CurveFit = class CurveFit {
     // Rev.  0  11-9-98  RWC  Original Issue
     //------------------------------------------------------------------------------
     FlowFit(data, callback) {
+        const point = new Point();
         let lvSensor = data.lv_sensor,
             sensorRef = data.sensorRef,
             area = data.area,
@@ -160,7 +161,7 @@ const CurveFit = class CurveFit {
             c = [],
             ia, ib, ic; // temp coefficients for flow calcs
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: sensorRef.Value
             }

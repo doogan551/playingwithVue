@@ -1,9 +1,10 @@
 let express = require('express');
 let router = express.Router();
+
 let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let Firmware = new(require('../models/firmware'))();
-let Point = new(require('../models/point'))();
+let Point = require('../models/point');
 
 // Checked
 router.get('/get/:model', function (req, res, next) {
@@ -24,10 +25,11 @@ router.get('/get/:model', function (req, res, next) {
 });
 // NOT CHECKED - not used?
 router.get('/getRemoteUnits', function (req, res, next) {
+    const point = new Point();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Point.getRemoteUnits(data, function (err, remoteUnits) {
+    point.getRemoteUnits(data, function (err, remoteUnits) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

@@ -36,7 +36,7 @@ const User = class User extends Common {
             query: {}
         };
 
-        User.get(criteria, (err, users) => {
+        this.get(criteria, (err, users) => {
             if (err) {
                 return cb(err);
             }

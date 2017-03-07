@@ -1,7 +1,8 @@
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 const GPL = class GPL {
     getGplInfo(data, cb) {
+        const point = new Point();
         let seqData,
             sendToJade = (err, pointdata) => {
                 // console.log('GPL:', 'got points');
@@ -17,7 +18,7 @@ const GPL = class GPL {
                 }, sendToJade);
             };
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: data.upi
             }
@@ -32,9 +33,10 @@ const GPL = class GPL {
         });
     }
     getReferences(data, cb) {
+        const point = new Point();
         let upoint = parseInt(data.upoint, 10);
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: upoint
             },
@@ -44,6 +46,7 @@ const GPL = class GPL {
         }, cb);
     }
     getGplPoints(data, cb) {
+        const point = new Point();
         let c,
             seq = data.seq,
             list = seq.SequenceData,
@@ -90,7 +93,7 @@ const GPL = class GPL {
                 }
             }
 
-            Point.getWithSecurity({
+            point.getWithSecurity({
                 query: {
                     _id: {
                         $in: upis

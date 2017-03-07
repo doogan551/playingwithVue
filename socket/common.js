@@ -1,5 +1,5 @@
 // OTHERS
-let System = new(require('../models/system'))();
+let System = require('../models/system');
 
 let common = {
     sockets: require('../helpers/sockets.js')
@@ -10,9 +10,10 @@ let rooms = io.sockets.adapter.rooms;
 common.rooms = rooms;
 
 let socket = function () {
-    System.getSystemInfoByName('Quality Codes', function (err, codes) {
+    const system = new System();
+    system.getSystemInfoByName('Quality Codes', function (err, codes) {
         common.qualityCodes = codes.Entries;
-        System.getSystemInfoByName('Control Priorities', function (err, priorities) {
+        system.getSystemInfoByName('Control Priorities', function (err, priorities) {
             common.controlPriorities = priorities.Entries;
             loader();
         });

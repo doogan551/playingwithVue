@@ -1,5 +1,5 @@
 const Common = require('./common');
-const ActivityLog = new(require('./activitylog'))();
+const ActivityLog = require('./activitylog');
 const utils = require('../helpers/utils');
 
 const calendarCollection = utils.CONSTANTS('calendarCollection');
@@ -24,6 +24,7 @@ const Calendar = class Calendar extends Common {
     }
 
     newDate(data, cb) {
+        const activityLog = new ActivityLog();
         let year = parseInt(data.year, 10);
         let dates = data.dates;
 
@@ -63,7 +64,7 @@ const Calendar = class Calendar extends Common {
                 activity: 'Calendar Year Edit',
                 log: 'Calendar for year ' + year + ' updated.'
             };
-            ActivityLog.create(logData, (err) => {});
+            activityLog.create(logData, (err) => {});
 
             if (new Date().getFullYear() === year) {
                 criteria = {

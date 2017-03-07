@@ -22,7 +22,7 @@ const ActivityLog = class ActivityLog extends Common {
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);
-        let endDate = (this.getInt(data.endDate) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
+        let endDate = (this.getNumber(data.endDate) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
         let usernames = data.usernames;
 
         if (currentPage < 1) {

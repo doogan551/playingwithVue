@@ -1,7 +1,7 @@
 const ObjectID = require('mongodb').ObjectID;
 
 const UserGroup = new(require('./usergroup'))();
-const System = new(require('./system'))();
+const System = require('./system');
 
 const Security = class Security {
 
@@ -81,6 +81,7 @@ const Security = class Security {
         // });
     }
     updateControllers(op, username, callback) {
+        const system = new System();
         let searchCriteria = {
             Name: 'Controllers'
         };
@@ -89,7 +90,7 @@ const Security = class Security {
             query: searchCriteria
         };
 
-        System.getOne(criteria, (err, controllers) => {
+        system.getOne(criteria, (err, controllers) => {
             if (op === 'add') {
                 let id = 0;
                 let ids = [];
@@ -131,7 +132,7 @@ const Security = class Security {
                         }
                     }
                 };
-                System.updateOne(criteria, (err) => {
+                system.updateOne(criteria, (err) => {
                     callback(err);
                 });
             } else if (op === 'remove') {
@@ -148,7 +149,7 @@ const Security = class Security {
                         }
                     }
                 };
-                System.updateOne(criteria, (err) => {
+                system.updateOne(criteria, (err) => {
                     callback(err);
                 });
             }

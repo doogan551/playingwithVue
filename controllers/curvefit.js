@@ -5,7 +5,7 @@ let rtdTables = require('../lib/rtdTables.js');
 let utils = require('../helpers/utils.js');
 let CurveFit = new(require('../models/curvefit'))();
 
-// Checked
+// POSTMAN
 router.post('/getRTDRange', function (req, res, next) {
     let ranges = {};
     for (let prop in rtdTables) {
@@ -16,7 +16,7 @@ router.post('/getRTDRange', function (req, res, next) {
     }
     return utils.sendResponse(res, ranges);
 });
-// checked
+// POSTMAN
 router.post('/dofit', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -24,7 +24,7 @@ router.post('/dofit', function (req, res, next) {
     let callback = function (result) {
         return utils.sendResponse(res, result);
     };
-
+    console.log(data);
     CurveFit.doFit(data, callback);
 });
 

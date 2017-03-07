@@ -3,7 +3,7 @@ let router = express.Router();
 let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let Utilities = new(require('../models/utilities'))();
-// Checked
+// POSTMAN
 router.get('/', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;

@@ -8,8 +8,8 @@ let config = require('config');
 let Config = require('../public/js/lib/config.js');
 let scheduler = require('../helpers/scheduler');
 let utils = require('../helpers/utils');
-let Notifications = require('../models/notifications');
-let Point = new(require('../models/point'))();
+let notifications = require('../models/notifications');
+let Point = require('../models/point');
 let History = new(require('../models/history'))();
 let Schedule = new(require('../models/schedule'))();
 let Alarm = new(require('../models/alarm'))();
@@ -61,7 +61,6 @@ module.exports = model = function (_common) {
     };
 
     oplog.on('insert', function (doc) {
-        let notifications = new Notifications();
         let startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -117,6 +116,7 @@ module.exports = model = function (_common) {
     });
 
     oplog.on('update', function (doc) {
+        const point = new Point();
         let updateReliabilityFlag = false;
         let newReliability = null;
         if (doc.ns === dbName + '.points' && doc.o.$set !== undefined) {
@@ -142,7 +142,7 @@ module.exports = model = function (_common) {
 
             async.waterfall([
                 function (wfcb) {
-                    Point.getOne({
+                    point.getOne({
                         query: {
                             _id: doc.o2._id
                         },
@@ -399,6 +399,7 @@ function removeActiveAlarm(upi, callback) {
 }
 
 function updateFromTail(_id, value, reliability) {
+    const point = new Point();
     let updateObj = {
         $set: {}
     };
@@ -413,7 +414,7 @@ function updateFromTail(_id, value, reliability) {
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
 
-    Point.updateOne({
+    point.updateOne({
         query: {
             _id: _id
         },
@@ -478,6 +479,7 @@ function updateValsTail(point, finalCB) {
 }
 
 function getChangedVals(id, callback) {
+    const point = new Point();
     let fields = {
         Value: 1,
         'Alarm State': 1,
@@ -490,7 +492,7 @@ function getChangedVals(id, callback) {
         'Control Pending': 1,
         'Quality Code Enable': 1
     };
-    Point.getOne({
+    point.getOne({
         query: {
             _id: parseInt(id, 10)
         },

@@ -3,7 +3,7 @@ const fs = require('fs');
 const async = require('async');
 const _ = require('lodash');
 
-const Point = new(require('./point'))();
+const Point = require('./point');
 const utils = require('../helpers/utils.js');
 
 const forEach = (obj, fn) => {
@@ -24,12 +24,13 @@ const forEach = (obj, fn) => {
 
 const Toolbag = class Toolbag {
     getPoints(data, cb) {
+        const point = new Point();
         let criteria = {
             query: data,
             limit: 25 // g_limit
         };
 
-        Point.get(criteria, cb);
+        point.get(criteria, cb);
     }
     generateCppHeaderFile(data, cb) {
         // Override Config so we get the latest version - this allows us to generate a new C++ header file after making
@@ -522,6 +523,7 @@ const Toolbag = class Toolbag {
                 });
             },
             validatePoint = (pointTemplate, callback) => {
+                const point = new Point();
                 let criteria = {
                         query: {
                             _Name: pointTemplate._Name
@@ -532,7 +534,7 @@ const Toolbag = class Toolbag {
                         problems: []
                     };
 
-                Point.getOne(criteria, (err, point) => {
+                point.getOne(criteria, (err, point) => {
                     if (err) {
                         return callback(err);
                     }

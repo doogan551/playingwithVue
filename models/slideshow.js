@@ -1,11 +1,12 @@
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 const Slideshow = class Slideshow {
 
     get(data, cb) {
+        const point = new Point();
         let upi = parseInt(data.id, 10);
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: upi
             },

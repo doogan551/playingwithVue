@@ -17,7 +17,7 @@ let zmq = require('../helpers/zmq');
 let Alarm = new(require('../models/alarm'))();
 let ActivityLog = new(require('../models/activitylog'))();
 let ActiveAlarm = new(require('../models/activealarm'))();
-let Point = new(require('../models/point'))();
+let Point = require('../models/point');
 
 let controlPriorities = [];
 
@@ -72,6 +72,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('getRecentAlarms', function (data) {
+            const point = new Point();
             logger.debug('getRecentAlarms');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
@@ -85,7 +86,7 @@ module.exports = function socketio(_common) {
             }
             rooms.recentAlarms.views[socket.id] = data;
 
-            Point.getRecentAlarms(data, function (err, alarms, count) {
+            point.getRecentAlarms(data, function (err, alarms, count) {
                 sock.emit('recentAlarms', {
                     alarms: alarms,
                     count: count,
@@ -360,7 +361,7 @@ module.exports = function socketio(_common) {
             async.waterfall([
                 function (callback) {
                     async.mapSeries(data.adds, function (point, callback) {
-                        Point.addPoint({
+                        point.addPoint({
                             point: point
                         }, user, null, function (response, updatedPoint) {
                             callback(response.err, updatedPoint);
@@ -407,8 +408,9 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('addPoint', function (data) {
+            const point = new Point();
             logger.debug('addPoint');
-            Point.addPoint({
+            point.addPoint({
                 point: data.newPoint,
                 oldPoint: data.oldPoint,
                 path: data.path
@@ -523,6 +525,7 @@ module.exports = function socketio(_common) {
 };
 
 function getInitialVals(id, callback) {
+    const point = new Point();
     let fields = {
         Value: 1,
         Name: 1,
@@ -539,7 +542,7 @@ function getInitialVals(id, callback) {
         'Quality Code Enable': 1
     };
 
-    Point.getOne({
+    point.getOne({
         query: {
             _id: parseInt(id, 10)
         },
@@ -554,7 +557,8 @@ function getInitialVals(id, callback) {
 }
 
 function getBlockTypes(cb) {
-    Point.getAll({
+    const point = new Point();
+    point.getAll({
         query: {
             SequenceData: {
                 $exists: true
@@ -587,9 +591,10 @@ function getBlockTypes(cb) {
 }
 
 function doRefreshSequence(data, socket) {
+    const point = new Point();
     let _id = data.sequenceID;
 
-    Point.updateOne({
+    point.updateOne({
         query: {
             _id: _id
         },
@@ -606,6 +611,7 @@ function doRefreshSequence(data, socket) {
 }
 
 function doUpdateSequence(data, cb) {
+    const point = new Point();
     let name = data.sequenceName,
         sequenceData = data.sequenceData,
         pointRefs = data.pointRefs;
@@ -621,7 +627,7 @@ function doUpdateSequence(data, cb) {
 
     //         if(!err) {
 
-    Point.updateOne({
+    point.updateOne({
         query: {
             'Name': name
         },
@@ -730,6 +736,7 @@ function compileScript(data, callback) {
 }
 
 function updateSchedules(data, callback) {
+    const point = new Point();
     let oldPoints, updateScheds, newScheds, cancelScheds, hardScheds, schedule, oldPoint, user, options,
         devices = [],
         signalTOD = false,
@@ -772,11 +779,11 @@ function updateSchedules(data, callback) {
                     signalTOD = true;
                 }
                 if (updateSched['Host Schedule'].Value === false || oldPoint['Host Schedule'].Value === false) {
-                    Point.addToDevices(updateSched, devices, oldPoint);
+                    point.addToDevices(updateSched, devices, oldPoint);
                 }
 
                 if (!_.isEmpty(updateObj.$set)) {
-                    Point.updateOne({
+                    point.updateOne({
                         query: {
                             _id: updateSched._id
                         },
@@ -787,7 +794,7 @@ function updateSchedules(data, callback) {
                         }
 
                         ctrlPoint = Config.Utility.getPropertyObject('Control Point', updateSched);
-                        Point.getOne({
+                        point.getOne({
                             query: {
                                 _id: ctrlPoint.Value
                             }
@@ -816,7 +823,7 @@ function updateSchedules(data, callback) {
                 if (newSched['Host Schedule'].Value === true) {
                     signalTOD = true;
                 } else {
-                    Point.addToDevices(newSched, devices);
+                    point.addToDevices(newSched, devices);
                 }
                 options = {
                     from: 'updateSchedules',
@@ -830,7 +837,7 @@ function updateSchedules(data, callback) {
                     }
                 }
 
-                Point.addPoint({
+                point.addPoint({
                     point: newSched,
                     oldPoint: oldPoint
                 }, user, options, function (returnData) {
@@ -839,7 +846,7 @@ function updateSchedules(data, callback) {
                     }
 
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', newSched);
-                    Point.getOne({
+                    point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -863,7 +870,7 @@ function updateSchedules(data, callback) {
                     user: user
                 };
 
-                Point.deletePoint(cancelSched._id, 'hard', user, null, function (returnData) {
+                point.deletePoint(cancelSched._id, 'hard', user, null, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }
@@ -871,7 +878,7 @@ function updateSchedules(data, callback) {
                         return feCB(null);
                     }
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', cancelSched);
-                    Point.getOne({
+                    point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -901,10 +908,10 @@ function updateSchedules(data, callback) {
                 if (hardSched['Host Schedule'].Value === true) {
                     signalTOD = true;
                 } else {
-                    Point.addToDevices(hardSched, devices);
+                    point.addToDevices(hardSched, devices);
                 }
 
-                Point.deletePoint(hardSched._id, 'hard', user, options, function (returnData) {
+                point.deletePoint(hardSched._id, 'hard', user, options, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }
@@ -913,7 +920,7 @@ function updateSchedules(data, callback) {
                     }
 
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', hardSched);
-                    Point.getOne({
+                    point.getOne({
                         query: {
                             _id: ctrlPoint.Value
                         }
@@ -931,11 +938,11 @@ function updateSchedules(data, callback) {
             });
         }
     ], function (err) {
-        Point.signalHostTOD(signalTOD, function (err) {
+        point.signalHostTOD(signalTOD, function (err) {
             if (err) {
                 return callback(err);
             }
-            Point.updateDeviceToDs(devices, function (err) {
+            point.updateDeviceToDs(devices, function (err) {
                 return callback((err !== null) ? err : 'success');
             });
         });
@@ -943,17 +950,18 @@ function updateSchedules(data, callback) {
 }
 
 function getScheduleEntries(data, callback) {
+    const point = new Point();
     let isSchedule = data.isSchedule,
         upi = data.upi;
 
     if (isSchedule) {
-        Point.getAll({
+        point.getAll({
             query: {
                 'Point Type.Value': 'Schedule Entry'
             }
         }, callback);
     } else {
-        Point.getAll({
+        point.getAll({
             query: {
                 'Point Type.Value': 'Schedule Entry',
                 'Point Refs': {
@@ -968,6 +976,7 @@ function getScheduleEntries(data, callback) {
 }
 
 function checkProperties(data, callback) {
+    const point = new Point();
     // Override Config so we get the latest version - this allows us to see the affects of changes to our enumsTemplates.json file
     // without having to restart the server
     let _Config = require('../public/js/lib/config.js');
@@ -1009,7 +1018,7 @@ function checkProperties(data, callback) {
     data.errMsg = '';
 
     if (template !== undefined) {
-        Point.iterateCursor({
+        point.iterateCursor({
             query: {
                 'Point Type.Value': data.pointType
             }

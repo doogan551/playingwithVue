@@ -83,6 +83,10 @@ const Common = class Common extends Utility {
         return def;
     }
 
+    getNumber(val) {
+        return parseFloat(val);
+    }
+
     getSort(val) {
         if (!!~['desc', -1, '-1'].indexOf(val)) {
             return -1;
@@ -98,7 +102,7 @@ const Common = class Common extends Utility {
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);
-        let endDate = (this.getInt(data.endDate) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+        let endDate = (this.getNumber(data.endDate) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
         let sort = {};
         let query = {};
 

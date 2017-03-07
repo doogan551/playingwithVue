@@ -13,4 +13,4 @@ rename holiday collection or calendar model
 split out model functionality (Point -> System -> Point)
 
 add default log text to Activity Logs enumset
-testing
+move all requires to bottom and new () to inside methods (models, controllers, and sockets)

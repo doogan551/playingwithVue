@@ -1,8 +1,9 @@
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 const Sequence = class Sequence {
 
     getBlockTypes(cb) {
+        const point = new Point();
         let criteria = {
             query: {
                 SequenceData: {
@@ -14,7 +15,7 @@ const Sequence = class Sequence {
             }
         };
 
-        Point.get(criteria, (err, results) => {
+        point.get(criteria, (err, results) => {
             let c;
             let cc;
             let len = results.length;
@@ -38,6 +39,7 @@ const Sequence = class Sequence {
     }
 
     doRefreshSequence(data) {
+        const point = new Point();
         let _id = data.sequenceID;
         let criteria = {
             query: {
@@ -50,7 +52,7 @@ const Sequence = class Sequence {
             }
         };
 
-        Point.updateOne(criteria, (err) => {
+        point.updateOne(criteria, (err) => {
             if (err) {
                 // log it!
             }
@@ -58,6 +60,7 @@ const Sequence = class Sequence {
     }
 
     doUpdateSequence(data, cb) {
+        const point = new Point();
         let name = data.sequenceName;
         let sequenceData = data.sequenceData;
         let criteria = {
@@ -71,7 +74,7 @@ const Sequence = class Sequence {
             }
         };
 
-        Point.updateOne(criteria, (err) => {
+        point.updateOne(criteria, (err) => {
             if (err) {
                 cb('Error: ' + err.err);
             } else {

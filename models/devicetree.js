@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
-const Point = new(require('./point'))();
-const System = new(require('./system'))();
+const Point = require('./point');
+const System = require('./system');
 
 const validPortProtocols = [1, 4];
 const validEthProtocols = [1];
@@ -31,7 +31,8 @@ const DeviceTree = class DeviceTree {
     // Gets devices to build device tree //
     ///////////////////////////////////////
     getDevices(callback) {
-        Point.iterateCursor({
+        const point = new Point();
+        point.iterateCursor({
             query: {
                 'Point Type.Value': 'Device'
             },
@@ -231,7 +232,8 @@ const DeviceTree = class DeviceTree {
     // puts default network segment at top of list //
     /////////////////////////////////////////////////
     sortTree(next) {
-        System.getSystemInfoByName('Preferences', (err, syspref) => {
+        const system = new System();
+        system.getSystemInfoByName('Preferences', (err, syspref) => {
             let serverNetwork = syspref['IP Network Segment'];
             this.tree.sort(this.compare);
             for (let i = 0; i < this.tree.length; i++) {

@@ -5,18 +5,7 @@ const utils = require('../helpers/utils');
 const logger = require('../helpers/logger')(module);
 const Common = require('./common');
 const Config = require('../public/js/lib/config.js');
-const ActivityLog = new(require('./activitylog'))();
-const AlarmDefs = new(require('./alarmdefs'))();
-const History = new(require('./history'))();
-const Schedule = new(require('./schedule'))();
-const Security = require('./security');
-const Script = new(require('./scripts'))();
-const System = require('./system');
-const Upi = new(require('./upi'))();
 const ZMQ = require('../helpers/zmq');
-
-
-const system = new System();
 
 const READ = utils.CONSTANTS('READ');
 const ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
@@ -660,6 +649,9 @@ const Point = class Point extends Common {
         }, cb);
     }
     initPoint(data, cb) {
+        const alarmDefs = new AlarmDefs();
+        const system = new System();
+        const upi = new Upi();
         let criteria = {};
 
         let name1 = data.name1;
@@ -698,7 +690,7 @@ const Point = class Point extends Common {
                 }
 
                 system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    Upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
+                    upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
                         if (err) {
                             return callback(err);
                         }
@@ -862,7 +854,7 @@ const Point = class Point extends Common {
 
                     template._parentUpi = parentUpi;
 
-                    AlarmDefs.getSystemAlarms((err, alarmDefs) => {
+                    alarmDefs.getSystemAlarms((err, alarmDefs) => {
                         if (err) {
                             return callback(err);
                         }
@@ -1113,6 +1105,7 @@ const Point = class Point extends Common {
     //io, updateSequencePoints, runScheduleEntry(tcp), updateDependencies
     newUpdate(oldPoint, newPoint, flags, user, callback) {
         const security = new Security();
+        const script = new Script();
         let generateActivityLog = false,
             updateReferences = false,
             updateModelType = false,
@@ -1198,7 +1191,7 @@ const Point = class Point extends Common {
             }
 
             if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
-                Script.commitScript({
+                script.commitScript({
                     point: newPoint,
                     path: flags.path
                 }, (response) => {
@@ -1577,7 +1570,7 @@ const Point = class Point extends Common {
                                 case 'Integer Register Names':
                                 case 'Point Register Names':
                                 case 'Real Register Names':
-                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Script.enum) {
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].script.enum) {
                                         downloadPoint = true;
                                     }
                                     break;
@@ -2301,6 +2294,7 @@ const Point = class Point extends Common {
     }
 
     restorePoint(upi, user, callback) {
+        const activityLog = new ActivityLog();
         let logData = {
                 user: user,
                 timestamp: Date.now()
@@ -2330,7 +2324,7 @@ const Point = class Point extends Common {
             logData.activity = 'Point Restore';
             logData.log = 'Point restored';
             logData.point = point;
-            ActivityLog.create(logData, (err, result) => {
+            activityLog.create(logData, (err, result) => {
                 pointType = point['Point Type'].Value;
                 switch (pointType) {
                     case 'Schedule':
@@ -2423,6 +2417,9 @@ const Point = class Point extends Common {
 
     //updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
     deletePoint(upi, method, user, options, callback) {
+        const activityLog = new ActivityLog();
+        const history = new History();
+        const schedule = new Schedule();
         let _point,
             _updateFromSchedule = !!options && options.from === 'updateSchedules',
             _upi = parseInt(upi, 10),
@@ -2498,7 +2495,7 @@ const Point = class Point extends Common {
                     return cb(null);
                 }
 
-                Upi.deleteUpi(_upi, (err, result) => {
+                upi.deleteUpi(_upi, (err, result) => {
                     if (err) {
                         _buildWarning('could not update the UPI collection');
                     }
@@ -2510,7 +2507,7 @@ const Point = class Point extends Common {
                 if (method === 'soft') {
                     return cb(null);
                 }
-                History.remove({
+                history.remove({
                     upi: _upi
                 }, (err, result) => {
                     if (err) {
@@ -2539,7 +2536,7 @@ const Point = class Point extends Common {
                     _logData.log = 'Point deleted';
                 }
                 _logData.point = _point;
-                ActivityLog.create(_logData, (err, result) => {
+                activityLog.create(_logData, (err, result) => {
                     if (err) {
                         _buildWarning('could not create activity log');
                     }
@@ -2578,9 +2575,9 @@ const Point = class Point extends Common {
             },
             _updateRelatedSchedule = (cb) => {
                 if (method === 'hard') {
-                    Schedule.remove(upi, cb);
+                    schedule.remove(upi, cb);
                 } else {
-                    Schedule.disable(upi, cb);
+                    schedule.disable(upi, cb);
                 }
             },
             executeFunctions = [_findPoint, _deletePoint, _updateUpis, _deleteHistory, _fromScheduleExitCheck, _addActivityLog,
@@ -2728,6 +2725,7 @@ const Point = class Point extends Common {
     }
 
     addPoint(data, user, options, callback) {
+        const activityLog = new ActivityLog();
         let point = data.point;
         let logData = {
             user: user,
@@ -2766,7 +2764,7 @@ const Point = class Point extends Common {
                     point._id = searchQuery._id;
                     logData.point._id = searchQuery._id;
                     if (!options || (!!options && options.from !== 'updateSchedules')) {
-                        ActivityLog.create(logData, (err, result) => {});
+                        activityLog.create(logData, (err, result) => {});
                     }
 
                     if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
@@ -2994,3 +2992,12 @@ const Point = class Point extends Common {
 };
 
 module.exports = Point;
+
+const System = require('./system');
+const ActivityLog = require('./activitylog');
+const AlarmDefs = require('./alarmdefs');
+const History = require('./history');
+const Schedule = require('./schedule');
+const Security = require('./security');
+const Script = require('./scripts');
+const Upi = require('./upi');

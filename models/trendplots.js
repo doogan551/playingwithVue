@@ -1,8 +1,9 @@
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 const TrendPlots = class TrendPlots {
 
     getPoints(data, cb) {
+        const point = new Point();
         let DAY = 60 * 60 * 24;
         let upi = +data.id;
         let days = +data.numDays;
@@ -23,7 +24,7 @@ const TrendPlots = class TrendPlots {
             }
         };
 
-        Point.getAll(criteria, (err, results) => {
+        point.getAll(criteria, (err, results) => {
             let c = results.length;
             let ret = [];
             let row;
@@ -51,6 +52,7 @@ const TrendPlots = class TrendPlots {
     }
 
     getData(list, cb) {
+        const point = new Point();
         if (list) {
             let criteria = {
                 query: {
@@ -67,7 +69,7 @@ const TrendPlots = class TrendPlots {
                 }
             };
 
-            Point.getAll(criteria, cb);
+            point.getAll(criteria, cb);
         } else {
             cb(null, []);
         }

@@ -9,14 +9,13 @@ router.post('/getDisplayInfo', function (req, res, next) {
     data.user = req.user;
 
     Display.getDisplayInfo(data, function (err, info) {
-    if (err) {
-return utils.sendResponse(res, {
-    err: err
-});
-} 
-			return utils.sendResponse(res, info);
-		
-});
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        return utils.sendResponse(res, info);
+    });
 });
 // Checked
 router.get('/edit/:upoint', function (req, res, next) {
@@ -24,14 +23,13 @@ router.get('/edit/:upoint', function (req, res, next) {
     data.user = req.user;
 
     Display.editDisplay(data, function (err, result) {
-    if (err) {
-return utils.sendResponse(res, {
-    err: err
-});
-} 
-			res.render('displays/edit.pug', result);
-		
-});
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        res.render('displays/edit.pug', result);
+    });
 });
 // Checked
 router.get('/gifs/:fname', function (req, res, next) {
@@ -39,12 +37,12 @@ router.get('/gifs/:fname', function (req, res, next) {
     data.user = req.user;
 
     Display.displayGif(data, function (err, result) {
-    if (err) {
-    res.status(404).end();
-} else {
-    res.end(result, 'binary');
-}
-});
+        if (err) {
+            res.status(404).end();
+        } else {
+            res.end(result, 'binary');
+        }
+    });
 });
 // NOT CHECKED
 router.get('/gifs/:fname/:frame', function (req, res, next) {
@@ -52,18 +50,18 @@ router.get('/gifs/:fname/:frame', function (req, res, next) {
     data.user = req.user;
 
     Display.displayGif(data, function (err, result) {
-    if (err) {
-    res.status(404).end();
-} else {
-    res.end(result, 'binary');
-}
-});
+        if (err) {
+            res.status(404).end();
+        } else {
+            res.end(result, 'binary');
+        }
+    });
 });
 // Checked
 router.get('/view/:upoint', function (req, res, next) {
     res.render('displays/view.pug', {
-    upi: req.params.upoint
-});
+        upi: req.params.upoint
+    });
 });
 // NOT CHECKED
 router.get('/preview/:upoint', function (req, res, next) {
@@ -71,12 +69,11 @@ router.get('/preview/:upoint', function (req, res, next) {
     data.user = req.user;
 
     Display.previewDisplay(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.render('displays/preview.pug', result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/preview.pug', result);
+    });
 });
 // NOT CHECKED
 router.get('/view/:upoint/:dispId', function (req, res, next) {
@@ -85,7 +82,7 @@ router.get('/view/:upoint/:dispId', function (req, res, next) {
 
     Display.viewDisplay(data, function (err, result) {
 
-});
+    });
 });
 // NOT CHECKED
 router.get('/upiname/:upi', function (req, res, next) {
@@ -93,12 +90,11 @@ router.get('/upiname/:upi', function (req, res, next) {
     data.user = req.user;
 
     Display.getName(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.send(result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // Checked
 router.post('/later', function (req, res, next) {
@@ -106,12 +102,11 @@ router.post('/later', function (req, res, next) {
     data.user = req.user;
 
     Display.saveLater(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.send(result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // Checked
 router.post('/publish', function (req, res, next) {
@@ -120,12 +115,11 @@ router.post('/publish', function (req, res, next) {
     data.files = req.files;
 
     Display.publish(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.send(result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // NOT CHECKED
 router.get('/browse', function (req, res, next) {
@@ -133,12 +127,11 @@ router.get('/browse', function (req, res, next) {
     data.user = req.user;
 
     Display.browse(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.render('displays/browse.pug', result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/browse.pug', result);
+    });
 });
 // NOT CHECKED
 router.get('/browse2', function (req, res, next) {
@@ -146,12 +139,11 @@ router.get('/browse2', function (req, res, next) {
     data.user = req.user;
 
     Display.browse2(data, function (err, result) {
-    if (err) {
-    return res.send(err);
-} 
-			return res.render('displays/browse2.pug', result);
-		
-});
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/browse2.pug', result);
+    });
 });
 // NOT CHECKED
 router.get('/listassets', function (req, res, next) {
@@ -159,14 +151,13 @@ router.get('/listassets', function (req, res, next) {
     data.user = req.user;
 
     Display.listAssets(data, function (err, result) {
-    if (err) {
-return utils.sendResponse(res, {
-    err: err
-});
-} 
-			return utils.sendResponse(res, result);
-		
-});
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        return utils.sendResponse(res, result);
+    });
 });
 //router.get('/import', controllers.import.index);
 //router.get('/test', controllers.import.start);
@@ -176,8 +167,8 @@ return utils.sendResponse(res, {
 router.get('/trend', function (req, res, next) {
     let pars = req.query;
     res.render('displays/plot.pug',
-		pars
-	);
+        pars
+    );
 });
 // router.get('/displays/plot', controllers.displays.plot);
 // router.get('/displays/plot64', controllers.displays.plot64);

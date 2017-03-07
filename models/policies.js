@@ -6,7 +6,7 @@ const logger = require('../helpers/logger')(module);
 const notifications = require('./notifications');
 const NotifyPolicies = new(require('./notifypolicies'))();
 const NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 
 const Policies = class Policies {
@@ -124,6 +124,7 @@ const Policies = class Policies {
     }
 
     delete(data, cb) {
+        const point = new Point();
         let criteria = {
             query: {
                 _id: data._id
@@ -143,7 +144,7 @@ const Policies = class Policies {
                     }
                 }
             };
-            Point.updateOne(criteria, cb);
+            point.updateOne(criteria, cb);
         };
         NotifyPolicies.remove(criteria, updatePoints);
     }

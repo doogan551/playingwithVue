@@ -1,12 +1,13 @@
 const fs = require('fs');
 
-const Point = new(require('./point'))();
+const Point = require('./point');
 
 const Thumbnails = class Thumbnails {
     batch(data, cb) {
+        const point = new Point();
         let locallets = {};
 
-        Point.getAll({
+        point.getAll({
             query: {
                 _pStatus: 0,
                 $or: [{
@@ -53,9 +54,10 @@ const Thumbnails = class Thumbnails {
         });
     }
     one(data, cb) {
+        const point = new Point();
         let locallets = {};
 
-        Point.getOne({
+        point.getOne({
             query: {
                 _id: parseInt(data.id, 10)
             },

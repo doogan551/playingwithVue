@@ -1388,7 +1388,7 @@ const History = class History extends Common {
         // keeping in case mongo.drop and ensureIndex function needs to be added later
         cb();
     }
-    getUsage(data, cb) {
+    getUsageStart(data, cb) {
         let callback = (err, results) => {
             results = this.unbuildOps(results);
 

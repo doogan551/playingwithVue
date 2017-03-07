@@ -1,15 +1,16 @@
 let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
-let Point = new(require('../models/point'))();
+let Point = require('../models/point');
 let utils = require('../helpers/utils.js');
 
 // Checked
 router.post('/globalSearch', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Point.globalSearch(data, function (err, points, count) {
+    point.globalSearch(data, function (err, points, count) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err,
@@ -26,10 +27,11 @@ router.post('/globalSearch', function (req, res) {
 
 // Checked (JDR)
 router.post('/getDistinctValues', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Point.getDistinctValuesTemp(data, function (err, distinctValues) {
+    point.getDistinctValuesTemp(data, function (err, distinctValues) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -41,10 +43,11 @@ router.post('/getDistinctValues', function (req, res) {
 
 // Checked
 router.get('/newpoint', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.newPoint(data, function (err, locals) {
+    point.newPoint(data, function (err, locals) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -55,10 +58,11 @@ router.get('/newpoint', function (req, res) {
 });
 // NOT CHECKED - couldn't get context menu for clone to stay open
 router.get('/newpoint/:id', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.newPoint(data, function (err, locals) {
+    point.newPoint(data, function (err, locals) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -69,10 +73,11 @@ router.get('/newpoint/:id', function (req, res) {
 });
 // NOT CHECKED
 router.get('/newpoint/restrictTo/:pointType', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.newPoint(data, function (err, locals) {
+    point.newPoint(data, function (err, locals) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -83,10 +88,11 @@ router.get('/newpoint/restrictTo/:pointType', function (req, res) {
 });
 // Checked
 router.post('/search', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.search(data, function (err, points) {
+    point.search(data, function (err, points) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -98,10 +104,11 @@ router.post('/search', function (req, res) {
 // Checked
 // TODO - change routes to remove '2'
 router.get('/searchdependencies/:upi', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.searchDependencies(data, function (err, result) {
+    point.searchDependencies(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -114,10 +121,11 @@ router.get('/searchdependencies/:upi', function (req, res) {
 });
 // NOT CHECKED
 router.post('/getnames', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.getNames(data, function (err, results) {
+    point.getNames(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -128,10 +136,11 @@ router.post('/getnames', function (req, res) {
 });
 // NOT CHECKED
 router.post('/getpoint', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.getPoint(data, function (err, point) {
+    point.getPoint(data, function (err, point) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -142,10 +151,11 @@ router.post('/getpoint', function (req, res) {
 });
 // Checked
 router.post('/initpoint', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.initPoint(data, function (err, point) {
+    point.initPoint(data, function (err, point) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -156,10 +166,11 @@ router.post('/initpoint', function (req, res) {
 });
 // Checked
 router.get('/getpointref/small/:upi', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.getPointRefsSmall(data, function (err, message, point) {
+    point.getPointRefsSmall(data, function (err, message, point) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -175,10 +186,11 @@ router.get('/getpointref/small/:upi', function (req, res) {
 });
 // New
 router.get('/getpointref/instance/:upi/:device', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.getPointRefsInstance(data, function (err, message, point) {
+    point.getPointRefsInstance(data, function (err, message, point) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -194,12 +206,13 @@ router.get('/getpointref/instance/:upi/:device', function (req, res) {
 });
 // Checked
 router.post('/findalarmdisplays', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
     let reqId = parseInt(data.reqID, 10);
 
-    Point.findAlarmDisplays(data, function (err, displays) {
+    point.findAlarmDisplays(data, function (err, displays) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err,
@@ -214,10 +227,11 @@ router.post('/findalarmdisplays', function (req, res) {
 });
 
 router.post('/getcontrols', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    Point.getControls(data, function (err, data) {
+    point.getControls(data, function (err, data) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -228,10 +242,11 @@ router.post('/getcontrols', function (req, res) {
 });
 // Checked
 router.get('/:id', function (req, res) {
+    const point = new Point();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Point.getPointById(data, function (err, message, point) {
+    point.getPointById(data, function (err, message, point) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

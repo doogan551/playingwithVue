@@ -4,7 +4,7 @@ let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let DeviceTree = new(require('../models/devicetree'))();
 
-// Checked
+// POSTMAN
 router.get('/gettree', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
