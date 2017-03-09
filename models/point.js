@@ -395,6 +395,7 @@ const Point = class Point extends Common {
                     };
                 }
             } else {
+                console.log(searchTerm);
                 query._Name = {
                     $regex: utils.getRegex(searchTerm.expression.toLowerCase())
                 };

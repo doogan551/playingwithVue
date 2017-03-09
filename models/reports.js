@@ -5,18 +5,6 @@ const moment = require('moment');
 const ObjectID = require('mongodb').ObjectID;
 const config = require('config');
 
-const utils = require('../helpers/utils.js');
-const Config = require('../public/js/lib/config');
-const logger = require('../helpers/logger')(module);
-const PageRender = new(require('./pagerender'))();
-const Mailer = new(require('./mailer'))();
-const Schedule = require('./schedule');
-const History = new(require('./history'))();
-const Point = require('./point');
-const User = new(require('./user'))();
-const ActivityLog = new(require('./activitylog'))();
-
-
 const Report = class Report {
     saveSVG(data, cb) {
         const point = new Point();
@@ -40,6 +28,7 @@ const Report = class Report {
         });
     }
     saveReport(data, cb) {
+        const activityLog = new ActivityLog();
         const point = new Point();
         data['Point Type'] = {
             eValue: Config.Enums['Point Types'].Report.enum
@@ -71,7 +60,7 @@ const Report = class Report {
         };
 
         point.updateOne(criteria, (err, result) => {
-            ActivityLog.create(logData, (err, result) => {
+            activityLog.create(logData, (err, result) => {
                 if (!err) {
                     return cb(err, {
                         data: 'Report has been saved successfully!!!'
@@ -93,6 +82,7 @@ const Report = class Report {
         });
     }
     historyDataSearch(data, cb) {
+        const history = new History();
         const point = new Point();
         let reportConfig = data.reportConfig,
             checkForOldest = {},
@@ -174,11 +164,11 @@ const Report = class Report {
                     timestamp: -1
                 }
             };
-            History.getAll(criteria, (err, histPoints) => {
+            history.getAll(criteria, (err, histPoints) => {
                 if (err) {
                     return cb(err, null);
                 }
-                History.findHistory({
+                history.findHistory({
                     upis: justUpis,
                     range: {
                         start: startTime,
@@ -245,12 +235,12 @@ const Report = class Report {
                                         },
                                         limit: 1
                                     };
-                                    History.getAll(criteria, (err, nextOldest) => {
+                                    history.getAll(criteria, (err, nextOldest) => {
                                         if (!!err) {
                                             return callback2(err);
                                         }
 
-                                        History.findLatest({
+                                        history.findLatest({
                                             upis: [upi],
                                             range: {
                                                 end: ts
@@ -496,7 +486,7 @@ const Report = class Report {
             });
         }
         // this is weird. change it to be nested instead of relying on flags in handlResults()
-        point.getPointById(reportCriteria, (err, result) => {
+        point.getPointById(reportCriteria.data, (err, message, result) => {
             if (err) {
                 return cb(err);
             }
@@ -511,7 +501,7 @@ const Report = class Report {
                 reportRequestComplete = true;
                 handleResults();
             } else {
-                return cb(); // error
+                return cb(message); // error
             }
         });
     }
@@ -585,7 +575,7 @@ const Report = class Report {
         }
 
         if (filters && filters.length > 0) {
-            searchCriteria.$and.push(Report.collectFilters(filters, pointRefs));
+            searchCriteria.$and.push(this.collectFilters(filters, pointRefs));
         }
 
         if (sort) {
@@ -604,6 +594,7 @@ const Report = class Report {
             limit: returnLimit,
             fields: fields
         };
+        console.log(JSON.stringify(criteria));
         point.getAll(criteria, (err, docs) => {
             if (err) {
                 return cb(err);
@@ -1077,12 +1068,12 @@ const Report = class Report {
                 limit: 1
             };
 
-            History.getAll(criteria, (err, initial) => {
+            history.getAll(criteria, (err, initial) => {
                 callback(err, point, initial[0]);
             });
         };
         let getInitialDataSql = (point, initial, callback) => {
-            History.findLatest({
+            history.findLatest({
                 upis: [point.upi],
                 range: { // range object gets overwritten in  pass new ob=> j
                     end: range.start
@@ -1111,14 +1102,14 @@ const Report = class Report {
                 }
             };
 
-            History.getAll(criteria, (err, history) => {
+            history.getAll(criteria, (err, history) => {
                 callback(null, point, initial, history);
             });
         };
         let getRangeDataSql = (point, initial, history, callback) => {
             let exists = false;
 
-            History.findHistory({
+            history.findHistory({
                 upis: [point.upi],
                 range: {
                     start: range.start,
@@ -1167,7 +1158,10 @@ const Report = class Report {
         });
     }
     scheduledReport(data, cb) {
+        const mailer = new Mailer();
+        const pageRender = new PageRender();
         const point = new Point();
+        const user = new User();
         let domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
         let schedule = data.schedule;
         let upi = schedule.upi;
@@ -1189,9 +1183,9 @@ const Report = class Report {
                 let date = moment().format('YYYY-MM-DD');
                 let path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
                 let uri = [domain, '/scheduleloader/report/scheduled/', upi, '?scheduleID=', schedule._id].join('');
-                PageRender.renderPage(uri, path, (err) => {
+                pageRender.renderPage(uri, path, (err) => {
                     fs.readFile(path, (err, data) => {
-                        User.iterateCursor({
+                        user.iterateCursor({
                             query: {
                                 _id: {
                                     $in: users
@@ -1208,7 +1202,7 @@ const Report = class Report {
                             nextUser();
                         }, (err, count) => {
                             emails = emails.concat(schedule.emails).join(',');
-                            Mailer.sendEmail({
+                            mailer.sendEmail({
                                 to: emails,
                                 fromAccount: 'infoscan',
                                 subject: [reportName, ' for ', date].join(''),
@@ -1269,3 +1263,13 @@ const Report = class Report {
 };
 
 module.exports = Report;
+const utils = require('../helpers/utils.js');
+const Config = require('../public/js/lib/config');
+const logger = require('../helpers/logger')(module);
+const PageRender = require('./pagerender');
+const Mailer = require('./mailer');
+const Schedule = require('./schedule');
+const History = require('./history');
+const Point = require('./point');
+const User = require('./user');
+const ActivityLog = require('./activitylog');

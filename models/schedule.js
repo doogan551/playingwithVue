@@ -2,7 +2,6 @@ const async = require('async');
 const ObjectID = require('mongodb').ObjectID;
 
 const Common = require('./common');
-const Reports = require('./reports');
 const utils = require('../helpers/utils');
 
 const schedulesCollection = utils.CONSTANTS('schedulesCollection');
@@ -126,6 +125,7 @@ const Schedule = class Schedule extends Common {
         async.eachSeries(data.schedules, this.processSchedule, callback);
     }
     runSchedule(data, callback) {
+        const reports = new Reports();
         this.getOne({
             query: {
                 _id: ObjectID(data._id)
@@ -134,7 +134,7 @@ const Schedule = class Schedule extends Common {
             data.schedule = schedule;
             switch (data.schedule.type) {
                 case 1:
-                    return Reports.scheduledReport(data, callback);
+                    return reports.scheduledReport(data, callback);
                 default:
                     return callback();
             }
@@ -163,3 +163,4 @@ const Schedule = class Schedule extends Common {
 
 
 module.exports = Schedule;
+const Reports = require('./reports');

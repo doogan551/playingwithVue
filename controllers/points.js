@@ -4,12 +4,12 @@ let _ = require('lodash');
 let Point = require('../models/point');
 let utils = require('../helpers/utils.js');
 
-// Checked
+// POSTMAN - broken?
 router.post('/globalSearch', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
-
+    console.log(data);
     point.globalSearch(data, function (err, points, count) {
         if (err) {
             return utils.sendResponse(res, {
@@ -25,7 +25,7 @@ router.post('/globalSearch', function (req, res) {
     });
 });
 
-// Checked (JDR)
+// POSTMAN
 router.post('/getDistinctValues', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body);
@@ -86,7 +86,7 @@ router.get('/newpoint/restrictTo/:pointType', function (req, res) {
         res.render('pointlookup/newPoint', locals);
     });
 });
-// Checked
+// POSTMAN
 router.post('/search', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -102,7 +102,6 @@ router.post('/search', function (req, res) {
     });
 });
 // Checked
-// TODO - change routes to remove '2'
 router.get('/searchdependencies/:upi', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -119,7 +118,7 @@ router.get('/searchdependencies/:upi', function (req, res) {
         });
     });
 });
-// NOT CHECKED
+// POSTMAN
 router.post('/getnames', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -149,7 +148,7 @@ router.post('/getpoint', function (req, res) {
         return utils.sendResponse(res, point);
     });
 });
-// Checked
+// POSTMAN
 router.post('/initpoint', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -164,7 +163,7 @@ router.post('/initpoint', function (req, res) {
         return utils.sendResponse(res, point);
     });
 });
-// Checked
+// POSTMAN
 router.get('/getpointref/small/:upi', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -184,7 +183,7 @@ router.get('/getpointref/small/:upi', function (req, res) {
         return utils.sendResponse(res, point);
     });
 });
-// New
+// POSTMAN
 router.get('/getpointref/instance/:upi/:device', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -204,7 +203,7 @@ router.get('/getpointref/instance/:upi/:device', function (req, res) {
         return utils.sendResponse(res, point);
     });
 });
-// Checked
+// POSTMAN
 router.post('/findalarmdisplays', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -225,7 +224,7 @@ router.post('/findalarmdisplays', function (req, res) {
         });
     });
 });
-
+// POSTMAN
 router.post('/getcontrols', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body, req.query);
@@ -240,7 +239,7 @@ router.post('/getcontrols', function (req, res) {
         return utils.sendResponse(res, data);
     });
 });
-// Checked
+// POSTMAN
 router.get('/:id', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body);

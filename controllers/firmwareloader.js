@@ -6,7 +6,7 @@ let utils = require('../helpers/utils.js');
 let Firmware = new(require('../models/firmware'))();
 let Point = require('../models/point');
 
-// Checked
+// POSTMAN
 router.get('/get/:model', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -23,7 +23,7 @@ router.get('/get/:model', function (req, res, next) {
         });
     });
 });
-// NOT CHECKED - not used?
+// POSTMAN
 router.get('/getRemoteUnits', function (req, res, next) {
     const point = new Point();
     let data = _.merge(req.params, req.body);

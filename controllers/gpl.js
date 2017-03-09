@@ -4,7 +4,7 @@ let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let GPL = new(require('../models/gpl'))();
 
-// Checked
+// POSTMAN
 router.get('/view/:upoint', function (req, res, next) {
     let upi = parseInt(req.params.upoint, 10),
         cbCount = 0,
@@ -43,7 +43,7 @@ router.get('/view/:upoint', function (req, res, next) {
         upi: upi
     }, processGpl);
 });
-// Checked
+// POSTMAN
 router.get('/edit/:upoint', function (req, res, next) {
     let upi = parseInt(req.params.upoint, 10),
         cbCount = 0,
@@ -80,7 +80,7 @@ router.get('/edit/:upoint', function (req, res, next) {
         upi: upi
     }, processGpl);
 });
-// NOT CHECKED
+// POSTMAN
 router.get('/getReferences/:upoint', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     let ret;

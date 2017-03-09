@@ -58,26 +58,12 @@ let scheduledReportCallback = function (res, err, locals, result) {
 };
 
 // NOT CHECKED
-router.get('/reportSearch', function (req, res, next) {
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
-
-    Reports.reportSearch(data, function (err, trends) {
-        if (err) {
-            return utils.sendResponse(res, {
-                err: err
-            });
-        }
-
-        return utils.sendResponse(res, trends);
-    });
-});
-// NOT CHECKED
 router.post('/saveSVG', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.saveSVG(data, function (err, trends) {
+    reports.saveSVG(data, function (err, trends) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -89,10 +75,11 @@ router.post('/saveSVG', function (req, res, next) {
 });
 // NOT CHECKED
 router.post('/saveReport', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.saveReport(data, function (err, trends) {
+    reports.saveReport(data, function (err, trends) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -104,10 +91,11 @@ router.post('/saveReport', function (req, res, next) {
 });
 // NOT CHECKED
 router.get('/getSVG/:id', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.getSVG(data, function (err, trends) {
+    reports.getSVG(data, function (err, trends) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -119,10 +107,11 @@ router.get('/getSVG/:id', function (req, res, next) {
 });
 // NOT CHECKED
 router.post('/reportSearch', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.reportSearch(data, function (err, trends) {
+    reports.reportSearch(data, function (err, trends) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -134,10 +123,11 @@ router.post('/reportSearch', function (req, res, next) {
 });
 // NOT CHECKED
 router.post('/historyDataSearch', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.historyDataSearch(data, function (err, results) {
+    reports.historyDataSearch(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -149,10 +139,11 @@ router.post('/historyDataSearch', function (req, res, next) {
 });
 // NOT CHECKED
 router.post('/totalizerReport', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.totalizerReport(data, function (err, trends) {
+    reports.totalizerReport(data, function (err, trends) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -164,31 +155,34 @@ router.post('/totalizerReport', function (req, res, next) {
 });
 // NOT CHECKED
 router.get('/:id', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.reportMain(data, function (err, locals, result) {
+    reports.reportMain(data, function (err, locals, result) {
         reportMainCallback(res, err, locals, result);
     });
 });
 // NOT CHECKED
 router.get('/view/:id', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Reports.reportMain(data, function (err, locals, result) {
+    reports.reportMain(data, function (err, locals, result) {
         reportMainCallback(res, err, locals, result);
     });
 });
 // NOT CHECKED
 router.get('/scheduled/:id', function (req, res, next) {
+    const reports = new Reports();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
     data.scheduled = true;
     data.scheduleID = req.query.scheduleID;
     data.scheduledIncludeChart = true; // this could be a passed param from scheduler
 
-    Reports.reportMain(data, function (err, locals, result) {
+    reports.reportMain(data, function (err, locals, result) {
         scheduledReportCallback(res, err, locals, result);
     });
 });

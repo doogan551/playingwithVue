@@ -6,7 +6,7 @@ let utils = require('../helpers/utils');
 let History = new(require('../models/history'))();
 let Point = require('../models/point');
 
-// NOT CHECKED
+// POSTMAN
 router.post('/getMeters', function (req, res, next) {
     const point = new Point();
     let data = _.merge(req.params, req.body);
@@ -23,7 +23,7 @@ router.post('/getMeters', function (req, res, next) {
         });
     });
 });
-// Checked
+// POSTMAN
 router.post('/getUsage', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -37,7 +37,7 @@ router.post('/getUsage', function (req, res, next) {
         return utils.sendResponse(res, results);
     });
 });
-// Checked
+// POSTMAN
 router.post('/getMissingMeters', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -51,7 +51,7 @@ router.post('/getMissingMeters', function (req, res, next) {
         return utils.sendResponse(res, results);
     });
 });
-// Checked
+// POSTMAN
 router.post('/editDatastore', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
