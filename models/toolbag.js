@@ -3,7 +3,6 @@ const fs = require('fs');
 const async = require('async');
 const _ = require('lodash');
 
-const Point = require('./point');
 const utils = require('../helpers/utils.js');
 
 const forEach = (obj, fn) => {
@@ -605,3 +604,4 @@ const Toolbag = class Toolbag {
 };
 
 module.exports = Toolbag;
+const Point = require('./point');

@@ -10,14 +10,8 @@ let config = require('config');
 // OTHERS
 let Config = require('../public/js/lib/config');
 let compiler = require('../helpers/scriptCompiler');
-let History = require('../models/history');
-let Common = new(require('../models/common'))();
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
-let Alarm = new(require('../models/alarm'))();
-let ActivityLog = new(require('../models/activitylog'))();
-let ActiveAlarm = new(require('../models/activealarm'))();
-let Point = require('../models/point');
 
 let controlPriorities = [];
 
@@ -96,6 +90,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('getUnacknowledged', function (data) {
+            const alarm = new Alarm();
             logger.debug('getUnacknowledged');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
@@ -108,7 +103,7 @@ module.exports = function socketio(_common) {
             }
             rooms.unacknowledged.views[socket.id] = data;
 
-            Alarm.getUnacknowledged(data, function (err, alarms, count) {
+            alarm.getUnacknowledged(data, function (err, alarms, count) {
                 sock.emit('unacknowledged', {
                     alarms: alarms,
                     count: count,
@@ -118,6 +113,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('getActiveAlarms', function (data) {
+            const activeAlarm = new ActiveAlarm();
             logger.debug('getActiveAlarms');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
@@ -130,7 +126,7 @@ module.exports = function socketio(_common) {
             }
             rooms.activeAlarms.views[socket.id] = data;
 
-            ActiveAlarm.getActiveAlarms(data, function (err, alarms, count) {
+            activeAlarm.getActiveAlarms(data, function (err, alarms, count) {
                 sock.emit('activeAlarms', {
                     alarms: alarms,
                     count: count,
@@ -140,12 +136,13 @@ module.exports = function socketio(_common) {
         });
         // NOT CHECKED - Broken front?
         sock.on('sendAcknowledge', function (data) {
+            const alarm = new Alarm();
             logger.debug('sendAcknowledge');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
 
-            Alarm.acknowledgeAlarm(data, function (err, result) {
+            alarm.acknowledgeAlarm(data, function (err, result) {
                 sock.emit('acknowledgeResponse', {
                     result: result.result.nModified,
                     reqID: data.reqID
@@ -154,6 +151,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('fieldCommand', function (data) {
+            const activityLog = new ActivityLog();
             logger.debug('fieldCommand');
             let jsonData = JSON.parse(data);
             let logData, i;
@@ -213,7 +211,7 @@ module.exports = function socketio(_common) {
             data = JSON.stringify(jsonData);
 
             if ([2, 7].indexOf(jsonData['Command Type']) > -1) {
-                ActivityLog.create(logData, function (err, result) {});
+                activityLog.create(logData, function (err, result) {});
             }
             logger.info('fieldCommand', data);
             zmq.sendCommand(data, function (err, msg) {
@@ -229,6 +227,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('firmwareLoader', function (data) {
+            const activityLog = new ActivityLog();
             logger.debug('firmwareLoader');
 
             let filePath,
@@ -261,7 +260,7 @@ module.exports = function socketio(_common) {
                     });
                 },
                 logMessage = function (logData) {
-                    ActivityLog.create(logData, function (err, result) {});
+                    activityLog.create(logData, function (err, result) {});
                 };
 
             if (data.uploadFile !== undefined) {
@@ -482,6 +481,7 @@ module.exports = function socketio(_common) {
         });
         // NOT CHECKED - just added
         sock.on('getUsage', function (data) {
+            const history = new History();
             let reqOptions = data.options;
 
             reqOptions.forEach(function (options) {
@@ -494,10 +494,10 @@ module.exports = function socketio(_common) {
                 return;
             });
 
-            reqOptions = History.buildOps(reqOptions);
+            reqOptions = history.buildOps(reqOptions);
 
-            History.getUsageCall(reqOptions, function (err, results) {
-                results = History.unbuildOps(results);
+            history.getUsageCall(reqOptions, function (err, results) {
+                results = history.unbuildOps(results);
                 sock.emit('returnUsage', {
                     err: err,
                     results: results
@@ -525,6 +525,7 @@ module.exports = function socketio(_common) {
 };
 
 function getInitialVals(id, callback) {
+    const commonModel = new Common();
     const point = new Point();
     let fields = {
         Value: 1,
@@ -549,7 +550,7 @@ function getInitialVals(id, callback) {
         fields: fields
     }, function (err, point) {
         if (point) {
-            point = Common.setQualityLabel(point);
+            point = commonModel.setQualityLabel(point);
         }
 
         callback(point);
@@ -648,7 +649,7 @@ function doUpdateSequence(data, cb) {
               activity: actLogsEnums["GPL Edit"].enum,
               log: "Sequence edited."
             };
-            ActivityLog.create(logData, function(err, result) {});*/
+            activityLog.create(logData, function(err, result) {});*/
             return cb('success');
         }
     });
@@ -736,6 +737,7 @@ function compileScript(data, callback) {
 }
 
 function updateSchedules(data, callback) {
+    const activityLog = new ActivityLog();
     const point = new Point();
     let oldPoints, updateScheds, newScheds, cancelScheds, hardScheds, schedule, oldPoint, user, options,
         devices = [],
@@ -802,7 +804,7 @@ function updateSchedules(data, callback) {
                             logData.point = point;
                             logData.activity = Config.Enums['Activity Logs']['Schedule Entry Edit'].enum;
                             logData.log = 'Schedule entry edited';
-                            ActivityLog.create(logData, function (err, result) {
+                            activityLog.create(logData, function (err, result) {
                                 feCB(err);
                             });
                         });
@@ -854,7 +856,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Add'].enum;
                         logData.log = 'Schedule entry added';
-                        ActivityLog.create(logData, function (err, result) {
+                        activityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -886,7 +888,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
                         logData.log = 'Schedule entry deleted';
-                        ActivityLog.create(logData, function (err, result) {
+                        activityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -928,7 +930,7 @@ function updateSchedules(data, callback) {
                         logData.point = point;
                         logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
                         logData.log = 'Schedule entry deleted';
-                        ActivityLog.create(logData, function (err, result) {
+                        activityLog.create(logData, function (err, result) {
                             feCB(err);
                         });
                     });
@@ -1193,3 +1195,10 @@ function checkProperties(data, callback) {
         callback(data); // Perform the callback
     }
 }
+
+let History = require('../models/history');
+let Common = require('../models/common');
+let Alarm = require('../models/alarm');
+let ActivityLog = require('../models/activitylog');
+let ActiveAlarm = require('../models/activealarm');
+let Point = require('../models/point');

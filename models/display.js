@@ -5,9 +5,9 @@ const gm = require('gm');
 const glob = require('glob');
 const ObjectID = require('mongodb').ObjectID;
 
-const ActivityLog = new(require('./activitylog'))();
-const Utility = new(require('./utility'))();
 const Config = require('../public/js/lib/config.js');
+// TODO Remove utility occurences when converted to class.
+const Utility = require('./utility');
 
 const actLogsEnums = Config.Enums['Activity Logs'];
 const pointsCollection = 'points';
@@ -269,6 +269,7 @@ module.exports = {
     },
 
     publish: function (data, cb) {
+        const activityLog = new ActivityLog();
         let dId,
             c,
             displayObject = JSON.parse(data.display),
@@ -324,7 +325,7 @@ module.exports = {
                     log: 'Display edited.'
                 };
 
-                ActivityLog.create(logData, function (err, result) {});
+                activityLog.create(logData, function (err, result) {});
 
                 console.log('display publish err', err);
                 console.log('displays: updated display');
@@ -527,3 +528,6 @@ let renderDisplay = function (data, currDisp, versions, cb) {
         });
     });
 };
+
+
+const ActivityLog = require('./activitylog');

@@ -14,3 +14,4 @@ split out model functionality (Point -> System -> Point)
 
 add default log text to Activity Logs enumset
 move all requires to bottom and new () to inside methods (models, controllers, and sockets)
+change class inits to abcModel

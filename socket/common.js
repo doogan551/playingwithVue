@@ -1,6 +1,4 @@
 // OTHERS
-let System = require('../models/system');
-
 let common = {
     sockets: require('../helpers/sockets.js')
 };
@@ -39,3 +37,5 @@ function sendUpdate(dynamic) {
         io.to(dynamic.upi).emit('recieveUpdate', dynamic);
     }
 }
+
+let System = require('../models/system');

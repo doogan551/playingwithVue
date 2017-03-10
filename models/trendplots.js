@@ -1,5 +1,3 @@
-const Point = require('./point');
-
 const TrendPlots = class TrendPlots {
 
     getPoints(data, cb) {
@@ -77,3 +75,4 @@ const TrendPlots = class TrendPlots {
 };
 
 module.exports = TrendPlots;
+const Point = require('./point');

@@ -1,8 +1,5 @@
 const ObjectID = require('mongodb').ObjectID;
 
-const UserGroup = new(require('./usergroup'))();
-const System = require('./system');
-
 const Security = class Security {
 
     calcPermissions(groups) {
@@ -17,6 +14,7 @@ const Security = class Security {
         return points;
     }
     getPermissions(user, cb) {
+        const userGroup = new UserGroup();
         if (!user || !!user['System Admin'].Value) {
             return cb(null, true);
         }
@@ -28,7 +26,7 @@ const Security = class Security {
             $exists: 1
         };
 
-        UserGroup.getAll({
+        userGroup.getAll({
             query: query
         }, (err, groups) => {
             if (err || !groups.length) {
@@ -158,3 +156,5 @@ const Security = class Security {
 };
 
 module.exports = Security;
+const UserGroup = require('./usergroup');
+const System = require('./system');

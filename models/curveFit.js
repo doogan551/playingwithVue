@@ -3,7 +3,6 @@
 
 const reg = require('regression');
 
-const Point = require('./point');
 const rtdTables = require('../lib/rtdTables');
 
 const CurveFit = class CurveFit {
@@ -227,6 +226,7 @@ const CurveFit = class CurveFit {
 };
 
 module.exports = CurveFit;
+const Point = require('./point');
 
 
 //------------------------------------------------------------------------------

@@ -3,7 +3,6 @@ const fs = require('fs');
 const async = require('async');
 const ObjectID = require('mongodb').ObjectID;
 
-const ActivityLog = new(require('./activitylog'))();
 const utils = require('../helpers/utils');
 const Common = require('./common');
 
@@ -97,6 +96,7 @@ const User = class User extends Common {
         });
     }
     removeUser(data, cb) {
+        const activityLog = new ActivityLog();
         let userid = data.userid;
 
         if (userid.length < 12) {
@@ -131,7 +131,7 @@ const User = class User extends Common {
                     log: 'User: ' + username.username + ' deleted.'
                 };
 
-                ActivityLog.create(logData, (err) => {});
+                activityLog.create(logData, (err) => {});
 
                 async.waterfall([
 
@@ -284,6 +284,7 @@ const User = class User extends Common {
         }
     }
     newUser(data, cb) {
+        const activityLog = new ActivityLog();
         let username = data.username;
         let password;
 
@@ -428,7 +429,7 @@ const User = class User extends Common {
                     };
                     let user;
 
-                    ActivityLog.create(logData, (err) => {});
+                    activityLog.create(logData, (err) => {});
 
                     if (err) {
                         return cb(err);
@@ -555,6 +556,7 @@ const User = class User extends Common {
         });
     }
     updateUser(data, cb) {
+        const activityLog = new ActivityLog();
         let updateData = data['Update Data'];
         let groups = (updateData['User Groups'] !== undefined) ? updateData['User Groups'] : [];
         let username = '';
@@ -646,7 +648,7 @@ const User = class User extends Common {
                     log: 'User: ' + username + ' edited.'
                 };
 
-                ActivityLog.create(logData, (err) => {});
+                activityLog.create(logData, (err) => {});
 
                 let deleteSearch = {};
                 deleteSearch['Point Type'] = {};
@@ -873,3 +875,4 @@ const User = class User extends Common {
 };
 
 module.exports = User;
+const ActivityLog = require('./activitylog');

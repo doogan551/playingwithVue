@@ -6,8 +6,6 @@ const fs = require('fs');
 const tmp = require('tmp');
 
 const Common = require('./common');
-const ArchiveUtility = new(require('./archiveutility'))();
-const Utilities = new(require('./utilities'))();
 const utils = require('../helpers/utils');
 
 const historyCollection = utils.CONSTANTS('historyCollection');
@@ -99,6 +97,7 @@ const History = class History extends Common {
         return newOptions;
     }
     editHistoryData(values, updateOptions, callback) {
+        const archiveUtility = new ArchiveUtility();
         // updateOptions:
         // 1: insert missing data only
         // 2: overwrite user-supplied data only
@@ -154,7 +153,7 @@ const History = class History extends Common {
                         statement: selectStatement,
                         parameters: [value.upi, value.timestamp]
                     };
-                    ArchiveUtility.get(criteria, (err, sPoint) => {
+                    archiveUtility.get(criteria, (err, sPoint) => {
                         let bindings = {
                             $upi: value.upi,
                             $timestamp: value.timestamp,
@@ -172,14 +171,14 @@ const History = class History extends Common {
                                 year: moment.unix(value.timestamp).year(),
                                 statement: insertStatement
                             };
-                            ArchiveUtility.prepare(criteria, (stmt) => {
+                            archiveUtility.prepare(criteria, (stmt) => {
                                 criteria = {
                                     year: moment.unix(value.timestamp).year(),
                                     statement: stmt,
                                     parameters: bindings
                                 };
-                                ArchiveUtility.runStatement(criteria, () => {
-                                    ArchiveUtility.finalizeStatement(criteria, () => {
+                                archiveUtility.runStatement(criteria, () => {
+                                    archiveUtility.finalizeStatement(criteria, () => {
                                         if (err) {
                                             return callback(err);
                                         }
@@ -204,14 +203,14 @@ const History = class History extends Common {
                                 year: moment.unix(value.timestamp).year(),
                                 statement: updateStatement
                             };
-                            ArchiveUtility.prepare(criteria, (stmt) => {
+                            archiveUtility.prepare(criteria, (stmt) => {
                                 criteria = {
                                     year: moment.unix(value.timestamp).year(),
                                     statement: stmt,
                                     parameters: bindings
                                 };
-                                ArchiveUtility.runStatement(criteria, () => {
-                                    ArchiveUtility.finalizeStatement(criteria, () => {
+                                archiveUtility.runStatement(criteria, () => {
+                                    archiveUtility.finalizeStatement(criteria, () => {
                                         if (err) {
                                             return callback(err);
                                         }
@@ -453,7 +452,8 @@ const History = class History extends Common {
         });
     }
     buildPeakPeriods(option, callback) {
-        Utilities.getUtility(option, (_err, util) => {
+        const utilities = new Utilities();
+        utilities.getUtility(option, (_err, util) => {
             let holidays = {};
             let thisYear = moment().year();
             let fiscalYear = parseInt(option.fiscalYear, 10) || thisYear;
@@ -923,6 +923,7 @@ const History = class History extends Common {
         return ['sum', 'max', 'reactiveCharge'].indexOf(op.fx) >= 0 && (!op.hasOwnProperty('splitUpis') || op.splitUpis.toString() !== 'true');
     }
     findInSql(options, tables, callback) {
+        const archiveUtility = new ArchiveUtility();
         let upis = options.upis;
         let years = [];
         let results = [];
@@ -999,7 +1000,7 @@ const History = class History extends Common {
                 year: parseInt(year, 10),
                 statement: statement
             };
-            ArchiveUtility.all(criteria, (err, rows) => {
+            archiveUtility.all(criteria, (err, rows) => {
                 results = results.concat(rows);
                 cb(err);
             });
@@ -1064,6 +1065,7 @@ const History = class History extends Common {
         callback(null, sResults);
     }
     countInSql(options, tables, callback) {
+        const archiveUtility = new ArchiveUtility();
         let upis = options.upis;
         let results = [];
         let years = [];
@@ -1116,7 +1118,7 @@ const History = class History extends Common {
                 year: parseInt(year, 10),
                 statement: statement
             };
-            ArchiveUtility.all(criteria, (err, rows) => {
+            archiveUtility.all(criteria, (err, rows) => {
                 results = results.concat(rows);
                 cb(err);
             });
@@ -1304,18 +1306,19 @@ const History = class History extends Common {
         });
     }
     doMonth(range, cb2) {
-        ArchiveUtility.serialize(range, () => {
+        const archiveUtility = new ArchiveUtility();
+        archiveUtility.serialize(range, () => {
             let criteria = {
                 year: range.year,
                 statement: 'PRAGMA synchronous = OFF'
             };
-            ArchiveUtility.exec(criteria, () => {
+            archiveUtility.exec(criteria, () => {
                 let tableName = 'History_' + range.year.toString() + range.month.toString();
                 criteria = {
                     year: range.year,
                     statement: 'BEGIN TRANSACTION'
                 };
-                ArchiveUtility.runDB(criteria, () => {
+                archiveUtility.runDB(criteria, () => {
                     let batchSize = 100;
                     let count = 0;
                     let parameterPlaceholder = '?,?,?,?,?,?';
@@ -1329,14 +1332,14 @@ const History = class History extends Common {
                             year: range.year,
                             statement: statement
                         };
-                        ArchiveUtility.prepare(criteria, (stmt) => {
+                        archiveUtility.prepare(criteria, (stmt) => {
                             criteria = {
                                 year: range.year,
                                 statement: stmt,
                                 parameters: params
                             };
-                            ArchiveUtility.runStatement(criteria, () => {
-                                ArchiveUtility.finalizeStatement(criteria, () => {
+                            archiveUtility.runStatement(criteria, () => {
+                                archiveUtility.finalizeStatement(criteria, () => {
                                     params = [];
                                     return _cb();
                                 });
@@ -1362,14 +1365,14 @@ const History = class History extends Common {
                                     year: range.year,
                                     statement: 'END TRANSACTION'
                                 };
-                                ArchiveUtility.runDB(criteria, cb2);
+                                archiveUtility.runDB(criteria, cb2);
                             });
                         } else {
                             criteria = {
                                 year: range.year,
                                 statement: 'END TRANSACTION'
                             };
-                            ArchiveUtility.runDB(criteria, cb2);
+                            archiveUtility.runDB(criteria, cb2);
                         }
                     });
                 });
@@ -1415,6 +1418,7 @@ const History = class History extends Common {
         this.getUsage(reqOptions, callback);
     }
     getMissingMeters(data, cb) {
+        const archiveUtility = new ArchiveUtility();
         let options = data.options;
         let meters = options.meters;
         let missingMeters = [];
@@ -1436,7 +1440,7 @@ const History = class History extends Common {
                 year: moment.unix(start).year(),
                 statement: statement
             };
-            ArchiveUtility.get(criteria, (err, row) => {
+            archiveUtility.get(criteria, (err, row) => {
                 table = 'History_' + moment.unix(end).format('YYYY') + moment.unix(end).format('MM');
                 statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
 
@@ -1444,7 +1448,7 @@ const History = class History extends Common {
                     year: moment.unix(end).year(),
                     statement: statement
                 };
-                ArchiveUtility.get(criteria, (err, row2) => {
+                archiveUtility.get(criteria, (err, row2) => {
                     if ((row.COUNT + row2.COUNT) < neededCount) {
                         missingMeters.push(meter);
                         return callback(err);
@@ -1455,7 +1459,7 @@ const History = class History extends Common {
                         year: moment.unix(end).year(),
                         statement: statement
                     };
-                    ArchiveUtility.get(criteria, (err, _row2) => {
+                    archiveUtility.get(criteria, (err, _row2) => {
                         table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
                         statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
 
@@ -1463,7 +1467,7 @@ const History = class History extends Common {
                             year: moment.unix(start).year(),
                             statement: statement
                         };
-                        ArchiveUtility.get(criteria, (err, _row) => {
+                        archiveUtility.get(criteria, (err, _row) => {
                             if ((_row2.COUNT + _row.COUNT) > 0) {
                                 missingMeters.push(meter);
                                 return callback(err);
@@ -1804,3 +1808,5 @@ const History = class History extends Common {
 };
 
 module.exports = History;
+const ArchiveUtility = require('./archiveutility');
+const Utilities = require('./utilities');

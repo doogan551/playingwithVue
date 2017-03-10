@@ -1,5 +1,3 @@
-const Point = require('./point');
-
 const Sequence = class Sequence {
 
     getBlockTypes(cb) {
@@ -85,3 +83,4 @@ const Sequence = class Sequence {
 };
 
 module.exports = Sequence;
+const Point = require('./point');

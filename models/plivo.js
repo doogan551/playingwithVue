@@ -1,9 +1,6 @@
 const plivo = require('plivo');
 const config = require('config');
 
-const NotifierUtility = require('./notifierutility');
-const notifierUtility = new NotifierUtility();
-
 const authId = config.get('Plivo').authId;
 const authToken = config.get('Plivo').authToken;
 const src = config.get('Plivo').phoneNumber;
@@ -15,6 +12,7 @@ const client = plivo.RestAPI({
 
 const Plivo = class Plivo {
     sendText(toNumber, message, cb) {
+        const notifierUtility = new NotifierUtility();
         toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
 
         let params = {
@@ -36,6 +34,7 @@ const Plivo = class Plivo {
     }
 
     sendVoice(toNumber, message, cb) {
+        const notifierUtility = new NotifierUtility();
         toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
         let url = notifierUtility.buildVoiceUrl(message, 'Plivo');
 
@@ -59,3 +58,4 @@ const Plivo = class Plivo {
 };
 
 module.exports = Plivo;
+const NotifierUtility = require('./notifierutility');

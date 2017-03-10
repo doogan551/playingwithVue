@@ -1,12 +1,12 @@
 const bcrypt = require('bcrypt-nodejs');
 const ObjectID = require('mongodb').ObjectID;
 
-const User = new(require('./user'))();
 const utils = require('../helpers/utils');
 
 const Workspace = class Workspace {
 
     saveWorkspace(data, cb) {
+        const user = new User();
         let workspace = data.Workspace;
         let id = new ObjectID(data.userid);
 
@@ -21,10 +21,11 @@ const Workspace = class Workspace {
             }
         };
 
-        User.update(criteria, cb);
+        user.update(criteria, cb);
     }
 
     resetPassword(data, cb) {
+        const user = new User();
         let username = data.username;
         let oldPass = data.oldPass;
         let newPass = utils.encrypt(data.newPass);
@@ -37,7 +38,7 @@ const Workspace = class Workspace {
             }
         };
 
-        User.getOne(criteria, (err, user) => {
+        user.getOne(criteria, (err, user) => {
             if (!user) {
                 return cb('User not found');
             }
@@ -65,10 +66,11 @@ const Workspace = class Workspace {
                         }
                     }
                 };
-                User.update(criteria, cb);
+                user.update(criteria, cb);
             });
         });
     }
 };
 
 module.exports = Workspace;
+const User = require('./user');

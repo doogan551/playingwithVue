@@ -1,8 +1,5 @@
 const _ = require('lodash');
 
-const Point = require('./point');
-const System = require('./system');
-
 const validPortProtocols = [1, 4];
 const validEthProtocols = [1];
 
@@ -260,3 +257,5 @@ const DeviceTree = class DeviceTree {
 };
 
 module.exports = DeviceTree;
+const Point = require('./point');
+const System = require('./system');

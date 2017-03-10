@@ -1,5 +1,3 @@
-const Point = require('./point');
-
 const Slideshow = class Slideshow {
 
     get(data, cb) {
@@ -26,3 +24,4 @@ const Slideshow = class Slideshow {
 };
 
 module.exports = Slideshow;
+const Point = require('./point');

@@ -8,13 +8,6 @@ let config = require('config');
 let Config = require('../public/js/lib/config.js');
 let scheduler = require('../helpers/scheduler');
 let utils = require('../helpers/utils');
-let notifications = require('../models/notifications');
-let Point = require('../models/point');
-let History = new(require('../models/history'))();
-let Schedule = new(require('../models/schedule'))();
-let Alarm = new(require('../models/alarm'))();
-let ActiveAlarm = new(require('../models/activealarm'))();
-let Common = new(require('../models/common'))();
 let logger = require('../helpers/logger')(module);
 
 let dbName = config.get('Infoscan.dbConfig').dbName;
@@ -61,6 +54,7 @@ module.exports = model = function (_common) {
     };
 
     oplog.on('insert', function (doc) {
+        const notifications = new Notifications();
         let startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -116,7 +110,9 @@ module.exports = model = function (_common) {
     });
 
     oplog.on('update', function (doc) {
-        const point = new Point();
+        const history = new History();
+        const schedule = new Schedule();
+        const pointModel = new Point();
         let updateReliabilityFlag = false;
         let newReliability = null;
         if (doc.ns === dbName + '.points' && doc.o.$set !== undefined) {
@@ -142,7 +138,7 @@ module.exports = model = function (_common) {
 
             async.waterfall([
                 function (wfcb) {
-                    point.getOne({
+                    pointModel.getOne({
                         query: {
                             _id: doc.o2._id
                         },
@@ -250,7 +246,7 @@ module.exports = model = function (_common) {
                 }
             }
         } else if (doc.ns === dbName + '.historydata') {
-            History.getOne({
+            history.getOne({
                 query: {
                     _id: doc.o2._id
                 }
@@ -258,7 +254,7 @@ module.exports = model = function (_common) {
                 // module.exports.updateDashboard(historyPoint);
             });
         } else if (doc.ns === dbName + '.Schedules') {
-            Schedule.getOne({
+            schedule.getOne({
                 query: {
                     _id: doc.o2._id
                 }
@@ -370,13 +366,15 @@ model.updateDashboard = function (doc, callback) {
 };
 
 function addActiveAlarm(alarmId, callback) {
-    Alarm.getOne({
+    const activeAlarm = new ActiveAlarm();
+    const alarm = new Alarm();
+    alarm.getOne({
         query: {
             _id: alarmId
         }
     }, function (err1, alarm) {
         if (alarm !== null) {
-            ActiveAlarm.insert({
+            activeAlarm.insert({
                 insertObj: alarm
             }, function (err2, result) {
                 callback(err1
@@ -389,7 +387,8 @@ function addActiveAlarm(alarmId, callback) {
 }
 
 function removeActiveAlarm(upi, callback) {
-    ActiveAlarm.remove({
+    const activeAlarm = new ActiveAlarm();
+    activeAlarm.remove({
         query: {
             upi: upi
         }
@@ -399,7 +398,7 @@ function removeActiveAlarm(upi, callback) {
 }
 
 function updateFromTail(_id, value, reliability) {
-    const point = new Point();
+    const pointModel = new Point();
     let updateObj = {
         $set: {}
     };
@@ -414,7 +413,7 @@ function updateFromTail(_id, value, reliability) {
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = ObjectID(curAlarm);*/
 
-    point.updateOne({
+    pointModel.updateOne({
         query: {
             _id: _id
         },
@@ -452,8 +451,9 @@ function checkForPointTail(upi, point, callback) {
 }
 
 function updateValsTail(point, finalCB) {
+    const commonModel = new Common();
     if (point) {
-        point = Common.setQualityLabel(point);
+        point = commonModel.setQualityLabel(point);
         if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
             let pv = point.Value;
             for (let prop in pv.ValueOptions) {
@@ -479,7 +479,7 @@ function updateValsTail(point, finalCB) {
 }
 
 function getChangedVals(id, callback) {
-    const point = new Point();
+    const pointModel = new Point();
     let fields = {
         Value: 1,
         'Alarm State': 1,
@@ -492,7 +492,7 @@ function getChangedVals(id, callback) {
         'Control Pending': 1,
         'Quality Code Enable': 1
     };
-    point.getOne({
+    pointModel.getOne({
         query: {
             _id: parseInt(id, 10)
         },
@@ -513,3 +513,11 @@ function checkUserAccess(user, point) {
     point._pAccess = 0 | user.permissions[point[identifier]];
     return user.permissions.hasOwnProperty(point[identifier]);
 }
+
+let Notifications = require('../models/notifications');
+let Point = require('../models/point');
+let History = new(require('../models/history'))();
+let Schedule = new(require('../models/schedule'))();
+let Alarm = new(require('../models/alarm'))();
+let ActiveAlarm = new(require('../models/activealarm'))();
+let Common = new(require('../models/common'))();

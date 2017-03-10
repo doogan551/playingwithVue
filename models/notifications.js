@@ -5,29 +5,6 @@ const appConfig = require('config');
 const CronJob = require('./cronjob');
 const ObjectID = require('mongodb').ObjectID;
 const logger = require('../helpers/logger')(module);
-const Utility = require('./utility');
-const Calendar = require('./calendar');
-const Notifier = require('./notifierutility');
-const NotifyAlarmQueue = require('./notifyalarmqueue');
-const NotifyLogs = require('./notifylogs');
-const NotifyScheduledTasks = require('./notifyscheduledtasks');
-const NotifyPolicies = require('./notifypolicies');
-const User = require('./user');
-const UserGroup = require('./usergroup');
-const Point = require('./point');
-const Alarm = require('./alarm');
-
-const utility = new Utility();
-const calendar = new Calendar();
-const notifier = new Notifier();
-const notifyAlarmQueue = new NotifyAlarmQueue();
-const notifyLogs = new NotifyLogs();
-const notifyScheduledTasks = new NotifyScheduledTasks();
-const notifyPolicies = new NotifyPolicies();
-const user = new User();
-const userGroup = new UserGroup();
-const point = new Point();
-const alarm = new Alarm();
 
 const siteConfig = config.get('Infoscan');
 const siteDomain = siteConfig.domains[0];
@@ -84,6 +61,7 @@ let dbAlarmQueueLocked = false,
     actions = {
         calendar: {
             dbGetHolidaysObj: (cb) => {
+                const calendar = new Calendar();
                 let query = {
                     year: new Date().getFullYear()
                 };
@@ -113,6 +91,7 @@ let dbAlarmQueueLocked = false,
         },
         scheduledTasks: {
             dbGetAll: (cb) => {
+                const notifyScheduledTasks = new NotifyScheduledTasks();
                 let query = {};
                 notifyScheduledTasks.get(query, cb);
             },
@@ -126,6 +105,7 @@ let dbAlarmQueueLocked = false,
                         async.each(updates, doUpdate, updateCB);
                     },
                     doUpdate = (task, doUpdateCB) => {
+                        const notifyScheduledTasks = new NotifyScheduledTasks();
                         let criteria = {
                             query: {
                                 _id: task._id
@@ -135,6 +115,7 @@ let dbAlarmQueueLocked = false,
                         notifyScheduledTasks.updateOne(criteria, doUpdateCB);
                     },
                     deleteTasks = (deleteCB) => {
+                        const notifyScheduledTasks = new NotifyScheduledTasks();
                         actions.utility.log('\tDeleting ' + deleteIds.length + ' task(s)');
                         let criteria = {
                             query: {
@@ -252,6 +233,7 @@ let dbAlarmQueueLocked = false,
         },
         policies: {
             dbGet: (idList, cb) => {
+                const notifyPolicies = new NotifyPolicies();
                 let objectIdList = idList.map((id) => {
                         return new ObjectID(id);
                     }),
@@ -265,10 +247,12 @@ let dbAlarmQueueLocked = false,
                 notifyPolicies.getAll(criteria, cb);
             },
             dbGetAll: (cb) => {
+                const notifyPolicies = new NotifyPolicies();
                 let criteria = {};
                 notifyPolicies.getAll(criteria, cb);
             },
             dbUpdateConfigs: (data, cb) => {
+                const utility = new Utility();
                 let numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
 
                 actions.utility.log('actions.policies.dbUpdateConfigs');
@@ -315,6 +299,7 @@ let dbAlarmQueueLocked = false,
                         async.forEachOf(deletes, doDelete, deleteThreadsCB);
                     },
                     doUpdate = (update, doUpdateCB) => {
+                        const notifyPolicies = new NotifyPolicies();
                         let criteria = {
                             query: {
                                 '_id': new ObjectID(update.policyId),
@@ -329,6 +314,7 @@ let dbAlarmQueueLocked = false,
                         notifyPolicies.updateOne(criteria, doUpdateCB);
                     },
                     doInsert = (threads, policyId, doInsertCB) => {
+                        const notifyPolicies = new NotifyPolicies();
                         let criteria = {
                             query: {
                                 '_id': new ObjectID(policyId)
@@ -344,6 +330,7 @@ let dbAlarmQueueLocked = false,
                         notifyPolicies.updateOne(criteria, doInsertCB);
                     },
                     doDelete = (deleteIds, policyId, doDeleteCB) => {
+                        const notifyPolicies = new NotifyPolicies();
                         let criteria = {
                             query: {
                                 '_id': new ObjectID(policyId)
@@ -411,6 +398,7 @@ let dbAlarmQueueLocked = false,
                 });
             },
             dbRemoveThreads: (policyId, cb) => {
+                const utility = new Utility();
                 actions.utility.log('policies.dbRemoveThreads');
                 actions.utility.log('\tRemoving threads for policy id: ' + policyId);
                 let criteria = {
@@ -1024,6 +1012,7 @@ let dbAlarmQueueLocked = false,
                 return ((thread._state !== DELETED) && (thread.trigger.msgCat !== maintenanceCategoryEnum));
             },
             isThreadAcknowledged: (info, cb) => {
+                const alarm = new Alarm();
                 // info is an object with keys policy, thread, data, and sometimes queueEntry
                 let thread = info.thread,
                     alarmId = thread.trigger.alarmId,
@@ -1088,15 +1077,18 @@ let dbAlarmQueueLocked = false,
         },
         alarmQueue: {
             dbGetAll: (cb) => {
+                const notifyAlarmQueue = new NotifyAlarmQueue();
                 notifyAlarmQueue.getAll({}, cb);
             },
             dbInsert: (queueEntries, cb) => {
+                const notifyAlarmQueue = new NotifyAlarmQueue();
                 let criteria = {
                     insertObj: queueEntries
                 };
                 notifyAlarmQueue.insert(criteria, cb);
             },
             dbRemoveAll: (data, cb) => {
+                const notifyAlarmQueue = new NotifyAlarmQueue();
                 actions.utility.log('alarmQueue.dbRemoveAll');
 
                 // If the alarm queue was empty there's nothing for us to do
@@ -1412,6 +1404,7 @@ let dbAlarmQueueLocked = false,
                 //	Security: queueEntry.Security
                 // },
 
+                const notifyLogs = new NotifyLogs();
                 let len = data.notifyList.length,
                     userNotifyList = {},
                     notifyEntry,
@@ -1688,6 +1681,7 @@ let dbAlarmQueueLocked = false,
                 }
             },
             sendError: (err) => {
+                const notifier = new Notifier();
                 let siteName = siteConfig.location.site,
                     text = [
                         'Site: ' + siteName,
@@ -1705,6 +1699,7 @@ let dbAlarmQueueLocked = false,
             }
         },
         dbGetAllUsersObj: (cb) => {
+            const user = new User();
             user.getUsers((err, users) => {
                 if (!!err) {
                     return cb(err);
@@ -1718,6 +1713,7 @@ let dbAlarmQueueLocked = false,
             });
         },
         dbGetAllGroupsObj: (cb) => {
+            const userGroup = new UserGroup();
             userGroup.getAll((err, groups) => {
                 if (!!err) {
                     return cb(err);
@@ -1778,6 +1774,7 @@ let dbAlarmQueueLocked = false,
 
 
             let getPoint = (cb) => {
+                const point = new Point();
                 point.getOne({
                     query: {
                         _id: alarm.upi
@@ -2104,3 +2101,15 @@ if (appConfig.runNotifications) {
     // anyway - seconds should always be 0 if the CRON fires and we execute on time
     new CronJob('00 * * * * *', run);
 }
+
+const Utility = require('./utility');
+const Calendar = require('./calendar');
+const Notifier = require('./notifierutility');
+const NotifyAlarmQueue = require('./notifyalarmqueue');
+const NotifyLogs = require('./notifylogs');
+const NotifyScheduledTasks = require('./notifyscheduledtasks');
+const NotifyPolicies = require('./notifypolicies');
+const User = require('./user');
+const UserGroup = require('./usergroup');
+const Point = require('./point');
+const Alarm = require('./alarm');

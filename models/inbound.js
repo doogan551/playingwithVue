@@ -5,11 +5,6 @@ const ObjectID = require('mongodb').ObjectID;
 
 const logger = require('../helpers/logger')(module);
 const Config = require('../public/js/lib/config.js');
-const Notifier = new(require('./notifierutility'))();
-const NotifyLogs = new(require('./notifylogs'))();
-const User = new(require('./user'))();
-const UserGroups = new(require('./userGroup'))();
-const Alarm = new(require('./alarm'))();
 
 const infoscanConfig = config.get('Infoscan');
 const alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
@@ -23,6 +18,7 @@ const alarmClasses = enums['Alarm Classes'];
 
 let emailHandler = {};
 emailHandler[alarmsEmailAddress] = (relayMessage) => {
+    const notifier = new Notifier();
     // Our waterfall fxs are defined after the waterfall callback
     async.waterfall([
         getUser,
@@ -119,14 +115,15 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
             replyObj.inReplyTo = msgId;
             replyObj.references = references;
 
-            Notifier.sendEmail(replyObj);
+            notifier.sendEmail(replyObj);
         }
     });
 
     let getUser = (cb) => {
+        const user = new User();
         let data = {};
 
-        User.getUser({
+        user.getUser({
             'Contact Info.Value.Value': relayMessage.msg_from
         }, (err, user) => {
             if (err) {
@@ -142,6 +139,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
     };
 
     let getAlarm = (data, cb) => {
+        const alarm = new Alarm();
         if (data.err) {
             return cb(null, data);
         }
@@ -154,7 +152,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
         alarmId = alarmId && alarmId.split('}')[0];
 
         if (alarmId) {
-            Alarm.getAlarm({
+            alarm.getAlarm({
                 _id: ObjectID(alarmId)
             }, (err, alarm) => {
                 if (err) {
@@ -183,11 +181,12 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
     };
 
     let getGroups = (data, cb) => {
+        const userGroups = new UserGroups();
         if (data.err || data.user['System Admin'].Value) {
             return cb(null, data);
         }
 
-        UserGroups.getGroups((err, groups) => {
+        userGroups.getGroups((err, groups) => {
             if (err) {
                 return cb(err);
             }
@@ -229,6 +228,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
     };
 
     let ackAlarm = (data, cb) => {
+        const alarm = new Alarm();
         if (data.err) {
             return cb(null, data);
         }
@@ -239,7 +239,7 @@ emailHandler[alarmsEmailAddress] = (relayMessage) => {
             username: data.user.username
         };
 
-        Alarm.acknowledgeAlarm(criteria, (err, result) => {
+        alarm.acknowledgeAlarm(criteria, (err, result) => {
             data.result = result;
             cb(err, data);
         });
@@ -260,6 +260,8 @@ const Inbound = class Inbound {
         }
     }
     twilioVoiceAlarmsAnswer(data, callback) {
+        const alarm = new Alarm();
+        const notifyLogs = new NotifyLogs();
         let sid = data && data.CallSid;
 
         if (!sid) {
@@ -283,7 +285,7 @@ const Inbound = class Inbound {
                     }
                 };
 
-            NotifyLogs.getOne(criteria, (err, notifyLog) => {
+            notifyLogs.getOne(criteria, (err, notifyLog) => {
                 if (err) {
                     return cb(err);
                 }
@@ -301,7 +303,7 @@ const Inbound = class Inbound {
                 return cb(null, info);
             }
 
-            Alarm.getAlarm({
+            alarm.getAlarm({
                 _id: ObjectID(info.notifyLog.alarmId)
             }, (err, alarm) => {
                 if (err) {
@@ -403,7 +405,7 @@ const Inbound = class Inbound {
                         username: info.notifyLog.username
                     };
 
-                    Alarm.acknowledgeAlarm(criteria, (err) => {
+                    alarm.acknowledgeAlarm(criteria, (err) => {
                         if (err) {
                             xml += say('We encountered an unexpected error and could not acknowledge the alarm at this time. We apologize for the error.');
                         } else {
@@ -464,6 +466,7 @@ const Inbound = class Inbound {
         };
     }
     twilioVoiceAlarmStatus(data) {
+        const notifyLogs = new NotifyLogs();
         let sid = data && data.CallSid,
             criteria;
 
@@ -478,7 +481,7 @@ const Inbound = class Inbound {
                     }
                 }
             };
-            NotifyLogs.updateOne(criteria, (err) => {
+            notifyLogs.updateOne(criteria, (err) => {
                 if (err) {
                     logger.error('/twilio/voice/alarms/status', err);
                 }
@@ -488,3 +491,8 @@ const Inbound = class Inbound {
 };
 
 module.exports = Inbound;
+const Notifier = require('./notifierutility');
+const NotifyLogs = require('./notifylogs');
+const User = require('./user');
+const UserGroups = require('./userGroup');
+const Alarm = require('./alarm');

@@ -1,7 +1,5 @@
 const moment = require('moment');
 
-const History = require('./history');
-
 const TrendData = class TrendData {
 
     viewTrend(data, cb) {
@@ -158,3 +156,4 @@ const TrendData = class TrendData {
 };
 
 module.exports = TrendData;
+const History = require('./history');

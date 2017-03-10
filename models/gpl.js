@@ -1,5 +1,3 @@
-const Point = require('./point');
-
 const GPL = class GPL {
     getGplInfo(data, cb) {
         const point = new Point();
@@ -110,3 +108,4 @@ const GPL = class GPL {
 };
 
 module.exports = GPL;
+const Point = require('./point');

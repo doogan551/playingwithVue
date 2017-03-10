@@ -3,12 +3,10 @@ const fs = require('fs');
 const tmp = require('tmp');
 const rimraf = require('rimraf');
 
-const Point = require('./point');
-const compiler = require('../helpers/scriptCompiler.js');
-
 const Script = class Script {
 
     update(data, cb) {
+        const compiler = new Compiler();
         let fileName = data.fileName.replace(/\.dsl$/i, '');
         let script = data.script;
 
@@ -129,3 +127,5 @@ const Script = class Script {
 };
 
 module.exports = Script;
+const Point = require('./point');
+const Compiler = require('../helpers/scriptCompiler.js');

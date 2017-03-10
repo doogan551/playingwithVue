@@ -1,7 +1,5 @@
 const fs = require('fs');
 
-const Point = require('./point');
-
 const Thumbnails = class Thumbnails {
     batch(data, cb) {
         const point = new Point();
@@ -135,3 +133,4 @@ const Thumbnails = class Thumbnails {
 };
 
 module.exports = Thumbnails;
+const Point = require('./point');

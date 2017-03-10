@@ -2,7 +2,6 @@
 let fs = require('fs');
 
 let Config = require('../public/js/lib/config');
-let Point = require('../models/point');
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
 
@@ -69,18 +68,18 @@ function runScheduleEntry(entryUpi, callback) {
                 _id: Config.Utility.getPropertyObject('Control Point', scheduleEntry).Value,
                 _pStatus: 0
             }
-        }, function (err, point) {
+        }, function (err, _point) {
             if (err) {
                 return callback(err, scheduleEntry);
             } else if (!point) {
                 return callback('No point found', scheduleEntry);
             }
             let controlProperty = scheduleEntry['Control Property'].Value;
-            if (Config.Enums['Point Types'][point['Point Type'].Value].schedProps.indexOf(controlProperty) !== -1) {
+            if (Config.Enums['Point Types'][_point['Point Type'].Value].schedProps.indexOf(controlProperty) !== -1) {
                 if (controlProperty === 'Execute Now') {
                     point.updateOne({
                         query: {
-                            _id: point._id
+                            _id: _point._id
                         },
                         updateObj: {
                             $set: {
@@ -92,10 +91,10 @@ function runScheduleEntry(entryUpi, callback) {
                             callback(err, scheduleEntry);
                         });
                     });
-                } else if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'].indexOf(point['Point Type'].Value) !== -1 && controlProperty === 'Value') {
+                } else if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'].indexOf(_point['Point Type'].Value) !== -1 && controlProperty === 'Value') {
                     let control = {
                         'Command Type': 7,
-                        'upi': point._id,
+                        'upi': _point._id,
                         'Controller': scheduleEntry.Controller.eValue,
                         'Priority': scheduleEntry['Control Priority'].eValue,
                         'Relinquish': (scheduleEntry['Active Release'].Value === true) ? 1 : 0,
@@ -114,24 +113,24 @@ function runScheduleEntry(entryUpi, callback) {
                         }
                     });
                 } else {
-                    let oldPoint = _.cloneDeep(point);
-                    point[controlProperty].Value = scheduleEntry['Control Value'].Value;
-                    point._actvAlmId = oldPoint._actvAlmId;
+                    let oldPoint = _.cloneDeep(_point);
+                    _point[controlProperty].Value = scheduleEntry['Control Value'].Value;
+                    _point._actvAlmId = oldPoint._actvAlmId;
                     let result = Config.Update.formatPoint({
                         oldPoint: oldPoint,
-                        point: point,
+                        point: _point,
                         property: controlProperty,
                         refPoint: null
                     });
                     if (result.err) {
                         callback(result.err, scheduleEntry);
                     } else {
-                        common.newUpdate(oldPoint, point, {
+                        common.newUpdate(oldPoint, _point, {
                             method: 'update',
                             from: 'updateToD'
                         }, {
                             username: 'ToD Schedule'
-                        }, function (response, point) {
+                        }, function (response, _point) {
                             callback(response.err, scheduleEntry);
                         });
                     }
@@ -142,3 +141,5 @@ function runScheduleEntry(entryUpi, callback) {
         });
     });
 }
+
+let Point = require('../models/point');

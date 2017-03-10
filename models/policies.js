@@ -3,21 +3,18 @@ const _ = require('lodash');
 const moment = require('moment');
 
 const logger = require('../helpers/logger')(module);
-const notifications = require('./notifications');
-const NotifyPolicies = new(require('./notifypolicies'))();
-const NotifyScheduledTasks = new(require('./notifyscheduledtasks'))();
-const Point = require('./point');
-
 
 const Policies = class Policies {
     get(data, cb) {
+        const notifyPolicies = new NotifyPolicies();
         let criteria = {
             query: data.data || {}
         };
-        NotifyPolicies.get(criteria, cb);
+        notifyPolicies.get(criteria, cb);
     }
 
     save(rawData, cb) {
+        const notifications = new Notifications();
         let data;
         let newID;
         let callback = (err) => {
@@ -87,6 +84,7 @@ const Policies = class Policies {
             return obj;
         };
         let doUpdate = () => {
+            const notifyPolicies = new NotifyPolicies();
             let criteria = {
                 query: {
                     _id: data._id
@@ -99,7 +97,7 @@ const Policies = class Policies {
                 }
             };
 
-            NotifyPolicies.update(criteria, callback);
+            notifyPolicies.update(criteria, callback);
         };
 
         data = convertStrings(rawData);
@@ -124,6 +122,7 @@ const Policies = class Policies {
     }
 
     delete(data, cb) {
+        const notifyPolicies = new NotifyPolicies();
         const point = new Point();
         let criteria = {
             query: {
@@ -146,10 +145,11 @@ const Policies = class Policies {
             };
             point.updateOne(criteria, cb);
         };
-        NotifyPolicies.remove(criteria, updatePoints);
+        notifyPolicies.remove(criteria, updatePoints);
     }
 
     processRotateConfig(data, config, task, cb) {
+        const notifyScheduledTasks = new NotifyScheduledTasks();
         let criteria = {
                 query: {
                     policyID: data.policyID.toString(),
@@ -172,7 +172,7 @@ const Policies = class Policies {
                 lastAction: null
             };
 
-        NotifyScheduledTasks.getAll(criteria, (err, docs) => {
+        notifyScheduledTasks.getAll(criteria, (err, docs) => {
             let nextAction,
                 now = moment(),
                 taskList = [],
@@ -253,6 +253,7 @@ const Policies = class Policies {
     }
 
     processScheduledTasks(policy, cb) {
+        const notifyScheduledTasks = new NotifyScheduledTasks();
         let policyID = policy._id.toString(),
             count = 0,
             newTasks = [],
@@ -263,7 +264,7 @@ const Policies = class Policies {
                 };
 
                 // console.log('Inserting for policy', policyID);
-                NotifyScheduledTasks.insert(criteria, (err) => {
+                notifyScheduledTasks.insert(criteria, (err) => {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
@@ -281,7 +282,7 @@ const Policies = class Policies {
                 };
 
                 // console.log('Deleting from policy', typeof policyID, policyID);
-                NotifyScheduledTasks.remove(criteria, (err) => {
+                notifyScheduledTasks.remove(criteria, (err) => {
                     if (err) {
                         logger.debug('Remove err', JSON.stringify(err));
                     }
@@ -344,3 +345,7 @@ const Policies = class Policies {
 };
 
 module.exports = Policies;
+const Notifications = require('./notifications');
+const NotifyPolicies = require('./notifypolicies');
+const NotifyScheduledTasks = require('./notifyscheduledtasks');
+const Point = require('./point');

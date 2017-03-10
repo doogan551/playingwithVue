@@ -433,8 +433,6 @@ const Report = class Report {
             },
             scheduled = (!!data.scheduleID),
             reportResults = {},
-            reportRequestComplete = false,
-            scheduleRequestComplete = false,
             reportData,
             getValueTypes = (data) => {
                 'use strict';
@@ -471,7 +469,6 @@ const Report = class Report {
                         reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
                         reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
 
-                        scheduleRequestComplete = true;
                         reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
                         return cb(null, reportResults, reportData);
                     });
@@ -495,7 +492,6 @@ const Report = class Report {
                 reportResults.point = JSON.stringify(result);
 
                 reportData = result;
-                reportRequestComplete = true;
                 handleResults();
             } else {
                 return cb(message); // error

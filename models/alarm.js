@@ -2,7 +2,6 @@ const ObjectID = require('mongodb').ObjectID;
 
 const Common = require('./common');
 const utils = require('../helpers/utils');
-const ActiveAlarm = require('./activealarm');
 
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
@@ -144,3 +143,4 @@ const Alarm = class Alarm extends Common {
 };
 
 module.exports = Alarm;
+const ActiveAlarm = require('./activealarm');
