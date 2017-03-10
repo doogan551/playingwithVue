@@ -17,7 +17,7 @@ const Security = class Security {
         return points;
     }
     getPermissions(user, cb) {
-        if (!!user['System Admin'].Value || !user) {
+        if (!user || !!user['System Admin'].Value) {
             return cb(null, true);
         }
         let userId = ObjectID(user._id);

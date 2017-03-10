@@ -105,7 +105,7 @@ router.get('/getSVG/:id', function (req, res, next) {
         return utils.sendResponse(res, trends);
     });
 });
-// NOT CHECKED
+// POSTMAN
 router.post('/reportSearch', function (req, res, next) {
     const reports = new Reports();
     let data = _.merge(req.params, req.body);
@@ -121,7 +121,7 @@ router.post('/reportSearch', function (req, res, next) {
         return utils.sendResponse(res, trends);
     });
 });
-// NOT CHECKED
+// CHECKED 2017-03-10
 router.post('/historyDataSearch', function (req, res, next) {
     const reports = new Reports();
     let data = _.merge(req.params, req.body);

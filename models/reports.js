@@ -459,37 +459,34 @@ const Report = class Report {
             },
             handleResults = () => {
                 if (scheduled) {
-                    if (scheduleRequestComplete && reportRequestComplete) {
+                    schedule.getOne(scheduleCriteria, (err, scheduleData) => {
+                        if (err) {
+                            return cb(err);
+                        }
+                        if (scheduleData === null) {
+                            return cb();
+                        }
+                        reportResults.scheduledConfig = {};
+                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
+
+                        scheduleRequestComplete = true;
                         reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
                         return cb(null, reportResults, reportData);
-                    }
+                    });
                 } else {
                     return cb(null, reportResults, reportData);
                 }
             };
 
-        if (scheduled) {
-            schedule.get(scheduleCriteria, (err, scheduleData) => {
-                if (err) {
-                    return cb(err);
-                }
-                if (scheduleData === null) {
-                    return cb();
-                }
-                reportResults.scheduledConfig = {};
-                reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
-                reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
-                reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
 
-                scheduleRequestComplete = true;
-                handleResults();
-            });
-        }
         // this is weird. change it to be nested instead of relying on flags in handlResults()
         point.getPointById(reportCriteria.data, (err, message, result) => {
             if (err) {
                 return cb(err);
             }
+
             if (!!result) {
                 if (result['Report Type'].Value === 'Property') {
                     result = getValueTypes(result);
@@ -1202,6 +1199,9 @@ const Report = class Report {
                             nextUser();
                         }, (err, count) => {
                             emails = emails.concat(schedule.emails).join(',');
+                            if (!emails.length) {
+                                return cb('No recipients provided.');
+                            }
                             mailer.sendEmail({
                                 to: emails,
                                 fromAccount: 'infoscan',
@@ -1214,11 +1214,10 @@ const Report = class Report {
                                 }]
                             }, (err, info) => {
                                 console.log(err, info);
-                                cb(err);
+                                return cb(err);
                             });
                         });
                     });
-                    // }, 5000);
                 });
             } else {
                 logger.info('   - -  scheduledReport() schedule._id = ' + schedule._id + '  unable to find Report with UPI = ' + upi);
