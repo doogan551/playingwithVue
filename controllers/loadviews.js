@@ -33,6 +33,10 @@ router.get('/devicetree', function(req, res) {
   res.render("devicetree/devicetree.pug");
 });
 // 
+router.get('/mechtree', function(req, res) {
+  res.render("mechtree/mechtree.pug");
+});
+// 
 router.get('/displays', function(req, res) {
   res.render("displays/index.pug");
 });
