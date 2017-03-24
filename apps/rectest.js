@@ -6,6 +6,7 @@ var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
@@ -41,8 +42,8 @@ function newHistory() {
   // console.log('after range', newOptions.length);
   var startTime = new Date();
   logger.debug(connectionString.join(''));
-  db.connect(connectionString.join(''), function(err) {
-    history.getUsageCall(newOptions, function(err, result) {
+  db.connect(connectionString.join(''), function (err) {
+    history.getUsageCall(newOptions, function (err, result) {
       console.log('finished', new Date() - startTime, err);
       /*history.addToCsv(result, newOptions[0], function(err){
         console.log('doXne with csv', err);
@@ -74,7 +75,7 @@ function newHistory() {
 // newHistory();
 
 function fixDbDoubles() {
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'points',
       query: {
@@ -82,9 +83,9 @@ function fixDbDoubles() {
       }
     };
     console.log(criteria);
-    Utility.get(criteria, function(err, points) {
+    Utility.get(criteria, function (err, points) {
       console.log(err, points.length);
-      async.eachSeries(points, function(point, cb) {
+      async.eachSeries(points, function (point, cb) {
         for (var prop in point) {
           if (point[prop].hasOwnProperty('ValueType')) {
             point[prop].ValueType = parseInt(point[prop].ValueType, 10);
@@ -109,10 +110,10 @@ function fixDbDoubles() {
           _id: point._id
         };
         criteria.updateObj = point;
-        Utility.update(criteria, function(err, result) {
+        Utility.update(criteria, function (err, result) {
           cb(err);
         });
-      }, function(err) {
+      }, function (err) {
         console.log('done', err);
       });
     });
@@ -121,15 +122,15 @@ function fixDbDoubles() {
 // fixDbDoubles();
 
 function testDBCursor() {
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     Utility.iterateCursor({
       collection: 'points',
       query: {},
       limit: 10
-    }, function(err, doc, cb) {
+    }, function (err, doc, cb) {
       console.log(err, doc._id);
       cb(null);
-    }, function(err) {
+    }, function (err) {
       console.log('done', err);
     });
   });
@@ -184,8 +185,8 @@ function addProperties() {
       multi: true
     }
   };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.update(criteria, function(err, result) {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.update(criteria, function (err, result) {
       console.log(err, result.result.nModified);
     });
   });
@@ -203,8 +204,8 @@ function updateGPL() {
       }
     }
   };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.iterateCursor(criteria, function(err, point, cb) {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.iterateCursor(criteria, function (err, point, cb) {
       count++;
       if (count % 1000 === 0) {
         console.log(count);
@@ -247,7 +248,7 @@ function updateGPL() {
         updateObj: point
       };
       Utility.update(crit, cb);
-    }, function(err) {
+    }, function (err) {
       console.log('done', err);
     });
   });
@@ -282,8 +283,8 @@ function testTotalizerModel() {
       "interval": 60
     }
   };
-  db.connect(connectionString.join(''), function(err) {
-    Reports.totalizerReport(data, function(err, result) {
+  db.connect(connectionString.join(''), function (err) {
+    Reports.totalizerReport(data, function (err, result) {
       console.log(err, JSON.stringify(result));
     });
   });
@@ -291,7 +292,7 @@ function testTotalizerModel() {
 // testTotalizerModel();
 
 function testInheritance() {
-  var createInherit = function(superClass, subClass) {
+  var createInherit = function (superClass, subClass) {
     subClass.prototype = Object.create(superClass.prototype);
     subClass.prototype.constructor = subClass;
   };
@@ -300,13 +301,13 @@ function testInheritance() {
     this.type = 'table';
   }
 
-  Table.prototype.setType = function(type) {
+  Table.prototype.setType = function (type) {
     console.log('before', this.type);
     this.type = type;
     console.log('after', this.type);
   };
 
-  Table.prototype.print = function() {
+  Table.prototype.print = function () {
     console.log(this.type);
   };
 
@@ -321,7 +322,7 @@ function testInheritance() {
   template = {
     'Point Type': {
       eValue: 1,
-      Value: function() {
+      Value: function () {
         console.log('eval', this.eValue);
       }
     }
@@ -334,7 +335,7 @@ function setUpNotifications() {
   var pointNames = ['Booster_Pump 1_Control', 'Booster_Pump 2_Control', 'Booster_Pump 2_VFD Speed', 'Booster_Pump Station_Pressure', 'Booster_Pumps_Not Running_Alarm', 'Booster Sta_Chem Pump 1_Status', 'Booster Sta_Chem Pump 2_Status', 'Booster Sta_Chem Pump 3_Status', 'Booster Sta_Chem Pump 4_Status', 'Booster Sta_Discharge_Pressure', 'Booster Sta_Intrusion_Switch_Alarm', 'Booster Sta_Low_Suction_Alarm', 'Booster Sta_PH', 'Booster Sta_Power_Fail_Alarm', 'Booster Sta_Pump 1_Fail_Alarm', 'Booster Sta_Pump 2_Fail_Alarm', 'Booster Sta_Res Disch_Flow', 'Booster Sta_Reservoir_Flow', 'Booster Sta_Suction_Pressure', 'Chlorine_Feed', 'Clear_Water_Level', 'Combined_Effluent_Turbidity', 'Filter1_Effluent_Flow', 'Filter1_Effluent_Turbidity', 'Filter1_Finish H2O_Loss of Head', 'Filter2_Effluent_Flow', 'Filter2_Effluent_Turbidity', 'Filter2_Finish H2O_Loss of Head', 'Filter3_Effluent_Flow', 'Filter3_Effluent_Turbidity', 'Filter3_Finish H2O_Loss of Head', 'Finish_Pump 1_100 HP_Control', 'Finish_Pump 2_75 HP_Control', 'Finish_Pump 3_200 HP_Control', 'Finished_Water_Flow', 'Finished_Water_Turbidity', 'Finished_Water_pH', 'High_Service_Pressure', 'Mixed_Water_pH', 'Post_Chlorine', 'Raw_Water_Flow', 'Raw_Water_Pump 1_Control', 'Raw_Water_Pump 2_Control', 'Raw_Water_Turbidity', 'Reservior_Water_Level', 'Reservoir_Power_Fail_Alarm', 'Settled_DefNameSeg2_Turbidity', 'Sulfur_Feed', 'Sweep_Flow', 'Water_Tank_AltValve_Control', 'Water_Tank1_Intrusion', 'Water_Tank1_Level', 'Water_Tank2_Level_psi', 'Yadkinville_xTalk01 1_MSC20_Water Tank'];
   var policyId = '56e883c634fa375416c1c0ec';
 
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'points',
       query: {
@@ -346,7 +347,7 @@ function setUpNotifications() {
         }
       }
     };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
+    Utility.iterateCursor(criteria, function (err, doc, cb) {
       var msgs = doc['Alarm Messages'];
       doc['Notify Policies'] = [policyId];
       for (var i = 0; i < msgs.length; i++) {
@@ -359,10 +360,10 @@ function setUpNotifications() {
           _id: parseInt(doc._id, 10)
         },
         updateObj: doc
-      }, function(err, result) {
+      }, function (err, result) {
         cb(err);
       });
-    }, function(err, count) {
+    }, function (err, count) {
       console.log(err, count, 'done');
     });
   });
@@ -370,7 +371,7 @@ function setUpNotifications() {
 // setUpNotifications();
 
 function fixPointInst() {
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'points',
       query: {
@@ -379,10 +380,10 @@ function fixPointInst() {
         }
       }
     };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
+    Utility.iterateCursor(criteria, function (err, doc, cb) {
         var refs = doc['Point Refs'];
         var index = -1;
-        async.eachSeries(refs, function(ref, callback) {
+        async.eachSeries(refs, function (ref, callback) {
           index++;
           if (ref.Value !== ref.PointInst) {
             Utility.getOne({
@@ -390,7 +391,7 @@ function fixPointInst() {
               query: {
                 _id: ref.Value
               }
-            }, function(err, point) {
+            }, function (err, point) {
 
               Config.EditChanges.applyUniquePIDLogic({
                 point: doc,
@@ -411,7 +412,7 @@ function fixPointInst() {
         }, cb);
 
       },
-      function(err, count) {
+      function (err, count) {
         console.log(err, count, 'done');
       });
   });
@@ -419,12 +420,12 @@ function fixPointInst() {
 // fixPointInst();
 
 function fixUsers() {
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'Users',
       query: {}
     };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
+    Utility.iterateCursor(criteria, function (err, doc, cb) {
       var alerts = doc.alerts;
 
       for (var prop in alerts) {
@@ -464,7 +465,7 @@ function fixUsers() {
         },
         updateObj: doc
       }, cb);
-    }, function(err, count) {
+    }, function (err, count) {
       console.log('done', err, count);
     });
   });
@@ -480,14 +481,14 @@ function createMathBlocks() {
       _id: 81
     }
   };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.getOne(criteria, function(err, report) {
-      async.eachSeries(report['Point Refs'], function(column, cb) {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.getOne(criteria, function (err, report) {
+      async.eachSeries(report['Point Refs'], function (column, cb) {
         // logger.info('working on', column.Value, column.PointName);
-        async.waterfall([function(wfcb) {
+        async.waterfall([function (wfcb) {
           criteria.query._id = column.Value;
           Utility.getOne(criteria, wfcb);
-        }, function(refPoint, wfcb) {
+        }, function (refPoint, wfcb) {
           // logger.info(refPoint.Name);
           Point.initPoint({
             name1: refPoint.name1,
@@ -496,7 +497,7 @@ function createMathBlocks() {
             name4: 'Run Time',
             pointType: 'Math',
             targetUpi: 92
-          }, function(err, cloned) {
+          }, function (err, cloned) {
             // logger.info(err, cloned);
             cloned['Point Refs'][0] = refPoint['Point Refs'][0];
             cloned['Point Refs'][4].Value = refPoint._id;
@@ -505,11 +506,11 @@ function createMathBlocks() {
               refPoint: refPoint
             }, 4)['Point Refs'][4];
             // logger.info(cloned['Point Refs']);
-            socketCommon.addPoint(cloned, {}, {}, function(err, result) {
+            socketCommon.addPoint(cloned, {}, {}, function (err, result) {
               // logger.info('cloned added', err);
               wfcb(null, refPoint);
             });
-          }, function(refPoint, wfcb) {
+          }, function (refPoint, wfcb) {
             refPoint['Trend Interval'].Value = 1;
             Utility.update({
               collection: 'points',
@@ -520,7 +521,7 @@ function createMathBlocks() {
             }, wfcb);
           });
         }], cb);
-      }, function(err) {
+      }, function (err) {
         logger.info('done', err);
       });
     });
@@ -530,7 +531,7 @@ function createMathBlocks() {
 
 function renamePoints() {
   var socketCommon = require('../socket/common').common;
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var name1 = 'YDK Booster Sta';
     var newName1 = 'YNC Booster Sta';
     Utility.get({
@@ -538,8 +539,8 @@ function renamePoints() {
       query: {
         name1: name1
       }
-    }, function(err, points) {
-      async.eachSeries(points, function(point, cb) {
+    }, function (err, points) {
+      async.eachSeries(points, function (point, cb) {
         var oldPoint = _.cloneDeep(point);
         point.name1 = newName1;
         point = Config.Update.formatPoint({
@@ -552,11 +553,11 @@ function renamePoints() {
           from: "ui"
         }, {
           username: 'SYSTEM'
-        }, function(response, point) {
+        }, function (response, point) {
           console.log(response);
           cb();
         });
-      }, function(err) {
+      }, function (err) {
         console.log(err, 'done');
       });
     });
@@ -588,20 +589,20 @@ function test() {
     }
   };
 
-  var splitName = function(meter) {
+  var splitName = function (meter) {
     return meter.Name.split('_');
   }
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     Utility.iterateCursor({
       collection: 'PowerMeters',
       query: {}
-    }, function(err, meter, cb) {
+    }, function (err, meter, cb) {
       var names = {
         name1: splitName(meter)[0],
         name2: splitName(meter)[1],
         name4: splitName(meter)[3]
       };
-      async.waterfall([function(callback) {
+      async.waterfall([function (callback) {
         Utility.getOne({
           collection: 'points',
           query: {
@@ -610,7 +611,7 @@ function test() {
             name4: names.name4,
             name3: objs.DemandInUpi.name3
           }
-        }, function(err, point) {
+        }, function (err, point) {
           var updateObj = {
             $set: {}
           };
@@ -621,11 +622,11 @@ function test() {
               _id: meter._id
             },
             updateObj: updateObj
-          }, function(err, result) {
+          }, function (err, result) {
             callback();
           });
         });
-      }, function(callback) {
+      }, function (callback) {
         Utility.getOne({
           collection: 'points',
           query: {
@@ -634,7 +635,7 @@ function test() {
             name4: names.name4,
             name3: objs.UsageInUpi.name3
           }
-        }, function(err, point) {
+        }, function (err, point) {
           var updateObj = {
             $set: {}
           };
@@ -645,11 +646,11 @@ function test() {
               _id: meter._id
             },
             updateObj: updateObj
-          }, function(err, result) {
+          }, function (err, result) {
             callback();
           });
         });
-      }, function(callback) {
+      }, function (callback) {
         Utility.getOne({
           collection: 'points',
           query: {
@@ -658,7 +659,7 @@ function test() {
             name4: names.name4,
             name3: objs.KVARInUpi.name3
           }
-        }, function(err, point) {
+        }, function (err, point) {
           var updateObj = {
             $set: {}
           };
@@ -669,14 +670,14 @@ function test() {
               _id: meter._id
             },
             updateObj: updateObj
-          }, function(err, result) {
+          }, function (err, result) {
             callback();
           });
         });
       }], cb)
 
 
-    }, function(err, count) {
+    }, function (err, count) {
       console.log(err, count);
     });
   });
@@ -1121,7 +1122,7 @@ function rearrangeProperties() {
       "isReadOnly": false
     }
   };
-  var compare = function(a, b) {
+  var compare = function (a, b) {
     var _a = a.toLowerCase();
     var _b = b.toLowerCase();
     if (['name', 'name1'].indexOf(_a) >= 0) {
@@ -1168,7 +1169,7 @@ function rearrangeProperties() {
 
 function countUpis() {
   var uCount = 0;
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'points',
       query: {},
@@ -1176,7 +1177,7 @@ function countUpis() {
         _id: 1
       }
     };
-    Utility.iterateCursor(criteria, function(err, doc, next) {
+    Utility.iterateCursor(criteria, function (err, doc, next) {
       criteria = {
         collection: 'upis',
         query: {
@@ -1184,7 +1185,7 @@ function countUpis() {
         }
       };
 
-      Utility.getOne(criteria, function(err, upi) {
+      Utility.getOne(criteria, function (err, upi) {
         if (err) {
           console.log('err', err);
         } else if (!upi) {
@@ -1196,7 +1197,7 @@ function countUpis() {
         next();
       });
 
-    }, function(err, count) {
+    }, function (err, count) {
       console.log('done', count, uCount);
     });
   });
@@ -1216,14 +1217,14 @@ function testCron() {
     array.push(a);
   }
   // console.log(time, prettyCron.toString(time), prettyCron.getNext(time));
-  async.eachSeries(array, function(item, cb) {
-    jobs[item] = new CronJob(time, function() {
+  async.eachSeries(array, function (item, cb) {
+    jobs[item] = new CronJob(time, function () {
       logger.info('running', item, new Date());
-    }, function() {
+    }, function () {
       logger.info('finished');
     });
     cb();
-  }, function(err) {
+  }, function (err) {
     // jobs[2].stop();
     logger.info('done');
   });
@@ -1239,7 +1240,7 @@ function testobjects() {
     console.log(a, 2);
     b();
   }
-  async.waterfall([one, two], function(err) {
+  async.waterfall([one, two], function (err) {
     console.log(err);
   });
 }
@@ -1247,7 +1248,7 @@ function testobjects() {
 
 function testConfg() {
   var types = Object.keys(Config.Enums['Point Types']);
-  types.forEach(function(type) {
+  types.forEach(function (type) {
     var fx = ["apply", type.split(' ').join(''), 'DevModel'].join('');
     if (!Config.EditChanges.hasOwnProperty(fx)) {
       console.log(type);
@@ -1264,15 +1265,15 @@ function fixComparators() {
     '>=': 'GTEqual',
     '=': 'Equal'
   };
-  db.connect(connectionString.join(''), function(err) {
+  db.connect(connectionString.join(''), function (err) {
     var criteria = {
       collection: 'points',
       query: {
         'Point Type.Value': 'Comparator',
-        _id:2929
+        _id: 2929
       }
     };
-    Utility.iterateCursor(criteria, function(err, doc, next) {
+    Utility.iterateCursor(criteria, function (err, doc, next) {
       var ct = doc['Calculation Type'];
       for (var prop in matrix) {
         if (ct.Value === matrix[prop]) {
@@ -1291,9 +1292,115 @@ function fixComparators() {
           }
         }
       }, next);
-    }, function(err, count) {
+    }, function (err, count) {
       console.log(err, count, 'done');
     });
   });
 }
-fixComparators();
+// fixComparators();
+
+function fixLocationPath() {
+  let currentNode = {};
+  let findPath = function (id, cb) {
+    if (!id) {
+      return cb()
+    };
+    Utility.getOne({
+      collection: '4194',
+      query: {
+        _id: ObjectID(id)
+      }
+    }, function (err, parent) {
+      if (!!parent) {
+        currentNode.locationPath.unshift(parent._id);
+        findPath(parent.locationRef, cb);
+      } else {
+        return cb();
+      }
+    })
+  };
+
+  db.connect(connectionString.join(''), function (err) {
+    Utility.iterateCursor({
+      collection: '4194'
+    }, function (err, doc, next) {
+      doc.locationPath = [];
+      currentNode = doc;
+      findPath(doc.locationRef, function () {
+        Utility.update({
+          collection: '4194',
+          query: {
+            _id: doc._id
+          },
+          updateObj: doc
+        }, function (err, result) {
+          next();
+        });
+      });
+    }, function (err, count) {
+      console.log('done');
+    })
+  });
+}
+// fixLocationPath();
+
+function fixTags() {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.iterateCursor({
+      collection: 'five',
+      query: {
+        tags: 'point'
+      }
+    }, function (err, doc, next) {
+      doc.item = doc.tags[0];
+      doc.type = doc.tags[1];
+      if (doc.tags.length > 2) {
+        doc.tags = doc.tags.slice(2);
+      } else {
+        doc.tags = [];
+      }
+      Utility.update({
+        collection: 'five',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, function (err, result) {
+        next();
+      });
+    }, function (err, count) {
+      console.log('done');
+    })
+  });
+}
+// fixTags();
+
+function fixMongoIds() {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.iterateCursor({
+      collection: 'five'
+    }, function (err, doc, next) {
+      doc.locationPath.forEach(function (path, index) {
+        doc.locationPath[index] = path.toString();
+      });
+      doc.equipmentRefs.forEach(function (ref, index) {
+        doc.equipmentRefs[index] = ref.toString();
+      });
+      if (!!doc.locationRef) {
+        doc.locationRef = doc.locationRef.toString();
+      }
+      Utility.update({
+        collection: 'five',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, function (err, result) {
+        next();
+      });
+    }, function (err, count) {
+      console.log('done');
+    });
+  });
+}
+fixMongoIds();
