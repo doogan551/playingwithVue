@@ -1,6 +1,7 @@
 var fs = require('fs');
 var async = require('async');
 var moment = require('moment');
+var _ = require('lodash');
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
@@ -12,57 +13,146 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 const collection = 'mechTemplate';
-
+const order = ['Class', 'System', 'Component', 'Equipment', 'Instrumentation'];
 let hierarchy = [{
         mech: 'Class',
         optional: 'Class_Type',
-        id: 1,
-        parent: null
+        System: [],
+        Component: [],
+        Equipment: [],
+        Instrumentation: []
     },
     {
         mech: 'System',
         optional: 'System_Type',
-        id: 2,
-        parent: 1
+        Component: [],
+        Equipment: [],
+        Instrumentation: []
     },
     {
         mech: 'Component',
         optional: 'Component_Type',
-        id: 3,
-        parent: 2
+        Equipment: [],
+        Instrumentation: []
     },
     {
         mech: 'Equipment',
         optional: 'Equipment_Type',
-        id: 4,
-        parent: 3
+        Instrumentation: []
     },
     {
         mech: 'Instrumentation',
         optional: 'Instrumentation_Type',
-        id: 5,
-        parent: 4
     }
 ];
 
 let start = function (cb) {
-    async.eachSeries(hierarchy, function (mech, callback) {
-        var criteria = {
-            statement: 'Select distinct ' + mech.mech + ' from Mechanical_Library'
-        };
-        all(criteria, function (err, rows) {
-            async.eachSeries(rows, function (row, callback2) {
-                var obj = {
-                    collection: collection,
-                    insertObj: {
-                        mech: mech.mech,
-                        type: row[mech.mech]
-                    }
+    let findFirstChild = function (skip, obj) {
+        var skipIndex = order.indexOf(skip);
+        for (var o = 0; o < order.length; o++) {
+            var item = order[o];
+            if (o > skipIndex && !!obj[item]) {
+                return item;
+            }
+        }
+        return null;
+    };
+    let addChildren = function (_callback) {
+        Utility.get({
+            collection: collection,
+            query: {
+                mech: {
+                    $exists: 1
+                }
+            }
+        }, function (err, parents) {
+            async.eachSeries(parents, function (parent, callback) {
+                var criteria = {
+                    statement: 'Select * from Mechanical_Library where ' + parent.mech + ' == "' + parent.type + '"'
                 };
-                Utility.insert(obj, callback2);
-            }, callback);
+                all(criteria, function (err, rows) {
+                    async.eachSeries(rows, function (row, callback2) {
+
+                        var firstChild = findFirstChild(parent.mech, row);
+                        if (!!firstChild) {
+                            // if (firstChild === 'Instrumentation') {
+                            //     return callback2();
+                            // }
+                            // console.log('Select * from Mechanical_Library where ' + parent.mech + ' == "' + parent.type + '"');
+                            // console.log(parent);
+                            // console.log(row);
+                            // console.log(firstChild);
+                            Utility.getOne({
+                                collection: collection,
+                                query: {
+                                    type: row[firstChild],
+                                    mech: firstChild
+                                }
+                            }, function (err, item) {
+                                var updateObj = {
+                                    $addToSet: {}
+                                };
+                                updateObj.$addToSet[firstChild] = item.type;
+                                Utility.update({
+                                    collection: collection,
+                                    query: {
+                                        _id: parent._id
+                                    },
+                                    updateObj: updateObj
+                                }, callback2);
+                            });
+                        } else {
+                            Utility.update({
+                                collection: collection,
+                                query: {
+                                    type: 'Bad'
+                                },
+                                updateObj: {
+                                    $addToSet: {
+                                        objects: row
+                                    }
+                                }
+                            }, callback2);
+                        }
+                        // callback2();
+                    }, callback);
+                });
+            }, _callback);
         });
-    }, cb);
+    };
+
+
+    Utility.remove({
+        collection: collection
+    }, function () {
+        async.eachSeries(hierarchy, function (mech, callback) {
+            var criteria = {
+                statement: 'Select distinct ' + mech.mech + ' from Mechanical_Library'
+            };
+            all(criteria, function (err, rows) {
+                async.eachSeries(rows, function (row, callback2) {
+                    let newMech = _.cloneDeep(mech);
+                    newMech.type = row[mech.mech] || "";
+                    var obj = {
+                        collection: collection,
+                        insertObj: newMech
+                    };
+                    Utility.insert(obj, callback2);
+                }, callback);
+            });
+        }, function (err) {
+            var obj = {
+                collection: collection,
+                insertObj: {
+                    type: 'Bad',
+                    objects: []
+                }
+            };
+            Utility.insert(obj, function () {
+                addChildren(cb);
+            });
+        });
+    });
 };
 
 db.connect(connectionString.join(''), function (err) {
