@@ -13,7 +13,7 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 const collection = 'mechTemplate';
-const order = ['Class', 'System', 'Component', 'Equipment', 'Instrumentation'];
+const order = ['System', 'Component', 'Equipment', 'Instrumentation'];
 let hierarchy = [{
         mech: 'Class',
         optional: 'Class_Type',
@@ -57,154 +57,110 @@ let start = function (cb) {
         }
         return null;
     };
-    let addChildren = function (_callback) {
-        Utility.get({
-            collection: collection,
-            query: {
-                mech: {
-                    $exists: 1
+
+    let buildChildren = function (item, cb) {
+        var previousChildren = [];
+        async.eachSeries(order, function (mech, callback) {
+            if (!item.hasOwnProperty(mech)) {
+                if (mech === 'Instrumentation') {
+                    Utility.remove({
+                        collection: 'mechDB',
+                        query: {}
+                    })
                 }
-            }
-        }, function (err, parents) {
-            async.eachSeries(parents, function (parent, callback) {
+                return callback();
+            } else {
+                var statement = 'Select * from Mechanical_Library where ' + item.mech + ' != "" and ' + mech + ' != ""';
+                previousChildren.forEach(function (child) {
+                    statement += ' AND ' + child + ' == ""';
+                });
+                console.log(statement);
                 var criteria = {
-                    statement: 'Select * from Mechanical_Library where ' + parent.mech + ' == "' + parent.type + '"'
+                    statement: statement
                 };
                 all(criteria, function (err, rows) {
+                    // console.log(rows);
                     async.eachSeries(rows, function (row, callback2) {
+                        Utility.remove({
+                            collection: 'mechDB',
+                            query: {
+                                UID: row.UID
+                            }
+                        }, function () {
 
-                        var firstChild = findFirstChild(parent.mech, row);
-                        if (!!firstChild) {
-                            // if (firstChild === 'Instrumentation') {
-                            //     return callback2();
-                            // }
-                            // console.log('Select * from Mechanical_Library where ' + parent.mech + ' == "' + parent.type + '"');
-                            // console.log(parent);
-                            // console.log(row);
-                            // console.log(firstChild);
-                            Utility.getOne({
-                                collection: collection,
-                                query: {
-                                    type: row[firstChild],
-                                    mech: firstChild
-                                }
-                            }, function (err, item) {
-                                var updateObj = {
-                                    $addToSet: {}
-                                };
-                                updateObj.$addToSet[firstChild] = item.type;
-                                Utility.update({
-                                    collection: collection,
-                                    query: {
-                                        _id: parent._id
-                                    },
-                                    updateObj: updateObj
-                                }, callback2);
-                            });
-                        } else {
+                            var query = {
+                                mech: item.mech,
+                                type: row[item.optional] || '',
+                                name: row[item.mech]
+                            };
+                            var updateObj = {
+                                $addToSet: {}
+                            };
+                            updateObj.$addToSet[mech] = row[mech];
                             Utility.update({
                                 collection: collection,
-                                query: {
-                                    type: 'Bad'
-                                },
-                                updateObj: {
-                                    $addToSet: {
-                                        objects: row
-                                    }
-                                }
+                                query: query,
+                                updateObj: updateObj
                             }, callback2);
-                        }
-                        // callback2();
-                    }, callback);
+
+                        });
+                    }, function (err) {
+                        previousChildren.push(mech);
+                        callback();
+                    });
                 });
-            }, _callback);
-        });
-    };
+            }
 
 
-    let buildChildren = function (start, startIndex, cb) {
-        // go through each class and get all unique systems then get all unique Components withouth a system and so forth
-        // find a way to know which mech categories to skip - build the string after a search of mechs to ignore (where System = '' AND Component = '') - if Instrumentation is '', it's Bad
-        // Select * from Mechanical_Library where Instrumentation == "" AND Equipment == "" AND Component == "" AND System == "" AND Class == ""
-        async.eachOfSeries(order, function (mech, index, callback) {
-            if (startIndex > index) {
-                return callback();
-            }
-            var statement = 'Select * from Mechanical_Library where ' + start + ' != ""';
-            var i = index;
-            while (i > startIndex) {
-                statement += ' AND ' + order[i] + ' == ""';
-                i--;
-            }
-            var criteria = {
-                statement: statement
-            };
-            console.log(statement);
-            all(criteria, function (err, rows) {
-                // console.log(rows);
-                async.eachSeries(rows, function (row, callback2) {
-                    if (order[index + 1] === undefined) {
-                        // valid Instrumentations are being added to Bad array (last run)
-                        Utility.update({
-                            collection: collection,
-                            query: {
-                                type: 'Bad'
-                            },
-                            updateObj: {
-                                $addToSet: {
-                                    objects: row
-                                }
-                            }
-                        }, callback2);
-                    } else {
-                        var updateObj = {
-                            $addToSet: {}
-                        };
-                        // GET mech's id
-                        updateObj.$addToSet[order[index + 1]] = row[order[index + 1]];
-                        Utility.update({
-                            collection: collection,
-                            query: {
-                                mech: start,
-                                type: row[start]
-                            },
-                            updateObj: updateObj
-                        }, callback2);
-                    }
-                }, callback);
-            });
         }, cb);
     };
 
     Utility.remove({
         collection: collection
     }, function () {
-        async.eachSeries(hierarchy, function (mech, callback) {
-            var criteria = {
-                statement: 'Select distinct ' + mech.mech + ' from Mechanical_Library'
-            };
-            all(criteria, function (err, rows) {
-                async.eachSeries(rows, function (row, callback2) {
-                    let newMech = _.cloneDeep(mech);
-                    newMech.type = row[mech.mech] || "";
-                    var obj = {
-                        collection: collection,
-                        insertObj: newMech
-                    };
-                    Utility.insert(obj, callback2);
-                }, callback);
-            });
-        }, function (err) {
-            var obj = {
-                collection: collection,
-                insertObj: {
-                    type: 'Bad',
-                    objects: []
-                }
-            };
-            Utility.insert(obj, function () {
-                // addChildren(cb);
-                async.eachOfSeries(order, buildChildren, cb);
+        Utility.remove({
+            collection: 'mechDB'
+        }, function () {
+            all({
+                statement: 'Select * from Mechanical_Library'
+            }, function (err, results) {
+                Utility.insert({
+                    collection: 'mechDB',
+                    insertObj: results
+                }, function (err, results) {
+
+                    async.eachSeries(hierarchy, function (mech, callback) {
+                        var criteria = {
+                            statement: 'Select distinct ' + mech.mech + ', ' + mech.optional + ' from Mechanical_Library'
+                        };
+                        all(criteria, function (err, rows) {
+                            async.eachSeries(rows, function (row, callback2) {
+                                let newMech = _.cloneDeep(mech);
+                                newMech.type = row[mech.optional] || "";
+                                newMech.name = row[mech.mech] || "";
+                                delete newMech.optional;
+                                var obj = {
+                                    collection: collection,
+                                    insertObj: newMech
+                                };
+                                Utility.insert(obj, callback2);
+                            }, callback);
+                        });
+                    }, function (err) {
+                        var obj = {
+                            collection: collection,
+                            insertObj: {
+                                type: 'Bad',
+                                objects: []
+                            }
+                        };
+                        Utility.insert(obj, function () {
+                            // addChildren(cb);
+                            async.eachSeries(hierarchy, buildChildren, cb);
+                        });
+                    });
+
+                });
             });
         });
     });

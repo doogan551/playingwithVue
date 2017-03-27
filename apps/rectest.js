@@ -1403,4 +1403,48 @@ function fixMongoIds() {
     });
   });
 }
-fixMongoIds();
+// fixMongoIds();
+
+function changeLocationRefs() {
+  db.connect(connectionString.join(''), function (err) {
+    Utility.iterateCursor({
+      collection: 'six'
+    }, function (err, doc, next) {
+      var appIndex = 1;
+      doc['Location Refs'] = [];
+      async.eachSeries(doc.locationPath, function (itemId, cb) {
+        Utility.getOne({
+          collection: 'six',
+          query: {
+            _id: ObjectID(itemId)
+          }
+        }, function (err, item) {
+          doc['Location Refs'].push({
+            AppIndex: appIndex,
+            Display: item.display,
+            Value: itemId,
+            isReadOnly: false,
+            isDisplayable: true
+          });
+          appIndex++;
+          cb();
+        });
+      }, function (err) {
+        delete doc.locationRef;
+        delete doc.locationPath;
+        Utility.update({
+          collection: 'six',
+          query: {
+            _id: doc._id
+          },
+          updateObj: doc
+        }, function (err, result) {
+          next(err);
+        });
+      });
+    }, function (err, count) {
+      console.log('done');
+    });
+  });
+}
+changeLocationRefs();
