@@ -122,6 +122,60 @@ let start = function (cb) {
     };
 
 
+    let buildChildren = function (start, startIndex, cb) {
+        // go through each class and get all unique systems then get all unique Components withouth a system and so forth
+        // find a way to know which mech categories to skip - build the string after a search of mechs to ignore (where System = '' AND Component = '') - if Instrumentation is '', it's Bad
+        // Select * from Mechanical_Library where Instrumentation == "" AND Equipment == "" AND Component == "" AND System == "" AND Class == ""
+        async.eachOfSeries(order, function (mech, index, callback) {
+            if (startIndex > index) {
+                return callback();
+            }
+            var statement = 'Select * from Mechanical_Library where ' + start + ' != ""';
+            var i = index;
+            while (i > startIndex) {
+                statement += ' AND ' + order[i] + ' == ""';
+                i--;
+            }
+            var criteria = {
+                statement: statement
+            };
+            console.log(statement);
+            all(criteria, function (err, rows) {
+                // console.log(rows);
+                async.eachSeries(rows, function (row, callback2) {
+                    if (order[index + 1] === undefined) {
+                        // valid Instrumentations are being added to Bad array (last run)
+                        Utility.update({
+                            collection: collection,
+                            query: {
+                                type: 'Bad'
+                            },
+                            updateObj: {
+                                $addToSet: {
+                                    objects: row
+                                }
+                            }
+                        }, callback2);
+                    } else {
+                        var updateObj = {
+                            $addToSet: {}
+                        };
+                        // GET mech's id
+                        updateObj.$addToSet[order[index + 1]] = row[order[index + 1]];
+                        Utility.update({
+                            collection: collection,
+                            query: {
+                                mech: start,
+                                type: row[start]
+                            },
+                            updateObj: updateObj
+                        }, callback2);
+                    }
+                }, callback);
+            });
+        }, cb);
+    };
+
     Utility.remove({
         collection: collection
     }, function () {
@@ -149,7 +203,8 @@ let start = function (cb) {
                 }
             };
             Utility.insert(obj, function () {
-                addChildren(cb);
+                // addChildren(cb);
+                async.eachOfSeries(order, buildChildren, cb);
             });
         });
     });
