@@ -13,106 +13,131 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 const collection = 'mechTemplate';
-const order = ['System', 'Component', 'Equipment', 'Instrumentation'];
+const order = ['Class', 'Class_Type', 'System', 'System_Type', 'Component', 'Component_Type', 'Equipment', 'Component_Type', 'Instrumentation', 'Instrumentation_Type'];
+let mechStructure = {
+    name: '',
+    category: 'Class',
+    structure: []
+};
 let hierarchy = [{
-        mech: 'Class',
-        optional: 'Class_Type',
+        category: 'Class'
+    },
+    {
+        category: 'Class_Type',
+        Class: []
+    },
+    {
+        category: 'System',
+        Class: [],
+        Class_Type: []
+    },
+    {
+        category: 'System_Type',
+        Class: [],
+        Class_Type: [],
+        System: []
+    },
+    {
+        category: 'Component',
+        Class: [],
+        Class_Type: [],
         System: [],
+        System_Type: []
+    },
+    {
+        category: 'Component_Type',
+        Class: [],
+        Class_Type: [],
+        System: [],
+        System_Type: [],
+        Component: []
+    },
+    {
+        category: 'Equipment',
+        Class: [],
+        Class_Type: [],
+        System: [],
+        System_Type: [],
         Component: [],
-        Equipment: [],
-        Instrumentation: []
+        Component_Type: []
     },
     {
-        mech: 'System',
-        optional: 'System_Type',
+        category: 'Equipment_Type',
+        Class: [],
+        Class_Type: [],
+        System: [],
+        System_Type: [],
         Component: [],
+        Component_Type: [],
+        Equipment: []
+    },
+    {
+        category: 'Instrumentation',
+        Class: [],
+        Class_Type: [],
+        System: [],
+        System_Type: [],
+        Component: [],
+        Component_Type: [],
         Equipment: [],
-        Instrumentation: []
+        Equipment_Type: []
     },
     {
-        mech: 'Component',
-        optional: 'Component_Type',
+        category: 'Instrumentation_Type',
+        Class: [],
+        Class_Type: [],
+        System: [],
+        System_Type: [],
+        Component: [],
+        Component_Type: [],
         Equipment: [],
+        Equipment_Type: [],
         Instrumentation: []
-    },
-    {
-        mech: 'Equipment',
-        optional: 'Equipment_Type',
-        Instrumentation: []
-    },
-    {
-        mech: 'Instrumentation',
-        optional: 'Instrumentation_Type',
     }
 ];
 
 let start = function (cb) {
-    let findFirstChild = function (skip, obj) {
-        var skipIndex = order.indexOf(skip);
-        for (var o = 0; o < order.length; o++) {
-            var item = order[o];
-            if (o > skipIndex && !!obj[item]) {
-                return item;
-            }
-        }
-        return null;
-    };
 
-    let buildChildren = function (item, cb) {
-        var previousChildren = [];
-        async.eachSeries(order, function (mech, callback) {
-            if (!item.hasOwnProperty(mech)) {
-                if (mech === 'Instrumentation') {
-                    Utility.remove({
-                        collection: 'mechDB',
-                        query: {}
-                    })
-                }
-                return callback();
+    let buildParents = function (cat, callback) {
+        async.forEach(hierarchy, function (item, callback2) {
+            if (!cat.hasOwnProperty(item.category)) {
+                return callback2();
             } else {
-                var statement = 'Select * from Mechanical_Library where ' + item.mech + ' != "" and ' + mech + ' != ""';
-                previousChildren.forEach(function (child) {
-                    statement += ' AND ' + child + ' == ""';
-                });
+                var statement = ['SELECT DISTINCT ', cat.category, ', ', item.category, ' FROM Mechanical_Library'].join('');
                 console.log(statement);
                 var criteria = {
                     statement: statement
                 };
                 all(criteria, function (err, rows) {
-                    // console.log(rows);
-                    async.eachSeries(rows, function (row, callback2) {
-                        Utility.remove({
-                            collection: 'mechDB',
-                            query: {
-                                UID: row.UID
-                            }
-                        }, function () {
+                    async.eachSeries(rows, function (row, callback3) {
+                        var query = {
+                            category: cat.category,
+                            name: row[cat.category]
+                        };
+                        var updateObj = {
+                            $addToSet: {}
+                        };
 
-                            var query = {
-                                mech: item.mech,
-                                type: row[item.optional] || '',
-                                name: row[item.mech]
-                            };
-                            var updateObj = {
-                                $addToSet: {}
-                            };
-                            updateObj.$addToSet[mech] = row[mech];
+                        Utility.getOne({
+                            collection: collection,
+                            query: {
+                                category: item.category,
+                                name: row[item.category],
+                            }
+                        }, function (err, parent) {
+                            updateObj.$addToSet[item.category] = parent.name;
                             Utility.update({
                                 collection: collection,
                                 query: query,
                                 updateObj: updateObj
-                            }, callback2);
-
+                            }, callback3);
                         });
                     }, function (err) {
-                        previousChildren.push(mech);
-                        callback();
+                        callback2();
                     });
                 });
             }
-
-
-        }, cb);
+        }, callback);
     };
 
     Utility.remove({
@@ -131,14 +156,12 @@ let start = function (cb) {
 
                     async.eachSeries(hierarchy, function (mech, callback) {
                         var criteria = {
-                            statement: 'Select distinct ' + mech.mech + ', ' + mech.optional + ' from Mechanical_Library'
+                            statement: 'Select distinct ' + mech.category + ' from Mechanical_Library'
                         };
                         all(criteria, function (err, rows) {
                             async.eachSeries(rows, function (row, callback2) {
                                 let newMech = _.cloneDeep(mech);
-                                newMech.type = row[mech.optional] || "";
-                                newMech.name = row[mech.mech] || "";
-                                delete newMech.optional;
+                                newMech.name = row[mech.category] || "";
                                 var obj = {
                                     collection: collection,
                                     insertObj: newMech
@@ -156,7 +179,136 @@ let start = function (cb) {
                         };
                         Utility.insert(obj, function () {
                             // addChildren(cb);
-                            async.eachSeries(hierarchy, buildChildren, cb);
+                            async.eachSeries(hierarchy, buildParents, cb);
+                        });
+                    });
+
+                });
+            });
+        });
+    });
+};
+
+let transformSQLite = function (cb) {
+    let types = [{
+        old: 'Class',
+        new: 'Class'
+    }, {
+        old: 'Class_Type',
+        new: 'ClassType'
+    }, {
+        old: 'System',
+        new: 'System'
+    }, {
+        old: 'System_Type',
+        new: 'SystemType'
+    }, {
+        old: 'Component',
+        new: 'Component'
+    }, {
+        old: 'Component_Type',
+        new: 'ComponentType'
+    }, {
+        old: 'Equipment',
+        new: 'Equipment'
+    }, {
+        old: 'Equipment_Type',
+        new: 'EquipmentType'
+    }, {
+        old: 'Instrumentation',
+        new: 'Instrumentation'
+    }, {
+        old: 'Instrumentation_Type',
+        new: 'InstrumentationType'
+    }];
+
+    let createPaths = function (callback) {
+        var criteria = {
+            statement: "Select * from Mechanical_Library"
+        };
+        callback();
+    };
+    async.eachSeries(types, function (type, callback) {
+        var criteria = {
+            statement: ""
+        };
+        criteria.statement = "DROP TABLE " + type.new;
+        runDB(criteria, function (err, results) {
+            criteria.statement = "CREATE TABLE " + type.new + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name STRING UNIQUE)";
+            runDB(criteria, function (err, results) {
+                criteria.statement = "INSERT INTO " + type.new + " (name) SELECT DISTINCT " + type.old + " FROM Mechanical_Library";
+                runDB(criteria, callback);
+            });
+        });
+    }, function (err) {
+        console.log('err', err);
+        createPaths(cb);
+    });
+};
+
+let createPaths = function (cb) {
+    let buildPaths = function (orderIndex, callback) {
+        if (orderIndex >= order.length) {
+            return callback();
+        }
+        var statement = ['SELECT DISTINCT '];
+        for (var i = 0; i <= orderIndex; i++) {
+            statement.push(order[i]);
+            statement.push(', ');
+        }
+        statement.pop();
+        statement.push(' from Mechanical_Library WHERE ' + order[orderIndex] + ' != ""');
+        var criteria = {
+            statement: statement.join('')
+        };
+        all(criteria, function (err, rows) {
+            async.eachSeries(rows, function (row, callback2) {
+                let newMech = _.cloneDeep(mechStructure);
+                newMech.name = row[order[orderIndex]];
+                newMech.category = order[orderIndex];
+                // get mongoids
+                for (var o = 0; o < orderIndex; o++) {
+                    newMech.structure.push(row[order[o]]);
+                }
+                Utility.insert({
+                    collection: collection,
+                    insertObj: newMech
+                }, callback2);
+            }, function (err) {
+                buildPaths(++orderIndex, callback)
+            });
+        });
+    };
+
+    Utility.remove({
+        collection: collection
+    }, function () {
+        Utility.remove({
+            collection: 'mechDB'
+        }, function () {
+            all({
+                statement: 'Select * from Mechanical_Library'
+            }, function (err, results) {
+                Utility.insert({
+                    collection: 'mechDB',
+                    insertObj: results
+                }, function (err, results) {
+
+                    var criteria = {
+                        statement: 'Select distinct Class from Mechanical_Library'
+                    };
+                    all(criteria, function (err, rows) {
+                        async.eachSeries(rows, function (row, callback2) {
+                            let newMech = _.cloneDeep(mechStructure);
+                            newMech.name = row.Class || "";
+                            newMech.category = 'Class';
+                            var obj = {
+                                collection: collection,
+                                insertObj: newMech
+                            };
+                            Utility.insert(obj, callback2);
+                        }, function (err) {
+                            buildPaths(1, cb);
                         });
                     });
 
@@ -167,9 +319,15 @@ let start = function (cb) {
 };
 
 db.connect(connectionString.join(''), function (err) {
-    start(function (err) {
+    // start(function (err) {
+    //     console.log(err, 'done');
+    // });
+    createPaths(function (err) {
         console.log(err, 'done');
     });
+    // transformSQLite(function (err) {
+    //     console.log(err, 'done');
+    // });
 });
 
 /**
