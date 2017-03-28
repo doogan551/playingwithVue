@@ -427,8 +427,7 @@ input:focus {
     width: 16px;
     height: 16px;
     cursor: pointer;
-    background: url(/img/ui_icons.png);
-    background-repeat: no-repeat;
+    background: url("/img/ui_icons.png") no-repeat;
 }
 #workspace .remove {
     background-position: -364px -494px;
