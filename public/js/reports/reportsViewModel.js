@@ -5697,6 +5697,7 @@ var reportsViewModel = function () {
                                 return self.scheduler.availableUsersObj[name]._id;
                             }));
                             data.emails(recipientEmails);
+                            data.isValid = ko.observable(data.users().length > 0 || data.emails().length > 0);
 
                             data.optionalParameters.duration({
                                 selectedRange: bindings.selectedReportRange().value,
@@ -6046,6 +6047,7 @@ var reportsViewModel = function () {
                     schedule = $.extend({}, ko.toJS(schedule));
                     delete schedule.isDirty;
                     delete schedule.parsed;
+                    delete schedule.isValue;
                     if (schedule.deleteMe === false) {
                         delete schedule.deletMe;
                     }
@@ -6129,6 +6131,7 @@ var reportsViewModel = function () {
                         // Convert some keys to observables
                         schedule.optionalParameters.duration = ko.observable(schedule.optionalParameters.duration);
                         schedule.optionalParameters.interval = ko.observable(schedule.optionalParameters.interval);
+                        schedule.isValid = ko.observable(schedule.users.length > 0 || schedule.emails.length > 0);
                         schedule.users = ko.observableArray(schedule.users);
                         schedule.emails = ko.observableArray(schedule.emails);
                         schedule.enabled = ko.observable(schedule.enabled);
