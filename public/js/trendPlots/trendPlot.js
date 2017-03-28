@@ -439,7 +439,7 @@ var trendPlots = {
             }
         },
         init: function () {
-            var scriptList = ['highcharts', 'highcharts-more', '/modules/solid-gauge', '/modules/no-data-to-display'],//should be per type
+            var scriptList = ['highcharts', 'highcharts-more', 'modules/solid-gauge', 'modules/no-data-to-display'],//should be per type
                 ext = '.js',
                 base = '/js/lib/',
                 completed = 0,
