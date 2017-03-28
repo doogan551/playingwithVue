@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 var gpl = {
     texts: {},
     blocks: {},
@@ -31,7 +32,7 @@ var gpl = {
     pointApiPath: '/api/points/',
     defaultBackground: 'C8BEAA',
     jqxTheme: 'flat',
-    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value'],
+    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value', 'valueOptions'],
     $body: $('body'),
     $tooltip: $('.gplTooltip'),
     $fontColorPicker: $('#fontColorPicker'),
@@ -573,6 +574,31 @@ var gpl = {
         gpl.point['Point Refs'].push(pointRef);
 
         return pointRef;
+    },
+    getNameBasedOnValue: function (array, value) {
+        var answer;
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].value === value) {
+                answer = array[i].name;
+                break;
+            }
+        }
+        return answer;
+    },
+    getArrayFromJSON: function (obj) {
+        let answer;
+        if (!!obj) {
+            answer = [];
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    answer.push({
+                        name: key,
+                        value: obj[key]
+                    });
+                }
+            }
+        }
+        return answer;
     },
     isEdit: document.location.href.match('/edit/') !== null,
     noSocket: document.location.href.match('nosocket') !== null,
@@ -1122,6 +1148,77 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         });
     },
 
+    adjustRelatedBlocks: function (adjustPointRefs) {
+        var self = this,
+            anchorType,
+            otherAnchor,
+            attachedBlock = self.myBlock(),
+            otherBlock,
+            currentLine,
+            i,
+            otherBlockFound = false,
+            numberOfLines;
+
+        numberOfLines = self.getLines().length;
+        // console.log('  adjustRelatedBlocks() ----------------------------------------------------------------------------------------------');
+        for (i = 0; i < numberOfLines; i++) {
+            otherBlock = undefined;
+            currentLine = self.getLines()[i];
+            if (!!currentLine) {
+                anchorType = self.anchorType;
+                otherAnchor = currentLine.getOtherAnchor(self);
+                otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId);
+            }
+
+            if (!!otherBlock) {
+                otherBlockFound = true;
+                if (anchorType) {
+                    if (adjustPointRefs) {
+                        otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.pointName, attachedBlock.pointType);
+                    }
+                    // console.log('  adjustRelatedBlocks() line  = ['  + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
+                    if (otherBlock.type === 'Comparator' && otherAnchor.anchorType !== 'Control Point') {
+                        if (otherBlock.inputAnchors.length === 2) {
+                            let siblingAnchor = (otherBlock.inputAnchors[0].anchorType === otherAnchor.anchorType ? otherBlock.inputAnchors[1] : otherBlock.inputAnchors[0]),
+                                comparatorLines = siblingAnchor.getLines(),
+                                j = 0,
+                                otherBlockLine,
+                                otherBlockInputBlock;
+
+                            for (j = 0; j < comparatorLines.length; j++) {
+                                otherBlockLine = comparatorLines[j];
+                                if (otherAnchor.anchorType !== otherBlockLine.endAnchor.anchorType) {
+                                    otherBlockInputBlock = gpl.blockManager.getBlock(otherBlockLine.startAnchor.gplId);
+                                    if (otherBlockInputBlock.blockType === 'Constant' ) {
+                                        otherBlockInputBlock.valueOptions = gpl.getArrayFromJSON(attachedBlock.getPointData().Value.ValueOptions);
+                                        otherBlockInputBlock.setPlaceholderText();
+                                        // console.log('  adjustRelatedBlocks() adjusting valueOptions on otherBlockInputBlock.label = ' + otherBlockInputBlock.label + '   ' + JSON.stringify(otherBlockInputBlock.valueOptions));
+                                    } else if (attachedBlock.blockType === 'Constant' && !!otherBlockInputBlock.getPointData().Value) {
+                                        attachedBlock.valueOptions = gpl.getArrayFromJSON(otherBlockInputBlock.getPointData().Value.ValueOptions);
+                                        attachedBlock.setPlaceholderText();
+                                        // console.log('  adjustRelatedBlocks() adjusting valueOptions on attachedBlock.label = ' + attachedBlock.label + '   ' + JSON.stringify(attachedBlock.valueOptions));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (gpl.isEdit) {
+                    gpl.fire('editedblock', otherBlock);
+                }
+            } else {
+                if (!otherBlockFound && adjustPointRefs) {
+                    attachedBlock.setPointRef(self.anchorType, attachedBlock.upi, attachedBlock.pointName);
+                }
+            }
+        }
+    },
+
+    myBlock: function () {
+        'use strict';
+        return gpl.blockManager.getBlock(this.gplId);
+    },
+
     getConnectedBlock: function () {
         var lines = this.attachedLines,
             ids = Object.keys(lines),
@@ -1159,6 +1256,9 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.attachedLineCount++;
 
         this.attachFn(this, line);
+        // if (gpl.isEdit) {
+            this.adjustRelatedBlocks();
+        // }
     },
 
     detach: function (line) {
@@ -1381,7 +1481,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 });
                 idx = self._pointRefs[anchor.anchorType];
                 if (idx) {
-                    name = "";
+                    name = '';
                     if (upi) {
                         name = gpl.pointData[upi];
                         name = name && name.Name;
@@ -1908,8 +2008,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                 if (!!refPointType && !!gpl.pointTypes[refPointType]) {
                     ref.PointType = gpl.pointTypes[refPointType].enum;
+                } else {
+                    ref.PointType = 0;
                 }
-
             // } else {
             //     gpl.log("setPointRef()  idx is undefined for property '" + prop + "'");
             }
@@ -2097,11 +2198,20 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setPlaceholderText: function () {
-        var text;
+        var text,
+            value;
 
         if (this.valueText) {
-            if (this.blockType === "Constant") {
-                this.valueText.setText(gpl.formatValue(this, this.value + ""));
+            if (this.blockType === 'Constant') {
+                value = this.value;
+                if (!!this.valueOptions && this.valueOptions.length > 0) {
+                    let result = this.valueOptions.filter(function (option) {
+                        return option.value === value;
+                    });
+                    this.valueText.setText(!!result[0] ? result[0].name : gpl.formatValue(this, value + ''));
+                } else {
+                    this.valueText.setText(gpl.formatValue(this, value + ''));
+                }
             } else {
                 text = this.getPlaceholderText();
                 this.valueText.setText(text);
@@ -2711,7 +2821,11 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
 
     postInit: function () {
         if (this.value !== undefined) {
-            this.valueText.setText(gpl.formatValue(this, this.value.toString()));
+            if (!!this.valueOptions) {
+                this.valueText.setText(gpl.formatValue(this, gpl.getNameBasedOnValue(this.valueOptions, this.value)));
+            } else {
+                this.valueText.setText(gpl.formatValue(this, this.value.toString()));
+            }
         }
 
         this.callSuper('postInit');
@@ -4621,7 +4735,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
         invalidWidth = 2,
         selectedWidth = 2,
         proxyWidth = 3,
-        validWidth = 1,
+        validWidth = 1.2,
         bufferWidth = 10,
         invalidColor = '#ff0000',
         validColor = '#000000',
@@ -5629,6 +5743,7 @@ gpl.BlockManager = function (manager) {
             editPointCharacters: ko.observable(),
             editPointDecimals: ko.observable(),
             editPointValue: ko.observable(),
+            editPointValueOptions: ko.observableArray([]),
             editPointLabel: ko.observable(),
             editPointShowValue: ko.observable(),
             editPointShowLabel: ko.observable(),
@@ -5741,36 +5856,11 @@ gpl.BlockManager = function (manager) {
                     currReferences = bmSelf.upis[editBlock.upi] || [],
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
                     anchor,
-                    prop,
-                    adjustAnchoredPoints = function (focusedAnchor, anchorLocation, propertyname) {
-                        var anchorType,
-                            otherBlock,
-                            i,
-                            numberOfLines;
-
-                        numberOfLines = focusedAnchor.getLines().length;
-                        for (i = 0; i < numberOfLines; i++) {
-                            otherBlock = undefined;
-                            if (!!focusedAnchor.getLines()[i] && focusedAnchor.getLines()[i][anchorLocation]) {
-                                anchorType = focusedAnchor.getLines()[i][anchorLocation].anchorType;
-                                otherBlock = gpl.blockManager.getBlock(focusedAnchor.getLines()[i][anchorLocation].gplId);
-                                // otherBlock = focusedAnchor.getLines()[i][anchorLocation].getConnectedBlock();
-                            }
-
-                            if (!!otherBlock) {
-                                if (anchorType) {
-                                    otherBlock.setPointRef(anchorType, bmSelf.editBlockUpi, bmSelf.bindings.editPointName(), editBlock.pointType);
-                                }
-                                editBlock.setPointRef(propertyname, bmSelf.editBlockUpi, bmSelf.bindings.editPointName(), otherBlock.pointType);
-                                gpl.fire('editedblock', otherBlock);
-                            } else {
-                                editBlock.setPointRef(propertyname, bmSelf.editBlockUpi, bmSelf.bindings.editPointName());
-                            }
-                        }
-                    };
+                    prop;
 
                 editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
                 editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
+
                 if (editBlock.hasReferenceType) { //is monitor/control block
                     if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -5780,7 +5870,6 @@ gpl.BlockManager = function (manager) {
                                 idx = c;
                                 return false;
                             }
-                            //remove
                         });
 
                         if (idx !== undefined) {
@@ -5795,15 +5884,6 @@ gpl.BlockManager = function (manager) {
                         }
 
                         prop = props[editBlock.blockType.toLowerCase()];
-
-                        // configure references (all connected lines)
-                        if (prop === 'Monitor Point') {
-                            anchor = editBlock.outputAnchor;
-                            adjustAnchoredPoints(anchor, "endAnchor", prop);
-                        } else {
-                            anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
-                            adjustAnchoredPoints(anchor, "startAnchor", prop);
-                        }
 
                         editBlock.pointName = bmSelf.bindings.editPointName();
                         editBlock.upi = bmSelf.editBlockUpi;
@@ -5825,6 +5905,16 @@ gpl.BlockManager = function (manager) {
                         } else {
                             editBlock.setReferenceType('External');
                         }
+
+                        editBlock.setPointData(gpl.pointData[editBlock.upi]);
+
+                        // configure references (all connected lines)
+                        if (prop === 'Monitor Point') {
+                            anchor = editBlock.outputAnchor;
+                        } else {
+                            anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
+                        }
+                        anchor.adjustRelatedBlocks(true);
                     }
                 } else { //constant
                     editBlock.setValue(bmSelf.bindings.editPointValue());
@@ -6001,6 +6091,7 @@ gpl.BlockManager = function (manager) {
                     pointType = selectedPoint["Point Type"].Value,
                     devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
 
+                gpl.pointData[selectedPoint._id] = selectedPoint;
                 bmSelf.bindings.editPointName(name);
                 bmSelf.bindings.editPointLabel(name.split('_').pop());
                 bmSelf.editBlockUpi = upi;
@@ -6031,6 +6122,7 @@ gpl.BlockManager = function (manager) {
             var chars = parseInt(block.precision.characters, 10),
                 numDecimals = parseInt(block.precision.decimals, 10),
                 value = block.value,
+                valueOptions = (!!block.valueOptions ? block.valueOptions : []),
                 label = block.label,
                 editableTypes = {
                     'ControlBlock': true,
@@ -6047,6 +6139,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointCharacters(chars);
             bmSelf.bindings.editPointDecimals(numDecimals);
             bmSelf.bindings.editPointValue(value);
+            bmSelf.bindings.editPointValueOptions(valueOptions);
             bmSelf.bindings.editPointLabel(label);
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
@@ -6299,24 +6392,46 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.highlight = function (shape) {
+        let selectedBlock = bmSelf.getBlock(shape.gplId);
+
         if (gpl.isEdit) {
             if (bmSelf.highlightedObject) {
                 bmSelf.deselect();
             }
 
             bmSelf.highlightedObject = shape;
-            if (!shape._origFill) {
-                shape._origFill = shape.fill;
+
+            if (!shape._deselectedState) {
+                shape._deselectedState = {
+                    // origFill: shape.fill,
+                    origStroke: shape.stroke,
+                    origStrokeWidth: shape.strokeWidth,
+                    shadowOffsetX: shape.shadow.offsetX,
+                    shadowOffsetY: shape.shadow.offsetY
+                };
             }
-            shape.set('fill', bmSelf.highlightFill);
+
+            shape.set({
+                // fill: bmSelf.highlightFill,
+                stroke: '#BDFF00',
+                strokeWidth: 2,
+                shadow: {
+                    offsetX: 0,
+                    offsetY: 0
+                }
+            });
         }
     };
 
     bmSelf.deselect = function () {
         var obj = bmSelf.highlightedObject;
 
-        if (obj) {
-            obj.set('fill', obj._origFill);
+        if (obj && obj._deselectedState) {
+            // obj.set('fill', obj._deselectedState.origFill);
+            obj.set('stroke',  obj._deselectedState.origStroke);
+            obj.set('strokeWidth',  obj._deselectedState.origStrokeWidth);
+            obj.shadow.offsetX = obj._deselectedState.shadowOffsetX;
+            obj.shadow.offsetY = obj._deselectedState.shadowOffsetY;
         }
         bmSelf.highlightedObject = null;
     };
