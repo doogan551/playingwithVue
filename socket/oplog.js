@@ -54,7 +54,7 @@ module.exports = model = function (_common) {
     };
 
     oplog.on('insert', function (doc) {
-        // const notifications = new Notifications();
+        const alarm = new Alarm();
         let startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -89,7 +89,7 @@ module.exports = model = function (_common) {
                 }
             }
 
-            common.acknowledgePointAlarms(doc.o);
+            alarm.acknowledgeAlarm(doc.o);
             Notifications.processIncomingAlarm(doc.o);
         } else if (doc.ns === dbName + '.ActiveAlarms') {
             let activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
