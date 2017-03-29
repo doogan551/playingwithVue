@@ -12,29 +12,29 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 var upis = {
-  'demand': [918918, 918919, 918920, 918921, 918922, 918923, 918924, 918925, 918926, 918927, 918928, 918929, 918930, 918931, 918932, 918933, 918934, 918935, 918936, 918937, 918938, 918939, 918940, 918941, 918942, 918943, 918944, 918945, 918947, 918949, 918950, 918951, 918952, 918953],
-  'consumption': [918990, 918991, 918992, 918993, 918994, 918995, 918996, 918997, 918998, 918999, 919000, 919001, 919002, 919003, 919004, 919005, 919006, 919007, 919008, 919009, 919010, 919011, 919012, 919013, 919014, 919015, 919016, 919017, 919018, 919019, 919020, 919021, 919022, 919023],
-  'reactive': [918956, 918957, 918958, 918959, 918960, 918961, 918962, 918963, 918964, 918965, 918966, 918967, 918968, 918969, 918970, 918971, 918972, 918973, 918974, 918975, 918976, 918977, 918978, 918979, 918980, 918981, 918982, 918983, 918984, 918985, 918986, 918987, 918988, 918989]
+    'demand': [918918, 918919, 918920, 918921, 918922, 918923, 918924, 918925, 918926, 918927, 918928, 918929, 918930, 918931, 918932, 918933, 918934, 918935, 918936, 918937, 918938, 918939, 918940, 918941, 918942, 918943, 918944, 918945, 918947, 918949, 918950, 918951, 918952, 918953],
+    'consumption': [918990, 918991, 918992, 918993, 918994, 918995, 918996, 918997, 918998, 918999, 919000, 919001, 919002, 919003, 919004, 919005, 919006, 919007, 919008, 919009, 919010, 919011, 919012, 919013, 919014, 919015, 919016, 919017, 919018, 919019, 919020, 919021, 919022, 919023],
+    'reactive': [918956, 918957, 918958, 918959, 918960, 918961, 918962, 918963, 918964, 918965, 918966, 918967, 918968, 918969, 918970, 918971, 918972, 918973, 918974, 918975, 918976, 918977, 918978, 918979, 918980, 918981, 918982, 918983, 918984, 918985, 918986, 918987, 918988, 918989]
 };
 
 function newHistory() {
-  var history = require('../models/history.js');
-  var start = moment('10/01/15', 'MM/DD/YY').unix();
-  var end = moment.unix(start).add(1, 'month').unix();
+    var history = require('../models/history.js');
+    var start = moment('10/01/15', 'MM/DD/YY').unix();
+    var end = moment.unix(start).add(1, 'month').unix();
 
-  var options = [{
-    "touid": "tou_64",
-    "utilityName": "Electricity",
-    "range": {
-      "start": 1443675600,
-      "end": 1446354000
-    },
-    "scale": "month",
-    "fx": "tempRange",
-    "upis": [
-      65696
-    ]
-  }];
+    var options = [{
+        'touid': 'tou_64',
+        'utilityName': 'Electricity',
+        'range': {
+            'start': 1443675600,
+            'end': 1446354000
+        },
+        'scale': 'month',
+        'fx': 'tempRange',
+        'upis': [
+            65696
+        ]
+    }];
 
   // options  = [{"range":{"start":1417410000,"end":1420088400},"scale":"half-hour","fx":"missingData","upis":[919009,918929,918978]}];
   // console.log('before range', options.length);
@@ -70,7 +70,6 @@ function newHistory() {
         console.log(err);
       });*/
     });
-  });
 }
 // newHistory();
 
@@ -95,19 +94,6 @@ function fixDbDoubles() {
                 point[prop].ValueOptions[option] = parseInt(point[prop].ValueOptions[option], 10);
               }
             }
-            if (!isNaN(parseInt(point[prop].Value, 10))) {
-              if (point[prop].ValueType !== 1) {
-                point[prop].Value = parseInt(point[prop].Value, 10);
-              } else {
-                point[prop].Value = parseFloat(point[prop].Value);
-              }
-            }
-          } else {
-            // point[prop] = parseInt(point[prop], 10);
-          }
-        }
-        criteria.query = {
-          _id: point._id
         };
         criteria.updateObj = point;
         Utility.update(criteria, function (err, result) {
@@ -117,7 +103,6 @@ function fixDbDoubles() {
         console.log('done', err);
       });
     });
-  });
 }
 // fixDbDoubles();
 
@@ -133,7 +118,6 @@ function testDBCursor() {
     }, function (err) {
       console.log('done', err);
     });
-  });
 }
 // testDBCursor();
 /*process.on('uncaughtException', function(err) {
@@ -141,43 +125,48 @@ function testDBCursor() {
 });*/
 
 function addProperties() {
-  var criteria = {
-    collection: 'points',
-    query: {
-      'Point Type.Value': 'Optimum Start'
-    },
-    updateObj: {
-      $set: {
-        "Trend Enable": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 7,
-          "Value": false
+    var criteria = {
+        collection: 'points',
+        query: {
+            'Point Type.Value': 'Optimum Start'
         },
-        "Trend Interval": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 13,
-          "Value": 60
+        updateObj: {
+            $set: {
+                'Trend Enable': {
+                    'isDisplayable': true,
+                    'isReadOnly': false,
+                    'ValueType': 7,
+                    'Value': false
+                },
+                'Trend Interval': {
+                    'isDisplayable': true,
+                    'isReadOnly': false,
+                    'ValueType': 13,
+                    'Value': 60
+                },
+                'Trend Last Status': {
+                    'isDisplayable': false,
+                    'isReadOnly': true,
+                    'ValueType': 18,
+                    'Value': 0
+                },
+                'Trend Last Value': {
+                    'isDisplayable': false,
+                    'isReadOnly': true,
+                    'ValueType': 5,
+                    'Value': 'Off',
+                    'eValue': 0
+                },
+                'Trend Samples': {
+                    'isDisplayable': true,
+                    'isReadOnly': false,
+                    'ValueType': 4,
+                    'Value': 0
+                }
+            }
         },
-        "Trend Last Status": {
-          "isDisplayable": false,
-          "isReadOnly": true,
-          "ValueType": 18,
-          "Value": 0
-        },
-        "Trend Last Value": {
-          "isDisplayable": false,
-          "isReadOnly": true,
-          "ValueType": 5,
-          "Value": "Off",
-          "eValue": 0
-        },
-        "Trend Samples": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 4,
-          "Value": 0
+        options: {
+            multi: true
         }
       }
     },
@@ -189,7 +178,6 @@ function addProperties() {
     Utility.update(criteria, function (err, result) {
       console.log(err, result.result.nModified);
     });
-  });
 }
 // addProperties();
 
@@ -219,26 +207,23 @@ function updateGPL() {
           else
             point[prop].isReadOnly = false;
         }
-      }
+    };
+    db.connect(connectionString.join(''), function (err) {
+        Utility.iterateCursor(criteria, function (err, point, cb) {
+            count++;
+            if (count % 1000 === 0) {
+                console.log(count);
+            }
+            var parentUpi = point._parentUpi;
 
-      switch (point["Point Type"].Value) {
-        case 'Proportional':
-        case 'Binary Selector':
-        case 'Analog Selector':
-          point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Math':
-        case 'Multiplexer':
-          point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Delay':
-          point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Comparator':
-          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-      }
+            for (var prop in point) {
+                if (point[prop].ValueType == 8) {
+                    if (parentUpi !== 0)
+                        {point[prop].isReadOnly = true;}
+                    else
+                        {point[prop].isReadOnly = false;}
+                }
+            }
 
       var crit = {
         collection: 'points',
@@ -253,11 +238,23 @@ function updateGPL() {
     });
   });
 
+            var crit = {
+                collection: 'points',
+                query: {
+                    _id: point._id
+                },
+                updateObj: point
+            };
+            Utility.update(crit, cb);
+        }, function (err) {
+            console.log('done', err);
+        });
+    });
 }
 // updateGPL();
 
 function testTotalizerModel() {
-  var Reports = require('../models/reports');
+    var Reports = require('../models/reports');
 
   var data = {
     upis: [
@@ -287,7 +284,6 @@ function testTotalizerModel() {
     Reports.totalizerReport(data, function (err, result) {
       console.log(err, JSON.stringify(result));
     });
-  });
 }
 // testTotalizerModel();
 
@@ -297,9 +293,9 @@ function testInheritance() {
     subClass.prototype.constructor = subClass;
   };
 
-  function Table() {
-    this.type = 'table';
-  }
+    function Table() {
+        this.type = 'table';
+    }
 
   Table.prototype.setType = function (type) {
     console.log('before', this.type);
@@ -326,14 +322,8 @@ function testInheritance() {
         console.log('eval', this.eValue);
       }
     }
-  };
-  template['Point Type'].Value();
-}
-// testInheritance();
 
-function setUpNotifications() {
-  var pointNames = ['Booster_Pump 1_Control', 'Booster_Pump 2_Control', 'Booster_Pump 2_VFD Speed', 'Booster_Pump Station_Pressure', 'Booster_Pumps_Not Running_Alarm', 'Booster Sta_Chem Pump 1_Status', 'Booster Sta_Chem Pump 2_Status', 'Booster Sta_Chem Pump 3_Status', 'Booster Sta_Chem Pump 4_Status', 'Booster Sta_Discharge_Pressure', 'Booster Sta_Intrusion_Switch_Alarm', 'Booster Sta_Low_Suction_Alarm', 'Booster Sta_PH', 'Booster Sta_Power_Fail_Alarm', 'Booster Sta_Pump 1_Fail_Alarm', 'Booster Sta_Pump 2_Fail_Alarm', 'Booster Sta_Res Disch_Flow', 'Booster Sta_Reservoir_Flow', 'Booster Sta_Suction_Pressure', 'Chlorine_Feed', 'Clear_Water_Level', 'Combined_Effluent_Turbidity', 'Filter1_Effluent_Flow', 'Filter1_Effluent_Turbidity', 'Filter1_Finish H2O_Loss of Head', 'Filter2_Effluent_Flow', 'Filter2_Effluent_Turbidity', 'Filter2_Finish H2O_Loss of Head', 'Filter3_Effluent_Flow', 'Filter3_Effluent_Turbidity', 'Filter3_Finish H2O_Loss of Head', 'Finish_Pump 1_100 HP_Control', 'Finish_Pump 2_75 HP_Control', 'Finish_Pump 3_200 HP_Control', 'Finished_Water_Flow', 'Finished_Water_Turbidity', 'Finished_Water_pH', 'High_Service_Pressure', 'Mixed_Water_pH', 'Post_Chlorine', 'Raw_Water_Flow', 'Raw_Water_Pump 1_Control', 'Raw_Water_Pump 2_Control', 'Raw_Water_Turbidity', 'Reservior_Water_Level', 'Reservoir_Power_Fail_Alarm', 'Settled_DefNameSeg2_Turbidity', 'Sulfur_Feed', 'Sweep_Flow', 'Water_Tank_AltValve_Control', 'Water_Tank1_Intrusion', 'Water_Tank1_Level', 'Water_Tank2_Level_psi', 'Yadkinville_xTalk01 1_MSC20_Water Tank'];
-  var policyId = '56e883c634fa375416c1c0ec';
+    createInherit(Table, Devices);
 
   db.connect(connectionString.join(''), function (err) {
     var criteria = {
@@ -345,7 +335,6 @@ function setUpNotifications() {
         'Notify Policies': {
           $size: 1
         }
-      }
     };
     Utility.iterateCursor(criteria, function (err, doc, cb) {
       var msgs = doc['Alarm Messages'];
@@ -368,7 +357,7 @@ function setUpNotifications() {
     });
   });
 }
-// setUpNotifications();
+// testInheritance();
 
 function fixPointInst() {
   db.connect(connectionString.join(''), function (err) {
@@ -393,21 +382,40 @@ function fixPointInst() {
               }
             }, function (err, point) {
 
-              Config.EditChanges.applyUniquePIDLogic({
-                point: doc,
-                refPoint: point
-              }, index);
-              Utility.update({
+    db.connect(connectionString.join(''), function (err) {
+        var criteria = {
+            collection: 'points',
+            query: {
+                /*Name: {
+                  $in: pointNames
+                }*/
+                'Notify Policies': {
+                    $size: 1
+                }
+            }
+        };
+        Utility.iterateCursor(criteria, function (err, doc, cb) {
+            var msgs = doc['Alarm Messages'];
+            doc['Notify Policies'] = [policyId];
+            for (var i = 0; i < msgs.length; i++) {
+                msgs[i].ack = true;
+                msgs[i].notify = true;
+            }
+            Utility.update({
                 collection: 'points',
                 query: {
-                  _id: parseInt(doc._id, 10)
+                    _id: parseInt(doc._id, 10)
                 },
                 updateObj: doc
-              }, callback);
+            }, function (err, result) {
+                cb(err);
             });
-          } else {
-            callback();
-          }
+        }, function (err, count) {
+            console.log(err, count, 'done');
+        });
+    });
+}
+// setUpNotifications();
 
         }, cb);
 
@@ -468,7 +476,6 @@ function fixUsers() {
     }, function (err, count) {
       console.log('done', err, count);
     });
-  });
 }
 // fixUsers();
 
@@ -525,7 +532,6 @@ function createMathBlocks() {
         logger.info('done', err);
       });
     });
-  });
 }
 // createMathBlocks();
 
@@ -561,7 +567,6 @@ function renamePoints() {
         console.log(err, 'done');
       });
     });
-  });
 }
 // renamePoints();
 
@@ -573,21 +578,21 @@ function renamePoints() {
 "KVARInUpi" : NumberInt(643434),
 "KVAROutUpi" : NumberInt(643436)*/
 function test() {
-  process.setMaxListeners(0);
-  var objs = {
-    DemandInUpi: {
-      name3: 'W3P SUM',
-      newProp: 'DemandSumUpi'
-    },
-    UsageInUpi: {
-      name3: 'WH3P SUM',
-      newProp: 'UsageSumUpi'
-    },
-    KVARInUpi: {
-      name3: 'MVR3 SUM',
-      newProp: 'KVARSumUpi'
-    }
-  };
+    process.setMaxListeners(0);
+    var objs = {
+        DemandInUpi: {
+            name3: 'W3P SUM',
+            newProp: 'DemandSumUpi'
+        },
+        UsageInUpi: {
+            name3: 'WH3P SUM',
+            newProp: 'UsageSumUpi'
+        },
+        KVARInUpi: {
+            name3: 'MVR3 SUM',
+            newProp: 'KVARSumUpi'
+        }
+    };
 
   var splitName = function (meter) {
     return meter.Name.split('_');
@@ -680,446 +685,481 @@ function test() {
     }, function (err, count) {
       console.log(err, count);
     });
-  });
 }
 // test();
 
 function rearrangeProperties() {
-  var test = {
-    "_id": 20874,
-    "Name": "4201_FID01",
-    "name1": "4201",
-    "name2": "FID01",
-    "name3": "",
-    "name4": "",
-    "Security": [],
-    "_pStatus": 0,
-    "_cfgRequired": true,
-    "_cfgDevice": false,
-    "_forceAllCOV": false,
-    "_relDevice": 0,
-    "_relRMU": 0,
-    "_relPoint": 0,
-    "_updPoint": false,
-    "_updTOD": false,
-    "_pollTime": 0,
-    "_devModel": 2,
-    "_rmuModel": 0,
-    "_parentUpi": 0,
-    "_actvAlmId": {
-      "$oid": "000000000000000000000000"
-    },
-    "Alarm Messages": [{
-      "msgType": 17,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070e1"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 7,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d6"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 8,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d7"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 6,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d5"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 9,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d8"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 10,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d9"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 11,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070da"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 12,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070db"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 45,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070f4"
-      },
-      "ack": false,
-      "notify": false
-    }],
-    "APDU Retries": {
-      "ValueType": 4,
-      "Value": 2,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "APDU Timeout": {
-      "ValueType": 4,
-      "Value": 25,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Configure Device": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "COV Period": {
-      "ValueType": 13,
-      "Value": 10,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Device Status": {
-      "ValueType": 5,
-      "Value": "Stop Scan",
-      "eValue": 66,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Alarm Value": {
-      "ValueType": 5,
-      "Value": "Failed",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Downlink Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Firmware Version": {
-      "ValueType": 2,
-      "Value": "V3.20",
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Last Report Time": {
-      "ValueType": 11,
-      "Value": 1463589898,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Model Type": {
-      "ValueType": 5,
-      "Value": "Field Interface Device",
-      "eValue": 2,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Startup Delay": {
-      "ValueType": 13,
-      "Value": 120,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Time Zone": {
-      "ValueType": 5,
-      "Value": "Central Time Zone",
-      "eValue": 6,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Stop Scan": {
-      "ValueType": 7,
-      "Value": true,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Active Text": {
-      "ValueType": 2,
-      "Value": "Normal",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Class": {
-      "ValueType": 5,
-      "Value": "Critical",
-      "eValue": 1,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Delay Time": {
-      "ValueType": 13,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Display Point": {
-      "ValueType": 8,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false,
-      "PointName": "",
-      "PointType": 0,
-      "DevInst": 0,
-      "PointInst": 0
-    },
-    "Alarm Repeat Enable": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Repeat Time": {
-      "ValueType": 17,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarms Off": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm State": {
-      "ValueType": 5,
-      "Value": "Normal",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Inactive Text": {
-      "ValueType": 2,
-      "Value": "Failed",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Value": {
-      "ValueType": 5,
-      "Value": "Failed",
-      "eValue": 0,
-      "ValueOptions": {
-        "Failed": 0,
-        "Normal": 1
-      },
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Quality Code Enable": {
-      "ValueType": 18,
-      "Value": 255,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Reliability": {
-      "ValueType": 5,
-      "Value": "No Fault",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Trend Interval": {
-      "ValueType": 13,
-      "Value": 60,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Remarks": {
-      "ValueType": 2,
-      "Value": "",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Description": {
-      "ValueType": 2,
-      "Value": "",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Point Type": {
-      "ValueType": 5,
-      "Value": "Device",
-      "eValue": 8,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "taglist": ["4201", "FID01", "Device"],
-    "Ethernet Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Ethernet IP Port": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Ethernet Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Downlink IP Port": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Downlink Broadcast Delay": {
-      "ValueType": 4,
-      "Value": 64,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Ethernet Protocol": {
-      "ValueType": 5,
-      "Value": "None",
-      "eValue": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Uplink Port": {
-      "ValueType": 5,
-      "Value": "Port 1",
-      "eValue": 1,
-      "ValueOptions": {
-        "Port 1": 1,
-        "Port 2": 2
-      },
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Address": {
-      "ValueType": 4,
-      "Value": 12,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Maximum Address": {
-      "ValueType": 4,
-      "Value": 15,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Network": {
-      "ValueType": 4,
-      "Value": 15,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 2 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
+    var test = {
+        '_id': 20874,
+        'Name': '4201_FID01',
+        'name1': '4201',
+        'name2': 'FID01',
+        'name3': '',
+        'name4': '',
+        'Security': [],
+        '_pStatus': 0,
+        '_cfgRequired': true,
+        '_cfgDevice': false,
+        '_forceAllCOV': false,
+        '_relDevice': 0,
+        '_relRMU': 0,
+        '_relPoint': 0,
+        '_updPoint': false,
+        '_updTOD': false,
+        '_pollTime': 0,
+        '_devModel': 2,
+        '_rmuModel': 0,
+        '_parentUpi': 0,
+        '_actvAlmId': {
+            '$oid': '000000000000000000000000'
+        },
+        'Alarm Messages': [{
+            'msgType': 17,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070e1'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 7,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070d6'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 8,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070d7'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 6,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070d5'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 9,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070d8'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 10,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070d9'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 11,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070da'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 12,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070db'
+            },
+            'ack': false,
+            'notify': false
+        }, {
+            'msgType': 45,
+            'msgId': {
+                '$oid': '574463492f1ead8b514070f4'
+            },
+            'ack': false,
+            'notify': false
+        }],
+        'APDU Retries': {
+            'ValueType': 4,
+            'Value': 2,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'APDU Timeout': {
+            'ValueType': 4,
+            'Value': 25,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Configure Device': {
+            'ValueType': 7,
+            'Value': false,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'COV Period': {
+            'ValueType': 13,
+            'Value': 10,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Device Status': {
+            'ValueType': 5,
+            'Value': 'Stop Scan',
+            'eValue': 66,
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Alarm Value': {
+            'ValueType': 5,
+            'Value': 'Failed',
+            'eValue': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Downlink Network': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Firmware Version': {
+            'ValueType': 2,
+            'Value': 'V3.20',
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Last Report Time': {
+            'ValueType': 11,
+            'Value': 1463589898,
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Model Type': {
+            'ValueType': 5,
+            'Value': 'Field Interface Device',
+            'eValue': 2,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Startup Delay': {
+            'ValueType': 13,
+            'Value': 120,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Time Zone': {
+            'ValueType': 5,
+            'Value': 'Central Time Zone',
+            'eValue': 6,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Stop Scan': {
+            'ValueType': 7,
+            'Value': true,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Active Text': {
+            'ValueType': 2,
+            'Value': 'Normal',
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarm Class': {
+            'ValueType': 5,
+            'Value': 'Critical',
+            'eValue': 1,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarm Delay Time': {
+            'ValueType': 13,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarm Display Point': {
+            'ValueType': 8,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false,
+            'PointName': '',
+            'PointType': 0,
+            'DevInst': 0,
+            'PointInst': 0
+        },
+        'Alarm Repeat Enable': {
+            'ValueType': 7,
+            'Value': false,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarm Repeat Time': {
+            'ValueType': 17,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarms Off': {
+            'ValueType': 7,
+            'Value': false,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Alarm State': {
+            'ValueType': 5,
+            'Value': 'Normal',
+            'eValue': 0,
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Inactive Text': {
+            'ValueType': 2,
+            'Value': 'Failed',
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Value': {
+            'ValueType': 5,
+            'Value': 'Failed',
+            'eValue': 0,
+            'ValueOptions': {
+                'Failed': 0,
+                'Normal': 1
+            },
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Quality Code Enable': {
+            'ValueType': 18,
+            'Value': 255,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Reliability': {
+            'ValueType': 5,
+            'Value': 'No Fault',
+            'eValue': 0,
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'Trend Interval': {
+            'ValueType': 13,
+            'Value': 60,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Remarks': {
+            'ValueType': 2,
+            'Value': '',
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Description': {
+            'ValueType': 2,
+            'Value': '',
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Point Type': {
+            'ValueType': 5,
+            'Value': 'Device',
+            'eValue': 8,
+            'isDisplayable': true,
+            'isReadOnly': true
+        },
+        'taglist': ['4201', 'FID01', 'Device'],
+        'Ethernet Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Ethernet IP Port': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Ethernet Network': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Downlink IP Port': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Downlink Broadcast Delay': {
+            'ValueType': 4,
+            'Value': 64,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Ethernet Protocol': {
+            'ValueType': 5,
+            'Value': 'None',
+            'eValue': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Uplink Port': {
+            'ValueType': 5,
+            'Value': 'Port 1',
+            'eValue': 1,
+            'ValueOptions': {
+                'Port 1': 1,
+                'Port 2': 2
+            },
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Port 1 Address': {
+            'ValueType': 4,
+            'Value': 12,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Port 1 Maximum Address': {
+            'ValueType': 4,
+            'Value': 15,
+            'Max': 127,
+            'Min': 0,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Port 1 Network': {
+            'ValueType': 4,
+            'Value': 15,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Port 1 Protocol': {
+            'ValueType': 5,
+            'Value': 'MS/TP',
+            'eValue': 1,
+            'isDisplayable': true,
+            'isReadOnly': false
+        },
+        'Port 2 Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 2 Maximum Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'Max': 127,
+            'Min': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 2 Network': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 2 Protocol': {
+            'ValueType': 5,
+            'Value': 'MS/TP',
+            'eValue': 1,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 3 Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 3 Maximum Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'Max': 127,
+            'Min': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 3 Network': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 3 Protocol': {
+            'ValueType': 5,
+            'Value': 'MS/TP',
+            'eValue': 1,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 4 Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 4 Maximum Address': {
+            'ValueType': 4,
+            'Value': 0,
+            'Max': 127,
+            'Min': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 4 Network': {
+            'ValueType': 4,
+            'Value': 0,
+            'isDisplayable': false,
+            'isReadOnly': false
+        },
+        'Port 4 Protocol': {
+            'ValueType': 5,
+            'Value': 'MS/TP',
+            'eValue': 1,
+            'isDisplayable': false,
+            'isReadOnly': false
+        }
+    };
+    var compare = function (a, b) {
+        var _a = a.toLowerCase();
+        var _b = b.toLowerCase();
+        if (['name', 'name1'].indexOf(_a) >= 0) {
+            console.log(typeof test[a], a);
+        }
+        if (_a === '_id') {
+            return -1;
+        } else if (_b === '_id') {
+            return 1;
+        }
+        if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
+            if (_a > _b) {
+                return -1;
+            } else if (a < _b) {
+                return 1;
+            }
+        } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
+            if (_a > _b) {
+                return 1;
+            } else if (a < _b) {
+                return -1;
+            }
+        } else if (_a.match(/^name|^_/)) {
+            return -1;
+        } else if (_b.match(/^name|^_/)) {
+            return 1;
+        }
+        return 0;
+    };
+    var arr = [];
+    var o = {};
+    for (var prop in test) {
+        arr.push(prop);
     }
   };
   var compare = function (a, b) {
@@ -1128,42 +1168,8 @@ function rearrangeProperties() {
     if (['name', 'name1'].indexOf(_a) >= 0) {
       console.log(typeof test[a], a);
     }
-    if (_a === '_id') {
-      return -1;
-    } else if (_b === '_id') {
-      return 1;
-    }
-    if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
-      if (_a > _b) {
-        return -1;
-      } else if (a < _b) {
-        return 1;
-      }
-    } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
-      if (_a > _b) {
-        return 1;
-      } else if (a < _b) {
-        return -1;
-      }
-    } else if (_a.match(/^name|^_/)) {
-      return -1;
-    } else if (_b.match(/^name|^_/)) {
-      return 1;
-    }
-    return 0;
-  }
-  var arr = [];
-  var o = {};
-  for (var prop in test) {
-    arr.push(prop);
-  }
-  arr.sort(compare);
-  // console.log(arr);
-  for (var i = 0; i < arr.length; i++) {
-    o[arr[i]] = test[arr[i]];
-  }
-  test = o;
-  console.log(test);
+    test = o;
+    console.log(test);
 }
 // rearrangeProperties();
 
@@ -1200,14 +1206,13 @@ function countUpis() {
     }, function (err, count) {
       console.log('done', count, uCount);
     });
-  });
 }
 // countUpis();
 
 function testCron() {
-  var _ = require('lodash');
-  var prettyCron = require('prettycron');
-  var CronJob = require('../models/cronjob');
+    var _ = require('lodash');
+    var prettyCron = require('prettycron');
+    var CronJob = require('../models/cronjob');
 
   var seconds = new Date().getSeconds();
   var time = '*/15 * * * * *';
@@ -1232,9 +1237,9 @@ function testCron() {
 // testCron();
 
 function testobjects() {
-  function one(b) {
-    b(1);
-  }
+    function one(b) {
+        b(1);
+    }
 
   function two(a, b) {
     console.log(a, 2);
@@ -1295,7 +1300,6 @@ function fixComparators() {
     }, function (err, count) {
       console.log(err, count, 'done');
     });
-  });
 }
 // fixComparators();
 

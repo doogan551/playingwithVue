@@ -7,29 +7,29 @@ var logger = require('./logger')(module);
 var zmqConfig = config.get('Infoscan.zmqConfig');
 var zmqString = zmqConfig.protocol + '://' + zmqConfig.server + ':' + zmqConfig.port;
 
-module.exports.sendCommand = function(msg, callback) {
-  var zmqConn = makeZMQConn('dealer', 'client', zmqString, 'connect');
-  zmqConn.send(msg);
+module.exports.sendCommand = function (msg, callback) {
+    var zmqConn = makeZMQConn('dealer', 'client', zmqString, 'connect');
+    zmqConn.send(msg);
 
-  zmqConn.on('message', function(data) {
-    data = JSON.parse(data.toString());
-    logger.info(data);
+    zmqConn.on('message', function (data) {
+        data = JSON.parse(data.toString());
+        logger.info(data);
 
-    if (!data.hasOwnProperty('DEBUG')) {
-      if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
-        return callback(data.err, null);
-      } else if (data.msg !== 'Done' && (!data.hasOwnProperty('msg') || (data.hasOwnProperty('msg') && !data.msg.hasOwnProperty('DEBUG')))) {
-        data = data.msg || data;
-        return callback(null, data);
-      }
-    }
-  });
+        if (!data.hasOwnProperty('DEBUG')) {
+            if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
+                return callback(data.err, null);
+            } else if (data.msg !== 'Done' && (!data.hasOwnProperty('msg') || (data.hasOwnProperty('msg') && !data.msg.hasOwnProperty('DEBUG')))) {
+                data = data.msg || data;
+                return callback(null, data);
+            }
+        }
+    });
 };
 
 function makeZMQConn(sockType, idPrefix, addr, bindSyncOrConnect) {
-  var sock = zmq.socket(sockType);
-  sock.identity = idPrefix + uuid.v4();
-  // call the function name in bindSyncOrConnect
-  sock[bindSyncOrConnect](addr);
-  return sock;
+    var sock = zmq.socket(sockType);
+    sock.identity = idPrefix + uuid.v4();
+    // call the function name in bindSyncOrConnect
+    sock[bindSyncOrConnect](addr);
+    return sock;
 }

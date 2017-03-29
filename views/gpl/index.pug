@@ -361,9 +361,16 @@ html
                             .subtitle Configuration
                                 .row
                                     .col-md-6
+                                        // ko if: (editPointValueOptions().length > 0)
+                                        .input-row.dataField
+                                            label Options
+                                            select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
+                                        // /ko
+                                        // ko if: (editPointValueOptions().length === 0)
                                         .input-row.dataField
                                             label(for="constantvalue") Value
                                             input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
+                                        // /ko
                                     .col-md-6.editSection
                                         .input-row.dataField
                                             label(for="constantlabel") Label

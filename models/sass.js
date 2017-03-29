@@ -1,10 +1,8 @@
-var sass = require('node-sass');
-var Utility = require('../models/utility');
-// var logger = require('../helpers/logger')(module);
+const sass = require('node-sass');
 
-module.exports = {
-    renderSass: function (data, cb) {
-         var dir = data.dir,
+const Sass = class Sass {
+    renderSass(data, cb) {
+        let dir = data.dir,
             dirs = dir.split('-').join('/'),
             filename = data.filename,
             base = __dirname + '/../sass/' + dirs + '/',
@@ -15,3 +13,5 @@ module.exports = {
         }, cb);
     }
 };
+
+module.exports = Sass;
