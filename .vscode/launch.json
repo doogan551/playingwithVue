@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\apps\\importMechStructure.js"
+            "program": "${workspaceRoot}\\apps\\buildTrees.js"
         },
         {
             "type": "node",

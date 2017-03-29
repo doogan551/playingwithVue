@@ -17,7 +17,7 @@ const order = ['Class', 'Class_Type', 'System', 'System_Type', 'Component', 'Com
 let mechStructure = {
     name: '',
     category: 'Class',
-    structure: []
+    pathRefs: []
 };
 let hierarchy = [{
         category: 'Class'
@@ -247,6 +247,18 @@ let transformSQLite = function (cb) {
 };
 
 let createPaths = function (cb) {
+    // let buildRefPath = function (parents) {
+    //     if (!parents.length) {
+    //         return [];
+    //     }
+    //     var path = {
+    //         $and: []
+    //     };
+    //     for (var p = 0; p < parents.length; p++) {
+    //         let parent = parents[p];
+    //         path.$and.push({pathRefs:{$elemMatch:{PropertyName: parent.PropertyName, }}});
+    //     }
+    // };
     let buildPaths = function (orderIndex, callback) {
         if (orderIndex >= order.length) {
             return callback();
@@ -257,23 +269,56 @@ let createPaths = function (cb) {
             statement.push(', ');
         }
         statement.pop();
-        statement.push(' from Mechanical_Library WHERE ' + order[orderIndex] + ' != ""');
+        statement.push(' from Mechanical_Library');
         var criteria = {
             statement: statement.join('')
         };
         all(criteria, function (err, rows) {
             async.eachSeries(rows, function (row, callback2) {
                 let newMech = _.cloneDeep(mechStructure);
+                var query = {
+                    pathRefs: []
+                };
+
                 newMech.name = row[order[orderIndex]];
                 newMech.category = order[orderIndex];
-                // get mongoids
-                for (var o = 0; o < orderIndex; o++) {
-                    newMech.structure.push(row[order[o]]);
-                }
-                Utility.insert({
-                    collection: collection,
-                    insertObj: newMech
-                }, callback2);
+
+                var o = 0;
+                async.whilst(function () {
+                    return o < orderIndex
+                }, function (callback3) {
+                    var currentPath = {};
+                    // var refPath = buildRefPath(currentPath);
+
+                    query.name = row[order[o]];
+                    query.category = order[o];
+                    Utility.getOne({
+                        collection: collection,
+                        query: query
+                    }, function (err, parent) {
+                        var mechRef = {
+                            AppIndex: 0,
+                            name: parent.name,
+                            Value: parent._id.toString(),
+                            PropertyName: parent.category,
+                            isDisplayable: true,
+                            isReadOnly: false
+                        };
+                        newMech.pathRefs.push(mechRef);
+                        delete query.pathRefs;
+                        query['pathRefs.Value'] = parent._id.toString();
+                        o++;
+                        callback3();
+                    });
+                }, function (err) {
+                    Utility.insert({
+                        collection: collection,
+                        insertObj: newMech
+                    }, callback2);
+                });
+                // for (var o = 0; o < orderIndex; o++) {
+                //     newMech.structure.push(row[order[o]]);
+                // }
             }, function (err) {
                 buildPaths(++orderIndex, callback)
             });
