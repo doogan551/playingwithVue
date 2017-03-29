@@ -53,12 +53,12 @@ app.use(bodyParser.urlencoded({
     extended: true,
     parameterLimit: 45000
 }));
-let storage = multer.memoryStorage();
-let upload = multer({
-    storage: storage
-});
+// var storage = multer.memoryStorage();
+// var upload = multer({
+//   storage: storage
+// });
 
-app.use(upload.array());
+// app.use(upload.array());
 
 app.engine('pug', require('pug').__express);
 app.set('view engine', 'pug');

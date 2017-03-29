@@ -109,10 +109,15 @@ router.post('/later', function (req, res, next) {
     });
 });
 // Checked
-router.post('/publish', function (req, res, next) {
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
-    data.files = req.files;
+let multer = require('multer');
+let upload = multer({
+	storage: multer.memoryStorage()
+});
+let type = upload.array();
+router.post('/publish', function(req, res, next) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+	data.files = req.files;
 
     Display.publish(data, function (err, result) {
         if (err) {

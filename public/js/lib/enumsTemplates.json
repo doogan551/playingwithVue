@@ -505,6 +505,39 @@
             },
             "Control Log": {
                 "enum": 8
+            },
+            "Signal Host TOD": {
+                "enum": 9
+            },
+            "Signal Exec TOD": {
+                "enum": 10
+            },
+            "Device Loader": {
+                "enum": 11
+            },
+            "Start Server": {
+                "enum": 12
+            },
+            "Stop Server": {
+                "enum": 13
+            },
+            "Do Backup": {
+                "enum": 14
+            },
+            "Read Device Net Info": {
+                "enum": 15
+            },
+            "Read System Info": {
+                "enum": 16
+            },
+            "Set Count Interval": {
+                "enum": 17
+            },
+            "Print Router Table": {
+                "enum": 18
+            },
+            "Get System Status": {
+                "enum": 19
             }
         },
         "Conversion Types": {

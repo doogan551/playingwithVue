@@ -39,7 +39,7 @@ body {
     height: 35px;
     width: 55px;
     text-align: center;
-    cursor: pointer
+    cursor: pointer;
     margin-right: 5px;
     margin-left: 5px;
     float: right;
@@ -47,7 +47,7 @@ body {
     position: absolute;
     top: 500px;
     display: none;
-    color: #2f3e46
+    color: #2f3e46;
     box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
     background-clip: padding-box;
     border-radius: 1em /*{global-radii-buttons}*/;
@@ -62,7 +62,7 @@ body {
     height: 35px;
     width: 95px;
     text-align: center;
-    cursor: pointer
+    cursor: pointer;
     margin-right: 5px;
     margin-left: 5px;
     float: right;
@@ -70,14 +70,14 @@ body {
     position: absolute;
     top: 500px;
     display: none;
-    color: #2f3e46
+    color: #2f3e46;
 box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
     background-clip: padding-box;
     border-radius: 1em /*{global-radii-buttons}*/;
     border: 1px solid #ccc /*{c-bup-border}*/;
     background: #eee /*{c-bup-background-color}*/;
     font-weight: bold;
-    color: #222 /*{c-bup-color}*/;
+    color: #222; /*{c-bup-color}*/;
     text-shadow: 0 /*{c-bup-shadow-x}*/ 1px /*{c-bup-shadow-y}*/ 0 /*{c-bup-shadow-radius}*/ #fff /*{c-bup-shadow-color}*/;
 }
 

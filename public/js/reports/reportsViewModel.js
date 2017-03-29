@@ -1388,6 +1388,8 @@ var reportsViewModel = function () {
         $pointSelectorIframe,
         longClickStart,
         longClickTimer = 100,
+        mouseHoverStart,
+        mouseHoverTimer = 800,
         reportData,
         reportChartData,
         activeDataRequests,
@@ -3595,10 +3597,10 @@ var reportsViewModel = function () {
                     $dataTablePlaceHolder.on("click", ".pointInstance", function () {
                         var $this = $(this),
                             data = {
-                            upi: $this.attr("upi"),
-                            pointType: $this.attr("pointType"),
-                            pointName: $this.text()
-                        };
+                                upi: $this.attr("upi"),
+                                pointType: $this.attr("pointType"),
+                                pointName: $this.text()
+                            };
 
                         self.showPointReview(data);
                     });
@@ -4871,6 +4873,7 @@ var reportsViewModel = function () {
 
                     adjustViewReportTabHeightWidth();
                     self.activeRequestDataDrawn(true);
+                    self.selectViewReportTabSubTab("gridData");
                 }
             }
         },
@@ -5694,6 +5697,7 @@ var reportsViewModel = function () {
                                 return self.scheduler.availableUsersObj[name]._id;
                             }));
                             data.emails(recipientEmails);
+                            data.isValid = ko.observable(data.users().length > 0 || data.emails().length > 0);
 
                             data.optionalParameters.duration({
                                 selectedRange: bindings.selectedReportRange().value,
@@ -6043,6 +6047,7 @@ var reportsViewModel = function () {
                     schedule = $.extend({}, ko.toJS(schedule));
                     delete schedule.isDirty;
                     delete schedule.parsed;
+                    delete schedule.isValue;
                     if (schedule.deleteMe === false) {
                         delete schedule.deletMe;
                     }
@@ -6126,6 +6131,7 @@ var reportsViewModel = function () {
                         // Convert some keys to observables
                         schedule.optionalParameters.duration = ko.observable(schedule.optionalParameters.duration);
                         schedule.optionalParameters.interval = ko.observable(schedule.optionalParameters.interval);
+                        schedule.isValid = ko.observable(schedule.users.length > 0 || schedule.emails.length > 0);
                         schedule.users = ko.observableArray(schedule.users);
                         schedule.emails = ko.observableArray(schedule.emails);
                         schedule.enabled = ko.observable(schedule.enabled);
@@ -6948,7 +6954,10 @@ var reportsViewModel = function () {
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        // $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        setTimeout(function () {
+            $tabViewReport.find("ul.tabs").find("." + subTabName + " a").click();
+        }, 200);
     };
 
     self.editColumn = function (column, index) {
@@ -6970,19 +6979,36 @@ var reportsViewModel = function () {
     };
 
     self.showColumnSettings = function (element, column) {
-        var $card = $(element),
-            $cardReveal = $card.find(".card-reveal"),
-            delay = 750,
-            setTimeoutConst;
-        self.currentColumnEdit(column);
-        $cardReveal.css("display", "block").css("transform", "translateY(-100%)");
-        return true;
+        var $element = $(element),
+            $card = $element.parent(),
+            $cardReveal = $card.find(".card-reveal");
+
+        mouseHoverStart = moment();
+        setTimeout(function () {
+            if (moment().diff(mouseHoverStart) > mouseHoverTimer) {
+                self.currentColumnEdit(column);
+                $cardReveal
+                    .css("display", "block")
+                    .css("transform", "translateY(-100%)")
+                    .css("top", $card.height() + 280);
+
+                $cardReveal.width(column.colName.length * 8);
+
+                setTimeout(function () {
+                    Materialize.updateTextFields();
+                }, 200);
+            }
+        }, mouseHoverTimer + 10);
+
+        return false;
     };
 
     self.hideColumnSettings = function (element) {
-        var $card = $(element),
+        var $element = $(element),
+            $card = $element.parent(),
             $cardReveal = $card.find(".card-reveal");
         $cardReveal.css("display", "none").css("transform", "translateY(0px)");
+        mouseHoverStart = moment();
         // self.currentColumnEdit({});
         return true;
     };

@@ -668,7 +668,9 @@ var Config = (function (obj) {
             var len = props.length;
 
             for (var i = 0; i < len; i++) {
-                point[props[i]].isDisplayable = val;
+                if (point[props[i]]) {
+                    point[props[i]].isDisplayable = val;
+                }
             }
         },
 

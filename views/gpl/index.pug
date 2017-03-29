@@ -148,7 +148,8 @@ html
                     .modal-header
                         h3.panel-title Edit Precision
                     .modal-body.clearfix
-                        .subtitle.col-xs-12.center-block Numeric Format
+                        .subtitle.col-xs-12.center-block
+                            | Numeric Format
                             .input-row  # of Characters
                                 input.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
                             .input-row # of Decimals
@@ -339,7 +340,8 @@ html
                                             label(for="blocklabel") Label
                                             input#blocklabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
 
-                            .subtitle.col-xs-5 Numeric Format
+                            .subtitle.col-xs-5
+                                | Numeric Format
                                 .input-row  # of Characters
                                     input.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
 
@@ -359,14 +361,22 @@ html
                             .subtitle Configuration
                                 .row
                                     .col-md-6
+                                        // ko if: (editPointValueOptions().length > 0)
+                                        .input-row.dataField
+                                            label Options
+                                            select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
+                                        // /ko
+                                        // ko if: (editPointValueOptions().length === 0)
                                         .input-row.dataField
                                             label(for="constantvalue") Value
                                             input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
+                                        // /ko
                                     .col-md-6.editSection
                                         .input-row.dataField
                                             label(for="constantlabel") Label
                                             input#constantlabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
-                            .subtitle.col-md-5.editSection Numeric Format
+                            .subtitle.col-md-5.editSection
+                                | Numeric Format
                                 .col-md-6
                                     .input-row.dataField
                                         label(for="configPointCharacters") # of Characters

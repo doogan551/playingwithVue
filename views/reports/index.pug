@@ -299,8 +299,8 @@ html.direports
                                                             // /ko
                                                             // ko if: $index() > 0
                                                             // ko if: ($parent.reportType() !== 'Property')
-                                                            div.card.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
-                                                                .card-content
+                                                            .card.columnNames
+                                                                .card-content(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseenter: function () { $root.showColumnSettings($element, $data) },  mouseleave: function() { $root.hideColumnSettings($element) } }")
                                                                     // ko if: ($parent.reportType() === 'Totalizer')
                                                                     label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
                                                                     // /ko
@@ -311,7 +311,7 @@ html.direports
                                                                     .row
                                                                         label.col.s2 Name:
                                                                     .row
-                                                                        span.col.s10.columnDisplayName(data-bind="text: colName")
+                                                                        span.col.s12.columnDisplayName(data-bind="text: colName")
                                                                     // ko if: ($data.canCalculate)
                                                                     .row
                                                                         p(style="display: inline-flex")
@@ -333,8 +333,9 @@ html.direports
                                                                     // ko if: ($root.canEdit() && canBeCharted)
                                                                     .row
                                                                         p(style="display: inline-flex")
-                                                                            label.col.s2(data-bind="text: 'Chart:', attr: { for: 'cardIncludeInChart_' + $index()}", style="text-align: right;")
+                                                                            label.col.s2 Chart:
                                                                             input.col.s2.includeInChartColumn.input-md.filled-in(data-bind="checked: $data.includeInChart, enable: false, attr: { id: 'cardIncludeInChart_' + $index()}", type="checkbox")
+                                                                            label.includeInChartColumn(data-bind="attr: { for: 'cardIncludeInChart_' + $index()}")
                                                                     // /ko
                                                                     // ko if: ($root.canEdit() && canBeCharted)
                                                                     .row
@@ -370,9 +371,6 @@ html.direports
                                                         a.addColumnGridButton.rightSideAddButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element) }")
                                                         // /ko
                                         tbody(style="border-bottom: 1px solid #d0d0d0;")
-                                            tr(data-bind="foreach: listOfColumns()")
-                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
-                                                    div ...
                                             tr(data-bind="foreach: listOfColumns()")
                                                 td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
                                                     div ...
@@ -538,7 +536,7 @@ html.direports
                                             span , email this report to&nbsp;
                                             span(data-bind='text: $root.scheduler.buildRecipients($data)')
                                         i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
-                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: !$data.isDirty(), click: $root.scheduler.runNow') Run Now
+                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: (!$data.isDirty() && $data.isValid()), click: $root.scheduler.runNow') Run Now
                                     // /ko
                                     // /ko
                                     a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action

@@ -699,10 +699,10 @@ let scripts = {
             } else {
                 cb();
             }
-        }, function (err) {
-            logger.info('Finished with updateGenerateGPLPointRefs');
+        }, function(err) {
+            logger.info("Finished with updateGenerateDisplayPointRefs");
             callback(null, {
-                fn: 'updateGenerateGPLPointRefs',
+                fn: "updateGenerateDisplayPointRefs",
                 errors: err
             });
         });
@@ -807,10 +807,82 @@ let scripts = {
             });
         });
     },
+    // 0.5.1 - GPL X-Or moving to XOr...
+    updateGPLDigitalLogicXORBlock: function(callback) {
+        var afterVersion = '0.5.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateGPLDigitalLogicXORBlock',
+                errors: null,
+                results: null
+            });
+        }
+        Utility.iterateCursor({
+            collection: 'points',
+            query: {
+                $or: [{
+                    'Calculation Type.Value': 'X-Or'
+                }, {
+                    'Calculation Type.ValueOptions.X-Or': 2
+                }]
+            }
+        }, function processSequence(err, doc, cb) {
+            var calcType = doc["Calculation Type"],
+                updateMe = false;
 
-    // 0.4.2 - Report schema change
-    updateReportsDurationInterval: function (callback) {
-        let afterVersion = '0.4.1';
+            if (!!calcType) {
+                // logger.info("working on " + doc.Name );
+                updateMe = true;
+
+                if (calcType.Value === "X-Or") {
+                    calcType.Value = "XOr";
+                }
+
+                if (!!calcType.ValueOptions && !!calcType.ValueOptions["X-Or"]) {
+                    delete calcType.ValueOptions["X-Or"];
+                } else {
+                    // logger.info("calcType.ValueOptions = " + JSON.stringify(calcType.ValueOptions));
+                }
+
+                calcType.ValueOptions.XOr = 2;
+
+                // logger.info("calcType = " + JSON.stringify(calcType) + "    valueOptions = " + JSON.stringify(calcType.ValueOptions));
+
+                if (updateMe) {
+                    // logger.info('updating Digital Logic:', doc._id);
+                    Utility.update({
+                        collection: 'points',
+                        query: {
+                            _id: doc._id
+                        },
+                        updateObj: doc
+                    }, function updatedSequenceHandler(err) {
+                        if (err) {
+                            logger.debug('Update err:', err);
+                        }
+
+                        cb(null);
+                    });
+                } else {
+                    logger.info("nothing change for " + doc.Name );
+                    cb(null);
+                }
+            } else {
+                logger.info("no SequenceData for " + doc.Name );
+                cb(null);
+            }
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with updateGPLDigitalLogicXORBlock');
+            callback(null, {
+                fn: 'updateGPLDigitalLogicXORBlock',
+                errors: err
+            });
+        });
+    },
+
+    // 0.4.2 - Report schema change   Property Reports do NOT need duration or interval
+    updateReportsDurationInterval: function(callback) {
+        var afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'updateReportsDurationInterval',
@@ -821,7 +893,8 @@ let scripts = {
         logger.info('     - - - updateReportsDurationInterval() called - - - ');
         let collectionName = 'points',
             query = {
-                'Point Type.Value': 'Report'
+                'Point Type.Value': 'Report',
+                'Report Type.Value': {$ne: 'Property'}
             },
             reportUpdateCounter = 0,
             processDoc = function (reportDoc, cb) {
@@ -1775,7 +1848,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.updateGPLBlockPrecision];
+    // tasks = [scripts.updateGPLBlockPrecision];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
