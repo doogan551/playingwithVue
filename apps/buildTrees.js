@@ -12,25 +12,52 @@ let locationStructure = {
     item: 'location',
     type: '',
     display: '',
-    'Location Refs': []
+    'Location Refs': [],
+    'Mechanical Refs': []
 };
-let locationRefStructure = {
+let refStructure = {
     'AppIndex': 0,
     'Display': '',
     'Value': '',
     'isReadOnly': false,
     'isDisplayable': true
 };
+let mechStructure = {
+    item: 'system',
+    type: 'VAV',
+    dislay: "",
+    mechanical: {
+        class: 'Air Handling'
+    },
+    'Location Refs': [],
+    'Mechanical Refs': []
+};
+let instrStructure = {
+    item: 'instrumentation',
+    type: 'temperature',
+    dislay: "SAT",
+    mechanical: {
+        class: 'Air Handling',
+        component: 'Supply Air',
+        equipment: ''
+    },
+    'Location Refs': [],
+    'Mechanical Refs': []
+};
 let locations = [{
-    buildings: 200,
-    floors: 10,
-    rooms: 50
-}, {
-    buildings: 100,
-    floors: 0,
-    rooms: 25
+    buildings: 1,
+    floors: 1,
+    rooms: 5
+    // }, {
+    //     buildings: 100,
+    //     floors: 0,
+    //     rooms: 25
 }];
 let order = ['buildings', 'floors', 'rooms'];
+
+let buildMechanical = function(cb){
+    
+};
 
 let buildLocations = function (set, setIndex, index, refs, cb) {
     let locationType = order[index];
@@ -46,7 +73,7 @@ let buildLocations = function (set, setIndex, index, refs, cb) {
         }, function (callback) {
 
             let newLocation = _.cloneDeep(locationStructure);
-            let newRef = _.cloneDeep(locationRefStructure);
+            let newRef = _.cloneDeep(refStructure);
             newLocation.type = locationType;
             newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + setIndex.toString() + '-' + (i + 1).toString();
             newLocation['Location Refs'] = refs;
