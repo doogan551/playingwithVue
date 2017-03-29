@@ -516,8 +516,8 @@ function checkUserAccess(user, point) {
 
 let Notifications = require('../models/notifications');
 let Point = require('../models/point');
-let History = new(require('../models/history'))();
-let Schedule = new(require('../models/schedule'))();
-let Alarm = new(require('../models/alarm'))();
-let ActiveAlarm = new(require('../models/activealarm'))();
-let Common = new(require('../models/common'))();
+let History = require('../models/history');
+let Schedule = require('../models/schedule');
+let Alarm = require('../models/alarm');
+let ActiveAlarm = require('../models/activealarm');
+let Common = require('../models/common');
