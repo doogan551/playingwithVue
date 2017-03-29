@@ -1176,7 +1176,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                     if (adjustPointRefs) {
                         otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.pointName, attachedBlock.pointType);
                     }
-                    // console.log('  adjustRelatedBlocks() line  = ['  + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
+                    // console.log('  adjustRelatedBlocks() line  = [' + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
                     if (otherBlock.type === 'Comparator' && otherAnchor.anchorType !== 'Control Point') {
                         if (otherBlock.inputAnchors.length === 2) {
                             let siblingAnchor = (otherBlock.inputAnchors[0].anchorType === otherAnchor.anchorType ? otherBlock.inputAnchors[1] : otherBlock.inputAnchors[0]),
@@ -1489,7 +1489,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         name = otherBlock.name;
                     }
 
-                    if (upi) {
+                    if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output' )) {
                         self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
                     }
                 }
