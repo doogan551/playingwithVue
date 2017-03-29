@@ -1,8 +1,28 @@
 var rob = {
-  'Infoscan': {
-    'dbConfig': {
-      'host': 'localhost',
-      'dbName': 'hierarchy'
+    'Infoscan': {
+        'dbConfig': {
+            'host': 'info-int',
+            'dbName': 'infoscan'
+        },
+        'zmqConfig': {
+            'server': 'info-int'
+        },
+        'files': {
+            'driveLetter': 'C'
+        },
+        'location': {
+            'site': 'Rob'
+        },
+        'email': {
+            'onError': {
+                'to': 'rkendall@dorsett-tech.com',
+                'enabled': false
+            }
+        },
+        'processes': {
+            'zmqProcess': '',
+            'smProcess': ''
+        }
     },
     runNotifications: false,
     minifyFiles: false
