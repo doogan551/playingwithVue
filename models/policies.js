@@ -14,7 +14,7 @@ const Policies = class Policies {
     }
 
     save(rawData, cb) {
-        const notifications = new Notifications();
+        // const notifications = new Notifications();
         let data;
         let newID;
         let callback = (err) => {
@@ -29,7 +29,7 @@ const Policies = class Policies {
             };
 
             if (data.enabled === false) {
-                notifications.removeThreads(data._id, complete);
+                Notifications.removeThreads(data._id, complete);
             } else {
                 complete();
             }
