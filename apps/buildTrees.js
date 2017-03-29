@@ -1,12 +1,11 @@
 var async = require('async');
 var db = require('../helpers/db');
-var Utility = require('../models/utility');
-var Config = require('../public/js/lib/config.js');
 var config = require('config');
-var ObjectID = require('mongodb').ObjectID;
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+
+let collection = 'navigation';
 
 let locationStructure = {
     item: 'location',
@@ -24,21 +23,21 @@ let refStructure = {
 };
 let mechStructure = {
     item: 'system',
-    type: 'VAV',
-    dislay: "",
+    type: '',
+    display: '',
     mechanical: {
-        class: 'Air Handling'
+        class: ''
     },
     'Location Refs': [],
     'Mechanical Refs': []
 };
 let instrStructure = {
     item: 'instrumentation',
-    type: 'temperature',
-    dislay: "SAT",
+    type: '',
+    display: '',
     mechanical: {
-        class: 'Air Handling',
-        component: 'Supply Air',
+        class: '',
+        component: '',
         equipment: ''
     },
     'Location Refs': [],
@@ -55,8 +54,78 @@ let locations = [{
 }];
 let order = ['buildings', 'floors', 'rooms'];
 
-let buildMechanical = function(cb){
-    
+let buildMechanical = function (cb) {
+    let buildVAVs = function (callback) {
+        utility.iterateCursor({
+            collection: collection,
+            query: {
+                type: 'rooms'
+            }
+        }, function (err, room, next) {
+            let newMechStructure = _.cloneDeep(mechStructure);
+            let newRef = _.cloneDeep(refStructure);
+            newMechStructure.type = 'vav';
+            newMechStructure.mechanical.class = 'Air Handling';
+            newMechStructure['Location Refs'] = room['Location Refs'];
+            newRef.Display = room.display;
+            newRef.Value = room._id.toString();
+            newRef.AppIndex = room['Location Refs'].length - 1;
+
+            newMechStructure['Location Refs'].push(newRef);
+            newMechStructure.display = 'VAV ' + room.display.split('/')[1];
+            utility.insert({
+                collection: collection,
+                insertObj: newMechStructure
+            }, function (err, result) {
+                next(err);
+            });
+        }, callback);
+    };
+    let buildTemperatures = function (vavsCount, callback) {
+        utility.iterateCursor({
+            collection: collection,
+            query: {
+                type: 'rooms'
+            }
+        }, function (err, room, next) {
+            utility.getOne({
+                collection: collection,
+                query: {
+                    type: 'vav',
+                    'Location Refs.Value': room._id.toString()
+                }
+            }, function (err, vav) {
+                let newInstrStructure = _.cloneDeep(instrStructure);
+                let newLRef = _.cloneDeep(refStructure);
+                let newMRef = _.cloneDeep(refStructure);
+                newInstrStructure.type = 'temperature';
+                newInstrStructure.mechanical.class = 'Air Handling';
+                newInstrStructure.mechanical.component = 'Space';
+
+                newInstrStructure['Location Refs'] = room['Location Refs'];
+                newLRef.Display = room.display;
+                newLRef.Value = room._id.toString();
+                newLRef.AppIndex = room['Location Refs'].length + 1;
+                newInstrStructure['Location Refs'].push(newLRef);
+
+                newInstrStructure['Mechanical Refs'] = vav['Mechanical Refs'];
+                newMRef.Display = vav.display;
+                newMRef.Value = vav._id.toString();
+                newMRef.AppIndex = vav['Mechanical Refs'].length + 1;
+                newInstrStructure['Mechanical Refs'].push(newMRef);
+
+                newInstrStructure.display = 'SPT ' + room.display.split('/')[1];
+
+                utility.insert({
+                    collection: collection,
+                    insertObj: newInstrStructure
+                }, function (err, result) {
+                    next(err);
+                });
+            });
+        }, callback);
+    };
+    async.waterfall([buildVAVs, buildTemperatures], cb);
 };
 
 let buildLocations = function (set, setIndex, index, refs, cb) {
@@ -71,14 +140,13 @@ let buildLocations = function (set, setIndex, index, refs, cb) {
         async.whilst(function () {
             return i < set[locationType];
         }, function (callback) {
-
             let newLocation = _.cloneDeep(locationStructure);
             let newRef = _.cloneDeep(refStructure);
             newLocation.type = locationType;
             newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + setIndex.toString() + '-' + (i + 1).toString();
             newLocation['Location Refs'] = refs;
-            Utility.insert({
-                collection: 'locations',
+            utility.insert({
+                collection: collection,
                 insertObj: newLocation
             }, function (err, result) {
                 if (index >= order.length - 1) {
@@ -104,20 +172,25 @@ let buildLocations = function (set, setIndex, index, refs, cb) {
 
 let iterateLocations = function (set, setIndex, cb) {
     // async.eachSeries(order, function (locationType, callback) {
-    buildLocations(set, setIndex, 0, new Array(), cb);
+    let array = [];
+    buildLocations(set, setIndex, 0, array, cb);
     // }, cb);
 };
 
 let buildTree = function () {
     db.connect(connectionString.join(''), function (err) {
-        Utility.remove({
-            collection: 'locations'
+        utility.remove({
+            collection: collection
         }, function () {
             async.eachOfSeries(locations, iterateLocations, function (err) {
-                console.log('done');
+                buildMechanical(function (err) {
+                    console.log('done');
+                });
             });
         });
     });
 };
 
 buildTree();
+var Utility = require('../models/utility');
+let utility = new Utility();
