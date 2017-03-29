@@ -48,7 +48,7 @@ let buildLocations = function (set, setIndex, index, refs, cb) {
             let newLocation = _.cloneDeep(locationStructure);
             let newRef = _.cloneDeep(locationRefStructure);
             newLocation.type = locationType;
-            newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + setIndex.toString() + '-' (i + 1).toString();
+            newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + setIndex.toString() + '-' + (i + 1).toString();
             newLocation['Location Refs'] = refs;
             Utility.insert({
                 collection: 'locations',
