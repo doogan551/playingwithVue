@@ -1,100 +1,52 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-var Config = require('../public/js/lib/config');
-var utils = require('../helpers/utils');
-var activityLogCollection = utils.CONSTANTS("activityLogCollection");
-var actLogsEnums = Config.Enums["Activity Logs"];
+const Common = require('./common');
+const ActivityLog = require('./activitylog');
+const utils = require('../helpers/utils');
 
-module.exports = {
-    getYear: function(data, cb) {
-        var criteria = {
+const calendarCollection = utils.CONSTANTS('calendarCollection');
+
+const Calendar = class Calendar extends Common {
+
+    constructor() {
+        super(calendarCollection);
+    }
+
+    getYear(data, cb) {
+        let criteria = {
             query: {
                 year: parseInt(data.year, 10)
             },
-            collection: 'Holiday',
-            limit: 1,
             fields: {
                 _id: 0
             }
         };
 
-        Utility.get(criteria, cb);
-    },
-    getSeason: function(data, cb) {
-        var criteria = {
-            query: {
-                Name: "Preferences"
-            },
-            collection: 'SystemInfo',
-            limit: 1,
-            fields: {
-                _id: 0,
-                "Current Season": 1
-            }
-        };
+        this.getOne(criteria, cb);
+    }
 
-        Utility.get(criteria, cb);
-    },
-    updateSeason: function(data, cb) {
-        var logData = {
-            user: data.user,
-            timestamp: Date.now()
-        };
-        var season = data["Current Season"];
-        var criteria = {
-            query: {
-                Name: "Preferences"
-            },
-            updateObj: {
-                $set: {
-                    "Current Season": season
-                }
-            },
-            collection: 'SystemInfo',
-            fields: {
-                _id: 0,
-                "Current Season": 1
-            }
-        };
+    newDate(data, cb) {
+        const activityLog = new ActivityLog();
+        let year = parseInt(data.year, 10);
+        let dates = data.dates;
 
-        Utility.update(criteria, function(err, result) {
-            logData.activity = actLogsEnums["Season Change"].enum;
-            logData.log = "Season changed to " + season + ".";
-            logData = utils.buildActivityLog(logData);
-            Utility.insert({
-                collection: activityLogCollection,
-                insertObj: logData
-            }, function(err, result) {
-                return cb(null, 'success');
-            });
-        });
-
-    },
-    newDate: function(data, cb) {
-
-        var year = parseInt(data.year, 10);
-        var dates = data.dates;
-
-        dates.forEach(function(date) {
+        dates.forEach((date) => {
             date.month = parseInt(date.month, 10);
             date.date = parseInt(date.date, 10);
         });
 
-        var query = {
+        let query = {
             year: year
         };
 
-        var updateObj = {
+        let updateObj = {
             $set: {
                 dates: dates,
-                year: year,
+                year: year
             }
         };
 
-        var criteria = {
+        let criteria = {
             query: query,
             updateObj: updateObj,
-            collection: 'Holiday',
             sort: [],
             options: {
                 new: true,
@@ -102,48 +54,41 @@ module.exports = {
             }
         };
 
-        Utility.findAndModify(criteria, function(err, yearResult) {
-            if (err) return cb(err);
-            var logData = {
+        this.findAndModify(criteria, (err, yearResult) => {
+            if (err) {
+                return cb(err);
+            }
+            let logData = {
                 user: data.user,
                 timestamp: Date.now(),
-                activity: actLogsEnums["Calendar Year Edit"].enum,
-                log: "Calendar for year " + year + " updated."
+                activity: 'Calendar Year Edit',
+                log: 'Calendar for year ' + year + ' updated.'
             };
-            logData = utils.buildActivityLog(logData);
-            Utility.insert({
-                collection: activityLogCollection,
-                insertObj: logData
-            }, function(err, result) {});
+            activityLog.create(logData, (err) => {});
 
             if (new Date().getFullYear() === year) {
-
                 criteria = {
-                    collection: 'points',
                     query: {
-                        "Point Type.Value": "Device"
+                        'Point Type.Value': 'Device'
                     },
                     updateObj: {
                         $set: {
                             _updPoint: true
                         }
-                    },
-                    options: {
-                        multi: true
                     }
                 };
 
-                Utility.update(criteria, function(err, result) {
+                this.updateAll(criteria, (err) => {
                     if (err) {
                         return cb(err);
-                    } else {
-                        return cb(null, yearResult);
                     }
+                    return cb(null, yearResult);
                 });
             } else {
                 return cb(null, yearResult);
             }
-
         });
     }
 };
+
+module.exports = Calendar;

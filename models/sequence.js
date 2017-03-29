@@ -1,81 +1,86 @@
-var Utility = require('../models/utility');
-var config = require('../public/js/lib/config.js');
-var logger = require('../helpers/logger')(module);
+const Sequence = class Sequence {
 
-exports.getBlockTypes = function (cb) {
-  var criteria = {
-    collection: 'points',
-    query: {
-      SequenceData: {
-        $exists: true
-      }
-    },
-    fields: {
-      "SequenceData.Sequence.Block": 1
+    getBlockTypes(cb) {
+        const point = new Point();
+        let criteria = {
+            query: {
+                SequenceData: {
+                    $exists: true
+                }
+            },
+            fields: {
+                'SequenceData.Sequence.Block': 1
+            }
+        };
+
+        point.get(criteria, (err, results) => {
+            let c;
+            let cc;
+            let len = results.length;
+            let row;
+            let blockType;
+            let blockTypes = {};
+
+            for (c = 0; c < len; c++) {
+                row = results[c].SequenceData.Sequence.Block;
+                for (cc = 0; cc < row.length; cc++) {
+                    blockType = row[cc].data.BlockType;
+                    blockTypes[blockType] = blockTypes[blockType] || true;
+                }
+            }
+
+            cb({
+                err: err,
+                types: blockTypes
+            });
+        });
     }
-  };
 
-  Utility.get(criteria, function (err, results) {
-    var c;
-    var cc;
-    var len = results.length;
-    var row;
-    var blockType;
-    var blockTypes = {};
+    doRefreshSequence(data) {
+        const point = new Point();
+        let _id = data.sequenceID;
+        let criteria = {
+            query: {
+                _id: _id
+            },
+            updateObj: {
+                $set: {
+                    '_pollTime': new Date().getTime()
+                }
+            }
+        };
 
-    for (c = 0; c < len; c++) {
-      row = results[c].SequenceData.Sequence.Block;
-      for (cc = 0; cc < row.length; cc++) {
-        blockType = row[cc].data.BlockType;
-        blockTypes[blockType] = blockTypes[blockType] || true;
-      }
+        point.updateOne(criteria, (err) => {
+            if (err) {
+                // log it!
+            }
+        });
     }
 
-    cb({
-      err: err,
-      types: blockTypes
-    });
-  });
+    doUpdateSequence(data, cb) {
+        const point = new Point();
+        let name = data.sequenceName;
+        let sequenceData = data.sequenceData;
+        let criteria = {
+            query: {
+                'Name': name
+            },
+            updateObj: {
+                $set: {
+                    'SequenceData': sequenceData
+                }
+            }
+        };
+
+        point.updateOne(criteria, (err) => {
+            if (err) {
+                cb('Error: ' + err.err);
+            } else {
+                cb('success');
+            }
+        });
+    }
 };
 
-
-exports.doRefreshSequence = function (data, cb) {
-  var _id = data.sequenceID;
-  var criteria = {
-    collection: 'points',
-    query: {
-      _id: _id
-    },
-    updateObj: {
-      $set: {
-        '_pollTime': new Date().getTime()
-      }
-    }
-  };
-
-  Utility.update(criteria, function (err, results) {
-    if (err) {}
-  });
-};
-
-exports.doUpdateSequence = function (data, cb) {
-  var name = data.sequenceName;
-  var sequenceData = data.sequenceData;
-  var criteria = {
-    collection: 'points',
-    query:{'Name': name},
-    updateObj:{
-      $set:{
-        'SequenceData': sequenceData
-      }
-    }
-  };
-
-  Utility.update(criteria, function (err, results) {
-    if (updateErr) {
-      cb('Error: ' + updateErr.err);
-    } else {
-      cb('success');
-    }
-  });
-};
+module.exports = Sequence;
+const Point = require('./point');

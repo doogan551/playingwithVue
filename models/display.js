@@ -1,33 +1,31 @@
-var path = require('path');
-var fs = require('fs');
-var ce = require('cloneextend');
-var gm = require('gm');
-var glob = require('glob');
-var pointsCollection = "points";
-var versionsCollection = "versions";
-var ObjectID = require('mongodb').ObjectID;
+const path = require('path');
+const fs = require('fs');
+const ce = require('cloneextend');
+const gm = require('gm');
+const glob = require('glob');
+const ObjectID = require('mongodb').ObjectID;
 
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-var utils = require('../helpers/utils.js');
-var Config = require('../public/js/lib/config.js');
+const Config = require('../public/js/lib/config.js');
+// TODO Remove utility occurences when converted to class.
+const Utility = require('./utility');
 
-var actLogsEnums = Config.Enums["Activity Logs"];
-var activityLogCollection = utils.CONSTANTS("activityLogCollection");
+const actLogsEnums = Config.Enums['Activity Logs'];
+const pointsCollection = 'points';
+const versionsCollection = 'versions';
 
 module.exports = {
 
-    getDisplayInfo: function(data, cb) {
-        var upi = +data.upi;
-        var upiList = data.upiList || [];
-        var idx;
-        var returnObj = {};
-        var getUpiNames = function(callback) {
+    getDisplayInfo: function (data, cb) {
+        let upi = +data.upi;
+        let upiList = data.upiList || [];
+        let idx;
+        let returnObj = {};
+        let getUpiNames = function (callback) {
             // console.log('getting display info', upiList);
             Utility.get({
                 collection: pointsCollection,
                 query: {
-                    "_id": {
+                    '_id': {
                         $in: upiList
                     }
                 },
@@ -36,9 +34,8 @@ module.exports = {
                     Name: 1,
                     'Point Type.Value': 1
                 }
-            }, function(err, docs) {
-                var ret = {},
-                    names = {},
+            }, function (err, docs) {
+                let names = {},
                     pointTypes = {},
                     c,
                     len = docs.length;
@@ -67,8 +64,8 @@ module.exports = {
             sort: {
                 eDate: -1
             }
-        }, function(err, versions) {
-            var callback = function(ret) {
+        }, function (err, versions) {
+            let callback = function (ret) {
                 returnObj.upiNames = ret.names;
                 returnObj.pointTypes = ret.pointTypes;
                 return cb(null, returnObj);
@@ -78,42 +75,39 @@ module.exports = {
         });
     },
 
-    displayGif: function(data, cb) {
-        var filename = data.fname + '.gif';
-        var frame = parseInt(data.frame, 10);
-        var dirname = __dirname.replace(/\\/g, '/');
-        var assetPath = dirname + '/../public/display_assets/assets/';
-        var frameDir = 'frames/';
+    displayGif: function (data, cb) {
+        let filename = data.fname + '.gif';
+        let frame = parseInt(data.frame, 10);
+        let dirname = __dirname.replace(/\\/g, '/');
+        let assetPath = dirname + '/../public/display_assets/assets/';
+        let frameDir = 'frames/';
         // retried = false,
-        var filepath = assetPath + filename;
-        var frameFilename;
-        var setFrameFilename = function(fr) {
+        let filepath = assetPath + filename;
+        let frameFilename;
+        let setFrameFilename = function (fr) {
             frameFilename = filename.replace('.gif', '_frame_' + fr + '.gif');
         };
-        var splitIntoFrames = function(fn) {
-            gm(filepath).out('+adjoin').write(assetPath + frameDir + filename.replace('.gif', '_frame_%d.gif'), function() {
+        let splitIntoFrames = function (fn) {
+            gm(filepath).out('+adjoin').write(assetPath + frameDir + filename.replace('.gif', '_frame_%d.gif'), function () {
                 fn();
             });
         };
-        var sendFullImage = function() {
-            fs.readFile(filepath, function(err, result) {
+        let sendFullImage = function () {
+            fs.readFile(filepath, function (err, result) {
                 if (err) {
                     console.log('Displays: Error sending full gif file: ', err.code);
                     return cb(err);
-                } else {
-                    return cb(null, result);
                 }
+                return cb(null, result);
             });
         };
-        var sendSingleFrame = function() {
-            fs.readFile(assetPath + frameDir + frameFilename, function(err, result) {
-
+        let sendSingleFrame = function () {
+            fs.readFile(assetPath + frameDir + frameFilename, function (err, result) {
                 if (err) { //invalid frame/file
                     console.log('Displays: Error sending single frame: ', err);
                     return cb(err);
-                } else {
-                    return cb(null, result);
                 }
+                return cb(null, result);
             });
         };
 
@@ -122,28 +116,15 @@ module.exports = {
         }
 
         //create frame dir if doesn't exist
-        fs.exists(assetPath + frameDir, function(dexists) {
-            var retried = false,
-                complete = function() {
-                    if (isNaN(frame)) {
-                        sendFullImage();
-                    } else {
-                        fs.exists(assetPath + frameDir + filename + frame, function(exists) {
-                            if (exists) {
-                                sendSingleFrame();
-                            } else {
-                                splitIntoFrames(sendSingleFrame);
-                            }
-                        });
-                    }
-                },
-                getFiles = function() {
+        fs.exists(assetPath + frameDir, function (dexists) {
+            let retried = false,
+                getFiles = function () {
                     if (isNaN(frame)) {
                         sendFullImage();
                     } else {
                         setFrameFilename(frame);
-                        glob(assetPath + frameDir + filename.replace('.gif', '_frame_*.gif'), function(err, files) {
-                            var oldFrame = frame;
+                        glob(assetPath + frameDir + filename.replace('.gif', '_frame_*.gif'), function (err, files) {
+                            let oldFrame = frame;
 
                             if (files.length === 0) {
                                 if (retried === false) {
@@ -152,162 +133,151 @@ module.exports = {
                                 } else {
                                     return cb('No frame in file.');
                                 }
-                            } else {
-                                if (files.indexOf(assetPath + frameDir + frameFilename) > -1) { //frame exists
-                                    sendSingleFrame();
-                                } else { //invalid frame
-                                    if (frame < 0) {
-                                        frame = 0;
-                                    } else {
-                                        frame = files.length - 1;
-                                    }
-
-                                    console.log('Displays: Invalid frame (' + oldFrame + ') for', filename, 'sending', frame);
-
-                                    setFrameFilename(frame);
-                                    sendSingleFrame();
+                            } else if (files.indexOf(assetPath + frameDir + frameFilename) > -1) { //frame exists
+                                sendSingleFrame();
+                            } else { //invalid frame
+                                if (frame < 0) {
+                                    frame = 0;
+                                } else {
+                                    frame = files.length - 1;
                                 }
+
+                                console.log('Displays: Invalid frame (' + oldFrame + ') for', filename, 'sending', frame);
+
+                                setFrameFilename(frame);
+                                sendSingleFrame();
                             }
                         });
                     }
                 };
 
             if (!dexists) {
-                fs.mkdir(assetPath + frameDir, function() {
+                fs.mkdir(assetPath + frameDir, function () {
                     getFiles();
                 });
             } else {
                 getFiles();
             }
-
         });
     },
-    editDisplay: function(data, cb) {
+    editDisplay: function (data, cb) {
         Utility.get({
-                collection: versionsCollection,
-                query: {
-                    vid: +data.upoint
-                },
-                sort: {
-                    version: -1,
-                    eDate: -1
-                }
+            collection: versionsCollection,
+            query: {
+                vid: +data.upoint
             },
-            function(err, versions) {
-                console.log("err", err);
-                console.log('# of display versions for ', data.upoint, ': ', versions.length);
+            sort: {
+                version: -1,
+                eDate: -1
+            }
+        }, function (err, versions) {
+            console.log('err', err);
+            console.log('# of display versions for ', data.upoint, ': ', versions.length);
 
 
-                Utility.get({
-                    collection: pointsCollection,
-                    query: {
-                        "_id": +data.upoint
-                    }
-                }, function(err, production) {
-                    var disp;
+            Utility.get({
+                collection: pointsCollection,
+                query: {
+                    '_id': +data.upoint
+                }
+            }, function (err, production) {
+                let disp;
 
-                    production[0].version = 'Production';
+                production[0].version = 'Production';
 
-                    if (versions.length < 1) { //if no staging versions
-                        disp = ce.clone(production[0]);
-                        disp.version = 'Staging';
-                        disp.vid = +disp._id;
-                        versions.push(disp);
+                if (versions.length < 1) { //if no staging versions
+                    disp = ce.clone(production[0]);
+                    disp.version = 'Staging';
+                    disp.vid = +disp._id;
+                    versions.push(disp);
 
-                        disp._actvAlmId = 0;
-                        disp.vid = disp._id;
-                        delete disp._id;
-                        disp.eDate = Math.round(+new Date() / 1000);
+                    disp._actvAlmId = 0;
+                    disp.vid = disp._id;
+                    delete disp._id;
+                    disp.eDate = Math.round(+new Date() / 1000);
 
-                        console.log('saving staging version', disp.version);
-                        Utility.save({
-                            collection: versionsCollection,
-                            saveObj: disp
-                        }, function(err, result) {
-                            console.log('save version error', err);
-                            renderDisplay(data, versions.slice(-1)[0], versions, cb);
-                        });
-
-                    } else {
-                        versions.unshift(production[0]);
-                        renderDisplay(data, versions[1], versions, cb);
-                    }
-                });
+                    console.log('saving staging version', disp.version);
+                    Utility.save({
+                        collection: versionsCollection,
+                        saveObj: disp
+                    }, function (err, result) {
+                        console.log('save version error', err);
+                        renderDisplay(data, versions.slice(-1)[0], versions, cb);
+                    });
+                } else {
+                    versions.unshift(production[0]);
+                    renderDisplay(data, versions[1], versions, cb);
+                }
             });
+        });
     },
-    previewDisplay: function(data, cb) {
+    previewDisplay: function (data, cb) {
         Utility.get({
             collection: pointsCollection,
             query: {
-                "_id": +data.upoint,
-                "Screen Objects": {
+                '_id': +data.upoint,
+                'Screen Objects': {
                     $exists: true
                 }
             }
-        }, function(err, docs) {
-
+        }, function (err, docs) {
             //if it's found in the points collection
             if (docs.length > 0) {
                 return cb(null, {
                     upi: data.upoint,
                     displayJson: docs[0]
                 });
+            }
+
+            if (data.upoint !== '{{tab.upi}}') {
+                Utility.get({
+                    collection: versionsCollection,
+                    query: {
+                        '_id': new ObjectID(data.upoint)
+                    }
+                }, function (err, docs) {
+                    if (docs.length > 0) {
+                        return cb(null, {
+                            upi: docs[0].vid,
+                            displayJson: docs[0]
+                        });
+                    }
+                    return cb('Display not found');
+                });
             } else {
-
-                if (data.upoint !== '{{tab.upi}}') {
-                    Utility.get({
-                        collection: versionsCollection,
-                        query: {
-                            "_id": new ObjectID(data.upoint)
-                        }
-                    }, function(err, docs) {
-
-                        if (docs.length > 0) {
-                            return cb(null, {
-                                upi: docs[0].vid,
-                                displayJson: docs[0]
-                            });
-                        } else {
-                            return cb('Display not found');
-                        }
-                    });
-                } else {
-                    return cb('tab.upi sent');
-                }
+                return cb('tab.upi sent');
             }
         });
     },
-    getName: function(data, cb) {
+    getName: function (data, cb) {
         Utility.get({
             collection: pointsCollection,
             query: {
-                "_id": +data.upi
+                '_id': +data.upi
             }
-        }, function(err, docs) {
-
+        }, function (err, docs) {
             if (docs.length > 0) {
                 return cb(null, docs[0].Name);
-            } else {
-                return cb('#' + data.upi + ' not found');
             }
+            return cb('#' + data.upi + ' not found');
         });
-
     },
 
-    save: function(data, cb) {
+    save: function (data, cb) {
         console.log('saving display');
         return cb('saved');
     },
 
-    publish: function(data, cb) {
-        var dId,
+    publish: function (data, cb) {
+        const activityLog = new ActivityLog();
+        let dId,
             c,
             displayObject = JSON.parse(data.display),
             oldVersion,
             obj,
             rootPath = __dirname + '/../public/display_assets/assets/',
-            makeHandler = function(name) {
-                return function() {
+            makeHandler = function (name) {
+                return function () {
                     console.log('DISPLAYS: saved uploaded file:', name);
                 };
             },
@@ -330,9 +300,9 @@ module.exports = {
         Utility.get({
             collection: pointsCollection,
             query: {
-                "_id": displayObject._id
+                '_id': displayObject._id
             }
-        }, function(e, d) {
+        }, function (e, d) {
             console.log('publish find err:', e);
             console.log('displays: found ', d.length, ' docs');
             oldVersion = ce.clone(d[0]);
@@ -341,72 +311,65 @@ module.exports = {
             displayObject._pStatus = 1;
 
             Utility.update({
+                collection: pointsCollection,
+                query: { //update the display
+                    '_id': displayObject._id
+                },
+                updateObj: displayObject
+            }, function (err, docs) {
+                let logData = {
+                    user: data.user,
+                    timestamp: Date.now(),
+                    point: displayObject,
+                    activity: actLogsEnums['Display Edit'].enum,
+                    log: 'Display edited.'
+                };
+
+                activityLog.create(logData, function (err, result) {});
+
+                console.log('display publish err', err);
+                console.log('displays: updated display');
+                console.log('displays: removing display');
+
+                displayObject.vid = dId;
+                displayObject.version = 'Staging';
+                oldVersion.vid = dId;
+
+                //set version in previous production version
+                console.log('displays: updating staging version');
+                delete displayObject._id;
+
+                Utility.update({
                     collection: pointsCollection,
-                    query: { //update the display
-                        "_id": displayObject._id
+                    query: {
+                        vid: dId,
+                        version: 'Staging'
                     },
                     updateObj: displayObject
-                },
-                function(err, docs) {
-                    var logData = {
-                        user: data.user,
-                        timestamp: Date.now(),
-                        point: displayObject,
-                        activity: actLogsEnums["Display Edit"].enum,
-                        log: "Display edited."
-                    };
-                    logData = utils.buildActivityLog(logData);
-                    Utility.insert({
-                        collection: activityLogCollection,
-                        insertObj: logData
-                    }, function(err, result) {});
-
-                    console.log('display publish err', err);
-                    console.log('displays: updated display');
-                    console.log('displays: removing display');
-
-                    displayObject.vid = dId;
-                    displayObject.version = 'Staging';
-                    oldVersion.vid = dId;
-
-                    //set version in previous production version
-                    console.log('displays: updating staging version');
-                    delete displayObject._id;
-
-                    Utility.update({
-                        collection: pointsCollection,
-                        query: {
-                            vid: dId,
-                            version: 'Staging'
-                        },
-                        updateObj: displayObject
-                    }, function(saveOldErr, saveOldRes) {
-
-                        console.log('displays saveOld err:', saveOldErr);
-                        if (saveOldErr) {
-                            return cb(saveOldErr);
-                        } else {
-                            console.log('displays: saving display in versions');
-                            delete oldVersion._id;
-                            delete oldVersion.version;
-                            Utility.save({
-                                collection: versionsCollection,
-                                saveObj: oldVersion
-                            }, function(saveNewErr, saveNewRes) {
-                                if (saveNewErr) {
-                                    return cb(saveNewErr);
-                                } else {
-                                    return cb(null, 'Saved and Published');
-                                }
-                            });
+                }, function (saveOldErr, saveOldRes) {
+                    console.log('displays saveOld err:', saveOldErr);
+                    if (saveOldErr) {
+                        return cb(saveOldErr);
+                    }
+                    console.log('displays: saving display in versions');
+                    delete oldVersion._id;
+                    delete oldVersion.version;
+                    Utility.save({
+                        collection: versionsCollection,
+                        saveObj: oldVersion
+                    }, function (saveNewErr, saveNewRes) {
+                        if (saveNewErr) {
+                            return cb(saveNewErr);
                         }
+                        return cb(null, 'Saved and Published');
                     });
                 });
+            });
         });
     },
 
-    saveLater: function(data, cb) {
-        var displayObject,
+    saveLater: function (data, cb) {
+        let displayObject,
             upi;
 
         displayObject = JSON.parse(data.display);
@@ -422,25 +385,22 @@ module.exports = {
         // console.log('displays savelater', displayObject);
 
         Utility.update({
-                collection: versionsCollection,
-                query: {
-                    vid: upi,
-                    version: 'Staging'
-                },
-                updateObj: displayObject
+            collection: versionsCollection,
+            query: {
+                vid: upi,
+                version: 'Staging'
             },
-            function(err, docs) {
-                // console.log('displays savelater docs', docs);
-                if (err) {
-                    return cb(err);
-                } else {
-                    return cb(null, 'Saved for later');
-                }
-            });
-
+            updateObj: displayObject
+        }, function (err, docs) {
+            // console.log('displays savelater docs', docs);
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, 'Saved for later');
+        });
     },
-    browse: function(data, cb) { //bmp
-        var files,
+    browse: function (data, cb) { //bmp
+        let files,
             flist = [],
             j,
             ext;
@@ -457,11 +417,10 @@ module.exports = {
         return cb(null, {
             files: flist
         });
-
     },
 
-    browse2: function(req, res, next) {
-        var files, flist, j, ext;
+    browse2: function (req, res, next) {
+        let files, flist, j, ext;
 
         files = fs.readdirSync(path.join(__dirname, '..', 'public', 'display_assets', 'assets'));
         flist = [];
@@ -476,11 +435,10 @@ module.exports = {
         return next(null, {
             files: flist
         });
-
     },
-    listAssets: function(data, cb) {
+    listAssets: function (data, cb) {
         console.log(' - - - -  listassets()  called  - - - - - ');
-        var filetype = data.imagetype,
+        let filetype = data.imagetype,
             ext,
             files,
             flist = [],
@@ -488,15 +446,15 @@ module.exports = {
             assetsDir = path.join(__dirname, '..', 'public', 'display_assets', 'assets'),
             j;
 
-        console.log(" - - -  listassets()  assetsDir = %s", assetsDir);
+        console.log(' - - -  listassets()  assetsDir = %s', assetsDir);
         files = fs.readdirSync(assetsDir);
-        console.log(" - - -  listassets()  readdirSync() files.length = %s", files.length);
+        console.log(' - - -  listassets()  readdirSync() files.length = %s', files.length);
         for (j = 0; j < files.length; j++) {
-            fileStats = fs.statSync(assetsDir + "\\" + files[j]);
+            fileStats = fs.statSync(assetsDir + '\\' + files[j]);
             if (fileStats && !fileStats.isDirectory()) {
-                if (filetype && filetype !== "*") { // list all files when "*"
+                if (filetype && filetype !== '*') { // list all files when "*"
                     ext = path.extname(files[j]);
-                    if (("." + filetype.toLowerCase()) === ext.toLowerCase()) {
+                    if (('.' + filetype.toLowerCase()) === ext.toLowerCase()) {
                         flist.push({
                             file: {
                                 filename: files[j],
@@ -525,14 +483,14 @@ module.exports = {
     }
 };
 
-var renderDisplay = function(data, currDisp, versions, cb) {
-    var c, len,
+let renderDisplay = function (data, currDisp, versions, cb) {
+    let c, len,
         upiList = [],
-        getUpiNames = function(callback) {
+        getUpiNames = function (callback) {
             Utility.get({
                 collection: pointsCollection,
                 query: {
-                    "_id": {
+                    '_id': {
                         $in: upiList
                     }
                 },
@@ -540,8 +498,8 @@ var renderDisplay = function(data, currDisp, versions, cb) {
                     _id: 1,
                     Name: 1
                 }
-            }, function(err, docs) {
-                var ret = {},
+            }, function (err, docs) {
+                let ret = {},
                     cc,
                     lenn = docs.length;
 
@@ -558,7 +516,7 @@ var renderDisplay = function(data, currDisp, versions, cb) {
         upiList.push(currDisp['Screen Objects'][c].upi);
     }
 
-    getUpiNames(function(err, upiNames) {
+    getUpiNames(function (err, upiNames) {
         // currDisp.upiNames = upiNames;
         currDisp._id = data.upoint;
 
@@ -570,3 +528,6 @@ var renderDisplay = function(data, currDisp, versions, cb) {
         });
     });
 };
+
+
+const ActivityLog = require('./activitylog');

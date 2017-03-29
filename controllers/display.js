@@ -1,118 +1,112 @@
-var express = require('express');
-var router = express.Router();
-var app = express();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var Display = require('../models/display');
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let Display = require('../models/display');
 // Checked
-router.post('/getDisplayInfo', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.post('/getDisplayInfo', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.getDisplayInfo(data, function(err, info) {
-		if (err) {
-			return utils.sendResponse(res, {
-				err: err
-			});
-		} else {
-			return utils.sendResponse(res, info);
-		}
-	});
+    Display.getDisplayInfo(data, function (err, info) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        return utils.sendResponse(res, info);
+    });
 });
 // Checked
-router.get('/edit/:upoint', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/edit/:upoint', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.editDisplay(data, function(err, result) {
-		if (err) {
-			return utils.sendResponse(res, {
-				err: err
-			});
-		} else {
-			res.render('displays/edit.pug', result);
-		}
-	});
+    Display.editDisplay(data, function (err, result) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        res.render('displays/edit.pug', result);
+    });
 });
 // Checked
-router.get('/gifs/:fname', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/gifs/:fname', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.displayGif(data, function(err, result) {
-		if (err) {
-			res.status(404).end();
-		} else {
-			res.end(result, 'binary');
-		}
-	});
+    Display.displayGif(data, function (err, result) {
+        if (err) {
+            res.status(404).end();
+        } else {
+            res.end(result, 'binary');
+        }
+    });
 });
 // NOT CHECKED
-router.get('/gifs/:fname/:frame', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/gifs/:fname/:frame', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.displayGif(data, function(err, result) {
-		if (err) {
-			res.status(404).end();
-		} else {
-			res.end(result, 'binary');
-		}
-	});
+    Display.displayGif(data, function (err, result) {
+        if (err) {
+            res.status(404).end();
+        } else {
+            res.end(result, 'binary');
+        }
+    });
 });
 // Checked
-router.get('/view/:upoint', function(req, res, next) {
-	res.render('displays/view.pug', {
-		upi: req.params.upoint
-	});
+router.get('/view/:upoint', function (req, res, next) {
+    res.render('displays/view.pug', {
+        upi: req.params.upoint
+    });
 });
 // NOT CHECKED
-router.get('/preview/:upoint', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/preview/:upoint', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.previewDisplay(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.render('displays/preview.pug', result);
-		}
-	});
+    Display.previewDisplay(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/preview.pug', result);
+    });
 });
 // NOT CHECKED
-router.get('/view/:upoint/:dispId', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/view/:upoint/:dispId', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.viewDisplay(data, function(err, result) {
+    Display.viewDisplay(data, function (err, result) {
 
-	});
+    });
 });
 // NOT CHECKED
-router.get('/upiname/:upi', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/upiname/:upi', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.getName(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.send(result);
-		}
-	});
+    Display.getName(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // Checked
-router.post('/later', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.post('/later', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.saveLater(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.send(result);
-		}
-	});
+    Display.saveLater(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // Checked
 let multer = require('multer');
@@ -125,65 +119,61 @@ router.post('/publish', function(req, res, next) {
 	data.user = req.user;
 	data.files = req.files;
 
-	Display.publish(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.send(result);
-		}
-	});
+    Display.publish(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(result);
+    });
 });
 // NOT CHECKED
-router.get('/browse', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/browse', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.browse(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.render('displays/browse.pug', result);
-		}
-	});
+    Display.browse(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/browse.pug', result);
+    });
 });
 // NOT CHECKED
-router.get('/browse2', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+router.get('/browse2', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Display.browse2(data, function(err, result) {
-		if (err) {
-			return res.send(err);
-		} else {
-			return res.render('displays/browse2.pug', result);
-		}
-	});
+    Display.browse2(data, function (err, result) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.render('displays/browse2.pug', result);
+    });
 });
 // NOT CHECKED
-router.get('/listassets', function(req, res, next) {
-	var data = _.merge(req.params, req.body, req.query);
-	data.user = req.user;
+router.get('/listassets', function (req, res, next) {
+    let data = _.merge(req.params, req.body, req.query);
+    data.user = req.user;
 
-	Display.listAssets(data, function(err, result) {
-		if (err) {
-			return utils.sendResponse(res, {
-				err: err
-			});
-		} else {
-			return utils.sendResponse(res, result);
-		}
-	});
+    Display.listAssets(data, function (err, result) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        return utils.sendResponse(res, result);
+    });
 });
 //router.get('/import', controllers.import.index);
 //router.get('/test', controllers.import.start);
 //router.get('/test2', controllers.import.test2);
 //router.post('/import', controllers.import.start);
 // NOT CHECKED
-router.get('/trend', function(req, res, next) {
-	var pars = req.query;
-	res.render('displays/plot.pug',
-		pars
-	);
+router.get('/trend', function (req, res, next) {
+    let pars = req.query;
+    res.render('displays/plot.pug',
+        pars
+    );
 });
 // router.get('/displays/plot', controllers.displays.plot);
 // router.get('/displays/plot64', controllers.displays.plot64);

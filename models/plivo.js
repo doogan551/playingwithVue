@@ -1,58 +1,61 @@
-var plivo = require('plivo');
-var config = require('config');
-var authId = config.get('Plivo').authId;
-var authToken = config.get('Plivo').authToken;
-var src = config.get('Plivo').phoneNumber;
+const plivo = require('plivo');
+const config = require('config');
 
-var NotifierUtility = require('./notifierutility');
-var notifierUtility = new NotifierUtility();
+const authId = config.get('Plivo').authId;
+const authToken = config.get('Plivo').authToken;
+const src = config.get('Plivo').phoneNumber;
 
-var client = plivo.RestAPI({
-  authId: authId,
-  authToken: authToken
+const client = plivo.RestAPI({
+    authId: authId,
+    authToken: authToken
 });
 
-module.exports = {
-  sendText: function(toNumber, message, cb) {
-    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
+const Plivo = class Plivo {
+    sendText(toNumber, message, cb) {
+        const notifierUtility = new NotifierUtility();
+        toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
 
-    var params = {
-      src: src,
-      dst: toNumber,
-      text: message,
-      method: 'GET'
-    };
-
-    client.send_message(params, function(code, response) {
-      var err = null;
-      if (code >= 400) {
-        err = {
-          code: code
+        let params = {
+            src: src,
+            dst: toNumber,
+            text: message,
+            method: 'GET'
         };
-      }
-      return cb(err, response);
-    });
-  },
 
-  sendVoice: function(toNumber, message, cb) {
-    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
-    var url = notifierUtility.buildVoiceUrl(message, 'Plivo');
+        client.send_message(params, (code, response) => {
+            let err = null;
+            if (code >= 400) {
+                err = {
+                    code: code
+                };
+            }
+            return cb(err, response);
+        });
+    }
 
-    var params = {
-      from: src,
-      to: toNumber,
-      answer_url: url,
-      answer_method: 'GET'
-    };
+    sendVoice(toNumber, message, cb) {
+        const notifierUtility = new NotifierUtility();
+        toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
+        let url = notifierUtility.buildVoiceUrl(message, 'Plivo');
 
-    client.make_call(params, function(code, response) {
-      var err = null;
-      if (code >= 400) {
-        err = {
-          code: code
+        let params = {
+            from: src,
+            to: toNumber,
+            'answer_url': url,
+            'answer_method': 'GET'
         };
-      }
-      return cb(err, response);
-    });
-  }
+
+        client.make_call(params, (code, response) => {
+            let err = null;
+            if (code >= 400) {
+                err = {
+                    code: code
+                };
+            }
+            return cb(err, response);
+        });
+    }
 };
+
+module.exports = Plivo;
+const NotifierUtility = require('./notifierutility');
