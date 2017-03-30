@@ -6,7 +6,7 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 let collection = 'navigation';
-
+let upi = 1;
 let locationStructure = {
     item: 'location',
     type: '',
@@ -44,9 +44,9 @@ let instrStructure = {
     'Mechanical Refs': []
 };
 let locations = [{
-    buildings: 1,
-    floors: 1,
-    rooms: 5
+    buildings: 2,
+    floors: 2,
+    rooms: 3
     // }, {
     //     buildings: 100,
     //     floors: 0,
@@ -54,34 +54,16 @@ let locations = [{
 }];
 let order = ['buildings', 'floors', 'rooms'];
 
-let buildMechanical = function (cb) {
-    let buildVAVs = function (callback) {
-        utility.iterateCursor({
-            collection: collection,
-            query: {
-                type: 'rooms'
-            }
-        }, function (err, room, next) {
-            let newMechStructure = _.cloneDeep(mechStructure);
-            let newRef = _.cloneDeep(refStructure);
-            newMechStructure.type = 'vav';
-            newMechStructure.mechanical.class = 'Air Handling';
-            newMechStructure['Location Refs'] = room['Location Refs'];
-            newRef.Display = room.display;
-            newRef.Value = room._id.toString();
-            newRef.AppIndex = room['Location Refs'].length - 1;
+let buildRef = function (obj, newRef, ref, array) {
+    obj[array] = ref[array];
+    newRef.Display = ref.display;
+    newRef.Value = ref._id.toString();
+    newRef.AppIndex = ref[array].length + 1;
+    obj[array].push(newRef);
+};
 
-            newMechStructure['Location Refs'].push(newRef);
-            newMechStructure.display = 'VAV ' + room.display.split('/')[1];
-            utility.insert({
-                collection: collection,
-                insertObj: newMechStructure
-            }, function (err, result) {
-                next(err);
-            });
-        }, callback);
-    };
-    let buildTemperatures = function (vavsCount, callback) {
+let buildMechanical = function (cb) {
+    let buildVAVs = function (tempCount, callback) {
         utility.iterateCursor({
             collection: collection,
             query: {
@@ -91,41 +73,89 @@ let buildMechanical = function (cb) {
             utility.getOne({
                 collection: collection,
                 query: {
-                    type: 'vav',
+                    type: 'temperature',
                     'Location Refs.Value': room._id.toString()
                 }
-            }, function (err, vav) {
-                let newInstrStructure = _.cloneDeep(instrStructure);
-                let newLRef = _.cloneDeep(refStructure);
-                let newMRef = _.cloneDeep(refStructure);
-                newInstrStructure.type = 'temperature';
-                newInstrStructure.mechanical.class = 'Air Handling';
-                newInstrStructure.mechanical.component = 'Space';
-
-                newInstrStructure['Location Refs'] = room['Location Refs'];
-                newLRef.Display = room.display;
-                newLRef.Value = room._id.toString();
-                newLRef.AppIndex = room['Location Refs'].length + 1;
-                newInstrStructure['Location Refs'].push(newLRef);
-
-                newInstrStructure['Mechanical Refs'] = vav['Mechanical Refs'];
-                newMRef.Display = vav.display;
-                newMRef.Value = vav._id.toString();
-                newMRef.AppIndex = vav['Mechanical Refs'].length + 1;
-                newInstrStructure['Mechanical Refs'].push(newMRef);
-
-                newInstrStructure.display = 'SPT ' + room.display.split('/')[1];
+            }, function (err, temp) {
+                let newMechStructure = _.cloneDeep(mechStructure);
+                let newLocRef = _.cloneDeep(refStructure);
+                let newMechRef = _.cloneDeep(refStructure);
+                newMechStructure.type = 'vav';
+                newMechStructure.mechanical.class = 'Air Handling';
+                newMechStructure.display = 'VAV ' + room.display.split('/')[1];
+                buildRef(newMechStructure, newLocRef, room, 'Location Refs');
+                buildRef(newMechStructure, newMechRef, temp, 'Mechanical Refs');
 
                 utility.insert({
                     collection: collection,
-                    insertObj: newInstrStructure
+                    insertObj: newMechStructure
                 }, function (err, result) {
                     next(err);
                 });
             });
         }, callback);
     };
-    async.waterfall([buildVAVs, buildTemperatures], cb);
+    let buildTemperatures = function (callback) {
+        utility.iterateCursor({
+            collection: collection,
+            query: {
+                type: 'rooms'
+            }
+        }, function (err, room, next) {
+            let newInstrStructure = _.cloneDeep(instrStructure);
+            let newLocRef = _.cloneDeep(refStructure);
+            newInstrStructure._id = upi++;
+            newInstrStructure.type = 'temperature';
+            newInstrStructure.mechanical.class = 'Air Handling';
+            newInstrStructure.mechanical.component = 'Space';
+            newInstrStructure.display = 'SPT ' + room.display.split('/')[1];
+
+            buildRef(newInstrStructure, newLocRef, room, 'Location Refs');
+
+            utility.insert({
+                collection: collection,
+                insertObj: newInstrStructure
+            }, function (err, result) {
+                next(err);
+            });
+        }, callback);
+    };
+    let buildAHUs = function (vavsCount, callback) {
+        utility.iterateCursor({
+            collection: collection,
+            query: {
+                type: 'floors'
+            }
+        }, function (err, floor, nextFloor) {
+            let newMechStructure = _.cloneDeep(mechStructure);
+            let newLocRef = _.cloneDeep(refStructure);
+            let newMechRef = _.cloneDeep(refStructure);
+            newMechStructure.type = 'ahu';
+            newMechStructure.mechanical.class = 'Air Handling';
+            newMechStructure.display = 'AHU ' + floor.display.split('/')[1];
+            buildRef(newMechStructure, newLocRef, floor, 'Location Refs');
+
+            utility.iterateCursor({
+                collection: collection,
+                query: {
+                    type: 'vav',
+                    'Location Refs.Value': floor._id.toString()
+                }
+            }, function (err, vav, nextVav) {
+                vav['Mechanical Refs'] = [];
+                buildRef(newMechStructure, newMechRef, vav, 'Mechanical Refs');
+                nextVav();
+            }, function (err, count) {
+                utility.insert({
+                    collection: collection,
+                    insertObj: newMechStructure
+                }, function (err, result) {
+                    nextFloor(err);
+                });
+            });
+        }, callback);
+    };
+    async.waterfall([buildTemperatures, buildVAVs, buildAHUs], cb);
 };
 
 let buildLocations = function (set, setIndex, index, refs, cb) {
