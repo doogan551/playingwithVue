@@ -66,7 +66,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('getRecentAlarms', function (data) {
-            const point = new Point();
+            const alarm = new Alarm();
             logger.debug('getRecentAlarms');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
@@ -80,7 +80,7 @@ module.exports = function socketio(_common) {
             }
             rooms.recentAlarms.views[socket.id] = data;
 
-            point.getRecentAlarms(data, function (err, alarms, count) {
+            alarm.getRecentAlarms(data, function (err, alarms, count) {
                 sock.emit('recentAlarms', {
                     alarms: alarms,
                     count: count,
@@ -328,7 +328,7 @@ module.exports = function socketio(_common) {
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
-            pointModel.newUpdateUpdate(data.oldPoint, data.newPoint, {
+            pointModel.newUpdate(data.oldPoint, data.newPoint, {
                 method: 'update',
                 from: 'ui',
                 path: (data.hasOwnProperty('path')) ? data.path : null
@@ -374,7 +374,7 @@ module.exports = function socketio(_common) {
 
                 function (returnPoints, callback) {
                     async.mapSeries(data.updates, function (point, callback) {
-                        pointModel.newUpdateUpdate(point.oldPoint, point.newPoint, {
+                        pointModel.newUpdate(point.oldPoint, point.newPoint, {
                             method: 'update',
                             from: 'ui'
                         }, user, function (response, updatedPoint) {
