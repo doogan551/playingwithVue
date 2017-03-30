@@ -5,12 +5,25 @@ var config = require('config');
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-let collection = 'navigation';
+let collection = 'locations';
 let upi = 1;
 let locationStructure = {
     item: 'location',
     type: '',
     display: '',
+    tags: {
+        coords: {
+            lat: '36.118167',
+            long: '-80.654063'
+        },
+        address: {
+            street: '100 Woodlyn Dr.',
+            city: 'Yadkinville',
+            zip: '27055'
+        },
+        description: 'Dorsett Technologies, Inc.',
+        tz: 'New_York'
+    },
     'Location Refs': [],
     'Mechanical Refs': []
 };
@@ -160,9 +173,6 @@ let buildMechanical = function (cb) {
 
 let buildLocations = function (set, setIndex, index, refs, cb) {
     let locationType = order[index];
-    // each building
-    // each floor per building
-    // each room per floor
     let i = 0;
     if (set[locationType] === 0) {
         buildLocations(set, setIndex, index + 1, refs, cb);
@@ -213,9 +223,9 @@ let buildTree = function () {
             collection: collection
         }, function () {
             async.eachOfSeries(locations, iterateLocations, function (err) {
-                buildMechanical(function (err) {
-                    console.log('done');
-                });
+                // buildMechanical(function (err) {
+                console.log('done');
+                // });
             });
         });
     });
