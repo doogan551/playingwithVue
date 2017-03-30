@@ -77,7 +77,7 @@ const Alarm = class Alarm extends Common {
     acknowledgeAlarm(data, cb) {
         const activeAlarm = new ActiveAlarm();
 
-        let ids = data.ids;
+        let ids = data.ids || [data._id];
         let username = data.username;
         let time = Math.floor(new Date().getTime() / 1000);
         let ackMethod = data.ackMethod || 'Console';
@@ -105,7 +105,9 @@ const Alarm = class Alarm extends Common {
 
         this.updateAll(criteria, (err, result) => {
             activeAlarm.updateAll(criteria, (err2) => {
-                cb(err || err2, result);
+                if (!!cb) {
+                    cb(err || err2, result);
+                }
             });
         });
     }

@@ -685,7 +685,7 @@ var ActivityLogsManager = function (conf) {
         dateTo: '',
         timeTo: ''
     };
-    self.sortAscending = ko.observable(true);
+    self.sortAscending = ko.observable(false);
     self.pageNumber = ko.observable(1);
     self.dateFrom = ko.observable();
     self.timeFrom = ko.observable();
