@@ -60,10 +60,10 @@ let locations = [{
     buildings: 2,
     floors: 2,
     rooms: 3
-    // }, {
-    //     buildings: 100,
-    //     floors: 0,
-    //     rooms: 25
+}, {
+    buildings: 2,
+    floors: 0,
+    rooms: 2
 }];
 let order = ['buildings', 'floors', 'rooms'];
 
@@ -171,34 +171,23 @@ let buildMechanical = function (cb) {
     async.waterfall([buildTemperatures, buildVAVs, buildAHUs], cb);
 };
 
-let buildLocations = function (set, setIndex, index, refs, cb) {
+let buildLocations = function (set, index, refs, cb) {
     let locationType = order[index];
     let i = 0;
     if (set[locationType] === 0) {
-        buildLocations(set, setIndex, index + 1, refs, cb);
+        buildLocations(set, index + 1, refs, cb);
     } else {
         async.whilst(function () {
             return i < set[locationType];
         }, function (callback) {
-            let newLocation = _.cloneDeep(locationStructure);
-            let newRef = _.cloneDeep(refStructure);
-            newLocation.type = locationType;
-            newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + setIndex.toString() + '-' + (i + 1).toString();
-            newLocation['Location Refs'] = refs;
-            utility.insert({
-                collection: collection,
-                insertObj: newLocation
-            }, function (err, result) {
+            addLocation(locationType, refs, i, function (err, newRef) {
                 if (index >= order.length - 1) {
                     i++;
                     return callback();
                 }
-                newRef.AppIndex = index + 1;
-                newRef.Display = newLocation.display;
-                newRef.Value = result.ops[0]._id.toString();
                 refs.push(newRef);
-
-                buildLocations(set, setIndex, index + 1, refs, function () {
+                newRef.AppIndex = index + 1;
+                buildLocations(set, index + 1, refs, function () {
                     i++;
                     callback();
                 });
@@ -210,10 +199,29 @@ let buildLocations = function (set, setIndex, index, refs, cb) {
     }
 };
 
+let addLocation = function (locationType, refs, i, cb) {
+    let newLocation = _.cloneDeep(locationStructure);
+    let newRef = _.cloneDeep(refStructure);
+    newLocation.type = locationType;
+    newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + '-' + (i + 1).toString();
+    newLocation['Location Refs'] = refs;
+    utility.insert({
+        collection: collection,
+        insertObj: newLocation
+    }, function (err, result) {
+        newRef.Display = newLocation.display;
+        newRef.Value = result.ops[0]._id.toString();
+        cb(err, newRef);
+    });
+};
+
 let iterateLocations = function (set, setIndex, cb) {
     // async.eachSeries(order, function (locationType, callback) {
     let array = [];
-    buildLocations(set, setIndex, 0, array, cb);
+    addLocation('sites', array, setIndex, function (err, ref) {
+        array.push(ref);
+        buildLocations(set, 0, array, cb);
+    });
     // }, cb);
 };
 
