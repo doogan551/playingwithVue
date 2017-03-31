@@ -57,15 +57,17 @@ let instrStructure = {
     'Mechanical Refs': []
 };
 let locations = [{
-    buildings: 2,
-    floors: 2,
-    rooms: 3
+    building: 2,
+    floor: 2,
+    area: 2,
+    room: 3
 }, {
-    buildings: 2,
-    floors: 0,
-    rooms: 2
+    building: 2,
+    floor: 0,
+    area: 1,
+    room: 2
 }];
-let order = ['buildings', 'floors', 'rooms'];
+let order = ['building', 'floor', 'area', 'room'];
 
 let buildRef = function (obj, newRef, ref, array) {
     obj[array] = ref[array];
@@ -203,7 +205,7 @@ let addLocation = function (locationType, refs, i, cb) {
     let newLocation = _.cloneDeep(locationStructure);
     let newRef = _.cloneDeep(refStructure);
     newLocation.type = locationType;
-    newLocation.display = locationType.substr(0, locationType.length - 1) + '/' + '-' + (i + 1).toString();
+    newLocation.display = locationType + '/' + (i + 1).toString();
     newLocation['Location Refs'] = refs;
     utility.insert({
         collection: collection,
@@ -218,7 +220,7 @@ let addLocation = function (locationType, refs, i, cb) {
 let iterateLocations = function (set, setIndex, cb) {
     // async.eachSeries(order, function (locationType, callback) {
     let array = [];
-    addLocation('sites', array, setIndex, function (err, ref) {
+    addLocation('site', array, setIndex, function (err, ref) {
         array.push(ref);
         buildLocations(set, 0, array, cb);
     });
