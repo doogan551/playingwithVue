@@ -32,20 +32,20 @@ var Location = sequelize.define('locations', {
     display: {
         type: Sequelize.STRING,
         unique: true
-    },
-    typeId: {
-        type: Sequelize.INTEGER,
-        references: {
-            model: LocationType,
-            key: 'id'
-        }
-    },
-    parentId: {
-        type: Sequelize.INTEGER,
-        references: {
-            model: Location,
-            key: 'id'
-        }
+        // },
+        // typeId: {
+        //     type: Sequelize.INTEGER,
+        //     references: {
+        //         model: LocationType,
+        //         key: 'id'
+        //     }
+        // },
+        // parentId: {
+        //     type: Sequelize.INTEGER,
+        //     references: {
+        //         model: Location,
+        //         key: 'id'
+        //     }
     }
 });
 
@@ -74,7 +74,9 @@ sequelize.sync({
         display: '4200'
     }).then((location) => {
         return LocationType.findOne({
-            type: 'building'
+            where: {
+                type: 'building'
+            }
         }).then((building) => {
             return location.setType(building);
         });
@@ -85,15 +87,19 @@ sequelize.sync({
     });
 }).then((location2) => {
     return LocationType.findOne({
-        type: 'floor'
+        where: {
+            type: 'floor'
+        }
     }).then((floor) => {
-        return location2.setType(floor).then(()=>{
+        return location2.setType(floor).then(() => {
             return location2;
         });
     });
 }).then((location2) => {
     return Location.findOne({
-        display: '4200'
+        where: {
+            display: '4200'
+        }
     }).then((building) => {
         return location2.setParent(building);
     });
@@ -102,3 +108,6 @@ sequelize.sync({
         console.log(locations[0]);
     });
 });
+
+// try mongo $lookup
+// select t1.id, t1.display, t2.type, t3.display as parent from locations t1 LEFT JOIN "locationTypes" as t2 on t1."typeId" = t2.id LEFT OUTER JOIN locations t3 on t1."parentId" = t3.id
