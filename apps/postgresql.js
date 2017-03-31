@@ -13,7 +13,7 @@ let sequelize = new Sequelize('tester', 'postgres', 'FaciLLimus$58', {
     }
 });
 
-var LocationType = sequelize.define('locationTypes', {
+var LocationType = sequelize.define('locationType', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -23,7 +23,7 @@ var LocationType = sequelize.define('locationTypes', {
         type: Sequelize.STRING
     }
 });
-var Location = sequelize.define('locations', {
+var Location = sequelize.define('location', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -32,30 +32,14 @@ var Location = sequelize.define('locations', {
     display: {
         type: Sequelize.STRING,
         unique: true
-        // },
-        // typeId: {
-        //     type: Sequelize.INTEGER,
-        //     references: {
-        //         model: LocationType,
-        //         key: 'id'
-        //     }
-        // },
-        // parentId: {
-        //     type: Sequelize.INTEGER,
-        //     references: {
-        //         model: Location,
-        //         key: 'id'
-        //     }
     }
 });
 
 Location.belongsTo(LocationType, {
-    as: 'Type',
-    foreignKey: 'typeId'
+    as: 'type'
 });
-Location.belongsTo(Location, {
-    as: 'Parent',
-    foreignKey: 'parentId'
+Location.hasMany(Location, {
+    as: 'parent'
 });
 
 sequelize.sync({
@@ -101,13 +85,27 @@ sequelize.sync({
             display: '4200'
         }
     }).then((building) => {
-        return location2.setParent(building);
+        return building.setParent(location2);
     });
-}).then((location) => {
-    Location.findAll().then((locations) => {
-        console.log(locations[0]);
+}).then(() => {
+    return Location.all({
+        // attributes: ['display', ['typeId', 'type'], ['locationId', 'parent']],
+        include: [{
+            model: Location,
+            as: 'parent',
+            attributes: ['display', 'id']
+        }, {
+            model: LocationType,
+            as: 'type',
+            attributes: ['type']
+        }]
+    });
+}).then((locations) => {
+    locations.forEach((loc) => {
+        console.log(JSON.stringify(loc));
     });
 });
 
 // try mongo $lookup
-// select t1.id, t1.display, t2.type, t3.display as parent from locations t1 LEFT JOIN "locationTypes" as t2 on t1."typeId" = t2.id LEFT OUTER JOIN locations t3 on t1."parentId" = t3.id
+// select t1.id, t1.display, t2.type, t3.display as parent, t3.id as "parentId" from locations t1 LEFT JOIN "locationTypes" as t2 on t1."typeId" = t2.id LEFT OUTER JOIN locations t3 on t1."locationId" = t3.id
+// select * from locations where "locationId" = 1
