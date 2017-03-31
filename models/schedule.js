@@ -141,7 +141,7 @@ const Schedule = class Schedule extends Common {
         });
     }
     remove(data, callback) {
-        this.remove({
+        super.remove({
             query: {
                 upi: data.upi
             }
