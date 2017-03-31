@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-let sequelize = new Sequelize('test', 'postgres', 'FaciLLimus$58', {
+let sequelize = new Sequelize('tester', 'postgres', 'FaciLLimus$58', {
     host: 'localhost',
     dialect: 'postgres',
 
@@ -13,20 +13,92 @@ let sequelize = new Sequelize('test', 'postgres', 'FaciLLimus$58', {
     }
 });
 
-var Location = sequelize.define('location', {
-    display: {
+var LocationType = sequelize.define('locationTypes', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    type: {
         type: Sequelize.STRING
     }
 });
-Location.sync({
+var Location = sequelize.define('locations', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    display: {
+        type: Sequelize.STRING,
+        unique: true
+    },
+    typeId: {
+        type: Sequelize.INTEGER,
+        references: {
+            model: LocationType,
+            key: 'id'
+        }
+    },
+    parentId: {
+        type: Sequelize.INTEGER,
+        references: {
+            model: Location,
+            key: 'id'
+        }
+    }
+});
+
+Location.belongsTo(LocationType, {
+    as: 'Type',
+    foreignKey: 'typeId'
+});
+Location.belongsTo(Location, {
+    as: 'Parent',
+    foreignKey: 'parentId'
+});
+
+sequelize.sync({
     force: true
-}).then(function () {
+}).then(() => {
     // Table created
+    return LocationType.create({
+        type: 'building'
+    }).then(() => {
+        return LocationType.create({
+            type: 'floor'
+        });
+    });
+}).then(() => {
     return Location.create({
         display: '4200'
+    }).then((location) => {
+        return LocationType.findOne({
+            type: 'building'
+        }).then((building) => {
+            return location.setType(building);
+        });
     });
-}).then(function () {
-    Location.findAll().then(function (locations) {
-        console.log(locations);
+}).then((location) => {
+    return Location.create({
+        display: 'floor 1'
+    });
+}).then((location2) => {
+    return LocationType.findOne({
+        type: 'floor'
+    }).then((floor) => {
+        return location2.setType(floor).then(()=>{
+            return location2;
+        });
+    });
+}).then((location2) => {
+    return Location.findOne({
+        display: '4200'
+    }).then((building) => {
+        return location2.setParent(building);
+    });
+}).then((location) => {
+    Location.findAll().then((locations) => {
+        console.log(locations[0]);
     });
 });

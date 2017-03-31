@@ -7,7 +7,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\apps\\buildTrees.js",
+            "program": "${workspaceRoot}\\apps\\postgresql.js",
             "cwd": "${workspaceRoot}"
         },
         {
