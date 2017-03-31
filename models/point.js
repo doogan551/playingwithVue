@@ -2422,7 +2422,7 @@ const Point = class Point extends Common {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
-        const upiObject = new Upi();
+        const upiModel = new Upi();
         let _point,
             _updateFromSchedule = !!options && options.from === 'updateSchedules',
             _upi = parseInt(upi, 10),
@@ -2498,7 +2498,7 @@ const Point = class Point extends Common {
                     return cb(null);
                 }
 
-                upiObject.deleteUpi(_upi, (err, result) => {
+                upiModel.deleteUpi(_upi, (err, result) => {
                     if (err) {
                         _buildWarning('could not update the UPI collection');
                     }

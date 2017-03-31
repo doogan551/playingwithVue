@@ -1672,9 +1672,9 @@ const History = class History extends Common {
             start: moment(2000, 'YYYY').unix()
         };
 
-        self.findEarliest(options, (err, earliest) => {
+        this.findEarliest(options, (err, earliest) => {
             options.range.end = moment().unix();
-            self.findLatest(options, (err2, latest) => {
+            this.findLatest(options, (err2, latest) => {
                 let min = earliest[0] || {
                     timestamp: 0
                 };
