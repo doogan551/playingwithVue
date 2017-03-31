@@ -362,7 +362,7 @@ module.exports = function socketio(_common) {
             async.waterfall([
                 function (callback) {
                     async.mapSeries(data.adds, function (point, callback) {
-                        point.addPoint({
+                        pointModel.addPoint({
                             point: point
                         }, user, null, function (response, updatedPoint) {
                             callback(response.err, updatedPoint);

@@ -101,6 +101,7 @@ const TrendData = class TrendData {
     }
     getTrendLimits(data, cb) {
         let upi = parseInt(data.upi, 10);
+        const historyModel = new History();
 
         let query = [{
             $match: {
@@ -132,7 +133,7 @@ const TrendData = class TrendData {
             query: query
         };
 
-        History.aggregate(criteria, (err, mongoResults) => {
+        historyModel.aggregate(criteria, (err, mongoResults) => {
             if (!!mongoResults.length) {
                 mongoResults = mongoResults[0];
             } else {
@@ -141,7 +142,7 @@ const TrendData = class TrendData {
                     max: moment().unix()
                 };
             }
-            History.findEarliestAndLatest({
+            historyModel.findEarliestAndLatest({
                 upis: [upi],
                 range: {
                     start: moment(2000, 'YYYY').unix()
