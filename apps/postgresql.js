@@ -1,3 +1,5 @@
+const async = require('async');
+const _ = require('lodash');
 const Sequelize = require('sequelize');
 let sequelize = new Sequelize('tester', 'postgres', 'FaciLLimus$58', {
     host: 'localhost',
@@ -12,6 +14,13 @@ let sequelize = new Sequelize('tester', 'postgres', 'FaciLLimus$58', {
         timestamps: false
     }
 });
+
+let locationTemplate = {
+    type: 'floor',
+    display: 'floor ',
+    parent: '4200'
+};
+let o = 2;
 
 var LocationType = sequelize.define('locationType', {
     id: {
@@ -101,10 +110,57 @@ sequelize.sync({
         }]
     });
 }).then((locations) => {
-    locations.forEach((loc) => {
-        console.log(JSON.stringify(loc));
+    async.whilst(() => {
+        return o <= 10;
+    }, (cb) => {
+        let template = _.cloneDeep(locationTemplate);
+        template.display += o;
+        let location = null;
+        Location.create({
+            display: template.display
+        }).then((_location) => {
+            location = _location;
+            return LocationType.findOne({
+                where: {
+                    type: template.type
+                }
+            });
+        }).then((type) => {
+            return location.setType(type);
+        }).then((location) => {
+            return Location.findOne({
+                where: {
+                    display: template.parent
+                }
+            }).then((building) => {
+                return building.setParent(location);
+            });
+        }).done(() => {
+            o++;
+            cb();
+        });
+    }, (err) => {
+        console.log('done');
     });
 });
+// sequelize.sync({}).then(() => {
+//     return Location.all({
+//         // attributes: ['display', ['typeId', 'type'], ['locationId', 'parent']],
+//         include: [{
+//             model: Location,
+//             as: 'parent',
+//             attributes: ['display', 'id']
+//         }, {
+//             model: LocationType,
+//             as: 'type',
+//             attributes: ['type']
+//         }]
+//     });
+// }).then((locations) => {
+//     locations.forEach((loc) => {
+//         console.log(JSON.stringify(loc));
+//     });
+// });
 
 // try mongo $lookup
 // select t1.id, t1.display, t2.type, t3.display as parent, t3.id as "parentId" from locations t1 LEFT JOIN "locationTypes" as t2 on t1."typeId" = t2.id LEFT OUTER JOIN locations t3 on t1."locationId" = t3.id
