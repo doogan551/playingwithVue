@@ -62,6 +62,7 @@
     "tmp": "0.0.26",
     "twilio": "^2.8.0",
     "winston": "^2.0.1",
+    "winston-mongodb": "^2.0.8",
     "xhr-request": "^1.0.1",
     "xml2js": "^0.4.9",
     "zmq": "^2.14.0"

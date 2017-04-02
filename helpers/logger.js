@@ -1,6 +1,8 @@
 var winston = require('winston');
 var moment = require('moment');
 var DailyFile = require('winston-daily-rotate-file');
+var WinstonMongo = require('winston-mongodb').MongoDB;
+const db = require('../helpers/db');
 
 winston.emitErrs = true;
 
@@ -8,7 +10,7 @@ var logger = function (moduleName) {
     var label = '';
     var parts = moduleName.filename.split(/[\\\/]/);
     label = parts[parts.length - 2] + '/' + parts.pop();
-    return new winston.Logger({
+    let winstonModel = new winston.Logger({
         transports: [
             new DailyFile({
                 prepend: true,
@@ -63,6 +65,17 @@ var logger = function (moduleName) {
         ],
         exitOnError: false
     });
+    winstonModel.add(WinstonMongo, {
+        level: 'info',
+        silent: false,
+        db: db.get(),
+        collection: 'logs',
+        label: label,
+        timestamp: function () {
+            return moment().format();
+        }
+    });
+    return winstonModel;
 };
 
 module.exports = logger;
