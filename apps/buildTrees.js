@@ -1,11 +1,12 @@
 var async = require('async');
 var db = require('../helpers/db');
 var config = require('config');
+var ObjectId = require('mongodb').ObjectId;
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-let collection = 'locations';
+let collection = 'navigation';
 let upi = 1;
 let locationStructure = {
     item: 'location',
@@ -24,11 +25,10 @@ let locationStructure = {
         description: 'Dorsett Technologies, Inc.',
         tz: 'New_York'
     },
-    'Location Refs': [],
+    'Location Ref': null,
     'Mechanical Refs': []
 };
 let refStructure = {
-    'AppIndex': 0,
     'Display': '',
     'Value': '',
     'isReadOnly': false,
@@ -57,14 +57,14 @@ let instrStructure = {
     'Mechanical Refs': []
 };
 let locations = [{
-    building: 2,
-    floor: 2,
-    area: 2,
+    building: 1,
+    floor: 1,
+    area: 1,
     room: 3
 }, {
-    building: 2,
+    building: 1,
     floor: 0,
-    area: 1,
+    area: 0,
     room: 2
 }];
 let order = ['building', 'floor', 'area', 'room'];
@@ -72,8 +72,8 @@ let order = ['building', 'floor', 'area', 'room'];
 let buildRef = function (obj, newRef, ref, array) {
     obj[array] = ref[array];
     newRef.Display = ref.display;
-    newRef.Value = ref._id.toString();
-    newRef.AppIndex = ref[array].length + 1;
+    newRef.Value = ObjectId(ref._id);
+    // newRef.AppIndex = ref[array].length + 1;
     obj[array].push(newRef);
 };
 
@@ -173,58 +173,77 @@ let buildMechanical = function (cb) {
     async.waterfall([buildTemperatures, buildVAVs, buildAHUs], cb);
 };
 
-let buildLocations = function (set, index, refs, cb) {
+let buildLocations = function (set, index, ref, cb) {
     let locationType = order[index];
     let i = 0;
     if (set[locationType] === 0) {
-        buildLocations(set, index + 1, refs, cb);
+        buildLocations(set, index + 1, ref, cb);
     } else {
         async.whilst(function () {
             return i < set[locationType];
         }, function (callback) {
-            addLocation(locationType, refs, i, function (err, newRef) {
+            addLocation(locationType, ref, i, function (err, newRef) {
                 if (index >= order.length - 1) {
                     i++;
                     return callback();
                 }
-                refs.push(newRef);
-                newRef.AppIndex = index + 1;
-                buildLocations(set, index + 1, refs, function () {
+                // refs.push(newRef);
+                buildLocations(set, index + 1, newRef, function () {
                     i++;
                     callback();
                 });
             });
         }, function (err) {
-            refs.pop();
+            // refs.pop();
             cb();
         });
     }
 };
 
-let addLocation = function (locationType, refs, i, cb) {
+let addLocation = function (locationType, ref, i, cb) {
     let newLocation = _.cloneDeep(locationStructure);
     let newRef = _.cloneDeep(refStructure);
     newLocation.type = locationType;
     newLocation.display = locationType + '/' + (i + 1).toString();
-    newLocation['Location Refs'] = refs;
-    utility.insert({
-        collection: collection,
-        insertObj: newLocation
-    }, function (err, result) {
-        newRef.Display = newLocation.display;
-        newRef.Value = result.ops[0]._id.toString();
-        cb(err, newRef);
+    // newLocation['Location Refs'] = refs;
+    newLocation['Location Ref'] = ref;
+    getNextSequence('locationid', function (err, newId) {
+        newLocation._id = newId;
+        utility.insert({
+            collection: collection,
+            insertObj: newLocation
+        }, function (err, result) {
+            newRef.Display = newLocation.display;
+            newRef.Value = result.ops[0]._id;
+            cb(err, newRef);
+        });
     });
 };
 
 let iterateLocations = function (set, setIndex, cb) {
     // async.eachSeries(order, function (locationType, callback) {
-    let array = [];
-    addLocation('site', array, setIndex, function (err, ref) {
-        array.push(ref);
-        buildLocations(set, 0, array, cb);
+    let ref = null;
+    addLocation('site', ref, setIndex, function (err, newRef) {
+        buildLocations(set, 0, newRef, cb);
     });
     // }, cb);
+};
+
+let getNextSequence = function (name, callback) {
+    utility.findAndModify({
+        collection: 'counters',
+        query: {
+            _id: name
+        },
+        updateObj: {
+            $inc: {
+                count: 1
+            }
+        },
+        options: {
+            'new': true
+        }
+    }, callback);
 };
 
 let buildTree = function () {
@@ -232,10 +251,22 @@ let buildTree = function () {
         utility.remove({
             collection: collection
         }, function () {
-            async.eachOfSeries(locations, iterateLocations, function (err) {
-                // buildMechanical(function (err) {
-                console.log('done');
-                // });
+            utility.update({
+                collection: 'counters',
+                query: {
+                    _id: 'locationid'
+                },
+                updateObj: {
+                    $set: {
+                        count: 0
+                    }
+                }
+            }, function () {
+                async.eachOfSeries(locations, iterateLocations, function (err) {
+                    // buildMechanical(function (err) {
+                    console.log('done');
+                    // });
+                });
             });
         });
     });
