@@ -1,58 +1,60 @@
+const config = require('config');
+
 let ArchiveUtility = require('../models/archiveutility');
-let archiveUtility = new ArchiveUtility('');
-const db = require('../helpers/db');
-var config = require('config');
-var dbConfig = config.get('Infoscan.dbConfig');
-var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+let archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
+let archiveUtility = new ArchiveUtility(archiveLocation, 'History');
 
-db.connect(connectionString.join(''), function (err) {
-    let logger = require('../helpers/logger')(module);
-
-    let HistoryRecord = archiveUtility.define('History', {
-        upi: {
-            type: ArchiveUtility.INTEGER,
-            primaryKey: true
-        },
-        timestamp: {
-            type: ArchiveUtility.INTEGER,
-            primaryKey: true
-        },
-        value: {
-            type: ArchiveUtility.REAL
-        },
-        valueType: {
-            type: ArchiveUtility.INTEGER,
-            defaultValue: 1
-        },
-        statusFlags: {
-            type: ArchiveUtility.INTEGER,
-            defaultValue: 1
-        },
-        userEdited: {
-            type: ArchiveUtility.INTEGER,
-            defaultValue: 0
-        }
-    });
-
-    let count = 1000;
-    let b = 0;
-    let bulk = [];
-
-    for (b; b < count; ++b) {
-        bulk.push({
-            upi: 1,
-            timestamp: b,
-            value: b * count
-        });
+let HistoryRecord = archiveUtility.define('History', {
+    upi: {
+        type: ArchiveUtility.INTEGER,
+        primaryKey: true
+    },
+    timestamp: {
+        type: ArchiveUtility.INTEGER,
+        primaryKey: true
+    },
+    value: {
+        type: ArchiveUtility.REAL
+    },
+    valueType: {
+        type: ArchiveUtility.INTEGER
+    },
+    statusFlags: {
+        type: ArchiveUtility.INTEGER
+    },
+    userEdited: {
+        type: ArchiveUtility.INTEGER,
+        defaultValue: 0
     }
-    logger.info('test');
-    // archiveUtility.sync().then(() => {
-    //     console.log(bulk.length);
-    //     return HistoryRecord.bulkCreate(bulk);
-    // }).then((results) => {
-    //     console.log(JSON.stringify(results));
-    //     console.timeEnd('start');
-    // }).catch((err) => {
-    //     console.log(err);
-    // });
+});
+let upis = [918993, 918967, 918993, 918966];
+let where = {
+    timestamp: {
+        gt: 0,
+        lte: 1491250247000
+    },
+    upi: {
+        $in: upis
+    }
+};
+
+archiveUtility.sync().then(() => {
+    return HistoryRecord.count({
+        where: where,
+        raw: true
+    });
+}).then((count) => {
+    console.log(count);
+    if (count < 4465) {
+        return;
+    }
+    where.userEdited = 1;
+    return HistoryRecord.count({
+        where: where,
+        raw: true
+    });
+}).then((count2) => {
+    console.log(count2 > 0);
+}).catch((err) => {
+    console.log(err);
 });

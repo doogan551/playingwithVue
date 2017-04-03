@@ -6,19 +6,13 @@
  * https://github.com/mapbox/node-sqlite3
  */
 
-const sqlite3 = require('sqlite3').verbose();
-const config = require('config');
-const fs = require('fs');
-const async = require('async');
-const moment = require('moment');
 const Sequelize = require('sequelize');
 
 const ArchiveUtility = class ArchiveUtility extends Sequelize {
 
-    constructor(archiveLocation) {
-        archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/History.db';
-        console.log(archiveLocation);
-        super('history', '', '', {
+    constructor(archiveLocation, db) {
+        console.log(archiveLocation + db + '.db');
+        super(db, '', '', {
             host: 'localhost',
             dialect: 'sqlite',
 
@@ -31,107 +25,10 @@ const ArchiveUtility = class ArchiveUtility extends Sequelize {
                 timestamps: false,
                 freezeTableName: true
             },
-            logging: false,
-            storage: archiveLocation
+            // logging: false,
+            storage: archiveLocation + db + '.db'
         });
     }
 
-    get(criteria, cb) {
-        let statement = criteria.statement;
-        let year = criteria.year || moment().year();
-        let parameters = criteria.parameters || [];
-
-        if (!statement) {
-            cb('No statement supplied.', {});
-        } else {
-            this.getSqliteDB(year, (_sqliteDB) => {
-                _sqliteDB.get(statement, parameters, cb);
-            });
-        }
-    }
-
-    all(criteria, cb) {
-        let statement = criteria.statement;
-        let year = criteria.year || moment().year();
-        let parameters = criteria.parameters || [];
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            this.getSqliteDB(year, (_sqliteDB) => {
-                _sqliteDB.all(statement, parameters, cb);
-            });
-        }
-    }
-
-    prepare(criteria, cb) {
-        let statement = criteria.statement;
-        let year = criteria.year || moment().year();
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            this.getSqliteDB(year, (_sqliteDB) => {
-                return cb(_sqliteDB.prepare(statement));
-            });
-        }
-    }
-
-    exec(criteria, cb) {
-        let statement = criteria.statement;
-        let year = criteria.year || moment().year();
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            this.getSqliteDB(year, (_sqliteDB) => {
-                _sqliteDB.exec(statement, cb);
-            });
-        }
-    }
-
-    runDB(criteria, cb) {
-        let statement = criteria.statement;
-        let year = criteria.year || moment().year();
-        let parameters = criteria.parameters || [];
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            this.getSqliteDB(year, (_sqliteDB) => {
-                _sqliteDB.run(statement, parameters, cb);
-            });
-        }
-    }
-
-    runStatement(criteria, cb) {
-        let statement = criteria.statement;
-        let parameters = criteria.parameters || [];
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            statement.run(parameters, cb);
-        }
-    }
-
-    finalizeStatement(criteria, cb) {
-        let statement = criteria.statement;
-
-        if (!statement) {
-            cb('No statement supplied.', []);
-        } else {
-            statement.finalize(cb);
-        }
-    }
-
-    serialize(criteria, cb) {
-        let year = criteria.year || moment().year();
-        this.getSqliteDB(year, (_sqliteDB) => {
-            _sqliteDB.serialize((err) => {
-                return cb();
-            });
-        });
-    }
 };
 module.exports = ArchiveUtility;

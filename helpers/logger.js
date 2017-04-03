@@ -65,16 +65,16 @@ var logger = function (moduleName) {
         ],
         exitOnError: false
     });
-    winstonModel.add(WinstonMongo, {
-        level: 'info',
-        silent: false,
-        db: db.get(),
-        collection: 'logs',
-        label: label,
-        timestamp: function () {
-            return moment().format();
-        }
-    });
+    // winstonModel.add(WinstonMongo, {
+    //     level: 'info',
+    //     silent: false,
+    //     db: db.get(),
+    //     collection: 'logs',
+    //     label: label,
+    //     timestamp: function () {
+    //         return moment().format();
+    //     }
+    // });
     return winstonModel;
 };
 
