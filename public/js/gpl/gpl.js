@@ -1466,7 +1466,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     handleAnchorAttach: function (anchor, line) {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
-            myblock = gpl.blockManager.getBlock(anchor.gplId),
+            // myblock = gpl.blockManager.getBlock(anchor.gplId),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
             name,
             upi,
@@ -1494,10 +1494,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
                     }
                     if (otherBlock.blockType === 'Constant') {
-                        myblock.syncAnchorValue(anchor, otherBlock.value);
+                        self.syncAnchorValue(anchor, otherBlock.value);
                     }
                 }
                 self.formatPoint(anchor, line, otherBlock);
+                self.validate();
+                otherBlock.validate();
             }
 
             if (idx) {
