@@ -135,7 +135,10 @@ const ActivityLog = class ActivityLog extends Common {
             }
             propertyChange.property = data.prop;
             propertyChange.newValue = data.newValue;
-            propertyChange.valueType = data.point[data.prop].ValueType;
+            if (!!data.point[data.prop] && !!data.point[data.prop].ValueType) {
+                propertyChange.valueType = data.point[data.prop].ValueType;
+            }
+
             log.propertyChanges = propertyChange;
         }
 
