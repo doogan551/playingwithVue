@@ -7,8 +7,9 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\apps\\buildTrees.js",
-            "cwd": "${workspaceRoot}"
+            "program": "${workspaceRoot}\\apps\\createLocation.js",
+            "cwd": "${workspaceRoot}",
+            "args":["s:msfc/b:test/f:first/r:4"]
         },
         {
             "type": "node",
