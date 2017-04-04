@@ -25,7 +25,7 @@ const ArchiveUtility = class ArchiveUtility extends Sequelize {
                 timestamps: false,
                 freezeTableName: true
             },
-            // logging: false,
+            logging: false,
             storage: archiveLocation + db + '.db'
         });
     }

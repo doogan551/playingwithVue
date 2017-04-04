@@ -60,12 +60,11 @@ const History = class History extends Common {
                 type: ArchiveUtility.REAL
             },
             valueType: {
-                type: ArchiveUtility.INTEGER,
-                defaultValue: 1
+                type: ArchiveUtility.INTEGER
             },
             statusFlags: {
                 type: ArchiveUtility.INTEGER,
-                defaultValue: 1
+                defaultValue: 0
             },
             userEdited: {
                 type: ArchiveUtility.INTEGER,
@@ -1238,12 +1237,10 @@ const History = class History extends Common {
         });
     }
 
-    addToSQLite(ranges, cb) {
-        async.eachSeries(ranges, (range, callback) => {
-            // this.doMonth(range, callback);
-        }, (err) => {
-            this.removeFromHistorydata(ranges, cb);
-        });
+    addToSQLite(points, cb) {
+        this.HistoryRecord.bulkCreate(points).then(() => {
+            cb();
+        }).catch(cb);
     }
     removeFromHistorydata(ranges, cb) {
         // no longer removing data by mongo.remove()
@@ -1584,58 +1581,22 @@ const History = class History extends Common {
         range.points.push(point);
         ranges.push(range);
     }
-    buildTimeRanges(points, cb) {
-        let compare = (a, b) => {
-            if (a.timestamp < b.timestamp) {
-                return -1;
-            }
-            if (a.timestamp > b.timestamp) {
-                return 1;
-            }
-            return 0;
+    doBackUp(upis, cb) {
+        let criteria = {
+            query: [{
+                $project: {
+                    _id: 0,
+                    value: '$Value',
+                    valueType: '$ValueType',
+                    statusFlags: '$statusflags',
+                    timestamp: 1,
+                    upi: 1
+                }
+            }]
         };
 
-        let ranges = [];
-
-        points.sort(compare);
-
-        for (let i = 0; i < points.length; i++) {
-            let month = moment.unix(points[i].timestamp).format('MM');
-            let year = moment.unix(points[i].timestamp).format('YYYY');
-
-            this.upsertRange(ranges, month, year, points[i]);
-        }
-        this.addToSQLite(ranges, cb);
-    }
-    doBackUp(upis, limitRange, cb) {
-        let criteria = {};
-        let query = {};
-        this.findRangeEnds((err, range) => {
-            let dates = this.buildDates(range);
-            async.eachSeries(dates, (date, callback) => {
-                query = {
-                    $and: [{
-                        timestamp: {
-                            $gte: date.start
-                        }
-                    }, {
-                        timestamp: {
-                            $lt: date.end
-                        }
-                    }]
-                };
-
-                criteria = {
-                    query: query
-                };
-
-                this.get(criteria, (err, points) => {
-                    // TODO do full backup
-                    // this.buildTimeRanges(points, callback);
-                });
-            }, (err) => {
-                cb(err);
-            });
+        this.aggregate(criteria, (err, points) => {
+            this.addToSQLite(points, cb);
         });
     }
     // buildOps: buildOps,

@@ -7,7 +7,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\apps\\sqlite.js",
+            "program": "${workspaceRoot}\\apps\\migrationScripts.js",
             "cwd": "${workspaceRoot}"
         },
         {

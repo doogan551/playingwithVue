@@ -2,6 +2,7 @@
 // if you do not wish to update the version in the DB, pass -n from command prompt
 process.setMaxListeners(0);
 let async = require('async');
+let moment = require('moment');
 let Utility = new(require('../models/Utility'))();
 let db = require('../helpers/db');
 let utils = require('../helpers/utils');
@@ -699,10 +700,10 @@ let scripts = {
             } else {
                 cb();
             }
-        }, function(err) {
-            logger.info("Finished with updateGenerateDisplayPointRefs");
+        }, function (err) {
+            logger.info('Finished with updateGenerateDisplayPointRefs');
             callback(null, {
-                fn: "updateGenerateDisplayPointRefs",
+                fn: 'updateGenerateDisplayPointRefs',
                 errors: err
             });
         });
@@ -808,7 +809,7 @@ let scripts = {
         });
     },
     // 0.5.1 - GPL X-Or moving to XOr...
-    updateGPLDigitalLogicXORBlock: function(callback) {
+    updateGPLDigitalLogicXORBlock: function (callback) {
         var afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
@@ -827,19 +828,19 @@ let scripts = {
                 }]
             }
         }, function processSequence(err, doc, cb) {
-            var calcType = doc["Calculation Type"],
+            var calcType = doc['Calculation Type'],
                 updateMe = false;
 
             if (!!calcType) {
                 // logger.info("working on " + doc.Name );
                 updateMe = true;
 
-                if (calcType.Value === "X-Or") {
-                    calcType.Value = "XOr";
+                if (calcType.Value === 'X-Or') {
+                    calcType.Value = 'XOr';
                 }
 
-                if (!!calcType.ValueOptions && !!calcType.ValueOptions["X-Or"]) {
-                    delete calcType.ValueOptions["X-Or"];
+                if (!!calcType.ValueOptions && !!calcType.ValueOptions['X-Or']) {
+                    delete calcType.ValueOptions['X-Or'];
                 } else {
                     // logger.info("calcType.ValueOptions = " + JSON.stringify(calcType.ValueOptions));
                 }
@@ -864,11 +865,11 @@ let scripts = {
                         cb(null);
                     });
                 } else {
-                    logger.info("nothing change for " + doc.Name );
+                    logger.info('nothing change for ' + doc.Name);
                     cb(null);
                 }
             } else {
-                logger.info("no SequenceData for " + doc.Name );
+                logger.info('no SequenceData for ' + doc.Name);
                 cb(null);
             }
         }, function finishUpdatingSequences(err) {
@@ -881,7 +882,7 @@ let scripts = {
     },
 
     // 0.4.2 - Report schema change   Property Reports do NOT need duration or interval
-    updateReportsDurationInterval: function(callback) {
+    updateReportsDurationInterval: function (callback) {
         var afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
@@ -894,7 +895,9 @@ let scripts = {
         let collectionName = 'points',
             query = {
                 'Point Type.Value': 'Report',
-                'Report Type.Value': {$ne: 'Property'}
+                'Report Type.Value': {
+                    $ne: 'Property'
+                }
             },
             reportUpdateCounter = 0,
             processDoc = function (reportDoc, cb) {
@@ -1834,6 +1837,81 @@ let scripts = {
                 errors: err
             });
         });
+    },
+    convertSQLiteDB: function (callback) {
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'convertSQLiteDB',
+                errors: null,
+                results: null
+            });
+        }
+        let startYear = 2012;
+        let maxYear = 2020;
+        const ArchiveUtility = require('../models/archiveutility');
+        let History = require('../models/history');
+        let historyModel = new History();
+        async.whilst(() => {
+            return startYear <= maxYear;
+        }, (cb) => {
+            let oldLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
+            let oldArchive = new ArchiveUtility(oldLocation, 'History_' + startYear);
+            let month = 1;
+            async.whilst(() => {
+                return month <= 12;
+            }, (cb2) => {
+                let oldHistory = oldArchive.define('History_' + startYear + '' + ((month < 10) ? '0' + month : month), {
+                    upi: {
+                        type: ArchiveUtility.INTEGER,
+                        primaryKey: true
+                    },
+                    timestamp: {
+                        type: ArchiveUtility.INTEGER,
+                        primaryKey: true
+                    },
+                    value: {
+                        type: ArchiveUtility.REAL
+                    },
+                    valueType: {
+                        type: ArchiveUtility.INTEGER
+                    },
+                    statusFlags: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
+                    },
+                    userEdited: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
+                    }
+                });
+                month++;
+                oldHistory.sync().then(() => {
+                    return oldHistory.findAll({
+                        attributes: [
+                            ['upi', 'upi'],
+                            ['timestamp', 'timestamp'],
+                            ['value', 'value'],
+                            ['valueType', 'valueType'],
+                            ['statusFlags', 'statusFlags'],
+                            ['userEdited', 'userEdited']
+                        ],
+                        raw: true
+                    });
+                }).then((points) => {
+                    historyModel.addToSQLite(points, cb2);
+                }).catch(cb2);
+            }, function (err) {
+                startYear++;
+                cb(err);
+            });
+        }, (err) => {
+            logger.info('Finished with convertSQLiteDB');
+            callback(null, {
+                fn: 'convertSQLiteDB',
+                errors: err
+            });
+        });
     }
 };
 
@@ -1848,7 +1926,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    // tasks = [scripts.updateGPLBlockPrecision];
+    tasks = [scripts.convertSQLiteDB];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
