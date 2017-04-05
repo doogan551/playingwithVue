@@ -8,8 +8,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceRoot}\\app.js",
-            "cwd": "${workspaceRoot}",
-            "args":["s:msfc/b:test/f:first/r:4"]
+            "cwd": "${workspaceRoot}"
         },
         {
             "type": "node",

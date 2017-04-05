@@ -45,7 +45,9 @@ router.post('/add', function (req, res) {
             });
         }
 
-        return utils.sendResponse(res, results);
+        return utils.sendResponse(res, {
+            newLocation: results.ops[0]
+        });
     });
 });
 
