@@ -44,9 +44,23 @@ const Location = class Location extends Common {
         let display = data.display;
         let parentId = this.getNumber(data.parentId);
         let type = data.type;
+
         this.getLocation({
             id: parentId
         }, (err, parent) => {
+            let tags = {
+                coords: {
+                    lat: data.coords.lat || parent.tags.coords.lat,
+                    long: data.coords.long || parent.tags.coords.long
+                },
+                address: {
+                    street: data.address.street || parent.tags.address.street,
+                    city: data.address.city || parent.tags.address.city,
+                    zip: data.address.zip || parent.tags.address.zip
+                },
+                description: data.description || parent.tags.description,
+                tz: data.timezone || parent.tags.timezone
+            };
             parent = this.buildParent(parent);
             counterModel.getNextSequence('locationid', (err, newId) => {
                 this.insert({
@@ -55,7 +69,8 @@ const Location = class Location extends Common {
                         _id: newId,
                         display: display,
                         locationRef: parent,
-                        type: type
+                        type: type,
+                        tags: tags
                     }
                 }, cb);
             });
@@ -65,8 +80,8 @@ const Location = class Location extends Common {
     getDescendants(data, cb) {
         let id = this.getNumber(data.id);
         let itemTypes = ['location'];
-        let terms = data.terms || '';
-        let groups = data.groups;
+        let terms = this.getDefault(data.terms, '');
+        let groups = this.getDefault(data.groups, []);
 
         let pipeline = [];
 
@@ -91,7 +106,7 @@ const Location = class Location extends Common {
 
         if (!!id) {
             afterMatch.$match = {
-                'path.locationRef.Value': id
+                'path._id': id
             };
         }
 
@@ -211,20 +226,33 @@ const Location = class Location extends Common {
                         query: query
                     }, cb);
                 } else {
-                    this.update({
-                        query: query,
-                        updateObj: {
-                            $set: {
-                                locationRef: this.buildParent(0)
-                            }
-                        }
-                    }, cb);
+                    this.updateParent(null, query, cb);
                 }
             });
         });
     }
 
     moveLocation(data, cb) {
+        let id = this.getNumber(data.id);
+        let parentId = this.getNumber(data.parentId);
+
+        this.updateParent(parentId, {
+            _id: id
+        }, cb);
+    }
+
+    updateParent(parentId, query, cb) {
+        this.getLocation(parentId, (err, parent) => {
+            this.update({
+                query: query,
+                updateObj: {
+                    locationRef: this.buildParent(parent)
+                }
+            });
+        });
+    }
+
+    editLocation(data, cb) {
 
     }
 };

@@ -67,9 +67,23 @@ let buildParentPath = function (parent, node, cb) {
                 locationModel.insert({
                     insertObj: {
                         _id: newId.count,
+                        item: 'location',
                         display: display,
                         locationRef: parent,
-                        type: type
+                        type: type,
+                        tags: {
+                            coords: {
+                                lat: '36.118167',
+                                long: '-80.654063'
+                            },
+                            address: {
+                                street: '100 Woodlyn Dr.',
+                                city: 'Yadkinville',
+                                zip: '27055'
+                            },
+                            description: 'Dorsett Technologies, Inc.',
+                            tz: 'New_York'
+                        }
                     }
                 }, (err) => {
                     cb(err, buildParent(newId.count));
