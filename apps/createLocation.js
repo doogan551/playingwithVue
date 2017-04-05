@@ -10,6 +10,7 @@ let utility;
 let types = {
     site: ['s'],
     building: ['b'],
+    area: ['a'],
     floor: ['f'],
     room: ['r']
 };
@@ -50,6 +51,7 @@ let buildParentPath = function (parent, node, cb) {
         return {
             Display: display,
             Value: id,
+            Type: type,
             isDisplayable: true,
             isReadOnly: false
         };
@@ -80,7 +82,13 @@ let buildParentPath = function (parent, node, cb) {
 };
 
 let createLocation = function (locs) {
-    let parent = null;
+    let parent = {
+        Display: '',
+        Value: 0,
+        Type: '',
+        isDisplayable: false,
+        isReadOnly: false
+    };
     async.eachSeries(locs, (loc, cb) => {
         buildParentPath(parent, loc, (err, newParent) => {
             parent = _.cloneDeep(newParent);
