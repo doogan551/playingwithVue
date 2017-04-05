@@ -51,4 +51,66 @@ router.post('/add', function (req, res) {
     });
 });
 
+router.post('/getDescendants', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Location.getDescendants(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
+router.post('/getFullPath', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Location.getFullPath(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
+router.post('/delete', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Location.deleteLocation(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {
+            message: 'success'
+        });
+    });
+});
+
+router.post('/move', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Location.moveLocation(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
 module.exports = router;

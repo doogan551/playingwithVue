@@ -14,7 +14,7 @@ module.exports = function (passport) {
     passport.deserializeUser(function (id, done) {
         var criteria = {
             collection: 'Users',
-            query: [{
+            pipeline: [{
                 $match: {
                     '_id': new mongodb.ObjectID(id)
                 }
@@ -49,7 +49,7 @@ module.exports = function (passport) {
         process.nextTick(function () {
             var criteria = {
                 collection: 'Users',
-                query: [{
+                pipeline: [{
                     $match: {
                         'username': {
                             '$regex': new RegExp(['^', username, '$'].join(''), 'i')

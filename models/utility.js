@@ -52,7 +52,7 @@ const Utility = class Utility {
     }
 
     aggregate(criteria, cb) {
-        let query = (!!criteria.query) ? criteria.query : {};
+        let pipeline = (!!criteria.pipeline) ? criteria.pipeline : {};
         let coll = criteria.collection || this.collection;
         let collection;
 
@@ -64,7 +64,7 @@ const Utility = class Utility {
 
         collection = db.get().collection(coll);
 
-        collection.aggregate(query, cb);
+        collection.aggregate(pipeline, cb);
     }
 
     update(criteria, cb) {
