@@ -1226,7 +1226,7 @@ const Point = class Point extends Common {
                                 continue;
                             }
 
-                            logData.activity = Config.Enums['Activity Logs']['Point Property Edit'].enum;
+                            logData.activity = 'Point Property Edit';
                             logData.prop = prop;
                             logData.oldValue = {
                                 Value: oldPoint[prop].Value
