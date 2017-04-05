@@ -24,26 +24,32 @@ const Location = class Location extends Common {
         }, cb);
     }
 
+    buildParent(parent) {
+        let newParent = {
+            isReadOnly: false
+        };
+
+        newParent.Display = (!parent) ? '' : parent.display;
+        newParent.Value = (!parent) ? 0 : parent._id;
+        newParent.Type = (!parent) ? '' : parent.type;
+        newParent.isDisplayable = (!parent) ? false : true;
+
+        return newParent;
+    }
+
     add(data, cb) {
         let counterModel = new Counter();
         let display = data.display;
-        let parentId = this.getNumber(data.id);
+        let parentId = this.getNumber(data.parentId);
         let type = data.type;
         this.getLocation({
             id: parentId
         }, (err, parent) => {
-            if (!parent) {
-                parent = {
-                    Display: '',
-                    Value: 0,
-                    Type: '',
-                    isDisplayable: false,
-                    isReadOnly: false
-                };
-            }
+            parent = this.buildParent(parent);
             counterModel.getNextSequence('locationid', (err, newId) => {
                 this.insert({
                     insertObj: {
+                        item: 'location',
                         _id: newId,
                         display: display,
                         locationRef: parent,
@@ -52,6 +58,11 @@ const Location = class Location extends Common {
                 }, cb);
             });
         });
+    }
+
+    getDescendants(data, cb) {
+        let id = this.getNumber(data.id);
+        let items = ['location'];
     }
 };
 
