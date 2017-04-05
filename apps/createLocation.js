@@ -71,7 +71,7 @@ let buildParentPath = function (parent, node, cb) {
                         display: display,
                         locationRef: parent,
                         type: type,
-                        tags: {
+                        meta: {
                             coords: {
                                 lat: '36.118167',
                                 long: '-80.654063'
@@ -83,7 +83,8 @@ let buildParentPath = function (parent, node, cb) {
                             },
                             description: 'Dorsett Technologies, Inc.',
                             tz: 'New_York'
-                        }
+                        },
+                        tags: [display, type, 'location']
                     }
                 }, (err) => {
                     cb(err, buildParent(newId.count));

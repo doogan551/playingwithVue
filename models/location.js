@@ -48,18 +48,18 @@ const Location = class Location extends Common {
         this.getLocation({
             id: parentId
         }, (err, parent) => {
-            let tags = {
+            let meta = {
                 coords: {
-                    lat: data.coords.lat || parent.tags.coords.lat,
-                    long: data.coords.long || parent.tags.coords.long
+                    lat: data.coords.lat || parent.meta.coords.lat,
+                    long: data.coords.long || parent.meta.coords.long
                 },
                 address: {
-                    street: data.address.street || parent.tags.address.street,
-                    city: data.address.city || parent.tags.address.city,
-                    zip: data.address.zip || parent.tags.address.zip
+                    street: data.address.street || parent.meta.address.street,
+                    city: data.address.city || parent.meta.address.city,
+                    zip: data.address.zip || parent.meta.address.zip
                 },
-                description: data.description || parent.tags.description,
-                tz: data.timezone || parent.tags.timezone
+                description: data.description || parent.meta.description,
+                tz: data.timezone || parent.meta.timezone
             };
             parent = this.buildParent(parent);
             counterModel.getNextSequence('locationid', (err, newId) => {
@@ -70,7 +70,8 @@ const Location = class Location extends Common {
                         display: display,
                         locationRef: parent,
                         type: type,
-                        tags: tags
+                        meta: meta,
+                        tags: ['location', display, type]
                     }
                 }, cb);
             });
@@ -258,7 +259,7 @@ const Location = class Location extends Common {
     }
 
     editLocation(data, cb) {
-        const editProperties = ['display', 'type', 'tags'];
+        const editProperties = ['display', 'type', 'meta'];
         let id = this.getNumber(data.id);
         let updateObj = {
             $set: {}
