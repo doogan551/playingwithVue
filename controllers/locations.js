@@ -8,7 +8,7 @@ router.post('/get', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Location.get(data, function (err, results) {
+    Location.getLocation(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -24,6 +24,21 @@ router.post('/getChildren', function (req, res) {
     data.user = req.user;
 
     Location.getChildren(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
+router.post('/add', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Location.add(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
