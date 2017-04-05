@@ -1466,7 +1466,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     handleAnchorAttach: function (anchor, line) {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
-            // myblock = gpl.blockManager.getBlock(anchor.gplId),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
             name,
             upi,
@@ -1498,8 +1497,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     }
                 }
                 self.formatPoint(anchor, line, otherBlock);
-                self.validate();
-                otherBlock.validate();
+                if (gpl.rendered) {
+                    self.validate();
+                    otherBlock.validate();
+                }
             }
 
             if (idx) {
@@ -1513,7 +1514,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     handleAnchorDetach: function (anchor, line) {
         this.setPointRef(anchor.anchorType, 0, '');
 
-        if (this.targetCanvas !== 'toolbar') {
+        if (this.targetCanvas !== 'toolbar' && this.blockType.toLowerCase() !== 'input') {
             this.formatPoint(anchor, line);
         }
 
@@ -2100,7 +2101,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     if (anchor.required === true) {
                         ret = false;
                         gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
-                        gpl.log('no lines associated', anchor.anchorType, 'on', self.type);
+                        gpl.log('no lines associated', anchor.anchorType, 'on', self.label + ' ' + self.type);
                     }
                 }
 
