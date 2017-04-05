@@ -138,10 +138,15 @@ const Location = class Location extends Common {
             if (!!groups.length) {
                 return cb(err, descendants);
             }
+            descendants.sort(this.sortDescendants);
             async.each(descendants, this.orderPath, (err) => {
                 cb(err, descendants);
             });
         });
+    }
+
+    sortDescendants(a, b) {
+        return a.path.length - b.path.length;
     }
 
     getFullPath(data, cb) {
@@ -160,6 +165,7 @@ const Location = class Location extends Common {
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
+            descendants.sort(this.sortDescendants);
             async.each(descendants, this.orderPath, (err) => {
                 cb(err, descendants);
             });
@@ -253,7 +259,23 @@ const Location = class Location extends Common {
     }
 
     editLocation(data, cb) {
+        const editProperties = ['display', 'type', 'tags'];
+        let id = this.getNumber(data.id);
+        let updateObj = {
+            $set: {}
+        };
+        for (var prop in data) {
+            if (!!~editProperties.indexOf(prop)) {
+                updateObj.$set[prop] = data[prop];
+            }
+        }
 
+        this.update({
+            query: {
+                _id: id
+            },
+            updateObj: updateObj
+        }, cb);
     }
 };
 
