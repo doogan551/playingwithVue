@@ -91,7 +91,7 @@ const Common = class Common extends Utility {
         if (!!~['desc', -1, '-1'].indexOf(val)) {
             return -1;
         }
-        return 0;
+        return 1;
     }
 
     getTemplateEnum(set, prop) {
@@ -174,14 +174,12 @@ const Common = class Common extends Utility {
             toSegment = segment;
         }
 
-        if (!!data.hasOwnProperty(segment)) {
+        if (!!data.hasOwnProperty(segment) && data[segment] !== '') {
             if (data[segment] !== null) {
                 query[toSegment] = new RegExp('^' + data[segment], 'i');
             } else {
                 query[toSegment] = '';
             }
-        } else {
-            query[toSegment] = '';
         }
     }
 

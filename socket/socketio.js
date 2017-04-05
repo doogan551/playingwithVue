@@ -66,7 +66,7 @@ module.exports = function socketio(_common) {
         });
         // Checked
         sock.on('getRecentAlarms', function (data) {
-            const point = new Point();
+            const alarm = new Alarm();
             logger.debug('getRecentAlarms');
             if (typeof data === 'string') {
                 data = JSON.parse(data);
@@ -80,7 +80,7 @@ module.exports = function socketio(_common) {
             }
             rooms.recentAlarms.views[socket.id] = data;
 
-            point.getRecentAlarms(data, function (err, alarms, count) {
+            alarm.getRecentAlarms(data, function (err, alarms, count) {
                 sock.emit('recentAlarms', {
                     alarms: alarms,
                     count: count,
@@ -324,10 +324,11 @@ module.exports = function socketio(_common) {
         // Checked
         sock.on('updatePoint', function (data) {
             logger.debug('updatePoint');
+            const pointModel = new Point();
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
-            _common.newUpdate(data.oldPoint, data.newPoint, {
+            pointModel.newUpdate(data.oldPoint, data.newPoint, {
                 method: 'update',
                 from: 'ui',
                 path: (data.hasOwnProperty('path')) ? data.path : null
@@ -355,12 +356,13 @@ module.exports = function socketio(_common) {
         // Checked
         sock.on('updateSequencePoints', function (data) {
             logger.debug('updateSequencePoints');
+            const pointModel = new Point();
             let returnPoints = [];
 
             async.waterfall([
                 function (callback) {
                     async.mapSeries(data.adds, function (point, callback) {
-                        point.addPoint({
+                        pointModel.addPoint({
                             point: point
                         }, user, null, function (response, updatedPoint) {
                             callback(response.err, updatedPoint);
@@ -372,7 +374,7 @@ module.exports = function socketio(_common) {
 
                 function (returnPoints, callback) {
                     async.mapSeries(data.updates, function (point, callback) {
-                        _common.newUpdate(point.oldPoint, point.newPoint, {
+                        pointModel.newUpdate(point.oldPoint, point.newPoint, {
                             method: 'update',
                             from: 'ui'
                         }, user, function (response, updatedPoint) {
@@ -385,7 +387,7 @@ module.exports = function socketio(_common) {
 
                 function (returnPoints, callback) {
                     async.mapSeries(data.deletes, function (upi, callback) {
-                        _common.deletePoint(upi, 'hard', user, null, function (response) {
+                        pointModel.deletePoint(upi, 'hard', user, null, function (response) {
                             callback(response.err);
                         });
                     }, function (err, newPoints) {
@@ -429,11 +431,12 @@ module.exports = function socketio(_common) {
         // Checked
         sock.on('deletePoint', function (data) {
             logger.debug('deletePoint');
+            const pointModel = new Point();
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
 
-            _common.deletePoint(data.upi, data.method, user, null, function (msg) {
+            pointModel.deletePoint(data.upi, data.method, user, null, function (msg) {
                 msg.reqID = data.reqID;
                 msg.operation = 'deletePoint';
                 msg.method = data.method;
@@ -443,11 +446,12 @@ module.exports = function socketio(_common) {
         // Checked
         sock.on('restorePoint', function (data) {
             logger.debug('restorePoint');
+            const pointModel = new Point();
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
 
-            _common.restorePoint(data.upi, user, function (msg) {
+            pointModel.restorePoint(data.upi, user, function (msg) {
                 msg.reqID = data.reqID;
                 msg.operation = 'restorePoint';
                 sock.emit('pointUpdated', JSON.stringify(msg));

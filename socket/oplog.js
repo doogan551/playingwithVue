@@ -54,7 +54,7 @@ module.exports = model = function (_common) {
     };
 
     oplog.on('insert', function (doc) {
-        // const notifications = new Notifications();
+        const alarm = new Alarm();
         let startDate, endDate;
         // join room (recent)
         // add key to room of upis with each request obj
@@ -89,7 +89,7 @@ module.exports = model = function (_common) {
                 }
             }
 
-            common.acknowledgePointAlarms(doc.o);
+            alarm.acknowledgeAlarm(doc.o);
             Notifications.processIncomingAlarm(doc.o);
         } else if (doc.ns === dbName + '.ActiveAlarms') {
             let activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
@@ -516,8 +516,8 @@ function checkUserAccess(user, point) {
 
 let Notifications = require('../models/notifications');
 let Point = require('../models/point');
-let History = new(require('../models/history'))();
-let Schedule = new(require('../models/schedule'))();
-let Alarm = new(require('../models/alarm'))();
-let ActiveAlarm = new(require('../models/activealarm'))();
-let Common = new(require('../models/common'))();
+let History = require('../models/history');
+let Schedule = require('../models/schedule');
+let Alarm = require('../models/alarm');
+let ActiveAlarm = require('../models/activealarm');
+let Common = require('../models/common');

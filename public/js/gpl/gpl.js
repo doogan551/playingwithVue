@@ -1176,7 +1176,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                     if (adjustPointRefs) {
                         otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.pointName, attachedBlock.pointType);
                     }
-                    // console.log('  adjustRelatedBlocks() line  = ['  + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
+                    // console.log('  adjustRelatedBlocks() line  = [' + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
                     if (otherBlock.type === 'Comparator' && otherAnchor.anchorType !== 'Control Point') {
                         if (otherBlock.inputAnchors.length === 2) {
                             let siblingAnchor = (otherBlock.inputAnchors[0].anchorType === otherAnchor.anchorType ? otherBlock.inputAnchors[1] : otherBlock.inputAnchors[0]),
@@ -1489,11 +1489,18 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         name = otherBlock.name;
                     }
 
-                    if (upi) {
+                    if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output' )) {
                         self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
+                    }
+                    if (otherBlock.blockType === 'Constant') {
+                        self.syncAnchorValue(anchor, otherBlock.value);
                     }
                 }
                 self.formatPoint(anchor, line, otherBlock);
+                if (gpl.rendered) {
+                    self.validate();
+                    otherBlock.validate();
+                }
             }
 
             if (idx) {
@@ -1507,7 +1514,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     handleAnchorDetach: function (anchor, line) {
         this.setPointRef(anchor.anchorType, 0, '');
 
-        if (this.targetCanvas !== 'toolbar') {
+        if (this.targetCanvas !== 'toolbar' && this.blockType.toLowerCase() !== 'input') {
             this.formatPoint(anchor, line);
         }
 
@@ -1544,7 +1551,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 otherEnd = line && line.getOtherAnchor(),
                 otherBlock = block || gpl.blockManager.getBlock(otherEnd && otherEnd.gplId),
                 getRefPoint = function () {
-                    "use strict";
+                    'use strict';
                     var answer;
 
                     if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
@@ -1863,12 +1870,31 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     processValue: gpl.emptyFn,
 
     syncAnchorValue: function (anchor, val) {
-        var type = anchor.anchorType;
+        var getKeyBasedOnValue = function (obj, value) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key] === parseInt(value, 10)) {
+                        return key;
+                    }
+                }
+            }
+        };
 
-        if (anchor.constantProp) {
-            this._pointData[anchor.constantProp].Value = val;
-            gpl.fire('editedblock', this);
+        if (anchor.constantProp && val !== undefined) {
+            let valueOption;
+            if (!!this._pointData[anchor.constantProp].ValueOptions) {
+                valueOption = getKeyBasedOnValue(this._pointData[anchor.constantProp].ValueOptions, val);
+            }
+
+            if (!!valueOption) {
+                this._pointData[anchor.constantProp].eValue = val;
+                this._pointData[anchor.constantProp].Value = valueOption;
+
+            } else {
+                this._pointData[anchor.constantProp].Value = val;
+            }
         }
+        gpl.fire('editedblock', this);
         // this._pointData[type].Value = val;
     },
 
@@ -2075,7 +2101,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     if (anchor.required === true) {
                         ret = false;
                         gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
-                        gpl.log('no lines associated', anchor.anchorType, 'on', self.type);
+                        gpl.log('no lines associated', anchor.anchorType, 'on', self.label + ' ' + self.type);
                     }
                 }
 
@@ -2600,7 +2626,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setIconType: function (calcType, revAction) {
-        "use strict";
+        'use strict';
         let self = this,
             calculationType = calcType.Value,
             reverseAction = revAction.Value;
@@ -2616,7 +2642,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 }
 
                 self.icon = self.config.iconType + self.iconExtension;
-                self.iconType = self.config.iconType
+                self.iconType = self.config.iconType;
             }
         }
 

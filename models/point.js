@@ -5,7 +5,7 @@ const utils = require('../helpers/utils');
 const logger = require('../helpers/logger')(module);
 const Common = require('./common');
 const Config = require('../public/js/lib/config.js');
-const ZMQ = require('../helpers/zmq');
+const zmq = require('../helpers/zmq');
 
 const READ = utils.CONSTANTS('READ');
 const ACKNOWLEDGE = utils.CONSTANTS('ACKNOWLEDGE');
@@ -58,7 +58,7 @@ const Point = class Point extends Common {
             name: JSON.stringify(''),
             pointType: pointType,
             selectedPointType: data.selectedPointType,
-            pointTypes: JSON.stringify(Config.this.pointTypes.getAllowedPointTypes()),
+            pointTypes: JSON.stringify(Config.Utility.pointTypes.getAllowedPointTypes()),
             subType: (!!data.subType ? data.subType : -1)
         };
         let query = {
@@ -99,7 +99,7 @@ const Point = class Point extends Common {
     pointLookup(data, cb) {
         let property = data.property && decodeURI(data.property);
         let pointType = (data.pointType && data.pointType !== 'null' && decodeURI(data.pointType)) || null;
-        let pointTypes = Config.this.pointTypes.getAllowedPointTypes(property, pointType);
+        let pointTypes = Config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
         let deviceId = data.deviceId || null;
         let remoteUnitId = data.remoteUnitId || null;
         let locals = {
@@ -133,7 +133,7 @@ const Point = class Point extends Common {
         //limit query to 200 by default
         let limit = data.limit || 200;
         // If no point type array passed in, use default
-        let pointTypes = data.pointTypes || Config.this.pointTypes.getAllowedPointTypes().map((type) => {
+        let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
             return type.key;
         });
         // Name segments, sort names and values
@@ -1107,6 +1107,7 @@ const Point = class Point extends Common {
     newUpdate(oldPoint, newPoint, flags, user, callback) {
         const security = new Security();
         const script = new Script();
+        const activityLog = new ActivityLog();
         let generateActivityLog = false,
             updateReferences = false,
             updateModelType = false,
@@ -1189,20 +1190,6 @@ const Point = class Point extends Common {
                         activity: 'Point Restore'
                     }));
                 }
-            }
-
-            if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
-                script.commitScript({
-                    point: newPoint,
-                    path: flags.path
-                }, (response) => {
-                    if (response.err) {
-                        return callback(response.err);
-                    }
-                    updateProperties();
-                });
-            } else {
-                updateProperties();
             }
 
             let compare = (a, b) => {
@@ -1603,9 +1590,9 @@ const Point = class Point extends Common {
                                     break;
 
                                 case 'Point Refs':
-                                    let pointRefProps = Config.this.getPointRefProperties(newPoint);
+                                    let pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                                     for (let r = 0; r < pointRefProps.length; r++) {
-                                        if (!_.isEqual(Config.this.getPropertyObject(pointRefProps[r], newPoint), Config.this.getPropertyObject(pointRefProps[r], oldPoint))) {
+                                        if (!_.isEqual(Config.Utility.getPropertyObject(pointRefProps[r], newPoint), Config.Utility.getPropertyObject(pointRefProps[r], oldPoint))) {
                                             switch (pointRefProps[r]) {
                                                 case 'Alarm Adjust Point':
                                                 case 'CFM Input Point':
@@ -1859,8 +1846,8 @@ const Point = class Point extends Common {
                         newPoint._devModel === Config.Enums['Device Model Types']['Central Device'].enum ||
                         newPoint['Point Type'].Value === 'Sequence' ||
                         (newPoint['Point Type'].Value !== 'Device' &&
-                            (Config.this.getPropertyObject('Device Point', newPoint) === null ||
-                                Config.this.getPropertyObject('Device Point', newPoint).PointInst === 0))) {
+                            (Config.Utility.getPropertyObject('Device Point', newPoint) === null ||
+                                Config.Utility.getPropertyObject('Device Point', newPoint).PointInst === 0))) {
                         // not active
                         // or (central device or unknown)
                         // or (!device and !device point)
@@ -1904,7 +1891,7 @@ const Point = class Point extends Common {
                                         if (err) {
                                             error = error;
                                         }
-                                        this.doActivityLogs(generateActivityLog, activityLogObjects, (err) => {
+                                        activityLog.doActivityLogs(generateActivityLog, activityLogObjects, (err) => {
                                             if (err) {
                                                 return callback({
                                                     err: err
@@ -1952,6 +1939,20 @@ const Point = class Point extends Common {
                     }, newPoint);
                 }
             };
+
+            if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
+                script.commitScript({
+                    point: newPoint,
+                    path: flags.path
+                }, (response) => {
+                    if (response.err) {
+                        return callback(response.err);
+                    }
+                    updateProperties();
+                });
+            } else {
+                updateProperties();
+            }
         });
 
         let compareArrays = (newArray, oldArray, activityLogObjects) => {
@@ -1994,8 +1995,8 @@ const Point = class Point extends Common {
     //newupdate
     fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
         if (!!updateCfgReq) {
-            let oldDevPoint = Config.this.getPropertyObject('Device Point', oldPoint).Value;
-            let newDevPoint = Config.this.getPropertyObject('Device Point', newPoint).Value;
+            let oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
+            let newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
             // 0 > 0 - no change
             // N > 0 - cfg old
             // 0 > N - cfg new
@@ -2047,7 +2048,7 @@ const Point = class Point extends Common {
                 } else if (newPoint['Point Type'].Value === 'Remote Unit') {
                     doc._rmuModel = newPoint['Model Type'].eValue;
                 }
-                Config.this.updDevModel({
+                Config.Utility.updDevModel({
                     point: doc
                 });
                 this.updateOne({
@@ -2094,7 +2095,7 @@ const Point = class Point extends Common {
     }
     // newupdate
     updPoint(downloadPoint, newPoint, callback) {
-        const zmq = new ZMQ();
+        // const zmq = new ZMQ();
         if (downloadPoint === true) {
             //send download point request to c++ module
             let command = {
@@ -2421,6 +2422,7 @@ const Point = class Point extends Common {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
+        const upiModel = new Upi();
         let _point,
             _updateFromSchedule = !!options && options.from === 'updateSchedules',
             _upi = parseInt(upi, 10),
@@ -2496,7 +2498,7 @@ const Point = class Point extends Common {
                     return cb(null);
                 }
 
-                upi.deleteUpi(_upi, (err, result) => {
+                upiModel.deleteUpi(_upi, (err, result) => {
                     if (err) {
                         _buildWarning('could not update the UPI collection');
                     }
@@ -2649,7 +2651,7 @@ const Point = class Point extends Common {
     }
     //updateDependencies, deleteChildren, updateSchedules(io)
     signalHostTOD(signalTOD, callback) {
-        const zmq = new ZMQ();
+        // const zmq = new ZMQ();
         if (signalTOD === true) {
             let command = {
                 'Command Type': 9
@@ -2686,12 +2688,12 @@ const Point = class Point extends Common {
 
     //updateSchedules(io), updateScheduleEntries
     addToDevices(scheduleEntry, devices, oldPoint) {
-        let devInst = Config.this.getPropertyObject('Control Point', scheduleEntry).DevInst;
+        let devInst = Config.Utility.getPropertyObject('Control Point', scheduleEntry).DevInst;
         if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
             devices.push(parseInt(devInst, 10));
         }
         if (!!oldPoint) {
-            devInst = Config.this.getPropertyObject('Control Point', oldPoint).DevInst;
+            devInst = Config.Utility.getPropertyObject('Control Point', oldPoint).DevInst;
             if (devInst !== null && devInst !== 0 && devices.indexOf(devInst) === -1) {
                 devices.push(parseInt(devInst, 10));
             }
@@ -2702,12 +2704,12 @@ const Point = class Point extends Common {
         if (point['Point Type'].Value === 'Device') {
             point._cfgRequired = true;
             callback(null);
-        } else if (Config.this.getPropertyObject('Device Point', point) !== null) {
+        } else if (Config.Utility.getPropertyObject('Device Point', point) !== null) {
             point._cfgRequired = true;
-            if (Config.this.getPropertyObject('Device Point', point).PointInst !== 0) {
+            if (Config.Utility.getPropertyObject('Device Point', point).PointInst !== 0) {
                 this.updateOne({
                     query: {
-                        _id: Config.this.getPropertyObject('Device Point', point).PointInst
+                        _id: Config.Utility.getPropertyObject('Device Point', point).PointInst
                     },
                     updateObj: {
                         $set: {
