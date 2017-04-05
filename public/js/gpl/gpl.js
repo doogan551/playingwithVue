@@ -1550,24 +1550,31 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             var self = this,
                 otherEnd = line && line.getOtherAnchor(),
                 otherBlock = block || gpl.blockManager.getBlock(otherEnd && otherEnd.gplId),
+                property,
+                args,
                 getRefPoint = function () {
                     'use strict';
                     var answer;
-
                     if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
                         if (!!otherBlock) {
                             answer = otherBlock.getPointData();
                         }
                     }
-
                     return answer;
-                },
-                args = {
-                    point: newData || self.getPointData(),
-                    oldPoint: self._origPointData,
-                    property: self.blockType.toLowerCase() === 'output' ? otherEnd.anchorType : anchor.anchorType,
-                    refPoint: getRefPoint()
                 };
+
+            if (self.blockType.toLowerCase() === 'output') {
+                property = !!otherEnd ? otherEnd.anchorType : undefined;
+            } else {
+                property = anchor.anchorType;
+            }
+
+            args = {
+                point: newData || self.getPointData(),
+                oldPoint: self._origPointData,
+                property: property,
+                refPoint: getRefPoint()
+            };
 
             self._doFormatPoint(args, function (data) {
                 newData = data;
@@ -1613,7 +1620,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             gpl.emptyFn();
                             // gpl.log('no upi');
                         } else {
-                            if (gpl.pointData[upi]) {
+                            if (block.upi === anchor.myBlock().upi && block.valueType === anchor.inputType) {
+                                console.log(' - - - - - anchor.inputType = ' + anchor.inputType + "  anchor.myBlock().upi = " + anchor.myBlock().upi);
+                            } else if (gpl.pointData[upi]) {
                                 // if(newData && data) {
                                 try {
                                     args = {
@@ -7777,13 +7786,13 @@ gpl.Manager = function () {
 
             gpl.fire('save');
 
-            managerSelf.socket.emit('updateSequencePoints', saveObj);
-
-            managerSelf.embedActionButtons();
-
-            offsetPositions(true); //resets/removes offset
-
             if (gpl.isValid) {
+                managerSelf.socket.emit('updateSequencePoints', saveObj);
+
+                managerSelf.embedActionButtons();
+
+                offsetPositions(true); //resets/removes offset
+
                 finish();
             } else {
                 gpl.showMessage(gpl.validationMessage);
