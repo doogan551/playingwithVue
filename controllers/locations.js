@@ -109,7 +109,9 @@ router.post('/move', function (req, res) {
             });
         }
 
-        return utils.sendResponse(res, results);
+        return utils.sendResponse(res, {
+            message: 'success'
+        });
     });
 });
 

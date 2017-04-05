@@ -131,7 +131,7 @@ const Location = class Location extends Common {
             });
             pipeline.push(group);
         }
-
+        console.log(JSON.stringify(pipeline));
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
@@ -208,33 +208,28 @@ const Location = class Location extends Common {
         let id = this.getNumber(data.id);
         let deleteChildren = this.getDefault(data.deleteChildren, false);
 
-        this.remove({
-            query: {
-                _id: id
+        this.getDescendants({
+            id: id,
+            groups: [
+                ['ids', '_id']
+            ]
+        }, (err, descendants) => {
+            let ids = [id];
+            if (!!descendants.length && !!descendants[0].ids.length) {
+                ids = ids.concat(descendants[0].ids);
             }
-        }, (err, result) => {
-            if (!!err || result.ok !== 1) {
-                return cb(err || 'nothing deleted');
-            }
-            this.getDescendants({
-                parentId: id,
-                groups: [
-                    ['ids', '_id']
-                ]
-            }, (err, descendants) => {
-                let query = {
-                    _id: {
-                        $in: descendants.ids
-                    }
-                };
-                if (!!deleteChildren) {
-                    this.remove({
-                        query: query
-                    }, cb);
-                } else {
-                    this.updateParent(null, query, cb);
+            let query = {
+                _id: {
+                    $in: ids
                 }
-            });
+            };
+            if (!!deleteChildren) {
+                this.remove({
+                    query: query
+                }, cb);
+            } else {
+                this.updateParent(null, query, cb);
+            }
         });
     }
 
@@ -248,13 +243,17 @@ const Location = class Location extends Common {
     }
 
     updateParent(parentId, query, cb) {
-        this.getLocation(parentId, (err, parent) => {
+        this.getLocation({
+            id: parentId
+        }, (err, parent) => {
             this.update({
                 query: query,
                 updateObj: {
-                    locationRef: this.buildParent(parent)
+                    $set: {
+                        locationRef: this.buildParent(parent)
+                    }
                 }
-            });
+            }, cb);
         });
     }
 
