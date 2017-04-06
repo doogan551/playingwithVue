@@ -285,6 +285,7 @@ const User = class User extends Common {
     }
     newUser(data, cb) {
         const activityLog = new ActivityLog();
+        const systemModel = new System();
         let username = data.username;
         let password;
 
@@ -297,6 +298,7 @@ const User = class User extends Common {
         let searchCriteria = {
             username: username
         };
+        let criteria;
         let userTemplate = {
             'alerts': {
                 'Normal': [],
@@ -392,15 +394,9 @@ const User = class User extends Common {
 
         let groups = (data['User Groups']) ? data['User Groups'] : [];
 
-        let criteria = {
-            query: {
-                Name: 'Controllers'
-            }
-        };
-
-        this.get(criteria, (err, conts) => {
-            for (let i = 0; i < conts[0].Entries.length; i++) {
-                if (conts[0].Entries[i]['Controller Name'] === username) {
+        systemModel.getSystemInfoByName('Controllers', (err, conts) => {
+            for (let i = 0; i < conts.Entries.length; i++) {
+                if (conts.Entries[i]['Controller Name'] === username) {
                     return cb(null, {
                         message: 'This controller name already exists.'
                     });
@@ -876,3 +872,4 @@ const User = class User extends Common {
 
 module.exports = User;
 const ActivityLog = require('./activitylog');
+const System = require('./system');
