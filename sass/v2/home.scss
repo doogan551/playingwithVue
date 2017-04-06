@@ -1714,3 +1714,95 @@ input:focus {
     box-shadow: none;
     color: transparent;
 }
+
+
+
+
+
+.locations {
+    height: 100%;
+    overflow: auto;
+    
+    .pane {
+        position: relative;
+        /*display: inline-block;*/
+        padding-left: 15px;
+        margin-left: 15px;
+        /*width: 50%;*/
+    }
+
+    .expandcollapse {
+        color: black;
+    }
+
+    .children {
+        padding-left: 20px;
+        position: relative;
+    }
+
+    .node {
+        position: relative;
+        width: 40vw !important;
+        margin: 1px 0;
+    }
+
+    .node input {
+        display: none;
+        height: 22px !important;
+        margin: 0 !important;
+    }
+
+    .node.focused > input {
+        display: inline;
+        width: initial;
+
+        /*background-color: #dedede;*/
+    }
+
+    .node.focused > .name {
+        display: none;
+    }
+
+    .nodeHover > .name {
+        background-color: #43a047;
+    }
+
+    .name {
+        position: relative;
+        display: inline;
+        cursor: pointer;
+    }
+
+    i:not(.mdi) {
+        top: 2px;
+    }
+
+    i,
+    .mdi {
+        width: 14px;
+        height: 14px;
+        font-size: 14px !important;
+        display: inline;
+        /*position: absolute;
+        left: -15px;*/
+    }
+
+    .mdi.blank {
+        visibility: hidden;
+    }
+
+    .bulkAdd {
+        display: inline-block;
+        margin-left: 5px;
+    }
+
+    .bulkAdd i {
+        position: absolute;
+        top: 5px;
+    }
+
+    .error {
+        position: absolute;
+        width: auto !important;
+    }
+}
