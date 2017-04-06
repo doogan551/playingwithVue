@@ -45,9 +45,8 @@ let getNextSequence = function (name, callback) {
 };
 
 let buildParentPath = function (parent, node, cb) {
-    console.log(node);
-    let type = getType(node.split('.')[1]);
-    let display = node.split('.')[0];
+    let type = getType(node.split('.')[0]);
+    let display = node.split('.')[1];
     let buildParent = function (id) {
         return {
             Display: display,
@@ -123,16 +122,12 @@ db.connect(connectionString.join(''), function (err) {
         input: process.stdin,
         output: process.stdout
     });
-    console.log('Location string: <display>.<type>/ ');
-    console.log('children on left, parents to the right');
-    console.log('e.g. room>floor>building>site');
+    console.log('Location string: <type>.<display>/ ');
     let continuous = (cb) => {
-        rl.question('', (locations) => {
-            let locationSplit = locations.split('/').reverse();
+        rl.question('>', (locations) => {
+            let locationSplit = locations.split('/');
             createLocation(locationSplit, () => {
                 console.log(`added: ${locations}`);
-
-                rl.write(locations);
                 continuous(cb);
             });
         });
