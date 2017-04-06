@@ -16,13 +16,14 @@ const versionsCollection = 'versions';
 module.exports = {
 
     getDisplayInfo: function (data, cb) {
+        let dbUtility = new Utility();
         let upi = +data.upi;
         let upiList = data.upiList || [];
         let idx;
         let returnObj = {};
         let getUpiNames = function (callback) {
             // console.log('getting display info', upiList);
-            Utility.get({
+            dbUtility.get({
                 collection: pointsCollection,
                 query: {
                     '_id': {
@@ -56,7 +57,7 @@ module.exports = {
             upiList[idx] = +upiList[idx];
         }
 
-        Utility.get({
+        dbUtility.get({
             collection: versionsCollection,
             query: {
                 vid: upi
@@ -161,7 +162,8 @@ module.exports = {
         });
     },
     editDisplay: function (data, cb) {
-        Utility.get({
+        let dbUtility = new Utility();
+        dbUtility.get({
             collection: versionsCollection,
             query: {
                 vid: +data.upoint
@@ -175,7 +177,7 @@ module.exports = {
             console.log('# of display versions for ', data.upoint, ': ', versions.length);
 
 
-            Utility.get({
+            dbUtility.get({
                 collection: pointsCollection,
                 query: {
                     '_id': +data.upoint
@@ -197,7 +199,7 @@ module.exports = {
                     disp.eDate = Math.round(+new Date() / 1000);
 
                     console.log('saving staging version', disp.version);
-                    Utility.save({
+                    dbUtility.save({
                         collection: versionsCollection,
                         saveObj: disp
                     }, function (err, result) {
@@ -212,7 +214,8 @@ module.exports = {
         });
     },
     previewDisplay: function (data, cb) {
-        Utility.get({
+        let dbUtility = new Utility();
+        dbUtility.get({
             collection: pointsCollection,
             query: {
                 '_id': +data.upoint,
@@ -230,7 +233,7 @@ module.exports = {
             }
 
             if (data.upoint !== '{{tab.upi}}') {
-                Utility.get({
+                dbUtility.get({
                     collection: versionsCollection,
                     query: {
                         '_id': new ObjectID(data.upoint)
@@ -250,7 +253,8 @@ module.exports = {
         });
     },
     getName: function (data, cb) {
-        Utility.get({
+        let dbUtility = new Utility();
+        dbUtility.get({
             collection: pointsCollection,
             query: {
                 '_id': +data.upi
@@ -269,6 +273,7 @@ module.exports = {
     },
 
     publish: function (data, cb) {
+        let dbUtility = new Utility();
         const activityLog = new ActivityLog();
         let dId,
             c,
@@ -297,7 +302,7 @@ module.exports = {
         delete displayObject.version;
 
         console.log('displays: finding display-', displayObject._id);
-        Utility.get({
+        dbUtility.get({
             collection: pointsCollection,
             query: {
                 '_id': displayObject._id
@@ -310,7 +315,7 @@ module.exports = {
 
             displayObject._pStatus = 1;
 
-            Utility.update({
+            dbUtility.update({
                 collection: pointsCollection,
                 query: { //update the display
                     '_id': displayObject._id
@@ -339,7 +344,7 @@ module.exports = {
                 console.log('displays: updating staging version');
                 delete displayObject._id;
 
-                Utility.update({
+                dbUtility.update({
                     collection: pointsCollection,
                     query: {
                         vid: dId,
@@ -354,7 +359,7 @@ module.exports = {
                     console.log('displays: saving display in versions');
                     delete oldVersion._id;
                     delete oldVersion.version;
-                    Utility.save({
+                    dbUtility.save({
                         collection: versionsCollection,
                         saveObj: oldVersion
                     }, function (saveNewErr, saveNewRes) {
@@ -369,6 +374,7 @@ module.exports = {
     },
 
     saveLater: function (data, cb) {
+        let dbUtility = new Utility();
         let displayObject,
             upi;
 
@@ -384,7 +390,7 @@ module.exports = {
 
         // console.log('displays savelater', displayObject);
 
-        Utility.update({
+        dbUtility.update({
             collection: versionsCollection,
             query: {
                 vid: upi,
@@ -484,10 +490,11 @@ module.exports = {
 };
 
 let renderDisplay = function (data, currDisp, versions, cb) {
+    let dbUtility = new Utility();
     let c, len,
         upiList = [],
         getUpiNames = function (callback) {
-            Utility.get({
+            dbUtility.get({
                 collection: pointsCollection,
                 query: {
                     '_id': {
