@@ -22,6 +22,9 @@ const Location = class Location extends Common {
         this.getAll({
             query: {
                 'locationRef.Value': id
+            },
+            sort: {
+                'display': 1
             }
         }, cb);
     }
@@ -132,7 +135,7 @@ const Location = class Location extends Common {
             });
             pipeline.push(group);
         }
-        console.log(JSON.stringify(pipeline));
+
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
