@@ -45,8 +45,9 @@ let getNextSequence = function (name, callback) {
 };
 
 let buildParentPath = function (parent, node, cb) {
-    let type = getType(node.split(':')[0]);
-    let display = node.split(':')[1];
+    console.log(node);
+    let type = getType(node.split('.')[1]);
+    let display = node.split('.')[0];
     let buildParent = function (id) {
         return {
             Display: display,
@@ -96,7 +97,7 @@ let buildParentPath = function (parent, node, cb) {
     });
 };
 
-let createLocation = function (locs) {
+let createLocation = function (locs, cb) {
     let parent = {
         Display: '',
         Value: 0,
@@ -109,15 +110,36 @@ let createLocation = function (locs) {
             parent = _.cloneDeep(newParent);
             cb(err);
         });
-    }, (err) => {
-        process.exit(0);
-    });
+    }, cb);
 };
 
 db.connect(connectionString.join(''), function (err) {
     locationModel = new Location();
     utility = new Utility();
-    createLocation(process.argv.splice(2)[0].split('/'));
+    // createLocation(process.argv.splice(2)[0].split('/'));
+    const readline = require('readline');
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    console.log('Location string: <display>.<type>/ ');
+    console.log('children on left, parents to the right');
+    console.log('e.g. room>floor>building>site');
+    let continuous = (cb) => {
+        rl.question('', (locations) => {
+            let locationSplit = locations.split('/').reverse();
+            createLocation(locationSplit, () => {
+                console.log(`added: ${locations}`);
+
+                rl.write(locations);
+                continuous(cb);
+            });
+        });
+    };
+    continuous(() => {
+        console.log('done');
+    });
 });
 var Location = require('../models/location');
 var Utility = require('../models/utility');
