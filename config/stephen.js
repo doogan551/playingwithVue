@@ -1,7 +1,7 @@
 var stephen = {
     'Infoscan': {
         'dbConfig': {
-            'host': 'localhost',
+            'host': 'info-int',
             'dbName': 'infoscan'
         },
         'files': {

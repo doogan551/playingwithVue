@@ -265,6 +265,27 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
+            #bulkAddModal.modal
+                .modal-content
+                    h4 Bulk Add
+                    .row
+                        .input-field.col.s3
+                            input#startEntry(placeholder="#", type="number", data-bind="hasFocus: locations.modalOpen, value: locations.startEntry")
+                            label(for="startEntry") Node start #
+                        .input-field.col.s3
+                            input#endEntry(placeholder="#", type="number", data-bind="value: locations.endEntry")
+                            label(for="endEntry") Node end #                        
+                    .row
+                        .input-field.col.s6
+                            input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
+                            label(for="entryformat") Entry format (# for index placeholder)
+                    .row
+                        .col.s12.error.red-text(data-bind='html: locations.error')
+
+                .modal-footer
+                    button.btn.blue-grey.waves-effect(data-bind="click: locations.doBulkAdd") Add
+                    button.btn-flat.modal-action.modal-close.waves-effect Cancel
+
             #openItemsModal.modal.modal-large
                 .modal-content
                     .center-align.flex.flex-column.flex-center.openItemsHeader
@@ -367,6 +388,44 @@ html
                         .cssload-whirlpool
 
         iframe#thumbnailGen.hide
+
+    script#locationsTemplate(type='text/html')
+        .locations
+            .row
+                button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
+                button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
+
+            //- .row
+            //-     .col.xs-4
+            //-         input#autocomplete
+
+            .row
+                #tree.col.s6.pane(data-bind="template: { name: 'node', foreach: data}")
+
+                #rightPane.col.s6.pane
+
+            script#node(type='text/html')
+                .node(data-bind="css: { focused: focused }, dragNode: true")
+
+                    // ko if: hasChildren()
+                    a.expandcollapse(href="#", data-bind="click: $root.getBranch")
+                        i.material-icons(data-bind="text: expanded() ? 'expand_less' : 'expand_more'")
+                    // /ko
+
+                    // ko if: !hasChildren()
+                    a.mdi.mdi-file-outline.expandcollapse.blank(href="#") &nbsp;
+                    // /ko
+                    
+                    //- // ko if: children().length === 0
+                    //- i.mdi.mdi-file-outline
+                    //- // /ko
+
+                    .name(data-bind='text: type() + " " + name(), click: $root.getBranch')
+                    input(type='text', data-bind='textinput: name, hasFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
+                    a.bulkAdd.tooltipped(href="#")
+                        i.material-icons.green-text(data-tooltip="Bulk Add", data-position="right", data-bind="tooltipped: true, click: $root.bulkAddRaw") playlist_add
+                    .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
+                        
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
