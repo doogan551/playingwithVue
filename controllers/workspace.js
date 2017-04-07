@@ -4,7 +4,7 @@ let _ = require('lodash');
 let passport = require('passport');
 let utils = require('../helpers/utils');
 let Workspace = new(require('../models/workspace'))();
-let ActivityLog = new(require('../models/activitylog'))();
+let ActivityLog = require('../models/activitylog');
 let actLogsEnums = require('../public/js/lib/config').Enums['Activity Logs'];
 let logger = require('../helpers/logger')(module);
 // Checked
@@ -42,6 +42,7 @@ router.get('/login', function (req, res) {
 });
 // Checked
 router.post('/authenticate', function (req, res, next) {
+    const activityLog = new ActivityLog();
     passport.authenticate('local', function (err, user, info) {
         if (err) {
             return next(err);
@@ -59,7 +60,7 @@ router.post('/authenticate', function (req, res, next) {
                 activity: 'User Logon',
                 log: 'User Logged In.'
             };
-            ActivityLog.create(logData, function () {});
+            activityLog.create(logData, function () {});
             return res.json(user);
         });
     })(req, res, next);
@@ -123,16 +124,17 @@ router.post('/lost-password', function (req, res) {
 });
 // Checked
 router.get('/logout', function (req, res) {
+    const activityLog = new ActivityLog();
     let user = req.user;
     req.logout();
 
     let logData = {
         user: user,
         timestamp: Date.now(),
-        activity: actLogsEnums['User Logoff'].enum,
+        activity: 'User Logoff',
         log: 'User Logged Out.'
     };
-    ActivityLog.create(utils.buildActivityLog(logData), function () {});
+    activityLog.create(logData, function () {});
     res.redirect('/');
 });
 
