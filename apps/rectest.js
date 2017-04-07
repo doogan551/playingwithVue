@@ -10,23 +10,28 @@
 let runTest = () => {
     const MechTemplate = require('../models/mechanical/mechanical');
     let mechTemplate = new MechTemplate('Air Handling');
-    console.log(mechTemplate.getOptions());
-    console.log('-----');
-    let vav1 = mechTemplate.build('VAV');
-    console.log(mechTemplate);
-    console.log(vav1);
-    console.log(vav1.getOptions());
-    let vavSpace = vav1.build('Space');
-    console.log('-----');
-    // console.log(vav1.getOptions());
-    // let space = vav1.build('Space');
-    // console.log(mechTemplate);
-    // console.log(space);
+    console.log('options', mechTemplate.options);
+    // console.log('*****');
+    let vav1 = mechTemplate.build('Equipment', 'VAV');
+    // console.log('mech after VAV');
+    // iterateEquip(mechTemplate);
+    console.log('*****');
+    console.log('options', vav1.options);
+    let vavSpace = vav1.build('Category', 'Space');
+    let vavFan = vav1.build('Equipment', 'Fan');
+    // console.log('mech after Space');
+    // iterateEquip(mechTemplate);
+    console.log('*****');
+    console.log('options', vavSpace.options);
+    let vavSpaceTemp = vavSpace.build('Instrumentation', 'Temperature');
+    let vavSpaceLights = vavSpace.build('Instrumentation', 'Lights');
+    let vavFanControl = vavFan.build('Instrumentation', 'Control');
+    console.log('mech after space temp', vavSpaceLights.getAllParentNames());
+    iterateEquip(mechTemplate);
+    console.log('*****');
+    mechTemplate.save();
 
 
-    // iterateEquip(vavModel);
-    // let vavModel2 = new mechTemplate.VAV('Cooling');
-    // iterateEquip(vavModel2);
     console.log('done');
 };
 

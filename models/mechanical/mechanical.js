@@ -1,35 +1,28 @@
 let Mechanical = class Mechanical {
-    constructor(type) {
+    constructor(type, parent = null) {
         this._type = type;
+        this._parent = parent;
         this.equipment = [];
-    }
-
-    getOptions() {
-        let options = {
-            Equipment,
-            Category,
-            Instrumentation
+        this._options = {
+            Equipment: require('./equipment'),
+            Category: require('./category'),
+            Instrumentation: require('./instrumentation')
         };
-        return options;
     }
 
-    build(mech) {
-        if (Equipment.hasOwnProperty(mech)) {
-            let newEquipment = new Equipment[mech](this.class);
+    get options() {
+        return this._options;
+    }
+
+    build(item, type) {
+        try {
+            let newEquipment = new this.options[item][type](this);
             this.equipment.push(newEquipment);
             return newEquipment;
+        } catch (e) {
+            console.log(e);
+            return null;
         }
-        if (Category.hasOwnProperty(mech)) {
-            let newCategory = new Category[mech](this.class);
-            this.equipment.push(newCategory);
-            return newCategory;
-        }
-        if (Instrumentation.hasOwnProperty(mech)) {
-            let newInstrumentation = new Instrumentation[mech](this.class);
-            this.equipment.push(newInstrumentation);
-            return newInstrumentation;
-        }
-        throw new Error('Equipment type does not exist');
     }
 
     get type() {
@@ -40,8 +33,54 @@ let Mechanical = class Mechanical {
         this._type = newType;
     }
 
+    get parent() {
+        return this._parent;
+    }
+
+    set parent(newParent) {
+        this._parent = newParent;
+    }
+
+    getAllParentNames() {
+        let parents = [];
+        let parentClasses = this.getAllParents();
+        parentClasses.forEach((parent) => {
+            parents.push(parent.name);
+        });
+        return parents;
+    }
+
+    getAllParents() {
+        let parents = [];
+        let iterateParent = (obj) => {
+            let parent = obj.parent;
+            if (!!parent) {
+                parents.push(parent);
+                iterateParent(parent);
+            } else {
+                return;
+            }
+        };
+
+        iterateParent(this);
+        return parents;
+    }
+
     get name() {
         return this.constructor.name;
+    }
+
+    save() {
+        let objs = [];
+        let iterateEquipment = (equipment) => {
+            equipment.forEach((equip) => {
+                objs.push(equip.name);
+                iterateEquipment(equip.equipment);
+            });
+        };
+        iterateEquipment(this.equipment);
+        // save each object from the top, save their new id and add to children's refs
+        console.log(objs);
     }
 };
 
@@ -53,6 +92,3 @@ let Mechanical = class Mechanical {
 // }
 
 module.exports = Mechanical;
-let Equipment = require('./equipment');
-let Category = require('./category');
-let Instrumentation = require('./instrumentation');

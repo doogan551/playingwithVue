@@ -1,25 +1,25 @@
 let Mechanical = require('./mechanical');
 
 let Instrumentation = class Instrumentation extends Mechanical {
-    constructor() {
-        super('instrumentation');
+    constructor(parent) {
+        super('instrumentation', parent);
     }
 };
 
 
 class Temperature extends Instrumentation {
-    constructor() {
-        super();
+    constructor(parent) {
+        super(parent);
     }
 }
 class Lights extends Instrumentation {
-    constructor() {
-        super();
+    constructor(parent) {
+        super(parent);
     }
 }
 class Control extends Instrumentation {
-    constructor() {
-        super();
+    constructor(parent) {
+        super(parent);
     }
 }
 
