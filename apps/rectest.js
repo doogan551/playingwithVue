@@ -52,7 +52,7 @@ let runAutoVAV = () => {
     let vav1 = mechTemplate.build('Equipment', 'VAV');
 
     buildChildren(vav1);
-    iterateEquip(mechTemplate);
+    // iterateEquip(mechTemplate);
 };
 
 let buildChildren = (mech) => {

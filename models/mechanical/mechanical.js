@@ -41,16 +41,16 @@ let Mechanical = class Mechanical {
         this._parent = newParent;
     }
 
-    getAllParentNames() {
+    getParentNames() {
         let parents = [];
-        let parentClasses = this.getAllParents();
+        let parentClasses = this.getParents();
         parentClasses.forEach((parent) => {
             parents.push(parent.name);
         });
         return parents;
     }
 
-    getAllParents() {
+    getParents() {
         let parents = [];
         let iterateParent = (obj) => {
             let parent = obj.parent;
@@ -64,6 +64,21 @@ let Mechanical = class Mechanical {
 
         iterateParent(this);
         return parents;
+    }
+
+    checkForParents(parents, all = true) {
+        let allParentNames = this.getParentNames();
+        let exists = !!all;
+        parents.forEach((parent) => {
+            if (!!all) {
+                if (!~this.getParentNames().indexOf(parent)) {
+                    exists = false;
+                }
+            } else if (!!~this.getParentNames().indexOf(parent)) {
+                exists = true;
+            }
+        });
+        return exists;
     }
 
     get name() {

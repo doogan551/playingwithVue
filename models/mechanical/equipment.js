@@ -119,6 +119,7 @@ class Lights extends Equipment {
     }
 
     buildOptions() {
+        console.log(this.checkForParents(['Space'], true));
         this.options = {
             Instrumentation: {
                 'Control': Instrumentation.Control
