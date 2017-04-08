@@ -10,16 +10,9 @@
 let runTest = () => {
     const MechTemplate = require('../models/mechanical/mechanical');
     let mechTemplate = new MechTemplate('Air Handling');
-    // console.log('options', mechTemplate.options);
-    // console.log('*****');
     let vav1 = mechTemplate.build('Equipment', 'VAV');
-    // console.log('mech after VAV');
-    // iterateEquip(mechTemplate);
-    console.log('*****');
-    console.log('options', vav1.options);
+
     let vavSpace = vav1.build('Category', 'Space');
-    // console.log('mech after Space');
-    // iterateEquip(mechTemplate);
     let vavSpaceTemp = vavSpace.build('Equipment', 'Temperature');
     let vavSpaceLights = vavSpace.build('Equipment', 'Lights');
 
@@ -27,7 +20,6 @@ let runTest = () => {
     let vavSpaceLightsControl = vavSpaceLights.build('Instrumentation', 'Control');
     let vavSpaceOcc = vavSpace.build('Instrumentation', 'Occupancy');
 
-    console.log('*****');
     let vavSupplyAir = vav1.build('Category', 'Supply Air');
     let vavSupplyAirCFM = vavSupplyAir.build('Category', 'CFM');
     let vavSupplyAirTemp = vavSupplyAir.build('Equipment', 'Temperature');
@@ -37,12 +29,10 @@ let runTest = () => {
     let vavSupplyAirTempSensor = vavSupplyAirTemp.build('Instrumentation', 'Sensor');
     let vavSupplyAirDamperControl = vavSupplyAirDamper.build('Instrumentation', 'Control');
     let vavSupplyAirFanControl = vavSupplyAirFan.build('Instrumentation', 'Control');
-    console.log('*****');
     let vavDigHeat = vav1.build('Equipment', 'Digital Heat');
     let vavDigHeatControl1 = vavDigHeat.build('Instrumentation', 'Control');
     let vavDigHeatControl2 = vavDigHeat.build('Instrumentation', 'Control');
     let vavDigHeatControl3 = vavDigHeat.build('Instrumentation', 'Control');
-    console.log('*****');
     let vavSourceAir = vav1.build('Category', 'Source Air');
     let vavSourceAirTemp = vavSourceAir.build('Equipment', 'Temperature');
     let vavSourceAirTempSensor = vavSourceAirTemp.build('Instrumentation', 'Sensor');
@@ -53,8 +43,25 @@ let runTest = () => {
     iterateEquip(mechTemplate);
     // mechTemplate.save();
 
-
     console.log('done');
+};
+
+let runAutoVAV = () => {
+    const MechTemplate = require('../models/mechanical/mechanical');
+    let mechTemplate = new MechTemplate('Air Handling');
+    let vav1 = mechTemplate.build('Equipment', 'VAV');
+
+    buildChildren(vav1);
+    iterateEquip(mechTemplate);
+};
+
+let buildChildren = (mech) => {
+    for (var prop in mech.options) {
+        for (var item in mech.options[prop]) {
+            let newMech = mech.build(prop, item);
+            buildChildren(newMech);
+        }
+    }
 };
 
 let iterateEquip = (model, spacing = '-') => {
@@ -66,4 +73,5 @@ let iterateEquip = (model, spacing = '-') => {
     }
 };
 
-runTest();
+// runTest();
+runAutoVAV();

@@ -3,6 +3,7 @@ let Mechanical = require('./mechanical');
 let Instrumentation = class Instrumentation extends Mechanical {
     constructor(parent) {
         super('instrumentation', parent);
+        this._options = [];
     }
 };
 
