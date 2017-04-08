@@ -7,12 +7,7 @@ let Instrumentation = class Instrumentation extends Mechanical {
 };
 
 
-class Temperature extends Instrumentation {
-    constructor(parent) {
-        super(parent);
-    }
-}
-class Lights extends Instrumentation {
+class Sensor extends Instrumentation {
     constructor(parent) {
         super(parent);
     }
@@ -22,9 +17,14 @@ class Control extends Instrumentation {
         super(parent);
     }
 }
+class Occupancy extends Instrumentation {
+    constructor(parent) {
+        super(parent);
+    }
+}
 
 module.exports = {
-    Temperature: Temperature,
-    Lights: Lights,
-    Control: Control
+    Sensor: Sensor,
+    Control: Control,
+    Occupancy: Occupancy
 };
