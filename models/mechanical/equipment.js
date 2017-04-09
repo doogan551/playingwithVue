@@ -2,7 +2,7 @@ let Mechanical = require('./mechanical');
 
 let Equipment = class Equipment extends Mechanical {
     constructor(parent) {
-        super('equipment', parent);
+        super('Equipment', parent);
     }
 
 };

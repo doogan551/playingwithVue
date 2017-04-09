@@ -2,7 +2,7 @@ let Mechanical = class Mechanical {
     constructor(type, parent = null) {
         this._type = type;
         this._parent = parent;
-        this.equipment = [];
+        this.hierarchy = [];
         this._options = {
             Equipment: require('./equipment'),
             Category: require('./category'),
@@ -14,10 +14,24 @@ let Mechanical = class Mechanical {
         return this._options;
     }
 
+    getName() {
+        let findName = (obj, property) => {
+            for (var prop in obj) {
+                if (obj[prop].name === property) {
+                    return prop;
+                }
+            }
+        };
+        if (!this.parent) {
+            return this.constructor.name;
+        }
+        return findName(this.parent.options[this.type], this.name);
+    }
+
     build(item, type) {
         try {
             let newEquipment = new this.options[item][type](this);
-            this.equipment.push(newEquipment);
+            this.hierarchy.push(newEquipment);
             return newEquipment;
         } catch (e) {
             console.log(e);
@@ -87,13 +101,13 @@ let Mechanical = class Mechanical {
 
     save() {
         let objs = [];
-        let iterateEquipment = (equipment) => {
-            equipment.forEach((equip) => {
-                objs.push(equip.name);
-                iterateEquipment(equip.equipment);
+        let iterateHierarchy = (hierarchy) => {
+            hierarchy.forEach((node) => {
+                objs.push(node.name);
+                iterateHierarchy(node.hierarchy);
             });
         };
-        iterateEquipment(this.equipment);
+        iterateHierarchy(this.hierarchy);
         // save each object from the top, save their new id and add to children's refs
         console.log(objs);
     }

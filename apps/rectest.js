@@ -52,7 +52,8 @@ let runAutoVAV = () => {
     let vav1 = mechTemplate.build('Equipment', 'VAV');
 
     buildChildren(vav1);
-    // iterateEquip(mechTemplate);
+    iterateEquip(mechTemplate);
+    mechTemplate.save();
 };
 
 let buildChildren = (mech) => {
@@ -65,10 +66,10 @@ let buildChildren = (mech) => {
 };
 
 let iterateEquip = (model, spacing = '-') => {
-    console.log(`${spacing}${model.constructor.name} [${model.type.substring(0, 1)}]`);
-    if (model.hasOwnProperty('equipment')) {
-        model.equipment.forEach((equip) => {
-            iterateEquip(equip, spacing + '-');
+    console.log(`${spacing}${model.getName()} [${model.type.substring(0, 1)}]`);
+    if (model.hasOwnProperty('hierarchy')) {
+        model.hierarchy.forEach((item) => {
+            iterateEquip(item, spacing + '-');
         });
     }
 };

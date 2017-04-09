@@ -2,7 +2,7 @@ let Mechanical = require('./mechanical');
 
 class Category extends Mechanical {
     constructor(parent) {
-        super('category', parent);
+        super('Category', parent);
     }
 }
 
