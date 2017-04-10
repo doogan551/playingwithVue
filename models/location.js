@@ -51,7 +51,7 @@ const Location = class Location extends Common {
         this.getLocation({
             id: parentId
         }, (err, parent) => {
-            let meta = this.buildMeta(data.meta, parent.meta);
+            let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
             parent = this.buildParent(parent);
             counterModel.getNextSequence('locationid', (err, newId) => {
                 this.insert({
@@ -66,6 +66,28 @@ const Location = class Location extends Common {
                     }
                 }, cb);
             });
+        });
+    }
+
+    builkAdd(data, cb) {
+        let locations = data.locations;
+        let results = [];
+        async.eachSeries(locations, (location, callback) => {
+            this.add(location, (err, result) => {
+                if (!!err) {
+                    results.push({
+                        err: err,
+                        location: location
+                    });
+                } else {
+                    results.push({
+                        newLocation: result.ops[0]
+                    });
+                }
+                callback();
+            });
+        }, (err) => {
+            cb(err, results);
         });
     }
 
@@ -323,7 +345,7 @@ const Location = class Location extends Common {
         let iterateObj = (_meta, _data, _parent) => {
             for (var prop in _meta) {
                 if (typeof _meta[prop] === 'object') {
-                    iterateObj(_meta[prop], _data[prop], _parent[prop]);
+                    iterateObj(_meta[prop], (!!_data) ? _data[prop] : {}, (!!_parent) ? _parent[prop] : {});
                 } else if (!!_data && _data.hasOwnProperty(prop)) {
                     _meta[prop] = _data[prop];
                 } else if (!!_parent && _parent.hasOwnProperty(prop)) {
