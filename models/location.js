@@ -51,19 +51,7 @@ const Location = class Location extends Common {
         this.getLocation({
             id: parentId
         }, (err, parent) => {
-            let meta = {
-                coords: {
-                    lat: data.coords.lat || parent.meta.coords.lat,
-                    long: data.coords.long || parent.meta.coords.long
-                },
-                address: {
-                    street: data.address.street || parent.meta.address.street,
-                    city: data.address.city || parent.meta.address.city,
-                    zip: data.address.zip || parent.meta.address.zip
-                },
-                description: data.description || parent.meta.description,
-                tz: data.timezone || parent.meta.timezone
-            };
+            let meta = this.buildMeta(data.meta, parent.meta);
             parent = this.buildParent(parent);
             counterModel.getNextSequence('locationid', (err, newId) => {
                 this.insert({
@@ -262,23 +250,91 @@ const Location = class Location extends Common {
     }
 
     editLocation(data, cb) {
-        const editProperties = ['display', 'type', 'meta'];
         let id = this.getNumber(data.id);
-        let updateObj = {
-            $set: {}
-        };
-        for (var prop in data) {
-            if (!!~editProperties.indexOf(prop)) {
-                updateObj.$set[prop] = data[prop];
-            }
-        }
 
-        this.update({
+        // updateTags
+        this.getOne({
             query: {
                 _id: id
+            }
+        }, (err, location) => {
+            if (data.hasOwnProperty('display')) {
+                // updateRefs
+                location.display = data.display;
+            }
+
+            if (data.hasOwnProperty('type')) {
+                // updateRefs
+                location.type = data.type;
+            }
+
+            if (data.hasOwnProperty('meta')) {
+                for (var prop in data.meta) {
+                    location.meta[prop] = data.meta[prop];
+                }
+            }
+            this.recreateTags(location);
+
+            this.update({
+                query: {
+                    _id: id
+                },
+                updateObj: location
+            }, (err) => {
+                this.update({
+                    query: {
+                        'locationRef.Value': id
+                    },
+                    updateObj: {
+                        $set: {
+                            'locationRef.Display': location.display,
+                            'locationRef.Type': location.type
+                        }
+                    }
+                }, cb);
+            });
+        });
+    }
+
+    recreateTags(location) {
+        location.tags = [];
+        location.tags.push(location.display);
+        location.tags.push(location.type);
+        location.tags.push(location.item);
+        location.tags.push(location.description);
+        return;
+    }
+
+    buildMeta(data, parent) {
+        let meta = {
+            coords: {
+                lat: 0,
+                long: 0
             },
-            updateObj: updateObj
-        }, cb);
+            address: {
+                street: '',
+                city: '',
+                zip: ''
+            },
+            description: '',
+            tz: ''
+        };
+
+        let iterateObj = (_meta, _data, _parent) => {
+            for (var prop in _meta) {
+                if (typeof _meta[prop] === 'object') {
+                    iterateObj(_meta[prop], _data[prop], _parent[prop]);
+                } else if (!!_data && _data.hasOwnProperty(prop)) {
+                    _meta[prop] = _data[prop];
+                } else if (!!_parent && _parent.hasOwnProperty(prop)) {
+                    _meta[prop] = _parent[prop];
+                }
+            }
+        };
+
+        iterateObj(meta, data, parent);
+
+        return meta;
     }
 };
 
