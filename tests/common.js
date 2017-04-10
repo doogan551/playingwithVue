@@ -159,7 +159,7 @@ describe('Common', function () {
 
         expect(query.name1).to.deep.equal(new RegExp(/^Name1/i));
         expect(query.name2).to.deep.equal(new RegExp(/^123/i));
-        expect(query.name3).to.equal('');
+        expect(query.name3).to.equal(undefined);
         expect(query.name4).to.deep.equal(new RegExp(/^Name4/i));
 
         query = {};
@@ -175,7 +175,7 @@ describe('Common', function () {
 
         expect(query.Name1).to.deep.equal(new RegExp(/^Name1/i));
         expect(query.Name2).to.deep.equal(new RegExp(/^123/i));
-        expect(query.Name3).to.equal('');
+        expect(query.Name3).to.equal(undefined);
         expect(query.Name4).to.deep.equal(new RegExp(/^Name4/i));
     });
 

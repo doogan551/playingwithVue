@@ -587,7 +587,6 @@ const Report = class Report {
             limit: returnLimit,
             fields: fields
         };
-        console.log(JSON.stringify(criteria));
         point.getAll(criteria, (err, docs) => {
             if (err) {
                 return cb(err);

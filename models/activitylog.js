@@ -18,7 +18,7 @@ const ActivityLog = class ActivityLog extends Common {
         this.insert(criteria, cb);
     }
 
-    get(data, cb) {
+    getLogs(data, cb) {
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);

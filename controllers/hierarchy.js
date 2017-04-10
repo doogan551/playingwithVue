@@ -2,22 +2,22 @@ let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
 let utils = require('../helpers/utils.js');
-let Slideshow = new(require('../models/slideshow'))();
-// NOT CHECKED
-router.post('/get/:id', function (req, res, next) {
+let Hierarchy = new(require('../models/hierarchy'))();
+
+router.use('/locations', require('./locations'));
+
+router.get('/get', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Slideshow.getSlideshow(data, function (err, ss) {
+    Hierarchy.get(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
             });
         }
 
-        return utils.sendResponse(res, {
-            slideshow: ss
-        });
+        return utils.sendResponse(res, results);
     });
 });
 
