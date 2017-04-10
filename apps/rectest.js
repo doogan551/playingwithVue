@@ -1,11 +1,11 @@
 // const async = require('async');
-// const db = require('../helpers/db');
-// const Utility = require('../models/utility');
+const db = require('../helpers/db');
+const Utility = require('../models/utility');
 // const Config = require('../public/js/lib/config.js');
-// const config = require('config');
+const config = require('config');
 
-// const dbConfig = config.get('Infoscan.dbConfig');
-// const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+const dbConfig = config.get('Infoscan.dbConfig');
+const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 let runTest = () => {
     const MechTemplate = require('../models/mechanical/mechanical');
@@ -74,5 +74,7 @@ let iterateEquip = (model, spacing = '-') => {
     }
 };
 
-// runTest();
-runAutoVAV();
+db.connect(connectionString.join(''), function (err) {
+    // runTest();
+    runAutoVAV();
+});

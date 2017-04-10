@@ -1,3 +1,5 @@
+const async = require('async');
+
 let Mechanical = class Mechanical {
     constructor(type, parent = null) {
         this._type = type;
@@ -99,15 +101,16 @@ let Mechanical = class Mechanical {
         return this.constructor.name;
     }
 
-    save() {
+    save(cb) {
         let objs = [];
-        let iterateHierarchy = (hierarchy) => {
-            hierarchy.forEach((node) => {
-                objs.push(node.name);
-                iterateHierarchy(node.hierarchy);
-            });
-        };
-        iterateHierarchy(this.hierarchy);
+        // let iterateHierarchy = (hierarchy) => {
+        //     async.eachSeries(hierarchy, (node, callback) => {
+        //         objs.push(node.name);
+        //         iterateHierarchy(node.hierarchy);
+        //     }, cb);
+        // };
+
+        // iterateHierarchy(this.hierarchy);
         // save each object from the top, save their new id and add to children's refs
         console.log(objs);
     }
