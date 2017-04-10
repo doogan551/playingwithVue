@@ -52,8 +52,10 @@ let runAutoVAV = () => {
     let vav1 = mechTemplate.build('Equipment', 'VAV');
 
     buildChildren(vav1);
-    iterateEquip(mechTemplate);
-    mechTemplate.save();
+    // iterateEquip(mechTemplate);
+    mechTemplate.save((err) => {
+        console.log('done');
+    });
 };
 
 let buildChildren = (mech) => {
@@ -77,4 +79,24 @@ let iterateEquip = (model, spacing = '-') => {
 db.connect(connectionString.join(''), function (err) {
     // runTest();
     runAutoVAV();
+
+    // class Test {
+    //     tester() {
+    //         this.run();
+    //     }
+    //     // run() {}
+    // }
+
+    // class Blah extends Test {
+    //     constructor() {
+    //         super();
+    //     }
+
+    //     run() {
+    //         console.log('run');
+    //     }
+    // }
+
+    // let blah = new Blah();
+    // blah.tester();
 });
