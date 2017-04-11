@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+'use strict';
 var gpl = {
     texts: {},
     blocks: {},
@@ -677,7 +678,6 @@ var gpl = {
     validationMessage: [],
     validate: {
         connection: function (anchor1, anchor2, skipErrorPrint, connectionAttempt) {
-            'use strict';
             //get order as obj1 -> obj2
             var obj1 = (anchor2.anchorType === 'Control Point') ? anchor2 : anchor1,
                 obj2 = (anchor2.anchorType === 'Control Point') ? anchor1 : anchor2,
@@ -1148,7 +1148,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.config.top = this.config._originalTop = this.config.topFn(this.anchorRadius);
     },
 
-    hover: function (inValidAction) {
+    hover: function (invalidAction) {
         var gap = this.hoverRadius - this.anchorRadius;
 
         if (!this._oFill) {
@@ -1162,8 +1162,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             this.hoverTop = this.top;
             this.hovered = true;
             this.set({
-                fill: (inValidAction ? 'red' : 'green'),
-                stroke: (inValidAction ? 'red' : 'green'),
+                fill: (invalidAction ? 'red' : 'green'),
+                stroke: (invalidAction ? 'red' : 'green'),
                 radius: this.hoverRadius,
                 left: this.left - gap / 2 - 1,
                 top: this.top - gap / 2 - 1
@@ -1269,7 +1269,6 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     },
 
     myBlock: function () {
-        'use strict';
         return gpl.blockManager.getBlock(this.gplId);
     },
 
@@ -1607,7 +1606,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 property,
                 args,
                 getRefPoint = function () {
-                    'use strict';
                     var answer;
                     if (!!otherBlock) {
                         if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point') ||
@@ -2690,7 +2688,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setIconType: function (calcType, revAction) {
-        'use strict';
         let self = this,
             calculationType = calcType.Value,
             reverseAction = revAction.Value;
