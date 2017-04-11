@@ -676,7 +676,8 @@ var gpl = {
     },
     validationMessage: [],
     validate: {
-        connection: function (anchor1, anchor2, skipErrorPrint) {
+        connection: function (anchor1, anchor2, skipErrorPrint, connectionAttempt) {
+            'use strict';
             //get order as obj1 -> obj2
             var obj1 = (anchor2.anchorType === 'Control Point') ? anchor2 : anchor1,
                 obj2 = (anchor2.anchorType === 'Control Point') ? anchor1 : anchor2,
@@ -688,6 +689,57 @@ var gpl = {
                 pointType2,
                 allowedPoints2,
                 property2,
+                sameAnchor = function () {
+                    return obj1._anchorID === obj2._anchorID;
+                },
+                inputAnchorLineCount = function () {
+                    var length = 0,
+                        myObject = obj2.attachedLines;
+                    for (var key in myObject) {
+                        if (myObject.hasOwnProperty(key)) {
+                            ++length;
+                        }
+                    }
+                    return length;
+                },
+                duplicateLineAlreadyExists = function () {
+                    var answer = false,
+                        line;
+
+                    if (connectionAttempt) {
+                        for (var key in obj1.attachedLines) {
+                            if (obj1.attachedLines.hasOwnProperty(key)) {
+                                line = obj1.attachedLines[key];
+                                if ((line.endAnchor._anchorID === obj1._anchorID ||
+                                    line.endAnchor._anchorID === obj2._anchorID) &&
+                                    (line.startAnchor._anchorID === obj1._anchorID ||
+                                    line.startAnchor._anchorID === obj2._anchorID)) {
+                                    answer = true;
+                                }
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
+                inputHasOnlyOneLineConnected = function () {
+                    let answer = true,
+                        isInputAnchor;
+
+                    if (connectionAttempt) {
+                        if (!!block2.inputAnchors) {
+                            isInputAnchor = block2.inputAnchors.filter(function (anchor) {
+                                return anchor._anchorID === obj2._anchorID;
+                            });
+
+                            if (isInputAnchor.length > 0 && inputAnchorLineCount() > 0) {
+                                answer = false;
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
                 isPointValid = function (pointType, allowedPoints) {
                     var c,
                         ret = false;
@@ -734,20 +786,22 @@ var gpl = {
                     setVars();
                 }
 
-                if (pointType1 === 'Constant' && obj2.takesConstant === true) {
-                    isValid = true;
-                } else {
-                    property2 = anchorType2;
-                    allowedPoints2 = gpl.getPointTypes(property2, pointType2);
-
-                    if (allowedPoints2.error) {
-                        // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
-                        if (!skipErrorPrint) {
-                            gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
-                        }
+                if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
+                    if (pointType1 === 'Constant' && obj2.takesConstant === true) {
+                        isValid = true;
                     } else {
-                        if (isPointValid(pointType1, allowedPoints2)) {
-                            isValid = true;
+                        property2 = anchorType2;
+                        allowedPoints2 = gpl.getPointTypes(property2, pointType2);
+
+                        if (allowedPoints2.error) {
+                            // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
+                            if (!skipErrorPrint) {
+                                gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
+                            }
+                        } else {
+                            if (isPointValid(pointType1, allowedPoints2)) {
+                                isValid = true;
+                            }
                         }
                     }
                 }
@@ -1094,7 +1148,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.config.top = this.config._originalTop = this.config.topFn(this.anchorRadius);
     },
 
-    hover: function () {
+    hover: function (inValidAction) {
         var gap = this.hoverRadius - this.anchorRadius;
 
         if (!this._oFill) {
@@ -1108,8 +1162,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             this.hoverTop = this.top;
             this.hovered = true;
             this.set({
-                fill: 'green',
-                stroke: 'green',
+                fill: (inValidAction ? 'red' : 'green'),
+                stroke: (inValidAction ? 'red' : 'green'),
                 radius: this.hoverRadius,
                 left: this.left - gap / 2 - 1,
                 top: this.top - gap / 2 - 1
@@ -1123,8 +1177,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             radius: this.anchorRadius,
             left: this._originalLeft,
             top: this._originalTop,
-            fill: this._oFill,
-            stroke: this._oStroke
+            fill: (this._oFill ? this._oFill : this.fill),
+            stroke: (this._oStroke ? this._oStroke : this.stroke)
         });
     },
 
@@ -1555,8 +1609,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 getRefPoint = function () {
                     'use strict';
                     var answer;
-                    if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
-                        if (!!otherBlock) {
+                    if (!!otherBlock) {
+                        if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point') ||
+                            !(otherBlock.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
                             answer = otherBlock.getPointData();
                         }
                     }
@@ -4395,6 +4450,7 @@ gpl.ActionButton = function (config) {
 gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     var slSelf = this,
         VALIDCOLOR = 'green',
+        INVALIDCOLOR = 'RED',
         canvas = manager.canvas,
         segments = [],
         coords = [{
@@ -4402,7 +4458,6 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
             y: oy
         }],
         block = gpl.blockManager.getBlock(otarget.gplId),
-        startAnchor = otarget,
         spaceSegment,
         target,
         solidLine,
@@ -4454,6 +4509,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     block.lock(true);
 
+    slSelf.startAnchor = otarget;
+
+    slSelf.moveTarget = '';
+
     slSelf.setColor = function (color) {
         forEachLine(function (line) {
             line.setStroke(color || '#000000');
@@ -4466,7 +4525,9 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.completeLine = function (target) {
         var newCoords,
-            event;
+            event,
+            currentLine,
+            otherAnchor;
 
         if (target) {
             event = {
@@ -4489,7 +4550,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
         slSelf.detachEvents();
         newCoords = $.extend(true, [], coords);
         // gpl.log('creating new line', newCoords);
-        manager.shapes.push(new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true));
+        currentLine = new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true);
+        otherAnchor = currentLine.getOtherAnchor(target);
+        otherAnchor.clearHover();
+        manager.shapes.push(currentLine);
         slSelf.clearSegments();
         gpl.manager.renderAll();
     };
@@ -4584,26 +4648,35 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     };
 
     slSelf.handleMouseMove = function (event) {
-        var pointer = event.e ? canvas.getPointer(event.e) : event,
+        let pointer = event.e ? canvas.getPointer(event.e) : event,
             x = pointer.x, // - pointer.x % gpl.gridSize,
-            y = pointer.y, // - pointer.y % gpl.gridSize,
-            moveTarget = gpl.manager.getObject({
-                left: x,
-                top: y,
-                gplType: 'anchor'
-            });
+            y = pointer.y; // - pointer.y % gpl.gridSize,
+
+        slSelf.moveTarget = gpl.manager.getObject({
+            left: x,
+            top: y,
+            gplType: 'anchor'
+        });
 
         if (manager.isEditingLine) {
-            if (moveTarget) {
-                slSelf.valid = gpl.validate.connection(startAnchor, moveTarget, true);
-                if (slSelf.valid && moveTarget !== startAnchor) {
-                    moveTarget.hover();
+            if (slSelf.moveTarget) {
+                slSelf.valid = gpl.validate.connection(slSelf.startAnchor, slSelf.moveTarget, true, true);
+                if (slSelf.valid) {
+                    slSelf.moveTarget.hover();
+                    slSelf.startAnchor.hover();
                     slSelf.setColor(VALIDCOLOR);
-                    target = moveTarget;
+                } else {
+                    slSelf.setColor(INVALIDCOLOR);
+                    slSelf.moveTarget.hover(true);
+                    slSelf.startAnchor.hover(true);
                 }
+                gpl.manager.bringToFront(slSelf.moveTarget);
+                gpl.manager.bringToFront(slSelf.startAnchor);
+                target = slSelf.moveTarget;
             } else {
                 if (target) {
                     target.clearHover();
+                    slSelf.startAnchor.clearHover();
                     slSelf.setColor();
                 }
             }
@@ -4696,6 +4769,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.handleKeyUp = function (event) {
         if (event.which === gpl.ESCAPEKEY) {
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
             slSelf.delete();
         }
     };
@@ -6427,8 +6504,6 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.highlight = function (shape) {
-        let selectedBlock = bmSelf.getBlock(shape.gplId);
-
         if (gpl.isEdit) {
             if (bmSelf.highlightedObject) {
                 bmSelf.deselect();
