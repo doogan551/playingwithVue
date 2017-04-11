@@ -24,7 +24,7 @@ var dti = {
         view is requested.
     2)  Each view contains a pointer to the alarm table that the view uses.
     3)  We have a computed observable, self.alarms(), which has dependencies on self.currentView() and self.currentView().alarmTableName()
-    4)  self.alarms() is used to display the alarms on the screen.  This way, anytime the currentView changes, or if the target alarm list 
+    4)  self.alarms() is used to display the alarms on the screen.  This way, anytime the currentView changes, or if the target alarm list
         changes, the alarms shown are automatically updated.
 
     Here's how the filters work:
@@ -33,7 +33,7 @@ var dti = {
     2)  Every view also has a defaultFilters object that defines the default filter values for the view.  It is formatted differntly
         still, from the private filters object and the self.filters object. **See Room For Improvements, Note 1.
     3)  All views are initialized when the application starts. Part of that initialization is to copy the defaultFilters object
-        to a filters object, also in the view.  This allows us to make changes to the filters, but not forego the ability to revert 
+        to a filters object, also in the view.  This allows us to make changes to the filters, but not forego the ability to revert
         back to the original filter state.
     3)  When another view is requested, self.filters are saved onto the view (using the view's format), before loading the requested
         view's filters into self.filters.
@@ -43,10 +43,10 @@ var dti = {
     1)  When the application first loads, up to PAGE_SIZE alarms for each alarm list are requested from the server via socket.
     2)  This also establishes a socekt connection for each alarm list that the server uses to send alarm updates through. Alarm updates
         include adding new recent, active, and unacknowledged alarms, and removing active and unacknowledged alarms.
-    3)  The server remembers the filter criteria used for each alarm list, so updates received from the server are applicable to 
+    3)  The server remembers the filter criteria used for each alarm list, so updates received from the server are applicable to
         the current view.  There are two exceptions to this:
             a) Paging is ingored so even if we're several pages in, we'll still get new alarms matching our filter criteria.
-            b) 'Remove unacknowledged alarm' updates (the alarm was acknowledged by someone) are always broadcast, regardless of the 
+            b) 'Remove unacknowledged alarm' updates (the alarm was acknowledged by someone) are always broadcast, regardless of the
                 filter criteria.
     4)  When the user changes views, if the target view uses the same alarm list as the current view, we have to re-get PAGE_SIZE
         alarms from the server. This is because the filter set for the two views is likely different.
@@ -99,7 +99,7 @@ var AlarmManager = function (conf) {
         $elnewAlarmTop = $('.newAlarmTop'),
         $elnewAlarmBot = $('.newAlarmBottom'),
         rowHeight = 28,
-        
+
         $elContent = $('.content'),
         $elDetail = $('.detailContainer'),
         $dateFrom = $("#dateFrom"),
@@ -275,7 +275,7 @@ var AlarmManager = function (conf) {
             for (j; j > 0; j--) {
                 name = 'name' + j;
                 Name = 'Name' + j;
-                
+
                 // Support observables
                 val = (typeof data[Name] === 'function') ? data[Name]() : data[Name];
 
@@ -309,7 +309,7 @@ var AlarmManager = function (conf) {
 
             // Set this variable to false if no argument was provided (i.e. forceDateString = undefined)
             forceDateString = forceDateString || false;
-                    
+
             if (!forceDateString && almClone.equals(today)) {
                 str = 'Today';
             } else if (!forceDateString && almClone.equals(today.addDays(-1))) {
@@ -397,7 +397,7 @@ var AlarmManager = function (conf) {
         selectAlarm = function (alarm) {
             if (++nSelectedAlarmsOnPage === 1) {
                 self.openAlarmDetail(alarm);
-            }            
+            }
 
             alarm.isSelected(true);
             self.selectedRows.push(alarm);
@@ -441,7 +441,7 @@ var AlarmManager = function (conf) {
                             if (ackStatus) {
                                 alarm.ackStatus(ackStatus);
                             }
-                            
+
                             if (ackUser) {
                                 alarm.ackUser(ackUser);
                             }
@@ -522,11 +522,11 @@ var AlarmManager = function (conf) {
                     doScroll = false;
                     scrollPosition = $elAlarms.scrollTop();
 
-                    if (sortAsc) {
+                    if (!sortAsc) {
                         if (!scrolledTop) {
                             doScroll = true;
                             scrollPosition += rowHeight;
-                            
+
                             // Display the new alarms notification
                             $elnewAlarmTop.fadeIn(0);
                             $elnewAlarmTop.fadeOut(ALARM_NOTICE_FADEOUT);
@@ -571,7 +571,7 @@ var AlarmManager = function (conf) {
                 }
 
                 // Also, if we're adding an active alarm, there exists a possibility that this alarm could be a duplicate
-                // of another already in our view, although the alarm message should be different. See Rob or Morris for 
+                // of another already in our view, although the alarm message should be different. See Rob or Morris for
                 // more info. If so, we'll replace the one in our view with this one.
                 if (tableName === 'Active') {
                     alarm = findAlarm('upi', data.newAlarm.upi);
@@ -583,7 +583,7 @@ var AlarmManager = function (conf) {
 
                 if (!discardAlarm) {
                     modifier = 1;
-                    
+
                     if (sortAsc) {
                         operator.add = 'unshift';
                         operator.del = 'pop';
@@ -664,7 +664,7 @@ var AlarmManager = function (conf) {
                     alarmTable.refresh(true);
                 }
             }
-    
+
             return removedItem;
         },
         updateNumberOfPages = function (count, alarmTable) {
@@ -737,7 +737,7 @@ var AlarmManager = function (conf) {
             // Add the displayId key if it doesn't exist
             if (!alarm.displayId)
                 alarm.displayId = 0;
-            
+
             // Build concatenated name string & attach to alarm
             for (i = 2; i < 5; i++) {
                 key = 'Name' + i;
@@ -757,12 +757,12 @@ var AlarmManager = function (conf) {
             }
 
             var len = data.alarms ? data.alarms.length : 0,
-            view = alarmTable.view,
-            sortAscending = view.sortAscending(),
-            queue = alarmUpdateQueue[alarmTable.name],
-            page,
-            q,
-            i;
+                view = alarmTable.view,
+                sortAscending = view.sortAscending(),
+                queue = alarmUpdateQueue[alarmTable.name],
+                page,
+                q,
+                i;
 
             _log('Receiving ' + alarmTable.name + ' alarms from server', data, new Date());
 
@@ -796,12 +796,7 @@ var AlarmManager = function (conf) {
 
             if (alarmTable.view.id === self.currentView().id) {
                 if (view.gotoPageOne) {
-                    if (sortAscending)
-                        page = 1;
-                    else
-                        page = alarmTable.numberOfPages();
-
-                    view.pageNumber(page);
+                    view.pageNumber(1);
                     view.gotoPageOne = false;
                 }
                 updateViewPaused();
@@ -811,11 +806,7 @@ var AlarmManager = function (conf) {
                     // Clear the sticky flag (applies to one request only)
                     alarmTable.stickyScrollBar = false;
                 } else {
-                    // Adjust the scroll position
-                    if (sortAscending)
-                        $elAlarms.scrollTop(0);
-                    else
-                        $elAlarms.scrollTop(99999);
+                    $elAlarms.scrollTop(0);
                 }
             }
         },
@@ -833,7 +824,7 @@ var AlarmManager = function (conf) {
             alarmTable.refresh(false);
 
             buildAlarmRequestObject(alarmTable, reqObj);
-            
+
             reqObj.reqID = alarmTable.reqID = uniqueID;
 
             alarmTable.gettingData(true);
@@ -1001,12 +992,12 @@ var AlarmManager = function (conf) {
             reqObj.numberItems  = BUFFER_SIZE;
 
             reqObj.sort = sortAscending ? 'asc':'desc';
-            reqObj.currentPage = view.gotoPageOne ? (sortAscending ? 1 : nPages) : view.pageNumber.peek();
+            reqObj.currentPage = view.gotoPageOne ?  1 : view.pageNumber.peek();
 
             nameSegments = filters.nameSegment.options;
             for (key in nameSegments) {
                 if (key === 'pointTypes') {
-                    // pointTypes array length of 0 indicates all point types should be included. The server will 
+                    // pointTypes array length of 0 indicates all point types should be included. The server will
                     // give us all point types if we do not send the 'pointTypes' key.
                     if (availablePointTypes) {
                         if (nameSegments[key].length > 0) {
@@ -1072,7 +1063,7 @@ var AlarmManager = function (conf) {
         storeViewFilters = function (view) {
             var storeData = store.get(storeKey),
                 viewData = ko.toJS(view);
-            
+
             if (!storeData) {
                 storeData = {};
                 storeData.sessionId = sessionId;
@@ -1111,7 +1102,7 @@ var AlarmManager = function (conf) {
 
                 // Get and set the visibility of this filter category set
                 cat.visible(viewCat.visible);
-                
+
                 // Loop through all possible filter options, enabling the ones the view requires
                 len = cat.options.length;
                 for (i = 0; i < len; i++) {
@@ -1121,8 +1112,8 @@ var AlarmManager = function (conf) {
                     if (category === "dateTime" || category === "nameSegment") {
                         viewOptions[opt.text] = opt.value();
                     } else {
-                        found = ((index = viewOptions.indexOf(opt.text)) > -1) ? true:false;
-                        
+                        found = ((index = viewOptions.indexOf(opt.text)) > -1);
+
                         if (opt.isActive() && !found) {
                             viewOptions.push(opt.text);
                         } else if (!opt.isActive() && found) {
@@ -1174,13 +1165,13 @@ var AlarmManager = function (conf) {
                         view.filters = data.filters;
                     } else {
                         // Add a sort key (presently, sort is applied to the message time field)
-                        view.sortAscending = ko.observable(true);
+                        view.sortAscending = ko.observable(false);
 
                         // Add the current page number to this view
                         view.pageNumber = ko.observable(1);
 
                         // This flag tells us if we need to force page 1 when alarms are refreshed
-                        view.gotoPageOne = false;
+                        view.gotoPageOne = true;
 
                         // Add a force refresh flag. This flag is evaluated when the view is requested
                         view.forceRefresh = false;
@@ -1197,7 +1188,7 @@ var AlarmManager = function (conf) {
             for (i = 0, len = viewGroup.length; i < len; i++) {
                 // Shortcut
                 view = viewGroup[i];
-                
+
                 initView(view);
 
                 // Initialize children views
@@ -1276,7 +1267,7 @@ var AlarmManager = function (conf) {
             for (category in localFilters) {
                 // Create the filter category
                 self.filters[category] = {};
-                
+
                 // Shortcut
                 selfCat = self.filters[category];
 
@@ -1292,7 +1283,7 @@ var AlarmManager = function (conf) {
 
                 for (option in cat) {
                     selfOptions.push(new Filter(category, cat[option]));
-                    
+
                     // Extend the array with an associative pointer to this array entry.
                     // For example, now we can access the 'Emergency' filter option as:
                     // 'self.filters.alarmClass.options.Emergency', in addition to 'self.filters.alarmClass.options[0]'
@@ -1389,7 +1380,7 @@ var AlarmManager = function (conf) {
 
                 // Get and set the visibility of this filter category set
                 cat.visible(viewCat.visible);
-                
+
                 // Loop through all possible filter options, enabling the ones the view requires
                 len = cat.options.length;
                 for (i = 0; i < len; i++) {
@@ -1434,12 +1425,7 @@ var AlarmManager = function (conf) {
             self.currentView(targetView);
 
             // Reset the scroll bar
-            if (targetView.sortAscending()) {
-                scrollPosition = targetView.scrollPosition || 0;
-            } else {
-                scrollPosition = targetView.scrollPosition || 99999;
-            }
-
+            scrollPosition = targetView.scrollPosition || 0;
             $elAlarms.scrollTop(scrollPosition);
 
             // Update the view title
@@ -1448,13 +1434,13 @@ var AlarmManager = function (conf) {
             // See if we need to refresh the alarms list
             if (forceRefresh || (curGroup !== targetGroup) || (targetGroup === 'customViews') || (curTableName === targetTableName)) {
                 self.alarms().refresh(true);
-                
+
                 if (forceRefresh) {
                     targetView.forceRefresh = false;
                 }
             } else {
                 // We're not refreshing the page but we still have to build the isSelected state based on the selectedRows array
-                // (because the user could have selected one of these alarms in another view). isSelected is always determined when alarms 
+                // (because the user could have selected one of these alarms in another view). isSelected is always determined when alarms
                 // are received from the server which is why we don't need to do it above.
                 alarms = self.alarms().list();
                 len = alarms.length;
@@ -1553,7 +1539,7 @@ var AlarmManager = function (conf) {
                 jlen = viewGroup.length;
                 for (j = 0; j < jlen; j++) {
                     var view = viewGroup[j];
-                    
+
                     if (view.hasOwnProperty(key)) {
                         if (view[key] === keyValue) {
                             return view;
@@ -1573,11 +1559,11 @@ var AlarmManager = function (conf) {
             if (curPage > 1 && curPage < numPages) {
                 paused = true;
             } else if (curPage === 1) {
-                if (!sortAsc) {
+                if (sortAsc) {
                     paused = true;
                 }
             } else {
-                if (sortAsc) {
+                if (!sortAsc) {
                     paused = true;
                 }
             }
@@ -1879,7 +1865,7 @@ var AlarmManager = function (conf) {
         }
         self.currentView = ko.observable(view);
     }
-    
+
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
     self.currentPage = ko.observable(1);
@@ -1943,7 +1929,7 @@ var AlarmManager = function (conf) {
     socket.on('removingUnackAlarm', function (data) {
         // data: {
         //      _id: string
-        //      ackStatus: int 
+        //      ackStatus: int
         //      ackUser: string
         //      ackTime: int (Unix Epoch)
         // }
@@ -1973,7 +1959,7 @@ var AlarmManager = function (conf) {
 
     socket.on('connect', function () {
     });
-    
+
     socket.on('reconnect', function () {
         refreshAlarmLists();
     });
@@ -2019,7 +2005,7 @@ var AlarmManager = function (conf) {
 
         // In the future, part of our filter set will include 'Active' and 'Unacknowledged'.  When implemented,
         // we'll need to update the current view's alarmTableName and alarmTable prpoerties based on the filter selection.
-        
+
         // Event type is either left-click ('click') or right-click ('contextmenu')
         // For a left-click, we simple toggle the option clicked
         if (event.type === "click") {
@@ -2047,7 +2033,7 @@ var AlarmManager = function (conf) {
             else {
                 // If the other alarm options are a mixture of enabled and disabled, we always disable them
                 // If the other alarm options are all off, we enable all of them
-                
+
                 // Let's assume all other alarm options are off
                 active = true;
                 for (i = 0; i < len; i++) {
@@ -2096,14 +2082,14 @@ var AlarmManager = function (conf) {
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
-            
+
             if (alarm.isSelected() && self.ackRequired(alarm) && self.userHasPermissionToAck(alarm)) {
                 alarm.ackStatus(ACK_IN_PROGRESS);
                 updateAckStatus(alarm, self.alarms().name);
                 ackList.push(alarm._id);
             }
         }
-        
+
         // The UI button that calls this routine is not deactivated after it's selected. We need to make sure
         // we found selected alarms with ACK_REQUIRED before calling the sendAcknowledge command
         if (ackList.length) {
@@ -2135,7 +2121,7 @@ var AlarmManager = function (conf) {
         var srcClass = event.srcElement.classList,
             ackStatus = data.ackStatus(),
 
-            // For some reason, the event.srcElement.classList array doesn't 
+            // For some reason, the event.srcElement.classList array doesn't
             // have the indexOf function so we're rolling our own
             elHasClass = function(className) {
                 for (var i = 0, len = srcClass.length; i < len; i++) {
@@ -2161,7 +2147,7 @@ var AlarmManager = function (conf) {
         if (elHasClass("tableButton")) {
             return;
         }
-        
+
         var i,
             alarmTable = self.alarms(),
             alarmTableName = alarmTable.name,
@@ -2234,7 +2220,7 @@ var AlarmManager = function (conf) {
             if (!event.ctrlKey) {
                 self.selectNone();
             }
-            
+
             if (selected) {
                 deSelectAlarm(data);
             } else {
@@ -2251,7 +2237,7 @@ var AlarmManager = function (conf) {
                 // 'c' represents our anchor row...it is the index of where the user Clicked WITHOUT the shift key
                 // 'sc' is the row index the user just Shift Clicked
                 // 'prev_sc' is the row index the user just previously Shift Clicked
-                
+
                 // Alarms are always shifting in and out of our buffers, so we need to make sure we can still reach the row
                 if (c !== null) {
                     // If the user has previously selected any rows WITHOUT the shift key
@@ -2301,7 +2287,7 @@ var AlarmManager = function (conf) {
             // All alarms are not selected; make them selected!
             for (i = 0; i < len; i++) {
                 alarm = alarms[i];
-                
+
                 // We need to check the isSelected so we don't double add to our selectedRows array
                 if (!alarm.isSelected()) {
                     selectAlarm(alarm);
@@ -2327,7 +2313,7 @@ var AlarmManager = function (conf) {
             }
         }
     };
-    
+
     self.selectUnacknowledged = function () {
         var alarms = self.alarms().list(),
             n = alarms.length,
@@ -2342,14 +2328,14 @@ var AlarmManager = function (conf) {
             }
         }
     };
-    
+
     self.deselectAll = function () {
         var alarms = self.alarms().list(),
             len = alarms.length,
             i;
 
         // Our alarms variable points to alarms().list(), which is our alarms in view (up to 200), plus the alarms in the
-        // buffer area of this view. It is important 
+        // buffer area of this view. It is important
 
         // We only have to toggle the isSelected state for selected rows in the current view, because when
         // a new view is applied, each alarm's isSelected state is recalculated based on the contents of
@@ -2731,7 +2717,7 @@ var AlarmManager = function (conf) {
                 data = {
                     reqID: alarmTable.reqID
                 };
-            
+
             n = n || 1;
             if (deleteFromTop === undefined) {
                 deleteFromTop = true;
@@ -2770,7 +2756,7 @@ var AlarmManager = function (conf) {
     $(window).on('hashchange', function () {
         var filterName = location.hash.substring(1),
             view;
-        
+
         view = findView('title', filterName);
         if (view === null) {
             view = self.defaultViews[0];
@@ -2784,12 +2770,12 @@ var AlarmManager = function (conf) {
 
     // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
     initViewGroup('defaultViews');
-    
+
     // This routine creates & initializes filter observables displayed to the user
     initFilterOptions();
 
     //------ Computeds ------------------------------------
-    // Computeds are calculated on creation; They are located here because the logic inside a couple of them 
+    // Computeds are calculated on creation; They are located here because the logic inside a couple of them
     // depends on the rest of the viewmodel to be setup correctly before they are executed.
     self.alarms = ko.computed(function() {
         return alarmTables[self.currentView().alarmTableName()];
@@ -2910,7 +2896,7 @@ var AlarmManager = function (conf) {
         return false;
     });
 
-    // Pausing variable for the following computed name filter. If we didn't have this, when we changed views we'd 
+    // Pausing variable for the following computed name filter. If we didn't have this, when we changed views we'd
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
     // applyView routine (called when views change) because it updates name1-name4 observables.
     self.nameFilterPaused = ko.observable(true);
@@ -2934,10 +2920,10 @@ var AlarmManager = function (conf) {
             } else if (val !== '') {
                 active = true;
             }
-            // You would think we could break the loop once we know we have an active filter, but we need to 
+            // You would think we could break the loop once we know we have an active filter, but we need to
             // continue so that this computed maintains a dependency with all name segments.
         }
-        
+
         if (active) {
             $filterIcon.addClass('filterActive');
         } else {

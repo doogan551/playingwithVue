@@ -57,7 +57,7 @@ var ActivityLogsManager = function (conf) {
             // Paging
             reqObj.itemsPerPage = PAGE_SIZE;
             reqObj.sort = self.sortAscending() ? 'asc' : 'desc';
-            reqObj.currentPage = gotoPageOne ? (self.sortAscending() ? 1 : nPages) : self.pageNumber();
+            reqObj.currentPage = gotoPageOne ? 1 : self.pageNumber();
             reqObj.usernames = self.getFilteredUsers();
 
             // Point type filtering
@@ -156,10 +156,6 @@ var ActivityLogsManager = function (conf) {
             }
 
             activityLogTable.numberOfPages(newNumberPages);
-
-            if ((sortAsc === false) && (curPage === curNumberPages)) {
-                self.pageNumber(newNumberPages);
-            }
         },
         processActivityLogs = function (theLogData) {
             var i, page;
@@ -173,8 +169,7 @@ var ActivityLogsManager = function (conf) {
                 self.activityLogs().count(theLogData.count);
                 updateNumberOfPages(self.activityLogs().count(), self.activityLogs());
                 if (gotoPageOne) {
-                    page = self.sortAscending() ? 1 : self.activityLogs().numberOfPages();
-                    self.pageNumber(page);
+                    self.pageNumber(1);
                     gotoPageOne = false;
                 }
             } else {
