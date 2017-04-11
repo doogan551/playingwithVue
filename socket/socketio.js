@@ -161,7 +161,7 @@ module.exports = function socketio(_common) {
                     user: jsonData.logData.user,
                     timestamp: Date.now(),
                     point: jsonData.logData.point,
-                    activity: Config.Enums['Activity Logs']['Point Control'].enum,
+                    activity: 'Point Control',
                     prop: 'Value'
                 };
 
@@ -199,10 +199,10 @@ module.exports = function socketio(_common) {
                     point: jsonData.logData.point
                 };
                 if (jsonData.state === 1) {
-                    logData.activity = Config.Enums['Activity Logs']['Warm Restart'].enum;
+                    logData.activity = 'Warm Restart';
                     logData.log = 'Warm Restart sent';
                 } else {
-                    logData.activity = Config.Enums['Activity Logs'].Reset.enum;
+                    logData.activity = 'Reset';
                     logData.log = 'Reset sent';
                 }
             }
@@ -235,7 +235,7 @@ module.exports = function socketio(_common) {
                     user: data.logData.user,
                     timestamp: Date.now(),
                     point: data.logData.point,
-                    activity: Config.Enums['Activity Logs']['Firmware Load'].enum,
+                    activity: 'Firmware Load',
                     log: data.logData.point['Firmware Version'] + ' Firmware \'' + data.fileName + '\' loaded'
                 },
                 sendCommand = function (filePath) {
@@ -806,7 +806,7 @@ function updateSchedules(data, callback) {
                             }
                         }, function (err, point) {
                             logData.point = point;
-                            logData.activity = Config.Enums['Activity Logs']['Schedule Entry Edit'].enum;
+                            logData.activity = 'Schedule Entry Edit';
                             logData.log = 'Schedule entry edited';
                             activityLog.create(logData, function (err, result) {
                                 feCB(err);
@@ -858,7 +858,7 @@ function updateSchedules(data, callback) {
                         }
                     }, function (err, point) {
                         logData.point = point;
-                        logData.activity = Config.Enums['Activity Logs']['Schedule Entry Add'].enum;
+                        logData.activity = 'Schedule Entry Add';
                         logData.log = 'Schedule entry added';
                         activityLog.create(logData, function (err, result) {
                             feCB(err);
@@ -890,7 +890,7 @@ function updateSchedules(data, callback) {
                         }
                     }, function (err, point) {
                         logData.point = point;
-                        logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
+                        logData.activity = 'Schedule Entry Delete';
                         logData.log = 'Schedule entry deleted';
                         activityLog.create(logData, function (err, result) {
                             feCB(err);
@@ -932,7 +932,7 @@ function updateSchedules(data, callback) {
                         }
                     }, function (err, point) {
                         logData.point = point;
-                        logData.activity = Config.Enums['Activity Logs']['Schedule Entry Delete'].enum;
+                        logData.activity = 'Schedule Entry Delete';
                         logData.log = 'Schedule entry deleted';
                         activityLog.create(logData, function (err, result) {
                             feCB(err);
