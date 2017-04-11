@@ -1745,24 +1745,24 @@ input:focus {
         margin: 1px 0;
     }
 
-    .node input {
+    .node .displayInfo input {
         display: none;
         height: 22px !important;
         margin: 0 !important;
     }
 
-    .node.focused > input {
+    .node.focused .displayInfo input {
         display: inline;
         width: initial;
 
         /*background-color: #dedede;*/
     }
 
-    .node.focused > .name {
+    .node.focused .name {
         display: none;
     }
 
-    .nodeHover > .name {
+    .nodeHover .name {
         background-color: #43a047;
     }
 
@@ -1770,6 +1770,7 @@ input:focus {
         position: relative;
         display: inline;
         cursor: pointer;
+        width: initial;
     }
 
     i:not(.mdi) {
@@ -1793,6 +1794,7 @@ input:focus {
     .bulkAdd {
         display: inline-block;
         margin-left: 5px;
+        width: 14px;
     }
 
     .bulkAdd i {
@@ -1808,6 +1810,14 @@ input:focus {
     .nodeTooltip {
         // position: absolute;
         // right: -40px;
+    }
+
+    .tooltipped {
+        visibility: hidden;
+    }
+
+    .displayInfo:hover .tooltipped {
+        visibility: visible;
     }
 }
 

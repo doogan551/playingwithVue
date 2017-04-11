@@ -3143,6 +3143,15 @@ var dti = {
                             bindings.cloneNode($target, data);
                         }
                     },
+                    cloneMultiple: {
+                        name: 'Clone Multiple',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger,
+                                data = ko.contextFor($target[0]);
+
+                            bindings.bulkClone($target, data);
+                        }
+                    },
                     bulkAddSiblings: {
                         name: 'Add Siblings',
                         callback: function (key, opt) {
@@ -3217,6 +3226,8 @@ var dti = {
                     dti.bindings.locations.data.push(rootNode);
 
                     dti.bindings.locations.focusNode(rootNode);
+
+                    dti.bindings.locations._addNode(rootNode);
                 },
 
                 addBranch: function (results, obj, $el) {
@@ -3310,6 +3321,18 @@ var dti = {
                         obj.expanded(!obj.expanded());
                     }
                 },
+                addChildRaw: function (obj, event) {
+                    dti.bindings.locations.addChild(event.target, {
+                        fetched: true,
+                        expanded: true
+                    });
+                },
+                addSiblingRaw: function (obj, event) {
+                    dti.bindings.locations.addSibling(event.target, {
+                        fetched: true,
+                        expanded: true
+                    });
+                },
                 bulkAddRaw: function (obj, event) {
                     dti.bindings.locations.bulkAdd('Siblings', obj, event);
                 },
@@ -3328,6 +3351,7 @@ var dti = {
                     bindings.endEntry(number + 9);
                     bindings.entryFormat(type + '#');
                     bindings.bulkAddDestination(destination);
+                    bindings.entryType(obj.type());
                     bindings.currEntry = {
                         node: ko.toJS(obj),
                         el: event.target
@@ -3380,14 +3404,70 @@ var dti = {
                         bindings.focusNode();
                     }
                 },
-                cloneNode: function ($target, context) {
+                
+                bulkClone: function ($target, context) {
+                    var $bulkCloneModal = $('#bulkCloneModal'),
+                        bindings = dti.bindings.locations,
+                        obj = context.$data,
+                        name = obj.name(),
+                        type = name.replace(/\d+/g, ''),
+                        number = parseInt(name.replace(type, ''), 10);
+
+                    bindings.startEntry(number + 1);
+                    bindings.endEntry(number + 9);
+                    bindings.entryFormat(type + '#');
+                    // bindings.entryType(obj.type());
+                    bindings.currEntry = {
+                        node: ko.toJS(obj),
+                        el: event.target,
+                        $target: $target,
+                        context: context
+                    };
+
+                    $bulkCloneModal.openModal({
+                        ready: function () {
+                            bindings.modalOpen(true);
+                        },
+                        complete: function () {
+                            bindings.modalOpen(false);
+                            bindings.currEntry = null;
+                            bindings.error('');
+                        }
+                    });
+
+                },
+                doBulkClone: function () {
+                    var $bulkCloneModal = $('#bulkCloneModal'),
+                        bindings = dti.bindings.locations,
+                        format = bindings.entryFormat(),
+                        startEntry = bindings.startEntry(),
+                        endEntry = bindings.endEntry(),
+                        currEntry = bindings.currEntry,
+                        name = currEntry.node.name,
+                        $target = currEntry.$target,
+                        context = currEntry.context;
+
+                    if (!format.match('#')) {
+                        bindings.error('Format missing placeholder');
+                    } else {
+                        for (var c = startEntry; c <= endEntry; c++) {
+                            bindings.cloneNode($target, context, {
+                                name: format.replace('#', c)
+                            });
+                        }
+
+                        $bulkCloneModal.closeModal();
+                        bindings.focusNode();
+                    }
+                },
+                cloneNode: function ($target, context, cfg) {
                     var node = ko.viewmodel.toModel(context.$data),
                         data = context.$data,
                         parent = context.$parent,
                         koSiblings = parent.children || dti.bindings.locations.data,
                         jsSiblings = koSiblings();
 
-                    node.name = node.name.replace(/\d+/g, jsSiblings.length + 1);
+                    node.name = (cfg && cfg.name) || node.name.replace(/\d+/g, jsSiblings.length + 1);
 
                     node = ko.viewmodel.fromModel(node);
                     // bindings.forEachNode(function processChild (child) {
@@ -3395,6 +3475,7 @@ var dti = {
                     // });
 
                     koSiblings.push(node);
+                    dti.bindings.locations._addNode(node);
                 },
 
                 deleteBranch: function (context) {
@@ -3473,7 +3554,10 @@ var dti = {
                         bindings._focusedNode = obj;
                         bindings._focusedNodeName = obj.name();
                         obj.focused(true);
-                        // focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
+                        focusSubscriptions.push(obj.name.subscribe(function syncNameToRight (val) {
+                            bindings.focusedNodeName(val);
+                        }));
+                        focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
                     } else {
                         bindings.focusedNode(false);
                         bindings._focusedNode.focused(false);
@@ -3483,7 +3567,7 @@ var dti = {
                 getNode: function (cfg) {
                     if (!cfg._id) {
                         cfg._id = dti.makeId();
-                        cfg.fetched = false;//change to true for local only stuff
+                        // cfg.fetched = false;//change to true for local only stuff
                     }
 
                     return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, dti.locations.template), cfg || {}));
@@ -3528,6 +3612,10 @@ var dti = {
                         node: node,
                         childrenArray: childrenArray
                     };
+
+                    setTimeout(function fireTooltips () {
+                        $('.tooltipped:not([data-tooltip-id])').tooltip();
+                    }, 1);
                 },
                 addSibling: function (el, config) {
                     var parent = ko.contextFor(el).$parent,
@@ -3675,7 +3763,6 @@ var dti = {
                 var bindings = dti.bindings.locations;
 
                 if (val) {
-                    dti.log('focused node-sync');
                     setTimeout(function bahMaterialize () {
                         bindings.focusedNodeName(bindings._focusedNode.name());
                         bindings.focusedNodeType(bindings._focusedNode.type() || 'Area');
@@ -3688,7 +3775,6 @@ var dti = {
             dti.bindings.locations.focusedNodeName.subscribe(function updateNodeName (val) {
                 if (dti.bindings.locations._focusedNode) {
                     setTimeout(function syncName () {
-                        dti.log('updating focused node name', val);
                         dti.bindings.locations._focusedNode.name(val);
                     }, 1);
                 }
@@ -3697,7 +3783,6 @@ var dti = {
             dti.bindings.locations.focusedNodeType.subscribe(function updateNodeType (val) {
                 if (dti.bindings.locations._focusedNode) {
                     setTimeout(function syncType () {
-                        dti.log('updating focused node type', val);
                         dti.bindings.locations._focusedNode.type(val);
                     }, 1);
                 }
