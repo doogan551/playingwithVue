@@ -56,14 +56,14 @@ function runScheduleEntry(entryUpi, callback) {
     // get props allowed based on point type value
     // if pass
     // switch on control property
-    const point = new Point();
+    const pointModel = new Point();
 
-    point.getOne({
+    pointModel.getOne({
         query: {
             _id: parseInt(entryUpi._id, 10)
         }
     }, function (err, scheduleEntry) {
-        point.getOne({
+        pointModel.getOne({
             query: {
                 _id: Config.Utility.getPropertyObject('Control Point', scheduleEntry).Value,
                 _pStatus: 0
@@ -71,13 +71,13 @@ function runScheduleEntry(entryUpi, callback) {
         }, function (err, _point) {
             if (err) {
                 return callback(err, scheduleEntry);
-            } else if (!point) {
+            } else if (!_point) {
                 return callback('No point found', scheduleEntry);
             }
             let controlProperty = scheduleEntry['Control Property'].Value;
             if (Config.Enums['Point Types'][_point['Point Type'].Value].schedProps.indexOf(controlProperty) !== -1) {
                 if (controlProperty === 'Execute Now') {
-                    point.updateOne({
+                    pointModel.updateOne({
                         query: {
                             _id: _point._id
                         },
@@ -125,7 +125,7 @@ function runScheduleEntry(entryUpi, callback) {
                     if (result.err) {
                         callback(result.err, scheduleEntry);
                     } else {
-                        common.newUpdate(oldPoint, _point, {
+                        pointModel.newUpdate(oldPoint, _point, {
                             method: 'update',
                             from: 'updateToD'
                         }, {
