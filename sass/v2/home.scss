@@ -1751,14 +1751,14 @@ input:focus {
         margin: 0 !important;
     }
 
-    .node.focused .displayInfo input {
+    .node.focused > .displayInfo input {
         display: inline;
         width: initial;
 
         /*background-color: #dedede;*/
     }
 
-    .node.focused .name {
+    .node.focused > .displayInfo .name {
         display: none;
     }
 

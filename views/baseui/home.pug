@@ -448,11 +448,11 @@ html
                                 // /ko
 
             script#node(type='text/html')
-                .node.blue-grey-form(data-bind="css: { focused: focused }, dragNode: true")
+                .node.blue-grey-form(data-bind="css: { focused: focused }")
 
                     // ko if: hasChildren()
                     a.expandcollapse(href="#", data-bind="click: $root.getBranch")
-                        i.material-icons(data-bind="text: expanded() ? 'expand_less' : 'expand_more'")
+                        i.material-icons(data-bind="text: !expanded() ? 'keyboard_arrow_right' : 'expand_more'")
                     // /ko
 
                     // ko if: !hasChildren()
@@ -463,7 +463,7 @@ html
                     //- i.mdi.mdi-file-outline
                     //- // /ko
 
-                    span.displayInfo
+                    span.displayInfo(data-bind="dragNode: true")
                         .name(data-bind='text: name, click: $root.focusNode')
                         input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
                         a.bulkAdd.tooltipped(data-tooltip="Add Sibling", data-position="bottom", href="#")

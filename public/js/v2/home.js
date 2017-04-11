@@ -3817,7 +3817,7 @@ var dti = {
                     });
 
                     $element.droppable({
-                        accept: '.node',
+                        accept: '.displayInfo',
                         greedy: true,
                         tolerance: 'pointer',
                         hoverClass: 'nodeHover',
