@@ -968,6 +968,23 @@
                 "enum": 6
             }
         },
+        "Location Types":{
+            "Site":{
+                "enum": 1
+            },
+            "Building":{
+                "enum": 2
+            },
+            "Floor":{
+                "enum": 3
+            },
+            "Room":{
+                "enum": 4
+            },
+            "Area":{
+                "enum": 5
+            }
+        },
         "Modbus Control Functions": {
             "None": {
                 "enum": 0
