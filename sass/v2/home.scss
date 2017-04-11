@@ -1742,7 +1742,6 @@ input:focus {
 
     .node {
         position: relative;
-        width: 40vw !important;
         margin: 1px 0;
     }
 
@@ -1805,4 +1804,13 @@ input:focus {
         position: absolute;
         width: auto !important;
     }
+
+    .nodeTooltip {
+        // position: absolute;
+        // right: -40px;
+    }
+}
+
+.tooltipster-base {
+    height: 400px !important;
 }

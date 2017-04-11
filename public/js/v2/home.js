@@ -2985,47 +2985,18 @@ var dti = {
     },
     locations: {
         tree: [],
-        testData: [{
-            name: 'Site',
-            focused: false,
-            expanded: true,
-            fetched: true,
-            hasChildren: true,
-            children: [{
-                name: 'Building 1',
-                focused: false,
-                expanded: true,
-                fetched: true,
-                hasChildren: true,
-                children: [{
-                    name: 'Floor 1',
-                    focused: false,
-                    expanded: true,
-                    fetched: true,
-                    hasChildren: true,
-                    children: [{
-                        name: 'Room 1',
-                        focused: false,
-                        expanded: true,
-                        fetched: true,
-                        hasChildren: true,
-                        children: [],
-                        _id: 1
-                    }],
-                    _id: 1
-                }],
-                _id: 1
-            }],
-            _id: 1
-        }],
         template: {
             name: 'Name',
-            type: '',
+            type: 'Area',
             focused: false,
             expanded: false,
             fetched: false,
             hasChildren: true,
             children: []
+        },
+        blankNode: {
+            type: '',
+            name: ''
         },
 
         normalize: function (arr, cfg) {
@@ -3132,6 +3103,15 @@ var dti = {
 
             dti.locations.$container = $container;
 
+            $container.on('click', function handleClick (event) {
+                var $target = $(event.target);
+                //all valid skips
+                if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
+                    // dti.bindings.locations.focusedNode(false);
+                    dti.bindings.locations.focusNode();
+                }
+            });
+
             $.ajax({
                 url: '/api/hierarchy/locations/getChildren',
                 type: 'post',
@@ -3216,13 +3196,28 @@ var dti = {
                     }
                 }
             });
+
+            $('.locations select').material_select();
         },
         initBindings: function () {
-            var $modal = $('#bulkAddModal')[0];
+            var $modal = $('#bulkAddModal')[0],
+                focusSubscriptions = [];
 
             dti.bindings.locations = $.extend(true, dti.bindings.locations, {
                 newestNode: {},
-                focusedNode: null,
+
+                addRootNode: function () {
+                    var rootNode = dti.bindings.locations.getNode({
+                        name: 'Root',
+                        fetched: true,
+                        expanded: true,
+                        type: 'Area'
+                    });
+
+                    dti.bindings.locations.data.push(rootNode);
+
+                    dti.bindings.locations.focusNode(rootNode);
+                },
 
                 addBranch: function (results, obj, $el) {
                     var locationChildren = [],
@@ -3368,11 +3363,15 @@ var dti = {
                             if (destination === 'Siblings') {
                                 bindings.addSibling(currEntry.el, {
                                     name: format.replace('#', c),
-                                    type: currEntry.node.type
+                                    type: currEntry.node.type,
+                                    fetched: true,
+                                    expanded: true
                                 });
                             } else {
                                 bindings.addChild(currEntry.el, {
-                                    name: format.replace('#', c)
+                                    name: format.replace('#', c),
+                                    fetched: true,
+                                    expanded: true
                                 });
                             }
                         }
@@ -3405,9 +3404,12 @@ var dti = {
 
                     siblings.remove(data);
                     
-                    if (siblings().length === 0) {
+                    //no siblings and has a parent
+                    if (siblings().length === 0 && parent.hasChildren) {
                         parent.hasChildren(false);
                     }
+
+                    dti.bindings.locations.focusNode();
                 },
 
                 expandRecursive: function (context) {
@@ -3442,18 +3444,39 @@ var dti = {
                     });
                 },
                 focusNode: function (obj) {
-                    var bindings = dti.bindings.locations;
+                    var bindings = dti.bindings.locations,
+                        handler = function (val, node) {
+                            //if it's not focused
+                            if (!val) {
+                                dti.bindings.locations.focusedNode(false);
+                                dti.forEachArrayRev(focusSubscriptions, function disposeSubscriptions (subscription) {
+                                    subscription.dispose();
+                                    focusSubscriptions.pop();
+                                });
+                            }
+                        },
+                        makeHandler = function () {
+                            var node = obj;
 
-                    if (bindings.focusedNode) {
-                        bindings.focusedNode.focused(false);
+                            return function (val) {
+                                handler(val, node);
+                            };
+                        };
+
+                    if (bindings.focusedNode()) {
+                        bindings._focusedNode.focused(false);
+                        bindings.focusedNode(false);
                     }
 
                     if (obj) {
-                        bindings.focusedNode = obj;
+                        bindings.focusedNode(true);
+                        bindings._focusedNode = obj;
                         bindings._focusedNodeName = obj.name();
                         obj.focused(true);
+                        // focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
                     } else {
-                        bindings.focusedNode = null;
+                        bindings.focusedNode(false);
+                        bindings._focusedNode.focused(false);
                         bindings._focusedNodeName = null;
                     }
                 },
@@ -3463,7 +3486,7 @@ var dti = {
                         cfg.fetched = false;//change to true for local only stuff
                     }
 
-                    return ko.viewmodel.fromModel($.extend(true, dti.locations.template, cfg || {}));
+                    return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, dti.locations.template), cfg || {}));
                 },
                 expand: function (obj, event) {
                     event.preventDefault();
@@ -3533,7 +3556,7 @@ var dti = {
                 },
                 handleEscape: function (obj, event) {
                     var lastNode = dti.bindings.locations.newestNode,
-                        currNode = dti.bindings.locations.focusedNode;
+                        currNode = dti.bindings.locations.focusedNode() && dti.bindings.locations._focusedNode;
 
                     if (obj === lastNode.node) {
                         lastNode.childrenArray.remove(obj);
@@ -3600,11 +3623,17 @@ var dti = {
                         shift = event.shiftKey,
                         bindings = dti.bindings.locations,
                         handlers = {
-                            13: function () { // tab
-                                bindings.addSibling(event.target);
+                            13: function () { // enter
+                                bindings.addSibling(event.target, {
+                                    fetched: true,
+                                    expanded: true
+                                });
                             },
-                            9: function () { // enter
-                                bindings.addChild(event.target);
+                            9: function () { // tab
+                                bindings.addChild(event.target, {
+                                    fetched: true,
+                                    expanded: true
+                                });
                             },
                             27: function () { // escape
                                 bindings.handleEscape(obj, event);
@@ -3639,6 +3668,53 @@ var dti = {
                     }
                 }
             });
+
+            dti.bindings.locations._focusedNode = dti.bindings.locations.getNode(dti.locations.blankNode);
+
+            dti.bindings.locations.focusedNode.subscribe(function stupidMaterialSelect (val) {
+                var bindings = dti.bindings.locations;
+
+                if (val) {
+                    dti.log('focused node-sync');
+                    setTimeout(function bahMaterialize () {
+                        bindings.focusedNodeName(bindings._focusedNode.name());
+                        bindings.focusedNodeType(bindings._focusedNode.type() || 'Area');
+                        $('.locations select').material_select();
+                        Materialize.updateTextFields();
+                    }, 1);
+                }
+            });
+
+            dti.bindings.locations.focusedNodeName.subscribe(function updateNodeName (val) {
+                if (dti.bindings.locations._focusedNode) {
+                    setTimeout(function syncName () {
+                        dti.log('updating focused node name', val);
+                        dti.bindings.locations._focusedNode.name(val);
+                    }, 1);
+                }
+            });
+
+            dti.bindings.locations.focusedNodeType.subscribe(function updateNodeType (val) {
+                if (dti.bindings.locations._focusedNode) {
+                    setTimeout(function syncType () {
+                        dti.log('updating focused node type', val);
+                        dti.bindings.locations._focusedNode.type(val);
+                    }, 1);
+                }
+            });
+
+            ko.bindingHandlers.shouldFocus = {
+                init: function (element, valueAccessor) {
+
+                },
+                update: function (element, valueAccessor) {
+                    var observable = valueAccessor();
+
+                    if (observable()) {
+                        $(element).focus();
+                    }
+                }
+            };
 
             ko.bindingHandlers.dragNode = {
                 originEl: null,
@@ -5352,11 +5428,16 @@ var dti = {
         locations: ko.viewmodel.fromModel({
             root: true, //hack
             modalOpen: false,
+            focusedNode: false,
+            focusedNodeName: '',
+            focusedNodeType: '',
             startEntry: 1,
             endEntry: 10,
             entryFormat: '',
+            entryType: '',
             error: '&nbsp;',
-            bulkAddDestination: ''
+            bulkAddDestination: '',
+            availableTypes: ['Area', 'Building', 'Floor', 'Room']
         }),
         globalSearch: {
             gettingData: ko.observable(false),

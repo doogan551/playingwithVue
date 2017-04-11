@@ -279,6 +279,9 @@ html
                         .input-field.col.s6
                             input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
                             label(for="entryformat") Entry format (# for index placeholder)
+                        .input-field.col.s6
+                            select(data-bind="options: locations.availableTypes, selectedOptions: locations.type")
+                            label Type               
                     .row
                         .col.s12.error.red-text(data-bind='html: locations.error')
 
@@ -400,9 +403,26 @@ html
             //-         input#autocomplete
 
             .row
-                #tree.col.s6.pane(data-bind="template: { name: 'node', foreach: data}")
+                // ko if: data().length !== 0
+                #tree.col.s5.pane(data-bind="template: { name: 'node', foreach: data}")
+                // /ko
 
-                #rightPane.col.s6.pane
+                // ko if: data().length === 0
+                .col.s5.pane
+                    button.btn.btn-flat(data-bind="click: $root.addRootNode") Add Node
+                // /ko
+
+                #rightPane.col.s7.pane
+                    .details(data-bind="visible: focusedNode")
+                        .row
+                            .col.s6.input-field
+                                input#focusedNodeName(type="text", data-bind="value: focusedNodeName")
+                                label(for="focusedNodeName") Name
+                        .row
+                            .col.s6.input-field
+                                select(data-bind="options: availableTypes, value:focusedNodeType")
+                                label Type
+
 
             script#node(type='text/html')
                 .node(data-bind="css: { focused: focused }, dragNode: true")
@@ -420,8 +440,8 @@ html
                     //- i.mdi.mdi-file-outline
                     //- // /ko
 
-                    .name(data-bind='text: type() + " " + name(), click: $root.getBranch')
-                    input(type='text', data-bind='textinput: name, hasFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
+                    .name(data-bind='text: name, click: $root.focusNode')
+                    input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
                     a.bulkAdd.tooltipped(href="#")
                         i.material-icons.green-text(data-tooltip="Bulk Add", data-position="right", data-bind="tooltipped: true, click: $root.bulkAddRaw") playlist_add
                     .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
