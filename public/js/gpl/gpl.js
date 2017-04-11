@@ -64,6 +64,7 @@ var gpl = {
         39: 'right',
         40: 'down'
     },
+    // selectedGroup: new fabric.Group(),
     destroyObject: function (o) {
         var keys = Object.keys(o),
             c;
@@ -8918,8 +8919,10 @@ gpl.Manager = function () {
                 renderOnAddRemove: false,
                 imageSmoothingEnabled: false,
                 selection: false, //group selection
+                // selection: true, //group selection
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             toolbarConfig = {
@@ -8927,6 +8930,7 @@ gpl.Manager = function () {
                 imageSmoothingEnabled: false,
                 selection: false,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             viewConfig = {
@@ -8936,6 +8940,7 @@ gpl.Manager = function () {
                 hasControls: false,
                 selection: false,
                 draggable: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             };
 
@@ -8985,6 +8990,11 @@ gpl.Manager = function () {
             gpl.canvases.main = managerSelf.canvas;
             managerSelf.toolbarCanvas = new fabric.Canvas('toolbarCanvas', toolbarConfig);
             gpl.canvases.toolbar = managerSelf.toolbarCanvas;
+
+            // gpl.canvases.main.setActiveGroup(gpl.selectedGroup);
+            // setTimeout(function() {
+            //     gpl.canvases.main.discardActiveGroup();
+            // }, 5000);
         } else {
             if (gpl.nobg) {
                 delete viewConfig.backgroundColor;
