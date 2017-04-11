@@ -21,7 +21,7 @@ const Hierarchy = class Hierarchy extends Common {
         let id = this.getNumber(data.id);
         this.getAll({
             query: {
-                'hierarchyRefs.Value': id
+                'hierarchyRefs.value': id
             },
             sort: {
                 'display': 1
@@ -30,26 +30,21 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     buildParents(loc, mech) {
-        let locTemplate = {
+        return [this.buildParent('Location', loc), this.buildParent('Mechanical', mech)];
+    }
+
+    buildParent(item, parent) {
+        let template = {
             isReadOnly: false
         };
-        let mechTemplate = {
-            isReadOnly: false
-        };
 
-        locTemplate.display = (!loc) ? '' : loc.display;
-        locTemplate.value = (!loc) ? 0 : loc._id;
-        locTemplate.type = (!loc) ? '' : loc.type;
-        locTemplate.isDisplayable = (!loc) ? false : true;
-        locTemplate.item = 'Location';
+        template.display = (!parent) ? '' : parent.display;
+        template.value = (!parent) ? 0 : parent._id;
+        template.type = (!parent) ? '' : parent.type;
+        template.isDisplayable = (!parent) ? false : true;
+        template.item = item;
 
-        mechTemplate.display = (!mech) ? '' : mech.display;
-        mechTemplate.value = (!mech) ? 0 : mech._id;
-        mechTemplate.type = (!mech) ? '' : mech.type;
-        mechTemplate.isDisplayable = (!mech) ? false : true;
-        mechTemplate.item = 'Mechanical';
-
-        return [locTemplate, mechTemplate];
+        return template;
     }
 
     add(data, cb) {
@@ -121,7 +116,7 @@ const Hierarchy = class Hierarchy extends Common {
                     });
                 } else {
                     results.push({
-                        newNode: result.ops[0]
+                        newNode: result
                     });
                 }
                 callback();
@@ -133,47 +128,75 @@ const Hierarchy = class Hierarchy extends Common {
 
     getDescendants(data, cb) {
         let id = this.getNumber(data.id);
-        let itemTypes = [];
-        let terms = this.getDefault(data.terms, '');
+        let terms = this.getDefault(data.terms, []);
         let groups = this.getDefault(data.groups, []);
         let item = data.item;
 
         let pipeline = [];
 
-        let afterMatch = {
-            $match: {}
-        };
+        pipeline.push(this.getPathLookup());
 
         if (!!terms.length) {
-            // surrounding with double quotes matches phrase
-            // without quotes becomes OR
-            // - negates
             pipeline.push({
-                $match: {
-                    $text: {
-                        $search: terms
+                $unwind: {
+                    path: '$path'
+                }
+            });
+
+            pipeline.push({
+                $project: {
+                    'tags': {
+                        $concatArrays: ['$tags', '$path.tags']
+                    },
+                    'display': 1,
+                    'item': 1,
+                    'type': 1,
+                    'path': 1
+                }
+            });
+
+            pipeline.push({
+                $unwind: {
+                    path: '$tags'
+                }
+            });
+
+            pipeline.push({
+                $group: {
+                    _id: '$_id',
+                    display: {
+                        $first: '$display'
+                    },
+                    type: {
+                        $first: '$type'
+                    },
+                    item: {
+                        $first: '$item'
+                    },
+                    path: {
+                        $addToSet: '$path'
+                    },
+                    tags: {
+                        $addToSet: '$tags'
                     }
                 }
             });
-        }
 
-        pipeline.push(this.getPathLookup());
+            pipeline.push({
+                $match: {
+                    tags: {
+                        $all: terms
+                    }
+                }
+            });
 
-        if (!!id) {
-            afterMatch.$match = {
-                'path._id': id
-            };
-        }
-
-        if (!!itemTypes.length) {
-            afterMatch.$match.item = {
-                $in: itemTypes
-            };
-        }
-
-        pipeline.push(afterMatch);
-
-        if (!!groups.length) {
+            pipeline.push({
+                $project: {
+                    'tags': 0,
+                    'path.tags': 0
+                }
+            });
+        } else if (!!groups.length) {
             let group = {
                 $group: {
                     _id: 'descendants'
@@ -181,7 +204,7 @@ const Hierarchy = class Hierarchy extends Common {
             };
             groups.forEach((field) => {
                 group.$group[field[0]] = {
-                    $push: '$' + field[1]
+                    $addToSet: '$' + field[1]
                 };
             });
             pipeline.push(group);
@@ -241,7 +264,7 @@ const Hierarchy = class Hierarchy extends Common {
                 for (var h = 0; h < node.hierarchyRefs.length; h++) {
                     let hierRef = node.hierarchyRefs[h];
                     if (hierRef.item === item) {
-                        if (hierRef.Value === parentId) {
+                        if (hierRef.value === parentId) {
                             newPath.push(node);
                             findNextChild(node._id);
                             break;
@@ -260,8 +283,8 @@ const Hierarchy = class Hierarchy extends Common {
         return {
             $graphLookup: {
                 from: this.collection,
-                startWith: '$hierarchyRefs.Value',
-                connectFromField: 'hierarchyRefs.Value',
+                startWith: '$hierarchyRefs.value',
+                connectFromField: 'hierarchyRefs.value',
                 connectToField: '_id',
                 as: 'path'
             }
@@ -293,41 +316,8 @@ const Hierarchy = class Hierarchy extends Common {
                     query: query
                 }, cb);
             } else {
-                this.getOtherParent(id, item, 0, (err, parents) => {
-                    this.updateParent(parents, query, cb);
-                });
+                this.updateParent(null, query, item, cb);
             }
-        });
-    }
-
-    getOtherParent(id, item, parentId, cb) {
-        this.getNode({
-            id: id
-        }, (err, child) => {
-            let otherParentRef = {};
-            for (var h = 0; h < child.hierarchyRefs.length; h++) {
-                let hierRef = child.hierarchyRefs[h];
-                if (hierRef.item !== item) {
-                    otherParentRef = hierRef;
-                }
-            }
-            this.getNode({
-                _id: otherParentRef.value
-            }, (err, otherParent) => {
-                let parents = {
-                    locationId: 0,
-                    mechId: 0
-                };
-
-                if (otherParent.item === 'Location') {
-                    parents.locationId = otherParent._id;
-                    parents.mechId = parentId;
-                } else {
-                    parents.locationId = parentId;
-                    parents.mechId = otherParent._id;
-                }
-                cb(err, parents);
-            });
         });
     }
 
@@ -336,20 +326,21 @@ const Hierarchy = class Hierarchy extends Common {
         let parentId = this.getNumber(data.parentId);
         let item = data.item;
 
-        this.getOtherParent(id, item, parentId, (err, parents) => {
-            this.updateParent(parents, {
-                _id: id
-            }, cb);
-        });
+        this.updateParent(parentId, {
+            _id: id
+        }, item, cb);
     }
 
-    updateParent(parents, query, cb) {
-        this.getBothParents(parents.locationId, parents.mechId, (err, parentLoc, parentMech) => {
+    updateParent(parentId, query, item, cb) {
+        query['hierarchyRefs.item'] = item;
+        this.getNode({
+            id: parentId
+        }, (err, parent) => {
             this.update({
                 query: query,
                 updateObj: {
                     $set: {
-                        hierarchyRefs: this.buildParents(parentLoc, parentMech)
+                        'hierarchyRefs.$': this.buildParent(parent.item, parent)
                     }
                 }
             }, cb);
@@ -390,12 +381,11 @@ const Hierarchy = class Hierarchy extends Common {
             }, (err) => {
                 this.update({
                     query: {
-                        'hierarchyRefs.Value': id
+                        'hierarchyRefs.value': id
                     },
                     updateObj: {
                         $set: {
-                            'locationRef.Display': node.display,
-                            'locationRef.Type': node.type
+                            'hierarchyRefs.$': this.buildParent(node.item, node)
                         }
                     }
                 }, cb);

@@ -55,7 +55,7 @@ router.post('/bulkadd', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Hierarchy.builkAdd(data, function (err, results) {
+    Hierarchy.bulkAdd(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -100,7 +100,7 @@ router.post('/delete', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Hierarchy.deleteHierarchy(data, function (err, results) {
+    Hierarchy.deleteNode(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -117,7 +117,7 @@ router.post('/move', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Hierarchy.moveHierarchy(data, function (err, results) {
+    Hierarchy.moveNode(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

@@ -4,7 +4,9 @@ const Hierarchy = require('./hierarchy');
 
 const Location = class Location extends Hierarchy {
 
-    constructor() {}
+    constructor() {
+        super();
+    }
 
 };
 

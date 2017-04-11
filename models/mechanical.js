@@ -4,7 +4,9 @@ const Hierarchy = require('./hierarchy');
 
 const Mechanical = class Mechanical extends Hierarchy {
 
-    constructor() {}
+    constructor() {
+        super();
+    }
 };
 
 module.exports = Mechanical;
