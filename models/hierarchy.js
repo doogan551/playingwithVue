@@ -235,7 +235,8 @@ const Hierarchy = class Hierarchy extends Common {
             }
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                this.orderPath(item, descendant, callback);
+                this.orderPath(item, descendant);
+                callback();
             }, (err) => {
                 cb(err, descendants);
             });
@@ -265,7 +266,8 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, descendants) => {
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                this.orderPath(item, descendant, callback);
+                this.orderPath(item, descendant);
+                callback();
             }, (err) => {
                 cb(err, descendants);
             });
@@ -280,12 +282,10 @@ const Hierarchy = class Hierarchy extends Common {
                 let node = path[p];
                 for (var h = 0; h < node.hierarchyRefs.length; h++) {
                     let hierRef = node.hierarchyRefs[h];
-                    if (hierRef.item === item) {
-                        if (hierRef.value === parentId) {
-                            newPath.push(node);
-                            findNextChild(node._id);
-                            break;
-                        }
+                    if (hierRef.item === item && hierRef.value === parentId) {
+                        newPath.push(node);
+                        findNextChild(node._id);
+                        break;
                     }
                 }
             }
@@ -293,7 +293,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         findNextChild(0);
         descendant.path = newPath;
-        return cb(null);
+        return;
     }
 
     getPathLookup() {
