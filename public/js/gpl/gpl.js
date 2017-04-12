@@ -2699,7 +2699,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         } else {
             if (calculationType) {
                 self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
-                self.blockType = self.config.iconType;
 
                 if (self.iconPrefix) {
                     self.config.iconType = self.iconPrefix + calculationType;
@@ -2726,9 +2725,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.icon) {
             self.convertIconNames();
-            if (self.targetCanvas !== 'toolbar') {
-                self.blockType = self.config.iconType;
-            }
 
             if (self._icons[self.icon] === undefined) {
                 fabric.Image.fromURL(gpl.iconPath + self.icon, function (img) {
