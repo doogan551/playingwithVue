@@ -2984,14 +2984,18 @@ var dti = {
         }
     },
     locations: {
+        idx: 0,
         tree: [],
         template: {
+            id: 0,
             name: 'Name',
             type: 'Area',
             focused: false,
             expanded: false,
             fetched: false,
             hasChildren: true,
+            new: true,
+            parentLocId: 0,
             children: []
         },
         blankNode: {
@@ -2999,8 +3003,75 @@ var dti = {
             name: ''
         },
 
+        setId: function (id) {
+            dti.locations.idx = id;
+        },
+
+        makeId: function () {
+            return ++dti.locations.idx;
+        },
+
+        getSaveData: function (data) {
+            var obj = ko.toJS(data);
+
+            return {
+                parentLocId: obj.parentLocId,
+                parentMechId: 0,
+                display: obj.name,
+                type: obj.type,
+                item: 'Location',
+                hierarchyRefs: []
+            };
+        },
+
+        add: function (obj) {
+            var data = dti.locations.getSaveData(obj);
+
+            $.ajax({
+                url: '/api/hierarchy/add',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(data) 
+            }).done(function handleAdd(response) {
+                dti.log(response);
+            });
+        },
+
+        _doSave: function (data) {
+            $.ajax({
+                url: '/api/hierarchy/save',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            }).done(dti.locations.handleSave);
+        },
+
+        save: function (data) {
+
+        },
+
+        saveAll: function () {
+
+        },
+
+        handleSave: function (response) {
+
+        },
+
         normalize: function (arr, cfg) {
-            dti.forEachArray(arr, function (item) {
+            dti.forEachArray(arr, function (item, idx) {
+                // arr[idx] = {
+                //     name: item.display || 'Name',
+                //     type: item.type || 'Area',
+                //     focused: false,
+                //     expanded: false,
+                //     fetched: false,
+                //     hasChildren: true,
+                //     new: false,
+                //     parentLocId: 0,
+                //     children: []
+                //     _data: item
+                // };
                 dti.forEach(dti.locations.template, function (val, prop) {
                     if (item[prop] === undefined) {
                         item[prop] = dti.utility.clone(val);
@@ -3325,7 +3396,7 @@ var dti = {
                     dti.bindings.locations.addChild(event.target, {
                         fetched: true,
                         expanded: true
-                    });
+                    }, obj);
                 },
                 addSiblingRaw: function (obj, event) {
                     dti.bindings.locations.addSibling(event.target, {
@@ -3396,7 +3467,7 @@ var dti = {
                                     name: format.replace('#', c),
                                     fetched: true,
                                     expanded: true
-                                });
+                                }, currEntry.node);
                             }
                         }
 
@@ -3565,10 +3636,10 @@ var dti = {
                     }
                 },
                 getNode: function (cfg) {
-                    if (!cfg._id) {
-                        cfg._id = dti.makeId();
-                        // cfg.fetched = false;//change to true for local only stuff
-                    }
+                    // if (!cfg.id) {
+                    //     cfg.id = dti.makeId();
+                    //     // cfg.fetched = false;//change to true for local only stuff
+                    // }
 
                     return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, dti.locations.template), cfg || {}));
                 },
@@ -3622,8 +3693,9 @@ var dti = {
                         children,
                         child;
 
+                    config.parentLocId = parent.id();
+
                     if (parent) {
-                        // child = 
                         child = dti.bindings.locations.getNode(config || {});
                         if (parent.children) {
                             parent.children.push(child);
@@ -3634,10 +3706,14 @@ var dti = {
                         dti.bindings.locations.focusNode(child);
                     }
                 },
-                addChild: function (el, config) {
+                addChild: function (el, config, parent) {
                     var data = ko.dataFor(el),
                         child = dti.bindings.locations.getNode(config || {});
 
+                    child.parentLocId = parent.id;
+
+                    parent.hasChildren(true);
+                    parent.expanded(true);
                     data.children.push(child);
                     dti.bindings.locations._addNode(data.children, child);
                     dti.bindings.locations.focusNode(child);
@@ -3721,7 +3797,7 @@ var dti = {
                                 bindings.addChild(event.target, {
                                     fetched: true,
                                     expanded: true
-                                });
+                                }, obj);
                             },
                             27: function () { // escape
                                 bindings.handleEscape(obj, event);
@@ -3833,12 +3909,6 @@ var dti = {
             };
 
             ko.applyBindings(dti.bindings.locations, dti.locations.$container[0]);
-
-            // if (!ko.dataFor($modal)) {
-            //     ko.applyBindings(dti.bindings.locations, $modal);
-            // } else {
-            //     ko.viewmodel.updateFromModel(ko.dataFor($modal), dti.bindings.locations);
-            // }
         }
     },
     navigator: {
