@@ -2699,6 +2699,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         } else {
             if (calculationType) {
                 self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
+                self.blockType = self.config.iconType;
 
                 if (self.iconPrefix) {
                     self.config.iconType = self.iconPrefix + calculationType;
@@ -2725,6 +2726,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.icon) {
             self.convertIconNames();
+            if (self.targetCanvas !== 'toolbar') {
+                self.blockType = self.config.iconType;
+            }
 
             if (self._icons[self.icon] === undefined) {
                 fabric.Image.fromURL(gpl.iconPath + self.icon, function (img) {
@@ -6810,7 +6814,11 @@ gpl.BlockManager = function (manager) {
                     block.setPointData(results, true);
                     // bmSelf.canvas.setActiveObject(block, null);  // is this causing multiple updates??
                     gpl.pointUpiMap[upi].Name = results.newPoint.Name;  // in case name changed
-                    gpl.fire('editedblock', block);
+                    if (gpl.isEdit) {
+                        gpl.fire('editedblock', block);
+                    } else {
+                        gpl.manager.renderAll();
+                    }
                 }
             },
             doOpenWindow = function () {
@@ -6818,8 +6826,8 @@ gpl.BlockManager = function (manager) {
                     pointType: pointType,
                     upi: upi,
                     options: {
-                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        pointData: (gpl.isEdit ? pointData : null) || null
+                        callback: saveCallback,
+                        pointData: pointData || null
                     }
                 });
             };
@@ -9235,8 +9243,8 @@ gpl.Manager = function () {
             }
 
             // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
-                newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
-                managerSelf.shapes.push(newLine);
+            newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
+            managerSelf.shapes.push(newLine);
             // }
         }
 
