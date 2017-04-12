@@ -130,4 +130,21 @@ router.post('/move', function (req, res) {
     });
 });
 
+router.post('/edit', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.editNode(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {
+            message: 'success'
+        });
+    });
+});
+
 module.exports = router;
