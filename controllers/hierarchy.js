@@ -40,7 +40,7 @@ router.post('/add', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Hierarchy.add(data, function (err, result) {
+    Hierarchy.addAll(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -48,21 +48,6 @@ router.post('/add', function (req, res) {
         }
 
         return utils.sendResponse(res, result);
-    });
-});
-
-router.post('/bulkadd', function (req, res) {
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
-
-    Hierarchy.bulkAdd(data, function (err, results) {
-        if (err) {
-            return utils.sendResponse(res, {
-                err: err
-            });
-        }
-
-        return utils.sendResponse(res, results);
     });
 });
 

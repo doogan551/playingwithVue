@@ -5,6 +5,17 @@
 {"parentLocId":3, "parentMechId":4, "type":"Space", "display":"Space", "item":"Mechanical"}
 {"parentLocId":3, "parentMechId":5, "type":"Temperature", "display":"SPT", "item":"Mechanical"}
 
+{"parentLocId":"b", "parentMechId":0, "type":"Floor", "display":"f1", "item":"Location", "id":"c"},
+{"parentLocId":"a", "parentMechId":0, "type":"Area", "display":"a1", "item":"Location", "id":"b"},
+{"parentLocId":0, "parentMechId":0, "type":"Building", "display":"4220", "item":"Location", "id":"a"},
+{"parentLocId":"c", "parentMechId":0, "type":"Room", "display":"r11", "item":"Location", "id":"d"},
+{"parentLocId":"g", "parentMechId":0, "type":"Room", "display":"r22", "item":"Location", "id":"i"}
+{"parentLocId":"a", "parentMechId":0, "type":"Area", "display":"a2", "item":"Location", "id":"f"},
+{"parentLocId":"f", "parentMechId":0, "type":"Floor", "display":"f2", "item":"Location", "id":"g"},
+{"parentLocId":"c", "parentMechId":0, "type":"Room", "display":"r12", "item":"Location", "id":"e"},
+{"parentLocId":"g", "parentMechId":0, "type":"Room", "display":"r21", "item":"Location", "id":"h"}
+
+
 var tags = ['Space','4220','Temperature'];
 
 db.hierarchy.aggregate([

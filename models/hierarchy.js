@@ -52,6 +52,7 @@ const Hierarchy = class Hierarchy extends Common {
 
     add(data, cb) {
         let display = data.display;
+        let id = this.getNumber(data._id);
         let parentLocId = this.getNumber(data.parentLocId);
         let parentMechId = this.getNumber(data.parentMechId);
         let type = data.type;
@@ -69,29 +70,27 @@ const Hierarchy = class Hierarchy extends Common {
             description: '',
             tz: ''
         });
-        this.checkForExistingName(data, parentLocId, (err, exists) => {
-            if (!!exists) {
-                cb('Name already exists under this parent location');
-            } else {
-                this.getBothParents(parentLocId, parentMechId, (err, parentLoc, parentMech) => {
-                    // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
-                    this.getNewId((err, newId) => {
-                        this.insert({
-                            insertObj: {
-                                item: item,
-                                _id: newId,
-                                display: display,
-                                hierarchyRefs: this.buildParents(parentLoc, parentMech),
-                                type: type,
-                                meta: meta,
-                                tags: [item, display, type]
-                            }
-                        }, (err, result) => {
-                            cb(err, result.ops[0]);
-                        });
-                    });
-                });
-            }
+
+        this.getBothParents(parentLocId, parentMechId, (err, parentLoc, parentMech) => {
+            // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
+            this.insert({
+                insertObj: {
+                    item: item,
+                    _id: id,
+                    display: display,
+                    hierarchyRefs: this.buildParents(parentLoc, parentMech),
+                    type: type,
+                    meta: meta,
+                    tags: [item, display, type]
+                }
+            }, (err, result) => {
+                if (err) {
+                    return cb(err);
+                } else if (!!result) {
+                    return cb(null, result.ops[0]);
+                }
+                return cb(null, null);
+            });
         });
     }
 
@@ -112,25 +111,97 @@ const Hierarchy = class Hierarchy extends Common {
         counterModel.getNextSequence('hierarchyId', cb);
     }
 
-    bulkAdd(data, cb) {
+    addAll(data, cb) {
         let nodes = data.nodes;
         let results = [];
-        async.eachSeries(nodes, (node, callback) => {
-            this.add(node, (err, result) => {
-                if (!!err) {
-                    results.push({
-                        err: err,
-                        node: node
+        this.checkAllNames(nodes, (errs) => {
+            if (!!errs.length) {
+                return cb(errs);
+            }
+            this.assignIds(nodes, (err) => {
+                nodes = this.sortNodes(nodes);
+                async.eachSeries(nodes, (node, callback) => {
+                    this.add(node, (err, result) => {
+                        if (!!err) {
+                            results.push({
+                                err: err,
+                                node: node
+                            });
+                        } else {
+                            results.push({
+                                newNode: result
+                            });
+                        }
+                        callback();
+                    });
+                }, (err) => {
+                    cb(err, results);
+                });
+            });
+        });
+    }
+
+    sortNodes(nodes) {
+        let sorted = [];
+        let getParent = (node, path) => {
+            nodes.forEach((_node) => {
+                if (_node._id === node.parentLocId) {
+                    addToPath(_node, path);
+                    getParent(_node, path);
+                }
+            });
+        };
+        let addToPath = (node, path) => {
+            if (!~sorted.indexOf(node._id) && !~path.indexOf(node._id)) {
+                path.unshift(node._id);
+            }
+        };
+        nodes.forEach((node) => {
+            let path = [];
+            addToPath(node, path);
+            getParent(node, path);
+            sorted.push(...path);
+        });
+        sorted.forEach((id, index) => {
+            nodes.forEach((node) => {
+                if (id === node._id) {
+                    sorted[index] = node;
+                }
+            });
+        });
+        return sorted;
+    }
+
+    assignIds(nodes, cb) {
+        let assignParentId = (parentCallback) => {
+            async.eachSeries(nodes, (node, callback) => {
+                if (node.hasOwnProperty('id')) {
+                    this.getNewId((err, newId) => {
+                        node._id = newId;
+                        return callback(err);
                     });
                 } else {
-                    results.push({
-                        newNode: result
-                    });
+                    return callback();
                 }
-                callback();
-            });
-        }, (err) => {
-            cb(err, results);
+            }, parentCallback);
+        };
+        let assignRefs = (refCallback) => {
+            for (var p = 0; p < nodes.length; p++) {
+                let parent = nodes[p];
+                for (var c = 0; c < nodes.length; c++) {
+                    let child = nodes[c];
+                    if (child.parentLocId === parent.id) {
+                        child.parentLocId = parent._id;
+                    }
+                    if (child.parentMechId === parent.id) {
+                        child.parentMechId = parent._id;
+                    }
+                }
+            }
+        };
+        assignParentId((err) => {
+            assignRefs();
+            cb(err);
         });
     }
 
@@ -465,6 +536,29 @@ const Hierarchy = class Hierarchy extends Common {
         iterateObj(meta, data, parent);
 
         return meta;
+    }
+
+    checkAllNames(nodes, cb) {
+        // if parentId is fake, ignore it
+        // change node to normal structure before name check
+        let problems = [];
+        async.eachSeries(nodes, (node, callback) => {
+            if (this.isNumber(node.parentLocId)) {
+                this.checkForExistingName(node, node.parentLocId, (err, exists) => {
+                    if (!!exists) {
+                        problems.push({
+                            err: 'Name already exists under this parent location',
+                            node: node
+                        });
+                    }
+                    callback(err);
+                });
+            } else {
+                return callback();
+            }
+        }, (err) => {
+            return cb(err || problems);
+        });
     }
 
     checkForExistingName(node, item, cb) {
