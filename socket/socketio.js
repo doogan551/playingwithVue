@@ -500,7 +500,7 @@ module.exports = function socketio(_common) {
 
             reqOptions = history.buildOps(reqOptions);
 
-            history.getUsageCall(reqOptions, function (err, results) {
+            history.getUsage(reqOptions, function (err, results) {
                 results = history.unbuildOps(results);
                 sock.emit('returnUsage', {
                     err: err,
