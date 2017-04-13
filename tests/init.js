@@ -1,11 +1,11 @@
-var db = require('../helpers/db');
-var config = require('config');
-var dbConfig = config.get('Infoscan.dbConfig');
-var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port,
-    '/infoscan'
-];
+// var db = require('../helpers/db');
+// var config = require('config');
+// var dbConfig = config.get('Infoscan.dbConfig');
+// var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port,
+//     '/infoscan'
+// ];
 
-before(function (done) {
+before(function () {
     global.chai = require('chai');
     global.expect = chai.expect;
 
@@ -15,6 +15,6 @@ before(function (done) {
         },
         groups: []
     };
-    console.log('running before mocha init', connectionString.join(''));
-    db.connect(connectionString.join(''), done);
+    // console.log('running before mocha init', connectionString.join(''));
+    // db.connect(connectionString.join(''), done);
 });
