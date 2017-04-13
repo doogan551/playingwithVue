@@ -22,9 +22,16 @@ const Hierarchy = class Hierarchy extends Common {
 
     getChildren(data, cb) {
         let id = this.getNumber(data.id);
+        let item = this.getDefault(data.item, LOCATION);
+
         this.getAll({
             query: {
-                'hierarchyRefs.value': id
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: id,
+                        item: item
+                    }
+                }
             },
             sort: {
                 'display': 1
