@@ -185,24 +185,25 @@ const Hierarchy = class Hierarchy extends Common {
                 }
             }, parentCallback);
         };
-        let assignRefs = (refCallback) => {
-            for (var p = 0; p < nodes.length; p++) {
-                let parent = nodes[p];
-                for (var c = 0; c < nodes.length; c++) {
-                    let child = nodes[c];
-                    if (child.parentLocId === parent.id) {
-                        child.parentLocId = parent._id;
-                    }
-                    if (child.parentMechId === parent.id) {
-                        child.parentMechId = parent._id;
-                    }
-                }
-            }
-        };
         assignParentId((err) => {
-            assignRefs();
+            this.assignParentRefs(nodes);
             cb(err);
         });
+    }
+
+    assignParentRefs(nodes) {
+        for (var p = 0; p < nodes.length; p++) {
+            let parent = nodes[p];
+            for (var c = 0; c < nodes.length; c++) {
+                let child = nodes[c];
+                if (child.parentLocId === parent.id) {
+                    child.parentLocId = parent._id;
+                }
+                if (child.parentMechId === parent.id) {
+                    child.parentMechId = parent._id;
+                }
+            }
+        }
     }
 
     getDescendants(data, cb) {
