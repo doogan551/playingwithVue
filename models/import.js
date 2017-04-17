@@ -8,7 +8,7 @@ var config = require('config');
 var logger = require('../helpers/logger')(module);
 var Config = require('../public/js/lib/config');
 var utils = require('../helpers/utils');
-var Utility = require('../models/utility');
+var Common = require('../models/common');
 var importconfig = require('../apps/importconfig');
 
 var localTZ = config.get('Infoscan.location').timezone;
@@ -17,8 +17,10 @@ var pointsCollection = 'points';
 var systemInfoCollection = 'SystemInfo';
 var xmlPath = importconfig.xmlPath;
 
-let Import = class Import {
-    constructor() {}
+let Import = class Import extends Common {
+    constructor() {
+        super();
+    }
     start() {
         var limit = 2000,
             skip = 0;
@@ -53,7 +55,7 @@ let Import = class Import {
             }
         };
 
-        Utility.iterateCursor(criteria, (err, doc, cb) => {
+        this.iterateCursor(criteria, (err, doc, cb) => {
             // logger.info("retrieved", err);
             // logger.info("doc.id = " + doc._id);
             this.importPoint(doc, (err) => {
@@ -196,7 +198,7 @@ let Import = class Import {
     }
 
     updatePoint(point, cb) {
-        Utility.update({
+        this.update({
             collection: pointsCollection,
             query: {
                 _id: point._id
@@ -205,7 +207,7 @@ let Import = class Import {
         }, cb);
     }
     addDefaultUser(cb) {
-        Utility.get({
+        this.get({
             collection: 'Users',
             query: {}
         }, (err, users) => {
@@ -221,7 +223,7 @@ let Import = class Import {
                 Name: 'Controllers'
             };
 
-            Utility.getOne({
+            this.getOne({
                 collection: systemInfoCollection,
                 query: searchCriteria
             }, (err, controllers) => {
@@ -256,7 +258,7 @@ let Import = class Import {
                         'Description': username,
                         isUser: true
                     });
-                    Utility.update({
+                    this.update({
                         collection: systemInfoCollection,
                         query: searchCriteria,
                         updateObj: {
@@ -273,7 +275,7 @@ let Import = class Import {
                         }
                     }
 
-                    Utility.update({
+                    this.update({
                         collection: systemInfoCollection,
                         query: searchCriteria,
                         updateObj: {
@@ -288,7 +290,7 @@ let Import = class Import {
     }
     setupCfgRequired(callback) {
         logger.info('setupCfgRequired');
-        Utility.update({
+        this.update({
             collection: pointsCollection,
             query: {
                 $or: [{
@@ -310,13 +312,13 @@ let Import = class Import {
     createEmptyCollections(callback) {
         var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'dev'];
         async.forEach(collections, (coll, cb) => {
-            Utility.createCollection({
+            this.createCollection({
                 collection: coll
             }, cb);
         }, callback);
     }
     setupDevCollection(callback) {
-        Utility.insert({
+        this.insert({
             collection: 'dev',
             insertObj: {
                 'item': 'distinct',
@@ -329,11 +331,11 @@ let Import = class Import {
         var curVersion = pjson.version;
         var timezones = importconfig.timeZones;
 
-        Utility.insert({
+        this.insert({
             collection: systemInfoCollection,
             insertObj: timezones
         }, (err, result) => {
-            Utility.update({
+            this.update({
                 collection: systemInfoCollection,
                 query: {
                     Name: 'Preferences'
@@ -349,7 +351,7 @@ let Import = class Import {
     }
     setupPointRefsArray(callback) {
         logger.info('setupPointRefsArray');
-        Utility.update({
+        this.update({
             collection: pointsCollection,
             query: {
                 'Point Type.Value': {
@@ -391,7 +393,7 @@ let Import = class Import {
             return meter.Name.split('_');
         };
 
-        Utility.iterateCursor({
+        this.iterateCursor({
             collection: 'PowerMeters',
             query: {}
         }, (err, meter, cb) => {
@@ -401,7 +403,7 @@ let Import = class Import {
                 name4: splitName(meter)[3]
             };
             async.waterfall([(wfCb) => {
-                Utility.getOne({
+                this.getOne({
                     collection: 'points',
                     query: {
                         name1: names.name1,
@@ -415,7 +417,7 @@ let Import = class Import {
                             $set: {}
                         };
                         updateObj.$set[objs.DemandInUpi.newProp] = point._id;
-                        Utility.update({
+                        this.update({
                             collection: 'PowerMeters',
                             query: {
                                 _id: meter._id
@@ -429,7 +431,7 @@ let Import = class Import {
                     }
                 });
             }, (wfCb) => {
-                Utility.getOne({
+                this.getOne({
                     collection: 'points',
                     query: {
                         name1: names.name1,
@@ -443,7 +445,7 @@ let Import = class Import {
                             $set: {}
                         };
                         updateObj.$set[objs.UsageInUpi.newProp] = point._id;
-                        Utility.update({
+                        this.update({
                             collection: 'PowerMeters',
                             query: {
                                 _id: meter._id
@@ -457,7 +459,7 @@ let Import = class Import {
                     }
                 });
             }, (wfCb) => {
-                Utility.getOne({
+                this.getOne({
                     collection: 'points',
                     query: {
                         name1: names.name1,
@@ -471,7 +473,7 @@ let Import = class Import {
                             $set: {}
                         };
                         updateObj.$set[objs.KVARInUpi.newProp] = point._id;
-                        Utility.update({
+                        this.update({
                             collection: 'PowerMeters',
                             query: {
                                 _id: meter._id
@@ -500,7 +502,7 @@ let Import = class Import {
         var highestDevice = 4194302;
 
         var updateDependencies = (oldId, newId, collection, cb) => {
-            Utility.iterateCursor({
+            this.iterateCursor({
                 collection: collection,
                 query: {
                     $or: [{
@@ -528,7 +530,7 @@ let Import = class Import {
                     }
                 }
                 // logger.info(dep['Point Refs']);
-                Utility.update({
+                this.update({
                     collection: collection,
                     updateObj: dep,
                     query: {
@@ -538,14 +540,14 @@ let Import = class Import {
             }, cb);
         };
 
-        Utility.getOne({
+        this.getOne({
             collection: 'SystemInfo',
             query: {
                 Name: 'Preferences'
             }
         }, (err, sysinfo) => {
             centralDeviceUPI = sysinfo['Central Device UPI'];
-            Utility.iterateCursor({
+            this.iterateCursor({
                 collection: points,
                 query: {},
                 sort: {
@@ -566,7 +568,7 @@ let Import = class Import {
                 doc._newUpi = newUpi;
                 doc._oldUpi = oldId;
 
-                Utility.update({
+                this.update({
                     query: {
                         _id: oldId
                     },
@@ -576,7 +578,7 @@ let Import = class Import {
                     cb();
                 });
             }, (err, count) => {
-                Utility.update({
+                this.update({
                     collection: 'SystemInfo',
                     query: {
                         Name: 'Preferences'
@@ -587,13 +589,13 @@ let Import = class Import {
                         }
                     }
                 }, (err, sysinfo) => {
-                    Utility.iterateCursor({
+                    this.iterateCursor({
                         collection: points,
                         query: {}
                     }, (err, doc, cb) => {
                         doc._id = doc._newUpi;
 
-                        Utility.insert({
+                        this.insert({
                             collection: newPoints,
                             insertObj: doc
                         }, (err) => {
@@ -601,7 +603,7 @@ let Import = class Import {
                         });
                     }, (err, count) => {
                         logger.info('count', count);
-                        Utility.iterateCursor({
+                        this.iterateCursor({
                             collection: newPoints,
                             query: {}
                         }, (err, doc, cb) => {
@@ -618,7 +620,7 @@ let Import = class Import {
     }
     convertHistoryReports(callback) {
         logger.info('converting history reports');
-        Utility.iterateCursor({
+        this.iterateCursor({
             collection: 'OldHistLogs',
             query: {}
         }, (err, point, next) => {
@@ -649,7 +651,7 @@ let Import = class Import {
             report['Report Config'].duration.selectedRange = 'Today';
 
             async.forEachSeries(point.upis, (upi, cb) => {
-                Utility.getOne({
+                this.getOne({
                     collection: pointsCollection,
                     query: {
                         _id: upi
@@ -702,7 +704,7 @@ let Import = class Import {
                     cb(null);
                 });
             }, (err) => {
-                Utility.insert({
+                this.insert({
                     collection: pointsCollection,
                     insertObj: report
                 }, next);
@@ -715,7 +717,7 @@ let Import = class Import {
             collection: 'Totalizers',
             query: {}
         };
-        Utility.iterateCursor(criteria, (err, doc, cb) => {
+        this.iterateCursor(criteria, (err, doc, cb) => {
             var guide = importconfig.reportGuide;
             var template = Config.Templates.getTemplate('Report');
             var report = lodash.merge(template, guide);
@@ -772,7 +774,7 @@ let Import = class Import {
                     }
                 };
 
-                Utility.getOne(monitorCriteria, (err, ref) => {
+                this.getOne(monitorCriteria, (err, ref) => {
                     if (!!ref) {
                         if (refIds.indexOf(ref._id) < 0) {
                             refIds.push(ref._id);
@@ -833,9 +835,9 @@ let Import = class Import {
                         'new': true
                     }
                 };
-                Utility.findAndModify(criteria, (err, upiObj) => {
+                this.findAndModify(criteria, (err, upiObj) => {
                     report._id = upiObj._id;
-                    Utility.insert({
+                    this.insert({
                         collection: pointsCollection,
                         insertObj: report
                     }, cb);
@@ -863,7 +865,7 @@ let Import = class Import {
         scheduleTemplate._pStatus = 0;
         scheduleTemplate._cfgRequired = false;
 
-        Utility.get({
+        this.get({
             collection: 'ScheduleEntries',
             query: {}
         }, (err, oldScheduleEntries) => {
@@ -886,7 +888,7 @@ let Import = class Import {
                         'new': true
                     }
                 };
-                Utility.findAndModify(criteria, (err, upiObj) => {
+                this.findAndModify(criteria, (err, upiObj) => {
                     /*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
                       scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
                     }*/
@@ -927,16 +929,16 @@ let Import = class Import {
         });
     }
     insertScheduleEntry(scheduleEntry, callback) {
-        Utility.insert({
+        this.insert({
             collection: pointsCollection,
             insertObj: scheduleEntry
         }, callback);
     }
     cleanupDB(callback) {
-        Utility.dropCollection({
+        this.dropCollection({
             collection: pointsCollection
         }, () => {
-            Utility.update({
+            this.update({
                 collection: 'new_points',
                 query: {
                     _oldUpi: {
@@ -952,7 +954,7 @@ let Import = class Import {
                     multi: true
                 }
             }, (err, result) => {
-                Utility.update({
+                this.update({
                     collection: 'new_points',
                     query: {
                         _newUpi: {
@@ -968,17 +970,17 @@ let Import = class Import {
                         multi: true
                     }
                 }, (err, result) => {
-                    Utility.rename({
+                    this.rename({
                         from: 'new_points',
                         to: 'points'
                     }, () => {
-                        Utility.dropCollection({
+                        this.dropCollection({
                             collection: 'ScheduleEntries'
                         }, () => {
-                            Utility.dropCollection({
+                            this.dropCollection({
                                 collection: 'OldHistLogs'
                             }, () => {
-                                Utility.dropCollection({
+                                this.dropCollection({
                                     collection: 'Totalizers'
                                 }, callback);
                             });
@@ -990,7 +992,7 @@ let Import = class Import {
     }
     updateGPLReferences(callback) {
         logger.info('starting updateGPLReferences');
-        Utility.get({
+        this.get({
             collection: pointsCollection,
             query: {
                 'gplLabel': {
@@ -1006,7 +1008,7 @@ let Import = class Import {
                 gplBlock._name4 = gplBlock.name4.toLowerCase();
                 gplBlock._Name = gplBlock.Name.toLowerCase();
                 delete gplBlock.gplLabel;
-                Utility.update({
+                this.update({
                     collection: pointsCollection,
                     query: {
                         _id: gplBlock._id
@@ -1017,7 +1019,7 @@ let Import = class Import {
                         logger.info('updateGPLReferences1 err', err);
                     }
 
-                    Utility.get({
+                    this.get({
                         collection: pointsCollection,
                         query: {
                             'Point Refs.Value': gplBlock._id,
@@ -1034,7 +1036,7 @@ let Import = class Import {
                                 }
                             }
                             logger.info(1, gplRef['Point Refs']);
-                            Utility.update({
+                            this.update({
                                 collection: pointsCollection,
                                 query: {
                                     _id: gplBlock._id
@@ -1061,7 +1063,7 @@ let Import = class Import {
         });
     }
     updateGPLRefs(callback) {
-        Utility.get({
+        this.get({
             collection: pointsCollection,
             query: {
                 'Point Type.Value': 'Sequence',
@@ -1072,7 +1074,7 @@ let Import = class Import {
         }, (err, sequences) => {
             async.forEachSeries(sequences, (sequence, cb) => {
                 this.addReferencesToSequencePointRefs(sequence, () => {
-                    Utility.update({
+                    this.update({
                         collection: pointsCollection,
                         query: {
                             _id: sequence._id
@@ -1399,7 +1401,7 @@ let Import = class Import {
         }];
 
         async.forEachSeries(indexes, (index, indexCB) => {
-            Utility.ensureIndex({
+            this.ensureIndex({
                 collection: index.collection,
                 index: index.index,
                 options: index.options
@@ -1491,7 +1493,7 @@ let Import = class Import {
         cb(null);
     }
     updateModels(point, cb) {
-        Config.Utility.updDevModel({
+        Config.this.updDevModel({
             point: point
         });
         cb();
@@ -1551,14 +1553,14 @@ let Import = class Import {
                 point.name4 = '';
 
                 for (var i = 0; i < point.Remarks.Value.length; i++) {
-                    if (Config.Utility.isPointNameCharacterLegal(point.Remarks.Value[i])) {
+                    if (Config.this.isPointNameCharacterLegal(point.Remarks.Value[i])) {
                         point.name2 += point.Remarks.Value[i];
                     }
                 }
                 point.Name = point.name1 + '_' + point.name2;
                 delete point.Remarks;
                 this.updateNameSegments(point, (err) => {
-                    Utility.get({
+                    this.get({
                         collection: pointsCollection,
                         query: {
                             _name1: point._name1,
@@ -1586,7 +1588,7 @@ let Import = class Import {
                         this.updateNameSegments(point, (err) => {
                             delete point._Name;
                             updateProps();
-                            Utility.update({
+                            this.update({
                                 collection: pointsCollection,
                                 query: {
                                     _id: point._id
@@ -1598,7 +1600,7 @@ let Import = class Import {
                 });
             } else {
                 updateProps();
-                Utility.update({
+                this.update({
                     collection: pointsCollection,
                     query: {
                         _id: point._id
@@ -1612,7 +1614,7 @@ let Import = class Import {
     }
     updateProgramPoints(point, cb) {
         if (point['Point Type'].Value === 'Script') {
-            Utility.update({
+            this.update({
                 collection: pointsCollection,
                 query: {
                     'Point Type.Value': 'Program',
@@ -1687,7 +1689,7 @@ let Import = class Import {
                         'isReadOnly': false,
                         'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
+                        'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
                         'PointType': Config.Enums['Point Types'][pointType].enum || 0
                     };
 
@@ -1713,7 +1715,7 @@ let Import = class Import {
                 pushPointObjectsUPIs(referencedSlides);
 
                 if (!!upiList && upiList.length > 0) {
-                    Utility.get({
+                    this.get({
                         collection: pointsCollection,
                         query: {
                             _id: {
@@ -1827,7 +1829,7 @@ let Import = class Import {
                         'isReadOnly': false,
                         'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
+                        'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
                         'PointType': Config.Enums['Point Types'][pointType].enum || 0
                     };
 
@@ -1863,7 +1865,7 @@ let Import = class Import {
                 pushScreenObjectsUPIs(screenObjectsCollection);
 
                 if (!!upiList && upiList.length > 0) {
-                    Utility.get({
+                    this.get({
                         collection: pointsCollection,
                         query: {
                             _id: {
@@ -1953,7 +1955,7 @@ let Import = class Import {
                     'isReadOnly': true,
                     'PointName': refPoint.Name,
                     'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                    'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
+                    'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
                     'PointType': Config.Enums['Point Types'][pointType].enum || 0
                 };
 
@@ -1986,7 +1988,7 @@ let Import = class Import {
                 pushGPLObjectUPIs(dynamics, 'GPLDynamic', 440);
 
                 if (!!upiList && upiList.length > 0) {
-                    Utility.get({
+                    this.get({
                         collection: pointsCollection,
                         query: {
                             _id:
@@ -2025,7 +2027,7 @@ let Import = class Import {
 
             async.forEachSeries(pointRefs, (pointRef, cb) => {
                 if (pointRef.Value !== 0) {
-                    Utility.getOne({
+                    this.getOne({
                         collection: pointsCollection,
                         query: {
                             _id: pointRef.Value
@@ -2136,7 +2138,7 @@ let Import = class Import {
                         }
 
                         async.forEachSeries(point['Point Registers'], (register, propCb) => {
-                            Utility.getOne({
+                            this.getOne({
                                 collection: pointsCollection,
                                 query: {
                                     _id: register
@@ -2152,7 +2154,7 @@ let Import = class Import {
                                 pointRef.isDisplayable = true;
                                 pointRef.AppIndex = appIndexes[register].shift();
                                 pointRef.isReadOnly = false;
-                                pointRef.DevInst = (Config.Utility.getPropertyObject('Device Point', registerPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', registerPoint).Value : 0;
+                                pointRef.DevInst = (Config.this.getPropertyObject('Device Point', registerPoint) !== null) ? Config.this.getPropertyObject('Device Point', registerPoint).Value : 0;
 
                                 if (registerPoint !== null) {
                                     pointRef.Value = registerPoint._id;
@@ -2384,7 +2386,7 @@ let Import = class Import {
         callback();
     }
     setupProgramPoints(callback) {
-        Utility.update({
+        this.update({
             collection: pointsCollection,
             query: {
                 'Point Type.Value': 'Program'
@@ -2411,7 +2413,7 @@ let Import = class Import {
         });
     }
     updateAllProgramPoints(callback) {
-        Utility.get({
+        this.get({
             collection: pointsCollection,
             query: {
                 'Point Type.Value': 'Script'
@@ -2431,7 +2433,7 @@ let Import = class Import {
     }
     updateAllSensorPoints(callback) {
         logger.info('starting updateAllSensorPoints');
-        Utility.get({
+        this.get({
             collection: pointsCollection,
             query: {
                 'Point Type.Value': 'Sensor'
@@ -2554,7 +2556,7 @@ let Import = class Import {
                     upi,
                     saveSequence = () => {
                         //logger.info('GPLIMPORT: saving sequence', name);
-                        Utility.getOne({
+                        this.getOne({
                             collection: pointsCollection,
                             query: {
                                 'Name': name
@@ -2567,7 +2569,7 @@ let Import = class Import {
                                 var _id = result._id;
 
                                 if (!err) {
-                                    Utility.update({
+                                    this.update({
                                         collection: pointsCollection,
                                         query: {
                                             _id: _id
@@ -2630,7 +2632,7 @@ let Import = class Import {
                             upi = row.upi;
                             label = row.label;
 
-                            Utility.update({
+                            this.update({
                                 collection: pointsCollection,
                                 query: {
                                     _id: upi
@@ -2771,7 +2773,7 @@ let Import = class Import {
         var currentYear = now.year();
 
         logger.info('starting updateHistory upis');
-        Utility.get({
+        this.get({
             collection: 'new_points',
             query: {},
             fields: {
@@ -2817,16 +2819,19 @@ let Import = class Import {
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
-            let typeId = type.split(' ');
-            typeId[0] = typeId[0].toLowerCase();
-            typeId = typeId.join('') + 'Id';
+            let typeId = type.toLowerCase().split(' ');
+            typeId = typeId.join('');
             counters.push({
                 _id: typeId,
-                counter: (type === 'Device') ? 3145727 : 0,
+                count: (type === 'Device') ? 3145727 : 0,
                 enum: pointTypes[type].enum
             });
         }
-        Utility.insert({
+        counters.push({
+            _id: 'hierarchy',
+            counter: 0
+        });
+        this.insert({
             collection: 'counters',
             insertObj: counters
         }, callback);
