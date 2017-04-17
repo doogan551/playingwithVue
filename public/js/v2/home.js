@@ -1,3 +1,12 @@
+var kodt = function () {
+    return ko.dataFor(window.$0);
+};
+var kojs = function () {
+    return ko.toJS(kodt());
+};
+var koct = function () {
+    return ko.contextFor(window.$0);
+};
 var dti = {
     $loginBtn: $('#loginBtn'),
     $resetPasswordBtn: $('#resetPasswordBtn'),
@@ -16,6 +25,19 @@ var dti = {
             dti.utility.configureMoment(moment);
         },
         itemGroups: {
+            'Navigatorv2': {
+                title: 'Navigator v2',
+                iconText:'',
+                iconClass: 'mdi mdi-compass',
+                group: 'Navigatorv2',
+                standalone: true,
+                singleton: true,
+                initFn: 'locations.initLocations',
+                fullScreen: false,
+                options: {
+                    retainNames: false
+                }
+            },
             'Display': {
                 title: 'Displays',
                 iconText: 'tv',
@@ -965,6 +987,7 @@ var dti = {
         draggableConfig: {
             containment: 'main',
             scroll: false,
+            handle: '.card-toolbar',
             start: function() {
                 dti.windows.dragStart();
             },
@@ -1218,7 +1241,7 @@ var dti = {
         }
     },
     taskbar: {
-        pinnedItems: ['Navigator', 'Display'],
+        pinnedItems: ['Navigatorv2', 'Display'],
         init: function() {
             var menuItems = {};
 
@@ -2960,6 +2983,934 @@ var dti = {
             });
         }
     },
+    locations: {
+        idx: 0,
+        tree: [],
+        template: {
+            id: 0,
+            name: 'Name',
+            type: 'Area',
+            focused: false,
+            expanded: false,
+            fetched: false,
+            hasChildren: true,
+            new: true,
+            parentLocId: 0,
+            children: []
+        },
+        blankNode: {
+            type: '',
+            name: ''
+        },
+
+        setId: function (id) {
+            dti.locations.idx = id;
+        },
+
+        makeId: function () {
+            return ++dti.locations.idx;
+        },
+
+        getSaveData: function (data) {
+            var obj = ko.toJS(data);
+
+            return {
+                parentLocId: obj.parentLocId,
+                parentMechId: 0,
+                display: obj.name,
+                type: obj.type,
+                item: 'Location',
+                hierarchyRefs: []
+            };
+        },
+
+        add: function (obj) {
+            var data = dti.locations.getSaveData(obj);
+
+            $.ajax({
+                url: '/api/hierarchy/add',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(data) 
+            }).done(function handleAdd(response) {
+                dti.log(response);
+            });
+        },
+
+        _doSave: function (data) {
+            $.ajax({
+                url: '/api/hierarchy/save',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            }).done(dti.locations.handleSave);
+        },
+
+        save: function (data) {
+
+        },
+
+        saveAll: function () {
+
+        },
+
+        handleSave: function (response) {
+
+        },
+
+        normalize: function (arr, cfg) {
+            dti.forEachArray(arr, function (item, idx) {
+                // arr[idx] = {
+                //     name: item.display || 'Name',
+                //     type: item.type || 'Area',
+                //     focused: false,
+                //     expanded: false,
+                //     fetched: false,
+                //     hasChildren: true,
+                //     new: false,
+                //     parentLocId: 0,
+                //     children: []
+                //     _data: item
+                // };
+                dti.forEach(dti.locations.template, function (val, prop) {
+                    if (item[prop] === undefined) {
+                        item[prop] = dti.utility.clone(val);
+                    }
+
+                    if (item.display) {
+                        item.name = item.display;
+                    }
+
+                    if (cfg) {
+                        item = $.extend(true, item, cfg);
+                    }
+                });
+
+                dti.locations.normalize(item.children);
+            });
+
+            return arr;
+        },
+
+        findNode: function (id, rootArr, level) {
+            var ret = false,
+                lvl = level || 1;
+
+            // console.log(level);
+
+            dti.forEachArray(rootArr, function (item) {
+                if (item._id() === id) {
+                    ret = item;
+                    return false;
+                }
+            });
+
+            if (!ret) {
+                dti.forEachArray(rootArr, function (item) {
+                    ret = dti.locations.findNode(id, item.children(), lvl + 1);
+
+                    return !ret;
+                });
+            }
+
+            return ret;
+        },
+
+        buildTree: function (arr, root) {
+            var ret = root || dti.locations.tree,
+                key = 'locationRef';
+
+            dti.forEachArray(arr, function (item) {
+                var target,
+                    node;
+
+                target = item[key].Value;
+
+                node = dti.locations.findNode(target, ret);
+
+                if (node) {
+                    node.fetched(true);
+                    node.expanded(true);
+                    node.children.push(ko.viewmodel.fromModel(item));
+                }
+            });
+
+            // if (references) {
+
+            // } else {
+            //     dti.tree = ret;
+            // }
+        },
+        getBranch: function (obj, $el, cb) { // expects ko
+            var id = obj._id();
+
+            $.ajax({
+                url: '/api/hierarchy/locations/getChildren',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: id || 0
+                })
+            }).done(function passOff(results) {
+                var data = dti.locations.normalize(results);
+                cb(data, obj, $el);
+            });
+        },
+
+        getReferences: function (obj, $el, cb) {
+            var id = obj._id(),
+                level = obj['Mechanical Refs']().length;
+
+            $.getJSON('/navtree/references/' + level + '/' + id).done(function passOff(results) {
+                var data = dti.locations.normalize(results);
+                cb(data, obj, $el);
+            });
+        },
+        initLocations: function (config) {
+            var $container = config.$container,
+                markup = dti.utility.getTemplate('#locationsTemplate');
+
+            $container.append(markup);
+
+            dti.locations.$container = $container;
+
+            $container.on('click', function handleClick (event) {
+                var $target = $(event.target);
+                //all valid skips
+                if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
+                    // dti.bindings.locations.focusedNode(false);
+                    dti.bindings.locations.focusNode();
+                }
+            });
+
+            $.ajax({
+                url: '/api/hierarchy/locations/getChildren',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: 0
+                })
+            }).done(function passOff(results) {
+                dti.locations._init(results);
+                dti.locations.initBindings();
+            });
+        },
+        _init: function (data) {
+            var bindings = dti.bindings.locations;
+
+            dti.locations.tree = dti.locations.normalize(data);
+
+            bindings.data = ko.viewmodel.fromModel(dti.locations.tree);
+
+            $.contextMenu({
+                selector: '.node',
+                items: {
+                    clone: {
+                        name: 'Clone',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger,
+                                data = ko.contextFor($target[0]);
+
+                            bindings.cloneNode($target, data);
+                        }
+                    },
+                    cloneMultiple: {
+                        name: 'Clone Multiple',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger,
+                                data = ko.contextFor($target[0]);
+
+                            bindings.bulkClone($target, data);
+                        }
+                    },
+                    bulkAddSiblings: {
+                        name: 'Add Siblings',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger;
+
+                            bindings.bulkAdd('Siblings', ko.dataFor($target[0]), {
+                                target: $target[0]
+                            });
+
+                            // if (!dti.taskbar.pinnedItems[text]) {
+                            //     $el = $('.taskbar .left').append(template);
+
+                            //     dti.taskbar.pinnedItems[text] = {
+                            //         text: text,
+                            //         icon: icon,
+                            //         template: template,
+                            //         $el: $el
+                            //     };
+                            // }
+
+                            // console.log($target);
+                        }
+                    },
+                    bulkAddChildren: {
+                        name: 'Add Children',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger;
+
+                            bindings.bulkAdd('Children', ko.dataFor($target[0]), {
+                                target: $target[0]
+                            });
+                        }
+                    },
+                    delete: {
+                        name: 'Delete',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger;
+
+                            bindings.deleteBranch(ko.contextFor($target[0]));
+                        }
+                    },
+                    expandAllRecursive: {
+                        name: 'Expand All',
+                        callback: function (key, opt) {
+                            var $target = opt.$trigger;
+
+                            bindings.expandRecursive(ko.contextFor($target[0]), {
+                                $target: $target
+                            });
+                        }
+                    }
+                }
+            });
+
+            $('.locations select').material_select();
+        },
+        initBindings: function () {
+            var $modal = $('#bulkAddModal')[0],
+                focusSubscriptions = [];
+
+            dti.bindings.locations = $.extend(true, dti.bindings.locations, {
+                newestNode: {},
+
+                addRootNode: function () {
+                    var rootNode = dti.bindings.locations.getNode({
+                        name: 'Root',
+                        fetched: true,
+                        expanded: true,
+                        type: 'Area'
+                    });
+
+                    dti.bindings.locations.data.push(rootNode);
+
+                    dti.bindings.locations.focusNode(rootNode);
+
+                    dti.bindings.locations._addNode(rootNode);
+                },
+
+                addBranch: function (results, obj, $el) {
+                    var locationChildren = [],
+                        mechanicalChildren = [],
+                        children = [],
+                        groups = {},
+                        grouping,
+                        newChild,
+                        koResults;
+
+                    dti.forEachArray(results, function (child) {
+                        // if is new combined
+                        if (child.hasOwnProperty('mechanical')) {
+                            child.hasChildren = false;
+                            child.expaned = true;
+
+                            if (child.item === 'system') {
+                                mechanicalChildren.push(child);
+                            } else {
+                                grouping = child.mechanical.component + child.mechanical.equipment;
+                                if (!groups[grouping]) {
+                                    groups[grouping] = mechanicalChildren.length; //get idx
+                                }
+
+                                newChild = dti.utility.clone(child);
+                                newChild.name = grouping;
+                                newChild.expanded = true;
+                                newChild.fetched = true;
+                                newChild.hasChildren = true;
+                                mechanicalChildren.push(newChild);
+                                mechanicalChildren[groups[grouping]].children.push(child);
+                            }
+                        } else {
+                            locationChildren.push(child);
+                        }
+                    });
+
+                    children = locationChildren.concat(mechanicalChildren);
+
+                    koResults = ko.viewmodel.fromModel(children);
+                    obj.children(koResults());
+
+                    if (children.length === 0) {
+                        obj.hasChildren(false);
+                    }
+
+                    obj.expanded(true);
+
+                    $el.unblock();
+                },
+                getBranch: function (obj, event) {
+                    var $el;
+
+                    if (obj.fetched() === false) {
+                        obj.fetched(true);
+                        $el = $(event.target).parent();
+                        $el.block({
+                            message: ''
+                        });
+                        dti.locations.getBranch(obj, $el, dti.bindings.locations.addBranch);
+                    } else {
+                        obj.expanded(!obj.expanded());
+                    }
+                },
+                addReferences: function (results, obj, $el) {
+                    var children;
+
+                    children = dti.utility.clone(results);
+                    children = ko.viewmodel.fromModel(children);
+
+                    if ($el.parents('#tree').length > 0) { // hack -- if left pane
+                        dti.bindings.locations.references(children());
+                    } else {
+                        obj.children(children());
+                    }
+
+                    $el.unblock();
+                },
+                getReferences: function (obj, event) {
+                    var $el;
+
+                    if (obj.fetched() === false) {
+                        obj.fetched(true);
+                        $el = $(event.target).parent();
+                        $el.block({
+                            message: ''
+                        });
+                        dti.getReferences(obj, $el, dti.bindings.locations.addReferences);
+                    } else {
+                        obj.expanded(!obj.expanded());
+                    }
+                },
+                addChildRaw: function (obj, event) {
+                    dti.bindings.locations.addChild(event.target, {
+                        fetched: true,
+                        expanded: true
+                    }, obj);
+                },
+                addSiblingRaw: function (obj, event) {
+                    dti.bindings.locations.addSibling(event.target, {
+                        fetched: true,
+                        expanded: true
+                    });
+                },
+                bulkAddRaw: function (obj, event) {
+                    dti.bindings.locations.bulkAdd('Siblings', obj, event);
+                },
+                bulkAdd: function (destination, obj, event) {
+                    var $bulkAddModal = $('#bulkAddModal'),
+                        bindings = dti.bindings.locations,
+                        name = obj.name(),
+                        type = name.replace(/\d+/g, ''),
+                        number = parseInt(name.replace(type, ''), 10);
+
+                    if (destination === 'Children' || isNaN(number)) {
+                        number = 1;
+                    }
+
+                    bindings.startEntry(number + 1);
+                    bindings.endEntry(number + 9);
+                    bindings.entryFormat(type + '#');
+                    bindings.bulkAddDestination(destination);
+                    bindings.entryType(obj.type());
+                    bindings.currEntry = {
+                        node: ko.toJS(obj),
+                        el: event.target
+                    };
+
+                    $bulkAddModal.openModal({
+                        ready: function () {
+                            bindings.modalOpen(true);
+                        },
+                        complete: function () {
+                            bindings.modalOpen(false);
+                            bindings.currEntry = null;
+                            bindings.error('');
+                        }
+                    });
+
+                    // bindings.modalOpen(false);
+                },
+                doBulkAdd: function () {
+                    var $bulkAddModal = $('#bulkAddModal'),
+                        bindings = dti.bindings.locations,
+                        format = bindings.entryFormat(),
+                        startEntry = bindings.startEntry(),
+                        endEntry = bindings.endEntry(),
+                        currEntry = bindings.currEntry,
+                        name = currEntry.node.name,
+                        destination = bindings.bulkAddDestination();
+
+                    if (!format.match('#')) {
+                        bindings.error('Format missing placeholder');
+                    } else {
+                        for (var c = startEntry; c <= endEntry; c++) {
+                            if (destination === 'Siblings') {
+                                bindings.addSibling(currEntry.el, {
+                                    name: format.replace('#', c),
+                                    type: currEntry.node.type,
+                                    fetched: true,
+                                    expanded: true
+                                });
+                            } else {
+                                bindings.addChild(currEntry.el, {
+                                    name: format.replace('#', c),
+                                    fetched: true,
+                                    expanded: true
+                                }, currEntry.node);
+                            }
+                        }
+
+                        $bulkAddModal.closeModal();
+                        bindings.focusNode();
+                    }
+                },
+                
+                bulkClone: function ($target, context) {
+                    var $bulkCloneModal = $('#bulkCloneModal'),
+                        bindings = dti.bindings.locations,
+                        obj = context.$data,
+                        name = obj.name(),
+                        type = name.replace(/\d+/g, ''),
+                        number = parseInt(name.replace(type, ''), 10);
+
+                    bindings.startEntry(number + 1);
+                    bindings.endEntry(number + 9);
+                    bindings.entryFormat(type + '#');
+                    // bindings.entryType(obj.type());
+                    bindings.currEntry = {
+                        node: ko.toJS(obj),
+                        el: event.target,
+                        $target: $target,
+                        context: context
+                    };
+
+                    $bulkCloneModal.openModal({
+                        ready: function () {
+                            bindings.modalOpen(true);
+                        },
+                        complete: function () {
+                            bindings.modalOpen(false);
+                            bindings.currEntry = null;
+                            bindings.error('');
+                        }
+                    });
+
+                },
+                doBulkClone: function () {
+                    var $bulkCloneModal = $('#bulkCloneModal'),
+                        bindings = dti.bindings.locations,
+                        format = bindings.entryFormat(),
+                        startEntry = bindings.startEntry(),
+                        endEntry = bindings.endEntry(),
+                        currEntry = bindings.currEntry,
+                        name = currEntry.node.name,
+                        $target = currEntry.$target,
+                        context = currEntry.context;
+
+                    if (!format.match('#')) {
+                        bindings.error('Format missing placeholder');
+                    } else {
+                        for (var c = startEntry; c <= endEntry; c++) {
+                            bindings.cloneNode($target, context, {
+                                name: format.replace('#', c)
+                            });
+                        }
+
+                        $bulkCloneModal.closeModal();
+                        bindings.focusNode();
+                    }
+                },
+                cloneNode: function ($target, context, cfg) {
+                    var node = ko.viewmodel.toModel(context.$data),
+                        data = context.$data,
+                        parent = context.$parent,
+                        koSiblings = parent.children || dti.bindings.locations.data,
+                        jsSiblings = koSiblings();
+
+                    node.name = (cfg && cfg.name) || node.name.replace(/\d+/g, jsSiblings.length + 1);
+
+                    node = ko.viewmodel.fromModel(node);
+                    // bindings.forEachNode(function processChild (child) {
+                    //     child._id(dti.makeId());
+                    // });
+
+                    koSiblings.push(node);
+                    dti.bindings.locations._addNode(node);
+                },
+
+                deleteBranch: function (context) {
+                    var data = context.$data,
+                        parent = context.$parent,
+                        siblings = parent && parent.children && parent.children || dti.bindings.locations.data;
+
+                    siblings.remove(data);
+                    
+                    //no siblings and has a parent
+                    if (siblings().length === 0 && parent.hasChildren) {
+                        parent.hasChildren(false);
+                    }
+
+                    dti.bindings.locations.focusNode();
+                },
+
+                expandRecursive: function (context) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/api/hierarchy/locations/getDescendants',
+                        data: JSON.stringify({
+                            id: context.$data._id()
+                        }),
+                        contentType: 'application/json'
+                    }).done(function (data) {
+                        var root = context.$parent && context.$parent.children && context.$parent.children() || dti.bindings.locations.data();
+                        dti.locations.buildTree(dti.locations.normalize(data, {
+                            expanded: true,
+                            fetched: true
+                        }), root);
+
+                        dti.bindings.locations.forEachNode(function (child, parent) {
+                            if (child.fetched() && child.children().length === 0) {
+                                child.hasChildren(false);
+                            }
+                        }, root);
+                    });
+                },
+
+                forEachNode: function (fn, root) {
+                    var base = root || dti.bindings.locations.data();
+
+                    dti.forEachArray(base, function processChild(child) {
+                        fn(child, base);
+                        dti.bindings.locations.forEachNode(fn, child.children());
+                    });
+                },
+                focusNode: function (obj) {
+                    var bindings = dti.bindings.locations,
+                        handler = function (val, node) {
+                            //if it's not focused
+                            if (!val) {
+                                dti.bindings.locations.focusedNode(false);
+                                dti.forEachArrayRev(focusSubscriptions, function disposeSubscriptions (subscription) {
+                                    subscription.dispose();
+                                    focusSubscriptions.pop();
+                                });
+                            }
+                        },
+                        makeHandler = function () {
+                            var node = obj;
+
+                            return function (val) {
+                                handler(val, node);
+                            };
+                        };
+
+                    if (bindings.focusedNode()) {
+                        bindings._focusedNode.focused(false);
+                        bindings.focusedNode(false);
+                    }
+
+                    if (obj) {
+                        bindings.focusedNode(true);
+                        bindings._focusedNode = obj;
+                        bindings._focusedNodeName = obj.name();
+                        obj.focused(true);
+                        focusSubscriptions.push(obj.name.subscribe(function syncNameToRight (val) {
+                            bindings.focusedNodeName(val);
+                        }));
+                        focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
+                    } else {
+                        bindings.focusedNode(false);
+                        bindings._focusedNode.focused(false);
+                        bindings._focusedNodeName = null;
+                    }
+                },
+                getNode: function (cfg) {
+                    // if (!cfg.id) {
+                    //     cfg.id = dti.makeId();
+                    //     // cfg.fetched = false;//change to true for local only stuff
+                    // }
+
+                    return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, dti.locations.template), cfg || {}));
+                },
+                expand: function (obj, event) {
+                    event.preventDefault();
+                    obj.expanded(!obj.expanded());
+                },
+                expandAll: function () {
+                    dti.bindings.locations.forEachNode(function (child, parent) {
+                        if (child.fetched()) {
+                            child.expanded(true);
+                        } else {
+                            dti.bindings.locations.expandRecursive({
+                                $parent: parent,
+                                $data: {
+                                    _id: child._id
+                                }
+                            });
+                        }
+                    });
+                },
+                moveNode: function (from, to) {
+                    var data = ko.dataFor(from),
+                        parent = ko.contextFor(from).$parent,
+                        destData = ko.dataFor(to);
+
+                    (parent.children || dti.bindings.locations.data).remove(data);
+
+                    destData.children.push(data);
+                },
+                collapseAll: function () {
+                    dti.bindings.locations.forEachNode(function (child) {
+                        child.expanded(false);
+                    });
+                },
+                select: function (obj, event) {
+                    event.target.select();
+                },
+                _addNode: function (childrenArray, node) {
+                    dti.bindings.locations.newestNode = {
+                        node: node,
+                        childrenArray: childrenArray
+                    };
+
+                    setTimeout(function fireTooltips () {
+                        $('.tooltipped:not([data-tooltip-id])').tooltip();
+                    }, 1);
+                },
+                addSibling: function (el, config) {
+                    var parent = ko.contextFor(el).$parent,
+                        children,
+                        child;
+
+                    config.parentLocId = parent.id();
+
+                    if (parent) {
+                        child = dti.bindings.locations.getNode(config || {});
+                        if (parent.children) {
+                            parent.children.push(child);
+                        } else {
+                            parent.data.push(child);
+                        }
+                        dti.bindings.locations._addNode(parent.children, child);
+                        dti.bindings.locations.focusNode(child);
+                    }
+                },
+                addChild: function (el, config, parent) {
+                    var data = ko.dataFor(el),
+                        child = dti.bindings.locations.getNode(config || {});
+
+                    child.parentLocId = parent.id;
+
+                    parent.hasChildren(true);
+                    parent.expanded(true);
+                    data.children.push(child);
+                    dti.bindings.locations._addNode(data.children, child);
+                    dti.bindings.locations.focusNode(child);
+                },
+                handleEscape: function (obj, event) {
+                    var lastNode = dti.bindings.locations.newestNode,
+                        currNode = dti.bindings.locations.focusedNode() && dti.bindings.locations._focusedNode;
+
+                    if (obj === lastNode.node) {
+                        lastNode.childrenArray.remove(obj);
+                    }
+
+                    if (currNode && currNode.name && currNode.focused()) {
+                        currNode.focused(false);
+                        currNode.name(dti.bindings.locations._focusedNodeName);
+                    }
+                },
+                navigate: function (obj, event, dir, previousContext) {
+                    var context = previousContext || ko.contextFor(event.target),
+                        subsequent = !!previousContext,
+                        parent = context.$parent,
+                        bindings = dti.bindings.locations,
+                        siblings = parent && parent.children && parent.children() || parent.data(),
+                        position = siblings && siblings.indexOf(obj),
+                        children = context.$data.children && context.$data.children(),
+                        handlers = {
+                            left: function () {
+                                if (parent && !parent.root) {
+                                    bindings.focusNode(parent);
+                                }
+                            },
+                            up: function () {
+                                var sibling,
+                                    kids;
+                                if (position > 0) {
+                                    sibling = siblings[position - 1];
+                                    kids = sibling.children();
+
+                                    if (kids.length > 0) {
+                                        bindings.focusNode(kids[kids.length - 1]);
+                                    } else {
+                                        bindings.focusNode(siblings[position - 1]);
+                                    }
+                                } else if (position === 0) {
+                                    bindings.focusNode(parent);
+                                }
+                            },
+                            right: function () {
+                                if (children.length > 0) {
+                                    bindings.focusNode(children[0]);
+                                }
+                            },
+                            down: function () {
+                                if (!subsequent && children.length > 0) {
+                                    bindings.focusNode(children[0]);
+                                } else if (siblings && position < siblings.length - 1) { // not end child
+                                    bindings.focusNode(siblings[position + 1]);
+                                } else {
+                                    if (context.$parentContext) {
+                                        bindings.navigate(parent, null, 'down', context.$parentContext);
+                                    }
+                                }
+                            }
+                        };
+
+                    handlers[dir]();
+                },
+                handleKeyUp: function (obj, event) {
+                    var el = event.target,
+                        key = event.keyCode,
+                        shift = event.shiftKey,
+                        bindings = dti.bindings.locations,
+                        handlers = {
+                            13: function () { // enter
+                                bindings.addSibling(event.target, {
+                                    fetched: true,
+                                    expanded: true
+                                });
+                            },
+                            9: function () { // tab
+                                bindings.addChild(event.target, {
+                                    fetched: true,
+                                    expanded: true
+                                }, obj);
+                            },
+                            27: function () { // escape
+                                bindings.handleEscape(obj, event);
+                            },
+                            37: function () { // left arrow
+                                bindings.navigate(obj, event, 'left');
+                            },
+                            38: function () { // up arrow
+                                bindings.navigate(obj, event, 'up');
+                            },
+                            39: function () { // right arrow
+                                bindings.navigate(obj, event, 'right');
+                            },
+                            40: function () { // bottom arrow
+                                bindings.navigate(obj, event, 'down');
+                            }
+                        },
+                        shiftHandlers = {
+                            9: function () { // enter
+
+                            }
+                        },
+                        handler = (!shift && handlers[key]) || (shift && shiftHandlers[key]);
+
+                    // console.log(key);
+
+                    if (handler) {
+                        event.preventDefault();
+                        handler();
+                    } else {
+                        return true;
+                    }
+                }
+            });
+
+            dti.bindings.locations._focusedNode = dti.bindings.locations.getNode(dti.locations.blankNode);
+
+            dti.bindings.locations.focusedNode.subscribe(function stupidMaterialSelect (val) {
+                var bindings = dti.bindings.locations;
+
+                if (val) {
+                    setTimeout(function bahMaterialize () {
+                        bindings.focusedNodeName(bindings._focusedNode.name());
+                        bindings.focusedNodeType(bindings._focusedNode.type() || 'Area');
+                        $('.locations select').material_select();
+                        Materialize.updateTextFields();
+                    }, 1);
+                }
+            });
+
+            dti.bindings.locations.focusedNodeName.subscribe(function updateNodeName (val) {
+                if (dti.bindings.locations._focusedNode) {
+                    setTimeout(function syncName () {
+                        dti.bindings.locations._focusedNode.name(val);
+                    }, 1);
+                }
+            });
+
+            dti.bindings.locations.focusedNodeType.subscribe(function updateNodeType (val) {
+                if (dti.bindings.locations._focusedNode) {
+                    setTimeout(function syncType () {
+                        dti.bindings.locations._focusedNode.type(val);
+                    }, 1);
+                }
+            });
+
+            ko.bindingHandlers.shouldFocus = {
+                init: function (element, valueAccessor) {
+
+                },
+                update: function (element, valueAccessor) {
+                    var observable = valueAccessor();
+
+                    if (observable()) {
+                        $(element).focus();
+                    }
+                }
+            };
+
+            ko.bindingHandlers.dragNode = {
+                originEl: null,
+                init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                    var $element = $(element);
+
+                    $element.draggable({
+                        revert: 'invalid',
+                        // containment: '#tree',
+                        cursor: 'move',
+                        helper: 'clone',
+                        start: function (event, ui) {
+                            ko.bindingHandlers.dragNode.originEl = event.toElement;
+                        }
+                    });
+
+                    $element.droppable({
+                        accept: '.displayInfo',
+                        greedy: true,
+                        tolerance: 'pointer',
+                        hoverClass: 'nodeHover',
+                        drop: function (event, ui) {
+                            var dest = event.target,
+                                from = ko.bindingHandlers.dragNode.originEl;
+
+                            dti.bindings.locations.moveNode(from, dest);
+                            $('.locations .nodeHover').removeClass('nodeHover');
+                        }
+                    });
+                }
+            };
+
+            ko.applyBindings(dti.bindings.locations, dti.locations.$container[0]);
+        }
+    },
     navigator: {
         _lastInit: true,
         _navigators: {},
@@ -4629,6 +5580,20 @@ var dti = {
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },
+        locations: ko.viewmodel.fromModel({
+            root: true, //hack
+            modalOpen: false,
+            focusedNode: false,
+            focusedNodeName: '',
+            focusedNodeType: '',
+            startEntry: 1,
+            endEntry: 10,
+            entryFormat: '',
+            entryType: '',
+            error: '&nbsp;',
+            bulkAddDestination: '',
+            availableTypes: ['Area', 'Building', 'Floor', 'Room']
+        }),
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),

@@ -50,7 +50,6 @@ module.exports = function socketio(_common) {
 
         sock.on('dynamics', function (data) {
             let upis = [];
-            console.log(data.data);
             data['Point Refs'].forEach(function (ref) {
                 if (ref.Value !== 0) {
                     socket.join(ref.Value);

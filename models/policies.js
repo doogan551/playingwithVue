@@ -5,7 +5,7 @@ const moment = require('moment');
 const logger = require('../helpers/logger')(module);
 
 const Policies = class Policies {
-    get(data, cb) {
+    getPolicies(data, cb) {
         const notifyPolicies = new NotifyPolicies();
         let criteria = {
             query: data.data || {}

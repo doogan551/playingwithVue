@@ -495,7 +495,6 @@ const System = class System extends Common {
             let findAlarmDef = (type, alarms) => {
                 for (let i = 0; i < alarms.length; i++) {
                     if (!!alarms[i].isSystemMessage && type === alarms[i].msgType) {
-                        console.log(typeof alarms[i]._id);
                         return alarms[i]._id.toString();
                     }
                 }

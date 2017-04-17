@@ -1,6 +1,6 @@
 const Slideshow = class Slideshow {
 
-    get(data, cb) {
+    getSlideshow(data, cb) {
         const point = new Point();
         let upi = parseInt(data.id, 10);
 

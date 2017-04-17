@@ -8,7 +8,7 @@ router.post('/get/:id', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Slideshow.get(data, function (err, ss) {
+    Slideshow.getSlideshow(data, function (err, ss) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

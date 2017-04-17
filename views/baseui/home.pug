@@ -265,6 +265,51 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
+            #bulkAddModal.modal
+                .modal-content
+                    h4 Bulk Add
+                    .row
+                        .input-field.col.s3
+                            input#startEntry(placeholder="#", type="number", data-bind="hasFocus: locations.modalOpen, value: locations.startEntry")
+                            label(for="startEntry") Node start #
+                        .input-field.col.s3
+                            input#endEntry(placeholder="#", type="number", data-bind="value: locations.endEntry")
+                            label(for="endEntry") Node end #                        
+                    .row
+                        .input-field.col.s6
+                            input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
+                            label(for="entryformat") Entry format (# for index placeholder)
+                        .input-field.col.s6
+                            select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                            label Type               
+                    .row
+                        .col.s12.error.red-text(data-bind='html: locations.error')
+
+                .modal-footer
+                    button.btn.blue-grey.waves-effect(data-bind="click: locations.doBulkAdd") Add
+                    button.btn-flat.modal-action.modal-close.waves-effect Cancel
+
+            #bulkCloneModal.modal
+                .modal-content
+                    h4 Bulk Clone
+                    .row
+                        .input-field.col.s3
+                            input#startEntry(placeholder="#", type="number", data-bind="hasFocus: locations.modalOpen, value: locations.startEntry")
+                            label(for="startEntry") Node start #
+                        .input-field.col.s3
+                            input#endEntry(placeholder="#", type="number", data-bind="value: locations.endEntry")
+                            label(for="endEntry") Node end #                        
+                    .row
+                        .input-field.col.s6
+                            input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
+                            label(for="entryformat") Entry format (# for index placeholder)
+                    .row
+                        .col.s12.error.red-text(data-bind='html: locations.error')
+
+                .modal-footer
+                    button.btn.blue-grey.waves-effect(data-bind="click: locations.doBulkClone") Add
+                    button.btn-flat.modal-action.modal-close.waves-effect Cancel            
+
             #openItemsModal.modal.modal-large
                 .modal-content
                     .center-align.flex.flex-column.flex-center.openItemsHeader
@@ -367,6 +412,66 @@ html
                         .cssload-whirlpool
 
         iframe#thumbnailGen.hide
+
+    script#locationsTemplate(type='text/html')
+        .locations.blue-grey-form
+            .row
+                button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
+                button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
+
+            //- .row
+            //-     .col.xs-4
+            //-         input#autocomplete
+
+            .row
+                // ko if: data().length !== 0
+                #tree.col.s5.pane(data-bind="template: { name: 'node', foreach: data}")
+                // /ko
+
+                // ko if: data().length === 0
+                .col.s5.pane
+                    button.btn.btn-flat.stayFocused(data-bind="click: $root.addRootNode") Add Node
+                // /ko
+
+                #rightPane.col.s7.pane
+                    .details(data-bind="visible: focusedNode")
+                        .row
+                            .col.s6.input-field
+                                input#focusedNodeName(type="text", data-bind="textInput: focusedNodeName")
+                                label(for="focusedNodeName") Name
+                        .row
+                            .col.s6
+                                // ko foreach: $root.availableTypes
+                                p
+                                    input(type="radio", data-bind="attr: {name: 'focusedNodeType', id: 'focusedNodeType_' + $index()}, value: $data, checked: $root.focusedNodeType")
+                                    label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
+                                // /ko
+
+            script#node(type='text/html')
+                .node.blue-grey-form(data-bind="css: { focused: focused }")
+
+                    // ko if: hasChildren()
+                    a.expandcollapse(href="#", data-bind="click: $root.getBranch")
+                        i.material-icons(data-bind="text: !expanded() ? 'keyboard_arrow_right' : 'expand_more'")
+                    // /ko
+
+                    // ko if: !hasChildren()
+                    a.mdi.mdi-file-outline.expandcollapse.blank(href="#") &nbsp;
+                    // /ko
+                    
+                    //- // ko if: children().length === 0
+                    //- i.mdi.mdi-file-outline
+                    //- // /ko
+
+                    span.displayInfo(data-bind="dragNode: true")
+                        .name(data-bind='text: name, click: $root.focusNode')
+                        input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
+                        a.bulkAdd.tooltipped(data-tooltip="Add Sibling", data-position="bottom", href="#")
+                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSiblingRaw") arrow_downward
+                        a.bulkAdd.tooltipped(data-tooltip="Add Child", data-position="bottom", href="#")
+                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
+                    .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
+                        
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")

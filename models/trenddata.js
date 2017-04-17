@@ -130,7 +130,7 @@ const TrendData = class TrendData {
         }
 
         let criteria = {
-            query: query
+            pipeline: query
         };
 
         historyModel.aggregate(criteria, (err, mongoResults) => {

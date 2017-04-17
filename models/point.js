@@ -395,7 +395,6 @@ const Point = class Point extends Common {
                     };
                 }
             } else {
-                console.log(searchTerm);
                 query._Name = {
                     $regex: utils.getRegex(searchTerm.expression.toLowerCase())
                 };
@@ -762,7 +761,6 @@ const Point = class Point extends Common {
                 if (block.upi === undefined || block.upi === 0) {
                     acb(null);
                 } else {
-                    console.log(block);
                     oName1 = oldSequence.name1;
                     oName2 = oldSequence.name2;
                     oName3 = oldSequence.name3;
