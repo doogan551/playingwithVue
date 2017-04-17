@@ -311,7 +311,7 @@ let Import = class Import extends Common {
     }
     createEmptyCollections(callback) {
         var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'versions', 'dev'];
-        async.forEach(collections, (coll, cb) => {
+        async.each(collections, (coll, cb) => {
             this.createCollection({
                 collection: coll
             }, cb);
@@ -642,7 +642,7 @@ let Import = class Import extends Common {
             report['Report Config'].interval.value = Math.floor(point.Interval / 60);
             report['Report Config'].duration.selectedRange = 'Today';
 
-            async.forEachSeries(point.upis, (upi, cb) => {
+            async.eachSeries(point.upis, (upi, cb) => {
                 this.getOne({
                     collection: pointsCollection,
                     query: {
@@ -752,7 +752,7 @@ let Import = class Import extends Common {
                     break;
             }
 
-            async.forEachSeries(doc.Monitors, (monitor, cb2) => {
+            async.eachSeries(doc.Monitors, (monitor, cb2) => {
                 var monitorCriteria = {
                     collection: 'points',
                     query: {
@@ -847,7 +847,7 @@ let Import = class Import extends Common {
             query: {}
         }, (err, oldScheduleEntries) => {
             logger.info('results', oldScheduleEntries.length);
-            async.forEachSeries(oldScheduleEntries, (oldScheduleEntry, forEachCallback) => {
+            async.eachSeries(oldScheduleEntries, (oldScheduleEntry, forEachCallback) => {
                 /*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
                   scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
                 }*/
@@ -973,7 +973,7 @@ let Import = class Import extends Common {
                             'Point Refs': 1
                         }
                     }, (err, gplRefs) => {
-                        async.forEachSeries(gplRefs, (gplRef, cb2) => {
+                        async.eachSeries(gplRefs, (gplRef, cb2) => {
                             for (var m = 0; m < gplRef['Point Refs'].length; m++) {
                                 if (gplRef['Point Refs'][m].Value === gplBlock._id) {
                                     gplRef['Point Refs'][m].PointName = gplBlock.Name;
@@ -1016,7 +1016,7 @@ let Import = class Import extends Common {
                 }
             }
         }, (err, sequences) => {
-            async.forEachSeries(sequences, (sequence, cb) => {
+            async.eachSeries(sequences, (sequence, cb) => {
                 this.addReferencesToSequencePointRefs(sequence, () => {
                     this.update({
                         collection: pointsCollection,
@@ -1346,7 +1346,7 @@ let Import = class Import extends Common {
             collection: 'historydata'
         }];
 
-        async.forEachSeries(indexes, (index, indexCB) => {
+        async.eachSeries(indexes, (index, indexCB) => {
             this.ensureIndex({
                 collection: index.collection,
                 index: index.index,
@@ -1971,7 +1971,7 @@ let Import = class Import extends Common {
             var index = 0;
             var prop;
 
-            async.forEachSeries(pointRefs, (pointRef, cb) => {
+            async.eachSeries(pointRefs, (pointRef, cb) => {
                 if (pointRef.Value !== 0) {
                     this.getOne({
                         collection: pointsCollection,
@@ -2038,7 +2038,7 @@ let Import = class Import extends Common {
                 async.waterfall([
 
                     (wfcb) => {
-                        async.forEachSeries(properties, (prop, callback) => {
+                        async.eachSeries(properties, (prop, callback) => {
                             if (point[prop] !== null && (point[prop].ValueType === 8)) {
                                 var propName = prop;
                                 var propEnum = Config.Enums.Properties[prop].enum;
@@ -2083,7 +2083,7 @@ let Import = class Import extends Common {
                             }
                         }
 
-                        async.forEachSeries(point['Point Registers'], (register, propCb) => {
+                        async.eachSeries(point['Point Registers'], (register, propCb) => {
                             this.getOne({
                                 collection: pointsCollection,
                                 query: {
@@ -2134,7 +2134,7 @@ let Import = class Import extends Common {
                     //});
                 });
             } else {
-                async.forEachSeries(properties, (prop, callback) => {
+                async.eachSeries(properties, (prop, callback) => {
                     /*if (prop === "Sequence Device")
                       prop = "Device Point";*/
 
@@ -2380,7 +2380,7 @@ let Import = class Import extends Common {
                 'Point Type.Value': 'Script'
             }
         }, (err, scripts) => {
-            async.forEachSeries(scripts, (script, cb) => {
+            async.eachSeries(scripts, (script, cb) => {
                 this.updateProgramPoints(script, (err) => {
                     if (err) {
                         logger.info('updateProgramPoints', err);
@@ -2400,7 +2400,7 @@ let Import = class Import extends Common {
                 'Point Type.Value': 'Sensor'
             }
         }, (err, sensors) => {
-            async.forEachSeries(sensors, (sensor, cb) => {
+            async.eachSeries(sensors, (sensor, cb) => {
                 this.updateSensorPoints(sensor, (err) => {
                     if (err) {
                         logger.info('updateSensorPoints', err);

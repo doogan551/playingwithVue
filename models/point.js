@@ -2782,9 +2782,50 @@ const Point = class Point extends Common {
     }
 
     bulkAdd(points, user, cb) {
-        // update ids
-        // update point ref values
-        //
+        let updatedPoints = [];
+        this.updateIds(points, (err) => {
+            this.reassignRefs(points);
+            async.eachSeries(points, (point, callback) => {
+                this.addPoint({
+                    point
+                }, user, {}, (err, point) => {
+                    if (!!err && !err.hasOwnProperty('msg')) {
+                        callback(err);
+                    } else {
+                        updatedPoints.push(point);
+                    }
+                    callback();
+                });
+            }, (err) => {
+                cb(err);
+            });
+        });
+    }
+
+    updateIds(points, callback) {
+        let counterModel = new Counter();
+        async.eachSeries(points, (point, seriesCallback) => {
+            counterModel.getUpiForPointType(point['Point Type'].eValue, (err, newUpi) => {
+                point._id = newUpi;
+                seriesCallback(err);
+            });
+        }, callback);
+    }
+
+    reassignRefs(points) {
+        for (var p = 0; p < points.length; p++) {
+            let point = points[p];
+            for (var pr = 0; pr < points.length; pr++) {
+                let refs = points[pr]['Point Refs'];
+                for (var r = 0; r < refs.length; r++) {
+                    let ref = refs[r];
+                    if (ref.id === point.id) {
+                        ref.id = point._id;
+                    }
+                }
+            }
+            delete point.id;
+        }
     }
 
     ////////////////////////////////////////////
