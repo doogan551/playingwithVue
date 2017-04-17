@@ -492,14 +492,12 @@ let Import = class Import extends Common {
         });
     }
     changeUpis(callback) {
+        const counterModel = new Counter();
         // rename schedule entries
         // drop pointinst and devinst indexes
         var centralDeviceUPI = 0;
         var newPoints = 'new_points';
         var points = 'points';
-        var newUpi = 0;
-        var lowest = 1;
-        var highestDevice = 4194302;
 
         var updateDependencies = (oldId, newId, collection, cb) => {
             this.iterateCursor({
@@ -554,28 +552,22 @@ let Import = class Import extends Common {
                     _id: 1
                 }
             }, (err, doc, cb) => {
-                var oldId = doc._id;
-                if (doc['Point Type'].Value === 'Device') {
-                    newUpi = highestDevice;
+                doc._oldUpi = doc._id;
+                counterModel.getUpiForPointType(doc['Point Type'].eValue, (err, newUpi) => {
                     if (doc._id === centralDeviceUPI) {
                         centralDeviceUPI = newUpi;
                     }
-                    highestDevice--;
-                } else {
-                    newUpi = lowest;
-                    lowest++;
-                }
-                doc._newUpi = newUpi;
-                doc._oldUpi = oldId;
 
-                this.update({
-                    query: {
-                        _id: oldId
-                    },
-                    updateObj: doc,
-                    collection: points
-                }, (err, result) => {
-                    cb();
+                    doc._newUpi = newUpi;
+                    this.update({
+                        query: {
+                            _id: doc._oldUpi
+                        },
+                        updateObj: doc,
+                        collection: points
+                    }, (err, result) => {
+                        cb();
+                    });
                 });
             }, (err, count) => {
                 this.update({
@@ -602,7 +594,7 @@ let Import = class Import extends Common {
                             cb(err);
                         });
                     }, (err, count) => {
-                        logger.info('count', count);
+                        logger.info('count', err, count);
                         this.iterateCursor({
                             collection: newPoints,
                             query: {}
@@ -910,49 +902,32 @@ let Import = class Import extends Common {
             this.update({
                 collection: 'new_points',
                 query: {
-                    _oldUpi: {
+                    _newUpi: {
                         $exists: 1
                     }
                 },
                 updateObj: {
                     $unset: {
-                        _oldUpi: 1
+                        _newUpi: 1
                     }
                 },
                 options: {
                     multi: true
                 }
             }, (err, result) => {
-                this.update({
-                    collection: 'new_points',
-                    query: {
-                        _newUpi: {
-                            $exists: 1
-                        }
-                    },
-                    updateObj: {
-                        $unset: {
-                            _newUpi: 1
-                        }
-                    },
-                    options: {
-                        multi: true
-                    }
-                }, (err, result) => {
-                    this.rename({
-                        from: 'new_points',
-                        to: 'points'
+                this.rename({
+                    from: 'new_points',
+                    to: 'points'
+                }, () => {
+                    this.dropCollection({
+                        collection: 'ScheduleEntries'
                     }, () => {
                         this.dropCollection({
-                            collection: 'ScheduleEntries'
+                            collection: 'OldHistLogs'
                         }, () => {
                             this.dropCollection({
-                                collection: 'OldHistLogs'
-                            }, () => {
-                                this.dropCollection({
-                                    collection: 'Totalizers'
-                                }, callback);
-                            });
+                                collection: 'Totalizers'
+                            }, callback);
                         });
                     });
                 });
@@ -2752,11 +2727,8 @@ let Import = class Import extends Common {
         });
     }
     updateHistory(cb) {
-        var Archive = require('../models/archiveutility');
-        var now = moment().endOf('month');
-        var start = moment('2000/01', 'YYYY/MM');
-        var count = 0;
-        var currentYear = now.year();
+        var History = require('../models/history');
+        let historyModel = new History();
 
         logger.info('starting updateHistory upis');
         this.get({
@@ -2769,36 +2741,15 @@ let Import = class Import extends Common {
                 _id: 1
             }
         }, (err, results) => {
-            async.whilst(() => {
-                return now.isAfter(start);
-            }, (callback) => {
-                async.eachSeries(results, (doc, eachCB) => {
-                    var criteria = {
-                        year: now.year(),
-                        statement: ['UPDATE History_', now.year(), now.format('MM'), ' SET UPI=? WHERE UPI=?'].join('')
-                    };
-                    Archive.prepare(criteria, (stmt) => {
-                        criteria = {
-                            year: now.year(),
-                            statement: stmt,
-                            parameters: [doc._id, doc._oldUpi]
-                        };
-                        Archive.runStatement(criteria, () => {
-                            count += this.changes;
-                            Archive.finalizeStatement(criteria, () => {
-                                eachCB();
-                            });
-                        });
-                    });
-                }, (err) => {
-                    now = now.subtract(1, 'month');
-                    if (now.year() !== currentYear) {
-                        currentYear = now.year();
-                        logger.info(currentYear, count);
-                    }
-                    callback(err);
-                });
-            }, cb);
+            async.eachSeries(results, (doc, callback) => {
+                historyModel.updateArchive({
+                    upi: doc._id
+                }, {
+                    upi: doc._oldUpi
+                }, callback);
+            }, (err) => {
+                cb(err);
+            });
         });
     }
     setupCounters(callback) {

@@ -651,7 +651,7 @@ const Point = class Point extends Common {
     initPoint(data, cb) {
         const alarmDefs = new AlarmDefs();
         const system = new System();
-        const upi = new Upi();
+        const counterModel = new Counter();
         let criteria = {};
 
         let name1 = data.name1;
@@ -690,13 +690,13 @@ const Point = class Point extends Common {
                 }
 
                 system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
+                    counterModel.getUpiForPointType(pointType, (err, newUpi) => {
                         if (err) {
                             return callback(err);
                         }
 
                         if (pointType === 'Schedule Entry') {
-                            name2 = upiObj._id.toString();
+                            name2 = newUpi.toString();
                             buildName(name1, name2, name3, name4);
                         }
 
@@ -717,10 +717,10 @@ const Point = class Point extends Common {
                                 }
 
                                 targetPoint._pStatus = 1;
-                                fixPoint(upiObj, targetPoint, true, sysInfo, callback);
+                                fixPoint(newUpi, targetPoint, true, sysInfo, callback);
                             });
                         } else {
-                            fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, sysInfo, callback);
+                            fixPoint(newUpi, Config.Templates.getTemplate(pointType), false, sysInfo, callback);
                         }
                     });
                 });
@@ -807,7 +807,7 @@ const Point = class Point extends Common {
             });
         };
 
-        let fixPoint = (upiObj, template, isClone, sysInfo, callback) => {
+        let fixPoint = (newUpi, template, isClone, sysInfo, callback) => {
             template.Name = Name;
             template.name1 = (name1) ? name1 : '';
             template.name2 = (name2) ? name2 : '';
@@ -820,7 +820,7 @@ const Point = class Point extends Common {
             template._name3 = (_name3) ? _name3 : '';
             template._name4 = (_name4) ? _name4 : '';
 
-            template._id = upiObj._id;
+            template._id = newUpi;
 
             template._actvAlmId = ObjectID('000000000000000000000000');
 
@@ -900,12 +900,12 @@ const Point = class Point extends Common {
         };
 
         let addTemplateToDB = (template, callback) => {
-            criteria = {
-                insertObj: template
-            };
-            this.insert(criteria, (err) => {
-                return callback(err, template);
-            });
+            // criteria = {
+            //     insertObj: template
+            // };
+            // this.insert(criteria, (err) => {
+            return callback(null, template);
+            // });
         };
 
         if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
@@ -2420,7 +2420,7 @@ const Point = class Point extends Common {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
-        const upiModel = new Upi();
+
         let _point,
             _updateFromSchedule = !!options && options.from === 'updateSchedules',
             _upi = parseInt(upi, 10),
@@ -2496,12 +2496,7 @@ const Point = class Point extends Common {
                     return cb(null);
                 }
 
-                upiModel.deleteUpi(_upi, (err, result) => {
-                    if (err) {
-                        _buildWarning('could not update the UPI collection');
-                    }
-                    cb(null);
-                });
+                cb(null);
             },
             _deleteHistory = (cb) => {
                 // We only remove entries from the history collection if the point is hard deleted (destroyed)
@@ -2990,6 +2985,17 @@ const Point = class Point extends Common {
             });
         }, cb);
     }
+    linkWithOldUpi(upi, cb) {
+        this.getOne({
+            _id: upi
+        }, {
+            fields: {
+                _oldUpi: 1
+            }
+        }, (err, point) => {
+            return cb(err, point._oldUpi);
+        });
+    }
 };
 
 module.exports = Point;
@@ -3001,4 +3007,4 @@ const History = require('./history');
 const Schedule = require('./schedule');
 const Security = require('./security');
 const Script = require('./scripts');
-const Upi = require('./upi');
+const Counter = require('./counter');

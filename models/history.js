@@ -1611,6 +1611,13 @@ const History = class History extends Common {
             query: query
         }, cb);
     }
+    updateArchive(updateObj, where, cb) {
+        this.HistoryRecord.update(updateObj, {where}).then((result) => {
+            return cb(null, result);
+        }).catch((err) => {
+            return cb(err);
+        });
+    }
 };
 
 module.exports = History;
