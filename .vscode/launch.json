@@ -14,6 +14,20 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "rectest",
+            "program": "${workspaceRoot}/apps/rectest.js",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Migration",
+            "program": "${workspaceRoot}/apps/migrationScripts.js",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Server",
             "program": "${workspaceRoot}\\app.js",
             "cwd": "${workspaceRoot}"

@@ -56,8 +56,6 @@ let Import = class Import extends Common {
         };
 
         this.iterateCursor(criteria, (err, doc, cb) => {
-            // logger.info("retrieved", err);
-            // logger.info("doc.id = " + doc._id);
             this.importPoint(doc, (err) => {
                 count++;
                 if (count % 10000 === 0) {
@@ -75,11 +73,13 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                if (err) {
-                                    logger.info('updateGPLReferences err:', err);
-                                }
-                                logger.info('done', err, new Date());
-                                process.exit(0);
+                                this.fixPointRefs((err) => {
+                                    if (err) {
+                                        logger.info('updateGPLReferences err:', err);
+                                    }
+                                    logger.info('done', err, new Date());
+                                    process.exit(0);
+                                });
                             });
                         });
                     });
@@ -166,9 +166,6 @@ let Import = class Import extends Common {
                                                                         this.rearrangeProperties(point, (err) => {
                                                                             if (err) {
                                                                                 logger.info('rearrangeProperties', err);
-                                                                            }
-                                                                            if (point._id === 85161) {
-                                                                                logger.info(point['Point Refs'][2]);
                                                                             }
                                                                             this.updatePoint(point, (err) => {
                                                                                 if (err) {
@@ -515,19 +512,15 @@ let Import = class Import extends Common {
                 var refs = dep['Point Refs'];
                 for (var i = 0; i < refs.length; i++) {
                     if (refs[i].Value === oldId) {
-                        // logger.info('changing Value', oldId, collection);
                         refs[i].Value = newId;
                     }
                     if (refs[i].PointInst === oldId) {
-                        // logger.info('changing PointInst', oldId, collection);
                         refs[i].PointInst = newId;
                     }
                     if (refs[i].DevInst === oldId) {
-                        // logger.info('changing DevInst', oldId, collection);
                         refs[i].DevInst = newId;
                     }
                 }
-                // logger.info(dep['Point Refs']);
                 this.update({
                     collection: collection,
                     updateObj: dep,
@@ -594,7 +587,6 @@ let Import = class Import extends Common {
                             cb(err);
                         });
                     }, (err, count) => {
-                        logger.info('count', err, count);
                         this.iterateCursor({
                             collection: newPoints,
                             query: {}
@@ -846,7 +838,6 @@ let Import = class Import extends Common {
             collection: 'ScheduleEntries',
             query: {}
         }, (err, oldScheduleEntries) => {
-            logger.info('results', oldScheduleEntries.length);
             async.eachSeries(oldScheduleEntries, (oldScheduleEntry, forEachCallback) => {
                 /*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
                   scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
@@ -944,7 +935,6 @@ let Import = class Import extends Common {
                 }
             }
         }, (err, gplBlocks) => {
-            logger.info('gplBlocks.length = ' + gplBlocks.length);
             async.eachSeries(gplBlocks, (gplBlock, cb) => {
                 gplBlock.name4 = gplBlock.gplLabel;
                 gplBlock.Name = gplBlock.name1 + '_' + gplBlock.name2 + '_' + gplBlock.name3 + '_' + gplBlock.name4;
@@ -979,7 +969,6 @@ let Import = class Import extends Common {
                                     gplRef['Point Refs'][m].PointName = gplBlock.Name;
                                 }
                             }
-                            logger.info(1, gplRef['Point Refs']);
                             this.update({
                                 collection: pointsCollection,
                                 query: {
@@ -1452,7 +1441,6 @@ let Import = class Import extends Common {
     }
     updateOOSValue(point, callback) {
         var pointTemplate = Config.Templates.getTemplate(point['Point Type'].Value);
-        //logger.info(point["Point Type"].Value, pointTemplate["Point Type"].Value);
         if (pointTemplate.Value !== undefined && pointTemplate.Value.oosValue !== undefined) {
             point.Value.oosValue = (point.Value.eValue !== undefined) ? point.Value.eValue : point.Value.Value;
         }
@@ -1953,7 +1941,6 @@ let Import = class Import extends Common {
                                 neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
                                 for (i = 0; i < neededRefs.length; i++) {
                                     point['Point Refs'].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
-                                    logger.info(4, point['Point Refs']);
                                 }
                             }
                         }
@@ -2165,7 +2152,6 @@ let Import = class Import extends Common {
                             PointType: point[prop].PointType
                         };
 
-                        //logger.info("pushing", pointRef);
                         point['Point Refs'].push(pointRef);
                         delete point[prop];
                         callback(null);
@@ -2234,7 +2220,6 @@ let Import = class Import extends Common {
         callback(null);
     }
     updateAlarmMessages(point, callback) {
-        //logger.info("updateAlarmMessages");
         var alarmClasses = ['Emergency', 'Critical'];
         if (point.hasOwnProperty('Alarm Messages')) {
             point['Notify Policies'] = [];
@@ -2317,8 +2302,6 @@ let Import = class Import extends Common {
         callback(null);
     }
     updateNameSegments(point, callback) {
-        //logger.info("updateNameSegments");
-        //var updObj = {};
 
         point._name1 = point.name1.toLowerCase();
         point._name2 = point.name2.toString().toLowerCase();
@@ -2500,7 +2483,6 @@ let Import = class Import extends Common {
             },
             complete = (cb) => {
                 count++;
-                // logger.info('count:', count, 'max:', max);
                 if (count === max) {
                     logger.info('GPLIMPORT: complete');
                     // socket.emit('gplImportComplete', {});
@@ -2516,7 +2498,6 @@ let Import = class Import extends Common {
                     c,
                     upi,
                     saveSequence = () => {
-                        //logger.info('GPLIMPORT: saving sequence', name);
                         this.getOne({
                             collection: pointsCollection,
                             query: {
@@ -2653,10 +2634,7 @@ let Import = class Import extends Common {
                 c,
                 cleanup = (str) => {
                     if (str.sequence['xd:Dynamics']) {
-                        // logger.info('copying dynamics');
                         str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
-                        // logger.info(str.sequence['xd:Dynamics']['xd:Dynamic']);
-                        // logger.info(str.sequence.dynamic);
                         delete str.sequence['xd:Dynamics'];
                     }
                     var st = JSON.stringify(str);
@@ -2695,7 +2673,6 @@ let Import = class Import extends Common {
                         json = convertStrings(json);
 
                         // json = convertSequence(json);
-                        // logger.info('GPLIMPORT: sending', name, 'to update');
                         update(json, newName, () => {
                             c++;
                             doNext();
@@ -2773,7 +2750,42 @@ let Import = class Import extends Common {
             insertObj: counters
         }, callback);
     }
+    fixPointRefs(cb) {
+        let pointModel = new Point();
+
+        pointModel.iterateCursor({
+            query: {
+                'Point Refs': {
+                    $ne: []
+                }
+            }
+        }, (err, point, next) => {
+            for (var pr = 0; pr < point['Point Refs'].length; pr++) {
+                let ref = point['Point Refs'][pr];
+
+                ref.id = ref.Value;
+                ref.upi = ref.PointInst;
+                ref.dev = ref.DevInst;
+                ref.index = ref.AppIndex;
+
+                delete ref.Value;
+                delete ref.PointInst;
+                delete ref.DevInst;
+                delete ref.AppIndex;
+                delete ref.PointType;
+            }
+            pointModel.update({
+                query: {
+                    _id: point._id
+                },
+                updateObj: point
+            }, (err, result) => {
+                next(err);
+            });
+        }, cb);
+    }
 };
 
 module.exports = Import;
 var Counter = require('../models/counter');
+var Point = require('../models/point');

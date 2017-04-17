@@ -9,6 +9,8 @@ let utils = require('../helpers/utils');
 let config = require('config');
 let Config = require('../public/js/lib/config.js');
 let logger = require('../helpers/logger')(module);
+let Point = require('../models/point');
+let Import = require('../models/import');
 
 let pjson = require('../package.json');
 let compareVersions = require('compare-versions');
@@ -29,8 +31,8 @@ let dbConfig = config.get('Infoscan.dbConfig');
 let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
 let checkVersions = function (version) {
-    // console.log(version, prevVersion, curVersion);
-    // console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
+    console.log(version, prevVersion, curVersion);
+    console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
     if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }
@@ -43,7 +45,7 @@ let scripts = {
     updateCommittedBills: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateCommittedBills',
                 errors: null,
                 results: null
@@ -178,7 +180,7 @@ let scripts = {
     updateGPLBlockPointRefEnum: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLBlockPointRefEnum',
                 errors: null,
                 results: null
@@ -225,7 +227,7 @@ let scripts = {
     updateGenerateGPLPointRefs: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGenerateGPLPointRefs',
                 errors: null,
                 results: null
@@ -462,7 +464,7 @@ let scripts = {
     updateGenerateDisplayPointRefs: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGenerateDisplayPointRefs',
                 errors: null,
                 results: null
@@ -712,7 +714,7 @@ let scripts = {
     updateGPLBlockPrecision: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLBlockPrecision',
                 errors: null,
                 results: null
@@ -812,7 +814,7 @@ let scripts = {
     updateGPLDigitalLogicXORBlock: function (callback) {
         var afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLDigitalLogicXORBlock',
                 errors: null,
                 results: null
@@ -885,7 +887,7 @@ let scripts = {
     updateReportsDurationInterval: function (callback) {
         var afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateReportsDurationInterval',
                 errors: null,
                 results: null
@@ -968,7 +970,7 @@ let scripts = {
     updateExistingReports: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateExistingReports',
                 errors: null,
                 results: null
@@ -1127,7 +1129,7 @@ let scripts = {
     updateDevices: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateDevices',
                 errors: null,
                 results: null
@@ -1176,7 +1178,7 @@ let scripts = {
     removePointInstance: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'removePointInstance',
                 errors: null,
                 results: null
@@ -1207,7 +1209,7 @@ let scripts = {
     updateGatewayReadOnlyRouterAddress: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGatewayReadOnlyRouterAddress',
                 errors: null,
                 results: null
@@ -1285,7 +1287,7 @@ let scripts = {
     updateNetworkProps: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateNetworkProps',
                 errors: null,
                 results: null
@@ -1344,7 +1346,7 @@ let scripts = {
     fixDorsDB: function (callback) {
         let afterVersion = '0.0.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'fixDorsDB',
                 errors: null,
                 results: null
@@ -1454,7 +1456,7 @@ let scripts = {
     fixSequenceDevicePropertyName: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'fixSequenceDevicePropertyName',
                 errors: null,
                 results: null
@@ -1502,7 +1504,7 @@ let scripts = {
     addDownlinkProtocol: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addDownlinkProtocol',
                 errors: null,
                 results: null
@@ -1545,7 +1547,7 @@ let scripts = {
     switchModbusOrder: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'switchModbusOrder',
                 errors: null,
                 results: null
@@ -1633,7 +1635,7 @@ let scripts = {
     updateSecurity: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateSecurity',
                 errors: null,
                 results: null
@@ -1670,7 +1672,7 @@ let scripts = {
     addMissingProperties: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addMissingProperties',
                 errors: null,
                 results: null
@@ -1712,7 +1714,7 @@ let scripts = {
     removeProperties: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'removeProperties',
                 errors: null,
                 results: null
@@ -1765,7 +1767,7 @@ let scripts = {
     applyDevModel: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'applyDevModel',
                 errors: null,
                 results: null
@@ -1804,7 +1806,7 @@ let scripts = {
     addFeedbackInstance: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addFeedbackInstance',
                 errors: null,
                 results: null
@@ -1841,7 +1843,7 @@ let scripts = {
     convertSQLiteDB: function (callback) {
         let afterVersion = '0.6.0';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'convertSQLiteDB',
                 errors: null,
                 results: null
@@ -1912,6 +1914,52 @@ let scripts = {
                 errors: err
             });
         });
+    },
+    convertUpis: function (callback) {
+        logger.warn('convertUpis must run before updatePointRefProperties');
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'convertUpis',
+                errors: null,
+                results: null
+            });
+        }
+
+        let importApp = new Import();
+
+        importApp.changeUpis((err) => {
+            importApp.updateHistory((err) => {
+                importApp.cleanupDB((err) => {
+                    logger.info('Finished with convertUpis');
+                    callback(null, {
+                        fn: 'convertUpis',
+                        errors: null
+                    });
+                });
+            });
+        });
+    },
+    updatePointRefProperties: function (callback) {
+        logger.warn('updatePointRefProperties must run after convertUpis');
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'updatePointRefProperties',
+                errors: null,
+                results: null
+            });
+        }
+
+        let importApp = new Import();
+
+        importApp.fixPointRefProperties((err, count) => {
+            logger.info('Finished with updatePointRefProperties');
+            callback(null, {
+                fn: 'updatePointRefProperties',
+                errors: null
+            });
+        });
     }
 };
 
@@ -1926,7 +1974,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.convertSQLiteDB];
+    tasks = [scripts.convertUpis, scripts.updatePointRefProperties];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
