@@ -4601,10 +4601,11 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Port 1 Address": {
                     "isDisplayable": false,
@@ -4987,20 +4988,22 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Poll Function": {
                     "isDisplayable": false,
@@ -5133,10 +5136,11 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Sensor Type": {
                     "isDisplayable": true,
@@ -5328,10 +5332,11 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }]
             },
 
@@ -5612,60 +5617,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Sensor Point",
                     "PropertyEnum": 154,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Adjust Point",
                     "PropertyEnum": 136,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Poll Data Type": {
                     "isDisplayable": false,
@@ -6081,60 +6092,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Sensor Point",
                     "PropertyEnum": 154,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Adjust Point",
                     "PropertyEnum": 136,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Polarity": {
                     "isDisplayable": false,
@@ -6486,60 +6503,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Adjust Point",
                     "PropertyEnum": 136,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -6824,50 +6847,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Feedback Point",
                     "PropertyEnum": 141,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Polarity": {
                     "isDisplayable": true,
@@ -7399,50 +7427,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Feedback Point",
                     "PropertyEnum": 141,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Polarity": {
                     "isDisplayable": true,
@@ -7800,60 +7833,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Interlock Point",
                     "PropertyEnum": 148,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Feedback Point",
                     "PropertyEnum": 141,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -8039,20 +8078,22 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Poll Data Type": {
                     "isDisplayable": false,
@@ -8268,20 +8309,22 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Poll Data Type": {
                     "isDisplayable": false,
@@ -8409,10 +8452,11 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "SequenceData": {
                     "sequence": {
@@ -8564,60 +8608,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Dry Bulb Point",
                     "PropertyEnum": 140,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Humidity Point",
                     "PropertyEnum": 142,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Reliability": {
                     "isDisplayable": true,
@@ -8842,70 +8892,77 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Mixed Air Point",
                     "PropertyEnum": 149,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Return Air Point",
                     "PropertyEnum": 153,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Outside Air Point",
                     "PropertyEnum": 151,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -9147,90 +9204,99 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 3",
                     "PropertyEnum": 145,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 4",
                     "PropertyEnum": 146,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 5",
                     "PropertyEnum": 147,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -9478,90 +9544,99 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 3",
                     "PropertyEnum": 145,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 4",
                     "PropertyEnum": 146,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 5",
                     "PropertyEnum": 147,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -9823,60 +9898,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Occupied Point",
                     "PropertyEnum": 259,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Setpoint Input",
                     "PropertyEnum": 155,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Outside Air Point",
                     "PropertyEnum": 151,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -10120,61 +10201,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "id": 0,
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Setpoint Input",
                     "PropertyEnum": 155,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Proportional Band": {
                     "isDisplayable": false,
@@ -10447,50 +10533,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -10752,60 +10843,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -11066,70 +11163,77 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Select Input",
                     "PropertyEnum": 206,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -11377,50 +11481,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -11654,20 +11763,22 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Script Point",
                     "PropertyEnum": 270,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Remarks": {
                     "isDisplayable": false,
@@ -11927,180 +12038,198 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "CFM Input Point",
                     "PropertyEnum": 286,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Damper Control Point",
                     "PropertyEnum": 288,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Digital Heat 1 Control Point",
                     "PropertyEnum": 297,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Digital Heat 2 Control Point",
                     "PropertyEnum": 301,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Digital Heat 3 Control Point",
                     "PropertyEnum": 341,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Fan Control Point",
                     "PropertyEnum": 384,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Heat 1 Control Point",
                     "PropertyEnum": 349,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Lights Control Point",
                     "PropertyEnum": 364,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Occupied Cool Setpoint",
                     "PropertyEnum": 365,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Occupied Heat Setpoint",
                     "PropertyEnum": 367,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Occupied Input",
                     "PropertyEnum": 373,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Source Air Temp Point",
                     "PropertyEnum": 376,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Unoccupied Cool Setpoint",
                     "PropertyEnum": 377,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Unoccupied Heat Setpoint",
                     "PropertyEnum": 379,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Zone Temp Point",
                     "PropertyEnum": 386,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Zone Offset Point",
                     "PropertyEnum": 387,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": true,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Startup Delay": {
                     "ValueType": 4,
@@ -12265,50 +12394,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -12618,60 +12752,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Setpoint Input",
                     "PropertyEnum": 155,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -12927,60 +13067,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Trigger Point",
                     "PropertyEnum": 157,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -13296,60 +13442,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Setpoint Input",
                     "PropertyEnum": 155,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -13780,90 +13932,99 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 3",
                     "PropertyEnum": 145,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 4",
                     "PropertyEnum": 146,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 5",
                     "PropertyEnum": 147,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -14138,50 +14299,55 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Monitor Point",
                     "PropertyEnum": 150,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -14458,60 +14624,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -14774,60 +14946,66 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Control Point",
                     "PropertyEnum": 138,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Shutdown Point",
                     "PropertyEnum": 156,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 1",
                     "PropertyEnum": 143,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Input Point 2",
                     "PropertyEnum": 144,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -15086,170 +15264,187 @@
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Auxiliary Control Point",
                     "PropertyEnum": 423,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Float Alarm Point",
                     "PropertyEnum": 408,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Flow Rate Point",
                     "PropertyEnum": 411,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Flow Total Point",
                     "PropertyEnum": 412,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "High Level Float Point",
                     "PropertyEnum": 428,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Horn Control Point",
                     "PropertyEnum": 422,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Lag Level Float Point",
                     "PropertyEnum": 429,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Lead Level Float Point",
                     "PropertyEnum": 430,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Level Sensor Point",
                     "PropertyEnum": 427,
                     "index": 0,
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Light Control Point",
                     "PropertyEnum": 421,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Low Level Float Point",
                     "PropertyEnum": 432,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Off Level Float Point",
                     "PropertyEnum": 431,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Power Fail Point",
                     "PropertyEnum": 414,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Pump 1 Control Point",
                     "PropertyEnum": 409,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Pump 2 Control Point",
                     "PropertyEnum": 410,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }, {
                     "PropertyName": "Runtime Alarm Point",
                     "PropertyEnum": 413,
                     "index": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "id": 0,
+                    "Value": 0,
                     "PointName": "",
-                    "upi": 0,
-                    "dev": 0
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
                 }],
                 "Pump Control Mode": {
                     "ValueType": 5,
