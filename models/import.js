@@ -218,7 +218,7 @@ let Import = class Import extends Common {
             }, cb);
         });
 
-        function updateControllers(op, username, callback) {
+        let updateControllers = (op, username, callback) => {
             var searchCriteria = {
                 Name: 'Controllers'
             };
@@ -286,7 +286,7 @@ let Import = class Import extends Common {
                     }, callback);
                 }
             });
-        }
+        };
     }
     setupCfgRequired(callback) {
         logger.info('setupCfgRequired');
@@ -310,7 +310,7 @@ let Import = class Import extends Common {
         }, callback);
     }
     createEmptyCollections(callback) {
-        var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'dev'];
+        var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'versions', 'dev'];
         async.forEach(collections, (coll, cb) => {
             this.createCollection({
                 collection: coll
@@ -713,6 +713,7 @@ let Import = class Import extends Common {
     }
     convertTotalizerReports(callback) {
         logger.info('converting totalizer reports');
+        const counterModel = new Counter();
         var criteria = {
             collection: 'Totalizers',
             query: {}
@@ -818,25 +819,8 @@ let Import = class Import extends Common {
                     cb2(null);
                 });
             }, (err) => {
-                criteria = {
-                    collection: 'upis',
-                    query: {
-                        _pStatus: 1
-                    },
-                    sort: [
-                        ['_id', 'asc']
-                    ],
-                    updateObj: {
-                        $set: {
-                            _pStatus: 0
-                        }
-                    },
-                    options: {
-                        'new': true
-                    }
-                };
-                this.findAndModify(criteria, (err, upiObj) => {
-                    report._id = upiObj._id;
+                counterModel.getUpiForPointType(report['Point Type'].eValue, (err, newUpi) => {
+                    report._id = newUpi;
                     this.insert({
                         collection: pointsCollection,
                         insertObj: report
@@ -850,6 +834,7 @@ let Import = class Import extends Common {
     }
     convertScheduleEntries(callback) {
         logger.info('convertScheduleEntries');
+        const counterModel = new Counter();
         // get sched entry template & set pstatus to 0
         // get all schedule entries from SE collection
         // get _id from upi's collection
@@ -871,31 +856,15 @@ let Import = class Import extends Common {
         }, (err, oldScheduleEntries) => {
             logger.info('results', oldScheduleEntries.length);
             async.forEachSeries(oldScheduleEntries, (oldScheduleEntry, forEachCallback) => {
-                var criteria = {
-                    collection: 'upis',
-                    query: {
-                        _pStatus: 1
-                    },
-                    sort: [
-                        ['_id', 'asc']
-                    ],
-                    updateObj: {
-                        $set: {
-                            _pStatus: 0
-                        }
-                    },
-                    options: {
-                        'new': true
-                    }
-                };
-                this.findAndModify(criteria, (err, upiObj) => {
-                    /*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
-                      scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
-                    }*/
-                    scheduleEntryTemplate._id = upiObj._id;
+                /*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
+                  scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
+                }*/
+
+                counterModel.getUpiForPointType(scheduleEntryTemplate['Point Type'].eValue, (err, newUpi) => {
+                    scheduleEntryTemplate._id = newUpi;
                     scheduleEntryTemplate._parentUpi = oldScheduleEntry._schedUpi;
                     scheduleEntryTemplate.name1 = 'Schedule Entry';
-                    scheduleEntryTemplate.name2 = scheduleEntryTemplate._id.toString();
+                    scheduleEntryTemplate.name2 = newUpi.toString();
                     scheduleEntryTemplate.Name = scheduleEntryTemplate.name1 + '_' + scheduleEntryTemplate.name2;
                     /*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
                     scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
@@ -1092,11 +1061,13 @@ let Import = class Import extends Common {
         this.createEmptyCollections((err) => {
             this.setupDevCollection((err) => {
                 this.setupSystemInfo((err) => {
-                    this.setupPointRefsArray((err) => {
-                        this.addDefaultUser((err) => {
-                            this.setupCfgRequired((err) => {
-                                this.setupProgramPoints((err) => {
-                                    callback(null);
+                    this.setupCounters((err) => {
+                        this.setupPointRefsArray((err) => {
+                            this.addDefaultUser((err) => {
+                                this.setupCfgRequired((err) => {
+                                    this.setupProgramPoints((err) => {
+                                        callback(null);
+                                    });
                                 });
                             });
                         });
@@ -1493,7 +1464,7 @@ let Import = class Import extends Common {
         cb(null);
     }
     updateModels(point, cb) {
-        Config.this.updDevModel({
+        Config.Utility.updDevModel({
             point: point
         });
         cb();
@@ -1553,7 +1524,7 @@ let Import = class Import extends Common {
                 point.name4 = '';
 
                 for (var i = 0; i < point.Remarks.Value.length; i++) {
-                    if (Config.this.isPointNameCharacterLegal(point.Remarks.Value[i])) {
+                    if (Config.Utility.isPointNameCharacterLegal(point.Remarks.Value[i])) {
                         point.name2 += point.Remarks.Value[i];
                     }
                 }
@@ -1689,7 +1660,7 @@ let Import = class Import extends Common {
                         'isReadOnly': false,
                         'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
+                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
                         'PointType': Config.Enums['Point Types'][pointType].enum || 0
                     };
 
@@ -1829,7 +1800,7 @@ let Import = class Import extends Common {
                         'isReadOnly': false,
                         'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
+                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
                         'PointType': Config.Enums['Point Types'][pointType].enum || 0
                     };
 
@@ -1955,7 +1926,7 @@ let Import = class Import extends Common {
                     'isReadOnly': true,
                     'PointName': refPoint.Name,
                     'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                    'DevInst': (Config.this.getPropertyObject('Device Point', refPoint) !== null) ? Config.this.getPropertyObject('Device Point', refPoint).Value : 0,
+                    'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
                     'PointType': Config.Enums['Point Types'][pointType].enum || 0
                 };
 
@@ -2154,7 +2125,7 @@ let Import = class Import extends Common {
                                 pointRef.isDisplayable = true;
                                 pointRef.AppIndex = appIndexes[register].shift();
                                 pointRef.isReadOnly = false;
-                                pointRef.DevInst = (Config.this.getPropertyObject('Device Point', registerPoint) !== null) ? Config.this.getPropertyObject('Device Point', registerPoint).Value : 0;
+                                pointRef.DevInst = (Config.Utility.getPropertyObject('Device Point', registerPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', registerPoint).Value : 0;
 
                                 if (registerPoint !== null) {
                                     pointRef.Value = registerPoint._id;
@@ -2252,6 +2223,8 @@ let Import = class Import extends Common {
             point['Device Address'] = Config.Templates.getTemplate('Device')['Device Address'];
             point['Network Segment'] = Config.Templates.getTemplate('Device')['Network Segment'];
             point['Firmware 2 Version'] = Config.Templates.getTemplate('Device')['Firmware 2 Version'];
+            point['Ethernet Gateway'] = Config.Templates.getTemplate('Device')['Ethernet Gateway'];
+            point['Ethernet Subnet'] = Config.Templates.getTemplate('Device')['Ethernet Subnet'];
             point['Ethernet IP Port'].isReadOnly = true;
 
             if (typeof point['Ethernet Address'].Value !== 'string') {
@@ -2261,14 +2234,27 @@ let Import = class Import extends Common {
 
             utils.updateNetworkAndAddress(point);
 
+            point._cfgDevice = true;
+            point['Stop Scan'].Value = true;
             point['Device Status'].Value = 'Stop Scan';
             point['Device Status'].eValue = 66;
         } else if (point['Point Type'].Value === 'Remote Unit') {
             point['Device Address'].ValueType = 2;
-            point['Device Address'].Value = point['Device Address'].Value.toString();
-
+            if (typeof point['Device Address'].Value !== 'string') {
+                point['Device Address'].Value = point['Device Address'].Value.toString();
+            }
+            point['Router Address'].ValueType = 2;
+            if (typeof point['Router Address'].Value !== 'string') {
+                point['Router Address'].Value = point['Router Address'].Value.toString();
+            }
             point['Device Status'].Value = 'Stop Scan';
             point['Device Status'].eValue = 66;
+        }
+        // set all devices/rmus and possible points on those to Stop Scan
+        if (!!point.hasOwnProperty('Reliability')) {
+            point._relDevice = 129;
+            point.Reliability.Value = 'Stop Scan';
+            point.Reliability.eValue = 129;
         }
         callback(null);
     }
@@ -2839,3 +2825,4 @@ let Import = class Import extends Common {
 };
 
 module.exports = Import;
+var Counter = require('../models/counter');
