@@ -716,7 +716,6 @@ const Point = class Point extends Common {
                                     return callback('Target point not found.');
                                 }
 
-                                targetPoint._pStatus = 1;
                                 fixPoint(newUpi, targetPoint, true, sysInfo, callback);
                             });
                         } else {
@@ -2780,6 +2779,12 @@ const Point = class Point extends Common {
                 }
             });
         });
+    }
+
+    bulkAdd(points, user, cb) {
+        // update ids
+        // update point ref values
+        //
     }
 
     ////////////////////////////////////////////
