@@ -1,4 +1,5 @@
 const async = require('async');
+const config = require('config');
 const moment = require('moment');
 const csv = require('fast-csv');
 const _ = require('lodash');
@@ -9,6 +10,7 @@ const Common = require('./common');
 const utils = require('../helpers/utils');
 
 const historyCollection = utils.CONSTANTS('historyCollection');
+const archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
 const dateFormat = 'ddd, MMM DD, YYYY HH: mm: ss ZZ ';
 
 String.prototype.repeat = (num) => {
@@ -44,6 +46,31 @@ Array.prototype.equals = (array) => {
 const History = class History extends Common {
     constructor() {
         super(historyCollection);
+        this.archiveUtility = new ArchiveUtility(archiveLocation, 'History');
+        this.HistoryRecord = this.archiveUtility.define('History', {
+            upi: {
+                type: ArchiveUtility.INTEGER,
+                primaryKey: true
+            },
+            timestamp: {
+                type: ArchiveUtility.INTEGER,
+                primaryKey: true
+            },
+            value: {
+                type: ArchiveUtility.REAL
+            },
+            valueType: {
+                type: ArchiveUtility.INTEGER
+            },
+            statusFlags: {
+                type: ArchiveUtility.INTEGER,
+                defaultValue: 0
+            },
+            userEdited: {
+                type: ArchiveUtility.INTEGER,
+                defaultValue: 0
+            }
+        });
     }
 
     addOp(operation, newOptions) {
@@ -97,7 +124,6 @@ const History = class History extends Common {
         return newOptions;
     }
     editHistoryData(values, updateOptions, callback) {
-        const archiveUtility = new ArchiveUtility();
         // updateOptions:
         // 1: insert missing data only
         // 2: overwrite user-supplied data only
@@ -143,87 +169,58 @@ const History = class History extends Common {
                         return callback();
                     }
                 } else {
-                    let month = moment.unix(value.timestamp).format('MM');
-                    let year = moment.unix(value.timestamp).format('YYYY');
-                    let table = 'History_' + year + month;
-                    let selectStatement = 'Select UPI, TIMESTAMP, USEREDITED FROM ' + table + ' WHERE UPI=(?) AND TIMESTAMP=(?)';
-                    //run select
-                    criteria = {
-                        year: moment.unix(value.timestamp).year(),
-                        statement: selectStatement,
-                        parameters: [value.upi, value.timestamp]
-                    };
-                    archiveUtility.get(criteria, (err, sPoint) => {
-                        let bindings = {
-                            $upi: value.upi,
-                            $timestamp: value.timestamp,
-                            $Value: value.Value
-                        };
-
+                    this.HistoryRecord.findAll({
+                        attributes: ['upi', 'timestamp', 'useredited'],
+                        where: {
+                            upi: value.upi,
+                            timestamp: value.timestamp
+                        },
+                        raw: true
+                    }).then((sPoint) => {
                         if ((updateOptions & 1 !== 0) && !sPoint) {
                             // only inserting new data
-                            let insertStatement = 'INSERT INTO ' + table + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED)';
-                            insertStatement += 'VALUES ($upi, $timestamp, $Value, $ValueType, $statusflags, 1)';
-                            bindings.$ValueType = (!!value.ValueType) ? value.ValueType : 1;
-                            bindings.$statusflags = (!!value.statusflags) ? value.statusflags : 0;
-
-                            criteria = {
-                                year: moment.unix(value.timestamp).year(),
-                                statement: insertStatement
-                            };
-                            archiveUtility.prepare(criteria, (stmt) => {
-                                criteria = {
-                                    year: moment.unix(value.timestamp).year(),
-                                    statement: stmt,
-                                    parameters: bindings
-                                };
-                                archiveUtility.runStatement(criteria, () => {
-                                    archiveUtility.finalizeStatement(criteria, () => {
-                                        if (err) {
-                                            return callback(err);
-                                        }
-                                        updatedCount++;
-                                        callback();
-                                    });
-                                });
+                            this.HistoryRecord.create({
+                                upi: value.upi,
+                                timestamp: value.timestamp,
+                                value: value.Value,
+                                valueType: (!!value.ValueType) ? value.ValueType : 1,
+                                statusFlags: (!!value.statusflags) ? value.statusflags : 0
+                            }).then((result) => {
+                                updatedCount++;
+                                callback();
+                            }).catch((err) => {
+                                updatedCount++;
+                                callback(err);
                             });
                         } else if (((updateOptions & 2) !== 0 && sPoint.USEREDITED === 1) || ((updateOptions & 4) !== 0 && sPoint.USEREDITED === 0 && sPoint.VALUE !== value.Value)) {
                             // updating only existing user edited data
-                            let updateStatement = 'UPDATE ' + table;
-                            updateStatement += ' SET VALUE=$Value';
+
+                            let updateObj = {
+                                value: value.Value,
+                                userEdited: 1
+                            };
                             if (!!value.statusflags) {
-                                bindings.$statusflags = value.statusflags;
-                                updateStatement += ', STATUSFLAGS=$statusflags';
+                                updateObj.statusflags = value.statusflags;
                             }
 
-                            updateStatement += ', USEREDITED=1 WHERE';
-                            updateStatement += ' UPI=$upi AND TIMESTAMP=$timestamp AND USEREDITED=' + sPoint.USEREDITED;
-
-                            criteria = {
-                                year: moment.unix(value.timestamp).year(),
-                                statement: updateStatement
-                            };
-                            archiveUtility.prepare(criteria, (stmt) => {
-                                criteria = {
-                                    year: moment.unix(value.timestamp).year(),
-                                    statement: stmt,
-                                    parameters: bindings
-                                };
-                                archiveUtility.runStatement(criteria, () => {
-                                    archiveUtility.finalizeStatement(criteria, () => {
-                                        if (err) {
-                                            return callback(err);
-                                        }
-                                        updatedCount++;
-                                        callback();
-                                    });
-                                });
+                            this.HistoryRecord.update(updateObj, {
+                                where: {
+                                    upi: value.upi,
+                                    timestamp: value.timestamp,
+                                    userEdited: sPoint.USEREDITED
+                                }
+                            }).then((result) => {
+                                updatedCount++;
+                                callback();
+                            }).catch((err) => {
+                                updatedCount++;
+                                callback(err);
                             });
                         } else {
                             //ignored
                             return callback();
                         }
-                    });
+                    }).catch((err) => {});
                 }
             });
         }, (err) => {
@@ -923,89 +920,65 @@ const History = class History extends Common {
         return ['sum', 'max', 'reactiveCharge'].indexOf(op.fx) >= 0 && (!op.hasOwnProperty('splitUpis') || op.splitUpis.toString() !== 'true');
     }
     findInSql(options, tables, callback) {
-        const archiveUtility = new ArchiveUtility();
         let upis = options.upis;
-        let years = [];
-        let results = [];
 
-        for (let i = 0; i < tables.length; i++) {
-            if (years.indexOf(tables[i].substring(8, 12)) < 0) {
-                years.push(tables[i].substring(8, 12));
-            }
+
+        let query = {
+            raw: true
+        };
+        let attributes = [];
+        if (this.testFunctions(options.ops[0])) {
+            attributes = [
+                [ArchiveUtility.fn('sum', ArchiveUtility.col('value')), 'value'], 'timestamp', [ArchiveUtility.fn('count', ArchiveUtility.col('upi')), 'upis']
+            ];
+        } else {
+            attributes = ['upi', 'timestamp', 'value', 'valueType', 'statusFlags', 'userEdited'];
         }
 
-        async.eachSeries(years, (year, cb) => {
-            let columns;
-            if (this.testFunctions(options.ops[0])) {
-                columns = ['SUM(VALUE) as VALUE', 'TIMESTAMP', 'COUNT(UPI) as UPIS'];
-            } else {
-                columns = ['UPI', 'TIMESTAMP', 'VALUE', 'VALUETYPE', 'STATUSFLAGS', 'USEREDITED'];
-            }
+        let where = {
+            upi: {
+                $in: upis
+            },
+            timestamp: {}
+        };
+        if (['weather', 'history match', 'latest history', 'earliest history'].indexOf(options.ops[0].fx) >= 0) {
+            where.timestamp.$gte = options.range.start;
+        } else {
+            where.timestamp.$gt = options.range.start;
+        }
 
-            let start = 'SELECT ' + columns.join(', ') + ' FROM';
-            let WHERE = 'WHERE';
-            let UNION = 'UNION';
-            let statement = [];
+        if (options.ops[0].fx === 'latest history') {
+            where.timestamp.$lt = options.range.end;
+        } else {
+            where.timestamp.$lte = options.range.end;
+        }
 
-            statement.push(start);
+        if (['history match'].indexOf(options.ops[0].fx) >= 0) {
+            where.timestamp.$in = options.timestamps;
+        }
 
-            for (let i = 0; i < tables.length; i++) {
-                if (tables[i].substring(8, 12) === year) {
-                    if (statement.length > 1) {
-                        statement.push(UNION);
-                        statement.push(start);
-                    }
+        if (this.testFunctions(options.ops[0])) {
+            query.group = ['timestamp'];
+        }
 
-                    statement.push(tables[i]);
-                    if (upis.length === 1) {
-                        statement.push(WHERE);
-                        statement.push('upi =');
-                        statement.push(upis[0]);
-                    } else if (upis.length > 1) {
-                        statement.push(WHERE);
-                        statement.push('upi IN');
-                        statement.push('(' + upis.join(',') + ')');
-                    }
+        if (true) {
+            query.order = [
+                ['timestamp', 'DESC']
+            ];
+            query.limit = 1;
+        } else if (false) {
+            query.order = [
+                ['timestamp', 'ASC']
+            ];
+            query.limit = 1;
+        }
 
-                    if (['weather', 'history match', 'latest history', 'earliest history'].indexOf(options.ops[0].fx) >= 0) {
-                        statement.push('AND TIMESTAMP >=');
-                    } else {
-                        statement.push('AND TIMESTAMP >');
-                    }
-                    statement.push(options.range.start);
-                    if (options.ops[0].fx === 'latest history') {
-                        statement.push('AND TIMESTAMP <');
-                    } else {
-                        statement.push('AND TIMESTAMP <=');
-                    }
-                    statement.push(options.range.end);
-                    if (['history match'].indexOf(options.ops[0].fx) >= 0) {
-                        statement.push('AND TIMESTAMP IN (');
-                        statement.push(options.timestamps);
-                        statement.push(')');
-                    }
-                    if (this.testFunctions(options.ops[0])) {
-                        statement.push('GROUP BY timestamp');
-                    }
-                }
-            }
-            if (['latest history'].indexOf(options.ops[0].fx) >= 0) {
-                statement.push('ORDER BY TIMESTAMP DESC LIMIT 1');
-            } else if (['earliest history'].indexOf(options.ops[0].fx) >= 0) {
-                statement.push('ORDER BY TIMESTAMP ASC LIMIT 1');
-            }
-
-            statement = statement.join(' ');
-            let criteria = {
-                year: parseInt(year, 10),
-                statement: statement
-            };
-            archiveUtility.all(criteria, (err, rows) => {
-                results = results.concat(rows);
-                cb(err);
-            });
-        }, (err) => {
-            return callback(err, results);
+        query.attributes = attributes;
+        query.where = where;
+        this.HistoryRecord.findAll(query).then((rows) => {
+            callback(null, rows);
+        }).catch((err) => {
+            callback(err);
         });
     }
     fixResults(sResults, mResults, callback) {
@@ -1065,65 +1038,23 @@ const History = class History extends Common {
         callback(null, sResults);
     }
     countInSql(options, tables, callback) {
-        const archiveUtility = new ArchiveUtility();
         let upis = options.upis;
-        let results = [];
-        let years = [];
-        for (let i = 0; i < tables.length; i++) {
-            if (years.indexOf(tables[i].substring(8, 12)) < 0) {
-                years.push(tables[i].substring(8, 12));
+        let where = {
+            timestamp: {
+                gt: options.range.start,
+                lte: options.range.end
+            },
+            upi: {
+                $in: upis
             }
-        }
-
-        async.eachSeries(years, (year, cb) => {
-            let WHERE = 'WHERE';
-            let UNION = 'UNION';
-            let statement = [];
-
-            let buildStart = (tableName) => {
-                return 'Select count(*) as count, "' + tableName + '" as TableName FROM';
-            };
-
-            for (let i = 0; i < tables.length; i++) {
-                if (tables[i].substring(8, 12) === year) {
-                    if (!statement.length) {
-                        statement.push(buildStart(tables[i]));
-                    }
-                    if (statement.length > 1) {
-                        statement.push(UNION);
-                        statement.push(buildStart(tables[i]));
-                    }
-
-                    statement.push(tables[i]);
-                    statement.push(WHERE);
-                    statement.push('timestamp >');
-                    statement.push(options.range.start);
-                    statement.push('AND');
-                    statement.push('timestamp <=');
-                    statement.push(options.range.end);
-
-                    if (upis.length === 1) {
-                        statement.push('AND');
-                        statement.push('upi =');
-                        statement.push(upis[0]);
-                    } else if (upis.length > 1) {
-                        statement.push('AND');
-                        statement.push('upi IN');
-                        statement.push('(' + upis.join(',') + ')');
-                    }
-                }
-            }
-            statement = statement.join(' ');
-            let criteria = {
-                year: parseInt(year, 10),
-                statement: statement
-            };
-            archiveUtility.all(criteria, (err, rows) => {
-                results = results.concat(rows);
-                cb(err);
-            });
-        }, (err) => {
-            return callback(err, results);
+        };
+        this.HistoryRecord.count({
+            where: where,
+            raw: true
+        }).then((count) => {
+            callback(null, count);
+        }).catch((err) => {
+            return callback((err));
         });
     }
     findMissing(counts, options, callback) {
@@ -1305,86 +1236,11 @@ const History = class History extends Common {
             callback(err, options);
         });
     }
-    doMonth(range, cb2) {
-        const archiveUtility = new ArchiveUtility();
-        archiveUtility.serialize(range, () => {
-            let criteria = {
-                year: range.year,
-                statement: 'PRAGMA synchronous = OFF'
-            };
-            archiveUtility.exec(criteria, () => {
-                let tableName = 'History_' + range.year.toString() + range.month.toString();
-                criteria = {
-                    year: range.year,
-                    statement: 'BEGIN TRANSACTION'
-                };
-                archiveUtility.runDB(criteria, () => {
-                    let batchSize = 100;
-                    let count = 0;
-                    let parameterPlaceholder = '?,?,?,?,?,?';
-                    let additionalParameter = ',(' + parameterPlaceholder + ')';
-                    let params = [];
 
-                    let processPoint = (_cb) => {
-                        let statement = 'INSERT INTO ' + tableName + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED) VALUES  (' + parameterPlaceholder + ')' + additionalParameter.repeat(params.length / 6 - 1);
-
-                        criteria = {
-                            year: range.year,
-                            statement: statement
-                        };
-                        archiveUtility.prepare(criteria, (stmt) => {
-                            criteria = {
-                                year: range.year,
-                                statement: stmt,
-                                parameters: params
-                            };
-                            archiveUtility.runStatement(criteria, () => {
-                                archiveUtility.finalizeStatement(criteria, () => {
-                                    params = [];
-                                    return _cb();
-                                });
-                            });
-                        });
-                    };
-
-                    async.eachSeries(range.points, (point, callback) => {
-                        let userEdited = (point.hasOwnProperty('userEdited')) ? point.userEdited : false;
-
-                        params.push(point.upi, point.timestamp, point.Value, point.ValueType, point.statusflags, userEdited);
-                        if (++count % batchSize === 0) {
-                            processPoint(() => {
-                                callback();
-                            });
-                        } else {
-                            callback();
-                        }
-                    }, (err) => {
-                        if (!!params.length) {
-                            processPoint(() => {
-                                criteria = {
-                                    year: range.year,
-                                    statement: 'END TRANSACTION'
-                                };
-                                archiveUtility.runDB(criteria, cb2);
-                            });
-                        } else {
-                            criteria = {
-                                year: range.year,
-                                statement: 'END TRANSACTION'
-                            };
-                            archiveUtility.runDB(criteria, cb2);
-                        }
-                    });
-                });
-            });
-        });
-    }
-    addToSQLite(ranges, cb) {
-        async.eachSeries(ranges, (range, callback) => {
-            this.doMonth(range, callback);
-        }, (err) => {
-            this.removeFromHistorydata(ranges, cb);
-        });
+    addToSQLite(points, cb) {
+        this.HistoryRecord.bulkCreate(points).then(() => {
+            cb();
+        }).catch(cb);
     }
     removeFromHistorydata(ranges, cb) {
         // no longer removing data by mongo.remove()
@@ -1418,7 +1274,6 @@ const History = class History extends Common {
         this.getUsage(reqOptions, callback);
     }
     getMissingMeters(data, cb) {
-        const archiveUtility = new ArchiveUtility();
         let options = data.options;
         let meters = options.meters;
         let missingMeters = [];
@@ -1427,55 +1282,41 @@ const History = class History extends Common {
 
         let endOfPeriod = (end > moment().unix()) ? moment().unix() : end;
 
+
         async.each(meters, (meter, callback) => {
+            let neededCount = Math.ceil((endOfPeriod - start) / (30 * 60)) * meter.upis.length;
+            let where = {
+                upi: {
+                    $in: meter.upis
+                },
+                timestamp: {
+                    $gt: start,
+                    lte: end
+                }
+            };
+
             meter.upis = meter.upis.map((upi) => {
                 return parseInt(upi, 10);
             });
 
-            let table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
-            let neededCount = Math.ceil((endOfPeriod - start) / (30 * 60)) * meter.upis.length;
-            let statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-
-            let criteria = {
-                year: moment.unix(start).year(),
-                statement: statement
-            };
-            archiveUtility.get(criteria, (err, row) => {
-                table = 'History_' + moment.unix(end).format('YYYY') + moment.unix(end).format('MM');
-                statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-
-                criteria = {
-                    year: moment.unix(end).year(),
-                    statement: statement
-                };
-                archiveUtility.get(criteria, (err, row2) => {
-                    if ((row.COUNT + row2.COUNT) < neededCount) {
-                        missingMeters.push(meter);
-                        return callback(err);
-                    }
-                    statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-
-                    criteria = {
-                        year: moment.unix(end).year(),
-                        statement: statement
-                    };
-                    archiveUtility.get(criteria, (err, _row2) => {
-                        table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
-                        statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-
-                        criteria = {
-                            year: moment.unix(start).year(),
-                            statement: statement
-                        };
-                        archiveUtility.get(criteria, (err, _row) => {
-                            if ((_row2.COUNT + _row.COUNT) > 0) {
-                                missingMeters.push(meter);
-                                return callback(err);
-                            }
-                            return callback(err);
-                        });
-                    });
+            this.HistoryRecord.count({
+                where: where
+            }).then((count) => {
+                if (count < neededCount) {
+                    missingMeters.push(meter);
+                    return;
+                }
+                where.userEdited = 1;
+                return this.HistoryRecord.count({
+                    where: where
                 });
+            }).then((editedCount) => {
+                if (editedCount > 0) {
+                    missingMeters.push(meter);
+                }
+                return callback(null);
+            }).catch((err) => {
+                return callback(err);
             });
         }, (err) => {
             cb(err, missingMeters);
@@ -1740,57 +1581,22 @@ const History = class History extends Common {
         range.points.push(point);
         ranges.push(range);
     }
-    buildTimeRanges(points, cb) {
-        let compare = (a, b) => {
-            if (a.timestamp < b.timestamp) {
-                return -1;
-            }
-            if (a.timestamp > b.timestamp) {
-                return 1;
-            }
-            return 0;
+    doBackUp(upis, cb) {
+        let criteria = {
+            query: [{
+                $project: {
+                    _id: 0,
+                    value: '$Value',
+                    valueType: '$ValueType',
+                    statusFlags: '$statusflags',
+                    timestamp: 1,
+                    upi: 1
+                }
+            }]
         };
 
-        let ranges = [];
-
-        points.sort(compare);
-
-        for (let i = 0; i < points.length; i++) {
-            let month = moment.unix(points[i].timestamp).format('MM');
-            let year = moment.unix(points[i].timestamp).format('YYYY');
-
-            this.upsertRange(ranges, month, year, points[i]);
-        }
-        this.addToSQLite(ranges, cb);
-    }
-    doBackUp(upis, limitRange, cb) {
-        let criteria = {};
-        let query = {};
-        this.findRangeEnds((err, range) => {
-            let dates = this.buildDates(range);
-            async.eachSeries(dates, (date, callback) => {
-                query = {
-                    $and: [{
-                        timestamp: {
-                            $gte: date.start
-                        }
-                    }, {
-                        timestamp: {
-                            $lt: date.end
-                        }
-                    }]
-                };
-
-                criteria = {
-                    query: query
-                };
-
-                this.get(criteria, (err, points) => {
-                    this.buildTimeRanges(points, callback);
-                });
-            }, (err) => {
-                cb(err);
-            });
+        this.aggregate(criteria, (err, points) => {
+            this.addToSQLite(points, cb);
         });
     }
     // buildOps: buildOps,

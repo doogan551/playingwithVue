@@ -9,8 +9,8 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
-var History = new(require('../models/history.js'))();
-var Utility = new(require('../models/utility.js'))();
+var History = require('../models/history.js');
+var Utilities = require('../models/utilities');
 
 var logFilePath = config.get('Infoscan.files').driveLetter + ':/InfoScanJS/apps/backup.log';
 
@@ -36,8 +36,8 @@ var upis = {
 };
 
 let getMeterUpis = (cb) => {
-    Utility.get({
-        collection: 'Utilities',
+    let utilitiesModel = new Utilities();
+    utilitiesModel.get({
         query: {},
         fields: {
             Meters: 1,
@@ -61,11 +61,11 @@ let getMeterUpis = (cb) => {
 };
 
 let calculateWeather = (cb) => {
+    let historyModel = new History();
     var removals = [lowTempUpi, hiTempUpi, hddUpi, cddUpi];
     var results = [];
 
-    Utility.remove({
-        collection: 'historydata',
+    historyModel.remove({
         query: {
             upi: {
                 $in: removals
@@ -75,8 +75,7 @@ let calculateWeather = (cb) => {
         if (err) {
             return cb(err);
         }
-        Utility.get({
-            collection: 'historydata',
+        historyModel.get({
             query: {
                 upi: oatUpi
             },
@@ -153,7 +152,7 @@ let calculateWeather = (cb) => {
                 callback();
             }, (err) => {
                 console.log(results.length);
-                Utility.insert({
+                historyModel.insert({
                     collection: 'historydata',
                     insertObj: results
                 }, (err, result) => {
@@ -223,44 +222,42 @@ let backUp = () => {
 
 
 let newBackup = () => {
+    let historyModel = new History();
     db.connect(connectionString.join(''), (err) => {
-        History.doBackUp(upis.all, false, (err) => {
+        historyModel.doBackUp(upis.all, (err) => {
             if (err) {
-                logToFile('doBackUp Error: ' + err);
+                console.log('doBackUp Error: ' + JSON.stringify(err));
             }
-            logToFile('Finished with SQLite backup');
-            setTimeout(() => {
-                Utility.dropCollection({
-                    collection: 'historydata'
-                }, (err, result) => {
-                    if (err) {
-                        logToFile('dropCollection Error: ' + err);
-                    }
-                    Utility.ensureIndex({
-                        collection: 'historydata',
-                        index: {
-                            upi: 1,
-                            timestamp: 1
-                        },
-                        options: {
-                            unique: true
-                        }
-                    }, (err, result) => {
-                        Utility.ensureIndex({
-                            collection: 'historydata',
-                            index: {
-                                timestamp: -1
-                            }
-                        }, (err, result) => {
-                            if (err) {
-                                logToFile('ensureIndex Error: ' + err);
-                            }
-                            logToFile('backupHistory completed. Exiting.');
-                            process.exit(0);
-                        });
-                    });
-                });
-            }, 2000);
+            console.log('Finished with SQLite backup');
+            process.exit(0);
+            // setTimeout(() => {
+            //     historyModel.dropCollection({}, (err, result) => {
+            //         if (err) {
+            //             console.log('dropCollection Error: ' + err);
+            //         }
+            //         historyModel.ensureIndex({
+            //             index: {
+            //                 upi: 1,
+            //                 timestamp: 1
+            //             },
+            //             options: {
+            //                 unique: true
+            //             }
+            //         }, (err, result) => {
+            //             historyModel.ensureIndex({
+            //                 index: {
+            //                     timestamp: -1
+            //                 }
+            //             }, (err, result) => {
+            //                 if (err) {
+            //                     console.log('ensureIndex Error: ' + err);
+            //                 }
+            //                 console.log('backupHistory completed. Exiting.');
+            //                 process.exit(0);
+            //             });
+            //         });
+            //     });
+            // }, 2000);
         });
     });
 };

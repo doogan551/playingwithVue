@@ -5,7 +5,7 @@ var rob = {
             'dbName': 'infoscan'
         },
         'zmqConfig': {
-            'server': 'info-int'
+            'server': 'localhost'
         },
         'files': {
             'driveLetter': 'C'
