@@ -450,14 +450,14 @@ html
             script#node(type='text/html')
                 .node.blue-grey-form(data-bind="css: { focused: focused }")
 
-                    // ko if: hasChildren()
+                    //- // ko if: hasChildren()
                     a.expandcollapse(href="#", data-bind="click: $root.getBranch")
                         i.material-icons(data-bind="text: !expanded() ? 'keyboard_arrow_right' : 'expand_more'")
-                    // /ko
+                    //- // /ko
 
-                    // ko if: !hasChildren()
-                    a.mdi.mdi-file-outline.expandcollapse.blank(href="#") &nbsp;
-                    // /ko
+                    //- // ko if: !hasChildren()
+                    //- a.mdi.mdi-file-outline.expandcollapse.blank(href="#") &nbsp;
+                    //- // /ko
                     
                     //- // ko if: children().length === 0
                     //- i.mdi.mdi-file-outline
