@@ -326,81 +326,28 @@ const Hierarchy = class Hierarchy extends Common {
             }
         });
 
-        pipeline.push({
-            $unwind: '$children'
-        });
-        pipeline.push({
-            $unwind: '$children.hierarchyRefs'
-        });
-        pipeline.push({
-            $match: {
-                'children.hierarchyRefs.item': 'Location'
-            }
-        });
-        pipeline.push({
-            $project: {
-                'parentId': '$_id',
-                children: 1
-            }
-        });
-        pipeline.push({
-            $group: {
-                _id: '$children.hierarchyRefs.value',
-                children: {
-                    $addToSet: '$children'
-                },
-                display: {
-                    $first: '$children.hierarchyRefs.display'
-                },
-                type: {
-                    $first: '$children.hierarchyRefs.type'
-                },
-                parentLocationId: {
-                    $first: '$parentId'
-                }
-            }
-        });
-        pipeline.push({
-            $project: {
-                'children.meta': 0,
-                'children.tags': 0
-            }
-        });
+        // pipeline.push({
+        //     $unwind: '$children'
+        // });
+        // pipeline.push({
+        //     $replaceRoot: {
+        //         'newRoot': '$children'
+        //     }
+        // });
 
         this.aggregate({
             pipeline: pipeline
-        }, cb);
-    }
-
-    buildTree(branches) {
-        let roots = [];
-        let tree = [];
-        let buildChildren = (parent) => {
-            parent.children.forEach((child) => {
-                child.children = [];
-                branches.forEach((branch) => {
-                    if (child._id === branch._id) {
-                        child.children = branch.children;
-                    }
-                });
-                buildChildren(child);
+        }, (err, descendants) => {
+            let newDescendants = [];
+            descendants.forEach((descendant) => {
+                newDescendants = newDescendants.concat([...descendant.children]);
+                delete descendant.children;
+                newDescendants.push(descendant);
             });
-        };
-        branches.forEach((branch) => {
-            if (!roots.includes(branch.parentLocationId)) {
-                roots.push(branch.parentLocationId);
-            }
-        });
 
-        branches.forEach((branch) => {
-            if (roots.includes(branch._id)) {
-                tree.push(branch);
-            }
+            descendants = this.orderDescendants(item, newDescendants, id);
+            cb(err, descendants);
         });
-        tree.forEach((root) => {
-            buildChildren(root);
-        });
-        return tree;
     }
 
     getDescendantIds(data, cb) {
@@ -443,12 +390,6 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    expandTree(data, cb) {
-        this.getDescendants(data, (err, descendants) => {
-            return cb(err, this.buildTree(descendants));
-        });
-    }
-
     sortDescendants(a, b) {
         return a.path.length - b.path.length;
     }
@@ -480,7 +421,7 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    orderPath(item, path, cb) {
+    orderPath(item, path) {
         let newPath = [];
         let parentId = 0;
 
@@ -493,6 +434,25 @@ const Hierarchy = class Hierarchy extends Common {
                         newPath.push(node);
                         findNextChild(node._id);
                         break;
+                    }
+                }
+            }
+        };
+
+        findNextChild(parentId);
+        return newPath;
+    }
+
+    orderDescendants(item, descendants, parentId) {
+        let newPath = [];
+        let findNextChild = (parentId) => {
+            for (var d = 0; d < descendants.length; d++) {
+                let node = descendants[d];
+                for (var h = 0; h < node.hierarchyRefs.length; h++) {
+                    let hierRef = node.hierarchyRefs[h];
+                    if (hierRef.value === parentId && hierRef.item === item) {
+                        newPath.push(node);
+                        findNextChild(node._id);
                     }
                 }
             }
