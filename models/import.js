@@ -73,13 +73,11 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                this.fixPointRefs((err) => {
-                                    if (err) {
-                                        logger.info('updateGPLReferences err:', err);
-                                    }
-                                    logger.info('done', err, new Date());
-                                    process.exit(0);
-                                });
+                                if (err) {
+                                    logger.info('updateGPLReferences err:', err);
+                                }
+                                logger.info('done', err, new Date());
+                                process.exit(0);
                             });
                         });
                     });
@@ -2302,7 +2300,6 @@ let Import = class Import extends Common {
         callback(null);
     }
     updateNameSegments(point, callback) {
-
         point._name1 = point.name1.toLowerCase();
         point._name2 = point.name2.toString().toLowerCase();
         point._name3 = point.name3.toLowerCase();
@@ -2749,40 +2746,6 @@ let Import = class Import extends Common {
             collection: 'counters',
             insertObj: counters
         }, callback);
-    }
-    fixPointRefs(cb) {
-        let pointModel = new Point();
-
-        pointModel.iterateCursor({
-            query: {
-                'Point Refs': {
-                    $ne: []
-                }
-            }
-        }, (err, point, next) => {
-            for (var pr = 0; pr < point['Point Refs'].length; pr++) {
-                let ref = point['Point Refs'][pr];
-
-                ref.id = ref.Value;
-                ref.upi = ref.PointInst;
-                ref.dev = ref.DevInst;
-                ref.index = ref.AppIndex;
-
-                delete ref.Value;
-                delete ref.PointInst;
-                delete ref.DevInst;
-                delete ref.AppIndex;
-                delete ref.PointType;
-            }
-            pointModel.update({
-                query: {
-                    _id: point._id
-                },
-                updateObj: point
-            }, (err, result) => {
-                next(err);
-            });
-        }, cb);
     }
 };
 

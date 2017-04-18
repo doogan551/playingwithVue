@@ -1916,7 +1916,6 @@ let scripts = {
         });
     },
     convertUpis: function (callback) {
-        logger.warn('convertUpis must run before updatePointRefProperties');
         let afterVersion = '0.6.0';
         if (!checkVersions(afterVersion)) {
             return callback(null, {
@@ -1939,27 +1938,6 @@ let scripts = {
                 });
             });
         });
-    },
-    updatePointRefProperties: function (callback) {
-        logger.warn('updatePointRefProperties must run after convertUpis');
-        let afterVersion = '0.6.0';
-        if (!checkVersions(afterVersion)) {
-            return callback(null, {
-                fn: 'updatePointRefProperties',
-                errors: null,
-                results: null
-            });
-        }
-
-        let importApp = new Import();
-
-        importApp.fixPointRefProperties((err, count) => {
-            logger.info('Finished with updatePointRefProperties');
-            callback(null, {
-                fn: 'updatePointRefProperties',
-                errors: null
-            });
-        });
     }
 };
 
@@ -1974,7 +1952,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.convertUpis, scripts.updatePointRefProperties];
+    tasks = [scripts.convertUpis];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
