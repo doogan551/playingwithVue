@@ -115,7 +115,7 @@ const Hierarchy = class Hierarchy extends Common {
 
     getNewId(cb) {
         let counterModel = new Counter();
-        counterModel.getNextSequence('hierarchyId', cb);
+        counterModel.getNextSequence('hierarchy', cb);
     }
 
     addAll(data, cb) {
@@ -213,112 +213,239 @@ const Hierarchy = class Hierarchy extends Common {
         }
     }
 
-    getDescendants(data, cb) {
-        let id = this.getNumber(data.id);
+    search(data, cb) {
         let terms = this.getDefault(data.terms, []);
-        let groups = this.getDefault(data.groups, []);
+        let pipeline = [];
         let item = data.item;
 
-        let pipeline = [];
+        terms = terms.map((term) => {
+            if (term.match(/"/)) {
+                return term;
+            }
+            return new RegExp('[.]*' + term.toLowerCase() + '[.]*');
+        });
 
-        pipeline.push(this.getPathLookup());
+        pipeline.push({
+            $unwind: {
+                path: '$path',
+                preserveNullAndEmptyArrays: true
+            }
+        });
 
-        if (!!terms.length) {
-            terms = terms.map((term) => {
-                if (term.match(/"/)) {
-                    return term;
-                }
-                return new RegExp('[.]*' + term.toLowerCase() + '[.]*');
-            });
-            pipeline.push({
-                $unwind: {
-                    path: '$path',
-                    preserveNullAndEmptyArrays: true
-                }
-            });
+        pipeline.push({
+            $project: {
+                'tags': {
+                    $concatArrays: ['$tags', {
+                        $ifNull: ['$path.tags', []]
+                    }]
+                },
+                'display': 1,
+                'item': 1,
+                'type': 1,
+                'path': 1
+            }
+        });
 
-            pipeline.push({
-                $project: {
-                    'tags': {
-                        $concatArrays: ['$tags', {
-                            $ifNull: ['$path.tags', []]
-                        }]
-                    },
-                    'display': 1,
-                    'item': 1,
-                    'type': 1,
-                    'path': 1
-                }
-            });
+        pipeline.push({
+            $unwind: {
+                path: '$tags'
+            }
+        });
 
-            pipeline.push({
-                $unwind: {
-                    path: '$tags'
+        pipeline.push({
+            $group: {
+                _id: '$_id',
+                display: {
+                    $first: '$display'
+                },
+                type: {
+                    $first: '$type'
+                },
+                item: {
+                    $first: '$item'
+                },
+                path: {
+                    $addToSet: '$path'
+                },
+                tags: {
+                    $addToSet: '$tags'
                 }
-            });
+            }
+        });
 
-            pipeline.push({
-                $group: {
-                    _id: '$_id',
-                    display: {
-                        $first: '$display'
-                    },
-                    type: {
-                        $first: '$type'
-                    },
-                    item: {
-                        $first: '$item'
-                    },
-                    path: {
-                        $addToSet: '$path'
-                    },
-                    tags: {
-                        $addToSet: '$tags'
-                    }
+        pipeline.push({
+            $match: {
+                tags: {
+                    $all: terms
                 }
-            });
+            }
+        });
 
-            pipeline.push({
-                $match: {
-                    tags: {
-                        $all: terms
-                    }
-                }
-            });
-
-            pipeline.push({
-                $project: {
-                    'tags': 0,
-                    'path.tags': 0
-                }
-            });
-        } else if (!!groups.length) {
-            let group = {
-                $group: {
-                    _id: 'descendants'
-                }
-            };
-            groups.forEach((field) => {
-                group.$group[field[0]] = {
-                    $addToSet: '$' + field[1]
-                };
-            });
-            pipeline.push(group);
-        }
+        pipeline.push({
+            $project: {
+                'tags': 0,
+                'path.tags': 0
+            }
+        });
 
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
-            if (!!groups.length) {
-                return cb(err, descendants);
-            }
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                this.orderPath(item, descendant);
+                descendant.path = this.orderPath(item, descendant);
                 callback();
             }, (err) => {
                 cb(err, descendants);
             });
+        });
+    }
+
+    getDescendants(data, cb) {
+        let id = this.getNumber(data.id);
+        let item = data.item;
+
+        let pipeline = [];
+        pipeline.push({
+            '$match': {
+                'hierarchyRefs': {
+                    '$elemMatch': {
+                        'item': 'Location',
+                        'value': id
+                    }
+                }
+            }
+        });
+        pipeline.push({
+            '$graphLookup': {
+                'from': 'hierarchy',
+                'startWith': '$_id',
+                'connectFromField': '_id',
+                'connectToField': 'hierarchyRefs.value',
+                'as': 'children'
+            }
+        });
+
+        pipeline.push({
+            $unwind: '$children'
+        });
+        pipeline.push({
+            $unwind: '$children.hierarchyRefs'
+        });
+        pipeline.push({
+            $match: {
+                'children.hierarchyRefs.item': 'Location'
+            }
+        });
+        pipeline.push({
+            $project: {
+                'parentId': '$_id',
+                children: 1
+            }
+        });
+        pipeline.push({
+            $group: {
+                _id: '$children.hierarchyRefs.value',
+                children: {
+                    $addToSet: '$children'
+                },
+                display: {
+                    $first: '$children.hierarchyRefs.display'
+                },
+                type: {
+                    $first: '$children.hierarchyRefs.type'
+                },
+                parentLocationId: {
+                    $first: '$parentId'
+                }
+            }
+        });
+        pipeline.push({
+            $project: {
+                'children.meta': 0,
+                'children.tags': 0
+            }
+        });
+
+        this.aggregate({
+            pipeline: pipeline
+        }, cb);
+    }
+
+    buildTree(branches) {
+        let roots = [];
+        let tree = [];
+        let buildChildren = (parent) => {
+            parent.children.forEach((child) => {
+                child.children = [];
+                branches.forEach((branch) => {
+                    if (child._id === branch._id) {
+                        child.children = branch.children;
+                    }
+                });
+                buildChildren(child);
+            });
+        };
+        branches.forEach((branch) => {
+            if (!roots.includes(branch.parentLocationId)) {
+                roots.push(branch.parentLocationId);
+            }
+        });
+
+        branches.forEach((branch) => {
+            if (roots.includes(branch._id)) {
+                tree.push(branch);
+            }
+        });
+        tree.forEach((root) => {
+            buildChildren(root);
+        });
+        return tree;
+    }
+
+    getDescendantIds(data, cb) {
+        let id = this.getNumber(data.id);
+        let item = data.item;
+
+        let pipeline = [];
+        pipeline.push({
+            '$match': {
+                _id: id
+            }
+        });
+        pipeline.push({
+            '$graphLookup': {
+                'from': 'hierarchy',
+                'startWith': '$_id',
+                'connectFromField': '_id',
+                'connectToField': 'hierarchyRefs.value',
+                'as': 'children'
+            }
+        });
+        pipeline.push({
+            $unwind: {
+                path: '$children'
+            }
+        });
+        pipeline.push({
+            $group: {
+                '_id': 'children',
+                ids: {
+                    $addToSet: '$children._id'
+                }
+            }
+        });
+
+        this.aggregate({
+            pipeline: pipeline
+        }, (err, descendants) => {
+            return cb(err, descendants);
+        });
+    }
+
+    expandTree(data, cb) {
+        this.getDescendants(data, (err, descendants) => {
+            return cb(err, this.buildTree(descendants));
         });
     }
 
@@ -345,7 +472,7 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, descendants) => {
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                this.orderPath(item, descendant);
+                descendant.path = this.orderPath(item, descendant.path);
                 callback();
             }, (err) => {
                 cb(err, descendants);
@@ -353,15 +480,16 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    orderPath(item, descendant, cb) {
-        let path = descendant.path;
+    orderPath(item, path, cb) {
         let newPath = [];
+        let parentId = 0;
+
         let findNextChild = (parentId) => {
             for (var p = 0; p < path.length; p++) {
                 let node = path[p];
                 for (var h = 0; h < node.hierarchyRefs.length; h++) {
                     let hierRef = node.hierarchyRefs[h];
-                    if (hierRef.item === item && hierRef.value === parentId) {
+                    if (hierRef.value === parentId && hierRef.item === item) {
                         newPath.push(node);
                         findNextChild(node._id);
                         break;
@@ -370,9 +498,8 @@ const Hierarchy = class Hierarchy extends Common {
             }
         };
 
-        findNextChild(0);
-        descendant.path = newPath;
-        return;
+        findNextChild(parentId);
+        return newPath;
     }
 
     getPathLookup() {
@@ -392,11 +519,8 @@ const Hierarchy = class Hierarchy extends Common {
         let deleteChildren = this.getDefault(data.deleteChildren, false);
         let item = data.item;
 
-        this.getDescendants({
-            id: id,
-            groups: [
-                ['ids', '_id']
-            ]
+        this.getDescendantIds({
+            id: id
         }, (err, descendants) => {
             let ids = [id];
             if (!!descendants.length && !!descendants[0].ids.length) {
@@ -412,7 +536,7 @@ const Hierarchy = class Hierarchy extends Common {
                     query: query
                 }, cb);
             } else {
-                this.updateParent(null, query, item, cb);
+                this.updateParent(id, query, item, cb);
             }
         });
     }

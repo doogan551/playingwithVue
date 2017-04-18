@@ -106,3 +106,46 @@ db.hierarchy.aggregate([
       tags:{$all:tags}
     }}
 ]);
+
+{ 
+    "_id" : NumberInt(500), 
+    "item" : "Location", 
+    "display" : "a5004", 
+    "hierarchyRefs" : [
+        {
+            "isReadOnly" : false, 
+            "display" : "r5004", 
+            "value" : NumberInt(50), 
+            "type" : "Room", 
+            "isDisplayable" : true, 
+            "item" : "Location"
+        }, 
+        {
+            "isReadOnly" : false, 
+            "display" : "", 
+            "value" : NumberInt(0), 
+            "type" : "", 
+            "isDisplayable" : false, 
+            "item" : "Mechanical"
+        }
+    ], 
+    "type" : "Area", 
+    "meta" : {
+        "coords" : {
+            "lat" : NumberInt(0), 
+            "long" : NumberInt(0)
+        }, 
+        "address" : {
+            "street" : "", 
+            "city" : "", 
+            "zip" : ""
+        }, 
+        "description" : "", 
+        "tz" : ""
+    }, 
+    "tags" : [
+        "Location", 
+        "a5004", 
+        "Area"
+    ]
+}

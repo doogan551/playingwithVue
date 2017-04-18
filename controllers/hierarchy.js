@@ -66,11 +66,41 @@ router.post('/getDescendants', function (req, res) {
     });
 });
 
+router.post('/expandTree', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.expandTree(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
 router.post('/getFullPath', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
     Hierarchy.getFullPath(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+
+router.post('/search', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.search(data, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
