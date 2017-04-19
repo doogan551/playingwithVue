@@ -3934,16 +3934,15 @@ var dti = {
                         children,
                         child;
 
-                    config.parentLocId = parent._id();
-
                     if (parent) {
+                        config.parentLocId = parent._id && parent._id() || 0;
                         child = dti.bindings.locations.getNode(config || {});
                         if (parent.children) {
                             parent.children.push(child);
                         } else {
                             parent.data.push(child);
                         }
-                        dti.bindings.locations._addNode(parent.children, child);
+                        dti.bindings.locations._addNode(parent.children || parent.data, child);
                         dti.bindings.locations.focusNode(child);
 
                         if (!skipAdd) {
