@@ -4236,6 +4236,9 @@
             },
             "_actvAlmId": {
                 "enum": 16
+            },
+            "_oldUpi":{
+                "enum": 17
             }
         },
         "Value Types": {
@@ -4301,6 +4304,7 @@
             "_updTOD": false,
             "_cfgRequired": true,
             "_actvAlmId": 0,
+            "_oldUpi": 0,
             "name1": "",
             "name2": "",
             "name3": "",
