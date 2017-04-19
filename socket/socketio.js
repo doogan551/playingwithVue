@@ -410,11 +410,7 @@ module.exports = function socketio(_common) {
         sock.on('addPoint', function (data) {
             const point = new Point();
             logger.debug('addPoint');
-            point.addPoint({
-                point: data.newPoint,
-                oldPoint: data.oldPoint,
-                path: data.path
-            }, user, null, function (response, point) {
+            point.bulkAdd(data, user, function (response, points) {
                 if (response.err) {
                     sock.emit('pointUpdated', {
                         err: response.err
@@ -422,7 +418,7 @@ module.exports = function socketio(_common) {
                 } else {
                     sock.emit('pointUpdated', {
                         message: response.msg,
-                        point: point
+                        points: points
                     });
                 }
             });

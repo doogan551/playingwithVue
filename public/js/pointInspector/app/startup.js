@@ -1,7 +1,7 @@
 /*jslint white: true*/
 
 //register ko components and binding handlers
-require(['knockout'], function(ko) {
+require(['knockout'], function (ko) {
     //manually set the global ko property
     //for non-amd compliant plugins
     window.ko = ko;
@@ -221,7 +221,7 @@ define([
     'jquery-hilite',
     'bootstrap',
     'bootstrap-switch'
-], function($, ko, io, moment, Big, bannerJS) {
+], function ($, ko, io, moment, Big, bannerJS) {
     var pointInspector = {},
         workspace = window.top.workspaceManager,
         uniqueIdRegister = [],
@@ -229,9 +229,8 @@ define([
 
     //for workspace 'give me point data' function
     (function checkParameters() {
-        setTimeout(function() { // give messaging layer time to finish with onLoad()   home.js
+        setTimeout(function () { // give messaging layer time to finish with onLoad()   home.js
             if (window.getWindowParameters) {
-
                 var cfg = window.getWindowParameters();
 
                 window.attach = {};
@@ -250,22 +249,22 @@ define([
                 pointInspector.isExternal = true;
                 initialize(window.attach.point);
             } else {
-                getData(pointInspector.id).done(function(data) {
+                getData(pointInspector.id).done(function (data) {
                     initialize(data);
                 });
             }
         }, 50);
-    })();
+    }());
 
     //adjust default calendar config to show time
     moment.locale('en', {
         longDateFormat: {
-            LT: "HH:mm",
-            LTS: "HH:mm:ss",
-            L: "MM/DD/YYYY",
-            LL: "MMMM Do YYYY",
-            LLL: "MMMM Do YYYY LT",
-            LLLL: "dddd, MMMM Do YYYY LT"
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'MM/DD/YYYY',
+            LL: 'MMMM Do YYYY',
+            LLL: 'MMMM Do YYYY LT',
+            LLLL: 'dddd, MMMM Do YYYY LT'
         },
         calendar: {
             lastDay: '[Yesterday at] LTS',
@@ -287,8 +286,8 @@ define([
         WRITE: 8
     };
     pointInspector.utility = {
-        getPointRefProperty: function(propertyName, point) {
-            var pointRefs = (point !== undefined) ? point["Point Refs"]() : pointInspector.point.data['Point Refs'](),
+        getPointRefProperty: function (propertyName, point) {
+            var pointRefs = (point !== undefined) ? point['Point Refs']() : pointInspector.point.data['Point Refs'](),
                 pointRefProperty = {},
                 i = 0,
                 last = pointRefs.length;
@@ -300,7 +299,7 @@ define([
                 }
             }
         },
-        getPointRefPropertyByAppIndex: function(propertyName, appIndex) {
+        getPointRefPropertyByAppIndex: function (propertyName, appIndex) {
             var pointRefs = pointInspector.point.data['Point Refs'](),
                 pointRefProperty = {},
                 i = 0,
@@ -313,7 +312,7 @@ define([
                 }
             }
         },
-        enumToArray: function(obj) {
+        enumToArray: function (obj) {
             var _array = [];
             for (var i in obj) {
                 _array.push({
@@ -323,7 +322,7 @@ define([
             }
             return _array;
         },
-        arrayToValueOptions: function(arr) {
+        arrayToValueOptions: function (arr) {
             var _options = {},
                 i = 0;
             for (i; i < arr.length; i++) {
@@ -331,28 +330,28 @@ define([
             }
             return _options;
         },
-        createUniqueId: function() {
+        createUniqueId: function () {
             var lastId = Math.max.apply(Math, uniqueIdRegister),
                 newId = lastId < 0 ? 0 : lastId + 1;
 
             uniqueIdRegister.push(newId);
             return newId;
         },
-        addEvent: function(element, event, fn) {
+        addEvent: function (element, event, fn) {
             if (element.addEventListener) {
                 element.addEventListener(event, fn, false);
             } else if (element.attachEvent) {
                 element.attachEvent('on' + event, fn);
             }
         },
-        removeEvent: function(element, event, fn) {
+        removeEvent: function (element, event, fn) {
             if (element.removeEventListener) {
                 element.removeEventListener(event, fn, false);
             } else if (element.detachEvent) {
                 element.detachEvent('on' + event, fn);
             }
         },
-        createSelection: function(input, start, end) {
+        createSelection: function (input, start, end) {
             if (input.setSelectionRange) {
                 input.focus();
                 input.setSelectionRange(start, end);
@@ -364,7 +363,7 @@ define([
                 range.select();
             }
         },
-        getSelectionStart: function(input) {
+        getSelectionStart: function (input) {
             if (typeof input.selectionStart === 'number') {
                 return input.selectionStart;
             } else if (input.createTextRange) {
@@ -372,13 +371,14 @@ define([
                 input.focus();
                 range = document.selection.createRange().duplicate();
                 range.moveEnd('character', input.value.length);
-                if (range.text === '') return input.value.length;
+                if (range.text === '') {
+                    return input.value.length;
+                }
                 return input.value.lastIndexOf(range.text);
-            } else {
-                return 0;
             }
+            return 0;
         },
-        getSelectionEnd: function(input) {
+        getSelectionEnd: function (input) {
             if (typeof input.selectionEnd === 'number') {
                 return input.selectionEnd;
             } else if (input.createTextRange) {
@@ -386,26 +386,28 @@ define([
                 input.focus();
                 range = document.selection.createRange().duplicate();
                 range.moveStart('character', -input.value.length);
-                if (range.text === '') return input.value.length;
+                if (range.text === '') {
+                    return input.value.length;
+                }
                 return input.value.lastIndexOf(range.text);
-            } else {
-                return 0;
             }
+            return 0;
         },
-        isInt: function(val) {
+        isInt: function (val) {
             var re = /^[-+]?[0-9]+$/;
             return re.test(val);
         },
-        isFloat: function(val) {
+        isFloat: function (val) {
             return (typeof val === 'number' || (typeof val === 'string' && val !== '')) && !isNaN(Number(val));
         },
-        normalizeNumber: function(val) {
+        normalizeNumber: function (val) {
             //remove commas
             return val.toString().replace(/,/g, '');
         },
-        formatNumber: function(val, valueType, noTruncate, noComma) {
-            if ($.trim(val) === '' || isNaN(parseFloat(val)))
+        formatNumber: function (val, valueType, noTruncate, noComma) {
+            if ($.trim(val) === '' || isNaN(parseFloat(val))) {
                 return '';
+            }
             val = new Big(pointInspector.utility.normalizeNumber(val));
             noTruncate = noTruncate || pointInspector.isInEditMode();
             // Check the value type and remove any illegal chars in case any were pasted
@@ -423,7 +425,7 @@ define([
         },
         workspace: workspace,
         config: workspace.config,
-        getControllerName: function(controller) {
+        getControllerName: function (controller) {
             var controllers = workspace.systemEnums.controllers;
             for (var i = controllers.length; i--;) {
                 if (controllers[i].value === controller) {
@@ -432,7 +434,7 @@ define([
             }
             return '';
         },
-        getLevelName: function(level) {
+        getLevelName: function (level) {
             var priorities = workspace.systemEnums.controlpriorities;
             for (var i = priorities.length; i--;) {
                 if (priorities[i].value === level) {
@@ -446,7 +448,7 @@ define([
     pointInspector.isInEditMode = ko.observable(false);
     pointInspector.modelUpdate = ko.observable(false);
     pointInspector.currentTab = ko.observable();
-    pointInspector.toggleEditMode = function(edit) {
+    pointInspector.toggleEditMode = function (edit) {
         var isInEditMode = pointInspector.isInEditMode();
         if (isInEditMode) {
             // undo changes
@@ -457,7 +459,7 @@ define([
         }
         pointInspector.isInEditMode(!isInEditMode);
     };
-    pointInspector.restorePoint = function(_, e) {
+    pointInspector.restorePoint = function (_, e) {
         var emitData = JSON.stringify({
                 upi: pointInspector.point.data._id()
             }),
@@ -466,7 +468,7 @@ define([
 
         pointInspector.socket.emit('restorePoint', emitData);
 
-        pointInspector.socket.once('pointUpdated', function(response) {
+        pointInspector.socket.once('pointUpdated', function (response) {
             response = JSON.parse(response);
             if (response.err) {
                 error = ['An error occurred when trying to restore this point: ', response.err].join('');
@@ -478,7 +480,7 @@ define([
                 bannerJS.showBanner({
                     msg: error,
                     dismissText: 'Dismiss',
-                    color: '#D50000',
+                    color: '#D50000'
                 });
             } else {
                 bannerJS.showBanner({
@@ -492,7 +494,7 @@ define([
             $(e.currentTarget).attr('disabled', false);
         });
     };
-    pointInspector.close = function(edit) {
+    pointInspector.close = function (edit) {
         var newPointData = ko.viewmodel.toModel(pointInspector.point.data),
             emitData = {
                 upi: newPointData._id,
@@ -508,47 +510,41 @@ define([
         dtiUtility.closeWindow();
         // window.close();
     };
-    pointInspector.updateObject = function(_koPoint, _configPoint) {
+    pointInspector.updateObject = function (_koPoint, _configPoint) {
         // var _newPoint = ko.viewmodel.fromModel(_configPoint);
         var _newPoint = (new Point(_configPoint)).data;
         var props = ['Value', 'ValueOptions', 'isDisplayable', 'isReadOnly', 'eValue', 'ValueType', 'PropertyName', 'PropertyEnum', 'AppIndex', 'PointName', 'PointType', 'PointInst', 'DevInst', 'name', 'value'];
-        var checkForProp = function(prop) {
+        var checkForProp = function (prop) {
             return !!pointInspector.utility.config.Templates.commonProperties.hasOwnProperty(prop) || !!~props.indexOf(prop);
         };
-        var updateValues = function(current, updated) {
-            var changeProperty = function(currentProp, updatedProp) {
+        var updateValues = function (current, updated) {
+            var changeProperty = function (currentProp, updatedProp) {
                 if (typeof currentProp === 'object' || (ko.isObservable(currentProp) && typeof currentProp() === 'object')) {
                     updateValues(currentProp, updatedProp);
-                } else {
-                    if (checkForProp(prop) && currentProp() !== updatedProp()) {
-                        currentProp(updatedProp());
-                    }
+                } else if (checkForProp(prop) && currentProp() !== updatedProp()) {
+                    currentProp(updatedProp());
                 }
-            }
+            };
             for (var prop in current) {
                 if (prop === 'Alarm Messages') {
                     continue;
-                } else {
-                    if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
-                        var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
-                        var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
-                        if (!!~['taglist', 'Security'].indexOf(prop)) { // commented below is going to get complex and will probably rewrite entire function to better support ko/js objects
-                            // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
-                            current[prop] = updated[prop];
-                        } else {
-                            current[prop](updated[prop]())
-                        }
+                } else if (Array.isArray(current[prop]) || (ko.isObservable(current[prop]) && Array.isArray(current[prop]()))) {
+                    var jsProp = (!!ko.isObservable(current[prop])) ? current[prop]() : current[prop];
+                    var updatedJsProp = (!!ko.isObservable(updated[prop])) ? updated[prop]() : updated[prop];
+                    if (!!~['taglist', 'Security'].indexOf(prop)) { // commented below is going to get complex and will probably rewrite entire function to better support ko/js objects
+                        // if ((!!jsProp.length && !ko.isObservable(jsProp[0])) || (!!updatedJsProp.length && !ko.isObservable(updatedJsProp[0]))) {
+                        current[prop] = updated[prop];
                     } else {
-                        if (!updated.hasOwnProperty(prop)) {
-                            delete currentProp;
-                        } else {
-                            changeProperty(current[prop], updated[prop]);
-                        }
+                        current[prop](updated[prop]());
                     }
+                } else if (!updated.hasOwnProperty(prop)) {
+                    // delete currentProp;
+                } else {
+                    changeProperty(current[prop], updated[prop]);
                 }
             }
         };
-        var addValues = function(current, updated) {
+        var addValues = function (current, updated) {
             var currentModel = ko.viewmodel.toModel(current);
             var updatedModel = ko.viewmodel.toModel(updated);
             for (var prop in updated) {
@@ -570,7 +566,7 @@ define([
     };
     pointInspector.tabTriggers = {};
     pointInspector.events = {
-        viewmodelChange: function(e) {
+        viewmodelChange: function (e) {
             var $element = e.targetElement === null ? null : (e.targetElement instanceof jQuery) ? e.targetElement : $(e.targetElement),
                 point,
                 config = pointInspector.utility.config,
@@ -590,9 +586,11 @@ define([
                 console.log('UPDATE111', updatedPoint);
                 if (!!updatedPoint.err) {
                     //set property back to original value
-                    if (!!$element) $element.effect('highlight', {
-                        color: '#ffff99'
-                    }, 2500);
+                    if (!!$element) {
+                        $element.effect('highlight', {
+                            color: '#ffff99'
+                        }, 2500);
+                    }
                     if (typeof e.property === 'number') {
                         pointProp = e.point['Point Refs']()[e.property];
                         originalProp = e.oldPoint['Point Refs'][e.property];
@@ -630,9 +628,11 @@ define([
                     formatPointErrorTimestamp = new Date().getTime();
 
                     //set property back to original value
-                    if (!!$element) $element.effect('highlight', {
-                        color: '#ffff99'
-                    }, 2500);
+                    if (!!$element) {
+                        $element.effect('highlight', {
+                            color: '#ffff99'
+                        }, 2500);
+                    }
                     if (typeof e.property === 'number') {
                         pointProp = pointInspector.point.data['Point Refs']()[e.property];
                         originalProp = pointInspector.point.originalData['Point Refs'][e.property];
@@ -661,7 +661,6 @@ define([
                             //display message from config.format call
                             bannerJS.showBanner(updatedPoint.err + ' The ' + e.property + ' has been set back to its original value.', 'Dismiss');
                         }
-
                     }
                 } else {
                     pointInspector.modelUpdate(true);
@@ -676,7 +675,7 @@ define([
             }
         }
     };
-    pointInspector.initDOM = function() {
+    pointInspector.initDOM = function () {
         var $body = $('body'),
             $nav = $('.nav'),
             $subNav = $nav.find('li>ul'),
@@ -696,7 +695,7 @@ define([
         }
 
         //disable context menu
-        $(document).on('contextmenu', function(event) {
+        $(document).on('contextmenu', function (event) {
             if (!$(event.target).is('textarea, input[type="text"]') && !$(event.target).closest('.CodeMirror').length) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -707,7 +706,7 @@ define([
         // add viewmodel change handler
         $(document).on('viewmodelChange', pointInspector.events.viewmodelChange);
 
-        $tab.on('click', function() {
+        $tab.on('click', function () {
             var $this = $(this),
                 $header = $view.find('.header').find('h4'),
                 contentTitle = $this.find('span').text(),
@@ -717,7 +716,9 @@ define([
                 $tabs = $('.content'),
                 tabTrigger = pointInspector.tabTriggers[contentTitle.toLowerCase()];
 
-            if ($this.hasClass('active')) return;
+            if ($this.hasClass('active')) {
+                return;
+            }
 
             //hide all tabs
             hideTabs($tabs);
@@ -742,7 +743,7 @@ define([
             }, {
                 duration: 100,
                 easing: 'easeOutQuint',
-                complete: function() {
+                complete: function () {
                     $header.text(contentTitle);
                     showTabs($tabContent);
                     $view.children().animate({
@@ -763,7 +764,7 @@ define([
         //show first tab
         $tab.first().trigger('click');
 
-        $parentItem.on('click', function() {
+        $parentItem.on('click', function () {
             var $this = $(this),
                 $siblingMenu = $this.siblings('ul');
             $siblingMenu.show();
@@ -776,12 +777,12 @@ define([
             }, {
                 duration: 300,
                 easing: 'easeOutExpo',
-                complete: function() {
+                complete: function () {
                     $nav.removeClass('animating');
                 }
             });
         });
-        $back.on('click', function() {
+        $back.on('click', function () {
             $subNav.hide();
 
             // Display the parent's first menu item
@@ -792,12 +793,12 @@ define([
             }, {
                 duration: 300,
                 easing: 'easeOutExpo',
-                complete: function() {
+                complete: function () {
                     $nav.removeClass('animating');
                 }
             });
         });
-        $navToggle.on('click', function() {
+        $navToggle.on('click', function () {
             if ($navToggle.hasClass('shown')) {
                 if ($(window).width() < 768) {
                     $view.animate({
@@ -805,7 +806,7 @@ define([
                     }, {
                         duration: 300,
                         easing: 'easeOutExpo',
-                        complete: function() {
+                        complete: function () {
                             $view.removeAttr('style');
                         }
                     });
@@ -862,25 +863,25 @@ define([
             });
         }
     };
-    pointInspector.authorize = function(data, requestedAccessLevel) {
+    pointInspector.authorize = function (data, requestedAccessLevel) {
         var pAccess = (ko.isObservable(data._pAccess)) ? data._pAccess() : data._pAccess;
         return !!(pAccess & requestedAccessLevel);
     };
 
-    pointInspector.isSystemAdmin = function() {
+    pointInspector.isSystemAdmin = function () {
         return workspace.user()['System Admin'].Value;
     };
 
-    pointInspector.isValidFirmwareLoader = function(data) {
-        var modelType = data["Model Type"].eValue();
+    pointInspector.isValidFirmwareLoader = function (data) {
+        var modelType = data['Model Type'].eValue();
 
-        if (data["Point Type"].eValue() === 8) {
+        if (data['Point Type'].eValue() === 8) {
             return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19 || modelType === 20);
-        } else if (data["Point Type"].eValue() === 144) {
+        } else if (data['Point Type'].eValue() === 144) {
             return (modelType === 3 || modelType === 6);
         }
     };
-    pointInspector.selectFirstTab = function() {
+    pointInspector.selectFirstTab = function () {
         var $nav = $('.nav'),
             $subNav = $nav.find('li>ul'),
             $parentItem = $subNav.parent().children('span'),
@@ -895,14 +896,14 @@ define([
         var self = this,
             options = {
                 extend: {
-                    "{root}": {
-                        map: function(point) {
+                    '{root}': {
+                        map: function (point) {
                             for (var i in point) {
                                 options.shared.mapValueType(point[i]);
                             }
                             return point;
                         },
-                        unmap: function(point) {
+                        unmap: function (point) {
                             for (var i in point) {
                                 options.shared.unmapValueType(point[i]);
                             }
@@ -911,34 +912,34 @@ define([
                     }
                 },
                 shared: {
-                    mapValueType: function(item) {
+                    mapValueType: function (item) {
                         return item;
                     },
-                    unmapValueType: function(item) {
+                    unmapValueType: function (item) {
                         return item;
                     },
                     extendArrayValue: {
-                        map: function(value) {
+                        map: function (value) {
                             return ko.observable(value);
                         },
-                        unmap: function(value) {
+                        unmap: function (value) {
                             return value();
                         }
                     }
                 },
                 custom: {
-                    "ValueOptions": {
-                        map: function(options) {
+                    'ValueOptions': {
+                        map: function (options) {
                             var mapped = ko.observableArray(pointInspector.utility.enumToArray(options));
                             return mapped;
                         },
-                        unmap: function(options) {
+                        unmap: function (options) {
                             var unmapped = pointInspector.utility.arrayToValueOptions(options());
                             return unmapped;
                         }
                     },
-                    "{root}.Occupancy Schedule[i]": {
-                        map: function(schedule) {
+                    '{root}.Occupancy Schedule[i]': {
+                        map: function (schedule) {
                             var _schedule = ko.viewmodel.toModel(schedule);
                             _schedule.Enable = ko.observable(_schedule.Enable);
                             _schedule['Occupancy Begin Time'] = {
@@ -953,9 +954,9 @@ define([
                             };
                             return _schedule;
                         },
-                        unmap: function(schedule) {
+                        unmap: function (schedule) {
                             // Workaround for a really strange bug where this routine was being called for the
-                            // 'Lead Time' property, located on the Occupancy Schedule tab of the Optimum Start 
+                            // 'Lead Time' property, located on the Occupancy Schedule tab of the Optimum Start
                             // point. Make sure this really is an occupancy schedule entry before unampping
                             if (typeof schedule.Enable === 'function') {
                                 schedule.Enable = schedule.Enable();
@@ -965,9 +966,9 @@ define([
                             return schedule;
                         }
                     },
-                    "{root}.Boolean Registers[i]": "extendArrayValue",
-                    "{root}.Integer Registers[i]": "extendArrayValue",
-                    "{root}.Real Registers[i]": "extendArrayValue"
+                    '{root}.Boolean Registers[i]': 'extendArrayValue',
+                    '{root}.Integer Registers[i]': 'extendArrayValue',
+                    '{root}.Real Registers[i]': 'extendArrayValue'
                 }
             };
 
@@ -1059,11 +1060,11 @@ define([
                 }
             }
         };
-        self.issueCommand = function(commandType, data, callback) {
+        self.issueCommand = function (commandType, data, callback) {
             var command = self.controls[commandType];
             ko.utils.extend(command.commandTX, data);
             pointInspector.socket.emit('fieldCommand', ko.toJSON(command.commandTX));
-            pointInspector.socket.once('returnFromField', function(data) {
+            pointInspector.socket.once('returnFromField', function (data) {
                 // data = $.parseJSON(data);
                 if (data.err) {
                     command.commandRX.value('');
@@ -1086,19 +1087,20 @@ define([
         self.data['Point Refs'].extend({
             rateLimit: {
                 timeout: 500,
-                method: "notifyWhenChangesStop"
+                method: 'notifyWhenChangesStop'
             }
         });
         self.status = ko.observable('saved'); // Options: saved, saving, error
-        self.save = function(data) {
+        self.save = function (data) {
             // We won't execute this routine if either of the following is true:
             // 1. We're already saving the point, or
             // 2. formatPoint returned an error less than 1 second ago. We do this because the user could
             //    have been editing a property, set it to an invalid value, then clicked save. The save
             //    action will almost immediately replace the error message associated with the invalid property
             //    value.
-            if (self.status() === 'saving' || ((new Date().getTime() - formatPointErrorTimestamp) < 1000))
+            if (self.status() === 'saving' || ((new Date().getTime() - formatPointErrorTimestamp) < 1000)) {
                 return;
+            }
             var newPointData = ko.viewmodel.toModel(self.data),
                 emitData = {
                     newPoint: newPointData,
@@ -1114,9 +1116,13 @@ define([
             $('body').css('overflow', 'hidden');
             data = data || {};
 
-            if (newPointData._pStatus === pointInspector.utility.config.Enums["Point Statuses"].Inactive.enum) {
+            if (newPointData._pStatus === pointInspector.utility.config.Enums['Point Statuses'].Inactive.enum) {
                 emitString = 'addPoint';
-            } else if (newPointData._pStatus == pointInspector.utility.config.Enums["Point Statuses"].Active.enum) {
+                emitData = [{
+                    newPoint: newPointData,
+                    oldPoint: self.originalData
+                }];
+            } else if (newPointData._pStatus === pointInspector.utility.config.Enums['Point Statuses'].Active.enum) {
                 for (var prop in newPointData) {
                     if (newPointData[prop].hasOwnProperty('ValueOptions') && Array.isArray(newPointData[prop].ValueOptions)) {
                         newPointData[prop].ValueOptions = pointInspector.utility.arrayToValueOptions(newPointData[prop].ValueOptions);
@@ -1124,15 +1130,15 @@ define([
                 }
             }
 
-            if (data.baseComponent === "pt-slideshow") { // clean up any removed slides
+            if (data.baseComponent === 'pt-slideshow') { // clean up any removed slides
                 var i,
-                    pointRefs = emitData.newPoint["Point Refs"],
+                    pointRefs = emitData.newPoint['Point Refs'],
                     len = pointRefs.length,
                     currentPointRef,
-                    slides = emitData.newPoint["Slides"],
+                    slides = emitData.newPoint.Slides,
                     slide,
                     displayId,
-                    getSlideIndexById = function(id) {
+                    getSlideIndexById = function (id) {
                         for (var j = 0; j < slides.length; j++) {
                             if (slides[j].display === id) {
                                 return j;
@@ -1140,7 +1146,7 @@ define([
                         }
                         return null;
                     },
-                    reorderDataSets = function() {
+                    reorderDataSets = function () {
                         for (var i = 0; i < pointRefs.length; i++) {
                             pointRefs[i].AppIndex = i + 1;
                             displayId = pointRefs[i].Value;
@@ -1155,7 +1161,7 @@ define([
                 for (i = (len - 1); i >= 0; i--) {
                     currentPointRef = pointRefs[i];
                     if (currentPointRef) {
-                        if (currentPointRef.PointName === "" && currentPointRef.Value === 0) {
+                        if (currentPointRef.PointName === '' && currentPointRef.Value === 0) {
                             slides.splice(getSlideIndexById(currentPointRef.PointInst), 1);
                             pointRefs.splice(i, 1);
                         }
@@ -1169,7 +1175,7 @@ define([
 
             self.status('saving');
             pointInspector.socket.emit(emitString, emitData);
-            pointInspector.socket.once('pointUpdated', function(rxData) {
+            pointInspector.socket.once('pointUpdated', function (rxData) {
                 var hideAfter = 3000,
                     bgColor,
                     dismissText,
@@ -1177,9 +1183,14 @@ define([
 
                 if (rxData.message && rxData.message === 'success') {
                     msg = 'Point was successfully saved.';
-
+                    let point;
+                    if (rxData.hasOwnProperty('points')) {
+                        point = rxData.points[0];
+                    } else {
+                        point = rxData.point;
+                    }
                     // Update our originalData with rxData received from the server
-                    self.originalData = ko.viewmodel.toModel(rxData.point);
+                    self.originalData = ko.viewmodel.toModel(point);
                     // Update our viewmodel with the new originalData
                     // ko.viewmodel.updateFromModel(self.data, self.originalData);
                     pointInspector.updateObject(pointInspector.point.data, self.originalData);
@@ -1214,7 +1225,7 @@ define([
                 }
             });
         };
-        self.saveAndClose = function(data) {
+        self.saveAndClose = function (data) {
             data.saveAndClose = true;
             self.save(data);
         };
@@ -1265,11 +1276,11 @@ define([
         pointInspector.point = new Point(data);
         // console.log("- - - - - -    pointInspector.point.data.name1() = " + pointInspector.point.data.name1());
         pointInspector.socket = io.connect(window.location.origin);
-        $('.wrapper').show(400, function() {
+        $('.wrapper').show(400, function () {
             // Show animation complete
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time
             // Delay the bannerJS animation for another 500ms to let things settle down
-            window.setTimeout(function() {
+            window.setTimeout(function () {
                 if (data._pStatus === pointStatuses.Deleted.enum) {
                     bannerJS.showBanner({
                         msg: 'This point has been deleted. Click the restore button to undelete it.',
@@ -1286,18 +1297,17 @@ define([
         window.document.title = pointInspector.point.data.Name();
     }
 
-    /**
+    /*
      * Global Knockout bindings and functions
      */
-    ko.utils.unwrapProperties = function(wrappedProperties) {
-
+    ko.utils.unwrapProperties = function (wrappedProperties) {
         if (wrappedProperties === null || typeof wrappedProperties !== 'object') {
             return wrappedProperties;
         }
 
         var options = {};
 
-        ko.utils.objectForEach(wrappedProperties, function(propertyName, propertyValue) {
+        ko.utils.objectForEach(wrappedProperties, function (propertyName, propertyValue) {
             options[propertyName] = ko.unwrap(propertyValue);
         });
 
@@ -1305,16 +1315,16 @@ define([
     };
 
     ko.bindingHandlers.tooltip = {
-        init: function(element) {
+        init: function (element) {
             var $element = $(element);
 
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
                 if ($element.data('bs.tooltip')) {
                     $element.tooltip('destroy');
                 }
             });
         },
-        update: function(element, valueAccessor) {
+        update: function (element, valueAccessor) {
             var $element = $(element),
                 value = ko.unwrap(valueAccessor()),
                 options = ko.utils.unwrapProperties(value),
@@ -1336,23 +1346,23 @@ define([
     };
 
     ko.bindingHandlers.modal = {
-        init: function(element, valueAccessor) {
+        init: function (element, valueAccessor) {
             var value = valueAccessor();
 
             $(element).modal({
                 show: false
             });
             if (typeof value === 'function') {
-                $(element).on('hide.bs.modal', function() {
+                $(element).on('hide.bs.modal', function () {
                     value(false);
                 });
             }
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
                 // $(element).modal("destroy"); // Destory was deprecated in bootstrap v3+
                 $(element).data('bs.modal', null);
             });
         },
-        update: function(element, valueAccessor) {
+        update: function (element, valueAccessor) {
             var value = valueAccessor();
             if (ko.utils.unwrapObservable(value)) {
                 $(element).modal('show');
@@ -1363,7 +1373,7 @@ define([
     };
 
     ko.bindingHandlers.formattedNumericText = {
-        update: function(element, valueAccessor, allBindingsAccessor) {
+        update: function (element, valueAccessor, allBindingsAccessor) {
             var utility = pointInspector.utility,
                 $element = $(element),
                 value = valueAccessor(),
@@ -1385,7 +1395,7 @@ define([
                     'font-size': fontSize + 'px'
                 });
             } else if ($element.attr('style')) {
-                $element.attr('style', function(i, style) {
+                $element.attr('style', function (i, style) {
                     return style.replace(/font-size[^;]+;?/g, '');
                 });
             }
@@ -1395,9 +1405,9 @@ define([
     };
 
     ko.bindingHandlers.numeric = {
-        init: function(element, valueAccessor, allBindingsAccessor) {
+        init: function (element, valueAccessor, allBindingsAccessor) {
             var utility = pointInspector.utility,
-                valueTypeEnums = utility.config.Enums["Value Types"],
+                valueTypeEnums = utility.config.Enums['Value Types'],
                 $element = $(element),
                 underlyingObservable = valueAccessor(),
                 valueType = ko.unwrap(allBindingsAccessor().valueType),
@@ -1409,7 +1419,7 @@ define([
                 noConfigValidation = ko.unwrap(allBindingsAccessor().noValidation),
                 method,
                 interceptor = ko.computed({
-                    read: function() {
+                    read: function () {
                         var val,
                             valIsPureNumber,
                             valueType;
@@ -1434,7 +1444,7 @@ define([
                         }
                         return utility.formatNumber(ko.unwrap(underlyingObservable), valueType, noTruncate, noComma);
                     },
-                    write: function(value) {
+                    write: function (value) {
                         var newValue = value,
                             oldValue = ko.unwrap(underlyingObservable);
                         // apply logic to enforce precision for floats
@@ -1470,47 +1480,48 @@ define([
                 });
             }
             $element
-                .on('keydown', function(event) {
+                .on('keydown', function (event) {
                     var cursorPosition = utility.getSelectionStart($element[0]),
                         currentValue = $element.val(),
                         hasDecimal = /\./g.test(currentValue),
                         hasE = /[Ee]/g.test(currentValue),
                         keyCode = event.keyCode,
                         allow = false,
-                        allowSign = function() {
+                        allowSign = function () {
                             if (cursorPosition === 0) {
                                 // Allow if our number doesn't already begin with a sign
                                 return !/^[\+-]/g.test(currentValue);
-                            } else {
-                                // Allow if previous character is 'e' or 'E' and next character is NOT '+' or '-'
-                                return (/^[eE]$|^[eE][^\+-]/g).test(currentValue.substring(cursorPosition - 1, cursorPosition + 1));
                             }
+                            // Allow if previous character is 'e' or 'E' and next character is NOT '+' or '-'
+                            return (/^[eE]$|^[eE][^\+-]/g).test(currentValue.substring(cursorPosition - 1, cursorPosition + 1));
                         };
                     method = 'key';
 
                     switch (keyCode) {
-                        // Backspace, delete, tab, escape, and enter
-                        case 46:
-                        case 8:
-                        case 9:
-                        case 27:
-                        case 13:
-                            // Home, end, left, right
-                        case 36:
-                        case 35:
-                        case 37:
-                        case 39:
+                        case 46: // delete
+                        case 8: // Backspace
+                        case 9: // tab
+                        case 27: // escape
+                        case 13: // enter
+                        case 36: // Home
+                        case 35: // end
+                        case 37: // left
+                        case 39: // right
                             allow = true;
                             break;
                             // 'a'
                         case 65:
-                            if (event.ctrlKey) allow = true;
+                            if (event.ctrlKey) {
+                                allow = true;
+                            }
                             break;
                             // '.'
                         case 190:
                         case 110:
                             // Float number without decimal and doesn't have an 'e' or 'E' left of the cursor position
-                            if (valueType === 1 && !hasDecimal && !/[eE]/g.test(currentValue.substring(0, cursorPosition))) allow = true;
+                            if (valueType === 1 && !hasDecimal && !/[eE]/g.test(currentValue.substring(0, cursorPosition))) {
+                                allow = true;
+                            }
                             break;
                             // '-'
                         case 109:
@@ -1526,7 +1537,9 @@ define([
                             break;
                             // 'e'
                         case 69:
-                            if (!hasE && cursorPosition !== 0) allow = true;
+                            if (!hasE && cursorPosition !== 0) {
+                                allow = true;
+                            }
                             break;
 
                         default:
@@ -1554,7 +1567,7 @@ define([
                         }
                     }
                 })
-                .on('mousewheel', function(event, trigger) {
+                .on('mousewheel', function (event, trigger) {
                     var cursorPosition = utility.getSelectionStart($element[0]),
                         currentValue = this.value,
                         decimalPosition = currentValue.indexOf('.'),
@@ -1564,7 +1577,9 @@ define([
                         selectionStart = 0,
                         selectionEnd = currentValue.length;
 
-                    if ($.trim(currentValue) === '' || isNaN(currentValue)) return;
+                    if ($.trim(currentValue) === '' || isNaN(currentValue)) {
+                        return;
+                    }
 
                     if (typeof trigger.deltaY === 'number') {
                         event = trigger;
@@ -1574,9 +1589,8 @@ define([
                     }
                     if (!$element.is(':focus')) {
                         return;
-                    } else {
-                        !!event.preventDefault && event.preventDefault();
-                    }
+                    }!!event.preventDefault && event.preventDefault();
+
                     // if value type is float, we will check the position of the decimal and
                     // increment/decrement accordingly
                     if (hasDecimal && cursorPosition > decimalPosition) {
@@ -1590,7 +1604,7 @@ define([
                     $element.val(new Big(currentValue).plus(event.deltaY / divisor).toFixed(decimalPlaces)).trigger('change');
                     utility.createSelection($element[0], selectionStart, selectionEnd);
                 })
-                .on('click', function(event) {
+                .on('click', function (event) {
                     var cursorPosition = utility.getSelectionStart($element[0]),
                         currentValue = $element.val(),
                         decimalPosition = currentValue.indexOf('.'),
@@ -1608,12 +1622,14 @@ define([
                     }
                     utility.createSelection($element[0], selectionStart, selectionEnd);
                 })
-                .on('focus', function() {
+                .on('focus', function () {
                     $element.val(utility.normalizeNumber($element.val(), valueType));
                 })
-                .on('focusout', function() {
+                .on('focusout', function () {
                     underlyingObservable(parseFloat(underlyingObservable()));
-                    if (!!noConfigValidation) return;
+                    if (!!noConfigValidation) {
+                        return;
+                    }
                     if (doValidate) {
                         $(document).triggerHandler({
                             type: 'viewmodelChange',
@@ -1623,7 +1639,7 @@ define([
                         });
                     }
                 })
-                .on('blur', function() {
+                .on('blur', function () {
                     if ($element.val() === underlyingObservable()) {
                         $element.val(utility.formatNumber($element.val(), valueType));
                     }
@@ -1632,14 +1648,14 @@ define([
     };
 
     ko.bindingHandlers.validateOnBlur = {
-        init: function(element, valueAccessor, allBindingsAccessor) {
+        init: function (element, valueAccessor, allBindingsAccessor) {
             var subscription,
                 context = {
                     $element: $(element),
                     property: valueAccessor()
                 };
 
-            subscription = allBindingsAccessor().value.subscribe(function(value) {
+            subscription = allBindingsAccessor().value.subscribe(function (value) {
                 $(document).triggerHandler({
                     type: 'viewmodelChange',
                     targetElement: this.$element,
@@ -1649,14 +1665,14 @@ define([
             }, context);
 
             // Dispose our subscription after this element is removed
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
                 subscription.dispose();
             });
         }
     };
 
     ko.bindingHandlers.protectedText = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var val = valueAccessor(),
                 $element = $(element),
                 $message = $('.invalidCharMsg'),
@@ -1670,7 +1686,7 @@ define([
 
             $element.val(val());
             $element
-                .on('keypress', function(event) {
+                .on('keypress', function (event) {
                     var _char = String.fromCharCode(event.which);
                     if (config.Utility.isPointNameCharacterLegal(_char) === false) {
                         $message.css({
@@ -1691,7 +1707,7 @@ define([
                         $element.blur();
                     }
                 })
-                .on('blur', function() {
+                .on('blur', function () {
                     if (val() !== $element.val()) {
                         // Update observable
                         val($element.val());
@@ -1704,7 +1720,7 @@ define([
                         });
                     }
                 })
-                .on('focus', function() {
+                .on('focus', function () {
                     $message.fadeOut(400);
                 });
         }
