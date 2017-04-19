@@ -525,7 +525,9 @@ let Import = class Import extends Common {
                     query: {
                         _id: dep._id
                     }
-                }, cb2);
+                }, (err, results)=>{
+                    cb2(err);
+                });
             }, cb);
         };
 
