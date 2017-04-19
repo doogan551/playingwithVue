@@ -216,14 +216,16 @@ const Hierarchy = class Hierarchy extends Common {
     search(data, cb) {
         let terms = this.getDefault(data.terms, []);
         let pipeline = [];
-        let item = data.item;
+        let item = this.getDefault(data.item, LOCATION);
 
         terms = terms.map((term) => {
             if (term.match(/"/)) {
                 return term;
             }
-            return new RegExp('[.]*' + term.toLowerCase() + '[.]*');
+            return new RegExp('[.]*' + term + '[.]*', 'i');
         });
+
+        pipeline.push(this.getPathLookup());
 
         pipeline.push({
             $unwind: {
@@ -293,7 +295,7 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, descendants) => {
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                descendant.path = this.orderPath(item, descendant);
+                descendant.path = this.orderPath(item, descendant.path);
                 callback();
             }, (err) => {
                 cb(err, descendants);
