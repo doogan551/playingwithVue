@@ -239,11 +239,11 @@ var dti = {
         return true;
     },
     timedEach: function (config) {
-        var idx = 0,
-            iterateFn = config.fn,
+        var iterateFn = config.fn,
             list = config.arr,
             start = config.start,
             end = config.end + 1,//inclusive by default
+            idx = start || 0,
             delay = config.delay || 1,
             cb = config.cb || null,
             doNext = function () {
@@ -3551,38 +3551,40 @@ var dti = {
                     if (!format.match('#')) {
                         bindings.error('Format missing placeholder');
                     } else {
-                        $bulkAddModal.closeModal();
+                        $bulkAddModal.closeModal({
+                            complete: () => {
+                                $('.locations').block({
+                                    message: 'Adding'
+                                });
 
-                        $('.locations').block({
-                            message: 'Cloning'
-                        });
+                                dti.timedEach({
+                                    start: startEntry,
+                                    end: endEntry,
+                                    delay: 2,
+                                    fn: (c) => {
+                                        if (destination === 'Siblings') {
+                                            newNodes.push(bindings.addSibling(currEntry.el, {
+                                                name: format.replace('#', c),
+                                                type: currEntry.node.type(),
+                                                fetched: true,
+                                                expanded: true
+                                            }, true));
+                                        } else {
+                                            newNodes.push(bindings.addChild(currEntry.el, {
+                                                name: format.replace('#', c),
+                                                fetched: true,
+                                                expanded: true
+                                            }, currEntry.node, true));
+                                        }
+                                    },
+                                    cb: () => {
+                                        $('.locations').unblock();
 
-                        dti.timedEach({
-                            start: startEntry,
-                            end: endEntry,
-                            delay: 2,
-                            fn: (c) => {
-                                if (destination === 'Siblings') {
-                                    newNodes.push(bindings.addSibling(currEntry.el, {
-                                        name: format.replace('#', c),
-                                        type: currEntry.node.type(),
-                                        fetched: true,
-                                        expanded: true
-                                    }, true));
-                                } else {
-                                    newNodes.push(bindings.addChild(currEntry.el, {
-                                        name: format.replace('#', c),
-                                        fetched: true,
-                                        expanded: true
-                                    }, currEntry.node, true));
-                                }
-                            },
-                            cb: () => {
-                                $('.locations').unblock();
+                                        bindings.focusNode();
 
-                                bindings.focusNode();
-
-                                dti.locations.addNewNodes(newNodes);
+                                        dti.locations.addNewNodes(newNodes);
+                                    }
+                                });
                             }
                         });
 
@@ -3624,8 +3626,8 @@ var dti = {
                     var $bulkCloneModal = $('#bulkCloneModal'),
                         bindings = dti.bindings.locations,
                         format = bindings.entryFormat(),
-                        startEntry = bindings.startEntry(),
-                        endEntry = bindings.endEntry(),
+                        startEntry = +bindings.startEntry(),
+                        endEntry = +bindings.endEntry(),
                         currEntry = bindings.currEntry,
                         node = currEntry.node,
                         name = node.name(),
@@ -3636,17 +3638,33 @@ var dti = {
                     if (!format.match('#')) {
                         bindings.error('Format missing placeholder');
                     } else {
-                        for (var c = startEntry; c <= endEntry; c++) {
-                            newNodes = newNodes.concat(bindings.cloneNode(context, {
-                                name: format.replace('#', c),
-                                parentLocId: node.parentLocId()
-                            }, true));
-                        }
+                        $bulkCloneModal.closeModal({
+                            complete: () => {
+                                $('.locations').block({
+                                    message: 'Cloning'
+                                });
 
-                        $bulkCloneModal.closeModal();
-                        bindings.focusNode();
+                                dti.timedEach({
+                                    start: startEntry,
+                                    end: endEntry,
+                                    delay: 2,
+                                    fn: (c) => {
+                                        newNodes = newNodes.concat(bindings.cloneNode(context, {
+                                            name: format.replace('#', c),
+                                            parentLocId: node.parentLocId()
+                                        }, true));
+                                    },
+                                    cb: () => {
+                                        $bulkCloneModal.closeModal();
+                                        bindings.focusNode();
 
-                        dti.locations.addNewNodes(newNodes);
+                                        $('.locations').unblock();
+
+                                        dti.locations.addNewNodes(newNodes);
+                                    }
+                                });
+                            }
+                        });
                     }
                 },
                 cloneNode: function (context, cfg, skipAdd) {
@@ -3716,27 +3734,45 @@ var dti = {
                 },
 
                 expandRecursive: function (context) {
-                    $.ajax({
-                        type: 'post',
-                        url: '/api/hierarchy/locations/getDescendants',
-                        data: JSON.stringify({
-                            id: context.$data._id()
-                        }),
-                        contentType: 'application/json'
-                    }).done(function (data) {
-                        var root = context.$parent && context.$parent.children && context.$parent.children() || dti.bindings.locations.data(),
-                            collator = new Intl.Collator(undefined, {
-                                numeric: true,
-                                sensitivity: 'base'
-                            });
+                    var collator = new Intl.Collator(undefined, {
+                            numeric: true,
+                            sensitivity: 'base'
+                        });
 
-                        dti.locations.buildTree(dti.locations.normalize(data, {
-                            expanded: true,
-                            fetched: true,
-                            new: false
-                        }), root);
+                    if (!context.$data.fetched()) {
+                        $.ajax({
+                            type: 'post',
+                            url: '/api/hierarchy/locations/getDescendants',
+                            data: JSON.stringify({
+                                id: context.$data._id(),
+                                item: 'Location'
+                            }),
+                            contentType: 'application/json'
+                        }).done(function (data) {
+                            var root = context.$parent && context.$parent.children && context.$parent.children() || dti.bindings.locations.data();
 
+                            dti.locations.buildTree(dti.locations.normalize(data, {
+                                expanded: true,
+                                fetched: true,
+                                new: false
+                            }), root);
+
+                            dti.bindings.locations.forEachNode(function (child, parent) {
+                                if (child.fetched() && child.children().length === 0) {
+                                    child.hasChildren(false);
+                                } else {
+                                    child.children.sort((a, b) => {
+                                        var res = collator.compare(a.name(), b.name());
+
+                                        return res;
+                                    });
+                                }
+                            }, root);
+                        });
+                    } else {
+                        context.$data.expanded(true);
                         dti.bindings.locations.forEachNode(function (child, parent) {
+                            child.expanded(true);
                             if (child.fetched() && child.children().length === 0) {
                                 child.hasChildren(false);
                             } else {
@@ -3746,8 +3782,9 @@ var dti = {
                                     return res;
                                 });
                             }
-                        }, root);
-                    });
+
+                        }, context.$data.children(), context.$data);
+                    }
                 },
 
                 forEachNode: function (fn, root, parent) {
@@ -3844,9 +3881,7 @@ var dti = {
                         } else {
                             dti.bindings.locations.expandRecursive({
                                 $parent: parent,
-                                $data: {
-                                    _id: child._id
-                                }
+                                $data: child
                             });
                         }
                     });
