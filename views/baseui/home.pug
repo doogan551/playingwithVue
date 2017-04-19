@@ -414,14 +414,21 @@ html
         iframe#thumbnailGen.hide
 
     script#locationsTemplate(type='text/html')
-        .locations.blue-grey-form
-            .row
-                button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
-                button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
+        .locations.blue-grey-form(data-bind="css: { busy: busy }")
+            .fetching
+                .progress
+                    .indeterminate
 
+            .row.locSearch
+                i.material-icons search
+                input#locationsearch(type='search', data-bind="textInput: $root.searchString")    
+                
             //- .row
             //-     .col.xs-4
             //-         input#autocomplete
+
+            button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
+            button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
             .row
                 // ko if: data().length !== 0

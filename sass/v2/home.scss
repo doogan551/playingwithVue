@@ -1722,6 +1722,22 @@ input:focus {
 .locations {
     height: 100%;
     overflow: auto;
+
+    & > .fetching {
+        visibility: hidden;
+    }
+
+    &.busy > .fetching {
+        visibility: visible;
+    }
+
+    .progress {
+        background-color: #fff;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey;
+    }
     
     .pane {
         position: relative;
@@ -1773,12 +1789,12 @@ input:focus {
         width: initial;
     }
 
-    i:not(.mdi) {
+    .node i:not(.mdi) {
         top: 2px;
     }
 
-    i,
-    .mdi {
+    .node i,
+    .node .mdi {
         width: 14px;
         height: 14px;
         font-size: 14px !important;
@@ -1787,7 +1803,7 @@ input:focus {
         left: -15px;*/
     }
 
-    .mdi.blank {
+    .node .mdi.blank {
         visibility: hidden;
     }
 
@@ -1818,6 +1834,24 @@ input:focus {
 
     .displayInfo:hover .tooltipped {
         visibility: visible;
+    }
+
+    .locSearch {
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 10px 15px 10px;
+        // margin-left: 15px !important;
+
+        i {
+            margin-right: 10px;
+        }
+
+        input {
+            width: auto;
+            flex-grow: 1;
+            margin-bottom: 10px;
+        }
     }
 }
 

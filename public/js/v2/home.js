@@ -3014,6 +3014,7 @@ var dti = {
     locations: {
         idx: 0,
         tree: [],
+        treeMatrix: {},
         template: {
             id: 0,
             _id: 0,
@@ -3032,6 +3033,11 @@ var dti = {
             type: '',
             name: ''
         },
+
+        collator: new Intl.Collator(undefined, {
+            numeric: true,
+            sensitivity: 'base'
+        }),
 
         setId: function (id) {
             dti.locations.idx = id;
@@ -3071,6 +3077,7 @@ var dti = {
             }).done(function handleAdd(response) {
                 Materialize.toast('Added nodes', 1000);
                 dti.forEachArray(response, (node, idx) => {
+                    dti.locations.treeMatrix[node.newNode._id] = true;
                     newNodes[idx]._id(node.newNode._id);
                     newNodes[idx].parentLocId(node.newNode.hierarchyRefs[0].value);
                 });
@@ -3092,6 +3099,7 @@ var dti = {
                 obj.hasChanged(false);
                 dti.locations.markNodeSaved(obj._id(), response[0].newNode._id);
                 obj._id(response[0].newNode._id);
+                dti.locations.treeMatrix[obj._id()] = true;
                 dti.log(response);
                 Materialize.toast('Node added', 1000);
             });
@@ -3145,19 +3153,7 @@ var dti = {
         },
 
         normalize: function (arr, cfg) {
-            dti.forEachArray(arr, function (item, idx) {
-                // arr[idx] = {
-                //     name: item.display || 'Name',
-                //     type: item.type || 'Area',
-                //     focused: false,
-                //     expanded: false,
-                //     fetched: false,
-                //     hasChildren: true,
-                //     new: false,
-                //     parentLocId: 0,
-                //     children: []
-                //     _data: item
-                // };
+            let _normalize = (item, idx) => {
                 dti.forEach(dti.locations.template, function (val, prop) {
                     if (item[prop] === undefined) {
                         item[prop] = dti.utility.clone(val);
@@ -3177,7 +3173,17 @@ var dti = {
                 });
 
                 dti.locations.normalize(item.children);
-            });
+            };
+
+
+            if (Array.isArray(arr)) {
+                dti.forEachArray(arr, function (item, idx) {
+                    _normalize(item, idx);
+                });
+
+            } else {
+                _normalize(arr, null);
+            }
 
             return arr;
         },
@@ -3220,6 +3226,7 @@ var dti = {
                 node = dti.locations.findNode(target, ret);
 
                 if (node) {
+                    dti.locations.treeMatrix[node._id()] = true;
                     node.fetched(true);
                     node.expanded(true);
                     item.parentLocId = node._id();
@@ -3259,6 +3266,103 @@ var dti = {
                 cb(data, obj, $el);
             });
         },
+        rebuildTree: function (data) {
+            var ret = ko.viewmodel.fromModel([]);
+
+            dti.locations.treeMatrix = {};
+
+            // ret = dti.locations.normalize(data, {
+            //     new: false
+            // });
+
+            // ret = ko.viewmodel.fromModel(ret);
+
+            dti.forEachArray(data, (result) => {
+                let parentId = 0;
+                let normalized = dti.locations.normalize(result, {
+                    new: false,
+                    fetched: true,
+                    expanded: true
+                });
+                dti.forEachArray(normalized.path, (pathEntry) => {
+                    let targetId = pathEntry._id;
+                    let normPath = dti.locations.normalize(pathEntry, {
+                        new: false,
+                        fetched: true,
+                        expanded: true
+                    });
+                    let node = dti.locations.findNode(targetId, ret());
+                    
+                    if (node) {//existing
+                        // dti.log('existing node');
+                    } else {//new
+                        let parentNode = dti.locations.findNode(pathEntry.hierarchyRefs[0].value, ret());
+                        
+                        if (parentNode) {//parent exists
+                            
+                            parentNode.children.push(ko.viewmodel.fromModel(normPath));
+                        } else {//root
+                            
+                            ret.push(ko.viewmodel.fromModel(normPath));
+                        }
+                    }
+
+                    parentId = targetId;
+                });
+
+                let parent = dti.locations.findNode(parentId, ret());
+
+                if (parent) {
+                    parent.children.push(ko.viewmodel.fromModel(normalized));
+                } else {
+                    dti.locations.getDefaultTree(null, true);
+                }
+            });
+
+            dti.bindings.locations.forEachNode(function (child, parent) {
+                if (child.fetched() && child.children().length === 0) {
+                    child.hasChildren(false);
+                } else {
+                    child.children.sort((a, b) => {
+                        var res = dti.locations.collator.compare(a.name(), b.name());
+
+                        return res;
+                    });
+                }
+            }, ret());
+
+            dti.bindings.locations.data(ret());
+        },
+        getDefaultTree: function (cb, overwrite) {
+            dti.bindings.locations.busy(true);
+            $.ajax({
+                url: '/api/hierarchy/locations/getChildren',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: 0
+                })
+            }).done((results) => {
+                var bindings = dti.bindings.locations;
+
+                dti.locations.tree = dti.locations.normalize(results, {
+                    new: false,
+                    expanded: false
+                });
+
+                if (!overwrite) {
+                    bindings.data = ko.viewmodel.fromModel(dti.locations.tree);
+                } else {
+                    bindings.data(ko.viewmodel.fromModel(dti.locations.tree)());
+                }
+
+                if (cb) {
+                    cb();
+                }
+
+                dti.bindings.locations.busy(false);
+            });
+        },
         initLocations: function (config) {
             var $container = config.$container,
                 markup = dti.utility.getTemplate('#locationsTemplate');
@@ -3276,27 +3380,13 @@ var dti = {
                 }
             });
 
-            $.ajax({
-                url: '/api/hierarchy/locations/getChildren',
-                type: 'post',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    id: 0
-                })
-            }).done(function passOff(results) {
-                dti.locations._init(results);
+            dti.locations.getDefaultTree(() => {
                 dti.locations.initBindings();
                 dti.bindings.locations.refreshTooltips();
             });
         },
-        _init: function (data) {
+        _init: function () {
             var bindings = dti.bindings.locations;
-
-            dti.locations.tree = dti.locations.normalize(data, {
-                new: false
-            });
-
-            bindings.data = ko.viewmodel.fromModel(dti.locations.tree);
 
             $.contextMenu({
                 selector: '.node',
@@ -3734,11 +3824,7 @@ var dti = {
                 },
 
                 expandRecursive: function (context) {
-                    var collator = new Intl.Collator(undefined, {
-                            numeric: true,
-                            sensitivity: 'base'
-                        });
-
+                    dti.bindings.locations.busy(true);
                     if (!context.$data.fetched()) {
                         $.ajax({
                             type: 'post',
@@ -3762,12 +3848,14 @@ var dti = {
                                     child.hasChildren(false);
                                 } else {
                                     child.children.sort((a, b) => {
-                                        var res = collator.compare(a.name(), b.name());
+                                        var res = dti.locations.collator.compare(a.name(), b.name());
 
                                         return res;
                                     });
                                 }
                             }, root);
+
+                            dti.bindings.locations.busy(false);
                         });
                     } else {
                         context.$data.expanded(true);
@@ -3777,13 +3865,33 @@ var dti = {
                                 child.hasChildren(false);
                             } else {
                                 child.children.sort((a, b) => {
-                                    var res = collator.compare(a.name(), b.name());
+                                    var res = dti.locations.collator.compare(a.name(), b.name());
 
                                     return res;
                                 });
                             }
 
                         }, context.$data.children(), context.$data);
+                        dti.bindings.locations.busy(false);
+                    }
+                },
+
+                search: function (terms) {
+                    if (terms !== '') {
+                        dti.bindings.locations.busy(true);
+                        $.ajax({
+                            url: '/api/hierarchy/search',
+                            type: 'post',
+                            contentType: 'application/json',
+                            data: JSON.stringify({
+                                terms: terms.split(',')
+                            })
+                        }).done((results) => {
+                            dti.locations.rebuildTree(results);
+                            dti.bindings.locations.busy(false);
+                        });
+                    } else {
+                        dti.locations.getDefaultTree(null, true);
                     }
                 },
 
@@ -4117,6 +4225,14 @@ var dti = {
                 }
             });
 
+            dti.bindings.locations.searchInput = ko.computed(dti.bindings.locations.searchString).extend({
+                throttle: 1000
+            });
+
+            dti.bindings.locations.searchInput.subscribe((val) => {
+                dti.bindings.locations.search(val);
+            });
+
             ko.bindingHandlers.shouldFocus = {
                 init: function (element, valueAccessor) {
 
@@ -4157,6 +4273,11 @@ var dti = {
                             dti.bindings.locations.moveNode(from, dest);
                             $('.locations .nodeHover').removeClass('nodeHover');
                         }
+                    });
+
+                    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                        $element.draggable('destroy');
+                        $element.droppable('destroy');
                     });
                 }
             };
@@ -5837,12 +5958,14 @@ var dti = {
             root: true, //hack
             modalOpen: false,
             focusedNode: false,
+            busy: false,
             focusedNodeName: '',
             focusedNodeType: '',
             startEntry: 1,
             endEntry: 10,
             entryFormat: '',
             entryType: '',
+            searchString: '',
             error: '&nbsp;',
             bulkAddDestination: '',
             availableTypes: ['Area', 'Building', 'Floor', 'Room']
