@@ -3917,9 +3917,9 @@ var dti = {
                     event.target.select();
                 },
                 refreshTooltips: function () {
-                    setTimeout(function fireTooltips () {
-                        $('.locations .tooltipped:not([data-tooltip-id])').tooltip();
-                    }, 1);
+                    // setTimeout(function fireTooltips () {
+                    //     $('.locations .tooltipped:not([data-tooltip-id])').tooltip();
+                    // }, 1);
                 },
                 _addNode: function (childrenArray, node) {
                     dti.bindings.locations.newestNode = {

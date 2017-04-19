@@ -466,9 +466,9 @@ html
                     span.displayInfo(data-bind="dragNode: true")
                         .name(data-bind='text: name, click: $root.focusNode')
                         input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
-                        a.bulkAdd.tooltipped(data-tooltip="Add Sibling", data-position="bottom", href="#")
+                        a.bulkAdd.tooltipped(title="Add Sibling", data-tooltip="Add Sibling", data-position="bottom", href="#")
                             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSiblingRaw") arrow_downward
-                        a.bulkAdd.tooltipped(data-tooltip="Add Child", data-position="bottom", href="#")
+                        a.bulkAdd.tooltipped(title="Add Child", data-tooltip="Add Child", data-position="bottom", href="#")
                             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
                     .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
                         
