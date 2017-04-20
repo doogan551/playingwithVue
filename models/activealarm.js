@@ -3,7 +3,7 @@ const Common = require('./common');
 const ActiveAlarm = class ActiveAlarm extends Common {
 
     constructor() {
-        super('ActiveAlarm');
+        super('ActiveAlarms');
     }
 
     getActiveAlarms(data, callback) {

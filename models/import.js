@@ -525,7 +525,7 @@ let Import = class Import extends Common {
                     query: {
                         _id: dep._id
                     }
-                }, (err, results)=>{
+                }, (err, results) => {
                     cb2(err);
                 });
             }, cb);
@@ -1925,11 +1925,9 @@ let Import = class Import extends Common {
                     this.get({
                         collection: pointsCollection,
                         query: {
-                            _id:
-                                /*{
-                                             $in: upiList
-                                           }*/
-                                85161
+                            _id: {
+                                $in: upiList
+                            }
                         }
                     }, (err, points) => {
                         var referencedPoint,
