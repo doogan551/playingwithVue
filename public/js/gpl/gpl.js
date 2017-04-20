@@ -89,7 +89,7 @@ var gpl = {
     waitForSocketMessage: function (fn) {
         gpl.socketWaitFn = fn;
     },
-    saveSequence: function () {
+    saveSequence: function (saveObj) {
         gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
 
@@ -107,7 +107,10 @@ var gpl = {
                 Name: gpl.point.Name,
                 "Point Type": gpl.point["Point Type"],
                 upi: gpl.upi
-            }
+            },
+            adds: (!!saveObj ? saveObj.adds : []),
+            deletes: (!!saveObj ? saveObj.deletes : []),
+            updates: (!!saveObj ? saveObj.updates : [])
         });
     },
     isCyclic: function (obj) {
@@ -6113,7 +6116,7 @@ gpl.BlockManager = function (manager) {
                     if (isCancel) {
                         saveObj.deletes.push(block.upi);
                     } else {
-                        saveObj.adds.push(data);
+                        saveObj.adds.push({newPoint: data});
                     }
                 }
             });
@@ -7823,26 +7826,7 @@ gpl.Manager = function () {
 
     managerSelf.doSave = function () {
         var saveObj,
-            isValid,
-            finish = function () {
-                delete gpl.json.editVersion;
-
-                gpl.saveSequence();
-
-                if (gpl.point._pStatus === 1) {
-                    managerSelf.socket.emit('addPoint', {
-                        oldPoint: gpl._origPoint,
-                        newPoint: gpl.point
-                    });
-                } else {
-                    managerSelf.socket.emit('updatePoint', {
-                        oldPoint: gpl._origPoint,
-                        newPoint: gpl.point
-                    });
-                }
-
-
-            };
+            isValid;
 
         gpl.isValid = true;
         gpl.validationMessage = [];
@@ -7863,13 +7847,11 @@ gpl.Manager = function () {
             gpl.fire('save');
 
             if (gpl.isValid) {
-                managerSelf.socket.emit('updateSequencePoints', saveObj);
+                gpl.saveSequence(saveObj);
 
                 managerSelf.embedActionButtons();
 
                 offsetPositions(true); //resets/removes offset
-
-                finish();
             } else {
                 gpl.showMessage(gpl.validationMessage);
                 managerSelf.resumeRender();
