@@ -69,17 +69,15 @@ let Import = class Import extends Common {
                 this.fixPowerMeters((err, count) => {
                     logger.info('number of powermeters changed:', count);
                     logger.info('before changeUpis', err, new Date());
-                    this.updateGPLRefs((err) => {
-                        this.changeUpis((err) => {
-                            this.updateHistory((err) => {
-                                logger.info('finished updateHistory', err);
-                                this.cleanupDB((err) => {
-                                    if (err) {
-                                        logger.info('updateGPLReferences err:', err);
-                                    }
-                                    logger.info('done', err, new Date());
-                                    process.exit(0);
-                                });
+                    this.changeUpis((err) => {
+                        this.updateHistory((err) => {
+                            logger.info('finished updateHistory', err);
+                            this.cleanupDB((err) => {
+                                if (err) {
+                                    logger.info('updateGPLReferences err:', err);
+                                }
+                                logger.info('done', err, new Date());
+                                process.exit(0);
                             });
                         });
                     });
