@@ -4561,6 +4561,7 @@ var dti = {
                 }
 
                 self.fullCreate = cfg.fullCreate || false;
+                self.fromGPL = cfg.fromGPL || false;
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
@@ -5309,7 +5310,7 @@ var dti = {
                     },
                     showCreatePoint: function () {
                         var sourceWindowId = config._windowId,
-                            callback = function (data) {
+                            pointCreatedCB = function(data) {
                                 dti.messaging.sendMessage({
                                     messageID: messageID,
                                     key: sourceWindowId,
@@ -5320,7 +5321,7 @@ var dti = {
                                 });
                             };
 
-                        config.callback = callback;
+                        config.callback = pointCreatedCB;
                         config.mode = 'create';
 
                         dti.navigator.showNavigator(config);

@@ -33,6 +33,9 @@ var dtiUtility =  {
         dtiUtility.itemIdx++;
         return dtiUtility.settings.idxPrefix + dtiUtility.itemIdx;
     },
+    generateFauxPointID: function () {
+        return Math.floor(Math.random() * (16777216));
+    },
     store: window.store,
     getConfigCallbacks: {},
     openWindowCallbacks: {},
@@ -152,7 +155,7 @@ var dtiUtility =  {
 
         params.mode = 'filter';
 
-        dtiUtility.sendMessage('showPointSelector', params);  
+        dtiUtility.sendMessage('showPointSelector', params);
     },
 
     showCreatePoint: function (parameters) {
@@ -179,7 +182,7 @@ var dtiUtility =  {
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
         data.messageID = data.messageID || dtiUtility.makeId();
-        
+
         store.set(target, data);
     },
 
@@ -254,5 +257,5 @@ var dtiUtility =  {
 
 // $(dtiUtility.init);
 document.addEventListener("DOMContentLoaded", function loaddtiUtility (event) {
-    setTimeout(dtiUtility.init, 1000); 
+    setTimeout(dtiUtility.init, 1000);
 });

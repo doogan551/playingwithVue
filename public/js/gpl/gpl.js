@@ -56,6 +56,7 @@ var gpl = {
     point: window.gplData.point,
     references: window.gplData.references,
     upi: window.gplData.upi,
+    currentUser: "",
     DELETEKEY: 46,
     ESCAPEKEY: 27,
     ARROWKEYS: {
@@ -536,7 +537,7 @@ var gpl = {
 
                 if (!!referencedObj) {
                     objRef = {
-                        upi: referencedObj._id,
+                        upi: referencedObj._id || referencedObj.id,
                         name: referencedObj.Name,
                         pointType: referencedObj['Point Type'].Value
                     };
@@ -1694,7 +1695,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                                 if (tmpData.err) {
                                     gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
                                     gpl.isValid = false;
-                                    gpl.validationMessage.push('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
+                                    gpl.validationMessage.push('Error with block "' + self.pointType + ' - \'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
                                     self.setInvalid();
                                 } else {
                                     self._origPointData = newData;
@@ -2699,7 +2700,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         } else {
             if (calculationType) {
                 self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
-                self.blockType = self.config.iconType;
 
                 if (self.iconPrefix) {
                     self.config.iconType = self.iconPrefix + calculationType;
@@ -2726,9 +2726,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.icon) {
             self.convertIconNames();
-            if (self.targetCanvas !== 'toolbar') {
-                self.blockType = self.config.iconType;
-            }
 
             if (self._icons[self.icon] === undefined) {
                 fabric.Image.fromURL(gpl.iconPath + self.icon, function (img) {
@@ -6370,7 +6367,7 @@ gpl.BlockManager = function (manager) {
             var ret = [];
 
             gpl.forEach(bmSelf.blocks, function (obj) {
-                if (obj.upi !== 0 && !isNaN(obj.upi)) {
+                if (obj.upi !== 0 && obj.upi !== undefined && !obj.isToolbar) {
                     gpl.setBlockPointRef(obj);
                 }
 
@@ -7028,6 +7025,10 @@ gpl.Manager = function () {
         mergeProperties = ['Show Label', 'Show Value'],
         initFlow = ['initBindings', 'initCanvas', 'initManagers', 'initQualityCodes', 'initShapes', 'initEvents', 'initKnockout', 'initToolbar', 'initSocket'],
 
+        setCurrentUser = function (theUser) {
+            gpl.currentUser = theUser;
+        },
+
         initLabels = function () {
             var type,
                 types = managerSelf.blockTypes;
@@ -7469,6 +7470,7 @@ gpl.Manager = function () {
 
     managerSelf.postInit = function () {
         managerSelf.postInitActionButtons();
+        dtiUtility.getUser(setCurrentUser);
     };
 
     managerSelf.offsetEverything = function (num, line, block) {
@@ -7750,8 +7752,6 @@ gpl.Manager = function () {
 
                 var oldPoint = $.extend(true, {}, obj);
 
-                // gpl.unblockUI();
-
                 if (obj && obj.target) { //is event
                     if (!called) {
                         log('New Point canceled, deleting block');
@@ -7761,11 +7761,9 @@ gpl.Manager = function () {
                     return;
                 }
 
-                block.upi = obj._id;
-                // obj['Point Instance'].Value = obj._id;
-
-                // if (obj['Reverse Action'])
-
+                obj.id = gpl.currentUser.username + dtiUtility.generateFauxPointID();
+                // block.upi = obj._id;
+                block.upi = obj.id;
 
                 obj['Point Refs'][0].Value = gpl.deviceId;
 
@@ -7780,14 +7778,14 @@ gpl.Manager = function () {
 
                 block.setPointData(obj, true);
 
-                log(block.gplId, 'save callback', obj);
+                // log(block.gplId, 'save callback', obj);
                 gpl.fire('newblock', block);
                 called = true;
 
-                managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': obj,
-                    'oldPoint': oldPoint
-                }));
+                // managerSelf.socket.emit('updatePoint', JSON.stringify({
+                //     'newPoint': obj,
+                //     'oldPoint': oldPoint
+                // }));
             };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
@@ -7797,6 +7795,7 @@ gpl.Manager = function () {
             parameters.name3 = name3;
             parameters.name4 = name4;
             parameters.pointType = block.pointType;
+            parameters.fromGPL = true;
 
             dtiUtility.showCreatePoint(parameters);
             dtiUtility.onCreatePoint(handler);
