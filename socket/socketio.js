@@ -360,24 +360,18 @@ module.exports = function socketio(_common) {
 
             async.waterfall([
                 function (callback) {
-                    async.mapSeries(data.adds, function (point, callback) {
-                        pointModel.addPoint({
-                            newPoint: point
-                        }, user, null, function (response, updatedPoint) {
-                            callback(response.err, updatedPoint);
-                        });
-                    }, function (err, newPoints) {
-                        callback(err, returnPoints.concat(newPoints));
+                    pointModel.bulkAdd(data.adds, user, null, function (response, updatedPoint) {
+                        callback(response.err, updatedPoint);
                     });
                 },
 
                 function (returnPoints, callback) {
-                    async.mapSeries(data.updates, function (point, callback) {
+                    async.mapSeries(data.updates, function (point, mapCallback) {
                         pointModel.newUpdate(point.oldPoint, point.newPoint, {
                             method: 'update',
                             from: 'ui'
                         }, user, function (response, updatedPoint) {
-                            callback(response.err, updatedPoint);
+                            mapCallback(response.err, updatedPoint);
                         });
                     }, function (err, newPoints) {
                         callback(err, returnPoints.concat(newPoints));
@@ -385,9 +379,9 @@ module.exports = function socketio(_common) {
                 },
 
                 function (returnPoints, callback) {
-                    async.mapSeries(data.deletes, function (upi, callback) {
+                    async.mapSeries(data.deletes, function (upi, mapCallback) {
                         pointModel.deletePoint(upi, 'hard', user, null, function (response) {
-                            callback(response.err);
+                            mapCallback(response.err);
                         });
                     }, function (err, newPoints) {
                         callback(err, returnPoints);
