@@ -362,7 +362,7 @@ module.exports = function socketio(_common) {
                 function (callback) {
                     async.mapSeries(data.adds, function (point, callback) {
                         pointModel.addPoint({
-                            point: point
+                            newPoint: point
                         }, user, null, function (response, updatedPoint) {
                             callback(response.err, updatedPoint);
                         });
