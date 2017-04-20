@@ -2805,11 +2805,10 @@ const Point = class Point extends Common {
             }, (err) => {
                 if (err) {
                     return cb(err);
-                } else {
-                    return cb({
-                        msg: 'success'
-                    }, updatedPoints);
                 }
+                return cb({
+                    msg: 'success'
+                }, updatedPoints);
             });
         });
     }
