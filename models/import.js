@@ -1925,11 +1925,9 @@ let Import = class Import extends Common {
                     this.get({
                         collection: pointsCollection,
                         query: {
-                            _id:
-                                /*{
-                                             $in: upiList
-                                           }*/
-                                85161
+                            _id: {
+                                $in: upiList
+                            }
                         }
                     }, (err, points) => {
                         var referencedPoint,
