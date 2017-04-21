@@ -26,6 +26,7 @@ dtiMessaging.openWindow(arguments);
 
 var dtiUtility = {
     itemIdx: 0,
+    lastIdNumber: 0,
     settings: {
         idxPrefix: 'dti_'
     },
@@ -34,7 +35,12 @@ var dtiUtility = {
         return dtiUtility.settings.idxPrefix + dtiUtility.itemIdx;
     },
     generateFauxPointID: function (preFix) {
-        return (!!preFix ? preFix : "fauxID") + Math.floor(Math.random() * (16777216));
+        let newId = dtiUtility.lastIdNumber;
+        while (dtiUtility.lastIdNumber !== newId) {
+            newId = Date.now();
+        }
+        dtiUtility.lastIdNumber = newId;
+        return (!!preFix ? preFix : 'fauxID') + newId.toString();
     },
     store: window.store,
     getConfigCallbacks: {},
@@ -45,8 +51,8 @@ var dtiUtility = {
 
     init: function () {
         if (dtiUtility.store === undefined) {
-            $.getScript('/js/lib/store2.min.js', function handleGetStore () {
-                var storeInterval = setInterval(function testStore () {
+            $.getScript('/js/lib/store2.min.js', function handleGetStore() {
+                var storeInterval = setInterval(function testStore() {
                     if (window.store) {
                         dtiUtility.store = window.store;
                         clearInterval(storeInterval);
@@ -238,7 +244,6 @@ var dtiUtility = {
             parameters: parameters,
             _getCfgID: getCfgID
         });
-
     },
     getUser: function (cb) {
         dtiUtility._getUserCb = cb;
@@ -256,6 +261,6 @@ var dtiUtility = {
 };
 
 // $(dtiUtility.init);
-document.addEventListener("DOMContentLoaded", function loaddtiUtility (event) {
+document.addEventListener('DOMContentLoaded', function loaddtiUtility(event) {
     setTimeout(dtiUtility.init, 1000);
 });
