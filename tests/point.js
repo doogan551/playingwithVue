@@ -1,4 +1,4 @@
-let Point = require('../models/point.js');
+let Point = require('../models/point');
 let pointModel = new Point();
 let logObj;
 

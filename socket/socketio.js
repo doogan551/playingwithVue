@@ -313,6 +313,24 @@ module.exports = function socketio(_common) {
                 socket.emit('sequenceUpdateMessage', result);
             });
         });
+        // Checked
+        sock.on('doPointPackage', function (data) {
+            data.user = user;
+            const pointModel = new Point();
+            logger.debug('doPointPackage');
+            pointModel.doPointPackage(data, function (err, returnPoints) {
+                if (err) {
+                    sock.emit('pointPackage', {
+                        err: err
+                    });
+                } else {
+                    sock.emit('pointPackage', {
+                        message: 'success',
+                        points: returnPoints
+                    });
+                }
+            });
+        });
         // NOT CHECKED - will check on 88
         sock.on('compileScript', function (data) {
             logger.debug('compileScript');
@@ -610,17 +628,6 @@ function doUpdateSequence(data, cb) {
         sequenceData = data.sequenceData,
         pointRefs = data.pointRefs;
 
-    // mydb.collection('points').findOne({
-    //     "Name": name
-    // }, {
-    //     '_id': 1
-    // },
-    // function(err, result) {
-    //     if(result) {
-    //         let _id = result._id;
-
-    //         if(!err) {
-
     point.updateOne({
         query: {
             'Name': name
@@ -635,34 +642,9 @@ function doUpdateSequence(data, cb) {
         if (updateErr) {
             cb('Error: ' + updateErr.err);
         } else {
-            /*let logData = {
-              user: data.user,
-              timestamp: Date.now(),
-              // point: data.point,
-              activity: actLogsEnums["GPL Edit"].enum,
-              log: "Sequence edited."
-            };
-            activityLog.create(logData, function(err, result) {});*/
             return cb('success');
         }
     });
-    //         } else {
-    //             socket.emit('sequenceUpdateMessage', {
-    //                 type: 'error',
-    //                 message: err.err,
-    //                 name: name
-    //             });
-    //             complete();
-    //         }
-    //     } else {
-    //         socket.emit('sequenceUpdateMessage', {
-    //             type: 'empty',
-    //             message: 'empty',
-    //             name: name
-    //         });
-    //         complete();
-    //     }
-    // });
 }
 
 function getVals(upis) {

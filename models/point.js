@@ -671,6 +671,7 @@ const Point = class Point extends Common {
 
         point._Name = point.Name.toLowerCase();
     }
+
     initPoint(data, cb) {
         const alarmDefs = new AlarmDefs();
         const system = new System();
@@ -2791,8 +2792,7 @@ const Point = class Point extends Common {
 
     bulkAdd(points, user, cb) {
         let updatedPoints = [];
-        this.updateIds(points, (err) => {
-            this.reassignRefs(points);
+        this.changeNewIds(points, (err, points) => {
             async.eachSeries(points, (point, callback) => {
                 this.addPoint(point, user, {}, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
@@ -2813,17 +2813,28 @@ const Point = class Point extends Common {
         });
     }
 
+    changeNewIds(points, cb) {
+        this.updateIds(points, (err) => {
+            this.reassignRefs(points);
+            cb(null, points);
+        });
+    }
+
     updateIds(points, callback) {
         let counterModel = new Counter();
         async.eachSeries(points, (point, seriesCallback) => {
-            counterModel.getUpiForPointType(point.newPoint['Point Type'].eValue, (err, newUpi) => {
-                point.newPoint._id = newUpi;
-                if (point.newPoint['Point Type'] === 'Schedule Entry') {
-                    point.newPoint.name2 = newUpi;
-                    this.rebuildName(point.newPoint);
-                }
-                seriesCallback(err);
-            });
+            if (point.newPoint.hasOwnProperty('id')) {
+                counterModel.getUpiForPointType(point.newPoint['Point Type'].eValue, (err, newUpi) => {
+                    point.newPoint._id = newUpi;
+                    if (point.newPoint['Point Type'] === 'Schedule Entry') {
+                        point.newPoint.name2 = newUpi;
+                        this.rebuildName(point.newPoint);
+                    }
+                    seriesCallback(err);
+                });
+            } else {
+                return seriesCallback();
+            }
         }, callback);
     }
 
@@ -2834,8 +2845,8 @@ const Point = class Point extends Common {
                 let refs = points[pr].newPoint['Point Refs'];
                 for (var r = 0; r < refs.length; r++) {
                     let ref = refs[r];
-                    if (ref.id === point.id) {
-                        ref.id = point._id;
+                    if (ref.Value === point.id) {
+                        ref.Value = point._id;
                     }
                 }
             }
@@ -3055,6 +3066,44 @@ const Point = class Point extends Common {
             }
         }, (err, point) => {
             return cb(err, point._oldUpi);
+        });
+    }
+    doPointPackage(data, cb) {
+        // reassignids for new blocks
+        // update refs on blocks and on gpl
+        let user = data.user;
+        async.waterfall([
+
+            function (callback) {
+                this.changeNewIds(data.updates, (err, points) => {
+                    async.mapSeries(points, function (point, mapCallback) {
+                        this.newUpdate(point.oldPoint, point.newPoint, {
+                            method: 'update',
+                            from: 'ui'
+                        }, user, function (response, updatedPoint) {
+                            mapCallback(response.err, updatedPoint);
+                        });
+                    }, function (err, newPoints) {
+                        callback(err, newPoints);
+                    });
+                });
+            },
+
+            function (returnPoints, callback) {
+                async.mapSeries(data.deletes, function (upi, mapCallback) {
+                    this.deletePoint(upi, 'hard', user, null, function (response) {
+                        mapCallback(response.err);
+                    });
+                }, function (err, newPoints) {
+                    callback(err, returnPoints);
+                });
+            }
+        ], function (err, returnPoints) {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, returnPoints);
+            }
         });
     }
 };
