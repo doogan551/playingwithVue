@@ -422,7 +422,7 @@ module.exports = function socketio(_common) {
         sock.on('addPoint', function (data) {
             const point = new Point();
             logger.debug('addPoint');
-            point.bulkAdd(data, user, function (response, points) {
+            point.bulkAdd(data, user, null, function (response, points) {
                 if (response.err) {
                     sock.emit('pointUpdated', {
                         err: response.err
@@ -814,10 +814,10 @@ function updateSchedules(data, callback) {
                     }
                 }
 
-                point.addPoint({
-                    point: newSched,
+                point.bulkAdd([{
+                    newPoint: newSched,
                     oldPoint: oldPoint
-                }, user, options, function (returnData) {
+                }], user, options, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }

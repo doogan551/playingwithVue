@@ -829,6 +829,7 @@ const Point = class Point extends Common {
         };
 
         let fixPoint = (template, isClone, sysInfo, callback) => {
+            template.id = null;
             template.Name = Name;
             template.name1 = (name1) ? name1 : '';
             template.name2 = (name2) ? name2 : '';
@@ -2790,11 +2791,11 @@ const Point = class Point extends Common {
         });
     }
 
-    bulkAdd(points, user, cb) {
+    bulkAdd(points, user, options, cb) {
         let updatedPoints = [];
         this.changeNewIds(points, (err, points) => {
             async.eachSeries(points, (point, callback) => {
-                this.addPoint(point, user, {}, (err, point) => {
+                this.addPoint(point, user, options, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
                         callback(err);
                     } else {
