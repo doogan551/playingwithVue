@@ -108,7 +108,6 @@ var gpl = {
                 "Point Type": gpl.point["Point Type"],
                 upi: gpl.upi
             },
-            adds: (!!saveObj ? saveObj.adds : []),
             deletes: (!!saveObj ? saveObj.deletes : []),
             updates: (!!saveObj ? saveObj.updates : [])
         });
@@ -6116,7 +6115,11 @@ gpl.BlockManager = function (manager) {
                     if (isCancel) {
                         saveObj.deletes.push(block.upi);
                     } else {
-                        saveObj.adds.push({newPoint: data});
+                        data = {
+                            oldPoint: block._origPointData,
+                            newPoint: block.getPointData()
+                        };
+                        saveObj.updates.push(data);
                     }
                 }
             });
@@ -7764,7 +7767,7 @@ gpl.Manager = function () {
                     return;
                 }
 
-                obj.id = gpl.currentUser.username + dtiUtility.generateFauxPointID();
+                obj.id = dtiUtility.generateFauxPointID(gpl.currentUser.username);
                 // block.upi = obj._id;
                 block.upi = obj.id;
 

@@ -24,7 +24,7 @@ dtiMessaging.openWindow(arguments);
 
 */
 
-var dtiUtility =  {
+var dtiUtility = {
     itemIdx: 0,
     settings: {
         idxPrefix: 'dti_'
@@ -33,8 +33,8 @@ var dtiUtility =  {
         dtiUtility.itemIdx++;
         return dtiUtility.settings.idxPrefix + dtiUtility.itemIdx;
     },
-    generateFauxPointID: function () {
-        return Math.floor(Math.random() * (16777216));
+    generateFauxPointID: function (preFix) {
+        return (!!preFix ? preFix : "fauxID") + Math.floor(Math.random() * (16777216));
     },
     store: window.store,
     getConfigCallbacks: {},
