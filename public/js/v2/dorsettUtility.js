@@ -36,7 +36,7 @@ var dtiUtility = {
     },
     generateFauxPointID: function (preFix) {
         let newId = dtiUtility.lastIdNumber;
-        while (dtiUtility.lastIdNumber !== newId) {
+        while (dtiUtility.lastIdNumber === newId) {
             newId = Date.now();
         }
         dtiUtility.lastIdNumber = newId;
