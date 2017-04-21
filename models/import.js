@@ -528,7 +528,21 @@ let Import = class Import extends Common {
                 }, (err, results) => {
                     cb2(err);
                 });
-            }, cb);
+            }, (err, count) => {
+                this.update({
+                    collection: collection,
+                    updateObj: {
+                        $set: {
+                            _parentUpi: newId
+                        }
+                    },
+                    query: {
+                        _parentUpi: oldId
+                    }
+                }, (err, results) => {
+                    cb(err);
+                });
+            });
         };
 
         this.getOne({
@@ -972,7 +986,7 @@ let Import = class Import extends Common {
                             this.update({
                                 collection: pointsCollection,
                                 query: {
-                                    _id: gplBlock._id
+                                    _id: gplRefs._id
                                 },
                                 updateObj: {
                                     $set: {

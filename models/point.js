@@ -134,8 +134,8 @@ const Point = class Point extends Common {
         let limit = data.limit || 200;
         // If no point type array passed in, use default
         let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
-                return type.key;
-            });
+            return type.key;
+        });
         // Name segments, sort names and values
         let nameSegments = [{
             name: '_name1',
@@ -836,6 +836,7 @@ const Point = class Point extends Common {
 
         let fixPoint = (template, isClone, sysInfo, callback) => {
             template.id = null;
+            template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
             template.Name = Name;
             template.name1 = (name1) ? name1 : '';
             template.name2 = (name2) ? name2 : '';
@@ -2776,6 +2777,7 @@ const Point = class Point extends Common {
                 callback(err);
             }
 
+            delete point.id;
             point._pStatus = 0;
             point.Security = [];
             point._actvAlmId = ObjectID(point._actvAlmId);
@@ -2862,15 +2864,17 @@ const Point = class Point extends Common {
     reassignRefs(points) {
         for (var p = 0; p < points.length; p++) {
             let point = points[p].newPoint;
-            let refs = point['Point Refs'];
-            for (var r = 0; r < refs.length; r++) {
-                let ref = refs[r];
-                if (ref.Value === point.id) {
-                    ref.Value = point._id;
-                    ref.PointInst = point.Value;
+            for (var rp = 0; rp < points.length; rp++) {
+                let refPoint = points[rp].newPoint;
+                let refs = refPoint['Point Refs'];
+                for (var r = 0; r < refs.length; r++) {
+                    let ref = refs[r];
+                    if (ref.Value === point.id) {
+                        ref.Value = point._id;
+                        ref.PointInst = point.Value;
+                    }
                 }
             }
-            delete point.id;
         }
     }
 
@@ -3095,34 +3099,35 @@ const Point = class Point extends Common {
         // reassignids for new blocks
         // update refs on blocks and on gpl
         let user = data.user;
-        let self = this;
-        async.waterfall([
-
-            function (callback) {
-                self.changeNewIds(data.updates, (err, points) => {
-                    async.mapSeries(points, function (point, mapCallback) {
-                        self.newUpdate(point.oldPoint, point.newPoint, {
-                            method: 'update',
-                            from: 'ui'
-                        }, user, function (response, updatedPoint) {
+        let _options = {
+            method: 'update',
+            from: 'ui'
+        };
+        async.waterfall([(callback) => {
+            this.changeNewIds(data.updates, (err, points) => {
+                async.mapSeries(points, (point, mapCallback) => {
+                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                        this.addPoint(point, user, null, (err, result) => {
+                            mapCallback(err.err, result);
+                        });
+                    } else {
+                        this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
                             mapCallback(response.err, updatedPoint);
                         });
-                    }, function (err, newPoints) {
-                        callback(err, newPoints);
-                    });
+                    }
+                }, (err, newPoints) => {
+                    callback(err, newPoints);
                 });
-            },
-
-            function (returnPoints, callback) {
-                async.mapSeries(data.deletes, function (upi, mapCallback) {
-                    self.deletePoint(upi, 'hard', user, null, function (response) {
-                        mapCallback(response.err);
-                    });
-                }, function (err, newPoints) {
-                    callback(err, returnPoints);
+            });
+        }, (returnPoints, callback) => {
+            async.mapSeries(data.deletes, (upi, mapCallback) => {
+                this.deletePoint(upi, 'hard', user, null, (response) => {
+                    mapCallback(response.err);
                 });
-            }
-        ], function (err, returnPoints) {
+            }, (err, newPoints) => {
+                callback(err, returnPoints);
+            });
+        }], (err, returnPoints) => {
             if (err) {
                 cb(err);
             } else {

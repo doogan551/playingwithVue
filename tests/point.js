@@ -4,23 +4,29 @@ let logObj;
 
 describe('Point Model', function () {
     it('should reassign point refs.', function () {
-        let points = [{
+        let point1 = {
             _id: 100,
             id: 'AAA',
             'Point Refs': [{
-                id: 'BBB'
+                Value: 'BBB'
             }]
-        }, {
+        };
+        let point2 = {
             _id: 200,
             id: 'BBB',
             'Point Refs': [{
-                id: 'AAA'
+                Value: 'AAA'
             }]
+        };
+        let points = [{
+            newPoint: point1
+        }, {
+            newPoint: point2
         }];
 
         pointModel.reassignRefs(points);
 
-        expect(points[0]['Point Refs'][0].id).to.be.equal(points[1]._id);
-        expect(points[1]['Point Refs'][0].id).to.be.equal(points[0]._id);
+        expect(point1['Point Refs'][0].Value).to.be.equal(point2._id);
+        expect(point2['Point Refs'][0].Value).to.be.equal(point1._id);
     });
 });

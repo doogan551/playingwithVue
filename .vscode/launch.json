@@ -7,6 +7,13 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Server",
+            "program": "${workspaceRoot}\\app.js",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Import",
             "program": "${workspaceRoot}/apps/newimport.js",
             "cwd": "${workspaceRoot}"
@@ -23,13 +30,6 @@
             "request": "launch",
             "name": "Migration",
             "program": "${workspaceRoot}/apps/migrationScripts.js",
-            "cwd": "${workspaceRoot}"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Server",
-            "program": "${workspaceRoot}\\app.js",
             "cwd": "${workspaceRoot}"
         },
         {
