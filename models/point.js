@@ -134,8 +134,8 @@ const Point = class Point extends Common {
         let limit = data.limit || 200;
         // If no point type array passed in, use default
         let pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
-            return type.key;
-        });
+                return type.key;
+            });
         // Name segments, sort names and values
         let nameSegments = [{
             name: '_name1',
@@ -248,6 +248,7 @@ const Point = class Point extends Common {
             return cb(err, points, count);
         });
     }
+
     getDistinctValues(data, cb) {
         // data is an array of objects indicating the properties for which you want unique Values:
         // [{
@@ -304,6 +305,7 @@ const Point = class Point extends Common {
             });
         });
     }
+
     getDistinctValuesTemp(data, cb) {
         this.getOne({
             collection: 'dev',
@@ -318,6 +320,7 @@ const Point = class Point extends Common {
             }
         });
     }
+
     globalSearch(data, cb) {
         // data = {
         //   searchTerms: [{
@@ -438,6 +441,7 @@ const Point = class Point extends Common {
         //   });
         // }
     }
+
     searchDependencies(data, cb) {
         let returnObj = {
             target: {},
@@ -633,6 +637,7 @@ const Point = class Point extends Common {
             }
         };
     }
+
     getNames(data, cb) {
         let upis = data.upis;
         async.map(upis, (upi, callback) => {
@@ -648,6 +653,7 @@ const Point = class Point extends Common {
             this.getOne(criteria, callback);
         }, cb);
     }
+
     rebuildName(point) {
         point._name1 = (point.name1) ? point.name1.toLowerCase() : '';
         point._name2 = (point.name2) ? point.name2.toLowerCase() : '';
@@ -939,6 +945,7 @@ const Point = class Point extends Common {
 
         doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
     }
+
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};
         let filterProps = {
@@ -971,6 +978,7 @@ const Point = class Point extends Common {
             return cb(null, null, point);
         });
     }
+
     getPointRefsInstance(data, cb) {
         this.getPointRefsSmall(data, (err, msg, result) => {
             if (!!err) {
@@ -1010,6 +1018,7 @@ const Point = class Point extends Common {
             });
         });
     }
+
     findAlarmDisplays(data, cb) {
         const security = new Security();
         let criteria = {};
@@ -1098,6 +1107,7 @@ const Point = class Point extends Common {
             });
         };
     }
+
     getControls(data, cb) {
         let searchCriteria = {};
         let filterProps = {
@@ -1120,6 +1130,7 @@ const Point = class Point extends Common {
             return cb(null, point);
         });
     }
+
     //io, updateSequencePoints, runScheduleEntry(tcp), updateDependencies
     newUpdate(oldPoint, newPoint, flags, user, callback) {
         const security = new Security();
@@ -1996,6 +2007,7 @@ const Point = class Point extends Common {
             }
         };
     }
+
     // newupdate
     updateRefs(updateReferences, newPoint, flags, user, callback) {
         if (updateReferences === true) {
@@ -2009,6 +2021,7 @@ const Point = class Point extends Common {
             return callback(null);
         }
     }
+
     //newupdate
     fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
         if (!!updateCfgReq) {
@@ -2051,6 +2064,7 @@ const Point = class Point extends Common {
             callback();
         }
     }
+
     //newupdate
     updateModel(updateModelType, newPoint, callback) {
         if (!!updateModelType) {
@@ -2079,6 +2093,7 @@ const Point = class Point extends Common {
             callback();
         }
     }
+
     // newupdate
     updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
         if (updateDownlinkNetwk) {
@@ -2110,6 +2125,7 @@ const Point = class Point extends Common {
             callback(null);
         }
     }
+
     // newupdate
     updPoint(downloadPoint, newPoint, callback) {
         // const zmq = new ZMQ();
@@ -2157,6 +2173,7 @@ const Point = class Point extends Common {
             callback(null, 'success');
         }
     }
+
     //renamePoint(depre), deletePoint, restorePoint(io), updateRefs (common)
     updateDependencies(refPoint, flags, user, callback) {
         // schedule entries collection - find the control point properties and
@@ -2254,7 +2271,7 @@ const Point = class Point extends Common {
                                         }
 
                                         /*if (dependency["Point Refs"][i]["Point Type"].Value === "Script")
-                                          data.newPoint._cfgRequired = true;*/
+                                         data.newPoint._cfgRequired = true;*/
                                         Config.Update.formatPoint(data);
                                         if (data.err !== undefined) {
                                             logger.error('data.err: ', data.err);
@@ -2661,6 +2678,7 @@ const Point = class Point extends Common {
             callback(err);
         });
     }
+
     //updateDependencies, deleteChildren, updateSchedules(io)
     signalHostTOD(signalTOD, callback) {
         // const zmq = new ZMQ();
@@ -2676,6 +2694,7 @@ const Point = class Point extends Common {
             callback(null, 'success');
         }
     }
+
     //updateDependencies, deleteChildren
     updateScheduleEntries(scheduleEntry, devices, refPoint, callback) {
         let signalTOD = false;
@@ -2711,6 +2730,7 @@ const Point = class Point extends Common {
             }
         }
     }
+
     //addpoint (io), deletepoint
     updateCfgRequired(point, callback) {
         if (point['Point Type'].Value === 'Device') {
@@ -2841,13 +2861,12 @@ const Point = class Point extends Common {
     reassignRefs(points) {
         for (var p = 0; p < points.length; p++) {
             let point = points[p].newPoint;
-            for (var pr = 0; pr < points.length; pr++) {
-                let refs = points[pr].newPoint['Point Refs'];
-                for (var r = 0; r < refs.length; r++) {
-                    let ref = refs[r];
-                    if (ref.Value === point.id) {
-                        ref.Value = point._id;
-                    }
+            let refs = point['Point Refs'];
+            for (var r = 0; r < refs.length; r++) {
+                let ref = refs[r];
+                if (ref.Value === point.id) {
+                    ref.Value = point._id;
+                    ref.PointInst = point.Value;
                 }
             }
             delete point.id;
@@ -3013,6 +3032,7 @@ const Point = class Point extends Common {
             return cb(err);
         });
     }
+
     removeGroups(data, cb) {
         let groupUpis = (data['User Group Upis']) ? data['User Group Upis'] : [];
         let points = (data.Points) ? data.Points : [];
@@ -3057,6 +3077,7 @@ const Point = class Point extends Common {
             });
         }, cb);
     }
+
     linkWithOldUpi(upi, cb) {
         this.getOne({
             _id: upi
@@ -3068,16 +3089,18 @@ const Point = class Point extends Common {
             return cb(err, point._oldUpi);
         });
     }
+
     doPointPackage(data, cb) {
         // reassignids for new blocks
         // update refs on blocks and on gpl
         let user = data.user;
+        let self = this;
         async.waterfall([
 
             function (callback) {
-                this.changeNewIds(data.updates, (err, points) => {
+                self.changeNewIds(data.updates, (err, points) => {
                     async.mapSeries(points, function (point, mapCallback) {
-                        this.newUpdate(point.oldPoint, point.newPoint, {
+                        self.newUpdate(point.oldPoint, point.newPoint, {
                             method: 'update',
                             from: 'ui'
                         }, user, function (response, updatedPoint) {
@@ -3091,7 +3114,7 @@ const Point = class Point extends Common {
 
             function (returnPoints, callback) {
                 async.mapSeries(data.deletes, function (upi, mapCallback) {
-                    this.deletePoint(upi, 'hard', user, null, function (response) {
+                    self.deletePoint(upi, 'hard', user, null, function (response) {
                         mapCallback(response.err);
                     });
                 }, function (err, newPoints) {

@@ -9,6 +9,7 @@ var gpl = {
     eventLog: [],
     actionLog: [],
     json: {},
+    originalSequenceData: {},
     originalSequence: {},
     eventHandlers: {},
     destroyFns: [],
@@ -90,27 +91,28 @@ var gpl = {
         gpl.socketWaitFn = fn;
     },
     saveSequence: function (saveObj) {
+        let data;
         gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
 
-        gpl.socket.emit('updateSequence', {
-            sequenceName: gpl.point.Name,
-            sequenceData: {
-                sequence: gpl.json
-            },
-            pointRefs: gpl.point['Point Refs'],
-            point: {
-                name1: gpl.point.name1,
-                name2: gpl.point.name2,
-                name3: gpl.point.name3,
-                name4: gpl.point.name4,
-                Name: gpl.point.Name,
-                "Point Type": gpl.point["Point Type"],
-                upi: gpl.upi
-            },
-            deletes: (!!saveObj ? saveObj.deletes : []),
-            updates: (!!saveObj ? saveObj.updates : [])
+        if (saveObj === undefined) {
+            saveObj = {};
+            saveObj.updates = [];
+        } else if (saveObj.updates === undefined) {
+            saveObj.updates = [];
+        }
+
+        saveObj.updates.push({
+            oldPoint: gpl.originalSequence,
+            newPoint: gpl.point
         });
+
+        data = {
+            deletes: (!!saveObj.deletes ? saveObj.deletes : []),
+            updates: (!!saveObj.updates ? saveObj.updates : [])
+        };
+
+        gpl.socket.emit('doPointPackage', data);
     },
     isCyclic: function (obj) {
         var seenObjects = [];
@@ -7203,10 +7205,10 @@ gpl.Manager = function () {
             managerSelf.confirmEditVersion = function (discardAnyUpdates) {
                 managerSelf.hideEditVersionModal();
                 if (discardAnyUpdates) {
-                    if (!!gpl.originalSequence.editVersion) {
-                        delete gpl.originalSequence.editVersion;
+                    if (!!gpl.originalSequenceData.editVersion) {
+                        delete gpl.originalSequenceData.editVersion;
                     }
-                    gpl.json = gpl.originalSequence;
+                    gpl.json = gpl.originalSequenceData;
                 }
                 doNextInit();
             };
@@ -7224,7 +7226,8 @@ gpl.Manager = function () {
                 gpl.showMessage('Sequence data not found');
             } else {
                 gpl.json = gpl.point.SequenceData.sequence;
-                gpl.originalSequence = $.extend(true, {}, gpl.point.SequenceData.sequence);
+                gpl.originalSequenceData = $.extend(true, {}, gpl.point.SequenceData.sequence);
+                gpl.originalSequence = $.extend(true, {}, gpl.point);
 
                 //forces new (hex) format, if flag exists it's already been converted/defaulted
                 if (!gpl.json._convertedBG) {
@@ -7883,7 +7886,7 @@ gpl.Manager = function () {
         offsetPositions(true);
 
         currentChanges = $.extend(true, {}, gpl.json.editVersion);
-        gpl.json = $.extend(true, {}, gpl.originalSequence);
+        gpl.json = $.extend(true, {}, gpl.originalSequenceData);
         gpl.json.editVersion = currentChanges;
 
         gpl.saveSequence();
@@ -8757,7 +8760,7 @@ gpl.Manager = function () {
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
 
-            gpl.json = $.extend(true, {}, gpl.originalSequence);
+            gpl.json = $.extend(true, {}, gpl.originalSequenceData);
 
             setTimeout(function () {
                 managerSelf.doCancel();
@@ -8765,7 +8768,7 @@ gpl.Manager = function () {
         });
 
         managerSelf.$discardChangesButton.click(function () {
-            var deleteNewBlocksObj,
+            var saveObj,
                 timeOutLength;
 
             gpl.isCancel = true;
@@ -8773,17 +8776,16 @@ gpl.Manager = function () {
             managerSelf.bindings.hasEditVersion(false);
             gpl.blockManager.handleUnload();
 
-            deleteNewBlocksObj = gpl.blockManager.getSaveObject(gpl.isCancel);
-            managerSelf.socket.emit('updateSequencePoints', deleteNewBlocksObj);  // delete any created points
+            saveObj = gpl.blockManager.getSaveObject(gpl.isCancel);
 
-            gpl.json = $.extend(true, {}, gpl.originalSequence);
+            gpl.json = $.extend(true, {}, gpl.originalSequenceData);
             if (!!gpl.json.editVersion) { // handle a saveForLater dataset
                 delete gpl.json.editVersion;
                 if (!!gpl.point.SequenceData.sequence.editVersion) {
                     delete gpl.point.SequenceData.sequence.editVersion;
                 }
 
-                gpl.saveSequence();
+                gpl.saveSequence(saveObj);
 
                 timeOutLength = 600;
             } else {
@@ -9268,17 +9270,13 @@ gpl.Manager = function () {
                 gpl.blockManager.processValue(dynamic);
             });
 
-            socket.on('sequenceUpdateMessage', function (message) {
+            socket.on('pointPackage', function (message) {
                 gpl.showMessage('Sequence Saved');
                 if (managerSelf.doCompleteSave) {
                     managerSelf.doCompleteSave = false;
                     managerSelf.afterSave();
                 }
-            });
-
-            socket.on('sequencePointsUpdated', function (data) {
                 gpl.blockManager.resetChanges();
-                // gpl.showMessage(JSON.stringify(data, null, 3));
             });
 
             managerSelf.registerHandler({
