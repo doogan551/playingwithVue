@@ -491,8 +491,8 @@ let Import = class Import extends Common {
         // rename schedule entries
         // drop pointinst and devinst indexes
         var centralDeviceUPI = 0;
-        var newPoints = 'new_points';
-        var points = 'points';
+        const newPoints = 'new_points';
+        const pointsCollection = 'points';
 
         var updateDependencies = (oldId, newId, collection, cb) => {
             this.iterateCursor({
@@ -545,6 +545,63 @@ let Import = class Import extends Common {
             });
         };
 
+        let changeReferenceValues = (cb) => {
+            let getRef = (refProp, callback) => {
+                if (refProp === 0) {
+                    return callback();
+                }
+                this.getOne({
+                    collection: newPoints,
+                    query: {
+                        _oldUpi: refProp
+                    },
+                    fields: {
+                        _id: 1
+                    }
+                }, (err, point) => {
+                    callback(err, point._id);
+                });
+            };
+            this.iterateCursor({
+                collection: newPoints
+            }, (err, doc, next) => {
+                let pointRefs = doc['Point Refs'];
+                async.each(pointRefs, (pointRef, eachCallback) => {
+                    async.parallel([(callback) => {
+                        getRef(pointRef.Value, (err, newValue) => {
+                            pointRef.Value = newValue;
+                            callback(err);
+                        });
+                    }, (callback) => {
+                        getRef(pointRef.PointInst, (err, newValue) => {
+                            pointRef.PointInst = newValue;
+                            callback(err);
+                        });
+                    }, (callback) => {
+                        getRef(pointRef.DevInst, (err, newValue) => {
+                            pointRef.DevInst = newValue;
+                            callback(err);
+                        });
+                    }], (err) => {
+                        eachCallback(err);
+                    });
+                }, (err) => {
+                    getRef(doc._parentUpi, (err, newValue) => {
+                        doc._parentUpi = newValue;
+                        this.update({
+                            collection: newPoints,
+                            query: {
+                                _id: doc._id
+                            },
+                            updateObj: doc
+                        }, (err, result) => {
+                            next(err);
+                        });
+                    });
+                });
+            }, cb);
+        };
+
         this.getOne({
             collection: 'SystemInfo',
             query: {
@@ -553,7 +610,7 @@ let Import = class Import extends Common {
         }, (err, sysinfo) => {
             centralDeviceUPI = sysinfo['Central Device UPI'];
             this.iterateCursor({
-                collection: points,
+                collection: pointsCollection,
                 query: {},
                 sort: {
                     _id: 1
@@ -571,7 +628,7 @@ let Import = class Import extends Common {
                             _id: doc._oldUpi
                         },
                         updateObj: doc,
-                        collection: points
+                        collection: pointsCollection
                     }, (err, result) => {
                         cb();
                     });
@@ -589,7 +646,7 @@ let Import = class Import extends Common {
                     }
                 }, (err, sysinfo) => {
                     this.iterateCursor({
-                        collection: points,
+                        collection: pointsCollection,
                         query: {}
                     }, (err, doc, cb) => {
                         doc._id = doc._newUpi;
@@ -601,16 +658,17 @@ let Import = class Import extends Common {
                             cb(err);
                         });
                     }, (err, count) => {
-                        this.iterateCursor({
-                            collection: newPoints,
-                            query: {}
-                        }, (err, doc, cb) => {
-                            updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
-                                cb(err);
-                            });
-                        }, (err, count) => {
-                            callback(err);
-                        });
+                        changeReferenceValues(callback);
+                        // this.iterateCursor({
+                        //     collection: newPoints,
+                        //     query: {}
+                        // }, (err, doc, cb) => {
+                        //     updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
+                        //         cb(err);
+                        //     });
+                        // }, (err, count) => {
+                        //     callback(err);
+                        // });
                     });
                 });
             });
@@ -1967,10 +2025,9 @@ let Import = class Import extends Common {
     }
     updateReferences(point, mainCallback) {
         var uniquePID = (pointRefs) => {
-            var index = 0;
             var prop;
 
-            async.eachSeries(pointRefs, (pointRef, cb) => {
+            async.eachOfSeries(pointRefs, (pointRef, index, cb) => {
                 if (pointRef.Value !== 0) {
                     this.getOne({
                         collection: pointsCollection,
@@ -1992,8 +2049,6 @@ let Import = class Import extends Common {
                             point: point,
                             refPoint: refPoint
                         }, prop);
-
-                        index++;
 
                         cb(null);
                     });

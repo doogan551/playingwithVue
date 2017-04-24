@@ -6,8 +6,8 @@ module.exports = {
 	//var conn = 'mongodb://10.250.0.10/infoscan';
 	//var conn = 'mongodb://ROBERT4/infoscan';
 	// conn: 'mongodb://localhost/infoscan',
-    xmlPath: 'F:/import/msfc/GPLConvert',
-    // xmlPath: 'F:/import/ydk/gplimport',
+    // xmlPath: 'F:/import/msfc/GPLConvert',
+    xmlPath: 'F:/import/ydk/gplimport',
 	// xmlPath: "//192.168.1.88/d$/InfoAdmin/MSFC GPL/XML",
     ctrlrs: {
         'Name': 'Controllers',
