@@ -9,6 +9,7 @@ describe('Point Model', function () {
             id: 'AAA',
             'Point Refs': [{
                 Value: 'BBB'
+
             }]
         };
         let point2 = {
@@ -28,5 +29,7 @@ describe('Point Model', function () {
 
         expect(point1['Point Refs'][0].Value).to.be.equal(point2._id);
         expect(point2['Point Refs'][0].Value).to.be.equal(point1._id);
+        expect(point1['Point Refs'][0].PointInst).to.be.equal(point2._id);
+        expect(point2['Point Refs'][0].PointInst).to.be.equal(point1._id);
     });
 });
