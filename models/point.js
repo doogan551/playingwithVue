@@ -2871,7 +2871,7 @@ const Point = class Point extends Common {
                     let ref = refs[r];
                     if (ref.Value === point.id) {
                         ref.Value = point._id;
-                        ref.PointInst = point.Value;
+                        ref.PointInst = point._id;
                     }
                 }
             }
