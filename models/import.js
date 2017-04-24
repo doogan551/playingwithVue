@@ -2731,7 +2731,8 @@ let Import = class Import extends Common {
         }, (err, results) => {
             async.eachSeries(results, (doc, callback) => {
                 historyModel.updateArchive({
-                    upi: doc._id
+                    upi: doc._id,
+                    oldUpi: doc._oldUpi
                 }, {
                     upi: doc._oldUpi
                 }, callback);

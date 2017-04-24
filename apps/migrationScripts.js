@@ -25,7 +25,7 @@ let cli = commandLineArgs([{
 let options = cli.parse();
 
 let curVersion = pjson.version;
-let prevVersion = 0;
+let prevVersion = '0';
 
 let dbConfig = config.get('Infoscan.dbConfig');
 let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
@@ -33,7 +33,7 @@ let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 let checkVersions = function (version) {
     console.log(version, prevVersion, curVersion);
     console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
-    if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
+    if (prevVersion === '0' || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }
 
@@ -1885,10 +1885,16 @@ let scripts = {
                     userEdited: {
                         type: ArchiveUtility.INTEGER,
                         defaultValue: 0
+                    },
+                    oldUpi: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
                     }
                 });
                 month++;
-                oldHistory.sync().then(() => {
+                return historyModel.HistoryRecord.sync().then(() => {
+                    return oldHistory.sync();
+                }).then(() => {
                     return oldHistory.findAll({
                         attributes: [
                             ['upi', 'upi'],
@@ -1901,7 +1907,8 @@ let scripts = {
                         raw: true
                     });
                 }).then((points) => {
-                    historyModel.addToSQLite(points, cb2);
+                    points.forEach((point) => point.oldUpi = point.upi);
+                    return historyModel.addToSQLite(points, cb2);
                 }).catch(cb2);
             }, function (err) {
                 startYear++;
@@ -1952,7 +1959,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.convertUpis];
+    tasks = [scripts.convertSQLiteDB];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1976,7 +1983,7 @@ db.connect(connectionString, function (err) {
             'InfoscanJS Version': 1
         }
     }, function (err, prefVersion) {
-        prevVersion = prefVersion['InfoscanJS Version'] || 0;
+        prevVersion = prefVersion['InfoscanJS Version'] || '0';
         async.series(tasks, function done(err, results) {
             if (err) {
                 logger.info('Error: ', err);

@@ -69,6 +69,10 @@ const History = class History extends Common {
             userEdited: {
                 type: ArchiveUtility.INTEGER,
                 defaultValue: 0
+            },
+            oldUpi: {
+                type: ArchiveUtility.INTEGER,
+                defaultValue: 0
             }
         });
     }
@@ -1612,7 +1616,9 @@ const History = class History extends Common {
         }, cb);
     }
     updateArchive(updateObj, where, cb) {
-        this.HistoryRecord.update(updateObj, {where}).then((result) => {
+        this.HistoryRecord.update(updateObj, {
+            where
+        }).then((result) => {
             return cb(null, result);
         }).catch((err) => {
             return cb(err);
