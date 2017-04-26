@@ -6151,21 +6151,24 @@ gpl.BlockManager = function (manager) {
 
         useEditVersion: function () {
             // gpl.on('rendered', function () {
+            // console.log(" * * * * * *       gpl.BlockManager.useEditVersion()           * * * * * * ");
                 var changes = gpl.pointChanges;
 
-                gpl.forEachArray(changes.adds, function (block) {
-                    var upi = block._id,
-                        gplBlock;
-
-                    gplBlock = bmSelf.getBlockByUpi(upi);
-
-                    gplBlock.setPointData(block);
-
-                    bmSelf.newBlocks[upi] = gplBlock;
-                });
+                // adds have been moved into updates logic
+                // gpl.forEachArray(changes.adds, function (block) {
+                //     var upi = block._id,
+                //         gplBlock;
+                //
+                //     gplBlock = bmSelf.getBlockByUpi(upi);
+                //
+                //     gplBlock.setPointData(block);
+                //
+                //     bmSelf.newBlocks[upi] = gplBlock;
+                // });
 
                 gpl.forEachArray(changes.updates, function (block) {
                     var upi = block.newPoint && block.newPoint._id,
+                        newBlockUpi = block.newPoint && block.newPoint.id,
                         gplBlock;
 
                     if (upi) {
@@ -6176,6 +6179,12 @@ gpl.BlockManager = function (manager) {
                         gplBlock.setPointData(block);
 
                         bmSelf.editedBlocks[upi] = gplBlock;
+                    } else if (newBlockUpi) {
+                        gplBlock = bmSelf.getBlockByUpi(newBlockUpi);
+
+                        gplBlock.setPointData(block);
+
+                        bmSelf.newBlocks[newBlockUpi] = gplBlock;
                     }
                 });
 
@@ -6342,7 +6351,7 @@ gpl.BlockManager = function (manager) {
 
             gpl.forEach(bmSelf.blocks, function (block) {
                 var data = block.getPointData && block.getPointData();
-                if (data && data._id === upi) {
+                if (data && (data._id === upi || data.id === upi)) {
                     ret = block;
                 }
             });
@@ -6681,6 +6690,7 @@ gpl.BlockManager = function (manager) {
         var items = block._shapes || [],
             item,
             c,
+            unpersistedPoint,
             canvas = gpl.canvases[targetCanvas || 'main'],
             handleBlockMove = function (event) {
                 var data = bmSelf.getActiveBlock(),
@@ -6720,7 +6730,9 @@ gpl.BlockManager = function (manager) {
 
         canvas.add(block);
 
-        if (block.upi && !isNaN(block.upi)) {
+
+        if (block.upi) {
+            // console.log("   bmSelf.registerBlock() -------------------------  " + block.upi);
             bmSelf.upis[block.upi] = bmSelf.upis[block.upi] || [];
 
             bmSelf.upis[block.upi].push({
@@ -6761,6 +6773,15 @@ gpl.BlockManager = function (manager) {
 
         if (!block.isToolbar) {
             bmSelf.updateBlockReferences(block);
+            if (block.upi && isNaN(block.upi) && !!gpl.pointChanges) { // a point that was not persisted
+                unpersistedPoint = gpl.pointChanges.updates.filter( function (updatedPoint) {
+                    return updatedPoint.newPoint.id === block.upi;
+                });
+
+                if (unpersistedPoint.length > 0) {
+                    block.setPointData(unpersistedPoint[0], true);
+                }
+            }
         }
 
         bmSelf.renderAll();
@@ -7076,13 +7097,14 @@ gpl.Manager = function () {
             var list = seq.line,
                 len = list.length,
                 handles,
+                offset = (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset)),
                 cc,
                 ccc;
 
             for (cc = 0; cc < len; cc++) {
                 handles = list[cc].handle;
                 for (ccc = 0; ccc < handles.length; ccc++) {
-                    handles[ccc].x = +handles[ccc].x + (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset));
+                    handles[ccc].x = +handles[ccc].x + offset;
                 }
 
             }
@@ -7090,10 +7112,11 @@ gpl.Manager = function () {
         offsetBlockPositions = function (reset, seq) {
             var list = seq.block,
                 len = list.length,
+                offset = (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset)),
                 cc;
 
             for (cc = 0; cc < len; cc++) {
-                list[cc].left = +list[cc].left + (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset));
+                list[cc].left = +list[cc].left + offset;
             }
         },
         offsetPositions = function (reset, seq) {
@@ -7156,14 +7179,35 @@ gpl.Manager = function () {
                 c;
 
             managerSelf.useEditVersion = function () {
-                var i,
+                let i,
                     block,
                     dynamic,
-                    pointRef;
+                    pointRef,
+                    updateReferences = () => {
+                        let changesIndex,
+                            refsIndex;
+
+                        // update references with changed pointdata stored in savedforlater logic and insert new points (not yet persisted)
+                        for (changesIndex = 0; changesIndex < gpl.pointChanges.updates.length; changesIndex++) {
+                            if (gpl.pointChanges.updates[changesIndex].newPoint.id) {
+                                gpl.references.push(gpl.pointChanges.updates[changesIndex].newPoint);
+                            } else {
+                                for (refsIndex = 0; refsIndex < gpl.references.length; refsIndex++) {
+                                    if (gpl.pointChanges.updates[changesIndex].newPoint._id > 0) {
+                                        if (gpl.references[refsIndex]._id === gpl.pointChanges.updates[changesIndex].newPoint._id) {
+                                            gpl.references[refsIndex] = gpl.pointChanges.updates[changesIndex].newPoint;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
 
                 gpl.json.block = gpl.json.editVersion.block;
                 gpl.json.line = gpl.json.editVersion.line;
                 gpl.json.dynamic = gpl.json.editVersion.dynamic;
+                gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
+                updateReferences();
 
                 if (!!gpl.json.block) {
                     for (i = 0; i < gpl.json.block.length; i++) {
@@ -7187,8 +7231,6 @@ gpl.Manager = function () {
                     }
                 }
 
-                gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
-
                 gpl.on('rendered', function () {
                     // managerSelf.bindings.hasEdits(true);
                     managerSelf.bindings.hasEditVersion(true);
@@ -7198,9 +7240,9 @@ gpl.Manager = function () {
                 managerSelf.confirmEditVersion(false);
             };
 
-            managerSelf.discardEditVersion = function () {
-                managerSelf.confirmEditVersion(true);
-            };
+            // managerSelf.discardEditVersion = function () {
+            //     managerSelf.confirmEditVersion(true);
+            // };
 
             managerSelf.confirmEditVersion = function (discardAnyUpdates) {
                 managerSelf.hideEditVersionModal();
@@ -7814,8 +7856,6 @@ gpl.Manager = function () {
     };
 
     managerSelf.afterSave = function () {
-        offsetPositions(false);
-
         managerSelf.resumeRender();
 
         managerSelf.bindings.hasEdits(false);
@@ -7853,11 +7893,15 @@ gpl.Manager = function () {
             gpl.fire('save');
 
             if (gpl.isValid) {
+                offsetPositions(true); //resets/removes offset
+
+                if (!!gpl.json.editVersion) {
+                    delete gpl.json.editVersion;
+                }
+
                 gpl.saveSequence(saveObj);
 
                 managerSelf.embedActionButtons();
-
-                offsetPositions(true); //resets/removes offset
             } else {
                 gpl.showMessage(gpl.validationMessage);
                 managerSelf.resumeRender();
@@ -7891,8 +7935,8 @@ gpl.Manager = function () {
 
         gpl.saveSequence();
 
-        offsetPositions(false, gpl.json.editVersion);
-        offsetPositions(false);
+        // offsetPositions(false, gpl.json.editVersion);
+        // offsetPositions(false);
 
         managerSelf.bindings.hasEdits(false);
         // gpl.hasEdits = false;
@@ -8768,24 +8812,24 @@ gpl.Manager = function () {
         });
 
         managerSelf.$discardChangesButton.click(function () {
-            var saveObj,
-                timeOutLength;
+            var timeOutLength;
 
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             managerSelf.bindings.hasEditVersion(false);
             gpl.blockManager.handleUnload();
-
-            saveObj = gpl.blockManager.getSaveObject(gpl.isCancel);
-
             gpl.json = $.extend(true, {}, gpl.originalSequenceData);
+
             if (!!gpl.json.editVersion) { // handle a saveForLater dataset
                 delete gpl.json.editVersion;
                 if (!!gpl.point.SequenceData.sequence.editVersion) {
                     delete gpl.point.SequenceData.sequence.editVersion;
                 }
 
-                gpl.saveSequence(saveObj);
+                gpl.point.SequenceData = {};
+                gpl.point.SequenceData.sequence = gpl.json;
+
+                gpl.saveSequence();
 
                 timeOutLength = 600;
             } else {
