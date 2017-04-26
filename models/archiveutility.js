@@ -11,7 +11,7 @@ const Sequelize = require('sequelize');
 const ArchiveUtility = class ArchiveUtility extends Sequelize {
 
     constructor(archiveLocation, db) {
-        console.log(archiveLocation + db + '.db');
+        // console.log(archiveLocation + db + '.db');
         super(db, '', '', {
             host: 'localhost',
             dialect: 'sqlite',
