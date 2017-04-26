@@ -584,7 +584,7 @@ var AlarmManager = function (conf) {
                 if (!discardAlarm) {
                     modifier = 1;
 
-                    if (sortAsc) {
+                    if (!sortAsc) {
                         operator.add = 'unshift';
                         operator.del = 'pop';
                         scrolledTop = ($elAlarms.scrollTop() === 0);
@@ -601,7 +601,7 @@ var AlarmManager = function (conf) {
 
                     // Received updates are not guaranteed to be in chronological order
                     if ((len = alarms.length) > 1) {
-                        if (sortAsc) {
+                        if (!sortAsc) {
                             if (alarms[0].msgTime < alarms[1].msgTime) {
                                 sortAlarms = true;
                             }
