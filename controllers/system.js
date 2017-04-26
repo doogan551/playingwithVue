@@ -191,13 +191,13 @@ router.get('/getAlarmTemplates', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    alarmDefModel.get(function (err, alarmTemplates) {
+    alarmDefModel.get({}, function (err, alarmTemplates) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
             });
         }
-        return utils.sendResponse(res, alarmTemplates.entries);
+        return utils.sendResponse(res, alarmTemplates);
     });
 });
 

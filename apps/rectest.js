@@ -1,4 +1,4 @@
-// const async = require('async');
+const async = require('async');
 const db = require('../helpers/db');
 const Utility = require('../models/utility');
 // const Config = require('../public/js/lib/config.js');
@@ -77,42 +77,45 @@ let iterateEquip = (model, spacing = '-') => {
 };
 
 let test = () => {
-    let Point = require('../models/point');
-    let pointModel = new Point();
-    let oldKeys = ['DevInst', 'PointInst', 'AppIndex', 'Value', 'PointType'];
-    let newKeys = ['dev', 'upi', 'index', 'id'];
-    let hasOld = 0;
-    let noNew = 0;
-    pointModel.iterateCursor({}, (err, point, next) => {
-        let pointRefs = point['Point Refs'];
-        let breakOut = false;
-        for (var pr = 0; pr < pointRefs.length; pr++) {
-            let ref = pointRefs[pr];
-            let keys = Object.keys(ref);
-            for (var ok = 0; ok < oldKeys.length; ok++) {
-                if (keys.includes(oldKeys[ok])) {
-                    console.log('has old', oldKeys[ok], point.Name, point._id);
-                    hasOld++;
-                    breakOut = true;
-                    break;
-                }
-            }
-            for (var nk = 0; nk < newKeys.length; nk++) {
-                if (!keys.includes(newKeys[nk])) {
-                    console.log('missing new', newKeys[nk], point.Name, point._id);
-                    noNew++;
-                    breakOut = true;
-                    break;
-                }
-            }
-            if (breakOut) {
-                break;
-            }
-        }
-        next(null);
-    }, (err, count) => {
-        console.log('done', count, hasOld, noNew);
+    let ImportApp = require('../models/import');
+    let importApp = new ImportApp();
+    importApp.fixToUUtil((err) => {
+        console.log('done');
     });
+    // let System = require('../models/system');
+    // let Point = require('../models/point');
+    // let systemModel = new System();
+    // let pointModel = new Point();
+
+    // systemModel.getOne({
+    //     query: {
+    //         Name: 'Weather'
+    //     }
+    // }, (err, weather) => {
+    //     async.eachOfSeries(weather, (value, prop, callback) => {
+    //         if (typeof value === 'number') {
+    //             pointModel.getOne({
+    //                 query: {
+    //                     _oldUpi: value
+    //                 }
+    //             }, (err, refPoint) => {
+    //                 weather[prop] = (!!refPoint) ? refPoint._id : 0;
+    //                 callback(err);
+    //             });
+    //         } else {
+    //             return callback();
+    //         }
+    //     }, (err) => {
+    //         systemModel.update({
+    //             query: {
+    //                 Name: 'Weather'
+    //             },
+    //             updateObj: weather
+    //         }, (err) => {
+    //             console.log('err', err);
+    //         });
+    //     });
+    // });
 };
 
 db.connect(connectionString.join(''), function (err) {

@@ -1907,8 +1907,19 @@ let scripts = {
                         raw: true
                     });
                 }).then((points) => {
-                    points.forEach((point) => point.oldUpi = point.upi);
-                    return historyModel.addToSQLite(points, cb2);
+                    points.forEach((point) => {
+                        point.oldUpi = point.upi;
+                    });
+                    let count = 0;
+                    async.whilst(() => {
+                        return count < points.length;
+                    }, (whilstCallback) => {
+                        let buffer = 1000;
+                        historyModel.addToSQLite(points.slice(count, count + buffer), (err) => {
+                            count += buffer;
+                            whilstCallback(err);
+                        });
+                    }, cb2);
                 }).catch(cb2);
             }, function (err) {
                 startYear++;
@@ -1936,11 +1947,13 @@ let scripts = {
 
         importApp.changeUpis((err) => {
             importApp.updateHistory((err) => {
-                importApp.cleanupDB((err) => {
-                    logger.info('Finished with convertUpis');
-                    callback(null, {
-                        fn: 'convertUpis',
-                        errors: null
+                importApp.fixToUUtil((err) => {
+                    importApp.cleanupDB((err) => {
+                        logger.info('Finished with convertUpis');
+                        callback(null, {
+                            fn: 'convertUpis',
+                            errors: null
+                        });
                     });
                 });
             });

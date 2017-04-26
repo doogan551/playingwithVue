@@ -494,7 +494,7 @@ const Point = class Point extends Common {
                     callback(err);
                 });
             }, (err) => {
-                criteria = {
+                let criteria = {
                     query: {
                         'Point Refs.PointInst': upi,
                         _pStatus: 0
@@ -592,7 +592,7 @@ const Point = class Point extends Common {
         let buildPointRefs = (upi, callback) => {
             let deviceUpi = 0;
             if (upi !== 0) {
-                criteria = {
+                let criteria = {
                     query: {
                         _id: upi
                     },
@@ -622,7 +622,7 @@ const Point = class Point extends Common {
 
         let findDevicePoint = (upi, callback) => {
             if (upi !== 0) {
-                criteria = {
+                let criteria = {
                     query: {
                         _id: upi
                     },
