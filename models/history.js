@@ -93,15 +93,15 @@ const History = class History extends Common {
         });
     }
 
-    loopOptions(options) {
+    loopOptions(options, newOptions) {
         for (let i = 0; i < options.length; i++) {
-            this.addOp(options[i]);
+            this.addOp(options[i], newOptions);
         }
     }
     buildOps(options) {
         let newOptions = [];
 
-        this.loopOptions(newOptions);
+        this.loopOptions(options, newOptions);
 
         return newOptions;
     }
@@ -787,6 +787,7 @@ const History = class History extends Common {
             maxes = values;
         } else {
             this.getScaleMaxes(this.buildScaleRanges(range, scale), ranges, values, operation, maxes);
+            // maxes = values;
         }
 
         operation.results = {
@@ -965,12 +966,12 @@ const History = class History extends Common {
             query.group = ['timestamp'];
         }
 
-        if (true) {
+        if (['latest history'].indexOf(options.ops[0].fx) >= 0) {
             query.order = [
                 ['timestamp', 'DESC']
             ];
             query.limit = 1;
-        } else if (false) {
+        } else if (['earliest history'].indexOf(options.ops[0].fx) >= 0) {
             query.order = [
                 ['timestamp', 'ASC']
             ];
@@ -1005,13 +1006,13 @@ const History = class History extends Common {
                 let sResult = sResults[a];
                 if (!!sResult) {
                     // JS logger.info("---- fixResults() --> sResults[" + a + "] = " + sResult);
-                    for (let prop in sResult) {
-                        let lc = prop.toLowerCase();
-                        sResult[lc] = sResult[prop];
-                        delete sResult[prop];
-                    }
+                    // for (let prop in sResult) {
+                    //     let lc = prop.toLowerCase();
+                    //     sResult[lc] = sResult[prop];
+                    //     delete sResult[prop];
+                    // }
                     sResult.value = parseFloat(sResult.value);
-                    sResult.Value = parseFloat(sResult.value);
+                    // sResult.Value = parseFloat(sResult.value);
                     for (m = 0; m < mResults.length; m++) {
                         if (sResult.timestamp === mResults[m].timestamp) {
                             sResult.value += parseFloat(mResults[m].Value);

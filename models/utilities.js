@@ -70,7 +70,7 @@ const Utilities = class Utilities extends Common {
     getUtility(data, cb) {
         let criteria = {
             query: {
-                'UtilityName': data.UtilityName
+                'utilityName': data.utilityName
             }
         };
 

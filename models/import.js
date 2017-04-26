@@ -73,11 +73,13 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                if (err) {
-                                    logger.info('updateGPLReferences err:', err);
-                                }
-                                logger.info('done', err, new Date());
-                                process.exit(0);
+                                this.fixToUUtil((err) => {
+                                    if (err) {
+                                        logger.info('updateGPLReferences err:', err);
+                                    }
+                                    logger.info('done', err, new Date());
+                                    process.exit(0);
+                                });
                             });
                         });
                     });
@@ -305,7 +307,7 @@ let Import = class Import extends Common {
         }, callback);
     }
     createEmptyCollections(callback) {
-        var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'versions', 'dev'];
+        var collections = ['Alarms', 'Activity Logs', 'NotifyPolicies', 'Schedules', 'hierarchy', 'Users', 'User Groups', 'historydata', 'versions', 'dev'];
         async.each(collections, (coll, cb) => {
             this.createCollection({
                 collection: coll
@@ -548,7 +550,7 @@ let Import = class Import extends Common {
         let changeReferenceValues = (cb) => {
             let getRef = (refProp, callback) => {
                 if (refProp === 0) {
-                    return callback();
+                    return callback(null, 0);
                 }
                 this.getOne({
                     collection: newPoints,
@@ -559,7 +561,11 @@ let Import = class Import extends Common {
                         _id: 1
                     }
                 }, (err, point) => {
-                    callback(err, point._id);
+                    if (!point) {
+                        console.log(refProp);
+                        point = {};
+                    }
+                    callback(err, point._id || 0);
                 });
             };
             this.iterateCursor({
@@ -2796,6 +2802,55 @@ let Import = class Import extends Common {
             });
         });
     }
+    fixToUUtil(cb) {
+        let utilsModel = new Utilities();
+        let pointModel = new Point();
+        let systemModel = new System();
+
+        utilsModel.iterateCursor({}, (err, utilityObj, next) => {
+            let meters = utilityObj.Meters;
+            async.eachSeries(meters, (meter, seriesCallback) => {
+                async.eachSeries(meter.meterPoints, (meterPoint, meterPointCallback) => {
+                    pointModel.getOne({
+                        query: {
+                            _oldUpi: meterPoint.upi
+                        }
+                    }, (err, refPoint) => {
+                        meterPoint.upi = (!!refPoint) ? refPoint._id : 0;
+                        meterPointCallback();
+                    });
+                }, seriesCallback);
+            }, (err) => {
+                utilsModel.update({
+                    query: {
+                        _id: ObjectID(utilityObj._id)
+                    },
+                    updateObj: utilityObj
+                }, (err, result) => {
+                    next(err);
+                });
+            });
+        }, (err) => {
+            systemModel.getOne({
+                query: {
+                    Name: 'Weather'
+                }
+            }, (err, weather) => {
+                async.eachOf(weather, (value, prop, callback) => {
+                    if (typeof value === 'number') {
+                        pointModel.getOne({
+                            _oldUpi: value
+                        }, (err, refPoint) => {
+                            weather[prop] = (!!refPoint) ? refPoint._id : 0;
+                            callback(err);
+                        });
+                    } else {
+                        return callback();
+                    }
+                }, cb);
+            });
+        });
+    }
     setupCounters(callback) {
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
@@ -2822,3 +2877,5 @@ let Import = class Import extends Common {
 module.exports = Import;
 var Counter = require('../models/counter');
 var Point = require('../models/point');
+var Utilities = require('../models/utilities');
+var System = require('../models/system');
