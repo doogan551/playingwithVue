@@ -229,6 +229,13 @@ var dtiUtility = {
         });
     },
 
+    updateUPI: function (upi) {
+        dtiUtility.sendMessage('windowMessage', {
+            action: 'updateUPI',
+            parameters: upi
+        });
+    },
+
     closeWindow: function () {
         dtiUtility.sendMessage('closeWindow');
     },

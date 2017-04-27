@@ -808,8 +808,15 @@ var dti = {
                 self.bindings.url(url);
             },
             refresh = function () {
+                let newUrl = self.bindings.newUrl();
+
                 self.bindings.loading(true);
-                self.$iframe[0].contentWindow.location.reload();
+                if (newUrl) {
+                    self.bindings.newUrl(null);
+                    self.bindings.url(newUrl);
+                } else {
+                    self.$iframe[0].contentWindow.location.reload();
+                }
             },
             getTitleForPoint = function (upi) {
                 var handlePointData = function (pt) {
@@ -826,6 +833,7 @@ var dti = {
                     windowId: ko.observable(windowId),
                     group: ko.observable(getGroupName(config)),
                     url: ko.observable(config.url),
+                    newUrl: ko.observable(null),
                     upi: ko.observable(config.upi),
                     hasUrl: ko.observable(!!config.url),
                     refresh: refresh,
@@ -858,6 +866,15 @@ var dti = {
                             var measurements = prepMeasurements(message.parameters, self.bindings);
 
                             ko.viewmodel.updateFromModel(self.bindings, measurements);
+                        },
+                        updateUPI: function () {
+                            var currUrl = self.bindings.url().split('/');
+
+                            currUrl.pop();
+                            currUrl.push(message.parameters);
+
+                            self.bindings.upi(message.parameters);
+                            self.bindings.newUrl(currUrl.join('/'));
                         }
                     };
 
