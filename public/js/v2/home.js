@@ -3019,7 +3019,9 @@ var dti = {
             id: 0,
             _id: 0,
             name: 'Name',
+            _name: 'Name',
             type: 'Area',
+            _type: 'Area',
             focused: false,
             expanded: false,
             fetched: false,
@@ -3074,7 +3076,7 @@ var dti = {
                 type: 'post',
                 contentType: 'application/json',
                 data: JSON.stringify(data) 
-            }).done(function handleAdd(response) {
+            }).done(function handleAdd (response) {
                 Materialize.toast('Added nodes', 1000);
                 dti.forEachArray(response, (node, idx) => {
                     dti.locations.treeMatrix[node.newNode._id] = true;
@@ -3095,7 +3097,7 @@ var dti = {
                 contentType: 'application/json',
                 data: JSON.stringify(data) 
             }).done(function handleAdd(response) {
-                obj.new(false);
+                // obj.new(false);
                 obj.hasChanged(false);
                 dti.locations.markNodeSaved(obj._id(), response[0].newNode._id);
                 obj._id(response[0].newNode._id);
@@ -3126,8 +3128,16 @@ var dti = {
                 contentType: 'application/json',
                 data: JSON.stringify(data) 
             }).done(function handleAdd(response) {
-                dti.log(response);
-                Materialize.toast('Node edited', 1000);
+                if (response.err) {
+                    Materialize.toast('Error: ' + response.err, 2000);
+                    obj.name(obj._name());
+                    obj.type(obj._type());
+                } else {
+                    obj._name(obj.name());
+                    obj._type(obj.type());
+                    dti.log(response);
+                    Materialize.toast('Node edited', 1000);
+                }
             });
         },        
 
@@ -3163,6 +3173,9 @@ var dti = {
                         item.name = item.display;
                     }
 
+                    item._name = item.name;
+                    item._type = item.type;
+
                     if (item.hierarchyRefs) {
                         item.parentLocId = item.hierarchyRefs[0].value;
                     }
@@ -3175,12 +3188,10 @@ var dti = {
                 dti.locations.normalize(item.children);
             };
 
-
             if (Array.isArray(arr)) {
                 dti.forEachArray(arr, function (item, idx) {
                     _normalize(item, idx);
                 });
-
             } else {
                 _normalize(arr, null);
             }
@@ -3323,15 +3334,18 @@ var dti = {
                 if (child.fetched() && child.children().length === 0) {
                     child.hasChildren(false);
                 } else {
-                    child.children.sort((a, b) => {
-                        var res = dti.locations.collator.compare(a.name(), b.name());
-
-                        return res;
-                    });
+                    dti.locations.sortNodes(child.children);
                 }
             }, ret());
 
             dti.bindings.locations.data(ret());
+        },
+        sortNodes: (nodeList) => {
+            nodeList.sort((a, b) => {
+                var res = dti.locations.collator.compare(a.name(), b.name());
+
+                return res;
+            });
         },
         getDefaultTree: function (cb, overwrite) {
             dti.bindings.locations.busy(true);
@@ -3382,6 +3396,7 @@ var dti = {
 
             dti.locations.getDefaultTree(() => {
                 dti.locations.initBindings();
+                dti.locations._init();
                 dti.bindings.locations.refreshTooltips();
             });
         },
@@ -3527,6 +3542,7 @@ var dti = {
 
                     koResults = ko.viewmodel.fromModel(children);
                     obj.children(koResults());
+                    dti.locations.sortNodes(obj.children);
 
                     if (children.length === 0) {
                         obj.hasChildren(false);
@@ -3783,7 +3799,7 @@ var dti = {
                     dti.bindings.locations.forEachNode((node, base, parent) => {
                         node._id(null);
                         node.id(dti.makeId());
-                        node.new(true);
+                        // node.new(true);
                         ret.push(node);
                         node.parentLocId(parent.id());
                     }, node.children(), node);
@@ -3847,11 +3863,7 @@ var dti = {
                                 if (child.fetched() && child.children().length === 0) {
                                     child.hasChildren(false);
                                 } else {
-                                    child.children.sort((a, b) => {
-                                        var res = dti.locations.collator.compare(a.name(), b.name());
-
-                                        return res;
-                                    });
+                                    dti.locations.sortNodes(child.children);
                                 }
                             }, root);
 
@@ -3864,11 +3876,7 @@ var dti = {
                             if (child.fetched() && child.children().length === 0) {
                                 child.hasChildren(false);
                             } else {
-                                child.children.sort((a, b) => {
-                                    var res = dti.locations.collator.compare(a.name(), b.name());
-
-                                    return res;
-                                });
+                                dti.locations.sortNodes(child.children);
                             }
 
                         }, context.$data.children(), context.$data);
@@ -3938,8 +3946,8 @@ var dti = {
                         });
 
                         if (hasChanged) {
-                            if (prevNodeJS.new === true) {
-                                prevNode.new(false);
+                            if (!prevNodeJS._id && prevNodeJS._id === 0) {
+                                // prevNode.new(false);
                                 dti.locations.addNewNode(prevNode);
                             } else {
                                 dti.locations.editNode(prevNode);
@@ -3999,10 +4007,6 @@ var dti = {
                         parent = ko.contextFor(from).$parent,
                         destData = ko.dataFor(to);
 
-                    (parent.children || dti.bindings.locations.data).remove(data);
-
-                    destData.children.push(data);
-
                     $.ajax({
                         type: 'post',
                         url: '/api/hierarchy/move',
@@ -4012,7 +4016,14 @@ var dti = {
                             item: 'Location'
                         }),
                         contentType: 'application/json'
-                    }).done(function () {
+                    }).done(function (response) {
+                        if (!response.err) {
+                            (parent.children || dti.bindings.locations.data).remove(data);
+
+                            destData.children.push(data);
+                        } else {
+                            Materialize.toast('Error: ' + response.err, 3000);
+                        }
                         dti.log(arguments);
                     });
                 },
@@ -4068,7 +4079,7 @@ var dti = {
 
                     parent.hasChildren(true);
                     parent.expanded(true);
-                    parent.hasChanged(true);
+                    // parent.hasChanged(true);
                     data.children.push(child);
                     dti.bindings.locations._addNode(data.children, child);
                     dti.bindings.locations.focusNode(child);
