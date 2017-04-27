@@ -813,7 +813,9 @@ var dti = {
                 self.bindings.loading(true);
                 if (newUrl) {
                     self.bindings.newUrl(null);
-                    self.bindings.url(newUrl);
+                    config.upi = self.bindings.upi();
+                    setUrl(newUrl);
+                    // self.bindings.url(newUrl);
                 } else {
                     self.$iframe[0].contentWindow.location.reload();
                 }
