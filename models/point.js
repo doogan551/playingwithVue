@@ -1588,7 +1588,7 @@ const Point = class Point extends Common {
                                 case 'Integer Register Names':
                                 case 'Point Register Names':
                                 case 'Real Register Names':
-                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].script.enum) {
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Script.enum) {
                                         downloadPoint = true;
                                     }
                                     break;
@@ -1971,12 +1971,12 @@ const Point = class Point extends Common {
             };
 
             if (newPoint['Point Type'].Value === 'Script' && !!flags.path) {
-                script.commitScript({
+                script.commit({
                     point: newPoint,
                     path: flags.path
-                }, (response) => {
-                    if (response.err) {
-                        return callback(response.err);
+                }, (err) => {
+                    if (!!err) {
+                        return callback(err);
                     }
                     updateProperties();
                 });

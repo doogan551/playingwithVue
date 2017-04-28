@@ -22,76 +22,67 @@ const Script = class Script {
         });
     }
     commit(data, cb) {
-        const point = new Point();
-        let upi = parseInt(data.upi, 10);
-        let fileName = data.fileName.replace(/\.dsl$/i, '');
+        let script = data.point;
+        let upi = parseInt(script._id, 10);
+        let fileName = upi.toString();
         let path = data.path;
 
-        point.getPointById({
-            id: upi
-        }, (err, script) => {
-            fs.readFile(path + '/' + fileName + '.sym', (err, sym) => {
+        fs.readFile(path + '/' + fileName + '.sym', (err, sym) => {
+            if (err) {
+                return cb(err);
+            }
+
+            sym = sym.toString();
+            let csv = sym.split(/[\r\n,]/);
+
+            script['Point Register Names'] = [];
+            script['Integer Register Names'] = [];
+            script['Real Register Names'] = [];
+            script['Boolean Register Names'] = [];
+
+            for (let i = 0; i < csv.length; i++) {
+                if (csv[i - 1] !== 'TOTAL') {
+                    if (csv[i] === 'POINT') {
+                        script['Point Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'INTEGER') {
+                        script['Integer Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'REAL') {
+                        script['Real Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'BOOLEAN') {
+                        script['Boolean Register Names'].push(csv[i + 2]);
+                    }
+                }
+            }
+
+            script['Point Register Count'] = script['Point Register Names'].length;
+            script['Integer Register Count'] = script['Integer Register Names'].length;
+            script['Real Register Count'] = script['Real Register Names'].length;
+            script['Boolean Register Count'] = script['Boolean Register Names'].length;
+
+            fs.readFile(path + '/' + fileName + '.dsl', (err, dsl) => {
                 if (err) {
                     return cb(err);
                 }
 
-                sym = sym.toString();
-                let csv = sym.split(/[\r\n,]/);
+                dsl = dsl.toString();
 
-                script = {
-                    'Point Register Names': [],
-                    'Integer Register Names': [],
-                    'Real Register Names': [],
-                    'Boolean Register Names': []
-                };
 
-                for (let i = 0; i < csv.length; i++) {
-                    if (csv[i - 1] !== 'TOTAL') {
-                        if (csv[i] === 'POINT') {
-                            script['Point Register Names'].push(csv[i + 2]);
-                        } else if (csv[i] === 'INTEGER') {
-                            script['Integer Register Names'].push(csv[i + 2]);
-                        } else if (csv[i] === 'REAL') {
-                            script['Real Register Names'].push(csv[i + 2]);
-                        } else if (csv[i] === 'BOOLEAN') {
-                            script['Boolean Register Names'].push(csv[i + 2]);
-                        }
-                    }
-                }
+                script['Script Source File'] = dsl;
+                //"Script Filename": fileName + '.dsl'
 
-                script['Point Register Count'] = script['Point Register Names'].length;
-                script['Integer Register Count'] = script['Integer Register Names'].length;
-                script['Real Register Count'] = script['Real Register Names'].length;
-                script['Boolean Register Count'] = script['Boolean Register Names'].length;
-
-                fs.readFile(path + '/' + fileName + '.dsl', (err, dsl) => {
+                fs.readFile(path + '/' + fileName + '.pcd', (err, pcd) => {
                     if (err) {
                         return cb(err);
                     }
 
-                    dsl = dsl.toString();
+                    //let buffer = new Buffer(pcd);
+
+                    script['Compiled Code'] = pcd;
+                    script['Compiled Code Size'] = pcd.length;
 
 
-                    script['Script Source File'] = dsl;
-                    //"Script Filename": fileName + '.dsl'
-
-                    fs.readFile(path + '/' + fileName + '.pcd', (err, pcd) => {
-                        if (err) {
-                            return cb(err);
-                        }
-
-                        //let buffer = new Buffer(pcd);
-
-                        script['Compiled Code'] = pcd;
-                        script['Compiled Code Size'] = pcd.length;
-
-
-                        rimraf(path, (err) => {
-                            if (err) {
-                                return cb(err);
-                            }
-                            return cb(null, script);
-                        });
+                    rimraf(path, (err) => {
+                        return cb(err);
                     });
                 });
             });
