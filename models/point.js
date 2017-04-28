@@ -2819,11 +2819,10 @@ const Point = class Point extends Common {
             async.eachSeries(points, (point, callback) => {
                 this.addPoint(point, user, options, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
-                        callback(err);
-                    } else {
-                        updatedPoints.push(point);
+                        return callback(err);
                     }
-                    callback();
+                    updatedPoints.push(point);
+                    return callback();
                 });
             }, (err) => {
                 if (err) {

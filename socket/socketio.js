@@ -9,7 +9,7 @@ let config = require('config');
 
 // OTHERS
 let Config = require('../public/js/lib/config');
-let compiler = require('../helpers/scriptCompiler');
+let Compiler = require('../helpers/scriptCompiler');
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
 
@@ -682,6 +682,7 @@ function getVals(upis) {
 }
 
 function compileScript(data, callback) {
+    const compiler = new Compiler();
     let script, fileName, filepath, re;
 
     re = new RegExp('"(.*), ');

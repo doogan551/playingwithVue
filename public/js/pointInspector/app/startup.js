@@ -1197,6 +1197,13 @@ define([
                     // Update our status
                     self.status('saved');
 
+                    // ko doesn't know how to handle removed properties
+                    if (pointInspector.point.data.hasOwnProperty('id')) {
+                        delete pointInspector.point.data.id;
+                    }
+
+                    dtiUtility.updateUPI(point._id);
+
                     if (data.exitEditModeOnSave) {
                         pointInspector.isInEditMode(false);
                     }
