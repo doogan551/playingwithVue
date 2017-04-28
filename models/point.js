@@ -1970,7 +1970,7 @@ const Point = class Point extends Common {
                 }
             };
 
-            if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
+            if (newPoint['Point Type'].Value === 'Script' && !!flags.path) {
                 script.commitScript({
                     point: newPoint,
                     path: flags.path

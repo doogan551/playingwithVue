@@ -1,5 +1,5 @@
 /*jslint white:true*/
-define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets', 'CMActiveLine', 'CMSearch', 'CMSearchCursor', 'CMDialog'], function(ko, CodeMirror, view, bannerJS) {
+define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets', 'CMActiveLine', 'CMSearch', 'CMSearchCursor', 'CMDialog'], function (ko, CodeMirror, view, bannerJS) {
     var apiEndpoint,
         $scriptTabs,
         $scriptEditors,
@@ -7,7 +7,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         initDone = false;
 
     ko.bindingHandlers.editor = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var value = ko.unwrap(valueAccessor()),
                 allBindings = allBindingsAccessor(),
                 isReadOnly = allBindings.isReadOnly || false,
@@ -18,35 +18,37 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
                 //normalize line endings
                 .replace(/(\r\n|\r|\n)/g, '\n');
             valueAccessor()(value);
-            ko.applyBindingsToNode(element, { value: valueAccessor() });
-            setTimeout(function() {
+            ko.applyBindingsToNode(element, {
+                value: valueAccessor()
+            });
+            setTimeout(function () {
                 viewModel[editorName] = CodeMirror.fromTextArea(element, {
-                    lineNumbers             : true,
-                    mode                    : "text/x-dorsett",
-                    theme                   : 'mdn-like',
-                    readOnly                : 'nocursor',
-                    indentUnit              : 4,
-                    showCursorWhenSelecting : true,
-                    extraKeys               : {
-                        Tab: function(cm) {
-                            var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                    lineNumbers: true,
+                    mode: 'text/x-dorsett',
+                    theme: 'mdn-like',
+                    readOnly: 'nocursor',
+                    indentUnit: 4,
+                    showCursorWhenSelecting: true,
+                    extraKeys: {
+                        Tab: function (cm) {
+                            var spaces = Array(cm.getOption('indentUnit') + 1).join(' ');
                             cm.replaceSelection(spaces);
                         }
                     }
                 });
-                viewModel[editorName].on('contextmenu', function(editor, event) {
+                viewModel[editorName].on('contextmenu', function (editor, event) {
                     if (!viewModel.isInEditMode() || isReadOnly) {
                         event.preventDefault();
                         event.stopImmediatePropagation();
                         return false;
                     }
                 });
-                viewModel[editorName].on('changes', function(editor) {
-                   valueAccessor()(editor.getValue('\n'));
+                viewModel[editorName].on('changes', function (editor) {
+                    valueAccessor()(editor.getValue('\n'));
                 });
             }, 1000);
         },
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var value = ko.unwrap(valueAccessor());
             //editor doesn't scroll far enough to the right unless we
             //convert all tabs to spaces
@@ -54,11 +56,13 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
                 //normalize line endings
                 .replace(/(\r\n|\r|\n)/g, '\n');
             valueAccessor()(value);
-            ko.applyBindingsToNode(element, { value: valueAccessor() });
+            ko.applyBindingsToNode(element, {
+                value: valueAccessor()
+            });
         }
     };
 
-    function ScriptObject (data) {
+    function ScriptObject(data) {
         var self = this,
             name = data.name,
             tabClass = name + 'Tab',
@@ -71,7 +75,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
                     self.timeoutId = window.setTimeout(tryRefresh, 50);
                 }
             };
-        self.name   = name;
+        self.name = name;
         self.source = data.script;
         self.editor = data.editor;
         self.$tab = $('.' + tabClass);
@@ -86,31 +90,34 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             tryRefresh();
         };
         self.selectTab = function () {
-            $scriptTabs.removeClass('active');  // Remove 'active' class from both script tabs
-            $scriptEditors.hide();              // Hide both editors
-            
-            self.$tab.addClass('active');   // Add 'active' class to selected tab
-            self.$editor.show();            // Show the editor associated with the selected tab
-            self.refreshEditor();           // Refresh the editor to make sure it is displayed properly
+            $scriptTabs.removeClass('active'); // Remove 'active' class from both script tabs
+            $scriptEditors.hide(); // Hide both editors
+
+            self.$tab.addClass('active'); // Add 'active' class to selected tab
+            self.$editor.show(); // Show the editor associated with the selected tab
+            self.refreshEditor(); // Refresh the editor to make sure it is displayed properly
 
             data.viewModel.selectedScript(self);
         };
         // Attach a click handler to the script tab
         self.$tab.click(function (e) {
-            if ($(e).hasClass(tabClass))
+            if ($(e).hasClass(tabClass)) {
                 return;
+            }
             self.selectTab();
         });
         return self;
     }
 
-    function initEditors (vm) {
+    function initEditors(vm) {
         if (!vm.productionEditor || !vm.developmentEditor) {
-            window.setTimeout(function(){initEditors(vm);}, 200);
+            window.setTimeout(function () {
+                initEditors(vm);
+            }, 200);
             return;
         }
 
-        $scriptTabs    = $('.scriptTab');
+        $scriptTabs = $('.scriptTab');
         $scriptEditors = $('.scriptEditor');
 
         vm.productionScript = new ScriptObject({
@@ -140,7 +147,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         initDone = true;
     }
 
-    function ViewModel (params) {
+    function ViewModel(params) {
         var self = this,
             _developmentSourceFile = params.point.data['Development Source File']();
 
@@ -167,7 +174,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
 
         this.showEditScript = function () {
             var developmentScript = self.developmentScript;
-            
+
             self.showEditScriptButton(false);
 
             if (self.productionScript.len()) {
@@ -182,15 +189,15 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         };
         this.discardScript = function () {
             var developmentScript = self.developmentScript,
-                productionScript  = self.productionScript;
+                productionScript = self.productionScript;
 
             // If we want to keep the script editor tab, do this:
             // developmentScript.editor.setValue(productionScript.source());
 
             // If we want to hide the script editor tab, we need to do all of the following:
             self.showDiscardScriptButton(false);
-            developmentScript.editor.setValue(''); // This also updates the self.data['Development Source File'] 
-            
+            developmentScript.editor.setValue(''); // This also updates the self.data['Development Source File']
+
             if (productionScript.len()) {
                 developmentScript.$tab.hide();
                 productionScript.selectTab();
@@ -201,20 +208,22 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
         this.sourceTabSubscription = this.tabTriggers.source.subscribe(function (value) {
             var script = self.selectedScript();
             // We have to refresh the editor to make 100% sure it is displayed correctly
-            if (script.refreshEditor) script.refreshEditor();
+            if (script.refreshEditor) {
+                script.refreshEditor();
+            }
             // Clear the tab trigger so it will fire again the next time this tab is clicked
             self.tabTriggers.source(false);
         });
 
         this.editModeSubscription = this.isInEditMode.subscribe(function (isInEditMode) {
             var developmentScript = self.developmentScript,
-                productionScript  = self.productionScript,
+                productionScript = self.productionScript,
                 developmentEditor = developmentScript.editor;
 
             developmentEditor.setOption('readOnly', isInEditMode ? false : 'nocursor');
             developmentEditor.setOption('styleActiveLine', isInEditMode);
             developmentEditor.setOption('matchBrackets', isInEditMode);
-            
+
             if (isInEditMode) {
                 // If no development script is in progress, then default it to the production code
                 if (!developmentScript.len()) {
@@ -256,7 +265,7 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             // If point was saved successfully
             if (saveStatus === 'saved') {
                 // We activated successfully, so the development code is now production, and we have no development code
-                self.developmentScript.editor.setValue("");
+                self.developmentScript.editor.setValue('');
                 // Hide the tab since we have no code
                 self.developmentScript.$tab.hide();
                 // Update production script editor content
@@ -277,12 +286,13 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             }
         });
 
-        this.sourceChangeSubscription = this.data['Development Source File'].subscribe(function(source) {
-            if (self.buildStatus() == 'changed')
+        this.sourceChangeSubscription = this.data['Development Source File'].subscribe(function (source) {
+            if (self.buildStatus() === 'changed') {
                 return;
+            }
             // Convert all tabs to spaces & normalize line endings
             var originalSource = self.root.point.originalData['Development Source File'].replace(/(\r\n|\r|\n)/g, '\n').replace(/[\t]/g, '    ');
-            if (originalSource != source) {
+            if (originalSource !== source) {
                 self.buildStatus('changed');
             }
         });
@@ -292,14 +302,14 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.compile = function() {
+    ViewModel.prototype.compile = function () {
         var self = this,
             point = self.data,
-            data  = {
-                upi:    point._id(),
+            data = {
+                upi: point._id(),
                 script: point['Development Source File']()
             },
-            $btnCompile  = $('.btnCompile'),
+            $btnCompile = $('.btnCompile'),
             $btnIcon = $btnCompile.find('i'),
             socket = self.root.socket,
             msg;
@@ -328,15 +338,18 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
     };
 
     ViewModel.prototype.saveAndActivate = function () {
-        if (this.buildStatus() !== 'compiled' || !this.exePath)
+        if (this.buildStatus() !== 'compiled' || !this.exePath) {
             return;
+        }
         var self = this,
             data = {
                 saveAndClose: true,
-                extendData: { path: self.exePath }
+                extendData: {
+                    path: self.exePath
+                }
             };
         self.productionScript.source(self.developmentScript.source());
-        self.developmentScript.source("");
+        self.developmentScript.source('');
         self.showDiscardScriptButton(false);
 
         self.buildStatus('activating');
@@ -346,21 +359,24 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
         this.sourceTabSubscription.dispose();
         this.editModeSubscription.dispose();
         this.buildStatusSubscription.dispose();
         this.saveStatusSubscription.dispose();
         this.sourceChangeSubscription.dispose();
-        
+
         // Remove timeout events
         window.clearTimeout(this.developmentScript.timeoutId);
         window.clearTimeout(this.productionScript.timeoutId);
-        
+
         // Remove click handlers from script tabs
         $scriptTabs.unbind();
     };
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });
