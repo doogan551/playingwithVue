@@ -854,7 +854,7 @@ const Point = class Point extends Common {
             template._cfgRequired = true;
 
             if (template['Point Type'].Value === 'Display') { // default background color for new Displays
-                template['Background Color'].Value = Config.Templates.getTemplate('Display')['Background Color'];
+                template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
             }
 
             utils.setupNonFieldPoints(template);
