@@ -2,6 +2,7 @@ var async = require('async');
 var db = require('../helpers/db');
 var config = require('config');
 var ObjectId = require('mongodb').ObjectId;
+let Config = require('../public/js/lib/config');
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
@@ -142,7 +143,7 @@ let addLocation = function (type, name, parentRef, cb) {
     });
 };
 
-let addPoint = function (type, name, parentRef, cb) {
+let addPoint = function (point, parentRef, cb) {
     let counterModel = new Counter();
     let utilityModel = new Utility('hierarchy');
     let newPoint = _.cloneDeep(pointStructure);
@@ -150,11 +151,24 @@ let addPoint = function (type, name, parentRef, cb) {
     let mechRef = _.cloneDeep(refStructure);
     mechRef.item = 'Mechanical';
 
-    newPoint.type = type;
-    newPoint.display = name;
+    newPoint.type = point['Point Type'].Value;
+    newPoint.display = point.Name;
     newPoint.hierarchyRefs.push(parentRef);
     newPoint.hierarchyRefs.push(mechRef);
     newPoint.tags = [newPoint.type, newPoint.display, 'Location'];
+
+    newPoint['Point Refs'] = [{
+        'PropertyName': 'Point',
+        'PropertyEnum': 0,
+        'AppIndex': 0,
+        'isDisplayable': true,
+        'isReadOnly': false,
+        'Value': point._id,
+        'PointName': point.Name,
+        'PointType': point['Point Type'].eValue,
+        'PointInst': point._id,
+        'DevInst': (Config.Utility.getPropertyObject('Device Point', point) !== null) ? Config.Utility.getPropertyObject('Device Point', point).Value : 0
+    }];
     counterModel.getNextSequence('hierarchy', function (err, newId) {
         newPoint._id = newId;
         utilityModel.insert({
@@ -330,7 +344,7 @@ let addPointsToModel = (cb) => {
             newRef.display = node.display;
             newRef.value = node._id;
             newRef.type = node.type;
-            addPoint(point['Point Type'].Value, point.Name, newRef, (err, result) => {
+            addPoint(point, newRef, (err, result) => {
                 nextPoint(err);
             });
         });
@@ -355,9 +369,7 @@ let moveNonBuildings = (cb) => {
                         item: 'Location'
                     }
                 },
-                _id: {
-                    $ne: otherGroup.value
-                }
+                type: 'Building'
             }
         }, (err, location, nextLocation) => {
             if (!newNames.includes(location.display)) {

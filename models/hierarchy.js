@@ -35,6 +35,12 @@ const Hierarchy = class Hierarchy extends Common {
             },
             sort: {
                 'display': 1
+            },
+            limit: 350,
+            fields: {
+                display: 1,
+                hierarchyRefs: 1,
+                type: 1
             }
         }, cb);
     }
