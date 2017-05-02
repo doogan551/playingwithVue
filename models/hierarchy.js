@@ -220,7 +220,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         terms = terms.map((term) => {
             if (term.match(/"/)) {
-                return term;
+                return term.replace(/"/g, '');
             }
             return new RegExp('[.]*' + term + '[.]*', 'i');
         });
