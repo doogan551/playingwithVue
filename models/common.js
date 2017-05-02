@@ -18,6 +18,11 @@ const Common = class Common extends Utility {
         return typeof val === 'number' && !isNaN(val);
     }
 
+    checkNumbers(n) {
+        n = n.toString();
+        return (n.match(/[^0-9.]*/g).join('').length > 0);
+    }
+
     /**
      * method to get default values.
      * if val can be converted to same type as def, it will be, otherwise val as given is returned
