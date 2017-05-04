@@ -106,9 +106,12 @@ let buildTree = () => {
                     addPointsToModel((err) => {
                         console.log('addPointsToModel', err);
                         moveNonBuildings((err) => {
+                            console.log('moveNonBuildings', err);
+                            // groupByPointTypes((err) => {
                             console.log('done', err);
                             console.timeEnd('tree');
                             process.exit(0);
+                            // });
                         });
                     });
                 });
@@ -308,7 +311,35 @@ let addPointsToModel = (cb) => {
         });
     };
 
+    let buildParentFromName = (parent, name, callback) => {
+        hierarchyModel.getOne({
+            query: {
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: parent._id,
+                        item: 'Location'
+                    }
+                },
+                display: name
+            }
+        }, (err, loc) => {
+            if (!loc) {
+                let parentRef = _.cloneDeep(refStructure);
+                parentRef.display = parent.display;
+                parentRef.value = parent._id;
+                parentRef.type = parent.type;
+                addLocation('Group', name, parentRef, callback);
+            } else {
+                return callback(err, {
+                    value: loc._id
+                });
+            }
+        });
+    };
+
     utilityModel.iterateCursor({}, (err, point, nextPoint) => {
+        let names = point.Name.split('_');
+        names.pop();
         let queries = [{
             display: 'MSFC'
         }];
@@ -325,12 +356,14 @@ let addPointsToModel = (cb) => {
                 display: building
             });
             terms.push(`"${building}"`);
+            names.shift();
         }
         if (!!floor) {
             queries.push({
                 display: floor
             });
             terms.push(`"${floor}"`);
+            names.shift();
         }
         if (!!area) {
             queries.push({
@@ -340,12 +373,21 @@ let addPointsToModel = (cb) => {
         }
         // console.log(point.Name, JSON.stringify(queries));
         findLastNode(queries, (err, node) => {
-            let newRef = _.cloneDeep(refStructure);
-            newRef.display = node.display;
-            newRef.value = node._id;
-            newRef.type = node.type;
-            addPoint(point, newRef, (err, result) => {
-                nextPoint(err);
+            let parentRef = node;
+            parentRef.value = node._id;
+            async.eachSeries(names, (nameSegment, nextName) => {
+                buildParentFromName(node, nameSegment, (err, _parentRef) => {
+                    parentRef = _parentRef;
+                    nextName();
+                });
+            }, (err) => {
+                let newRef = _.cloneDeep(refStructure);
+                newRef.display = parentRef.display;
+                newRef.value = parentRef.value;
+                newRef.type = parentRef.type;
+                addPoint(point, newRef, (err, result) => {
+                    nextPoint(err);
+                });
             });
         });
     }, cb);
@@ -385,6 +427,146 @@ let moveNonBuildings = (cb) => {
             }
         }, cb);
     });
+};
+
+let groupByPointTypes = (cb) => {
+    let hierarchyModel = new Hierarchy();
+    let getParentRef = (parent, type, callback) => {
+        hierarchyModel.getOne({
+            query: {
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: parent._id,
+                        item: 'Location'
+                    }
+                },
+                display: type
+            }
+        }, (err, loc) => {
+            if (!loc) {
+                let parentRef = _.cloneDeep(refStructure);
+                parentRef.display = parent.display;
+                parentRef.value = parent._id;
+                parentRef.type = parent.type;
+                addLocation('Group', type, parentRef, callback);
+            } else {
+                return callback(err, {
+                    value: loc._id
+                });
+            }
+        });
+    };
+
+    let buildParentFromName = (parent, name, callback) => {
+        hierarchyModel.getOne({
+            query: {
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: parent._id,
+                        item: 'Location'
+                    }
+                },
+                display: name
+            }
+        }, (err, loc) => {
+            if (!loc) {
+                let parentRef = _.cloneDeep(refStructure);
+                parentRef.display = parent.display;
+                parentRef.value = parent._id;
+                parentRef.type = parent.type;
+                addLocation('Group', name, parentRef, callback);
+            } else {
+                return callback(err, {
+                    value: loc._id
+                });
+            }
+        });
+    };
+
+    let doNames = (callback) => {
+        hierarchyModel.iterateCursor({
+            query: {
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: 1
+                    }
+                }
+            }
+        }, (err, location, nextLocation) => {
+            hierarchyModel.getAll({
+                query: {
+                    'hierarchyRefs': {
+                        $elemMatch: {
+                            value: location._id
+                        }
+                    },
+                    item: {
+                        $ne: 'Location'
+                    }
+                }
+            }, (err, children) => {
+                async.each(children, (child, nextChild) => {
+                    let names = child.display.split('_');
+                    names.pop();
+                    names.shift();
+                    async.eachSeries(names, (nameSegment, nextName) => {
+                        buildParentFromName(location, nameSegment, (err, parentRef) => {
+                            hierarchyModel.moveNode({
+                                id: child._id,
+                                parentId: parentRef.value,
+                                item: 'Location'
+                            }, (err, result) => {
+                                nextName(err);
+                            });
+                        });
+                    }, nextChild);
+                }, (err, count) => {
+                    nextLocation(err);
+                });
+            });
+        }, callback);
+    };
+
+    let doPointTypes = (callback) => {
+        hierarchyModel.iterateCursor({
+            query: {
+                'hierarchyRefs': {
+                    $elemMatch: {
+                        value: 1
+                    }
+                }
+            }
+        }, (err, location, nextLocation) => {
+            hierarchyModel.getAll({
+                query: {
+                    'hierarchyRefs': {
+                        $elemMatch: {
+                            value: location._id
+                        }
+                    },
+                    item: {
+                        $ne: 'Location'
+                    }
+                }
+            }, (err, children) => {
+                async.eachSeries(children, (child, nextChild) => {
+                    getParentRef(location, child.type, (err, parentRef) => {
+                        hierarchyModel.moveNode({
+                            id: child._id,
+                            parentId: parentRef.value,
+                            item: 'Location'
+                        }, (err, result) => {
+                            nextChild(err);
+                        });
+                    });
+                }, (err, count) => {
+                    nextLocation(err);
+                });
+            });
+        }, callback);
+    };
+
+    doNames(cb);
 };
 
 let testXML = () => {
