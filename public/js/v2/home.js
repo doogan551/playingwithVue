@@ -3047,6 +3047,59 @@ var dti = {
             return ++dti.locations.idx;
         },
 
+        LocationsNode: class LocationsNode {
+            constructor(navManager, navConfig) {
+                this.defaultConfig = {
+                    _id: 0,
+                    parentLocId: 0,
+
+                    children: [],
+                    _data: {},  //if we get it from the server, we store the db object here
+
+                    name: 'Name',
+                    _name: 'Name',
+                    type: 'Area',
+                    _type: 'Area',
+
+                    focused: false,
+                    expanded: false,
+                    fetched: false,
+                    hasChanged: false,
+
+                    hasChildren: false,
+                    isNew: false
+                };
+
+                this.manager = navManager;
+                this.defaultConfig = $.extend(true, this.defaultConfig, navConfig);
+                this.bindings = ko.viewmodel.fromModel(this.defaultConfig);
+
+                this.bindings.fetch = function () {   // (fetches children/descendants) //contents TDB
+
+                };
+
+                this.bindings.expand = function () {
+                    this.expanded(true);
+                };
+
+                this.bindings.collapse = function () {
+                    this.expanded(false);
+                };
+
+                this.bindings.focus = function () {
+                    this.focused(true);
+                };
+
+                this.bindings.hasChildren = ko.pureComputed(() => {
+                    return (this.bindings.children().length > 0);
+                });
+
+                this.bindings.isNew = ko.pureComputed(() => {
+                    return (this.bindings._id() === 0);
+                });
+            }
+        },
+
         getSaveData: function (data) {
             var obj = ko.toJS(data);
 
@@ -3062,10 +3115,10 @@ var dti = {
 
         addNewNodes: function (newNodes) {
             var data = {
-                    nodes: []
-                };
+                nodes: []
+            };
 
-            dti.forEachArray(newNodes, function getNodeData (node) {
+            dti.forEachArray(newNodes, function getNodeData(node) {
                 data.nodes.push(dti.locations.getSaveData(node));
             });
 
@@ -3073,7 +3126,7 @@ var dti = {
                 url: '/api/hierarchy/add',
                 type: 'post',
                 contentType: 'application/json',
-                data: JSON.stringify(data) 
+                data: JSON.stringify(data)
             }).done(function handleAdd(response) {
                 Materialize.toast('Added nodes', 1000);
                 dti.forEachArray(response, (node, idx) => {
@@ -3093,7 +3146,7 @@ var dti = {
                 url: '/api/hierarchy/add',
                 type: 'post',
                 contentType: 'application/json',
-                data: JSON.stringify(data) 
+                data: JSON.stringify(data)
             }).done(function handleAdd(response) {
                 obj.new(false);
                 obj.hasChanged(false);
@@ -3124,12 +3177,12 @@ var dti = {
                 url: '/api/hierarchy/edit',
                 type: 'post',
                 contentType: 'application/json',
-                data: JSON.stringify(data) 
+                data: JSON.stringify(data)
             }).done(function handleAdd(response) {
                 dti.log(response);
                 Materialize.toast('Node edited', 1000);
             });
-        },        
+        },
 
         _doSave: function (data) {
             $.ajax({
@@ -3292,17 +3345,17 @@ var dti = {
                         expanded: true
                     });
                     let node = dti.locations.findNode(targetId, ret());
-                    
+
                     if (node) {//existing
                         // dti.log('existing node');
                     } else {//new
                         let parentNode = dti.locations.findNode(pathEntry.hierarchyRefs[0].value, ret());
-                        
+
                         if (parentNode) {//parent exists
-                            
+
                             parentNode.children.push(ko.viewmodel.fromModel(normPath));
                         } else {//root
-                            
+
                             ret.push(ko.viewmodel.fromModel(normPath));
                         }
                     }
@@ -3350,6 +3403,8 @@ var dti = {
                     expanded: false
                 });
 
+                // let locationsNode = new dti.locations.LocationsNode(null, dti.locations.tree[0]);
+
                 if (!overwrite) {
                     bindings.data = ko.viewmodel.fromModel(dti.locations.tree);
                 } else {
@@ -3371,7 +3426,7 @@ var dti = {
 
             dti.locations.$container = $container;
 
-            $container.on('click', function handleClick (event) {
+            $container.on('click', function handleClick(event) {
                 var $target = $(event.target);
                 //all valid skips
                 if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
@@ -3680,7 +3735,7 @@ var dti = {
 
                     }
                 },
-                
+
                 bulkClone: function ($target, context) {
                     var $bulkCloneModal = $('#bulkCloneModal'),
                         bindings = dti.bindings.locations,
@@ -3801,13 +3856,13 @@ var dti = {
                         siblings = parent && parent.children && parent.children || dti.bindings.locations.data;
 
                     siblings.remove(data);
-                    
+
                     //no siblings and has a parent
                     if (siblings().length === 0 && parent.hasChildren) {
                         parent.hasChildren(false);
                     }
 
-                     $.ajax({
+                    $.ajax({
                         url: '/api/hierarchy/delete',
                         type: 'post',
                         contentType: 'application/json',
@@ -3913,7 +3968,7 @@ var dti = {
                             //if it's not focused
                             if (!val) {
                                 dti.bindings.locations.focusedNode(false);
-                                dti.forEachArrayRev(focusSubscriptions, function disposeSubscriptions (subscription) {
+                                dti.forEachArrayRev(focusSubscriptions, function disposeSubscriptions(subscription) {
                                     subscription.dispose();
                                     focusSubscriptions.pop();
                                 });
@@ -3928,13 +3983,13 @@ var dti = {
                         };
 
                     if (prevNode) {
-                        dti.forEachArray(propsToCheck, function checkProp (prop) {
+                        dti.forEachArray(propsToCheck, function checkProp(prop) {
                             if (prevNode[prop]() !== prevNodeJS[prop]) {
                                 dti.log('has changed', prop, prevNodeJS[prop], prevNode[prop]());
                                 prevNode.hasChanged(true);
                                 hasChanged = true;
                                 return false;
-                            }  
+                            }
                         });
 
                         if (hasChanged) {
@@ -3960,7 +4015,7 @@ var dti = {
                         bindings._focusedNode = obj;
                         bindings._focusedNodeName = obj.name();
                         obj.focused(true);
-                        focusSubscriptions.push(obj.name.subscribe(function syncNameToRight (val) {
+                        focusSubscriptions.push(obj.name.subscribe(function syncNameToRight(val) {
                             bindings.focusedNodeName(val);
                         }));
                         focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
@@ -4196,11 +4251,11 @@ var dti = {
 
             dti.bindings.locations._focusedNode = dti.bindings.locations.getNode(dti.locations.blankNode);
 
-            dti.bindings.locations.focusedNode.subscribe(function stupidMaterialSelect (val) {
+            dti.bindings.locations.focusedNode.subscribe(function stupidMaterialSelect(val) {
                 var bindings = dti.bindings.locations;
 
                 if (val) {
-                    setTimeout(function bahMaterialize () {
+                    setTimeout(function bahMaterialize() {
                         bindings.focusedNodeName(bindings._focusedNode.name());
                         bindings.focusedNodeType(bindings._focusedNode.type() || 'Area');
                         $('.locations select').material_select();
@@ -4209,17 +4264,17 @@ var dti = {
                 }
             });
 
-            dti.bindings.locations.focusedNodeName.subscribe(function updateNodeName (val) {
+            dti.bindings.locations.focusedNodeName.subscribe(function updateNodeName(val) {
                 if (dti.bindings.locations._focusedNode) {
-                    setTimeout(function syncName () {
+                    setTimeout(function syncName() {
                         dti.bindings.locations._focusedNode.name(val);
                     }, 1);
                 }
             });
 
-            dti.bindings.locations.focusedNodeType.subscribe(function updateNodeType (val) {
+            dti.bindings.locations.focusedNodeType.subscribe(function updateNodeType(val) {
                 if (dti.bindings.locations._focusedNode) {
-                    setTimeout(function syncType () {
+                    setTimeout(function syncType() {
                         dti.bindings.locations._focusedNode.type(val);
                     }, 1);
                 }
@@ -6131,12 +6186,10 @@ var dti = {
                 }
             };
 
-
             ko.bindingHandlers.updateLabel = {
                 init: updateLabelFn,
                 update: updateLabelFn
             };
-
 
             ko.bindingHandlers.stopBubblingOnClick = {
                 init: function(element) {
@@ -6396,7 +6449,6 @@ var dti = {
 
                 }
             };
-
 
             ko.bindingHandlers.fadeVisible = {
                 init: function(element, valueAccessor) {
