@@ -1748,12 +1748,40 @@ input:focus {
     }
 
     .expandcollapse {
+        &:before {
+            content: "";
+            position: absolute;
+            left: -10px;
+            display: block;
+            width: 10px;
+            height: 20px;
+            top: -10px;
+            border-bottom: 1px dashed rgba(12, 12, 12, 0.3);
+        }
+
         color: black;
+    }
+
+    .expanded .collapse,
+    .collapsed .expand {
+        display: none;
     }
 
     .children {
         padding-left: 20px;
         position: relative;
+
+        &:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            display: block;
+            top: -9px;
+            left: 7px;
+            width: 1px;
+            height: calc(100% - 1px);
+            border-left: 1px dashed rgba(12, 12, 12, 0.3);
+        }
     }
 
     .node {

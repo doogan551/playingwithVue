@@ -3252,7 +3252,7 @@ var dti = {
             //     dti.tree = ret;
             // }
         },
-        getBranch: function (obj, $el, cb) { // expects ko
+        getBranch: function (obj, cb) { // expects ko
             var id = obj._id();
 
             $.ajax({
@@ -3264,7 +3264,7 @@ var dti = {
                 })
             }).done(function passOff(results) {
                 var data = dti.locations.normalize(results);
-                cb(data, obj, $el);
+                cb(data, obj);
             });
         },
 
@@ -3502,7 +3502,7 @@ var dti = {
                     dti.bindings.locations._addNode(rootNode);
                 },
 
-                addBranch: function (results, obj, $el) {
+                addBranch: function (results, obj) {
                     var locationChildren = [],
                         mechanicalChildren = [],
                         children = [],
@@ -3550,18 +3550,18 @@ var dti = {
 
                     obj.expanded(true);
 
-                    $el.unblock();
+                    // $el.unblock();
                 },
-                getBranch: function (obj, event) {
-                    var $el;
+                getBranch: (event) => { //(obj, event) {
+                    var obj = ko.dataFor(event.target);
 
                     if (obj.fetched() === false) {
                         obj.fetched(true);
-                        $el = $(event.target).parent();
-                        $el.block({
-                            message: ''
-                        });
-                        dti.locations.getBranch(obj, $el, dti.bindings.locations.addBranch);
+                        // $el = $(event.target).parent();
+                        // $el.block({
+                        //     message: ''
+                        // });
+                        dti.locations.getBranch(obj, dti.bindings.locations.addBranch);
                     } else {
                         obj.expanded(!obj.expanded());
                     }
@@ -3841,6 +3841,7 @@ var dti = {
 
                 expandRecursive: function (context) {
                     dti.bindings.locations.busy(true);
+
                     if (!context.$data.fetched()) {
                         $.ajax({
                             type: 'post',
@@ -3854,7 +3855,7 @@ var dti = {
                             var root = context.$parent && context.$parent.children && context.$parent.children() || dti.bindings.locations.data();
 
                             dti.locations.buildTree(dti.locations.normalize(data, {
-                                expanded: true,
+                                // expanded: true,
                                 fetched: true,
                                 new: false
                             }), root);
@@ -3865,6 +3866,10 @@ var dti = {
                                 } else {
                                     dti.locations.sortNodes(child.children);
                                 }
+                            }, root);
+
+                            dti.bindings.locations.forEachNode(function (child, parent) {
+                                child.expanded(true);
                             }, root);
 
                             dti.bindings.locations.busy(false);
@@ -3907,8 +3912,8 @@ var dti = {
                     var base = root || dti.bindings.locations.data();
 
                     dti.forEachArray(base, function processChild(child) {
-                        fn(child, base, parent);
                         dti.bindings.locations.forEachNode(fn, child.children(), child);
+                        fn(child, base, parent);
                     });
                 },
                 focusNode: function (obj) {
@@ -4243,6 +4248,17 @@ var dti = {
             dti.bindings.locations.searchInput.subscribe((val) => {
                 dti.bindings.locations.search(val);
             });
+
+            ko.bindingHandlers.delegate = {
+                init: (element, valueAccessor) => {
+                    var $element = $(element),
+                        delegations = ko.utils.unwrapObservable(valueAccessor());
+
+                    dti.forEachArray(delegations, (cfg) => {
+                        $element.on(cfg.event, cfg.selector, cfg.handler);
+                    });
+                }
+            };
 
             ko.bindingHandlers.shouldFocus = {
                 init: function (element, valueAccessor) {

@@ -423,14 +423,10 @@ html
                 i.material-icons search
                 input#locationsearch(type='search', data-bind="textInput: $root.searchString")    
                 
-            //- .row
-            //-     .col.xs-4
-            //-         input#autocomplete
-
             button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
             button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
-            .row
+            .row(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.expandcollapse'}]")
                 // ko if: data().length !== 0
                 #tree.col.s5.pane(data-bind="template: { name: 'node', foreach: data}")
                 // /ko
@@ -458,23 +454,15 @@ html
                 .node.blue-grey-form(data-bind="css: { focused: focused }")
 
                     //- // ko if: hasChildren()
-                    a.expandcollapse(href="#", data-bind="click: $root.getBranch")
-                        i.material-icons(data-bind="text: !expanded() ? 'keyboard_arrow_right' : 'expand_more'")
-                    //- // /ko
-
-                    //- // ko if: !hasChildren()
-                    //- a.mdi.mdi-file-outline.expandcollapse.blank(href="#") &nbsp;
-                    //- // /ko
-                    
-                    //- // ko if: children().length === 0
-                    //- i.mdi.mdi-file-outline
-                    //- // /ko
+                    a.expandcollapse(href="#", data-bind="css: { expanded: expanded(), collapsed: !expanded()}")
+                        i.collapse.material-icons keyboard_arrow_right
+                        i.expand.material-icons expand_more
 
                     span.displayInfo(data-bind="dragNode: true")
                         .name(data-bind='text: name, click: $root.focusNode')
                         input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
                         a.bulkAdd.tooltipped(title="Add Sibling", data-tooltip="Add Sibling", data-position="bottom", href="#")
-                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSiblingRaw") arrow_downward
+                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSibling") arrow_downward
                         a.bulkAdd.tooltipped(title="Add Child", data-tooltip="Add Child", data-position="bottom", href="#")
                             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
                     .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
