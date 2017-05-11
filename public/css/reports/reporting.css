@@ -1149,6 +1149,9 @@ tbody.sortablecolumns .select-wrapper span.caret {
 .filtersGrid tr.ui-sortable-helper {
     border: 2px solid #33B171 !important;
 }
+.filtersGrid tr.ui-sortable-helper.invalid {
+    border: 2px solid #b11b21 !important;
+}
 .filtersGrid tr.ui-sortable-helper input[type="text"] {
     width: 150px;
 }

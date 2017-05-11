@@ -3851,6 +3851,17 @@ var reportsViewModel = function () {
                         items: "tr",  // to skip first row  "tr:gt(0)"
                         forceHelperSize: true,
                         helper: "original",
+                        change( event, ui ) {
+                            var item = ko.dataFor(ui.item[0]),
+                                placeholder = ui.placeholder[0],
+                                placeholderRowIndex = placeholder.rowIndex;
+
+                            if (item.condition === "$or" && placeholderRowIndex === 0) {  // don't allow OR condition in first slot
+                                $(ui.helper[0]).addClass("invalid");
+                            } else {
+                                $(ui.helper[0]).removeClass("invalid");
+                            }
+                        },
                         stop: function (event, ui) {
                             var tempArray,
                                 item = ko.dataFor(ui.item[0]),
@@ -3862,11 +3873,15 @@ var reportsViewModel = function () {
                                 newIndex = 0;
                             }
 
-                            ui.item.remove();
-                            self.listOfFilters.remove(item);
-                            self.listOfFilters.splice(newIndex, 0, item);
-                            tempArray = self.listOfFilters();
-                            updateListOfFilters(tempArray);
+                            if (item.condition === "$or" && newIndex === 0) {  // don't allow OR condition in first slot
+                                $filtersGrid.sortable('cancel');
+                            } else {
+                                ui.item.remove();
+                                self.listOfFilters.remove(item);
+                                self.listOfFilters.splice(newIndex, 0, item);
+                                tempArray = self.listOfFilters();
+                                updateListOfFilters(tempArray);
+                            }
                         },
                         scroll: true,
                         handle: ".handle"
