@@ -3853,8 +3853,7 @@ var reportsViewModel = function () {
                         helper: "original",
                         change( event, ui ) {
                             var item = ko.dataFor(ui.item[0]),
-                                placeholder = ui.placeholder[0],
-                                placeholderRowIndex = placeholder.rowIndex;
+                                placeholderRowIndex = ui.placeholder[0].rowIndex;
 
                             if (item.condition === "$or" && placeholderRowIndex === 0) {  // don't allow OR condition in first slot
                                 $(ui.helper[0]).addClass("invalid");

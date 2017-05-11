@@ -688,7 +688,7 @@ const Report = class Report {
                             };
                             break;
                         case 'EqualTo':
-                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
+                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchQuery[this.propertyCheckForValue(key)] = {
                                         $eq: ''
@@ -742,7 +742,7 @@ const Report = class Report {
                             };
                             searchQuery.$and = [];
                             searchQuery.$and.push(searchPart1);
-                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue)) {
+                            if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
                                         $ne: ''
