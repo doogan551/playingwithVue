@@ -167,7 +167,7 @@ var dti = {
                     dti.forEach(cfg.classNames, function (cssClass, name) {
                         obj[name] = '.' + cssClass;
                     });
-                    
+
                     return obj;
                 })(),
                 operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
@@ -185,7 +185,7 @@ var dti = {
                         doScroll = true;
                     } else {
                         topOffset = (topOffset + $target.height()) - $container.height();
-                        
+
                         if (topOffset > 0) {
                             doScroll = true;
                         }
@@ -214,7 +214,7 @@ var dti = {
                             isEquation: false,
                             isInvalid: false,
                             operator: getOperator(str),
-                            value: null,
+                            value: null
                         },
                         equationParts,
                         i;
@@ -224,7 +224,7 @@ var dti = {
                         equationParts = str.split(parsed.operator);
                         parsed.expression = equationParts[0].trim();
                         parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
-                        
+
                         if (parsed.expression.length === 0) {
                             parsed.isEquation = false;
                             parsed.value = null;
@@ -405,7 +405,6 @@ var dti = {
                 },
                 handleKeydown = function (e) {
                     var key = e.which,
-                        koData,
                         $selected;
 
                     if (key === 10 || key === 13) { // return
@@ -666,7 +665,7 @@ var dti = {
                 $markup.position({
                     my: 'left top',
                     at: 'left bottom',
-                    of: cfg.$inputElement,
+                    of: cfg.$inputElement
                 });
             };
 
@@ -680,8 +679,7 @@ var dti = {
 
             self.selectNext = function () {
                 var $selected = self.getSelected(),
-                    $next = $selected.next(),
-                    topOffset;
+                    $next = $selected.next();
 
                 if ($selected.length) {
                     self.selectNone($selected);
@@ -1334,7 +1332,9 @@ var initKnockout = function () {
 
     ko.bindingHandlers.dtiReportsMaterializePickadate = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickadate();
+            $(element).pickadate({
+                clear: ''
+            });
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -1352,7 +1352,6 @@ var initKnockout = function () {
 var reportsViewModel = function () {
     var self = this,
         $direports,
-        $tabs,
         $tabConfiguration,
         $configurationButton,
         $saveReportButton,
@@ -1360,7 +1359,6 @@ var reportsViewModel = function () {
         $viewReportButton,
         $dataTablePlaceHolder,
         $rightPanel,
-        $spinnertext,
         $editColumnModal,
         $viewReportNav,
         $globalEditColumnModal,
@@ -1371,21 +1369,16 @@ var reportsViewModel = function () {
         $columnsTbody,
         $gridColumnsTbody,
         $filtersTbody,
-        $filterByPoint,
         $reportTitleInput,
         $reportColumns,
         $additionalFilters,
-        $columnNames,
-        $hiddenPlaceholder,
         $globalPrecisionText,
         $globalPrecision,
         $globalIncludeInChartText,
         $globalIncludeInChart,
         $globalCalculateText,
         $globalCalculate,
-        $availableChartTypesChartTab,
         $reportChartDiv,
-        $pointSelectorIframe,
         longClickStart,
         longClickTimer = 100,
         mouseHoverStart,
@@ -1417,7 +1410,6 @@ var reportsViewModel = function () {
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         newlyReferencedPoints = [],
-        windowUpi,
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
@@ -2681,6 +2673,8 @@ var reportsViewModel = function () {
                 columnConfig,
                 validatedFilters,
                 filterConfig,
+                $reportStartDate = $additionalFilters.find("#reportStartDate"),
+                $reportEndDate = $additionalFilters.find("#reportEndDate"),
                 activeError = false,
                 upis = [],
                 uuid,
@@ -2749,6 +2743,8 @@ var reportsViewModel = function () {
                 switch (self.reportType()) {
                     case "History":
                     case "Totalizer":
+                        self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
+                        self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
                         configureSelectedDuration();
 
                         point["Report Config"].interval = {
@@ -2846,7 +2842,6 @@ var reportsViewModel = function () {
             $direports = $(document).find(".direports");
             $editColumnModal = $direports.find("#editColumnModal");
             $globalEditColumnModal = $direports.find("#globalEditColumnModal");
-            $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
             $configurationButton = $direports.find(".configurationButton");
             $saveReportButton = $direports.find(".saveReportButton");
@@ -2855,22 +2850,16 @@ var reportsViewModel = function () {
             $viewReportNav = $tabViewReport.find(".viewReportNav");
             $dataTablePlaceHolder = $direports.find(".dataTablePlaceHolder");
             $rightPanel = $direports.find(".rightPanel");
-            $spinnertext = $rightPanel.find(".spinnertext");
             $columnsGrid = $direports.find(".columnsGrid");
             $gridColumnConfig = $direports.find("#gridColumnConfig");
             $gridColumnConfigTable = $direports.find(".gridColumnConfigTable");
             $filtersGrid = $direports.find(".filtersGrid");
-            $columnNames = $direports.find(".columnName");
-            $filterByPoint = $direports.find("#filterByPoint");
-            $pointSelectorIframe = $filterByPoint.find(".pointLookupFrame");
             $reportTitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find(".filtersGrid .sortableFilters");
             $columnsTbody = $columnsGrid.find(".sortablecolumns");
             $gridColumnsTbody = $gridColumnConfigTable.find(".sortablecolumns");
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
-            $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
-            $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
         getDurationText = function (duration, precision, hoursOnly) {
@@ -3400,6 +3389,8 @@ var reportsViewModel = function () {
                 errors,
                 validatedColumns,
                 validatedFilters,
+                $reportStartDate = $additionalFilters.find("#reportStartDate"),
+                $reportEndDate = $additionalFilters.find("#reportEndDate"),
                 handleFormatPointRequests = function (result) {
                     if (!!result.err) {
                         if (errors === undefined) {
@@ -3468,6 +3459,11 @@ var reportsViewModel = function () {
                 tabSwitch(1);
                 self.activeSaveRequest(false);
             } else {
+                self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
+                self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
+                self.startDate(self.selectedDuration().startDate.unix());
+                self.endDate(self.selectedDuration().endDate.unix());
+
                 point["Report Config"].columns = validatedColumns.collection;
                 point["Report Config"].filters = validatedFilters.collection;
                 point["Report Config"].pointFilter = {
@@ -3510,7 +3506,11 @@ var reportsViewModel = function () {
             var intervals,
                 calculations,
                 entriesPerPage,
+                reportTypes,
                 chartTypes,
+                $reportRangeDropdown,
+                $reportStartDate,
+                $reportEndDate,
                 precisionEventsSet = false,
                 includeInChartEventsSet = false,
                 calculateEventsSet = false;
@@ -3521,6 +3521,10 @@ var reportsViewModel = function () {
 
             setTimeout(function () {
                 if (!scheduled) {
+                    $reportRangeDropdown = $additionalFilters.find('.reportRangeDropdown select');
+                    $reportStartDate = $additionalFilters.find("#reportStartDate");
+                    $reportEndDate = $additionalFilters.find("#reportEndDate");
+
                     $direports.find(".addColumnButton").on("click", function (e) {
                         var rowTemplate = getNewColumnTemplate(),
                             $newRow;
@@ -3567,25 +3571,46 @@ var reportsViewModel = function () {
                         }, 700);
                     });
 
-                    $additionalFilters.find('.reportRangePicker select').on('change', function (e) {
+                    $reportRangeDropdown.on('change', function (e) {
                         var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
                             dateRange;
                         self.selectedDuration().selectedRange = selectedRange;
                         if (self.selectedDuration().selectedRange !== "Custom Range") {
                             dateRange = reportDateRanges(self.selectedDuration().selectedRange);
-                            self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
-                            self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                            self.startDate(self.selectedDuration().startDate.unix());
-                            self.endDate(self.selectedDuration().endDate.unix());
-                            $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
-                            $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
-
-                            // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
-                            // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
-                            self.selectedDuration.valueHasMutated();
+                            $reportStartDate.pickadate('picker').set({select: getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet()).unix() * 1000});
+                            $reportEndDate.pickadate('picker').set({select: getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet()).unix() * 1000});
                         }
-                        // this.material_select();
-                        //alert('Select Changed to ' + selectedRange);
+
+                        $reportStartDate.pickadate('picker').set({max: new Date($reportEndDate.pickadate('picker').get('select').pick)});
+                        $reportEndDate.pickadate('picker').set({min: new Date($reportStartDate.pickadate('picker').get('select').pick)});
+                    });
+
+                    $reportStartDate.pickadate('picker').on({
+                        set: function(thingToSet) {
+                            if (!!thingToSet.select) {
+                                if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
+                                    $reportRangeDropdown.val("Custom Range");
+                                    self.selectedDuration().selectedRange = $reportRangeDropdown.val();
+                                    self.selectedDuration.valueHasMutated();
+                                    $reportRangeDropdown.material_select();
+                                }
+                                $reportEndDate.pickadate('picker').set({min: new Date(this.get('select').pick)});
+                            }
+                        }
+                    });
+
+                    $reportEndDate.pickadate('picker').on({
+                        set: function(thingToSet) {
+                            if (!!thingToSet.select) {
+                                if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
+                                    $reportRangeDropdown.val("Custom Range");
+                                    self.selectedDuration().selectedRange = $reportRangeDropdown.val();
+                                    self.selectedDuration.valueHasMutated();
+                                    $reportRangeDropdown.material_select();
+                                }
+                                $reportStartDate.pickadate('picker').set({max: new Date(this.get('select').pick)});
+                            }
+                        }
                     });
 
                     $saveReportButton.on("click", function () {
@@ -3963,10 +3988,18 @@ var reportsViewModel = function () {
                 }
             ];
 
+            reportTypes = Object.keys(ENUMSTEMPLATESENUMS["Report Types"]).map(function (e) {
+                return {
+                    text: e,
+                    enum: ENUMSTEMPLATESENUMS["Report Types"][e].enum
+                };
+            });
+
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
             self.listOfEntriesPerPage(entriesPerPage);
             self.listOfChartTypes(chartTypes);
+            self.listOfReportTypes(reportTypes);
         },
         getVariance = function (columnData) {
             var i,
@@ -5248,6 +5281,8 @@ var reportsViewModel = function () {
 
     self.listOfChartTypes = ko.observableArray([]);
 
+    self.listOfReportTypes = ko.observableArray([]);
+
     self.listOfFilterPropertiesLength = 0;
 
     self.listOfColumnPropertiesLength = 0;
@@ -6229,7 +6264,7 @@ var reportsViewModel = function () {
                 self.startDate.valueHasMutated();
                 self.endDate.valueHasMutated();
                 if (self.reportType() !== "Property" && !scheduled) {
-                    $additionalFilters.find(".reportRangePicker select").material_select();
+                    $additionalFilters.find(".reportRangeDropdown select").material_select();
                     $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
                     $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
                     // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
@@ -6266,7 +6301,6 @@ var reportsViewModel = function () {
                 if (!!point) {
                     self.canEdit(userCanEdit(point, permissionLevels.WRITE));
                     originalPoint = JSON.parse(JSON.stringify(point));
-                    windowUpi = point._id; // required or pop-in/pop-out will not work
                     if (point["Report Config"] === undefined) {
                         point["Report Config"] = {};
                     }
@@ -6878,6 +6912,17 @@ var reportsViewModel = function () {
         for (var i = 0; i < self.listOfEntriesPerPage().length; i++) {
             if (self.listOfEntriesPerPage()[i].value === selectedItem) {
                 self.selectedPageLength(self.listOfEntriesPerPage()[i].unit);
+                self.designChanged(true);
+                self.unSavedDesignChange(true);
+                break;
+            }
+        }
+    };
+
+    self.selectSelectReportType = function (element, selectedItem) {
+        for (var i = 0; i < self.listOfReportTypes().length; i++) {
+            if (self.listOfReportTypes()[i].text === selectedItem) {
+                self.reportType(selectedItem);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;

@@ -115,7 +115,16 @@ html.direports
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
                                             label.tiny Report Type
-                                            span.reporttype(data-bind="text: reportType")
+                                            .col.s1.reportTypes
+                                                .availableReportTypes
+                                                    // ko if: ($root.listOfReportTypes().length > 1)
+                                                    ul#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectSelectReportType($element, $data.text) }, text: $data.text")
+                                                    // /ko
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
+                                                        span(data-bind="text: reportType")
+
                                     .form-group.clearfix(style="display: inline-flex")
                                         .numberOfEnteriesPerPage
                                             label # of entries per Page
@@ -489,9 +498,9 @@ html.direports
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko
                                     // ko if: (reportType() !== 'Property')
-                                    .reportRangePicker
-                                        label(data-bind="attr: { for: 'reportRangePicker'}") Date Range
-                                        select(data-bind="attr: { 'id': 'reportRangePicker'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
+                                    .reportRangeDropdown
+                                        label(data-bind="attr: { for: 'reportRangeDropdown'}") Date Range
+                                        select(data-bind="attr: { 'id': 'reportRangeDropdown'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
                                     .reportDatePickers
                                         span.reportStartDatePicker
                                             .input-field
@@ -602,7 +611,7 @@ html.direports
                             input#timepicker2.timepicker(type='time', data-bind='value: selectedTime')
                         .flex.flex-center.flex-start(data-bind='visible: selectedInterval() !== "Advanced"')
                             .input-field.center(data-bind='visible: selectedInterval() !== "Daily"')
-                                span On 
+                                span On
                                 span(data-bind='visible: selectedInterval() === "Monthly"') The
                             .input-field(data-bind='visible: selectedInterval() === "Weekly"')
                                 select(data-bind='options: availableDaysOfWeek, optionsText: "text", optionsValue: "value", value: selectedDayOfWeek')
