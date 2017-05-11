@@ -115,16 +115,18 @@ html.direports
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
                                             label.tiny Report Type
+                                            span(data-bind="text: reportType")
+                                            // ko if: false
                                             .col.s1.reportTypes
-                                                .availableReportTypes
+                                                .availableReportTypes.disabled
                                                     // ko if: ($root.listOfReportTypes().length > 1)
-                                                    ul#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
+                                                    ul.disabled#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
                                                         li
                                                             a(data-bind="click: function(){ $root.selectSelectReportType($element, $data.text) }, text: $data.text")
                                                     // /ko
-                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
+                                                    a.disabled.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
                                                         span(data-bind="text: reportType")
-
+                                            // /ko
                                     .form-group.clearfix(style="display: inline-flex")
                                         .numberOfEnteriesPerPage
                                             label # of entries per Page

@@ -24,7 +24,7 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
 // /ko
 // ko if: (valueType === "UniquePID")
 div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
-    .preloader-wrapper.tiny.active.buildPointSelectorSpinner(data-bind="css: {displayDiv: $parent.activePointSelectorRequest(), hideDiv: !$parent.activePointSelectorRequest()} ")
+    .preloader-wrapper.tiny.active.buildPointSelectorSpinner(data-bind="css: {displayDiv: $parent.activePointSelectorRow() === $index(), hideDiv: $parent.activePointSelectorRow() !== $index()} ")
         .spinner-layer
             .circle-clipper.left
                 .circle
@@ -32,7 +32,7 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
                 .circle
             .circle-clipper
                 .circle
-    div.theButtons(data-bind="css: {displayDiv: !$parent.activePointSelectorRequest(), hideDiv: $parent.activePointSelectorRequest()} ")
+    div.theButtons(data-bind="css: {displayDiv: $parent.activePointSelectorRow() === $index() && !$parent.activePointSelectorRequest(), hideDiv: $parent.activePointSelectorRow() === $index() && $parent.activePointSelectorRequest()} ")
         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
             i.material-icons.tiny.center.blue-grey-text delete
         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")

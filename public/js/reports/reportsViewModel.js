@@ -1980,6 +1980,7 @@ var reportsViewModel = function () {
                 callShowPointSelector = function (availablePointTypes) {
                     self.pointTypes(availablePointTypes);
                     self.activePointSelectorRequest(false);
+                    self.activePointSelectorRow(-1);
 
                     dtiUtility.showPointSelector(getPointInspectorParams(filtersFilter));
                     dtiUtility.onPointSelect(pointSelectedCallback);
@@ -3459,10 +3460,12 @@ var reportsViewModel = function () {
                 tabSwitch(1);
                 self.activeSaveRequest(false);
             } else {
-                self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
-                self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
-                self.startDate(self.selectedDuration().startDate.unix());
-                self.endDate(self.selectedDuration().endDate.unix());
+                if (self.reportType() !== "Property") {
+                    self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
+                    self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
+                    self.startDate(self.selectedDuration().startDate.unix());
+                    self.endDate(self.selectedDuration().endDate.unix());
+                }
 
                 point["Report Config"].columns = validatedColumns.collection;
                 point["Report Config"].filters = validatedFilters.collection;
@@ -3585,33 +3588,35 @@ var reportsViewModel = function () {
                         $reportEndDate.pickadate('picker').set({min: new Date($reportStartDate.pickadate('picker').get('select').pick)});
                     });
 
-                    $reportStartDate.pickadate('picker').on({
-                        set: function(thingToSet) {
-                            if (!!thingToSet.select) {
-                                if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
-                                    $reportRangeDropdown.val("Custom Range");
-                                    self.selectedDuration().selectedRange = $reportRangeDropdown.val();
-                                    self.selectedDuration.valueHasMutated();
-                                    $reportRangeDropdown.material_select();
+                    if (self.reportType() !== "Property") {
+                        $reportStartDate.pickadate('picker').on({
+                            set: function(thingToSet) {
+                                if (!!thingToSet.select) {
+                                    if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
+                                        $reportRangeDropdown.val("Custom Range");
+                                        self.selectedDuration().selectedRange = $reportRangeDropdown.val();
+                                        self.selectedDuration.valueHasMutated();
+                                        $reportRangeDropdown.material_select();
+                                    }
+                                    $reportEndDate.pickadate('picker').set({min: new Date(this.get('select').pick)});
                                 }
-                                $reportEndDate.pickadate('picker').set({min: new Date(this.get('select').pick)});
                             }
-                        }
-                    });
+                        });
 
-                    $reportEndDate.pickadate('picker').on({
-                        set: function(thingToSet) {
-                            if (!!thingToSet.select) {
-                                if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
-                                    $reportRangeDropdown.val("Custom Range");
-                                    self.selectedDuration().selectedRange = $reportRangeDropdown.val();
-                                    self.selectedDuration.valueHasMutated();
-                                    $reportRangeDropdown.material_select();
+                        $reportEndDate.pickadate('picker').on({
+                            set: function(thingToSet) {
+                                if (!!thingToSet.select) {
+                                    if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
+                                        $reportRangeDropdown.val("Custom Range");
+                                        self.selectedDuration().selectedRange = $reportRangeDropdown.val();
+                                        self.selectedDuration.valueHasMutated();
+                                        $reportRangeDropdown.material_select();
+                                    }
+                                    $reportStartDate.pickadate('picker').set({max: new Date(this.get('select').pick)});
                                 }
-                                $reportStartDate.pickadate('picker').set({max: new Date(this.get('select').pick)});
                             }
-                        }
-                    });
+                        });
+                    }
 
                     $saveReportButton.on("click", function () {
                         if (!self.activeSaveRequest()) {
@@ -5216,7 +5221,7 @@ var reportsViewModel = function () {
 
     self.endDate = ko.observable("");
 
-    self.yaxisGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+    self.yaxisGroups = ["A", "B", "C", "D", "E", "F", "G"];
 
     self.reportDisplayTitle = ko.observable("");
 
@@ -5306,6 +5311,8 @@ var reportsViewModel = function () {
     self.activeDataRequest = ko.observable(false);
 
     self.activePointSelectorRequest = ko.observable(false);
+
+    self.activePointSelectorRow = ko.observable(-1);
 
     self.activePropertyFilterRequest = ko.observable({index: 0, status: false});
 
@@ -6582,6 +6589,7 @@ var reportsViewModel = function () {
             columnIndex = parseInt(currentIndex, 10);
 
         self.activePointSelectorRequest(true);
+        self.activePointSelectorRow(columnIndex);
         openPointSelectorForFilter(columnIndex);
     };
 

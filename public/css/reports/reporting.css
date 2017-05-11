@@ -279,10 +279,12 @@ input.intervalValue {
 .chartTypeSelection {
     padding-left: 100px;
 }
+.chartTab .chartTypes.dropdown-content {
+    text-indent: -13px;
+}
 .chartTypes.dropdown-content {
     width: 65px;
     min-width: 65px;
-    text-indent: -13px;
 }
 .childCondition > .dropdown > .operators.dropdown-content {
     min-width: 45px;
