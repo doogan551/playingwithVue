@@ -604,8 +604,14 @@ const Report = class Report {
                 }
             }
             docs.forEach((doc) => {
+                let pointType = doc["Point Type"].Value,
+                    pointTemplate = Config.Templates.getTemplate(pointType);
                 for (let prop in doc) {
-                    let newPropertyName = utils.getHumanProperty(prop);
+                    let newPropertyName = utils.getHumanProperty(prop),
+                        isDisplayable = (!!pointTemplate[prop] && pointTemplate[prop].isDisplayable == false ? false : true);
+                    if (!isDisplayable) {
+                        doc[prop].Value = null;
+                    }
                     if (prop !== newPropertyName) {
                         doc[newPropertyName] = utils.getHumanPropertyObj(prop, doc[prop]);
                         if (prop !== '_id') {

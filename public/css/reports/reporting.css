@@ -312,6 +312,9 @@ input.intervalValue {
 .filterContainer {
     cursor: pointer;
 }
+.filterContainer.input {
+    cursor: default;
+}
 .condition {
     cursor: pointer;
 }
