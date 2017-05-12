@@ -943,7 +943,7 @@ var dti = {
 
         dti.on('thumbnailCaptured', self.handleThumbnail);
 
-        if (config.upi !== undefined && typeof config.upi === 'number') {
+        if (config.upi !== undefined) {
             self.bindings.upi(config.upi);
 
             if (!config.title) {
@@ -4580,7 +4580,6 @@ var dti = {
                 }
 
                 self.fullCreate = cfg.fullCreate || false;
-                self.fromGPL = cfg.fromGPL || false;
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 

@@ -242,6 +242,10 @@ define([
                 if (cfg.callback) {
                     window.attach.saveCallback = cfg.callback;
                 }
+
+                if (!!cfg.options && cfg.options.isGplEdit) {
+                    pointInspector.isGplEdit = true;
+                }
             }
 
             if (!!window.attach && !!window.attach.point) {
@@ -1107,7 +1111,26 @@ define([
                     oldPoint: self.originalData
                 },
                 emitString = 'updatePoint',
-                close;
+                close,
+                finishSave = (updatedPoint) => {
+                    // Update our originalData with rxData received from the server
+                    self.originalData = ko.viewmodel.toModel(updatedPoint);
+                    // Update our viewmodel with the new originalData
+                    pointInspector.updateObject(pointInspector.point.data, self.originalData);
+                    // Update our status
+                    self.status('saved');
+
+                    // ko doesn't know how to handle removed properties
+                    if (pointInspector.point.data.hasOwnProperty('id')) {
+                        delete pointInspector.point.data.id;
+                    }
+
+                    dtiUtility.updateUPI(updatedPoint._id);
+
+                    if (data.exitEditModeOnSave) {
+                        pointInspector.isInEditMode(false);
+                    }
+                };
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
@@ -1174,63 +1197,58 @@ define([
             ko.utils.extend(emitData, data.extendData);
 
             self.status('saving');
-            pointInspector.socket.emit(emitString, emitData);
-            pointInspector.socket.once('pointUpdated', function (rxData) {
-                var hideAfter = 3000,
-                    bgColor,
-                    dismissText,
-                    msg;
+            if (pointInspector.isGplEdit) {
+                finishSave(newPointData);
 
-                if (rxData.message && rxData.message === 'success') {
-                    msg = 'Point was successfully saved.';
-                    let point;
-                    if (rxData.hasOwnProperty('points')) {
-                        point = rxData.points[0];
-                    } else {
-                        point = rxData.point;
-                    }
-                    // Update our originalData with rxData received from the server
-                    self.originalData = ko.viewmodel.toModel(point);
-                    // Update our viewmodel with the new originalData
-                    // ko.viewmodel.updateFromModel(self.data, self.originalData);
-                    pointInspector.updateObject(pointInspector.point.data, self.originalData);
-                    // Update our status
-                    self.status('saved');
-
-                    // ko doesn't know how to handle removed properties
-                    if (pointInspector.point.data.hasOwnProperty('id')) {
-                        delete pointInspector.point.data.id;
-                    }
-
-                    dtiUtility.updateUPI(point._id);
-
-                    if (data.exitEditModeOnSave) {
-                        pointInspector.isInEditMode(false);
-                    }
-                } else {
-                    if (typeof rxData.err === 'string') {
-                        msg = 'Error: ' + rxData.err;
-                    } else {
-                        msg = 'An unexpected error occurred.';
-                    }
-                    hideAfter = null;
-                    bgColor = '#D50000';
-                    dismissText = 'OK';
-                    self.status('error');
-                }
-                close = (data.saveAndClose && !rxData.err);
-
-                if (!close) {
-                    bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
-                    $('body').css('overflow', 'auto');
-                } else {
+                if (data.saveAndClose) {
                     dtiUtility.toast({
-                        msg: 'Point saved',
+                        msg: 'GPL point updated',
                         duration: 4000
                     });
                     return dtiUtility.closeWindow();
                 }
-            });
+            } else {
+                pointInspector.socket.emit(emitString, emitData);
+                pointInspector.socket.once('pointUpdated', function (rxData) {
+                    var hideAfter = 3000,
+                        bgColor,
+                        dismissText,
+                        msg;
+
+                    if (rxData.message && rxData.message === 'success') {
+                        msg = 'Point was successfully saved.';
+                        let point;
+                        if (rxData.hasOwnProperty('points')) {
+                            point = rxData.points[0];
+                        } else {
+                            point = rxData.point;
+                        }
+                        finishSave(point);
+                    } else {
+                        if (typeof rxData.err === 'string') {
+                            msg = 'Error: ' + rxData.err;
+                        } else {
+                            msg = 'An unexpected error occurred.';
+                        }
+                        hideAfter = null;
+                        bgColor = '#D50000';
+                        dismissText = 'OK';
+                        self.status('error');
+                    }
+                    close = (data.saveAndClose && !rxData.err);
+
+                    if (!close) {
+                        bannerJS.showBanner(msg, dismissText, hideAfter, bgColor, close);
+                        $('body').css('overflow', 'auto');
+                    } else {
+                        dtiUtility.toast({
+                            msg: 'Point saved',
+                            duration: 4000
+                        });
+                        return dtiUtility.closeWindow();
+                    }
+                });
+            }
         };
         self.saveAndClose = function (data) {
             data.saveAndClose = true;
