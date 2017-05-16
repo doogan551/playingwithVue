@@ -309,6 +309,9 @@ input.intervalValue {
 .operator {
     cursor: pointer;
 }
+.operatorValue {
+    margin-top: 16px;
+}
 .filterContainer {
     cursor: pointer;
 }
@@ -822,7 +825,7 @@ th .includeInChartColumn {
 .yaxisChartGroup {
     width: 32px;
     min-width: 20px;
-    text-align: center;
+    /*text-align: center;*/
 }
 ul.yaxisGroups.dropdown-content li a {
     padding: 3px 1px 3px 1px;
@@ -869,7 +872,7 @@ input.form-control.gridInputPrecision {
     /*padding-top: 7px;*/
     /*padding-bottom: 4px;*/
     height: 2rem;
-    width: 30px;
+    /*width: 30px;*/
     padding: 2px 2px 2px 5px;
 }
 input.form-control.gridInputPrecision:focus {

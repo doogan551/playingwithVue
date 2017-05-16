@@ -911,6 +911,7 @@ const Report = class Report {
     }
     totalizerReport(data, cb) {
         //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
+        const historyInstance = new History();
         let points = data.upis;
         let reportConfig = data.reportConfig;
         let range = data.range;
@@ -1067,12 +1068,12 @@ const Report = class Report {
                 limit: 1
             };
 
-            history.getAll(criteria, (err, initial) => {
+            historyInstance.getAll(criteria, (err, initial) => {
                 callback(err, point, initial[0]);
             });
         };
         let getInitialDataSql = (point, initial, callback) => {
-            history.findLatest({
+            historyInstance.findLatest({
                 upis: [point.upi],
                 range: { // range object gets overwritten in  pass new ob=> j
                     end: range.start
@@ -1101,14 +1102,14 @@ const Report = class Report {
                 }
             };
 
-            history.getAll(criteria, (err, history) => {
+            historyInstance.getAll(criteria, (err, history) => {
                 callback(null, point, initial, history);
             });
         };
         let getRangeDataSql = (point, initial, history, callback) => {
             let exists = false;
 
-            history.findHistory({
+            historyInstance.findHistory({
                 upis: [point.upi],
                 range: {
                     start: range.start,

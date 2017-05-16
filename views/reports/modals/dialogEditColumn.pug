@@ -36,6 +36,10 @@
                             select#totalizerOperators(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
                             label(data-bind="attr: {for: 'totalizerOperators'}") Type
                             // /ko
+                            // ko if: (valueList.length === 1)
+                            label.active Type
+                            .operatorValue(data-bind="text: operator")
+                            // /ko
                         .input-field.precision
                             // ko if: (canCalculate)
                             input.form-control.gridInputPrecision#precisionInput(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")

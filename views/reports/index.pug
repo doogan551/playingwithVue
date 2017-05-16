@@ -79,7 +79,7 @@ html.direports
                                         a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
                                     li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
-                                    //- li.tab.col.s1.columns2(role="presentation")
+                                    //li.tab.col.s1.columns2(role="presentation")
                                         a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType() === 'Property')
                                     li.tab.col.s4.filterByPoint(role="presentation")
@@ -255,10 +255,8 @@ html.direports
                                                 td.totalizerOperator
                                                     .availableTotalizerOperatorsContainer
                                                         // ko if: (valueList.length > 1)
-                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
+                                                        select.totalizerOperatorSelect(data-bind="event: {change: function () { $root.selectTotalizerOperator($element, $index(), $data) } }, options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
                                                         label
-                                                        //select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
-                                                        //    option(data-bind="attr: { selected: ($parent.operator === $data) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data, text: $data")
                                                         // /ko
                                                         // ko if: (valueList.length === 1)
                                                         span(data-bind="text: operator")
@@ -313,10 +311,10 @@ html.direports
                                                             .card.columnNames
                                                                 .card-content(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseenter: function () { $root.showColumnSettings($element, $data) },  mouseleave: function() { $root.hideColumnSettings($element) } }")
                                                                     // ko if: ($parent.reportType() === 'Totalizer')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : (colDisplayName.length < 30 ? colDisplayName : (colDisplayName.substring(0, 35) + '...')) + ' - ' + operator)", style="margin-right: 2px;")
                                                                     // /ko
                                                                     // ko if: ($parent.reportType() === 'History')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : (colDisplayName.length < 30 ? colDisplayName : (colDisplayName.substring(0, 35) + '...')))", style="margin-right: 2px;")
                                                                     // /ko
                                                                 .card-reveal(style="display: none; transform: translateY(0px)")
                                                                     .row
