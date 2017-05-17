@@ -2806,6 +2806,27 @@ let Import = class Import extends Common {
         let utilsModel = new Utilities();
         let pointModel = new Point();
         let systemModel = new System();
+        let powerMeterUtil = new PowerMeter();
+
+        let updatePowerMeters = (callback) => {
+            let properties = ['DemandInUpi', 'DemandOutUpi', 'UsageInUpi', 'UsageOutUpi', 'KVARInUpi', 'KVAROutUpi', 'DemandSumUpi', 'UsageSumUpi', 'KVARSumUpi'];
+            powerMeterUtil.iterateCursor({}, (err, meter, nextMeter) => {
+                async.each(properties, (property, nextProp) => {
+                    pointModel.getOne({
+                        _oldUpi: meter[property]
+                    }, (err, point) => {
+                        meter[property] = point._id;
+                        nextProp();
+                    });
+                }, (err) => {
+                    powerMeterUtil.update({
+                        _id: meter._id
+                    }, meter, (err, result) => {
+                        nextMeter(err);
+                    });
+                });
+            }, callback);
+        };
 
         utilsModel.iterateCursor({}, (err, utilityObj, next) => {
             let meters = utilityObj.Meters;
@@ -2877,5 +2898,6 @@ let Import = class Import extends Common {
 module.exports = Import;
 var Counter = require('../models/counter');
 var Point = require('../models/point');
+var PowerMeter = require('../models/powermeter');
 var Utilities = require('../models/utilities');
 var System = require('../models/system');

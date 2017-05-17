@@ -10,7 +10,9 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
 var History = require('../models/history.js');
+var PowerMeter = require('../models/powermeter.js');
 var Utilities = require('../models/utilities');
+var Point = require('../models/point');
 
 var logFilePath = config.get('Infoscan.files').driveLetter + ':/InfoScanJS/apps/backup.log';
 
@@ -33,31 +35,6 @@ var upis = {
     'reactive': [918956, 918957, 918958, 918959, 918960, 918961, 918962, 918963, 918964, 918965, 918966, 918967, 918968, 918969, 918970, 918971, 918972, 918973, 918974, 918975, 918976, 918977, 918978, 918979, 918980, 918981, 918982, 918983, 918984, 918985, 918986, 918987, 918988, 918989],
     all: [],
     wS: [lowTempUpi, hiTempUpi, hddUpi, cddUpi, oatUpi]
-};
-
-let getMeterUpis = (cb) => {
-    let utilitiesModel = new Utilities();
-    utilitiesModel.get({
-        query: {},
-        fields: {
-            Meters: 1,
-            _id: 0
-        }
-    }, (err, meters) => {
-        for (var i = 0; i < meters.length; i++) {
-            for (var m = 0; m < meters[i].Meters.length; m++) {
-                var meter = meters[i].Meters[m];
-                for (var p = 0; p < meter.meterPoints.length; p++) {
-                    var point = meter.meterPoints[p];
-                    if (upis.all.indexOf(point.upi) < 0) {
-                        upis.all.push(point.upi);
-                    }
-                }
-            }
-        }
-        upis.all = upis.all.concat(upis.wS);
-        cb(err);
-    });
 };
 
 let calculateWeather = (cb) => {
@@ -163,16 +140,112 @@ let calculateWeather = (cb) => {
     });
 };
 
+let loadUpis = (cb) => {
+    upis.all = [];
+    let powerMeterUtil = new PowerMeter();
+    let utilitiesModel = new Utilities();
+    let pointModel = new Point();
+    let getNewTemp = (oldTemp, callback) => {
+        // necessary because we currently have no tracking of what the hi and low temp points are
+        pointModel.getOne({
+            query: {
+                _oldUpi: oldTemp
+            }
+        }, (err, newTemp) => {
+            return callback(err, newTemp);
+        });
+    };
+
+    getNewTemp(lowTempUpi, (err, newLowTemp) => {
+        lowTempUpi = newLowTemp;
+        upis.all.push(lowTempUpi);
+        getNewTemp(hiTempUpi, (err, newHiTemp) => {
+            hiTempUpi = newHiTemp;
+            upis.all.push(hiTempUpi);
+
+            utilitiesModel.getOne({
+                query: {
+                    Name: 'Weather'
+                }
+            }, (err, weatherPoints) => {
+                hddUpi = weatherPoints['Heating Degree Days Point'];
+                cddUpi = weatherPoints['Cooling Degree Days Point'];
+                oatUpi = weatherPoints['Outside Air Temperature Point'];
+                upis.all.push(hddUpi);
+                upis.all.push(cddUpi);
+                upis.all.push(oatUpi);
+                powerMeterUtil.iterateCursor({}, (err, meter, nextMeter) => {
+                    upis.all.push(meter.UsageSumUpi);
+                    upis.all.push(meter.DemandSumUpi);
+                    upis.all.push(meter.KVARSumUpi);
+                    nextMeter();
+                }, cb);
+            });
+        });
+    });
+};
+
+let convertOldHistoryUpis = (cb) => {
+    let historyModel = new History();
+    let pointModel = new Point();
+    let currentUpi = 0;
+    let newUpi = 0;
+
+    let getNewUpi = (_currentUpi, callback) => {
+        pointModel.getOne({
+            query: {
+                _oldUpi: _currentUpi
+            }
+        }, (err, point) => {
+            callback(err, point._id);
+        });
+    };
+
+    let addWithNewUpi = (oldHistory, callback) => {
+        historyModel.insert({
+            insertObj: oldHistory
+        }, callback);
+    };
+
+    historyModel.iterateCursor({
+        collection: 'oldhistorydata',
+        sort: {
+            upi: 1
+        }
+    }, (err, oldHistory, nextHistory) => {
+        if (oldHistory.upi !== currentUpi) {
+            currentUpi = oldHistory.upi;
+            getNewUpi(currentUpi, (err, _newUpi) => {
+                newUpi = _newUpi;
+                oldHistory.upi = newUpi;
+                addWithNewUpi(oldHistory, (err, result) => {
+                    nextHistory(err);
+                });
+            });
+        } else {
+            oldHistory.upi = newUpi;
+            addWithNewUpi(oldHistory, (err, result) => {
+                nextHistory(err);
+            });
+        }
+    }, cb);
+};
+
 let backUp = () => {
     db.connect(connectionString.join(''), (err) => {
-        calculateWeather((err) => {
+        convertOldHistoryUpis((err) => {
+
+        });
+        loadUpis((err) => {
+            console.log(upis);
             if (err) {
-                logToFile('calculateWeather Error: ' + err);
+                logToFile('loadUpis Error: ' + err);
             }
-            getMeterUpis((err) => {
+            calculateWeather((err) => {
                 if (err) {
-                    logToFile('getMeterUpis Error: ' + err);
+                    logToFile('calculateWeather Error: ' + err);
                 }
+
                 logToFile('Starting SQLite backup.');
                 History.doBackUp(upis.all, false, (err) => {
                     if (err) {
@@ -262,3 +335,8 @@ let newBackup = () => {
     });
 };
 newBackup();
+
+// c++ puts data with old upis in separate coll
+// take data, change upis and put in historydata
+// clean collection
+// do normal (get upis from PowerMeters)
