@@ -624,33 +624,30 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
     padding: 3px 3px;
 }
-/*.firstColumn {*/
-    /*min-width: 200px;*/
-/*}*/
 .DTFC_LeftBodyLiner {
     overflow-x: hidden;
     overflow-y: hidden;
 }
 
-th.firstColumn.datetime {
-    min-width: 60px;
+/*th.firstColumn.datetime {*/
+    /*min-width: 60px;*/
+    /*!*width: 100px !important;*!*/
+/*}*/
+/*td.firstColumn.datetime {*/
+    /*min-width: 60px;*/
     /*width: 100px !important;*/
-}
-td.firstColumn.datetime {
-    min-width: 60px;
-    width: 100px !important;
-    font-size: small;
-}
+    /*font-size: small;*/
+/*}*/
 
-th.firstColumn.pointLookupColumn {
-    min-width: 270px;
-    width: 270px !important;
-}
+/*th.firstColumn.pointLookupColumn {*/
+    /*min-width: 270px;*/
+    /*width: 270px !important;*/
+/*}*/
 
-td.firstColumn.pointInstance {
-    min-width: 270px;
-    width: 270px !important;
-}
+/*td.firstColumn.pointInstance {*/
+    /*min-width: 270px;*/
+    /*width: 270px !important;*/
+/*}*/
 
 .columnName {
     display: inline-block;
