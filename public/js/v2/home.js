@@ -4244,7 +4244,7 @@ var dti = {
         },
         configureMoment: function(momentInstance) {
             // Adjust default calendar config
-            momentInstance.locale('en', {
+            momentInstance.updateLocale('en', {
                 longDateFormat: {
                     LT: "HH:mm",
                     LTS: "HH:mm:ss",

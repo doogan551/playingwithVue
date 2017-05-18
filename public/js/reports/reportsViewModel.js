@@ -458,11 +458,11 @@ var dti = {
 
             self.addSource = function (src) {
                 var source = {
-                        name: ko.observable(src.name || dti.makeId()),
-                        nameShown: ko.observable(src.nameShown),
-                        data: Array.isArray(src.data) ? []:{},
-                        matches: ko.observableArray([])
-                    };
+                    name: ko.observable(src.name || dti.makeId()),
+                    nameShown: ko.observable(src.nameShown),
+                    data: Array.isArray(src.data) ? [] : {},
+                    matches: ko.observableArray([])
+                };
 
                 self.bindings.sources.push(source);
 
@@ -2192,11 +2192,11 @@ let reportsViewModel = function () {
         ui = {
             setDatatableInfoBar: () => {
                 var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
-                    currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
                     $tablePagination = $tabViewReport.find(".dataTables_paginate"),
                     $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
                     $pagination = $tablePagination.find(".pagination"),
                     $paginate_buttons = $pagination.find("button"),
+                    numberOfButtons = $paginate_buttons.length,
                     $datatablesLength = $tabViewReport.find(".dataTables_length"),
                     $datatablesLengthSelect = $datatablesLength.find("select");
 
@@ -2205,9 +2205,16 @@ let reportsViewModel = function () {
                     $paginate_buttons = $paginate_buttons.not("li.active");
                     $paginate_buttons.hide();
                 } else {
+                    $paginate_buttons.hide();
                     $paginate_buttons.removeClass("mdl-button");
                     $paginate_buttons.addClass("btn blue-grey");
-                    $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
+                    for (let i = 0; i < numberOfButtons; i++) {
+                        if ($paginate_buttons[i].classList.contains("mdl-button--raised")) {
+                            $paginate_buttons[i].classList.add("lighten-2");
+                            $paginate_buttons[i].classList.remove("mdl-button--raised")
+                        }
+                    }
+                    $paginate_buttons.show();
                     $pagination.show();
                 }
 
@@ -2394,11 +2401,12 @@ let reportsViewModel = function () {
 
                         $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
                             var columnsArray = $.extend(true, [], self.listOfColumns()),
-                                swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                                swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]), // clone from field
+                                currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page;
                             columnsArray.splice(details.iFrom, 1);
                             columnsArray.splice(details.iTo, 0, swapColumnFrom);
                             columnLogic.updateListOfColumns(columnsArray);
-                            $dataTablePlaceHolder.DataTable().draw("current");
+                            $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);
                             console.log("moved column '" + details.from + "' to column '" + details.to + "'");
                             return true;
                         });
@@ -2780,33 +2788,23 @@ let reportsViewModel = function () {
                 let bottomPadding = 10,
                     adjustHeight,
                     currentWindowHeight = window.innerHeight,
-                    $dataTablesScrollHead,
                     $dataTablesScrollBody,
-                    $dataTablesScrollFoot,
-                    // $dataTablesWrapper = $tabViewReport.find(".dataTables_wrapper"),
                     $activePane = $tabViewReport.find(".tab-pane:visible");
 
                 if ($activePane.attr("id") === "chartData") {
                     $activePane.css("height", (window.innerHeight - 90));
-                    // $activePane.css("width", (window.innerWidth - 130));
                     $activePane.css("width", "100%");
                 } else if ($activePane.attr("id") === "gridData") {
                     $dataTablePlaceHolder.css("width", "100%");
-                    $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                     $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
-                    $dataTablesScrollFoot = $tabViewReport.find(".dataTables_scrollFoot");
 
                     ui.setDatatableInfoBar();
                     adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
-                    // $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
-                    $dataTablesScrollHead.css("width", "100%"); // allow for scrolly in body
                     $dataTablesScrollBody.css("height", adjustHeight);
-                    // $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
-                    // $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
-                    $dataTablesScrollBody.css("width", "100%");
-                    $dataTablesScrollFoot.css("width", "100%"); // allow for scrolly in body
+                    //   $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);   *****  this call seems to kick off recursive loop ***
+                    //   $dataTablePlaceHolder.DataTable().draw("current");  *****  this call seems to kick off recursive loop ***
                     $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
-                    // $dataTablePlaceHolder.DataTable().columns.adjust().draw();
+                    $dataTablePlaceHolder.DataTable().fixedColumns().update();
                 }
             },
             adjustConfigTabActivePaneHeight: () => {
@@ -4122,6 +4120,7 @@ let reportsViewModel = function () {
                         $dataTablePlaceHolder.DataTable().clear();
                         $dataTablePlaceHolder.DataTable().rows.add(reportData);
                         $dataTablePlaceHolder.DataTable().draw("current");
+                        $dataTablePlaceHolder.DataTable().fixedColumns().update();
                         self.refreshData(false);
                         self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
 
@@ -4139,7 +4138,7 @@ let reportsViewModel = function () {
                             });
                         }
 
-                        ui.adjustViewReportTabHeightWidth();
+                        // ui.adjustViewReportTabHeightWidth();
                         self.activeRequestDataDrawn(true);
                         self.selectViewReportTabSubTab("gridData");
                     }
@@ -4291,7 +4290,7 @@ let reportsViewModel = function () {
                                 } else {
                                     if (self.selectedChartType() !== "Column") {
                                         toolTip = {
-                                            formatter: () => {
+                                            formatter: function () {
                                                 return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
                                             }
                                         };
@@ -4796,8 +4795,6 @@ let reportsViewModel = function () {
 
                     if (!!columnConfig.width) {
                         columnWidth = columnConfig.width;
-                        // } else if (columnIndex > 0 && aoColumns.length < 3 && !scheduled) {
-                        //     columnWidth = "30%";
                     } else {
                         columnWidth = "auto";
                     }
@@ -4858,31 +4855,34 @@ let reportsViewModel = function () {
                     for (i = 0; i < columnDesign.calculation.length; i++) {
                         typeOfCalc = columnDesign.calculation[i].toLowerCase();
 
-                        switch (typeOfCalc) {
-                            case "mean":
-                                calc.totalCalc = reportCalc.getColumnMean(allRawValues);
-                                calc.pageCalc = (!sameDataSet ? reportCalc.getColumnMean(currentPageRawValues) : calc.totalCalc);
-                                break;
-                            case "max":
-                                calc.totalCalc = Math.max.apply(Math, allRawValues);
-                                calc.pageCalc = (!sameDataSet ? Math.max.apply(Math, currentPageRawValues) : calc.totalCalc);
-                                break;
-                            case "min":
-                                calc.totalCalc = Math.min.apply(Math, allRawValues);
-                                calc.pageCalc = (!sameDataSet ? Math.min.apply(Math, currentPageRawValues) : calc.totalCalc);
-                                break;
-                            case "sum":
-                                calc.totalCalc = reportCalc.getColumnSum(allRawValues);
-                                calc.pageCalc = (!sameDataSet ? reportCalc.getColumnSum(currentPageRawValues) : calc.totalCalc);
-                                break;
-                            case "std dev":
-                                calc.totalCalc = reportCalc.getColumnStandardDeviation(allRawValues);
-                                calc.pageCalc = (!sameDataSet ? reportCalc.getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
-                                break;
-                            default:
-                                console.log(" - - - DEFAULT  getCalcForColumn()");
-                                break;
+                        if (currentPageData.length > 0) {
+                            switch (typeOfCalc) {
+                                case "mean":
+                                    calc.totalCalc = reportCalc.getColumnMean(allRawValues);
+                                    calc.pageCalc = (!sameDataSet ? reportCalc.getColumnMean(currentPageRawValues) : calc.totalCalc);
+                                    break;
+                                case "max":
+                                    calc.totalCalc = Math.max.apply(Math, allRawValues);
+                                    calc.pageCalc = (!sameDataSet ? Math.max.apply(Math, currentPageRawValues) : calc.totalCalc);
+                                    break;
+                                case "min":
+                                    calc.totalCalc = Math.min.apply(Math, allRawValues);
+                                    calc.pageCalc = (!sameDataSet ? Math.min.apply(Math, currentPageRawValues) : calc.totalCalc);
+                                    break;
+                                case "sum":
+                                    calc.totalCalc = reportCalc.getColumnSum(allRawValues);
+                                    calc.pageCalc = (!sameDataSet ? reportCalc.getColumnSum(currentPageRawValues) : calc.totalCalc);
+                                    break;
+                                case "std dev":
+                                    calc.totalCalc = reportCalc.getColumnStandardDeviation(allRawValues);
+                                    calc.pageCalc = (!sameDataSet ? reportCalc.getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
+                                    break;
+                                default:
+                                    console.log(" - - - DEFAULT  getCalcForColumn()");
+                                    break;
+                            }
                         }
+
                         collectionOfCalcs.push($.extend(true, {}, calc));
                     }
 
@@ -4913,7 +4913,7 @@ let reportsViewModel = function () {
             }
 
             if (aoColumns.length > 0) {
-                $dataTablePlaceHolder.DataTable({
+                $dataTablePlaceHolder.removeAttr('width').DataTable({
                     api: true,
                     dom: (!scheduledReport ? "Blfrtip" : "lfrtip"),
                     buttons: (!scheduledReport ? [
@@ -5139,6 +5139,9 @@ let reportsViewModel = function () {
                     },
                     data: reportData,
                     columns: aoColumns,
+                    fixedColumns: {
+                        heightMatch: 'semiauto'
+                    },
                     colReorder: {
                         fixedColumnsLeft: 1,
                         realtime: false
@@ -6302,7 +6305,7 @@ let reportsViewModel = function () {
     };
 
     self.init = (externalConfig) => {
-        var columns,
+        let columns,
             reportConfig,
             initializeForMaterialize = () => {
                 columnLogic.updateListOfColumns(self.listOfColumns());
@@ -6934,10 +6937,10 @@ let reportsViewModel = function () {
 
     self.selectTotalizerOperator = (element, indexOfColumn, selectedItem) => {
         // console.log(indexOfColumn + "   element.val = " + $(element).val() + "   operator = " + self.listOfColumns()[indexOfColumn].operator);
-        if (self.listOfColumns()[indexOfColumn].operator === "Starts" && self.listOfColumns()[indexOfColumn].precision !== 0) {
-            self.listOfColumns()[indexOfColumn].precision = 0;
-            $(element).closest('tr').find(".precision input").val("0");
-        }
+        // if (self.listOfColumns()[indexOfColumn].operator === "Starts" && self.listOfColumns()[indexOfColumn].precision !== 0) {
+        //     self.listOfColumns()[indexOfColumn].precision = 0;
+        //     $(element).closest('tr').find(".precision input").val("0");
+        // }
         return true;
     };
 

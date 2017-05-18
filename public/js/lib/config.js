@@ -14,7 +14,7 @@ var Config = (function (obj) {
     } else if (typeof $ === 'function') {
         $.ajax({
             url: '/js/lib/enumsTemplates.json',
-            async: false,
+            async: false,   //  http://stackoverflow.com/questions/27736186/jquery-has-deprecated-synchronous-xmlhttprequest
             success: function (data) {
                 enumsTemplatesJson = data;
             }

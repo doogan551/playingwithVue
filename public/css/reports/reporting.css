@@ -135,6 +135,7 @@ input.input.form-control.durationDateRangeTime {
 .tableFooter {
     cursor: default;
     font-weight: bold;
+    background-color: #f9f5f5;
 }
 .pointInstance {
     cursor: pointer;
@@ -403,11 +404,17 @@ td.filterName {
 .tabViewReport div.dataTables_filter {
     float: right;
     margin-top: -50px;
-    margin-right: 20px;
     height: 65px;
+    width: 94%;
+}
+.tabViewReport div.dataTables_filter input {
+    width: 30%;
 }
 .tabViewReport div.dataTables_paginate {
     margin-top: -21px;
+}
+.dataTables_empty {
+    padding-left: 333px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
@@ -617,21 +624,34 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
     padding: 3px 3px;
 }
-.firstColumn {
+/*.firstColumn {*/
     /*min-width: 200px;*/
+/*}*/
+.DTFC_LeftBodyLiner {
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
+
 th.firstColumn.datetime {
     min-width: 60px;
     /*width: 100px !important;*/
 }
 td.firstColumn.datetime {
     min-width: 60px;
-    /*width: 100px !important;*/
+    width: 100px !important;
     font-size: small;
 }
-.firstColumn.pointLookupColumn {
-    /*min-width: 270px;*/
+
+th.firstColumn.pointLookupColumn {
+    min-width: 270px;
+    width: 270px !important;
 }
+
+td.firstColumn.pointInstance {
+    min-width: 270px;
+    width: 270px !important;
+}
+
 .columnName {
     display: inline-block;
     padding-left: 5px;
@@ -1391,6 +1411,16 @@ button {
 .preloader-wrapper.tiny {
     width: 20px;
     height: 20px;
+}
+table.bordered > thead > tr, table.bordered > tbody > tr {
+    background-color: #f9f5f5;
+}
+table.dataTable,
+table.dataTable th,
+table.dataTable td {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
 }
 /*table, th, td {*/
     /*border: 1px solid !important;*/
