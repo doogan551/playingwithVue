@@ -2274,6 +2274,7 @@ let reportsViewModel = function () {
                     $reportRangeDropdown,
                     $reportStartDate,
                     $reportEndDate,
+                    $clearAllSearchFilters,
                     precisionEventsSet = false,
                     includeInChartEventsSet = false,
                     calculateEventsSet = false;
@@ -3112,6 +3113,8 @@ let reportsViewModel = function () {
                                     }
                                 }
                                 break;
+                            case "None":
+                                break;
                             case "String":
                                 break;
                             default:
@@ -3233,9 +3236,9 @@ let reportsViewModel = function () {
                         results.error = true;
                     }
                     results.collection.push(localArray[i]);
+                    index = results.collection.length - 1;
 
                     if (cleanup && !validation.error && results.collection.length > 0) { // these fields are only used in UI
-                        index = results.collection.length - 1;
                         delete results.collection[index].valueList;
                         delete results.collection[index].dataColumnName;
                         delete results.collection[index].rawValue;
@@ -3244,6 +3247,7 @@ let reportsViewModel = function () {
                         delete results.collection[index].bitstringEnums;
                         delete results.collection[index].upi;
                     }
+                    delete self.listOfColumns()[index].searchFilter;  // only used for search filtering the result set in ui
                 }
 
                 if (cleanup) {
@@ -3278,6 +3282,7 @@ let reportsViewModel = function () {
 
                     if (valid) {
                         currentColumn.canCalculate = reportCalc.columnCalculable(currentColumn);
+                        currentColumn.searchFilter = "";
                         switch (self.reportType()) {
                             case "Property":
                                 currentColumn.canBeCharted = reportCalc.columnChartable(currentColumn);
@@ -3356,22 +3361,23 @@ let reportsViewModel = function () {
             },
             getNewColumnTemplate: () => {
                 return {
-                    colName: ((self.reportType() === "Totalizer") || (self.reportType() === "History") ? "Choose Point" : "Choose Property"),
-                    colDisplayName: "",
-                    valueType: "String",
-                    upi: 0,
-                    multiplier: 1,
-                    precision: 3,
                     calculation: [],
+                    canBeCharted: false,
+                    canCalculate: false,
+                    colDisplayName: "",
+                    colName: ((self.reportType() === "Totalizer") || (self.reportType() === "History") ? "Choose Point" : "Choose Property"),
+                    dataColumnName: "",
+                    filter: "",
+                    includeInChart: false,
+                    multiplier: 1,
                     operator: "",
                     pointType: "",
+                    precision: 3,
                     units: "",
-                    includeInChart: false,
-                    yaxisGroup: "",
+                    upi: 0,
                     valueList: [],
-                    canCalculate: false,
-                    canBeCharted: false,
-                    dataColumnName: ""
+                    valueType: "String",
+                    yaxisGroup: ""
                 };
             }
         },
@@ -4101,47 +4107,49 @@ let reportsViewModel = function () {
         },
         render = {
             baseReport: () => {
-                if (reportData !== undefined && self.currentTab() === 2) {
+                if (self.currentTab() === 2) {
                     self.reportResultViewed(true);
-                    ui.blockUI($tabViewReport, false);
-                    if (scheduledReport) {
-                        formatForPDF.breakReportDataIntoPrintablePages();
-                        if (!self.activeRequestDataDrawn()) {
-                            if (scheduledReport && self.chartable() && includeChart) {
-                                self.requestChart();
-                            } else {
-                                setTimeout(function () {
-                                    self.activeRequestDataDrawn(true);
-                                }, 1000);
-                            }
-                        }
-                        $(document.body).find("script").html(null);
-                    } else {
-                        $dataTablePlaceHolder.DataTable().clear();
-                        $dataTablePlaceHolder.DataTable().rows.add(reportData);
-                        $dataTablePlaceHolder.DataTable().draw("current");
-                        $dataTablePlaceHolder.DataTable().fixedColumns().update();
-                        self.refreshData(false);
-                        self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-
-                        if (!exportEventSet) {
-                            $tabViewReport.find("a.btn.btn-default.buttons-collection").on("click", function () {
-                                if (!exportEventSet) {
+                    if (reportData !== undefined) {
+                        ui.blockUI($tabViewReport, false);
+                        if (scheduledReport) {
+                            formatForPDF.breakReportDataIntoPrintablePages();
+                            if (!self.activeRequestDataDrawn()) {
+                                if (scheduledReport && self.chartable() && includeChart) {
+                                    self.requestChart();
+                                } else {
                                     setTimeout(function () {
-                                        $direports.find("li.dt-button > a").on("click", function () {  // export buttons clicked
-                                            console.log($(this).text() + " button clicked");
-                                            $(this).parent().parent().hide();
-                                        });
-                                    }, 100);
+                                        self.activeRequestDataDrawn(true);
+                                    }, 1000);
                                 }
-                                exportEventSet = true;
-                            });
-                        }
+                            }
+                            $(document.body).find("script").html(null);
+                        } else {
+                            $dataTablePlaceHolder.DataTable().clear();
+                            $dataTablePlaceHolder.DataTable().rows.add(reportData);
+                            $dataTablePlaceHolder.DataTable().draw("current");
+                            $dataTablePlaceHolder.DataTable().fixedColumns().update();
+                            self.refreshData(false);
+                            self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
 
-                        // ui.adjustViewReportTabHeightWidth();
-                        self.activeRequestDataDrawn(true);
-                        self.selectViewReportTabSubTab("gridData");
+                            if (!exportEventSet) {
+                                $tabViewReport.find("a.btn.btn-default.buttons-collection").on("click", function () {
+                                    if (!exportEventSet) {
+                                        setTimeout(function () {
+                                            $direports.find("li.dt-button > a").on("click", function () {  // export buttons clicked
+                                                console.log($(this).text() + " button clicked");
+                                                $(this).parent().parent().hide();
+                                            });
+                                        }, 100);
+                                    }
+                                    exportEventSet = true;
+                                });
+                            }
+
+                            // ui.adjustViewReportTabHeightWidth();
+                            self.selectViewReportTabSubTab("gridData");
+                        }
                     }
+                    self.activeRequestDataDrawn(true);
                 }
             },
             historyReport: (data) => {
@@ -4149,30 +4157,36 @@ let reportsViewModel = function () {
                 if (data.err === undefined) {
                     reportData = dataParse.pivotHistoryData(data.historyData);
                     self.truncatedData(reportData.truncated);
-                    render.baseReport();
+                    // render.baseReport();
                 } else {
                     console.log(" - * - * - render.historyReport() ERROR = ", data.err);
+                    ui.displayError(data.err);
                 }
+                render.baseReport();
             },
             totalizerReport: (data) => {
                 self.activeDataRequest(false);
                 if (data.err === undefined) {
                     reportData = dataParse.pivotTotalizerData(data);
                     self.truncatedData(reportData.truncated);
-                    render.baseReport();
+                    // render.baseReport();
                 } else {
                     console.log(" - * - * - render.totalizerReport() ERROR = ", data.err);
+                    ui.displayError(data.err);
                 }
+                render.baseReport();
             },
             propertyReport: (data) => {
                 self.activeDataRequest(false);
                 if (data.err === undefined) {
                     reportData = dataParse.cleanResultData(data);
                     self.truncatedData(reportData.truncated);
-                    render.baseReport();
+                    // render.baseReport();
                 } else {
                     console.log(" - * - * - render.propertyReport() ERROR = ", data.err);
+                    ui.displayError(data.err);
                 }
+                render.baseReport();
             },
             baseChart: (formatForPrint, isScheduled) => {
                 var maxDataRowsForChart = 50000,
@@ -4651,6 +4665,8 @@ let reportsViewModel = function () {
                 reportPoint["Report Config"].selectedPageLength = self.selectedPageLength();
                 reportPoint["Report Config"].selectedChartType = self.selectedChartType();
                 reportPoint["Report Config"].reportTitle = self.reportDisplayTitle();
+                reportPoint["Report Config"].displayGridCalculations = self.displayGridCalculations();
+                reportPoint["Report Config"].displayGridFilters = self.displayGridFilters();
                 switch (self.reportType()) {
                     case "History":
                     case "Totalizer":
@@ -4754,7 +4770,7 @@ let reportsViewModel = function () {
                         result += "small ";
                     }
                     if (columnConfig.canCalculate === true) {
-                        result += "text-right ";
+                        result += "right-align ";
                     }
                     if (columnConfig.softDeleted !== undefined && columnConfig.softDeleted) {
                         result += "softDeleted";
@@ -4762,10 +4778,46 @@ let reportsViewModel = function () {
                     return result;
                 },
                 buildColumnObject = function (columnConfig, columnIndex) {
-                    var result,
+                    let result,
                         columnTitle = columnConfig.colDisplayName,
                         sortAbleColumn = true,
-                        columnWidth;
+                        columnWidth,
+                        resolveDataFormat = () => {
+                            let answer;
+                            if (!!columnConfig) {
+                                switch (columnConfig.valueType) {
+                                    case "MinSec":
+                                    case "HourMin":
+                                    case "HourMinSec":
+                                    case "Float":
+                                    case "Double":
+                                    case "Integer":
+                                    case "Unsigned":
+                                    case "BitString":
+                                        answer = "num-fmt";
+                                        break;
+                                    case "Enum":
+                                    case "undecided":
+                                    case "null":
+                                    case "None":
+                                    case "Bool":
+                                    case "String":
+                                    case "UniquePID":  // point IDs get translated to pointname
+                                        answer = "string";
+                                        break;
+                                    case "DateTime":
+                                    case "Timet":
+                                        answer = "date";
+                                        break;
+                                    default:
+                                        answer = "string";
+                                        break;
+                                }
+                            } else {
+                                console.log("buildColumnObject()  columnConfig is undefined");
+                            }
+                            return answer;
+                        };
 
                     switch (self.reportType()) {
                         case "History":
@@ -4804,6 +4856,7 @@ let reportsViewModel = function () {
                         data: columnConfig.dataColumnName,
                         // data: columnConfig.dataColumnName + ".Value",
                         width: columnWidth,
+                        type: resolveDataFormat(),
                         render: {
                             _: "Value",
                             type: "rawValue",
@@ -5006,7 +5059,7 @@ let reportsViewModel = function () {
                             $firstThead;
 
 
-                        for (i = 0; i < reportColumns.length; i++) {
+                        for (i = 1; i < reportColumns.length; i++) {
                             if (!!reportColumns[i].calculation && reportColumns[i].calculation.length > 0) {
                                 $(thead).find("th").eq(i).addClass("calculate");
                             }
@@ -5033,13 +5086,14 @@ let reportsViewModel = function () {
                         }
                     },
                     footerCallback: function (tfoot, data, start, end, display) {
-                        var api = this.api(),
-                            reportColumns = $.extend(true, [], self.listOfColumns()),
-                            $firstColumn,
+                        let api = this.api(),
+                            reportColumns = self.listOfColumns(),
+                            $footerFirstCell,
                             columnIndexesToCalc = api.columns(".calculate")[0],
                             i,
                             j,
                             columnIndex,
+                            searchFilterData,
                             currentPageData,
                             allData,
                             sameDataSet,
@@ -5047,94 +5101,212 @@ let reportsViewModel = function () {
                             columnConfig,
                             calc,
                             calcs,
+                            dataExists = false,
                             pageFooterText,
                             totalFooterText,
-                            footerText,
+                            footerCalcText,
                             footerTitle,
-                            $tdFooter,
-                            $footerTableDataCollection;
-
-                        $footerTableDataCollection = $(tfoot).find("td");
-                        $footerTableDataCollection.html(""); // clear existing footers
-                        $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
-                        $footerTableDataCollection.removeAttr("data-toggle");
-                        $footerTableDataCollection.removeAttr("data-trigger");
-                        $footerTableDataCollection.removeAttr("data-html");
-                        $footerTableDataCollection.removeAttr("title");
-                        $footerTableDataCollection.removeAttr("data-original-title");
-
-                        for (i = 0; i < numberOfColumnsToCalculate; i++) {
-                            footerText = "";
-                            footerTitle = "";
-                            pageFooterText = "";
-                            columnIndex = columnIndexesToCalc[i];
-                            columnConfig = reportColumns[columnIndex];
-                            currentPageData = api.column(columnIndex, {page: "current"}).data();
-                            allData = api.column(columnIndex).data();
-                            sameDataSet = (currentPageData.length === allData.length);
-                            calcs = getCalcForColumn(currentPageData, allData, columnConfig);
-                            $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
-                            // TODO to Materialize $tdFooter.popover("destroy");
-
-                            for (j = 0; j < columnConfig.calculation.length; j++) {
-                                calc = calcs[j];
-
-                                switch (self.reportType()) {
-                                    case "History":
-                                        if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                        }
-                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
-                                        break;
-                                    case "Totalizer":
-                                        if (columnConfig.operator.toLowerCase() === "runtime") {
-                                            if (!sameDataSet) {
-                                                pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                            $clearAllSearchFilters,
+                            $trFooter,
+                            $tdFooterFilter,
+                            $tdFooterCalculations,
+                            $footerTableDataCollection,
+                            searchFilterActive = () => {
+                                let resultSet = reportColumns.filter(function (cConfig) {
+                                    return (cConfig.searchFilter !== undefined && cConfig.searchFilter !== "");
+                                });
+                                return (resultSet.length > 0);
+                            },
+                            buildFilterSelect = (column, columnIndex, columnData, $element) => {
+                                let searchFilterValue = self.listOfColumns()[columnIndex].searchFilter,
+                                    getUnique = (theArray) => {
+                                        var n = {},
+                                            result = [],
+                                            v;
+                                        for (var i = 0; i < theArray.length; i++) {
+                                            // console.log("---- theArray[" + i + "].Value = " + theArray[i].Value);
+                                            // console.log("-------- theArray[" + i + "].rawValue = " + theArray[i].rawValue);
+                                            if (theArray[i].Value === 'string') {
+                                                v = theArray[i].Value.trim();
+                                            } else {
+                                                v = (theArray[i].Value !== undefined && theArray[i].Value !== null ? theArray[i].Value : "");
                                             }
-                                            totalFooterText = "Total " + columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "<br />";
+                                            if (!n[v] && v !== "") {
+                                                // console.log("---- theArray[" + i + "].Value = " + theArray[i].Value);
+                                                // console.log("-------- theArray[" + i + "].rawValue = " + theArray[i].rawValue);
+                                                // console.log("v = (" + v + ")");
+                                                n[v] = true;
+                                                result.push(v);
+                                            }
+                                        }
+                                        if (self.listOfColumns()[columnIndex].canCalculate === true) {
+                                            return result.sort(function(a, b) {
+                                                return a - b;
+                                            });
                                         } else {
-                                            if (!sameDataSet) {
-                                                pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                            }
-                                            totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
+                                            return result.sort();
                                         }
-                                        break;
-                                    case "Property":
-                                        if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
+                                    },
+                                    uniqueData = getUnique(columnData);
+
+                                if (uniqueData.length === 1 && uniqueData[0] === "") {
+                                    // the data is this column is all blanks
+                                } else if (uniqueData.length > 0) {
+                                    let $selectFilter = $('<select><option value=""></option></select>').appendTo($element);
+
+                                    for (let i = 0; i < uniqueData.length; i++) {
+                                        if (searchFilterValue === uniqueData[i]) {
+                                            $selectFilter.append('<option class="active" value="' + uniqueData[i] + '">' + uniqueData[i] + '</option>');
+                                        } else {
+                                            $selectFilter.append('<option value="' + uniqueData[i] + '">' + uniqueData[i] + '</option>');
                                         }
-                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + "<br />";
-                                        break;
-                                    default:
-                                        console.log(" - - - DEFAULT  footerCallback()");
-                                        break;
+                                        if (searchFilterValue === $selectFilter[0].options[$selectFilter[0].options.length - 1].value) {
+                                            $selectFilter[0].options.selectedIndex = $selectFilter[0].options.length - 1;
+                                        }
+                                    }
+                                    $selectFilter.material_select();
+
+                                    $selectFilter.on('change', function (e) {
+                                        var val = $.fn.dataTable.util.escapeRegex($(this).val()),
+                                            // regExVal = val ? "^" + val + "$" : "",
+                                            regExVal = val ? "^" + val : "",
+                                            plainText = $(this).val();
+
+                                        $(this).addClass("active");
+                                        self.listOfColumns()[columnIndex].searchFilter = $(this).val();
+                                        column
+                                            .search(regExVal, true, false)
+                                            .draw();
+                                        console.log("   - - - - -  change      val = (" + val + ")");
+                                        console.log("                   * regExVal = (" + regExVal + ")");
+                                        console.log("                    plainText = (" + plainText + ")");
+                                        // column
+                                        //     .search(val, true, false)
+                                        //     .draw();
+                                        return true;
+                                    });
                                 }
+                            };
 
-                                footerText += (!sameDataSet ? pageFooterText + "<br />" : totalFooterText);
-                                footerTitle += (!sameDataSet ? totalFooterText : "");
-                            }
+                        $trFooter = $(tfoot);
 
-                            // $tdFooter.addClass("footerCalc");
-                            $tdFooter.html(footerText);
-                            if (!sameDataSet) {
-                                $tdFooter.attr("data-toggle", "popover");
-                                $tdFooter.attr("data-trigger", "hover");
-                                $tdFooter.attr("data-html", "true");
-                                $tdFooter.attr("title", "Entire column");
-                                $tdFooter.attr("data-content", footerTitle);
-                                //TODO  $tdFooter.popover({placement: "top"});
+                        $trFooter.find("span.searchFilter").html(""); // clear existing searchfilters
+
+                        if (self.displayGridFilters()) {
+                            for (i = 1; i < reportColumns.length; i++) {  // skip first column
+                                columnIndex = i;
+                                searchFilterData = (searchFilterActive() ? api.column(columnIndex, {search:"applied"}).data() : api.column(columnIndex).data());
+                                dataExists = (searchFilterData.length > 0);
+                                $tdFooterFilter = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.searchFilter");
+
+                                if (dataExists && $tdFooterFilter.length > 0) {
+                                    $tdFooterFilter.addClass("columnFilter");
+                                    if (reportColumns[i].canCalculate === true) {
+                                        $tdFooterFilter.find("input.select-dropdown").addClass("right-align");
+                                    }
+                                    buildFilterSelect(api.column(columnIndex), columnIndex, searchFilterData, $tdFooterFilter);
+                                }
                             }
                         }
 
-                        $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
-                        if (numberOfColumnsToCalculate > 0) {
-                            $firstColumn.text("Calculations:");
-                            $firstColumn.removeClass("small");
-                            $firstColumn.addClass("text-right");
-                            $(tfoot).parent().removeClass("hide");
-                        } else { // if none of the columns were calculated hide the Verbiage
-                            $firstColumn.removeClass("pointInstance");
+                        if (self.displayGridCalculations() && self.reportType() !== "Property") {
+                            $footerTableDataCollection = $trFooter.find("span.calculations");
+                            $footerTableDataCollection.html(""); // clear existing calcs results
+                            $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
+                            $footerTableDataCollection.removeAttr("data-toggle");
+                            $footerTableDataCollection.removeAttr("data-trigger");
+                            $footerTableDataCollection.removeAttr("data-html");
+                            $footerTableDataCollection.removeAttr("title");
+                            $footerTableDataCollection.removeAttr("data-original-title");
+
+                            for (i = 0; i < numberOfColumnsToCalculate; i++) {
+                                footerCalcText = "";
+                                footerTitle = "";
+                                pageFooterText = "";
+                                columnIndex = columnIndexesToCalc[i];
+                                columnConfig = reportColumns[columnIndex];
+                                currentPageData = api.column(columnIndex, {page: "current"}).data();
+                                allData = api.column(columnIndex).data();
+                                dataExists = (allData.length > 0);
+                                sameDataSet = (currentPageData.length === allData.length);
+                                calcs = getCalcForColumn(currentPageData, allData, columnConfig);
+                                $tdFooterCalculations = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.calculations");
+                                if (dataExists && $tdFooterCalculations.length > 0) {
+
+                                    $tdFooterCalculations.addClass("columnCalcs");
+
+                                    for (j = 0; j < columnConfig.calculation.length; j++) {
+                                        calc = calcs[j];
+
+                                        switch (self.reportType()) {
+                                            case "History":
+                                                if (!sameDataSet) {
+                                                    pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                                }
+                                                totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
+                                                break;
+                                            case "Totalizer":
+                                                if (columnConfig.operator.toLowerCase() === "runtime") {
+                                                    if (!sameDataSet) {
+                                                        pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                                    }
+                                                    totalFooterText = "Total " + columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "<br />";
+                                                } else {
+                                                    if (!sameDataSet) {
+                                                        pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                                    }
+                                                    totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
+                                                }
+                                                break;
+                                            case "Property":
+                                                if (!sameDataSet) {
+                                                    pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
+                                                }
+                                                totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + "<br />";
+                                                break;
+                                            default:
+                                                console.log(" - - - DEFAULT  footerCallback()");
+                                                break;
+                                        }
+
+                                        footerCalcText += (!sameDataSet ? pageFooterText + "<br />" : totalFooterText);
+                                        footerTitle += (!sameDataSet ? totalFooterText : "");
+                                    }
+
+                                    // TODO to Materialize $tdFooter.popover("destroy");
+
+                                    $tdFooterCalculations.html(footerCalcText);
+                                    if (!sameDataSet) {
+                                        $tdFooterCalculations.attr("data-toggle", "popover");
+                                        $tdFooterCalculations.attr("data-trigger", "hover");
+                                        $tdFooterCalculations.attr("data-html", "true");
+                                        $tdFooterCalculations.attr("title", "Entire column");
+                                        $tdFooterCalculations.attr("data-content", footerTitle);
+                                        //TODO  $tdFooter.popover({placement: "top"});
+                                    }
+                                }
+                            }
+                        }
+
+                        $footerFirstCell = $trFooter.find("td[colindex='0']");
+                        $footerFirstCell.addClass("right-align");
+                        $footerFirstCell.removeClass("pointInstance");
+                        $clearAllSearchFilters = $footerFirstCell.find("i.material-icons");
+                        if (self.displayGridCalculations() || self.displayGridFilters()) {
+                            if (self.displayGridCalculations()) {
+                                $footerFirstCell.removeClass("small");
+                                // $(tfoot).parent().removeClass("hide");
+                            }
+                            if (self.displayGridFilters()) {
+                                $clearAllSearchFilters.removeClass("hide");
+                                $clearAllSearchFilters.attr("onclick", "reportsVM.clearSearchFilters(); return false;");
+                                $clearAllSearchFilters.attr("title", "Clear all search filters");
+                            } else {
+                                $clearAllSearchFilters.addClass("hide");
+                            }
+                        } else {
                             $(tfoot).parent().addClass("hide"); // hide the footer block
+                            $clearAllSearchFilters.addClass("hide");
                         }
                     },
                     data: reportData,
@@ -5367,6 +5539,10 @@ let reportsViewModel = function () {
     self.calculatable = ko.observable(false);
 
     self.currentTab = ko.observable(1);
+
+    self.displayGridCalculations = ko.observable(true);
+
+    self.displayGridFilters = ko.observable(true);
 
     self.listOfColumns = ko.observableArray([]);
 
@@ -6368,7 +6544,7 @@ let reportsViewModel = function () {
                     }
 
                     if (columns) {
-                        self.reportDisplayTitle((!!reportPoint["Report Config"].reportTitle ? reportPoint["Report Config"].reportTitle : reportPoint.Name.replace(/_/g, " ")));
+                        self.reportDisplayTitle((!!reportConfig.reportTitle ? reportConfig.reportTitle : reportPoint.Name.replace(/_/g, " ")));
                         self.listOfColumns(columnLogic.initColumns(reportConfig.columns));
                         self.listOfFilters(filterLogic.initFilters(reportConfig.filters));
                         if (!!reportConfig.pointFilter) {
@@ -6380,6 +6556,8 @@ let reportsViewModel = function () {
                         }
                         self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
                         self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                        self.displayGridCalculations((reportConfig.displayGridCalculations !== undefined ? reportConfig.displayGridCalculations : true));
+                        self.displayGridFilters((reportConfig.displayGridFilters !== undefined ? reportConfig.displayGridFilters : true));
                         switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
@@ -6406,10 +6584,12 @@ let reportsViewModel = function () {
                             "name4": self.name4Filter(),
                             "selectedPointTypes": self.selectedPointTypesFilter()
                         };
+                        reportPoint["Report Config"].displayGridCalculations = self.displayGridCalculations();
+                        reportPoint["Report Config"].displayGridFilters = self.displayGridFilters();
                         switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
-                                reportPoint["Report Config"].returnLimit = 2000;
+                                // reportPoint["Report Config"].returnLimit = 2000;
                                 self.listOfColumns.push(columnLogic.getNewColumnTemplate());
                                 self.listOfColumns()[0].colName = "Date";
                                 self.listOfColumns()[0].colDisplayName = "Date";
@@ -6420,7 +6600,7 @@ let reportsViewModel = function () {
                                 break;
                             case "Property":
                                 collectEnumProperties();
-                                reportPoint["Report Config"].returnLimit = 4000;
+                                // reportPoint["Report Config"].returnLimit = 2000;
                                 self.listOfColumns.push(columnLogic.getNewColumnTemplate());
                                 self.listOfColumns()[0].colName = "Name";
                                 self.listOfColumns()[0].colDisplayName = "Name";
@@ -6655,6 +6835,9 @@ let reportsViewModel = function () {
 
     self.reportConfiguration = (e) => {
         ui.tabSwitch(1);
+        setTimeout(function () {
+            $tabConfiguration.find("ul.tabs").find("li a.active").click();
+        }, 100);
     };
 
     self.requestReportData = () => {
@@ -7053,7 +7236,7 @@ let reportsViewModel = function () {
         // $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
         setTimeout(function () {
             $tabViewReport.find("ul.tabs").find("." + subTabName + " a").click();
-        }, 200);
+        }, 100);
     };
 
     self.editColumn = (column, index) => {
@@ -7064,6 +7247,17 @@ let reportsViewModel = function () {
             Materialize.updateTextFields();
         }, 200);
         return true;
+    };
+
+    self.clearSearchFilters = () => {
+        for (let i = 0; i < self.listOfColumns().length; i++) {
+            if (self.listOfColumns()[i].searchFilter !== undefined && self.listOfColumns()[i].searchFilter !== "") {
+                self.listOfColumns()[i].searchFilter = "";
+                $dataTablePlaceHolder.DataTable().columns(i)
+                    .search(self.listOfColumns()[i].searchFilter, true, false)
+                    .draw();
+            }
+        }
     };
 
     self.globalEditColumnFields = () => {

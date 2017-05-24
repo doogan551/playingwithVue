@@ -4,6 +4,7 @@ const async = require('async');
 const moment = require('moment');
 const ObjectID = require('mongodb').ObjectID;
 const config = require('config');
+const RETURNLIMIT = 3000;
 
 const Report = class Report {
     saveSVG(data, cb) {
@@ -517,7 +518,7 @@ const Report = class Report {
             searchCriteria = {
                 $and: []
             },
-            returnLimit = utils.converters.convertType(reportConfig.returnLimit),
+            // returnLimit = RETURNLIMIT,
             parseNameField = (paramsField, fieldName) => {
                 let parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
@@ -584,7 +585,7 @@ const Report = class Report {
         //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         let criteria = {
             query: searchCriteria,
-            limit: returnLimit,
+            limit: RETURNLIMIT,
             fields: fields
         };
         console.log(JSON.stringify(criteria));
@@ -855,7 +856,7 @@ const Report = class Report {
                     }
                 }
 
-                return Report.groupOrExpression(group);
+                return this.groupOrExpression(group);
             };
 
         localSearchCriteria.$or = [];
