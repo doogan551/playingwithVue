@@ -6319,12 +6319,10 @@ var dti = {
                 }
             };
 
-
             ko.bindingHandlers.updateLabel = {
                 init: updateLabelFn,
                 update: updateLabelFn
             };
-
 
             ko.bindingHandlers.stopBubblingOnClick = {
                 init: function(element) {
@@ -6584,7 +6582,6 @@ var dti = {
 
                 }
             };
-
 
             ko.bindingHandlers.fadeVisible = {
                 init: function(element, valueAccessor) {

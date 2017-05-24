@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+'use strict';
 var gpl = {
     texts: {},
     blocks: {},
@@ -63,6 +64,7 @@ var gpl = {
         39: 'right',
         40: 'down'
     },
+    // selectedGroup: new fabric.Group(),
     destroyObject: function (o) {
         var keys = Object.keys(o),
             c;
@@ -634,7 +636,6 @@ var gpl = {
             steps,
             lineNumber,
             err,
-            now = new Date(),
             args = [].splice.call(arguments, 0),
             pad = function (num) {
                 return ('    ' + num).slice(-4);
@@ -676,7 +677,7 @@ var gpl = {
     },
     validationMessage: [],
     validate: {
-        connection: function (anchor1, anchor2, skipErrorPrint) {
+        connection: function (anchor1, anchor2, skipErrorPrint, connectionAttempt) {
             //get order as obj1 -> obj2
             var obj1 = (anchor2.anchorType === 'Control Point') ? anchor2 : anchor1,
                 obj2 = (anchor2.anchorType === 'Control Point') ? anchor1 : anchor2,
@@ -688,6 +689,57 @@ var gpl = {
                 pointType2,
                 allowedPoints2,
                 property2,
+                sameAnchor = function () {
+                    return obj1._anchorID === obj2._anchorID;
+                },
+                inputAnchorLineCount = function () {
+                    var length = 0,
+                        myObject = obj2.attachedLines;
+                    for (var key in myObject) {
+                        if (myObject.hasOwnProperty(key)) {
+                            ++length;
+                        }
+                    }
+                    return length;
+                },
+                duplicateLineAlreadyExists = function () {
+                    var answer = false,
+                        line;
+
+                    if (connectionAttempt) {
+                        for (var key in obj1.attachedLines) {
+                            if (obj1.attachedLines.hasOwnProperty(key)) {
+                                line = obj1.attachedLines[key];
+                                if ((line.endAnchor._anchorID === obj1._anchorID ||
+                                    line.endAnchor._anchorID === obj2._anchorID) &&
+                                    (line.startAnchor._anchorID === obj1._anchorID ||
+                                    line.startAnchor._anchorID === obj2._anchorID)) {
+                                    answer = true;
+                                }
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
+                inputHasOnlyOneLineConnected = function () {
+                    let answer = true,
+                        isInputAnchor;
+
+                    if (connectionAttempt) {
+                        if (!!block2.inputAnchors) {
+                            isInputAnchor = block2.inputAnchors.filter(function (anchor) {
+                                return anchor._anchorID === obj2._anchorID;
+                            });
+
+                            if (isInputAnchor.length > 0 && inputAnchorLineCount() > 0) {
+                                answer = false;
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
                 isPointValid = function (pointType, allowedPoints) {
                     var c,
                         ret = false;
@@ -734,20 +786,22 @@ var gpl = {
                     setVars();
                 }
 
-                if (pointType1 === 'Constant' && obj2.takesConstant === true) {
-                    isValid = true;
-                } else {
-                    property2 = anchorType2;
-                    allowedPoints2 = gpl.getPointTypes(property2, pointType2);
-
-                    if (allowedPoints2.error) {
-                        // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
-                        if (!skipErrorPrint) {
-                            gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
-                        }
+                if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
+                    if (pointType1 === 'Constant' && obj2.takesConstant === true) {
+                        isValid = true;
                     } else {
-                        if (isPointValid(pointType1, allowedPoints2)) {
-                            isValid = true;
+                        property2 = anchorType2;
+                        allowedPoints2 = gpl.getPointTypes(property2, pointType2);
+
+                        if (allowedPoints2.error) {
+                            // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
+                            if (!skipErrorPrint) {
+                                gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
+                            }
+                        } else {
+                            if (isPointValid(pointType1, allowedPoints2)) {
+                                isValid = true;
+                            }
                         }
                     }
                 }
@@ -901,7 +955,7 @@ fabric.ExternalMonitorPointShape = fabric.util.createClass(fabric.Object, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     },
@@ -969,7 +1023,7 @@ fabric.InternalMonitorPointShape = fabric.util.createClass(fabric.Object, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     },
@@ -1029,7 +1083,7 @@ fabric.ConstantPointShape = fabric.util.createClass(fabric.Rect, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     }
@@ -1094,7 +1148,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.config.top = this.config._originalTop = this.config.topFn(this.anchorRadius);
     },
 
-    hover: function () {
+    hover: function (invalidAction) {
         var gap = this.hoverRadius - this.anchorRadius;
 
         if (!this._oFill) {
@@ -1108,8 +1162,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             this.hoverTop = this.top;
             this.hovered = true;
             this.set({
-                fill: 'green',
-                stroke: 'green',
+                fill: (invalidAction ? 'red' : 'green'),
+                stroke: (invalidAction ? 'red' : 'green'),
                 radius: this.hoverRadius,
                 left: this.left - gap / 2 - 1,
                 top: this.top - gap / 2 - 1
@@ -1123,8 +1177,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             radius: this.anchorRadius,
             left: this._originalLeft,
             top: this._originalTop,
-            fill: this._oFill,
-            stroke: this._oStroke
+            fill: (this._oFill ? this._oFill : this.fill),
+            stroke: (this._oStroke ? this._oStroke : this.stroke)
         });
     },
 
@@ -1555,8 +1609,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 getRefPoint = function () {
                     'use strict';
                     var answer;
-                    if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
-                        if (!!otherBlock) {
+                    if (!!otherBlock) {
+                        if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point') ||
+                            !(otherBlock.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
                             answer = otherBlock.getPointData();
                         }
                     }
@@ -2635,10 +2690,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setIconType: function (calcType, revAction) {
-        'use strict';
         let self = this,
-            calculationType = calcType.Value,
-            reverseAction = revAction.Value;
+            calculationType = calcType.Value;
+            // reverseAction = revAction.Value;
 
         if (self.setIconName) {
             self.setIconName();
@@ -3842,7 +3896,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return wrapped;
     },
-    /**
+    /* *
      * Wraps a line of text using the width of the Textbox and a context.
      * @param {CanvasRenderingContext2D} ctx Context to use for measurements
      * @param {String} text The string of text to split into lines
@@ -3896,7 +3950,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return lines;
     },
-    /**
+    /* *
      * Gets lines of text to render in the Textbox. This function calculates
      * text wrapping on the fly everytime it is called.
      * @param {CanvasRenderingContext2D} ctx The context to use for measurements
@@ -3916,7 +3970,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return l;
     },
-    /**
+    /* *
      * Overrides the superclass version of this function. The only change is
      * that this function does not change the width of the Textbox. That is
      * done manually by the user.
@@ -3953,7 +4007,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
     }
 });
 
-/**
+/* *
  * Returns fabric.Textbox instance from an object representation
  * @static
  * @memberOf fabric.Textbox
@@ -3964,7 +4018,7 @@ fabric.Textbox.fromObject = function (object) {
     return new fabric.Textbox(object.text, fabric.util.object.clone(object));
 };
 
-/**
+/* *
  * Contains all fabric.Textbox objects that have been created
  * @static
  * @memberof fabric.Textbox
@@ -3973,7 +4027,7 @@ fabric.Textbox.fromObject = function (object) {
 fabric.Textbox.instances = [];
 fabric.Textbox.__setObjectScaleOverridden = fabric.Canvas.prototype._setObjectScale;
 
-/**
+/* *
  * Override _setObjectScale and add Textbox specific resizing behavior. Resizing
  * a Textbox doesn't scale text, it only changes width and makes text wrap automatically.
  */
@@ -3994,7 +4048,7 @@ fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockS
 };
 
 fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.prototype */ {
-    /**
+    /* *
      * Overrides superclass function and adjusts cursor offset value because
      * lines do not necessarily end with a newline in Textbox.
      * @param {Event} e
@@ -4004,7 +4058,7 @@ fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.pr
     getDownCursorOffset: function (e, isRight) {
         return this.callSuper('getDownCursorOffset', e, isRight) - 1;
     },
-    /**
+    /* *
      * Overrides superclass function and adjusts cursor offset value because
      * lines do not necessarily end with a newline in Textbox.
      * @param {Event} e
@@ -4019,7 +4073,7 @@ fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.pr
 /* ------------- Misc Classes ------------ */
 
 gpl.ActionButton = function (config) {
-    var codes = [{
+    let codes = [{
             text: 'No Action (useless)'
         }, {
             text: 'History Log Plot – No longer supported'
@@ -4118,8 +4172,8 @@ gpl.ActionButton = function (config) {
         $el,
         x = config.left,
         y = config.top,
-        height = config.Height,
-        width = config.Width,
+        // height = config.Height,
+        // width = config.Width,
         type = config.type || ((config.actionCode !== undefined) ? 'control' : 'link'),
 
         _addButton = function () {
@@ -4212,9 +4266,9 @@ gpl.ActionButton = function (config) {
             _sendCommand();
         },
         openWindow = function (queryString, cb) {  // TODO openwindow() URL needs addressing  (openReport calls)
-            var pointType = _local.pointType,
-                endPoint,
-                url;
+            // var pointType = _local.pointType,
+            //     endPoint,
+            //     url;
 
             // endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
             //
@@ -4395,6 +4449,7 @@ gpl.ActionButton = function (config) {
 gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     var slSelf = this,
         VALIDCOLOR = 'green',
+        INVALIDCOLOR = 'red',
         canvas = manager.canvas,
         segments = [],
         coords = [{
@@ -4402,7 +4457,6 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
             y: oy
         }],
         block = gpl.blockManager.getBlock(otarget.gplId),
-        startAnchor = otarget,
         spaceSegment,
         target,
         solidLine,
@@ -4454,6 +4508,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     block.lock(true);
 
+    slSelf.startAnchor = otarget;
+
+    slSelf.moveTarget = '';
+
     slSelf.setColor = function (color) {
         forEachLine(function (line) {
             line.setStroke(color || '#000000');
@@ -4466,7 +4524,9 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.completeLine = function (target) {
         var newCoords,
-            event;
+            event,
+            currentLine,
+            otherAnchor;
 
         if (target) {
             event = {
@@ -4489,7 +4549,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
         slSelf.detachEvents();
         newCoords = $.extend(true, [], coords);
         // gpl.log('creating new line', newCoords);
-        manager.shapes.push(new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true));
+        currentLine = new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true);
+        otherAnchor = currentLine.getOtherAnchor(target);
+        otherAnchor.clearHover();
+        manager.shapes.push(currentLine);
         slSelf.clearSegments();
         gpl.manager.renderAll();
     };
@@ -4584,26 +4647,35 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     };
 
     slSelf.handleMouseMove = function (event) {
-        var pointer = event.e ? canvas.getPointer(event.e) : event,
+        let pointer = event.e ? canvas.getPointer(event.e) : event,
             x = pointer.x, // - pointer.x % gpl.gridSize,
-            y = pointer.y, // - pointer.y % gpl.gridSize,
-            moveTarget = gpl.manager.getObject({
-                left: x,
-                top: y,
-                gplType: 'anchor'
-            });
+            y = pointer.y; // - pointer.y % gpl.gridSize,
+
+        slSelf.moveTarget = gpl.manager.getObject({
+            left: x,
+            top: y,
+            gplType: 'anchor'
+        });
 
         if (manager.isEditingLine) {
-            if (moveTarget) {
-                slSelf.valid = gpl.validate.connection(startAnchor, moveTarget, true);
-                if (slSelf.valid && moveTarget !== startAnchor) {
-                    moveTarget.hover();
+            if (slSelf.moveTarget) {
+                slSelf.valid = gpl.validate.connection(slSelf.startAnchor, slSelf.moveTarget, true, true);
+                if (slSelf.valid) {
+                    slSelf.moveTarget.hover();
+                    slSelf.startAnchor.hover();
                     slSelf.setColor(VALIDCOLOR);
-                    target = moveTarget;
+                } else {
+                    slSelf.setColor(INVALIDCOLOR);
+                    slSelf.moveTarget.hover(true);
+                    slSelf.startAnchor.hover(true);
                 }
+                gpl.manager.bringToFront(slSelf.moveTarget);
+                gpl.manager.bringToFront(slSelf.startAnchor);
+                target = slSelf.moveTarget;
             } else {
                 if (target) {
                     target.clearHover();
+                    slSelf.startAnchor.clearHover();
                     slSelf.setColor();
                 }
             }
@@ -4696,6 +4768,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.handleKeyUp = function (event) {
         if (event.which === gpl.ESCAPEKEY) {
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
             slSelf.delete();
         }
     };
@@ -4950,8 +5026,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                 xoffset,
                 yoffset,
                 line,
-                wideLine,
-                _coords = [];
+                wideLine;
 
             for (cc = 0; cc < calculatedSegments.length - 1; cc++) {
                 point1 = calculatedSegments[cc];
@@ -5130,12 +5205,10 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
     };
 
     clSelf.detach = function (anchor) {
-        var block,
-            property;
+        let block;
 
         if (anchor) {
             block = gpl.blockManager.getBlock(anchor.gplId);
-            property = anchor.anchorType;
 
             if (clSelf.startAnchor === anchor) {
                 clSelf.startAnchor = null;
@@ -5148,7 +5221,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
     };
 
     clSelf.getOtherAnchor = function (anchor) {
-        var ret;
+        let ret;
 
         if (clSelf.startAnchor === anchor) {
             ret = clSelf.endAnchor;
@@ -5375,16 +5448,16 @@ gpl.Toolbar = function (manager) {
                 Cls = newShape.constructor,
                 clone,
                 x = event.e.x,
-                y = event.e.y,
-                isOverCanvas = function () {
-                    var $canvasEl = gpl.manager.$mainCanvasEl,
-                        left = gpl.manager.panLeft,
-                        top = gpl.manager.panTop,
-                        currCanvasWidth = parseInt($canvasEl.css('width'), 10),
-                        currCanvasHeight = parseInt($canvasEl.css('height'), 10);
-
-                    return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
-                };
+                y = event.e.y;
+                // isOverCanvas = function () {
+                //     var $canvasEl = gpl.manager.$mainCanvasEl,
+                //         left = gpl.manager.panLeft,
+                //         top = gpl.manager.panTop,
+                //         currCanvasWidth = parseInt($canvasEl.css('width'), 10),
+                //         currCanvasHeight = parseInt($canvasEl.css('height'), 10);
+                //
+                //     return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
+                // };
 
             if (x >= gpl.editModeOffset) { //} && isOverCanvas()) {
                 newConfig.isToolbar = false;
@@ -5686,15 +5759,14 @@ gpl.LineManager = function (manager) {
 
     lmSelf.convertLine = function (line) {
         var ret = {
-            handle: line.coords,
+            handle: line.coords
         };
 
         return ret;
     };
 
-    lmSelf.prepSaveData = function (saveObject, isForLater) {
-        var ret = [],
-            laterRet = [];
+    lmSelf.prepSaveData = function (saveObject) {
+        var ret = [];
 
         gpl.forEach(lmSelf.lines, function (obj) {
             var rawLine = lmSelf.convertLine(obj);
@@ -6158,12 +6230,12 @@ gpl.BlockManager = function (manager) {
                 numDecimals = parseInt(block.precision.decimals, 10),
                 value = block.value,
                 valueOptions = (!!block.valueOptions ? block.valueOptions : []),
-                label = block.label,
-                editableTypes = {
-                    'ControlBlock': true,
-                    'MonitorBlock': true,
-                    'ConstantBlock': true
-                };
+                label = block.label;
+                // editableTypes = {
+                //     'ControlBlock': true,
+                //     'MonitorBlock': true,
+                //     'ConstantBlock': true
+                // };
 
             // if(editableTypes[block.type]) {
             bmSelf.editBlock = block;
@@ -6290,9 +6362,8 @@ gpl.BlockManager = function (manager) {
             gpl.log('type change', arguments);
         },
 
-        prepSaveData: function (saveObject, isForLater) {
-            var ret = [],
-                lines = [];
+        prepSaveData: function (saveObject) {
+            var ret = [];
 
             gpl.forEach(bmSelf.blocks, function (obj) {
                 if (obj.upi !== 0 && !isNaN(obj.upi)) {
@@ -6427,8 +6498,6 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.highlight = function (shape) {
-        let selectedBlock = bmSelf.getBlock(shape.gplId);
-
         if (gpl.isEdit) {
             if (bmSelf.highlightedObject) {
                 bmSelf.deselect();
@@ -6463,8 +6532,8 @@ gpl.BlockManager = function (manager) {
 
         if (obj && obj._deselectedState) {
             // obj.set('fill', obj._deselectedState.origFill);
-            obj.set('stroke',  obj._deselectedState.origStroke);
-            obj.set('strokeWidth',  obj._deselectedState.origStrokeWidth);
+            obj.set('stroke', obj._deselectedState.origStroke);
+            obj.set('strokeWidth', obj._deselectedState.origStrokeWidth);
             obj.shadow.offsetX = obj._deselectedState.shadowOffsetX;
             obj.shadow.offsetY = obj._deselectedState.shadowOffsetY;
         }
@@ -6741,7 +6810,11 @@ gpl.BlockManager = function (manager) {
                     block.setPointData(results, true);
                     // bmSelf.canvas.setActiveObject(block, null);  // is this causing multiple updates??
                     gpl.pointUpiMap[upi].Name = results.newPoint.Name;  // in case name changed
-                    gpl.fire('editedblock', block);
+                    if (gpl.isEdit) {
+                        gpl.fire('editedblock', block);
+                    } else {
+                        gpl.manager.renderAll();
+                    }
                 }
             },
             doOpenWindow = function () {
@@ -6749,8 +6822,8 @@ gpl.BlockManager = function (manager) {
                     pointType: pointType,
                     upi: upi,
                     options: {
-                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        pointData: (gpl.isEdit ? pointData : null) || null
+                        callback: saveCallback,
+                        pointData: pointData || null
                     }
                 });
             };
@@ -6867,11 +6940,11 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.handleUnload = function (cb) {
-        var ret = {
-            updates: [],
-            adds: [],
-            deletes: []
-        };
+        // var ret = {
+        //     updates: [],
+        //     adds: [],
+        //     deletes: []
+        // };
 
         // if (bmSelf.manager.bindings.hasEdits()) {
         //     gpl.forEach(bmSelf.newBlocks, function (block, upi) {
@@ -6947,7 +7020,7 @@ gpl.Manager = function () {
         currInitStep = 0,
         // renderDelay = 100,
 
-        sequenceEditProperties = ['Width', 'Height', 'Show Label', 'Show Value'],
+        // sequenceEditProperties = ['Width', 'Height', 'Show Label', 'Show Value'],
         mergeProperties = ['Show Label', 'Show Value'],
         initFlow = ['initBindings', 'initCanvas', 'initManagers', 'initQualityCodes', 'initShapes', 'initEvents', 'initKnockout', 'initToolbar', 'initSocket'],
 
@@ -7655,7 +7728,7 @@ gpl.Manager = function () {
 
     managerSelf.addNewPoint = function (block) {
         var parameters = {},
-            pointType = window.encodeURI(block.pointType),
+            // pointType = window.encodeURI(block.pointType),
             names = (gpl.pointNamePrefix + block.label).split('_'),
             called = false,
             name1 = names[0],
@@ -8281,7 +8354,7 @@ gpl.Manager = function () {
             delete window.gplData.point;
             delete window.gplData.references;
             // delete window.gplData.controllers;
-            delete window.gplData;
+            // delete window.gplData;  // strict mode
             gpl.destroyObject(gpl);
             gpl = {};
             $(document).off();
@@ -8351,7 +8424,7 @@ gpl.Manager = function () {
 
     managerSelf.initBindings = function () {
         var formatSequencePoint = function (property, value) {
-                var newPoint = $.extend(true, {}, gpl.point),
+                let newPoint = $.extend(true, {}, gpl.point),
                     tmpData;
 
                 newPoint[property].Value = value;
@@ -8369,7 +8442,7 @@ gpl.Manager = function () {
                 }
             },
             updateUpdateInterval = function (newValue) {
-                var val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
+                let val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
 
                 formatSequencePoint('Update Interval', val);
             },
@@ -8379,7 +8452,7 @@ gpl.Manager = function () {
                 }
             },
             syncDeviceProperties = function () {
-                var props = ko.toJS(managerSelf.bindings),
+                let props = ko.toJS(managerSelf.bindings),
                     devicePoint = gpl.devicePointRef;
 
                 gpl.point.Description.Value = props.deviceDescription;
@@ -8415,7 +8488,7 @@ gpl.Manager = function () {
                     pointName = editBlock.pointName,
                     parameter = editBlock.parameter,
                     type = editBlock.type,
-                    upi = editBlock.upi,
+                    // upi = editBlock.upi,
                     text = editBlock.text;
 
                 managerSelf.bindings.actionButtonPointName(pointName);
@@ -8546,8 +8619,7 @@ gpl.Manager = function () {
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
             updateSequenceProperties: function () {
-                var oldDevicePointID = gpl.devicePoint._id,
-                    props = ko.toJS(managerSelf.bindings),
+                let props = ko.toJS(managerSelf.bindings),
                     setBlockDevicePointRef = function (block) {
                         var idx = block._pointRefs["Control Point"],
                             dataPoint = block.getPointData(),
@@ -8555,7 +8627,6 @@ gpl.Manager = function () {
 
                         if (!!dataPoint) {
                             blockDeviceID = dataPoint["Point Refs"][0].Value;
-                            // if (blockDeviceID === 0 || blockDeviceID === oldDevicePointID) {
                             if (blockDeviceID === 0) {
                                 dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
                             }
@@ -8632,8 +8703,7 @@ gpl.Manager = function () {
             },
 
             addNewButton: function () {
-                var id = gpl.makeId(),
-                    config = {
+                let config = {
                         left: managerSelf.contextX,
                         top: managerSelf.contextY
                     };
@@ -8753,22 +8823,7 @@ gpl.Manager = function () {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var value = valueAccessor(),
                     hexColor = ko.unwrap(value),
-                    getTextElementByColor = function (color) {
-                        if (color === 'transparent' || color.hex === "") {
-                            return $("<div style='text-shadow: none; position: relative; padding-bottom: 2px; margin-top: 2px;'>transparent</div>");
-                        }
-                        var newEl = $("<div style='text-shadow: none; position: relative; padding-bottom: 2px; margin-top: 2px;'>#" + color.hex + "</div>"),
-                            nThreshold = 105,
-                            bgDelta = (color.r * 0.299) + (color.g * 0.587) + (color.b * 0.114),
-                            foreColor = (255 - bgDelta < nThreshold) ? 'Black' : 'White';
-
-                        newEl.css('color', foreColor);
-                        newEl.css('background', "#" + color.hex);
-                        newEl.addClass('jqx-rc-all');
-                        return newEl;
-                    },
-                    el = $(element),
-                    parent = el.parent();
+                    el = $(element);
 
                 value.subscribe(function (newVal) {
                     el.jqxColorPicker('setColor', newVal);
@@ -8782,26 +8837,15 @@ gpl.Manager = function () {
 
                 el.jqxColorPicker('setColor', hexColor);
 
-                // parent.jqxDropDownButton({
-                //     width: 150,
-                //     height: 22
-                // });
-
-                // parent.jqxDropDownButton('setContent', getTextElementByColor(new $.jqx.color({
-                //     hex: hexColor
-                // })));
-
                 el.on('colorchange', function (event) {
                     value(event.args.color.hex);
-                    // parent.jqxDropDownButton('setContent', getTextElementByColor(event.args.color));
                 });
-
             }
         };
 
         ko.bindingHandlers.numeric = {
             init: function (element, valueAccessor) {
-                $(element).on("keydown", function (event) {
+                $(element).on('keydown', function (event) {
                     // Allow: backspace, delete, tab, escape, and enter
                     if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
                         // Allow: Ctrl+A
@@ -8811,9 +8855,8 @@ gpl.Manager = function () {
                         // Allow: home, end, left, right
                         (event.keyCode >= 35 && event.keyCode <= 40)) {
                         // let it happen, don't do anything
-                        return;
-                    }
-                    else {
+                        // return;
+                    } else {
                         // Ensure that it is a number and stop the keypress
                         if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
                             event.preventDefault();
@@ -8880,8 +8923,10 @@ gpl.Manager = function () {
                 renderOnAddRemove: false,
                 imageSmoothingEnabled: false,
                 selection: false, //group selection
+                // selection: true, //group selection
                 backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             toolbarConfig = {
@@ -8889,6 +8934,7 @@ gpl.Manager = function () {
                 imageSmoothingEnabled: false,
                 selection: false,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             viewConfig = {
@@ -8898,6 +8944,7 @@ gpl.Manager = function () {
                 hasControls: false,
                 selection: false,
                 draggable: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             };
 
@@ -8947,6 +8994,11 @@ gpl.Manager = function () {
             gpl.canvases.main = managerSelf.canvas;
             managerSelf.toolbarCanvas = new fabric.Canvas('toolbarCanvas', toolbarConfig);
             gpl.canvases.toolbar = managerSelf.toolbarCanvas;
+
+            // gpl.canvases.main.setActiveGroup(gpl.selectedGroup);
+            // setTimeout(function() {
+            //     gpl.canvases.main.discardActiveGroup();
+            // }, 5000);
         } else {
             if (gpl.nobg) {
                 delete viewConfig.backgroundColor;
@@ -8955,7 +9007,7 @@ gpl.Manager = function () {
             gpl.canvases.main = managerSelf.canvas;
         }
 
-        managerSelf.$mainUpperCanvas = $('#' + managerSelf.mainCanvasElId + ' + .upper-canvas');
+        managerSelf.$mainUpperCanvas = $('#' + managerSelf.mainCanvasElId + '.upper-canvas');
         managerSelf.$mainCanvasContainer = $('#' + managerSelf.mainCanvasElId).parent();
 
         managerSelf._getObjectCount = 0;
@@ -9100,7 +9152,6 @@ gpl.Manager = function () {
             config,
             newLine,
             newBlock,
-            $btn,
             c,
             cc;
 
@@ -9188,8 +9239,8 @@ gpl.Manager = function () {
             }
 
             // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
-                newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
-                managerSelf.shapes.push(newLine);
+            newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
+            managerSelf.shapes.push(newLine);
             // }
         }
 
@@ -9302,7 +9353,6 @@ gpl.Manager = function () {
                     dx = event.originalEvent.movementX,
                     dy = event.originalEvent.movementY,
                     zoomStep = -0.01,
-                    movementStep = 1,
                     newZoom,
                     text,
                     obj,
