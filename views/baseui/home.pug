@@ -415,28 +415,37 @@ html
 
     script#locationsTemplate(type='text/html')
         .locations.blue-grey-form(data-bind="css: { busy: busy }")
-            .fetching
-                .progress
-                    .indeterminate
+            .treeTop
+                .fetching
+                    .progress
+                        .indeterminate
 
-            .row.locSearch
-                i.material-icons search
-                input#locationsearch(type='search', data-bind="textInput: $root.searchString")    
+                .locSearch
+                    i.material-icons search
+                    input#locationsearch(type='search', data-bind="textInput: $root.searchString")    
                 
-            button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
-            button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
+            //- button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
+            //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
-            .row(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.expandcollapse'}]")
-                // ko if: data().length !== 0
-                #tree.col.s5.pane(data-bind="template: { name: 'node', foreach: data}")
+
+            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.collapsible-header'}]")
+                
+
+                // ko if: children().length !== 0
+                #tree.pane(data-bind="css: treeStyle")
+                    .treeStyles(data-bind="foreach: treeStyles")
+                        span.treeStyle
+                            input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
+                            label(data-bind="text: $data, attr: { for: 'treeStyle_' + $index()}")
+                    ul.collapsible(data-bind="template: { name: 'node', foreach: children}")
                 // /ko
 
-                // ko if: data().length === 0
+                // ko if: children().length === 0
                 .col.s5.pane
                     button.btn.btn-flat.stayFocused(data-bind="click: $root.addRootNode") Add Node
                 // /ko
 
-                #rightPane.col.s7.pane
+                //- #rightPane.col.s7.pane
                     .details(data-bind="visible: focusedNode")
                         .row
                             .col.s6.input-field
@@ -451,22 +460,39 @@ html
                                 // /ko
 
             script#node(type='text/html')
-                .node.blue-grey-form(data-bind="css: { focused: focused }")
+                //- .node
+                //-     ul.collapsible
+                li(data-bind="css: {focused: focused}")
+                    .collapsible-header(data-bind="css: {active: expanded}")
+                        i.collapse.material-icons(style="float: right") keyboard_arrow_up
+                        i.expand.material-icons(style="float: right") keyboard_arrow_down
+                        span(data-bind="text: name")
+                    .collapsible-body
+                        //- span.displayInfo
+                            //- .name(data-bind="text: name")
+                            //- input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
+                        ul.collapsible.children(data-collapsible="collapsible", data-bind="template: {name: 'node', foreach: children}")
 
-                    //- // ko if: hasChildren()
-                    a.expandcollapse(href="#", data-bind="css: { expanded: expanded(), collapsed: !expanded()}")
-                        i.collapse.material-icons keyboard_arrow_right
-                        i.expand.material-icons expand_more
 
-                    span.displayInfo(data-bind="dragNode: true")
-                        .name(data-bind='text: name, click: $root.focusNode')
-                        input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
-                        a.bulkAdd.tooltipped(title="Add Sibling", data-tooltip="Add Sibling", data-position="bottom", href="#")
-                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSibling") arrow_downward
-                        a.bulkAdd.tooltipped(title="Add Child", data-tooltip="Add Child", data-position="bottom", href="#")
-                            i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
-                    .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
-                        
+
+                //- // ko with:bindings
+                //- .node.blue-grey-form(data-bind="css: { focused: focused }")
+
+                //-     //- // ko if: hasChildren()   --- hidden: !hasChildren(), 
+                //-     a.expandcollapse(href="#", data-bind="css: { expanded: expanded(), collapsed: !expanded()}")
+                //-         i.collapse.material-icons keyboard_arrow_right
+                //-         i.expand.material-icons expand_more
+
+                //-     span.displayInfo(data-bind="dragNode: true")
+                //-         .name(data-bind='text: name, click: $root.focusNode')
+                //-         input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
+                //-         a.bulkAdd.tooltipped(title="Add Sibling", data-tooltip="Add Sibling", data-position="bottom", href="#")
+                //-             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSibling") arrow_downward
+                //-         a.bulkAdd.tooltipped(title="Add Child", data-tooltip="Add Child", data-position="bottom", href="#")
+                //-             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
+                //-     .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
+                //- // /ko
+
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
