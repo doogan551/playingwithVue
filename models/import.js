@@ -307,7 +307,7 @@ let Import = class Import extends Common {
         }, callback);
     }
     createEmptyCollections(callback) {
-        var collections = ['Alarms', 'Activity Logs', 'NotifyPolicies', 'Schedules', 'hierarchy', 'Users', 'User Groups', 'historydata', 'versions', 'dev'];
+        var collections = ['Alarms', 'Activity Logs', 'NotifyPolicies', 'Schedules', 'hierarchy', 'Users', 'User Groups', 'historydata', 'versions', 'dev', 'oldhistorydata'];
         async.each(collections, (coll, cb) => {
             this.createCollection({
                 collection: coll
@@ -572,7 +572,7 @@ let Import = class Import extends Common {
                 collection: newPoints
             }, (err, doc, next) => {
                 let pointRefs = doc['Point Refs'];
-                async.each(pointRefs, (pointRef, eachCallback) => {
+                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
                     async.parallel([(callback) => {
                         getRef(pointRef.Value, (err, newValue) => {
                             pointRef.Value = newValue;
@@ -636,7 +636,7 @@ let Import = class Import extends Common {
                         updateObj: doc,
                         collection: pointsCollection
                     }, (err, result) => {
-                        cb();
+                        cb(err);
                     });
                 });
             }, (err, count) => {
@@ -1411,6 +1411,21 @@ let Import = class Import extends Common {
                 unique: true
             },
             collection: 'historydata'
+        }, {
+            index: {
+                'upi': 1,
+                'timestamp': 1
+            },
+            options: {
+                unique: true
+            },
+            collection: 'oldhistorydata'
+        }, {
+            index: {
+                'upi': 1
+            },
+            options: {},
+            collection: 'oldhistorydata'
         }];
 
         async.eachSeries(indexes, (index, indexCB) => {
@@ -2811,11 +2826,12 @@ let Import = class Import extends Common {
         let updatePowerMeters = (callback) => {
             let properties = ['DemandInUpi', 'DemandOutUpi', 'UsageInUpi', 'UsageOutUpi', 'KVARInUpi', 'KVAROutUpi', 'DemandSumUpi', 'UsageSumUpi', 'KVARSumUpi'];
             powerMeterUtil.iterateCursor({}, (err, meter, nextMeter) => {
+                meter.newUpis = {};
                 async.each(properties, (property, nextProp) => {
                     pointModel.getOne({
                         _oldUpi: meter[property]
                     }, (err, point) => {
-                        meter[property] = point._id;
+                        meter.newUpis[property] = point._id;
                         nextProp();
                     });
                 }, (err) => {
@@ -2857,7 +2873,7 @@ let Import = class Import extends Common {
                     Name: 'Weather'
                 }
             }, (err, weather) => {
-                async.eachOf(weather, (value, prop, callback) => {
+                async.eachOfSeries(weather, (value, prop, callback) => {
                     if (typeof value === 'number') {
                         pointModel.getOne({
                             _oldUpi: value
@@ -2868,7 +2884,14 @@ let Import = class Import extends Common {
                     } else {
                         return callback();
                     }
-                }, cb);
+                }, (err) => {
+                    systemModel.update({
+                        query: {
+                            Name: 'Weather'
+                        },
+                        updateObj: weather
+                    }, cb);
+                });
             });
         });
     }

@@ -10,7 +10,6 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
 var History = require('../models/history.js');
-var PowerMeter = require('../models/powermeter.js');
 var Utilities = require('../models/utilities');
 var Point = require('../models/point');
 
@@ -141,8 +140,6 @@ let calculateWeather = (cb) => {
 };
 
 let loadUpis = (cb) => {
-    upis.all = [];
-    let powerMeterUtil = new PowerMeter();
     let utilitiesModel = new Utilities();
     let pointModel = new Point();
     let getNewTemp = (oldTemp, callback) => {
@@ -158,10 +155,8 @@ let loadUpis = (cb) => {
 
     getNewTemp(lowTempUpi, (err, newLowTemp) => {
         lowTempUpi = newLowTemp;
-        upis.all.push(lowTempUpi);
         getNewTemp(hiTempUpi, (err, newHiTemp) => {
             hiTempUpi = newHiTemp;
-            upis.all.push(hiTempUpi);
 
             utilitiesModel.getOne({
                 query: {
@@ -171,15 +166,7 @@ let loadUpis = (cb) => {
                 hddUpi = weatherPoints['Heating Degree Days Point'];
                 cddUpi = weatherPoints['Cooling Degree Days Point'];
                 oatUpi = weatherPoints['Outside Air Temperature Point'];
-                upis.all.push(hddUpi);
-                upis.all.push(cddUpi);
-                upis.all.push(oatUpi);
-                powerMeterUtil.iterateCursor({}, (err, meter, nextMeter) => {
-                    upis.all.push(meter.UsageSumUpi);
-                    upis.all.push(meter.DemandSumUpi);
-                    upis.all.push(meter.KVARSumUpi);
-                    nextMeter();
-                }, cb);
+                cb();
             });
         });
     });
@@ -234,58 +221,57 @@ let convertOldHistoryUpis = (cb) => {
 let backUp = () => {
     db.connect(connectionString.join(''), (err) => {
         convertOldHistoryUpis((err) => {
-
-        });
-        loadUpis((err) => {
-            console.log(upis);
-            if (err) {
-                logToFile('loadUpis Error: ' + err);
-            }
-            calculateWeather((err) => {
+            loadUpis((err) => {
+                console.log(upis);
                 if (err) {
-                    logToFile('calculateWeather Error: ' + err);
+                    logToFile('loadUpis Error: ' + err);
                 }
-
-                logToFile('Starting SQLite backup.');
-                History.doBackUp(upis.all, false, (err) => {
+                calculateWeather((err) => {
                     if (err) {
-                        logToFile('doBackUp Error: ' + err);
+                        logToFile('calculateWeather Error: ' + err);
                     }
-                    logToFile('Finished with SQLite backup');
-                    /*setTimeout() => {
-                        Utility.dropCollection({
-                            collection: 'historydata'
-                        }, err, result) => {
-                            if (err) {
-                                logToFile('dropCollection Error: ' + err);
-                            }
-                            Utility.ensureIndex({
-                                    collection: 'historydata',
-                                    index: {
-                                        upi: 1,
-                                        timestamp: 1
-                                    },
-                                    options: {
-                                        unique: true
-                                    }
-                                },
-                                err, result) => {
-                                    Utility.ensureIndex({
-                                            collection: 'historydata',
-                                            index: {
-                                                timestamp: -1
-                                            }
+
+                    logToFile('Starting SQLite backup.');
+                    History.doBackUp(upis.all, false, (err) => {
+                        if (err) {
+                            logToFile('doBackUp Error: ' + err);
+                        }
+                        logToFile('Finished with SQLite backup');
+                        /*setTimeout() => {
+                            Utility.dropCollection({
+                                collection: 'historydata'
+                            }, err, result) => {
+                                if (err) {
+                                    logToFile('dropCollection Error: ' + err);
+                                }
+                                Utility.ensureIndex({
+                                        collection: 'historydata',
+                                        index: {
+                                            upi: 1,
+                                            timestamp: 1
                                         },
-                                        err, result) => {
-                                            if (err) {
-                                                logToFile('ensureIndex Error: ' + err);
-                                            }
-                                            logToFile('backupHistory completed. Exiting.');
-                                        });
-                                });
-                        });
-                    }, 2000);*/
-                    process.exit(0);
+                                        options: {
+                                            unique: true
+                                        }
+                                    },
+                                    err, result) => {
+                                        Utility.ensureIndex({
+                                                collection: 'historydata',
+                                                index: {
+                                                    timestamp: -1
+                                                }
+                                            },
+                                            err, result) => {
+                                                if (err) {
+                                                    logToFile('ensureIndex Error: ' + err);
+                                                }
+                                                logToFile('backupHistory completed. Exiting.');
+                                            });
+                                    });
+                            });
+                        }, 2000);*/
+                        process.exit(0);
+                    });
                 });
             });
         });
@@ -336,6 +322,7 @@ let newBackup = () => {
 };
 newBackup();
 
+// dont change power meters collection if c++ uses it
 // c++ puts data with old upis in separate coll
 // take data, change upis and put in historydata
 // clean collection
