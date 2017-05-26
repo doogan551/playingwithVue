@@ -1945,6 +1945,7 @@ $treeTopHeight: 76px;
     }
 
     .treeStyles {
+        text-align: center;
         height: 36px;
         padding-top: 5px;
     }
@@ -1976,6 +1977,10 @@ $treeTopHeight: 76px;
         & > li {
             border-left: 1px solid rgba(96, 125, 139, 0.5);
         }
+    }
+
+    & > .collapsible > li {
+        border-left: none;
     }
 
     .collapsible-header {
