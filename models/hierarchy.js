@@ -39,7 +39,8 @@ const Hierarchy = class Hierarchy extends Common {
             fields: {
                 display: 1,
                 hierarchyRefs: 1,
-                type: 1
+                type: 1,
+                item: 1
             }
         }, cb);
     }
