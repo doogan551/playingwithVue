@@ -3021,6 +3021,7 @@ var dti = {
                     _name: 'Name',
                     type: 'Area',
                     _type: 'Area',
+                    item: 'Location',
                     focused: false,
                     expanded: false,
                     fetched: false,
@@ -3044,6 +3045,7 @@ var dti = {
                     _name: config.display || 'Name', 
                     type: 'Area', 
                     _type: 'Area', 
+                    item: 'Location',
  
                     focused: false, 
                     expanded: false, 
@@ -4369,7 +4371,8 @@ var dti = {
                 this.ajax({
                     url: '/api/hierarchy/locations/getChildren',
                     data: {
-                        id: id || 0
+                        id: id || 0,
+                        item: obj.item()
                     }
                 }).done((results) => {
                     var data = this.normalize(results);
