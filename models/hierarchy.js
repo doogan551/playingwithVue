@@ -69,6 +69,7 @@ const Hierarchy = class Hierarchy extends Common {
         let parentMechId = this.getNumber(data.parentMechId);
         let type = data.type;
         let item = data.item;
+        let systemTags = this.getDefault(data.systemTags, '');
         let meta = this.getDefault(data.meta, {
             coords: {
                 lat: 0,
@@ -85,16 +86,19 @@ const Hierarchy = class Hierarchy extends Common {
 
         this.getBothParents(parentLocId, parentMechId, (err, parentLoc, parentMech) => {
             // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
+            let node = {
+                item: item,
+                _id: id,
+                display: display,
+                hierarchyRefs: this.buildParents(parentLoc, parentMech),
+                type: type,
+                meta: meta,
+                tags: [],
+                systemTags: systemTags
+            };
+            this.recreateTags(node);
             this.insert({
-                insertObj: {
-                    item: item,
-                    _id: id,
-                    display: display,
-                    hierarchyRefs: this.buildParents(parentLoc, parentMech),
-                    type: type,
-                    meta: meta,
-                    tags: [item, display, type]
-                }
+                insertObj: node
             }, (err, result) => {
                 if (err) {
                     return cb(err);
@@ -596,8 +600,19 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    splitSystemTags(tagString) {
+        // Group,Group/Property;Type
+        // Supply,Air/Temperature;Sensor
+        let tags = {};
+        tags.groups = tagString.split('/')[0].split(',');
+        tags.props = tagString.split('/')[1].split(';')[0].split(',');
+        tags.types = tagString.split('/')[1].split(';')[1].split(',');
+        return tags;
+    }
+
     recreateTags(node) {
         node.tags = [];
+        let sTags = node.systemTags.split(/[,/;]/);
         node.tags.push(node.display.toLowerCase());
         node.tags.push(node.type.toLowerCase());
         node.tags.push(node.item.toLowerCase());
