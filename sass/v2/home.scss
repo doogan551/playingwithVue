@@ -1920,6 +1920,10 @@ $treeTopHeight: 76px;
     .collapsible-header {
         background-color: initial;
         border-bottom: none;
+
+        i {
+            font-size: 1.2em;
+        }
     }
 
     // .collapsible-body {
@@ -1998,6 +2002,32 @@ $treeTopHeight: 76px;
 
         li {
             border-left: 2px solid rgba(96, 125, 139, 0.5);
+            // background-color: rgba(96, 125, 139, 0.07);
+            color: black;
+        }
+    }
+
+    & > .collapsible > li {
+        border-left: none;
+    }
+
+    .collapsible-header {
+        transition: background-color .2s ease;
+
+        &:hover {
+            background-color: $blue-grey-lighten-5;
+        }
+    }
+}
+
+#tree.style3 {
+    .collapsible {
+        // three sided border, transparent background
+
+        li {
+            // border-left: 2px solid rgba(96, 125, 139, 0.5);
+            border-left: none;
+            box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.5);
             // background-color: rgba(96, 125, 139, 0.07);
             color: black;
         }

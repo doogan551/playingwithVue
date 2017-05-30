@@ -3036,6 +3036,7 @@ var dti = {
             constructor(config) { 
                 this.defaultConfig = { 
                     _id: dti.makeId(), 
+                    nodeId: dti.makeId(),
                     parentLocId: 0, 
  
                     children: [], 
@@ -3163,13 +3164,13 @@ var dti = {
             }
 
             getNodeByContext(context) {
-                let _id = context.$data._id();
+                let _id = context.$data.nodeId();
 
                 return this.getNodeById(_id);
             }
 
             getNodeByBindings(nodeBindings) {
-                let _id = nodeBindings._id();
+                let _id = nodeBindings.nodeId();
 
                 return this.getNodeById(_id);
             }
@@ -3253,8 +3254,8 @@ var dti = {
                     modalOpen: false,
                     focusedNode: false,
                     busy: false,
-                    treeStyle: 'style1',
-                    treeStyles: ['style1', 'style2'],
+                    treeStyle: 'style3',
+                    treeStyles: ['style1', 'style2', 'style3'],
                     focusedNodeName: '',
                     focusedNodeType: '',
                     startEntry: 1,
@@ -3346,13 +3347,13 @@ var dti = {
                     },
 
                     getBranch(event) {
-                        let obj = ko.dataFor(event.target);
+                        let obj = manager.getNodeByContext(ko.contextFor(event.target));
 
-                        if (obj.fetched() === false) {
-                            obj.fetched(true);
+                        if (obj.bindings.fetched() === false) {
+                            obj.bindings.fetched(true);
                             manager.getBranch(obj, manager.bindings.addBranch);
                         } else {
-                            obj.expanded(!obj.expanded());
+                            obj.bindings.expanded(!obj.bindings.expanded());
                         }
                     },
 
@@ -4151,7 +4152,7 @@ var dti = {
 
                 let newNode = new dti.locations.LocationsNode(config);
 
-                this.nodeMatrix[newNode.bindings._id()] = newNode;
+                this.nodeMatrix[newNode.bindings.nodeId()] = newNode;
 
                 if (!parent) {
                     this.bindings.children.push(newNode.bindings);
@@ -4365,18 +4366,35 @@ var dti = {
             }
 
             getBranch(obj, cb) { // expects ko
-                let id = obj._id();
-                let node = this.getNodeById(id);
+                let id = obj.bindings._id();
 
                 this.ajax({
                     url: '/api/hierarchy/locations/getChildren',
                     data: {
                         id: id || 0,
-                        item: obj.item()
+                        item: obj.bindings.item()
                     }
                 }).done((results) => {
-                    var data = this.normalize(results);
-                    cb(data, node);
+                    let ret = [];
+                    dti.forEachArrayRev(results, (obj, idx) => {
+                        let skip = false;
+                        //so you don't see children as their own aunt/uncle
+                        if (obj.item === 'Mechanical' && obj.type === 'End Point') {
+                            dti.forEachArrayRev(results, (child) => {
+                                if (obj.hierarchyRefs[1].value === child._id) {
+                                    skip = true;
+                                    return false;
+                                }
+                            });
+                        }
+
+                        if (!skip) {
+                            ret.push(obj);
+                        }
+                    });
+
+                    let data = this.normalize(ret);
+                    cb(data, obj);
                 });
             }
 
