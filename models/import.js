@@ -70,6 +70,7 @@ let Import = class Import extends Common {
                     logger.info('number of powermeters changed:', count);
                     logger.info('before changeUpis', err, new Date());
                     this.changeUpis((err) => {
+                        console.log('changeUpis err', err);
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
@@ -569,7 +570,10 @@ let Import = class Import extends Common {
                 });
             };
             this.iterateCursor({
-                collection: newPoints
+                collection: newPoints,
+                options: {
+                    timeout: false
+                }
             }, (err, doc, next) => {
                 let pointRefs = doc['Point Refs'];
                 async.eachSeries(pointRefs, (pointRef, eachCallback) => {
