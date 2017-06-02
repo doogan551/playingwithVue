@@ -576,7 +576,8 @@ let Import = class Import extends Common {
                 }
             }, (err, doc, next) => {
                 let pointRefs = doc['Point Refs'];
-                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
+                async.each(pointRefs, (_pointRef, eachCallback) => {
+                    let pointRef = _.cloneDeep(_pointRef);
                     async.parallel([(callback) => {
                         getRef(pointRef.Value, (err, newValue) => {
                             pointRef.Value = newValue;
