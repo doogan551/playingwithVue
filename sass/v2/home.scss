@@ -1735,8 +1735,12 @@ $treeTopHeight: 76px;
     .treeTrunk {
         height: 100%;
         display: flex;
-        flex-direction: column;
-        overflow: auto;
+        flex-direction: row;
+        // overflow: auto;
+    }
+
+    .treeOptions {
+        padding: 10px;
     }
 
     .hidden {
@@ -1761,12 +1765,13 @@ $treeTopHeight: 76px;
     
     .pane {
         position: relative;
-        flex-grow: 1;
+        overflow: auto;
+        // flex-grow: 1;
         /*display: inline-block;*/
         // padding-left: 15px;
         padding-right: 0;
         // margin-left: 15px;
-        width: 320px;
+        width: 380px;
         border-right: 1px solid rgba(96, 125, 139, 0.5);
     }
 
@@ -1788,6 +1793,10 @@ $treeTopHeight: 76px;
     .expanded .collapse,
     .collapsed .expand {
         display: none;
+    }
+
+    .childless > i {
+        visibility: hidden;
     }
 
     .children {
@@ -1943,8 +1952,8 @@ $treeTopHeight: 76px;
         display: none;
     }
 
-    .treeStyle {
-        margin-left: 10px;
+    .treeOptions label {
+        margin-right: 20px;
         // margin-right: 10px;
     }
 
@@ -2027,7 +2036,7 @@ $treeTopHeight: 76px;
         li {
             // border-left: 2px solid rgba(96, 125, 139, 0.5);
             border-left: none;
-            box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.5);
+            box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.35);
             // background-color: rgba(96, 125, 139, 0.07);
             color: black;
         }

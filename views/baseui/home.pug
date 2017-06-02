@@ -433,10 +433,6 @@ html
 
                 // ko if: children().length !== 0
                 #tree.pane(data-bind="css: treeStyle")
-                    .treeStyles(data-bind="foreach: treeStyles")
-                        span.treeStyle
-                            input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
-                            label(data-bind="text: $data, attr: { for: 'treeStyle_' + $index()}")
                     ul.collapsible(data-bind="template: { name: 'node', foreach: children}")
                 // /ko
 
@@ -458,12 +454,28 @@ html
                                     input(type="radio", data-bind="attr: {name: 'focusedNodeType', id: 'focusedNodeType_' + $index()}, value: $data, checked: $root.focusedNodeType")
                                     label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
                                 // /ko
+                .treeOptions
+                    .row
+                        span Tree Styles
+                        .treeStyles(data-bind="foreach: treeStyles")
+                            span.treeStyle
+                                input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
+                                label(data-bind="text: $index, attr: { for: 'treeStyle_' + $index()}")
+                    .row
+                        div Show Grouped
+                        span
+                            input#showTreeGrouped(type="radio", name="showTreeGrouped", data-bind="value: true, checked: $root.showGrouped")
+                            label(for="showTreeGrouped") Yes
+                        span
+                            input#showTreeFlat(type="radio", name="showTreeGrouped", data-bind="value: false, checked: $root.showGrouped")
+                            label(for="showTreeFlat") No
+
 
             script#node(type='text/html')
                 //- .node
                 //-     ul.collapsible
-                li(data-bind="css: {focused: focused}")
-                    .collapsible-header(data-bind="css: {active: expanded}")
+                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused}")
+                    .collapsible-header(data-bind="css: {active: expanded, childless: hasChildren() === false}")
                         i.collapse.material-icons(style="float: right") remove
                         i.expand.material-icons(style="float: right") add
                         span(data-bind="text: name")
@@ -472,7 +484,6 @@ html
                             //- .name(data-bind="text: name")
                             //- input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
                         ul.collapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
-
 
 
                 //- // ko with:bindings

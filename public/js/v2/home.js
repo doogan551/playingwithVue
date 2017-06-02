@@ -3048,6 +3048,7 @@ var dti = {
                     _type: 'Area', 
                     item: 'Location',
  
+                    grouped: null,
                     focused: false, 
                     expanded: false, 
                     fetched: false, 
@@ -3062,7 +3063,7 @@ var dti = {
                 this.bindings = ko.viewmodel.fromModel(this.defaultConfig); 
 
                 this.bindings.hasChildren = ko.pureComputed(() => { 
-                    return this.bindings.children().length > 0 || !this.bindings.fetched(); 
+                    return !this.bindings.fetched() || (this.bindings.fetched() && this.bindings.children().length > 0); 
                 }); 
  
                 this.bindings.isNew = ko.pureComputed(() => { 
@@ -3152,11 +3153,36 @@ var dti = {
                 });
 
                 this.initBindings();
-                this.initDOM();
+                // this.initDOM();
 
                 this.getDefaultTree(() => {
                     this.bindings.refreshTooltips();
                 });
+            }
+
+            splitSystemTags(tagString) {
+                // Group,Group/Property;Type
+                // Supply,Air/Temperature;Sensor
+                let tokens = tagString.split('/');
+                let token = tokens[1].split(';');
+
+                let groups = tokens[0].split(',');     
+                if (groups[0] === '') {
+                    groups = [];
+                }           
+
+                let props = token[0].split(',');
+                let types = token[1].split(',');
+
+                // tags.groups = tagString.split('/')[0].split(',');
+                // tags.props = tagString.split('/')[1].split(';')[0].split(',');
+                // tags.types = tagString.split('/')[1].split(';')[1].split(',');
+
+                return {
+                    groups: groups,
+                    types: types,
+                    props: props
+                };
             }
 
             getNodeById(id) {
@@ -3176,63 +3202,65 @@ var dti = {
             }
 
             initDOM() {
-                var bindings = this.bindings;
+                // var bindings = this.bindings;
+                let manager = this;
 
                 $.contextMenu({
-                    selector: '.node',
+                    selector: '.collapsible-header',
                     items: {
-                        clone: {
-                            name: 'Clone',
-                            callback(key, opt) {
-                                var $target = opt.$trigger,
-                                    ctx = ko.contextFor($target[0]);
+                        // clone: {
+                        //     name: 'Clone',
+                        //     callback(key, opt) {
+                        //         var $target = opt.$trigger,
+                        //             ctx = ko.contextFor($target[0]);
 
-                                bindings.cloneNode(ctx);
-                            }
-                        },
-                        cloneMultiple: {
-                            name: 'Clone Multiple',
-                            callback(key, opt) {
-                                var $target = opt.$trigger,
-                                    data = ko.contextFor($target[0]);
+                        //         bindings.cloneNode(ctx);
+                        //     }
+                        // },
+                        // cloneMultiple: {
+                        //     name: 'Clone Multiple',
+                        //     callback(key, opt) {
+                        //         var $target = opt.$trigger,
+                        //             data = ko.contextFor($target[0]);
 
-                                bindings.bulkClone($target, data);
-                            }
-                        },
-                        bulkAddSiblings: {
-                            name: 'Add Siblings',
-                            callback(key, opt) {
-                                var $target = opt.$trigger;
+                        //         bindings.bulkClone($target, data);
+                        //     }
+                        // },
+                        // bulkAddSiblings: {
+                        //     name: 'Add Siblings',
+                        //     callback(key, opt) {
+                        //         var $target = opt.$trigger;
 
-                                bindings.bulkAdd('Siblings', ko.dataFor($target[0]), {
-                                    target: $target[0]
-                                });
-                            }
-                        },
-                        bulkAddChildren: {
-                            name: 'Add Children',
-                            callback(key, opt) {
-                                var $target = opt.$trigger;
+                        //         bindings.bulkAdd('Siblings', ko.dataFor($target[0]), {
+                        //             target: $target[0]
+                        //         });
+                        //     }
+                        // },
+                        // bulkAddChildren: {
+                        //     name: 'Add Children',
+                        //     callback(key, opt) {
+                        //         var $target = opt.$trigger;
 
-                                bindings.bulkAdd('Children', ko.dataFor($target[0]), {
-                                    target: $target[0]
-                                });
-                            }
-                        },
-                        delete: {
-                            name: 'Delete',
-                            callback(key, opt) {
-                                var $target = opt.$trigger;
+                        //         bindings.bulkAdd('Children', ko.dataFor($target[0]), {
+                        //             target: $target[0]
+                        //         });
+                        //     }
+                        // },
+                        // delete: {
+                        //     name: 'Delete',
+                        //     callback(key, opt) {
+                        //         var $target = opt.$trigger;
 
-                                bindings.deleteBranch(ko.contextFor($target[0]));
-                            }
-                        },
+                        //         bindings.deleteBranch(ko.contextFor($target[0]));
+                        //     }
+                        // },
                         expandAllRecursive: {
                             name: 'Expand All',
                             callback(key, opt) {
-                                var $target = opt.$trigger;
+                                let $target = opt.$trigger;
+                                let node = manager.getNodeByContext(ko.contextFor($target[0]));
 
-                                bindings.expandRecursive(ko.contextFor($target[0]), {
+                                manager.bindings.expandRecursive(node, {
                                     $target: $target
                                 });
                             }
@@ -3254,6 +3282,7 @@ var dti = {
                     modalOpen: false,
                     focusedNode: false,
                     busy: false,
+                    showGrouped: true,
                     treeStyle: 'style3',
                     treeStyles: ['style1', 'style2', 'style3'],
                     focusedNodeName: '',
@@ -3291,59 +3320,64 @@ var dti = {
                     },
 
                     addBranch(children, obj) {
-                        // var locationChildren = [],
-                        //     mechanicalChildren = [],
-                        //     children = [],
-                        //     groups = {},
-                        //     grouping,
-                        //     newChild,
-                        //     koResults;
-
-                        // dti.forEachArray(results, (child) => {
-                        //     // if is new combined
-                        //     if (child.hasOwnProperty('mechanical')) {
-                        //         child.hasChildren = false;
-                        //         child.expaned = true;
-
-                        //         if (child.item === 'system') {
-                        //             mechanicalChildren.push(child);
-                        //         } else {
-                        //             grouping = child.mechanical.component + child.mechanical.equipment;
-                        //             if (!groups[grouping]) {
-                        //                 groups[grouping] = mechanicalChildren.length; //get idx
-                        //             }
-
-                        //             newChild = dti.utility.clone(child);
-                        //             newChild.name = grouping;
-                        //             newChild.expanded = true;
-                        //             newChild.fetched = true;
-                        //             newChild.hasChildren = true;
-                        //             mechanicalChildren.push(newChild);
-                        //             mechanicalChildren[groups[grouping]].children.push(child);
-                        //         }
-                        //     } else {
-                        //         locationChildren.push(manager.createNode(child));
-                        //     }
-                        // });
-
-                        // children = locationChildren.concat(mechanicalChildren);
-
-                        // koResults = ko.viewmodel.fromModel(children);
-                        // obj.children(koResults());
-                        // obj.children(children);
+                        let paths = {};
 
                         dti.forEachArray(children, (child) => {
-                            manager.createNode(child, obj, true, true);
+                            if (child.item === 'Mechanical') {
+                                let tags = manager.splitSystemTags(child.systemTags);
+
+                                paths[tags.groups.join('-')] = paths[tags.groups.join('-')] || 0;
+                                paths[tags.groups.join('-')]++;
+                            }
                         });
 
-                        // manager.createNode()
+                        dti.forEachArray(children, (child) => {
+                            let parent = obj;
+                            
+                            //check for grouping preference, group/flatten as necessary 
+
+                            if (child.item === 'Mechanical') {
+                                let tags = manager.splitSystemTags(child.systemTags);
+
+                                if (tags.groups.length > 0 || child.type === 'End Point') {
+                                    child.fetched = true;
+                                }
+
+                                if (tags.groups.length > 0) {
+                                    let name = tags.groups.join(' ');
+                                    let flatChild = $.extend(true, {
+                                        display: name + ' ' + child.display,
+                                        grouped: paths[tags.groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
+                                    }, child);
+
+                                    manager.createNode(flatChild, parent, true, false);
+                                }
+
+                                if (paths[tags.groups.join('-')] > 1 && tags.groups.length > 0) {
+                                    //remove last parameter, below is single group, bottom is individual groups
+                                    parent = manager.createNode({
+                                        display: tags.groups.join(' '),
+                                        item: 'Mechanical',
+                                        fetched: true,
+                                        grouped: true
+                                    }, parent, true, false);
+                                    // dti.forEachArray(tags.groups, (group) => {
+                                    //     //display & item: Mechanical
+                                    //     parent = manager.createNode({
+                                    //         display: group,
+                                    //         item: 'Mechanical',
+                                    //         fetched: true,
+                                    //         grouped: true
+                                    //         // expanded: true // to expand automatically
+                                    //     }, parent, true, false);
+                                    // });
+                                }
+                            } 
+
+                            manager.createNode(child, parent, true, false);
+                        });
+
                         manager.sortNodes(obj.bindings.children);
-
-                        // if (children.length === 0) {
-                        //     obj.hasChildren(false);
-                        // }
-
-                        // obj.expanded(true);
                     },
 
                     getBranch(event) {
@@ -3351,6 +3385,7 @@ var dti = {
 
                         if (obj.bindings.fetched() === false) {
                             obj.bindings.fetched(true);
+                            obj.bindings.expanded(true);
                             manager.getBranch(obj, manager.bindings.addBranch);
                         } else {
                             obj.bindings.expanded(!obj.bindings.expanded());
@@ -3670,21 +3705,21 @@ var dti = {
                         manager.bindings.focusNode();
                     },
 
-                    expandRecursive(context) {
+                    expandRecursive(node) {
                         manager.bindings.busy(true);
 
-                        if (!context.$data.fetched()) {
+                        if (!node.bindings.fetched()) {
                             manager.ajax({
                                 url: '/api/hierarchy/locations/getDescendants',
                                 data: {
-                                    id: context.$data._id(),
+                                    id: node.bindings._id(),
                                     item: 'Location'
                                 }
                             }).done(function (data) {
                                 var root = context.$parent && context.$parent.children && context.$parent.children() || manager.bindings.data();
 
                                 manager.buildTree(manager.normalize(data, {
-                                    // expanded: true,
+                                    expanded: true,
                                     fetched: true,
                                     new: false
                                 }), root);
@@ -3697,9 +3732,9 @@ var dti = {
                                     }
                                 }, root);
 
-                                manager.bindings.forEachNode(function (child, parent) {
-                                    child.expanded(true);
-                                }, root);
+                                // manager.bindings.forEachNode(function (child, parent) {
+                                //     child.expanded(true);
+                                // }, root);
 
                                 manager.bindings.busy(false);
                             });
@@ -4150,33 +4185,48 @@ var dti = {
             createNode(config, parent, noFocus, expandParent) {
                 config.manager = this;
 
-                let newNode = new dti.locations.LocationsNode(config);
+                let newNode = null;
 
-                this.nodeMatrix[newNode.bindings.nodeId()] = newNode;
 
-                if (!parent) {
-                    this.bindings.children.push(newNode.bindings);
-                } else {
-                    let nodeParent = parent;
+                if (parent) {// check for duplicates
+                    this.bindings.forEachNode((node) => {
+                        if (node.display() === config.display) {
+                            newNode = this.getNodeByBindings(node);
+                        }
+                    }, parent.bindings.children(), parent);
+                }
 
-                    if (typeof parent === 'string') {
-                        nodeParent = this.getParent(parent);
+                if (!newNode) {
+                    newNode = new dti.locations.LocationsNode(config);
+
+                    this.nodeMatrix[newNode.bindings.nodeId()] = newNode;
+
+                    if (!parent) {
+                        this.bindings.children.push(newNode.bindings);
                     } else {
-                        nodeParent = parent;
+                        let nodeParent = parent;
+
+                        if (typeof parent === 'string') {
+                            nodeParent = this.getParent(parent);
+                        } else {
+                            nodeParent = parent;
+                        }
+
+                        newNode.parent = parent;
+
+                        parent.addChild(newNode);
+
+                        if (expandParent) {
+                            parent.bindings.expanded(true);
+                        }
                     }
 
-                    parent.addChild(newNode);
-
-                    if (expandParent) {
-                        parent.bindings.expanded(true);
+                    if (!noFocus) {
+                        this.bindings.focusNode(newNode.bindings);
                     }
-                }
 
-                if (!noFocus) {
-                    this.bindings.focusNode(newNode.bindings);
+                    this.bindings._addNode(newNode);
                 }
-
-                this.bindings._addNode(newNode);
 
                 return newNode;
             }
@@ -4341,7 +4391,7 @@ var dti = {
                 var ret = root || this.tree,
                     key = 'hierarchyRefs';
 
-                dti.forEachArray(arr, function (item) {
+                dti.forEachArray(arr, (item) => {
                     var target,
                         node,
                         newNode;
@@ -4351,7 +4401,6 @@ var dti = {
                     node = this.findNode(target, ret);
 
                     if (node) {
-                        //node.addChild(item)
                         item.parentLocId = node._id();
                         //= new locationnode
                         //add parentid equal to root
@@ -4379,7 +4428,7 @@ var dti = {
                     dti.forEachArrayRev(results, (obj, idx) => {
                         let skip = false;
                         //so you don't see children as their own aunt/uncle
-                        if (obj.item === 'Mechanical' && obj.type === 'End Point') {
+                        if (obj.item === 'Mechanical') {// && obj.type === 'End Point') {
                             dti.forEachArrayRev(results, (child) => {
                                 if (obj.hierarchyRefs[1].value === child._id) {
                                     skip = true;
@@ -4393,6 +4442,7 @@ var dti = {
                         }
                     });
 
+                    // group/ungroup?
                     let data = this.normalize(ret);
                     cb(data, obj);
                 });

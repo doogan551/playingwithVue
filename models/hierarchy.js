@@ -40,7 +40,8 @@ const Hierarchy = class Hierarchy extends Common {
                 display: 1,
                 hierarchyRefs: 1,
                 type: 1,
-                item: 1
+                item: 1,
+                systemTags: 1
             }
         }, cb);
     }
