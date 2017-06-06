@@ -1926,11 +1926,18 @@ $treeTopHeight: 76px;
         box-shadow: none;
     }
 
+    $treeHeight: 2rem; //original 3rem
+
     .collapsible-header {
         background-color: initial;
         border-bottom: none;
+        min-height: $treeHeight;
+        line-height: $treeHeight;
+        padding: 0 .6rem;
 
         i {
+            width: 30px;
+            line-height: $treeHeight;
             font-size: 1.2em;
         }
     }
