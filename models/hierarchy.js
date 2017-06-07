@@ -625,7 +625,7 @@ const Hierarchy = class Hierarchy extends Common {
         }
 
         node.hierarchyRefs.forEach((ref) => {
-            node.tags = node.tags.concat(ref.groups.map((tag) => tag.toLowerCase()));
+            node.tags = node.tags.concat(ref.categories.map((tag) => tag.toLowerCase()));
         });
 
         node.tags.push(node.display.toLowerCase());
