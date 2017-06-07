@@ -3319,11 +3319,12 @@ var dti = {
                         // manager.bindings._addNode(rootNode);
                     },
 
-                    addBranch(children, obj) {
+                    addBranch(children, parent) {
                         let paths = {};
 
                         dti.forEachArray(children, (child) => {
                             if (child.item === 'Mechanical') {
+                                // get correct hierarchyRef, then paths[groups]
                                 let tags = manager.splitSystemTags(child.systemTags);
 
                                 paths[tags.groups.join('-')] = paths[tags.groups.join('-')] || 0;
@@ -3332,8 +3333,6 @@ var dti = {
                         });
 
                         dti.forEachArray(children, (child) => {
-                            let parent = obj;
-                            
                             //check for grouping preference, group/flatten as necessary 
 
                             if (child.item === 'Mechanical') {
@@ -3378,7 +3377,7 @@ var dti = {
                             manager.createNode(child, parent, true, false);
                         });
 
-                        manager.sortNodes(obj.bindings.children);
+                        manager.sortNodes(parent.bindings.children);
                     },
 
                     getBranch(event) {
@@ -4425,27 +4424,28 @@ var dti = {
                         // item: obj.bindings.item()
                     }
                 }).done((results) => {
-                    let ret = [];
-                    dti.forEachArrayRev(results, (obj, idx) => {
-                        let skip = false;
+                    // let ret = [];
+                    // dti.forEachArrayRev(results, (obj, idx) => {
+                    //     let skip = false;
                         //so you don't see children as their own aunt/uncle
-                        //TODO
-                        if (obj.item === 'Mechanical') {// && obj.type === 'End Point') {
-                            dti.forEachArrayRev(results, (child) => {
-                                if (obj.hierarchyRefs[1].value === child._id) {
-                                    skip = true;
-                                    return false;
-                                }
-                            });
-                        }
+                        //decided 6/7/17 to not remove
+                        // if (obj.item === 'Mechanical') {// && obj.type === 'End Point') {
+                        //     dti.forEachArrayRev(results, (child) => {
+                        //         //if any  obj.hierarchyRefs.item===mechanical match child._id
+                        //         if (obj.hierarchyRefs[1].value === child._id) {
+                        //             skip = true;
+                        //             return false;
+                        //         }
+                        //     });
+                        // }
 
-                        if (!skip) {
-                            ret.push(obj);
-                        }
-                    });
+                    //     if (!skip) {
+                    //         ret.push(obj);
+                    //     }
+                    // });
 
                     // group/ungroup?
-                    let data = this.normalize(ret);
+                    let data = this.normalize(results);
                     cb(data, obj);
                 });
             }
