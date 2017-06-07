@@ -22,14 +22,12 @@ const Hierarchy = class Hierarchy extends Common {
 
     getChildren(data, cb) {
         let id = this.getNumber(data.id);
-        let item = this.getDefault(data.item, LOCATION);
 
         this.getAll({
             query: {
                 'hierarchyRefs': {
                     $elemMatch: {
-                        value: id,
-                        item: item
+                        value: id
                     }
                 }
             },
@@ -67,11 +65,15 @@ const Hierarchy = class Hierarchy extends Common {
     add(data, cb) {
         let display = data.display;
         let id = this.getNumber(data._id);
+        let refs = data.refs;
         let parentLocId = this.getNumber(data.parentLocId);
         let parentMechId = this.getNumber(data.parentMechId);
         let type = data.type;
         let item = data.item;
-        let systemTags = this.getDefault(data.systemTags, '');
+        let systemTags = this.getDefault(data.systemTags, {
+            properties: [],
+            qualifiers: []
+        });
         let meta = this.getDefault(data.meta, {
             coords: {
                 lat: 0,
@@ -82,7 +84,6 @@ const Hierarchy = class Hierarchy extends Common {
                 city: '',
                 zip: ''
             },
-            description: '',
             tz: ''
         });
 
@@ -92,7 +93,7 @@ const Hierarchy = class Hierarchy extends Common {
                 item: item,
                 _id: id,
                 display: display,
-                hierarchyRefs: this.buildParents(parentLoc, parentMech),
+                hierarchyRefs: refs,
                 type: type,
                 meta: meta,
                 tags: [],
@@ -214,11 +215,11 @@ const Hierarchy = class Hierarchy extends Common {
             let parent = nodes[p];
             for (var c = 0; c < nodes.length; c++) {
                 let child = nodes[c];
-                if (child.parentLocId === parent.id) {
-                    child.parentLocId = parent._id;
-                }
-                if (child.parentMechId === parent.id) {
-                    child.parentMechId = parent._id;
+                for (var r = 0; r < child.refs.length; r++) {
+                    let ref = child.refs[r];
+                    if (ref.value === parent.id) {
+                        ref.value = parent._id;
+                    }
                 }
             }
         }
@@ -607,18 +608,29 @@ const Hierarchy = class Hierarchy extends Common {
         // Supply,Air/Temperature;Sensor
         let tags = {};
         tags.groups = tagString.split('/')[0].split(',');
-        tags.props = tagString.split('/')[1].split(';')[0].split(',');
+        tags.properties = tagString.split('/')[1].split(';')[0].split(',');
         tags.types = tagString.split('/')[1].split(';')[1].split(',');
         return tags;
     }
 
     recreateTags(node) {
         node.tags = [];
-        let sTags = node.systemTags.split(/[,/;]/);
+        if (node.hasOwnProperty('systemTags')) {
+            node.systemTags.properties.forEach((tag) => {
+                node.tags = node.tags.concat(tag.split(' ').map((tag) => tag.toLowerCase()));
+            });
+            node.systemTags.qualifiers.forEach((tag) => {
+                node.tags = node.tags.concat(tag.split(' ').map((tag) => tag.toLowerCase()));
+            });
+        }
+
+        node.hierarchyRefs.forEach((ref) => {
+            node.tags = node.tags.concat(ref.groups.map((tag) => tag.toLowerCase()));
+        });
+
         node.tags.push(node.display.toLowerCase());
         node.tags.push(node.type.toLowerCase());
         node.tags.push(node.item.toLowerCase());
-        node.tags.push(node.meta.description.toLowerCase());
         return;
     }
 
@@ -633,7 +645,6 @@ const Hierarchy = class Hierarchy extends Common {
                 city: '',
                 zip: ''
             },
-            description: '',
             tz: ''
         };
 
