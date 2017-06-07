@@ -3337,6 +3337,7 @@ var dti = {
                             //check for grouping preference, group/flatten as necessary 
 
                             if (child.item === 'Mechanical') {
+                                //TODO find correct hierarchy ref, then process that one (ignore served by, etc)
                                 let tags = manager.splitSystemTags(child.systemTags);
 
                                 if (tags.groups.length > 0 || child.type === 'End Point') {
@@ -4420,14 +4421,15 @@ var dti = {
                 this.ajax({
                     url: '/api/hierarchy/locations/getChildren',
                     data: {
-                        id: id || 0,
-                        item: obj.bindings.item()
+                        id: id || 0
+                        // item: obj.bindings.item()
                     }
                 }).done((results) => {
                     let ret = [];
                     dti.forEachArrayRev(results, (obj, idx) => {
                         let skip = false;
                         //so you don't see children as their own aunt/uncle
+                        //TODO
                         if (obj.item === 'Mechanical') {// && obj.type === 'End Point') {
                             dti.forEachArrayRev(results, (child) => {
                                 if (obj.hierarchyRefs[1].value === child._id) {
