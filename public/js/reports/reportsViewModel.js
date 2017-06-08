@@ -4472,40 +4472,46 @@ let reportsViewModel = function () {
                         setTimeout(function () {
                             if ($reportChartDiv.length > 0) {
                                 if (self.selectedChartType() === "Pie") {
-                                    $reportChartDiv.highcharts({
-                                        turboThreshold: maxDataRowsForChart,
-                                        chart: {
-                                            width: chartWidth,
-                                            height: chartHeight,
-                                            plotBackgroundColor: null,
-                                            plotBorderWidth: null,
-                                            plotShadow: false,
-                                            type: "pie"
-                                        },
-                                        title: {
-                                            text: chartTitle
-                                        },
-                                        subtitle: {
-                                            text: subTitle
-                                        },
-                                        tooltip: {
-                                            pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>"
-                                        },
-                                        plotOptions: {
-                                            pie: {
-                                                allowPointSelect: true,
-                                                cursor: "pointer",
-                                                dataLabels: {
-                                                    enabled: true,
-                                                    format: "<b>{point.name}</b>: {point.percentage:.1f} %",
-                                                    style: {
-                                                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || "black"
+                                    for (let dataIndex = 0; dataIndex < reportChartData.length; dataIndex++) {
+                                        let chunkOfChartData = [];
+                                        let $chartDiv = $("<div chartIndex='" + dataIndex +"'></div>");
+                                        $chartDiv.appendTo($reportChartDiv);
+                                        chunkOfChartData.push(reportChartData[dataIndex]);
+                                        $chartDiv.highcharts({
+                                            turboThreshold: maxDataRowsForChart,
+                                            chart: {
+                                                width: chartWidth,
+                                                height: chartHeight,
+                                                plotBackgroundColor: null,
+                                                plotBorderWidth: null,
+                                                plotShadow: false,
+                                                type: "pie"
+                                            },
+                                            title: {
+                                                text: chartTitle
+                                            },
+                                            subtitle: {
+                                                text: subTitle
+                                            },
+                                            tooltip: {
+                                                pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>"
+                                            },
+                                            plotOptions: {
+                                                pie: {
+                                                    allowPointSelect: true,
+                                                    cursor: "pointer",
+                                                    dataLabels: {
+                                                        enabled: true,
+                                                        format: "<b>{point.name}</b>: {point.percentage:.1f} %",
+                                                        style: {
+                                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || "black"
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        },
-                                        series: reportChartData
-                                    });
+                                            },
+                                            series: chunkOfChartData
+                                        });
+                                    }
                                 } else {
                                     if (self.selectedChartType() !== "Column") {
                                         toolTip = {
