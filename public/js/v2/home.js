@@ -3333,7 +3333,7 @@ var dti = {
                         });
 
                         dti.forEachArray(children, (child) => {
-                            //check for grouping preference, group/flatten as necessary 
+                            //TODO check for grouping preference, group/flatten as necessary 
 
                             if (child.item === 'Mechanical') {
                                 //TODO find correct hierarchy ref, then process that one (ignore served by, etc)
