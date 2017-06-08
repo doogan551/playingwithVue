@@ -11,6 +11,7 @@ html.direports
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        link(rel='stylesheet', href='/css/trendPlots/highcharts.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
     body.blue-grey.lighten-5
         block content
@@ -599,6 +600,8 @@ html.direports
                                                 // ko if: ($root.reportType() !== 'Property')
                                                 span.calculations
                                                 // /ko
+                                .columnCardPanel.card-panel.blue-grey(data-bind="click: function(){ $root.setColumnFilter() }", style="display: none;", tabindex="9999")
+                                    .verbiage.white-text
                             div.chartData#chartData.tab-pane
                                 .chartButtons
                                     .availableChartTypes.chartTab(tabindex="990")
@@ -611,6 +614,7 @@ html.direports
                                         i.material-icons print
                                         span.printButton Print
                                 .reportChartDiv
+
     include footer
     include popoverColumnSettings
     include modals/dialogScreens
@@ -723,7 +727,7 @@ html.direports
     script(type="text/javascript" src='/js/lib/jszip.min.js')
     script(type="text/javascript" src='/js/lib/pdfmake.min.js')
     script(type="text/javascript" src='/js/lib/vfs_fonts.js')
-    script(type="text/javascript" src='/js/lib/highcharts.src.js')
+    script(type="text/javascript" src='/js/lib/highstock.src.js')
     script(type="text/javascript" src='/js/trendPlots/trendplot.js')
     script(type="text/javascript" src='/js/lib/jquery.printarea.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')

@@ -62,15 +62,15 @@ const History = class History extends Common {
         });
     }
 
-    loopOptions(options) {
+    loopOptions(options, newOptions) {
         for (let i = 0; i < options.length; i++) {
-            this.addOp(options[i]);
+            this.addOp(options[i], newOptions);
         }
     }
     buildOps(options) {
         let newOptions = [];
 
-        this.loopOptions(newOptions);
+        this.loopOptions(options, newOptions);
 
         return newOptions;
     }

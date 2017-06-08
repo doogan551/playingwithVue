@@ -632,13 +632,36 @@ div.dt-button-collection a div:hover {
     background-color: #d5e1f2 !important;
 }
 .tabViewReport .dataTables_length {
-    margin-left: 260px;
+    margin-left: 40%;
     margin-top: -30px;
     font-weight: bold;
+    display: -webkit-box;
+}
+.tabViewReport .dataTables_length .material-icons {
+    cursor: pointer;
+    padding-left: 10px;
+    margin-top: 15px;
+}
+.tabViewReport .dataTables_length select {
+    cursor: pointer;
+}
+.tabViewReport .dataTables_length select:hover {
+    outline: 1px solid #607d8b !important;
+}
+.tabViewReport .dataTables_length label {
+    padding-right: 20px;
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
     padding: 3px 3px;
+}
+.tabViewReport .dataTables_length .lineDensity {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 div.dataTables_wrapper input[type=search] {
     color: #607d8b !important;
@@ -647,14 +670,67 @@ div.dataTables_wrapper input[type=search] {
     overflow-x: hidden;
     overflow-y: hidden;
 }
-
+.DTFC_ScrollWrapper tbody tr.small {
+    line-height: 10% !important;
+    height: 43px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.small {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+}
+.DTFC_ScrollWrapper tbody tr.smaller {
+    line-height: 10% !important;
+    height: 33px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.smaller {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    white-space: nowrap;
+}
+.DTFC_ScrollWrapper tbody tr.tiny {
+    line-height: 5% !important;
+    height: 23px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.tiny {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    white-space: nowrap;
+}
 .columnFilter li span {
     font-size: small;
     white-space: nowrap;
     padding-top: 2px;
     padding-bottom: 2px;
 }
-
+.dataTables_scrollBody tbody tr td:not(:first-child) {
+    cursor: pointer;
+}
+.dataTables_scrollBody tbody tr td:not(:first-child):hover {
+    background-color: rgba(207, 221, 228, 0.39);
+}
+.thinScroll::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+.thinScroll::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+.thinScroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
+ul.select-dropdown.active::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+ul.select-dropdown.active::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+ul.select-dropdown.active::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
 .columnFilter ul.dropdown-content.select-dropdown {
     width: 100% !important;
     max-height: 80px !important;
@@ -681,16 +757,13 @@ div.dataTables_wrapper input[type=search] {
     background-color: rgba(149, 198, 212, 0.12);
 }
 
-    /*th.firstColumn.datetime {*/
+/*th.firstColumn.datetime {*/
     /*min-width: 60px;*/
     /*!*width: 100px !important;*!*/
 /*}*/
-/*td.firstColumn.datetime {*/
-    /*min-width: 60px;*/
-    /*width: 100px !important;*/
-    /*font-size: small;*/
-/*}*/
-
+td.firstColumn.datetime {
+    font-size: small;
+}
 /*th.firstColumn.pointLookupColumn {*/
     /*min-width: 270px;*/
     /*width: 270px !important;*/
@@ -1100,6 +1173,24 @@ input.filled-in[type=number]:focus:not([readonly]) {
 
 #globalEditColumnModal .row .yaxisChartGroup {
     margin-left: 30px;
+}
+#searchFilterModal .modal-footer a.btn .specialtiny {
+    height: 27px;
+    line-height: 29px;
+    outline: 0;
+    padding: 0 1rem;
+}
+.columnCardPanel.card-panel.blue-grey {
+    height: 26px;
+    line-height: 25px;
+    width: 90px;
+    text-indent: 8px;
+    z-index: 999999;
+    padding: 1px;
+    cursor: pointer;
+}
+.columnCardPanel:focus {
+    outline: none;
 }
 .gridColumnConfigTable > thead > tr > th {
     border-top: 1px solid #CCC !important;

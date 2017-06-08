@@ -1359,6 +1359,7 @@ let reportsViewModel = function () {
         $dataTablePlaceHolder,
         $rightPanel,
         $editColumnModal,
+        $columnCardPanel,
         $viewReportNav,
         $globalEditColumnModal,
         $columnsGrid,
@@ -1391,7 +1392,7 @@ let reportsViewModel = function () {
         reportPoint = point,
         scheduledReport = scheduled,
         includeChart = scheduledIncludeChart,
-        Name = "dorsett.reportUI",
+        reportName = "dorsett.reportUI",
         getPointURL = "/api/points/",
         originalPoint = {},
         permissionLevels = {
@@ -1412,6 +1413,9 @@ let reportsViewModel = function () {
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         newlyReferencedPoints = [],
+        columnFilterValue = "",
+        nonSearchableColumnTypes = ["MinSec", "HourMin", "HourMinSec"],
+        currentLineDensity = "",
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
@@ -1853,7 +1857,7 @@ let reportsViewModel = function () {
             },
             parseNumberValue: (theValue, rawValue, eValue) => {
                 var result;
-                result = parseFloat(theValue.toString().replace(",", ""));
+                result = (theValue !== null && theValue !== undefined ? parseFloat(theValue.toString().replace(",", "")) : theValue);
                 if (isNaN(result)) {
                     result = (eValue !== undefined ? parseFloat(eValue) : parseFloat(rawValue));
                     if (isNaN(result)) {
@@ -1861,6 +1865,16 @@ let reportsViewModel = function () {
                     }
                 }
                 return (isNaN(result) || result === "" ? 0 : result);
+            },
+            searchFilterActive: () => {
+                let resultSet = self.listOfColumns().filter(function (cConfig) {
+                    return (cConfig.searchFilter !== undefined && cConfig.searchFilter !== "");
+                });
+                return (resultSet.length > 0);
+            },
+            getExportFileName: () => {
+                let now = moment().format("YYYY-MM-DD_HHmm");
+                return reportName + "_" + now;
             }
         },
         pointSelector = {
@@ -2190,7 +2204,111 @@ let reportsViewModel = function () {
             }
         },
         ui = {
-            setDatatableInfoBar: () => {
+            setCustomLineDensityOption: () => {
+                let $datatablesLength = $tabViewReport.find(".dataTables_length"),
+                    $lineDensityDiv,
+                    $increaseDensity = $datatablesLength.find("i.material-icons.increaseDensity"),
+                    $decreaseDensity = $datatablesLength.find("i.material-icons.decreaseDensity");
+
+                if ($increaseDensity.length === 0) {
+                    $lineDensityDiv = $('<div class= "lineDensity" title="Line density"></div>');
+                    $lineDensityDiv.appendTo($datatablesLength);
+                    $increaseDensity = $('<i class="material-icons tiny increaseDensity blue-grey-text" title="Increase line density">add</i>');
+                    $increaseDensity.appendTo($lineDensityDiv);
+                    $decreaseDensity = $('<i class="material-icons tiny decreaseDensity blue-grey-text" title="Decrease line density">remove</i>');
+                    $decreaseDensity.appendTo($lineDensityDiv);
+
+                    $increaseDensity.on("click", function (e, settings) {
+                        let $dataTablesScrollWrapper = $tabViewReport.find(".DTFC_ScrollWrapper"),
+                            $scrollBodyRows = $dataTablesScrollWrapper.find("tbody tr"),
+                            $scrollBodyCells = $scrollBodyRows.find("td"),
+                            redraw = true;
+
+                        if ($scrollBodyRows.hasClass("small")) {
+                            $scrollBodyRows.removeClass("small");
+                            $scrollBodyCells.removeClass("small");
+                            currentLineDensity = "";
+                        } else if ($scrollBodyRows.hasClass("smaller")) {
+                            $scrollBodyRows.removeClass("smaller");
+                            $scrollBodyCells.removeClass("smaller");
+                            $scrollBodyRows.addClass("small");
+                            $scrollBodyCells.addClass("small");
+                            currentLineDensity = "small";
+                        } else if ($scrollBodyRows.hasClass("tiny")) {
+                            $scrollBodyRows.removeClass("tiny");
+                            $scrollBodyCells.removeClass("tiny");
+                            $scrollBodyRows.addClass("smaller");
+                            $scrollBodyCells.addClass("smaller");
+                            currentLineDensity = "smaller";
+                        } else {
+                            redraw = false;
+                        }
+                        if (redraw) {
+                            $dataTablePlaceHolder.DataTable().draw("current");
+                        }
+                    });
+
+                    $decreaseDensity.on("click", function (e, settings) {
+                        let $dataTablesScrollWrapper = $tabViewReport.find(".DTFC_ScrollWrapper"),
+                            $scrollBodyRows = $dataTablesScrollWrapper.find("tbody tr"),
+                            $scrollBodyCells = $scrollBodyRows.find("td"),
+                            redraw = true;
+
+                        if ($scrollBodyRows.hasClass("small")) {
+                            $scrollBodyRows.removeClass("small");
+                            $scrollBodyCells.removeClass("small");
+                            $scrollBodyRows.addClass("smaller");
+                            $scrollBodyCells.addClass("smaller");
+                            currentLineDensity = "smaller";
+                        } else if ($scrollBodyRows.hasClass("smaller")) {
+                            $scrollBodyRows.removeClass("smaller");
+                            $scrollBodyCells.removeClass("smaller");
+                            $scrollBodyRows.addClass("tiny");
+                            $scrollBodyCells.addClass("tiny");
+                            currentLineDensity = "tiny";
+                        } else if ($scrollBodyRows.hasClass("tiny")) {
+                            redraw = false;
+                        } else {
+                            $scrollBodyRows.addClass("small");
+                            $scrollBodyCells.addClass("small");
+                            currentLineDensity = "small";
+                        }
+                        if (redraw) {
+                            $dataTablePlaceHolder.DataTable().draw("current");
+                        }
+                    });
+                } else {
+                    let $dataTablesScrollWrapper = $tabViewReport.find(".DTFC_ScrollWrapper"),
+                        $scrollBodyRows = $dataTablesScrollWrapper.find("tbody tr"),
+                        $scrollBodyCells = $scrollBodyRows.find("td");
+
+                    switch (currentLineDensity) {
+                        case "":
+                            $scrollBodyRows.removeClass("small smaller tiny");
+                            $scrollBodyCells.removeClass("small smaller tiny");
+                            break;
+                        case "small":
+                            $scrollBodyRows.removeClass("smaller tiny");
+                            $scrollBodyCells.removeClass("smaller tiny");
+                            $scrollBodyRows.addClass("small");
+                            $scrollBodyCells.addClass("small");
+                            break;
+                        case "smaller":
+                            $scrollBodyRows.removeClass("small tiny");
+                            $scrollBodyCells.removeClass("small tiny");
+                            $scrollBodyRows.addClass("smaller");
+                            $scrollBodyCells.addClass("smaller");
+                            break;
+                        case "tiny":
+                            $scrollBodyRows.removeClass("small smaller");
+                            $scrollBodyCells.removeClass("small smaller");
+                            $scrollBodyRows.addClass("tiny");
+                            $scrollBodyCells.addClass("tiny");
+                            break;
+                    }
+                }
+            },
+            setCustomDatatableInfo: () => {
                 var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
                     $tablePagination = $tabViewReport.find(".dataTables_paginate"),
                     $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
@@ -2228,11 +2346,15 @@ let reportsViewModel = function () {
                 if (!$datatablesLengthSelect.hasClass("blue-grey-text")) {
                     $datatablesLengthSelect.addClass("blue-grey-text");
                 }
+
+                ui.setCustomLineDensityOption();
+
                 $datatablesLengthSelect.show();
             },
             getScreenFields: () => {
                 $direports = $(document).find(".direports");
                 $editColumnModal = $direports.find("#editColumnModal");
+                $columnCardPanel = $direports.find(".columnCardPanel.card-panel");
                 $globalEditColumnModal = $direports.find("#globalEditColumnModal");
                 $tabConfiguration = $direports.find(".tabConfiguration");
                 $configurationButton = $direports.find(".configurationButton");
@@ -2246,7 +2368,7 @@ let reportsViewModel = function () {
                 $gridColumnConfig = $direports.find("#gridColumnConfig");
                 $gridColumnConfigTable = $direports.find(".gridColumnConfigTable");
                 $filtersGrid = $direports.find(".filtersGrid");
-                $reportTitleInput = $direports.find(".reporttitle").find("input");
+                $reportTitleInput = $direports.find(".reportTitleInput");
                 $filtersTbody = $direports.find(".filtersGrid .sortableFilters");
                 $columnsTbody = $columnsGrid.find(".sortablecolumns");
                 $gridColumnsTbody = $gridColumnConfigTable.find(".sortablecolumns");
@@ -2274,7 +2396,6 @@ let reportsViewModel = function () {
                     $reportRangeDropdown,
                     $reportStartDate,
                     $reportEndDate,
-                    $clearAllSearchFilters,
                     precisionEventsSet = false,
                     includeInChartEventsSet = false,
                     calculateEventsSet = false;
@@ -2396,6 +2517,58 @@ let reportsViewModel = function () {
                             self.showPointReview(data);
                         });
 
+                        $dataTablePlaceHolder.on("click", "td:not(:first-child)", function (e) {
+                            let $this = $(this),
+                                $target = $(e.target),
+                                // clickedValue = $this.html(),
+                                clickedValue = $this.text(),
+                                clearFilterValue = "",
+                                colIndex = e.target.cellIndex || $target.parent()[0].cellIndex,
+                                offset = $target.offset(),
+                                columnFilter = self.listOfColumns()[colIndex].searchFilter,
+                                displayCardPanel = (self.listOfColumns()[colIndex].searchable && clickedValue !== "") || false,
+                                columnFilterSet = (columnFilter !== "" && columnFilter !== undefined),
+                                $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody"),
+                                x = (offset.left - $target.offsetParent().offset().left) + ($target.width() - $columnCardPanel.width()),
+                                // x = (colIndex < self.listOfColumns().length-1 ? offset.left : offset.left - 75),
+                                y = offset.top + ($target.height() - $columnCardPanel.height());
+
+                            // console.log("e.clientX x e.clientY = (" + e.clientX + "," + e.clientY + ")");
+                            // console.log("offset.left x offset.top = (" + offset.left + "," + offset.top + ")");
+                            // console.log("$target.width() x $target.height() = (" + $target.width() + "," + $target.height() + ")");
+                            // console.log("$columnCardPanel.width() x $columnCardPanel.height() = (" + $columnCardPanel.width() + "," + $columnCardPanel.height() + ")");
+                            // console.log("X x Y = (" + x + "," + y + ")");
+                            $columnCardPanel.hide();
+
+                            if (displayCardPanel) {
+                                $columnCardPanel.css({
+                                    position: "absolute",
+                                    top: y,
+                                    left: x
+                                });
+
+                                if (!columnFilterSet) {
+                                    $columnCardPanel.find(".verbiage").text("Set Filter");
+                                } else {
+                                    $columnCardPanel.find(".verbiage").text("Clear Filter");
+                                }
+
+                                $dataTablesScrollBody.one("scroll", function (e) {
+                                    $columnCardPanel.hide();
+                                    return true;
+                                });
+
+                                self.currentColumnEditIndex(colIndex);
+                                columnFilterValue = (!columnFilterSet ? clickedValue : clearFilterValue);
+                                $columnCardPanel.show();
+                                $columnCardPanel.focus();
+
+                                $columnCardPanel.one("focusout", function (outEvent) {
+                                    $columnCardPanel.hide();
+                                });
+                            }
+                        });
+
                         $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
                             ui.adjustConfigTabActivePaneHeight();
                         });
@@ -2412,22 +2585,31 @@ let reportsViewModel = function () {
                             return true;
                         });
 
+                        $dataTablePlaceHolder.on("order.dt", function (e, diff, edit) {
+                            ui.setCustomLineDensityOption();
+                            return true;
+                        });
+
                         $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
                             self.selectedPageLength(len);
                             setTimeout(function () {
                                 ui.adjustViewReportTabHeightWidth();
+                                ui.setCustomLineDensityOption();
+                                return true;
                             }, 10);
                         });
 
                         $dataTablePlaceHolder.on("page.dt", function (e, settings) {
                             setTimeout(function () {
                                 ui.adjustViewReportTabHeightWidth();
+                                return true;
                             }, 10);
                         });
 
                         $dataTablePlaceHolder.on("search.dt", function (e, settings) {
                             setTimeout(function () {
                                 ui.adjustViewReportTabHeightWidth();
+                                return true;
                             }, 10);
                         });
 
@@ -2772,12 +2954,16 @@ let reportsViewModel = function () {
                     }
                 ];
 
-                reportTypes = Object.keys(ENUMSTEMPLATESENUMS["Report Types"]).map(function (e) {
-                    return {
-                        text: e,
-                        enum: ENUMSTEMPLATESENUMS["Report Types"][e].enum
-                    };
-                });
+                if (!scheduledReport) {
+                    reportTypes = Object.keys(ENUMSTEMPLATESENUMS["Report Types"]).map(function (e) {
+                        return {
+                            text: e,
+                            enum: ENUMSTEMPLATESENUMS["Report Types"][e].enum
+                        };
+                    });
+                } else {
+                    reportTypes = [];
+                }
 
                 self.listOfIntervals(intervals);
                 self.listOfCalculations(calculations);
@@ -2798,8 +2984,9 @@ let reportsViewModel = function () {
                 } else if ($activePane.attr("id") === "gridData") {
                     $dataTablePlaceHolder.css("width", "100%");
                     $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
+                    $dataTablesScrollBody.addClass("thinScroll");
 
-                    ui.setDatatableInfoBar();
+                    ui.setCustomDatatableInfo();
                     adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
                     $dataTablesScrollBody.css("height", adjustHeight);
                     //   $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);   *****  this call seems to kick off recursive loop ***
@@ -3246,8 +3433,11 @@ let reportsViewModel = function () {
                         delete results.collection[index].softDeleted;
                         delete results.collection[index].bitstringEnums;
                         delete results.collection[index].upi;
+                        delete results.collection[index].searchable;
+                        delete results.collection[index].searchFilter;
                     }
-                    delete self.listOfColumns()[index].searchFilter;  // only used for search filtering the result set in ui
+
+                    delete self.listOfColumns()[index].searchFilter;  // remove for every request, only used for search filtering the result set in ui
                 }
 
                 if (cleanup) {
@@ -3283,6 +3473,7 @@ let reportsViewModel = function () {
                     if (valid) {
                         currentColumn.canCalculate = reportCalc.columnCalculable(currentColumn);
                         currentColumn.searchFilter = "";
+                        currentColumn.searchable = (nonSearchableColumnTypes.indexOf(currentColumn.valueType) === -1);
                         switch (self.reportType()) {
                             case "Property":
                                 currentColumn.canBeCharted = reportCalc.columnChartable(currentColumn);
@@ -3711,29 +3902,43 @@ let reportsViewModel = function () {
                         if (self.reportType() === "Property") {
                             drilldown.series = [];
                             // TODO drilldown data specific to Property & Pie chart
-                            // for (var fieldName in sumsForProperties) {
-                            //     if (sumsForProperties.hasOwnProperty(fieldName)) {
-                            //         columnData.push({
-                            //             name: fieldName,
-                            //             y: parseFloat(10),
-                            //             drilldown: fieldName
-                            //         });
-                            //         columnDrillDownData = [];
-                            //         for (var enumName in sumsForProperties[fieldName]) {
-                            //             if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
-                            //                 console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
-                            //                 columnDrillDownData.push({
-                            //                     enumName: parseFloat(sumsForProperties[fieldName][enumName])
-                            //                 });
-                            //                 totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
-                            //             }
-                            //         }
-                            //         drilldown.series.push({
-                            //             name: fieldName,
-                            //             id: fieldName,
-                            //             data: columnDrillDownData,
-                            //         });
-                            //     }
+                            // for (let fieldName in sumsForProperties) {
+                                let fieldName = columnName;
+                                if (sumsForProperties.hasOwnProperty(fieldName)) {
+                                    columnData = [];
+                                    columnDrillDownData = [];
+                                    for (var enumName in sumsForProperties[fieldName]) {
+                                        if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
+                                            columnData.push({
+                                                name: enumName,
+                                                y: parseFloat(sumsForProperties[fieldName][enumName]),
+                                                drilldown: enumName
+                                            });
+
+                                            console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
+                                            columnDrillDownData.push({
+                                                enumName: parseFloat(sumsForProperties[fieldName][enumName])
+                                            });
+                                            totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
+                                        }
+                                    }
+                                    drilldown.series.push({
+                                        name: fieldName,
+                                        id: fieldName,
+                                        data: columnDrillDownData
+                                    });
+
+                                    for (i = 0; i < columnData.length; i++) {
+                                        columnData[i].y = parseFloat(reportUtil.toFixed((columnData[i].y / totalAmount) * 100, 3));
+                                    }
+
+                                    result.push({
+                                        name: fieldName,
+                                        colorByPoint: true,
+                                        data: columnData,
+                                        drilldown: drilldown
+                                    });
+                                }
                             // }
                         } else {
                             if (self.selectedChartType() === "Pie") {
@@ -3754,7 +3959,7 @@ let reportsViewModel = function () {
                         }
                     }
                 }
-                if (self.selectedChartType() === "Pie") {
+                if (self.selectedChartType() === "Pie" && self.reportType() !== "Property") {
                     for (i = 0; i < columnData.length; i++) {
                         columnData[i].y = parseFloat(reportUtil.toFixed((columnData[i].y / totalAmount) * 100, 3));
                     }
@@ -3765,7 +3970,7 @@ let reportsViewModel = function () {
                         drilldown: drilldown
                     });
                 }
-                return dataParse.setYaxisValues(result);
+                return (self.selectedChartType() !== "Pie") ? dataParse.setYaxisValues(result) : result;
             }
         },
         formatForPDF = {
@@ -4339,6 +4544,9 @@ let reportsViewModel = function () {
                                         //        }
                                         //    }
                                         //},
+                                        navigator: {
+                                            enabled: (!scheduledReport && !formatForPrint)
+                                        },
                                         xAxis: {
                                             allowDecimals: false
                                         },
@@ -4454,8 +4662,8 @@ let reportsViewModel = function () {
 
             for (i = 0; i < validatedColumns.collection.length; i++) {
                 columnConfig = validatedColumns.collection[i];
-                if (!!validatedColumns.collection[i].error) {
-                    ui.displayError(validatedColumns.collection[i].error);
+                if (!!columnConfig.error) {
+                    ui.displayError(columnConfig.error);
                     activeError = true;
                     $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
                     $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
@@ -4465,10 +4673,10 @@ let reportsViewModel = function () {
                     $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                     $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                     $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
-                    if (validatedColumns.collection[i].upi > 0) {  // collect UPIs from Columns
+                    if (columnConfig.upi > 0) {  // collect UPIs from Columns
                         upis.push({
-                            upi: parseInt(validatedColumns.collection[i].upi, 10),
-                            op: (validatedColumns.collection[i].operator).toLowerCase()
+                            upi: parseInt(columnConfig.upi, 10),
+                            op: (columnConfig.operator).toLowerCase()
                         });
                     }
                 }
@@ -4495,8 +4703,10 @@ let reportsViewModel = function () {
                 switch (self.reportType()) {
                     case "History":
                     case "Totalizer":
-                        self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
-                        self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
+                        if (!scheduledReport) {
+                            self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
+                            self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
+                        }
                         reportUtil.configureSelectedDuration();
 
                         reportPoint["Report Config"].interval = {
@@ -4760,16 +4970,16 @@ let reportsViewModel = function () {
                             result += "durationCtrl durationDisplay";
                             break;
                     }
-                    if (columnIndex === 0) {
-                        result += "firstColumn ";
-                    }
-                    if (columnConfig.valueType === "DateTime") {
+                    // if (columnIndex === 0) {
+                    //     result += "firstColumn ";
+                    // }
+                    if (columnConfig.valueType === "DateTime" && columnIndex > 0) {
                         result += "small datetime ";
                     }
                     if (columnConfig.valueType === "BitString") {
                         result += "small ";
                     }
-                    if (columnConfig.canCalculate === true) {
+                    if (columnConfig.canCalculate === true && columnIndex > 0) {
                         result += "right-align ";
                     }
                     if (columnConfig.softDeleted !== undefined && columnConfig.softDeleted) {
@@ -4807,7 +5017,7 @@ let reportsViewModel = function () {
                                         break;
                                     case "DateTime":
                                     case "Timet":
-                                        answer = "date";
+                                        answer = "num";  // allows for quicker sorting
                                         break;
                                     default:
                                         answer = "string";
@@ -4979,6 +5189,10 @@ let reportsViewModel = function () {
                                     extend: "copyHtml5",
                                     className: "white blue-grey-text center",
                                     text: '<div>Copy</div>',
+                                    footer: false,
+                                    filename: function () {
+                                        return reportUtil.getExportFileName();
+                                    },
                                     key: {
                                         altKey: true,
                                         key: "1"
@@ -4988,6 +5202,10 @@ let reportsViewModel = function () {
                                     extend: "csvHtml5",
                                     className: "white blue-grey-text center",
                                     text: '<div>CSV</div>',
+                                    footer: false,
+                                    filename: function () {
+                                        return reportUtil.getExportFileName();
+                                    },
                                     key: {
                                         altKey: true,
                                         key: "2"
@@ -4997,6 +5215,10 @@ let reportsViewModel = function () {
                                     extend: "excelHtml5",
                                     className: "white blue-grey-text center",
                                     text: '<div>Excel</div>',
+                                    footer: false,
+                                    filename: function () {
+                                        return reportUtil.getExportFileName();
+                                    },
                                     key: {
                                         altKey: true,
                                         key: "3"
@@ -5006,7 +5228,10 @@ let reportsViewModel = function () {
                                     extend: "pdfHtml5",
                                     className: "white blue-grey-text center",
                                     text: '<div>PDF</div>',
-                                    footer: true,
+                                    footer: false,
+                                    filename: function () {
+                                        return reportUtil.getExportFileName();
+                                    },
                                     orientation: (aoColumns.length > 4 ? "landscape" : "portrait"),
                                     key: {
                                         altKey: true,
@@ -5050,7 +5275,7 @@ let reportsViewModel = function () {
                         }
                     ] : undefined),
                     drawCallback: function (settings) {
-                        ui.setDatatableInfoBar();
+                        ui.setCustomDatatableInfo();
                     },
                     headerCallback: function (thead, data, start, end, display) {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
@@ -5086,6 +5311,8 @@ let reportsViewModel = function () {
                         }
                     },
                     footerCallback: function (tfoot, data, start, end, display) {
+                        let startTime = moment();
+                        console.log("footerCallback()  started ............................................");
                         let api = this.api(),
                             reportColumns = self.listOfColumns(),
                             $footerFirstCell,
@@ -5111,12 +5338,6 @@ let reportsViewModel = function () {
                             $tdFooterFilter,
                             $tdFooterCalculations,
                             $footerTableDataCollection,
-                            searchFilterActive = () => {
-                                let resultSet = reportColumns.filter(function (cConfig) {
-                                    return (cConfig.searchFilter !== undefined && cConfig.searchFilter !== "");
-                                });
-                                return (resultSet.length > 0);
-                            },
                             buildFilterSelect = (column, columnIndex, columnData, $element) => {
                                 let searchFilterValue = self.listOfColumns()[columnIndex].searchFilter,
                                     getUnique = (theArray) => {
@@ -5169,7 +5390,7 @@ let reportsViewModel = function () {
                                     $selectFilter.on('change', function (e) {
                                         var val = $.fn.dataTable.util.escapeRegex($(this).val()),
                                             // regExVal = val ? "^" + val + "$" : "",
-                                            regExVal = val ? "^" + val : "",
+                                            regExVal = val ? "\\b" + val + "\\b" : "",
                                             plainText = $(this).val();
 
                                         $(this).addClass("active");
@@ -5177,9 +5398,9 @@ let reportsViewModel = function () {
                                         column
                                             .search(regExVal, true, false)
                                             .draw();
-                                        console.log("   - - - - -  change      val = (" + val + ")");
-                                        console.log("                   * regExVal = (" + regExVal + ")");
-                                        console.log("                    plainText = (" + plainText + ")");
+                                        // console.log("   - - - - -  change      val = (" + val + ")");
+                                        // console.log("                   * regExVal = (" + regExVal + ")");
+                                        // console.log("                    plainText = (" + plainText + ")");
                                         // column
                                         //     .search(val, true, false)
                                         //     .draw();
@@ -5188,126 +5409,132 @@ let reportsViewModel = function () {
                                 }
                             };
 
-                        $trFooter = $(tfoot);
-
-                        $trFooter.find("span.searchFilter").html(""); // clear existing searchfilters
-
-                        if (self.displayGridFilters()) {
-                            for (i = 1; i < reportColumns.length; i++) {  // skip first column
-                                columnIndex = i;
-                                searchFilterData = (searchFilterActive() ? api.column(columnIndex, {search:"applied"}).data() : api.column(columnIndex).data());
-                                dataExists = (searchFilterData.length > 0);
-                                $tdFooterFilter = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.searchFilter");
-
-                                if (dataExists && $tdFooterFilter.length > 0) {
-                                    $tdFooterFilter.addClass("columnFilter");
-                                    if (reportColumns[i].canCalculate === true) {
-                                        $tdFooterFilter.find("input.select-dropdown").addClass("right-align");
-                                    }
-                                    buildFilterSelect(api.column(columnIndex), columnIndex, searchFilterData, $tdFooterFilter);
-                                }
-                            }
-                        }
-
-                        if (self.displayGridCalculations() && self.reportType() !== "Property") {
+                        if (!scheduledReport) {
+                            $trFooter = $(tfoot);
                             $footerTableDataCollection = $trFooter.find("span.calculations");
                             $footerTableDataCollection.html(""); // clear existing calcs results
-                            $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
-                            $footerTableDataCollection.removeAttr("data-toggle");
-                            $footerTableDataCollection.removeAttr("data-trigger");
-                            $footerTableDataCollection.removeAttr("data-html");
-                            $footerTableDataCollection.removeAttr("title");
-                            $footerTableDataCollection.removeAttr("data-original-title");
 
-                            for (i = 0; i < numberOfColumnsToCalculate; i++) {
-                                footerCalcText = "";
-                                footerTitle = "";
-                                pageFooterText = "";
-                                columnIndex = columnIndexesToCalc[i];
-                                columnConfig = reportColumns[columnIndex];
-                                currentPageData = api.column(columnIndex, {page: "current"}).data();
-                                allData = api.column(columnIndex).data();
-                                dataExists = (allData.length > 0);
-                                sameDataSet = (currentPageData.length === allData.length);
-                                calcs = getCalcForColumn(currentPageData, allData, columnConfig);
-                                $tdFooterCalculations = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.calculations");
-                                if (dataExists && $tdFooterCalculations.length > 0) {
+                            $trFooter.find("span.searchFilter").html(""); // clear existing searchfilters
 
-                                    $tdFooterCalculations.addClass("columnCalcs");
+                            if (self.displayGridFilters()) {
+                                for (i = 1; i < reportColumns.length; i++) {  // skip first column
+                                    columnIndex = i;
+                                    searchFilterData = api.column(columnIndex, {search: "applied"}).data();
+                                    dataExists = (searchFilterData.length > 0);
 
-                                    for (j = 0; j < columnConfig.calculation.length; j++) {
-                                        calc = calcs[j];
+                                    if (reportColumns[i].searchable && dataExists) {
+                                        $tdFooterFilter = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.searchFilter");
 
-                                        switch (self.reportType()) {
-                                            case "History":
-                                                if (!sameDataSet) {
-                                                    pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                                }
-                                                totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
-                                                break;
-                                            case "Totalizer":
-                                                if (columnConfig.operator.toLowerCase() === "runtime") {
-                                                    if (!sameDataSet) {
-                                                        pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
-                                                    }
-                                                    totalFooterText = "Total " + columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "<br />";
-                                                } else {
+                                        if ($tdFooterFilter.length > 0) {
+                                            $tdFooterFilter.addClass("columnFilter");
+                                            if (reportColumns[i].canCalculate === true) {
+                                                $tdFooterFilter.find("input.select-dropdown").addClass("right-align");
+                                            }
+                                            buildFilterSelect(api.column(columnIndex), columnIndex, searchFilterData, $tdFooterFilter);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (self.displayGridCalculations() && self.reportType() !== "Property") {
+                                $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
+                                $footerTableDataCollection.removeAttr("data-toggle");
+                                $footerTableDataCollection.removeAttr("data-trigger");
+                                $footerTableDataCollection.removeAttr("data-html");
+                                $footerTableDataCollection.removeAttr("title");
+                                $footerTableDataCollection.removeAttr("data-original-title");
+
+                                for (i = 0; i < numberOfColumnsToCalculate; i++) {
+                                    footerCalcText = "";
+                                    footerTitle = "";
+                                    pageFooterText = "";
+                                    columnIndex = columnIndexesToCalc[i];
+                                    columnConfig = reportColumns[columnIndex];
+                                    currentPageData = api.column(columnIndex, {page: "current"}).data();
+                                    allData = api.column(columnIndex).data();
+                                    dataExists = (allData.length > 0);
+                                    sameDataSet = (currentPageData.length === allData.length);
+                                    calcs = getCalcForColumn(currentPageData, allData, columnConfig);
+                                    $tdFooterCalculations = $trFooter.find("td[colindex='" + columnIndex + "']").find("span.calculations");
+                                    if (dataExists && $tdFooterCalculations.length > 0) {
+
+                                        $tdFooterCalculations.addClass("columnCalcs");
+
+                                        for (j = 0; j < columnConfig.calculation.length; j++) {
+                                            calc = calcs[j];
+
+                                            switch (self.reportType()) {
+                                                case "History":
                                                     if (!sameDataSet) {
                                                         pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
                                                     }
                                                     totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
-                                                }
-                                                break;
-                                            case "Property":
-                                                if (!sameDataSet) {
-                                                    pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
-                                                }
-                                                totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + "<br />";
-                                                break;
-                                            default:
-                                                console.log(" - - - DEFAULT  footerCallback()");
-                                                break;
+                                                    break;
+                                                case "Totalizer":
+                                                    if (columnConfig.operator.toLowerCase() === "runtime") {
+                                                        if (!sameDataSet) {
+                                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                                        }
+                                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "<br />";
+                                                    } else {
+                                                        if (!sameDataSet) {
+                                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                                        }
+                                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
+                                                    }
+                                                    break;
+                                                case "Property":
+                                                    if (!sameDataSet) {
+                                                        pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
+                                                    }
+                                                    totalFooterText = "Total " + columnConfig.calculation[j] + ": " + reportUtil.toFixedComma(calc.totalCalc, columnConfig.precision) + "<br />";
+                                                    break;
+                                                default:
+                                                    console.log(" - - - DEFAULT  footerCallback()");
+                                                    break;
+                                            }
+
+                                            footerCalcText += (!sameDataSet ? pageFooterText + "<br />" : totalFooterText);
+                                            footerTitle += (!sameDataSet ? totalFooterText : "");
                                         }
 
-                                        footerCalcText += (!sameDataSet ? pageFooterText + "<br />" : totalFooterText);
-                                        footerTitle += (!sameDataSet ? totalFooterText : "");
-                                    }
+                                        // TODO to Materialize $tdFooter.popover("destroy");
 
-                                    // TODO to Materialize $tdFooter.popover("destroy");
-
-                                    $tdFooterCalculations.html(footerCalcText);
-                                    if (!sameDataSet) {
-                                        $tdFooterCalculations.attr("data-toggle", "popover");
-                                        $tdFooterCalculations.attr("data-trigger", "hover");
-                                        $tdFooterCalculations.attr("data-html", "true");
-                                        $tdFooterCalculations.attr("title", "Entire column");
-                                        $tdFooterCalculations.attr("data-content", footerTitle);
-                                        //TODO  $tdFooter.popover({placement: "top"});
+                                        $tdFooterCalculations.html(footerCalcText);
+                                        if (!sameDataSet) {
+                                            $tdFooterCalculations.attr("data-toggle", "popover");
+                                            $tdFooterCalculations.attr("data-trigger", "hover");
+                                            $tdFooterCalculations.attr("data-html", "true");
+                                            $tdFooterCalculations.attr("title", "Entire column");
+                                            $tdFooterCalculations.attr("data-content", footerTitle);
+                                            //TODO  $tdFooter.popover({placement: "top"});
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        $footerFirstCell = $trFooter.find("td[colindex='0']");
-                        $footerFirstCell.addClass("right-align");
-                        $footerFirstCell.removeClass("pointInstance");
-                        $clearAllSearchFilters = $footerFirstCell.find("i.material-icons");
-                        if (self.displayGridCalculations() || self.displayGridFilters()) {
-                            if (self.displayGridCalculations()) {
-                                $footerFirstCell.removeClass("small");
-                                // $(tfoot).parent().removeClass("hide");
-                            }
-                            if (self.displayGridFilters()) {
-                                $clearAllSearchFilters.removeClass("hide");
-                                $clearAllSearchFilters.attr("onclick", "reportsVM.clearSearchFilters(); return false;");
-                                $clearAllSearchFilters.attr("title", "Clear all search filters");
+                            $footerFirstCell = $trFooter.find("td[colindex='0']");
+                            $footerFirstCell.addClass("right-align");
+                            $footerFirstCell.removeClass("pointInstance");
+                            $clearAllSearchFilters = $footerFirstCell.find("i.material-icons");
+                            if (self.displayGridCalculations() || self.displayGridFilters()) {
+                                if (self.displayGridCalculations()) {
+                                    $footerFirstCell.removeClass("small");
+                                    // $(tfoot).parent().removeClass("hide");
+                                }
+                                if (self.displayGridFilters()) {
+                                    $clearAllSearchFilters.removeClass("hide");
+                                    $clearAllSearchFilters.attr("onclick", "reportsVM.clearSearchFilters(); return false;");
+                                    $clearAllSearchFilters.attr("title", "Clear all search filters");
+                                } else {
+                                    $clearAllSearchFilters.addClass("hide");
+                                }
                             } else {
+                                $(tfoot).parent().addClass("hide"); // hide the footer block
                                 $clearAllSearchFilters.addClass("hide");
                             }
-                        } else {
-                            $(tfoot).parent().addClass("hide"); // hide the footer block
-                            $clearAllSearchFilters.addClass("hide");
                         }
+                        console.log("footerCallback()  end - - -   diff = " + moment.duration(moment().diff(startTime)).asMilliseconds() + "ms");
                     },
                     data: reportData,
                     columns: aoColumns,
@@ -6620,6 +6847,7 @@ let reportsViewModel = function () {
                     filterLogic.updateListOfFilters(self.listOfFilters());
                     setTimeout(function () {
                         $reportTitleInput.focus();
+                        reportName = $reportTitleInput.val();
                     }, 1500);
                     ui.registerEvents();
                     reportCalc.checkForColumnCalculations();
@@ -7104,6 +7332,7 @@ let reportsViewModel = function () {
         if (!!column.AppIndex) {
             delete column.AppIndex;
         }
+        column.searchable = (nonSearchableColumnTypes.indexOf(column.valueType) === -1);
         column.calculation = [];
         column.canCalculate = reportCalc.columnCalculable(column);
         column.canBeCharted = reportCalc.columnChartable(column);
@@ -7249,15 +7478,21 @@ let reportsViewModel = function () {
         return true;
     };
 
+    self.setColumnFilter = () => {
+        let regExVal = columnFilterValue !== "" ? "\\b" + columnFilterValue + "\\b" : "";
+        self.listOfColumns()[self.currentColumnEditIndex()].searchFilter = columnFilterValue;
+        $dataTablePlaceHolder.DataTable().column(self.currentColumnEditIndex()).search(regExVal, true, false).draw();
+        $columnCardPanel.hide();
+        return true;
+    };
+
     self.clearSearchFilters = () => {
         for (let i = 0; i < self.listOfColumns().length; i++) {
-            if (self.listOfColumns()[i].searchFilter !== undefined && self.listOfColumns()[i].searchFilter !== "") {
-                self.listOfColumns()[i].searchFilter = "";
-                $dataTablePlaceHolder.DataTable().columns(i)
-                    .search(self.listOfColumns()[i].searchFilter, true, false)
-                    .draw();
-            }
+            self.listOfColumns()[i].searchFilter = "";
         }
+        $dataTablePlaceHolder.DataTable().columns()
+            .search("")
+            .draw();
     };
 
     self.globalEditColumnFields = () => {

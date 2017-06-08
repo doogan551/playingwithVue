@@ -600,6 +600,9 @@ var trendPlots = {
                     legend: {
                         enabled: false
                     },
+                    navigator: {
+                        enabled: (!!cfg.navigator ? cfg.navigator.enabled: false)
+                    },
                     series: []
                 },
                 data = [],

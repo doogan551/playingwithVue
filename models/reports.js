@@ -611,7 +611,7 @@ const Report = class Report {
                     let newPropertyName = utils.getHumanProperty(prop),
                         isDisplayable = (!!pointTemplate[prop] && pointTemplate[prop].isDisplayable == false ? false : true);
                     if (!isDisplayable) {
-                        doc[prop].Value = null;
+                        //JEFF TODO doc[prop].Value = null;
                     }
                     if (prop !== newPropertyName) {
                         doc[newPropertyName] = utils.getHumanPropertyObj(prop, doc[prop]);
@@ -649,7 +649,8 @@ const Report = class Report {
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
                     searchKey = key,
-                    searchPart1 = {},
+                    searchKeyExists = {},
+                    searchKeyIsDisplayable = {},
                     searchPart2 = {},
                     pointRef,
                     filterValueType = (Config.Enums.Properties.hasOwnProperty(key)) ? Config.Enums.Properties[key].valueType : null;
@@ -695,10 +696,15 @@ const Report = class Report {
                             };
                             break;
                         case 'EqualTo':
+                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                $eq: true
+                            };
+                            searchQuery.$and = [];
+                            searchQuery.$and.push(searchKeyIsDisplayable);
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
-                                    searchQuery[this.propertyCheckForValue(key)] = {
-                                        $eq: ''
+                                    searchPart2[this.propertyCheckForValue(key)] = {
+                                        $in: ['', null]
                                     };
                                 } else {
                                     if (filterValueType !== null) {
@@ -706,20 +712,20 @@ const Report = class Report {
                                     } else {
                                         searchKey = key;
                                     }
-                                    searchQuery[searchKey] = filter.evalue;
+                                    searchPart2[searchKey] = filter.evalue;
                                 }
                             } else if (filter.valueType === 'Bool') {
                                 if (utils.converters.isNumber(filter.value)) {
-                                    searchQuery[this.propertyCheckForValue(key)] = {
+                                    searchPart2[this.propertyCheckForValue(key)] = {
                                         $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
                                     };
                                 } else {
-                                    searchQuery[this.propertyCheckForValue(key)] = {
+                                    searchPart2[this.propertyCheckForValue(key)] = {
                                         $eq: filter.value
                                     };
                                 }
                             } else if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                                searchPart2[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             } else if (filter.value.indexOf(',') > -1) {
                                 let splitValues = filter.value.split(',');
                                 //if (!searchCriteria.$or)
@@ -736,23 +742,28 @@ const Report = class Report {
                                     new$or.$or.push(ppp);
                                 }
                             } else if (utils.converters.isNumber(filter.value)) {
-                                searchQuery[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
+                                searchPart2[this.propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             } else {
-                                searchQuery[this.propertyCheckForValue(key)] = {
+                                searchPart2[this.propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
                                 };
                             }
+                            searchQuery.$and.push(searchPart2);
                             break;
                         case 'NotEqualTo':
-                            searchPart1[key] = {
+                            searchKeyExists[key] = {
                                 $exists: true
                             };
+                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                $eq: true
+                            };
                             searchQuery.$and = [];
-                            searchQuery.$and.push(searchPart1);
+                            searchQuery.$and.push(searchKeyExists);
+                            searchQuery.$and.push(searchKeyIsDisplayable);
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
-                                        $ne: ''
+                                        $nin: ['', null]
                                     };
                                 } else {
                                     if (filterValueType !== null) {
@@ -1161,6 +1172,7 @@ const Report = class Report {
     scheduledReport(data, cb) {
         const mailer = new Mailer();
         const pageRender = new PageRender();
+        const chromePageRender = new ChromePageRender();
         const point = new Point();
         const user = new User();
         let domain = 'http://' + (!!config.get('Infoscan.letsencrypt').enabled ? config.get('Infoscan.domains')[0] : 'localhost');
@@ -1223,6 +1235,45 @@ const Report = class Report {
                         });
                     });
                 });
+                // chromePageRender.renderPage(uri, path, (err, stdout, stderr) => {
+                //     fs.readFile(path, (err, data) => {
+                //         user.iterateCursor({
+                //             query: {
+                //                 _id: {
+                //                     $in: users
+                //                 }
+                //             }
+                //         }, (err, user, nextUser) => {
+                //             // figure out date/time
+                //             emails = emails.concat(user['Contact Info'].Value.filter((info) => {
+                //                 return info.Type === 'Email';
+                //             }).map((email) => {
+                //                 return email.Value;
+                //             }));
+                //
+                //             nextUser();
+                //         }, (err, count) => {
+                //             emails = emails.concat(schedule.emails).join(',');
+                //             if (!emails.length) {
+                //                 return cb('No recipients provided.');
+                //             }
+                //             mailer.sendEmail({
+                //                 to: emails,
+                //                 fromAccount: 'infoscan',
+                //                 subject: [reportName, ' for ', date].join(''),
+                //                 html: '<html><body><h1>You\'re welcome!</h1></body></html>',
+                //                 attachments: [{
+                //                     path: path,
+                //                     contentType: 'application/pdf',
+                //                     content: data
+                //                 }]
+                //             }, (err, info) => {
+                //                 console.log(err, info);
+                //                 return cb(err);
+                //             });
+                //         });
+                //     });
+                // });
             } else {
                 logger.info('   - -  scheduledReport() schedule._id = ' + schedule._id + '  unable to find Report with UPI = ' + upi);
             }
@@ -1270,6 +1321,7 @@ const utils = require('../helpers/utils.js');
 const Config = require('../public/js/lib/config');
 const logger = require('../helpers/logger')(module);
 const PageRender = require('./pagerender');
+const ChromePageRender = require('./chromepagerender');
 const Mailer = require('./mailer');
 const Schedule = require('./schedule');
 const History = require('./history');
