@@ -3387,10 +3387,11 @@ var dti = {
                                             grouped: null
                                         }, myParent, true, false);
                                     });
+                                    manager.createNode(child, myParent, true, false);
                                 });
-                            } 
-
-                            manager.createNode(child, myParent, true, false);
+                            } else {
+                                manager.createNode(child, myParent, true, false);
+                            }
                         });
 
                         manager.sortNodes(parent.bindings.children);
