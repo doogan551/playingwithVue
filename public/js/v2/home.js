@@ -3201,6 +3201,22 @@ var dti = {
                 return this.getNodeById(_id);
             }
 
+            getHierarchyRefsById(parent, child) {
+                let ret = [];
+                let id = parent.bindings._id();
+                if (typeof id === 'string') {
+                    id = parent.bindings.originalParentId();
+                }
+
+                dti.forEachArray(child.hierarchyRefs, (ref) => {
+                    if (ref.value === id) {
+                        ret.push(ref);
+                    }
+                });
+
+                return ret;
+            }
+
             initDOM() {
                 // var bindings = this.bindings;
                 let manager = this;
@@ -3321,60 +3337,59 @@ var dti = {
 
                     addBranch(children, parent) {
                         let paths = {};
+                        let parentId = parent.bindings._id();
 
                         dti.forEachArray(children, (child) => {
                             if (child.item === 'Mechanical') {
-                                // get correct hierarchyRef, then paths[groups]
-                                let tags = manager.splitSystemTags(child.systemTags);
+                                let pointRefs = manager.getHierarchyRefsById(parent, child);
 
-                                paths[tags.groups.join('-')] = paths[tags.groups.join('-')] || 0;
-                                paths[tags.groups.join('-')]++;
+                                dti.forEachArray(pointRefs, (pointRef) => {
+                                    let groups = pointRef.categories.join('-');
+
+                                    paths[groups] = paths[groups] || 0;
+                                    paths[groups]++;
+                                });
                             }
                         });
 
                         dti.forEachArray(children, (child) => {
-                            //TODO check for grouping preference, group/flatten as necessary 
+                            let myParent = parent;
 
                             if (child.item === 'Mechanical') {
-                                //TODO find correct hierarchy ref, then process that one (ignore served by, etc)
-                                let tags = manager.splitSystemTags(child.systemTags);
+                                child.originalParentId = parentId;
 
-                                if (tags.groups.length > 0 || child.type === 'End Point') {
-                                    child.fetched = true;
-                                }
+                                let pointRefs = manager.getHierarchyRefsById(parent, child);
 
-                                if (tags.groups.length > 0) {
-                                    let name = tags.groups.join(' ');
-                                    let flatChild = $.extend(true, {
-                                        display: name + ' ' + child.display,
-                                        grouped: paths[tags.groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
-                                    }, child);
+                                dti.forEachArray(pointRefs, (pointRef) => {
+                                    let groups = pointRef.categories;
 
-                                    manager.createNode(flatChild, parent, true, false);
-                                }
+                                    // if (groups.length > 0 || child.type === 'End Point') {
+                                    //     child.fetched = true;
+                                    // }
 
-                                if (paths[tags.groups.join('-')] > 1 && tags.groups.length > 0) {
-                                    //remove last parameter, below is single group, bottom is individual groups
-                                    parent = manager.createNode({
-                                        display: tags.groups.join(' '),
-                                        item: 'Mechanical',
-                                        fetched: true,
-                                        grouped: true
-                                    }, parent, true, false);
-                                    // dti.forEachArray(tags.groups, (group) => {
-                                    //     //display & item: Mechanical
-                                    //     parent = manager.createNode({
-                                    //         display: group,
-                                    //         item: 'Mechanical',
-                                    //         fetched: true,
-                                    //         grouped: true
-                                    //         // expanded: true // to expand automatically
-                                    //     }, parent, true, false);
-                                    // });
-                                }
+                                    // if (groups.length > 0) {
+                                    //     let name = groups.join(' ');
+                                    //     let flatChild = $.extend(true, {
+                                    //         display: name + ' ' + child.display,
+                                    //         grouped: paths[groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
+                                    //     }, child);
+
+                                    //     manager.createNode(flatChild, parent, true, false);
+                                    // }
+
+                                    dti.forEachArray(groups, (group) => {
+                                        myParent = manager.createNode({
+                                            display: group,
+                                            originalParentId: parentId,
+                                            item: 'Mechanical',
+                                            fetched: true,
+                                            grouped: null
+                                        }, myParent, true, false);
+                                    });
+                                });
                             } 
 
-                            manager.createNode(child, parent, true, false);
+                            manager.createNode(child, myParent, true, false);
                         });
 
                         manager.sortNodes(parent.bindings.children);
