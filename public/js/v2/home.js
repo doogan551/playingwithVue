@@ -3362,6 +3362,7 @@ var dti = {
 
                                 dti.forEachArray(pointRefs, (pointRef) => {
                                     let groups = pointRef.categories;
+                                    myParent = parent;
 
                                     // if (groups.length > 0 || child.type === 'End Point') {
                                     //     child.fetched = true;
