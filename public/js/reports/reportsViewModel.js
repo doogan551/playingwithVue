@@ -4394,7 +4394,7 @@ let reportsViewModel = function () {
                 render.baseReport();
             },
             baseChart: (formatForPrint, isScheduled) => {
-                var maxDataRowsForChart = 50000,
+                let maxDataRowsForChart = 50000,
                     chartType,
                     chartTitle = self.reportDisplayTitle(),
                     subTitle = "",
@@ -4403,6 +4403,7 @@ let reportsViewModel = function () {
                     spinnerText,
                     chartWidth,
                     chartHeight,
+                    $tabContent = $tabViewReport.find(".tab-content"),
                     getChartWidth = () => {
                         var answer;
 
@@ -4411,7 +4412,7 @@ let reportsViewModel = function () {
                         } else if (!!isScheduled) {
                             answer = 1050;
                         } else {
-                            answer = $reportChartDiv.parent().parent().width();
+                            answer = $tabContent.width();
                         }
 
                         return answer;
@@ -4424,7 +4425,7 @@ let reportsViewModel = function () {
                         } else if (!!isScheduled) {
                             answer = 680;
                         } else {
-                            answer = $reportChartDiv.parent().parent().height();
+                            answer = $tabContent.height();
                         }
 
                         return answer;
@@ -4472,6 +4473,14 @@ let reportsViewModel = function () {
                         setTimeout(function () {
                             if ($reportChartDiv.length > 0) {
                                 if (self.selectedChartType() === "Pie") {
+                                    if (reportChartData.length > 1) {
+                                        $reportChartDiv.css("overflow-y", "auto");
+                                        $reportChartDiv.css("height", chartHeight);
+                                        $reportChartDiv.addClass("thinScroll");
+                                    } else {
+                                        $reportChartDiv.css("overflow-y", "hidden");
+                                        $reportChartDiv.removeClass("thinScroll");
+                                    }
                                     for (let dataIndex = 0; dataIndex < reportChartData.length; dataIndex++) {
                                         let chunkOfChartData = [];
                                         let $chartDiv = $("<div chartIndex='" + dataIndex +"'></div>");
