@@ -64,6 +64,7 @@ const Hierarchy = class Hierarchy extends Common {
         let refs = data.refs;
         let type = data.type;
         let item = data.item;
+        let instance = this.getDefault(data.instance, '');
         let systemTags = this.getDefault(data.systemTags, {
             properties: [],
             qualifiers: []
@@ -90,7 +91,8 @@ const Hierarchy = class Hierarchy extends Common {
             type: type,
             meta: meta,
             tags: [],
-            systemTags: systemTags
+            systemTags: systemTags,
+            instance: instance
         };
         this.recreateTags(node);
         this.insert({
@@ -570,29 +572,32 @@ const Hierarchy = class Hierarchy extends Common {
 
     recreateTags(node) {
         let addUniqueTags = (tag) => {
-            if (!node.tags.includes(tag)) {
-                node.tags.push(tag);
-            }
+            let tags = tag.toLowerCase().split(' ');
+            tags = tags.filter((tag) => !node.tags.includes(tag) && tag !== '');
+            node.tags.push(...tags);
         };
 
         node.tags = [];
 
         if (node.hasOwnProperty('systemTags')) {
             node.systemTags.properties.forEach((tag) => {
-                node.tags = node.tags.concat(tag.split(' ').forEach((tag) => addUniqueTags(tag.toLowerCase())));
+                addUniqueTags(tag);
             });
             node.systemTags.qualifiers.forEach((tag) => {
-                node.tags = node.tags.concat(tag.split(' ').forEach((tag) => addUniqueTags(tag.toLowerCase())));
+                addUniqueTags(tag);
             });
         }
 
         node.hierarchyRefs.forEach((ref) => {
-            node.tags = node.tags.concat(ref.categories.forEach((tag) => addUniqueTags(tag.toLowerCase())));
+            ref.categories.forEach((cat) => {
+                addUniqueTags(cat);
+            });
         });
 
-        addUniqueTags(node.display.toLowerCase());
-        addUniqueTags(node.type.toLowerCase());
-        addUniqueTags(node.item.toLowerCase());
+        addUniqueTags(node.display);
+        addUniqueTags(node.type);
+        addUniqueTags(node.item);
+        addUniqueTags(node.instance);
         return;
     }
 
