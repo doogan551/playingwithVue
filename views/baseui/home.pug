@@ -455,20 +455,20 @@ html
                                     label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
                                 // /ko
                 .treeOptions
-                    .row
-                        span Tree Styles
-                        .treeStyles(data-bind="foreach: treeStyles")
-                            span.treeStyle
-                                input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
-                                label(data-bind="text: $index, attr: { for: 'treeStyle_' + $index()}")
-                    .row
-                        div Show Grouped
-                        span
-                            input#showTreeGrouped(type="radio", name="showTreeGrouped", data-bind="value: true, checked: $root.showGrouped")
-                            label(for="showTreeGrouped") Yes
-                        span
-                            input#showTreeFlat(type="radio", name="showTreeGrouped", data-bind="value: false, checked: $root.showGrouped")
-                            label(for="showTreeFlat") No
+                    //- .row
+                    //-     span Tree Styles
+                    //-     .treeStyles(data-bind="foreach: treeStyles")
+                    //-         span.treeStyle
+                    //-             input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
+                    //-             label(data-bind="text: $index, attr: { for: 'treeStyle_' + $index()}")
+                    //- .row
+                    //-     div Show Grouped
+                    //-     span
+                    //-         input#showTreeGrouped(type="radio", name="showTreeGrouped", data-bind="value: true, checked: $root.showGrouped")
+                    //-         label(for="showTreeGrouped") Yes
+                    //-     span
+                    //-         input#showTreeFlat(type="radio", name="showTreeGrouped", data-bind="value: false, checked: $root.showGrouped")
+                    //-         label(for="showTreeFlat") No
 
 
             script#node(type='text/html')
