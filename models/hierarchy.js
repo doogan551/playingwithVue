@@ -44,11 +44,7 @@ const Hierarchy = class Hierarchy extends Common {
         }, cb);
     }
 
-    buildParents(loc, mech) {
-        return [this.buildParent(LOCATION, loc), this.buildParent(MECHANICAL, mech)];
-    }
-
-    buildParent(item, parent) {
+    buildParent(parent) {
         let template = {
             isReadOnly: false
         };
@@ -57,7 +53,7 @@ const Hierarchy = class Hierarchy extends Common {
         template.value = (!parent) ? 0 : parent._id;
         template.type = (!parent) ? '' : parent.type;
         template.isDisplayable = (!parent) ? false : true;
-        template.item = item;
+        template.item = parent.item;
 
         return template;
     }
@@ -66,10 +62,9 @@ const Hierarchy = class Hierarchy extends Common {
         let display = data.display;
         let id = this.getNumber(data._id);
         let refs = data.refs;
-        let parentLocId = this.getNumber(data.parentLocId);
-        let parentMechId = this.getNumber(data.parentMechId);
         let type = data.type;
         let item = data.item;
+        let instance = this.getDefault(data.instance, '');
         let systemTags = this.getDefault(data.systemTags, {
             properties: [],
             qualifiers: []
@@ -87,41 +82,28 @@ const Hierarchy = class Hierarchy extends Common {
             tz: ''
         });
 
-        this.getBothParents(parentLocId, parentMechId, (err, parentLoc, parentMech) => {
-            // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
-            let node = {
-                item: item,
-                _id: id,
-                display: display,
-                hierarchyRefs: refs,
-                type: type,
-                meta: meta,
-                tags: [],
-                systemTags: systemTags
-            };
-            this.recreateTags(node);
-            this.insert({
-                insertObj: node
-            }, (err, result) => {
-                if (err) {
-                    return cb(err);
-                } else if (!!result) {
-                    return cb(null, result.ops[0]);
-                }
-                return cb(null, null);
-            });
-        });
-    }
-
-    getBothParents(parentLocId, parentMechId, cb) {
-        this.getNode({
-            id: parentLocId
-        }, (err, parentLoc) => {
-            this.getNode({
-                id: parentMechId
-            }, (err, parentMech) => {
-                cb(err, parentLoc, parentMech);
-            });
+        // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
+        let node = {
+            item: item,
+            _id: id,
+            display: display,
+            hierarchyRefs: refs,
+            type: type,
+            meta: meta,
+            tags: [],
+            systemTags: systemTags,
+            instance: instance
+        };
+        this.recreateTags(node);
+        this.insert({
+            insertObj: node
+        }, (err, result) => {
+            if (err) {
+                return cb(err);
+            } else if (!!result) {
+                return cb(null, result.ops[0]);
+            }
+            return cb(null, null);
         });
     }
 
@@ -228,7 +210,6 @@ const Hierarchy = class Hierarchy extends Common {
     search(data, cb) {
         let terms = this.getDefault(data.terms, []);
         let pipeline = [];
-        let item = this.getDefault(data.item, LOCATION);
 
         terms = terms.map((term) => {
             if (term.match(/"/)) {
@@ -307,7 +288,7 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, descendants) => {
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                descendant.path = this.orderPath(item, descendant.path);
+                // descendant.path = this.orderPath(item, descendant.path);
                 callback();
             }, (err) => {
                 cb(err, descendants);
@@ -317,14 +298,12 @@ const Hierarchy = class Hierarchy extends Common {
 
     getDescendants(data, cb) {
         let id = this.getNumber(data.id);
-        let item = data.item;
 
         let pipeline = [];
         pipeline.push({
             '$match': {
                 'hierarchyRefs': {
                     '$elemMatch': {
-                        'item': 'Location',
                         'value': id
                     }
                 }
@@ -340,15 +319,6 @@ const Hierarchy = class Hierarchy extends Common {
             }
         });
 
-        // pipeline.push({
-        //     $unwind: '$children'
-        // });
-        // pipeline.push({
-        //     $replaceRoot: {
-        //         'newRoot': '$children'
-        //     }
-        // });
-
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
@@ -359,14 +329,13 @@ const Hierarchy = class Hierarchy extends Common {
                 newDescendants.push(descendant);
             });
 
-            descendants = this.orderDescendants(item, newDescendants, id);
+            // descendants = this.orderDescendants(item, newDescendants, id);
             cb(err, descendants);
         });
     }
 
     getDescendantIds(data, cb) {
         let id = this.getNumber(data.id);
-        let item = data.item;
 
         let pipeline = [];
         pipeline.push({
@@ -410,7 +379,6 @@ const Hierarchy = class Hierarchy extends Common {
 
     getFullPath(data, cb) {
         let id = this.getNumber(data.id);
-        let item = data.item;
 
         let pipeline = [];
 
@@ -427,7 +395,7 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, descendants) => {
             descendants.sort(this.sortDescendants);
             async.each(descendants, (descendant, callback) => {
-                descendant.path = this.orderPath(item, descendant.path);
+                // descendant.path = this.orderPath(item, descendant.path);
                 callback();
             }, (err) => {
                 cb(err, descendants);
@@ -491,7 +459,6 @@ const Hierarchy = class Hierarchy extends Common {
     deleteNode(data, cb) {
         let id = this.getNumber(data.id);
         let deleteChildren = this.getDefault(data.deleteChildren, false);
-        let item = data.item;
 
         this.getDescendantIds({
             id: id
@@ -510,7 +477,7 @@ const Hierarchy = class Hierarchy extends Common {
                     query: query
                 }, cb);
             } else {
-                this.updateParent(id, query, item, cb);
+                this.updateParent(id, query, cb);
             }
         });
     }
@@ -518,7 +485,6 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentId = this.getNumber(data.parentId);
-        let item = data.item;
         this.getNode({
             id: id
         }, (err, node) => {
@@ -528,14 +494,15 @@ const Hierarchy = class Hierarchy extends Common {
                 } else {
                     this.updateParent(parentId, {
                         _id: id
-                    }, item, cb);
+                    }, cb);
                 }
             });
         });
     }
 
-    updateParent(parentId, query, item, cb) {
-        query['hierarchyRefs.item'] = item;
+    updateParent(parentId, query, cb) {
+        // TODO needs to be reworked on how the array element is updated
+        // query['hierarchyRefs.item'] = item;
         this.getNode({
             id: parentId
         }, (err, parent) => {
@@ -543,7 +510,7 @@ const Hierarchy = class Hierarchy extends Common {
                 query: query,
                 updateObj: {
                     $set: {
-                        'hierarchyRefs.$': this.buildParent(parent.item, parent)
+                        'hierarchyRefs.$': this.buildParent(parent)
                     }
                 }
             }, cb);
@@ -593,7 +560,7 @@ const Hierarchy = class Hierarchy extends Common {
                             },
                             updateObj: {
                                 $set: {
-                                    'hierarchyRefs.$': this.buildParent(node.item, node)
+                                    'hierarchyRefs.$': this.buildParent(node)
                                 }
                             }
                         }, cb);
@@ -603,34 +570,34 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    splitSystemTags(tagString) {
-        // Group,Group/Property;Type
-        // Supply,Air/Temperature;Sensor
-        let tags = {};
-        tags.groups = tagString.split('/')[0].split(',');
-        tags.properties = tagString.split('/')[1].split(';')[0].split(',');
-        tags.types = tagString.split('/')[1].split(';')[1].split(',');
-        return tags;
-    }
-
     recreateTags(node) {
+        let addUniqueTags = (tag) => {
+            let tags = tag.toLowerCase().split(' ');
+            tags = tags.filter((tag) => !node.tags.includes(tag) && tag !== '');
+            node.tags.push(...tags);
+        };
+
         node.tags = [];
+
         if (node.hasOwnProperty('systemTags')) {
             node.systemTags.properties.forEach((tag) => {
-                node.tags = node.tags.concat(tag.split(' ').map((tag) => tag.toLowerCase()));
+                addUniqueTags(tag);
             });
             node.systemTags.qualifiers.forEach((tag) => {
-                node.tags = node.tags.concat(tag.split(' ').map((tag) => tag.toLowerCase()));
+                addUniqueTags(tag);
             });
         }
 
         node.hierarchyRefs.forEach((ref) => {
-            node.tags = node.tags.concat(ref.categories.map((tag) => tag.toLowerCase()));
+            ref.categories.forEach((cat) => {
+                addUniqueTags(cat);
+            });
         });
 
-        node.tags.push(node.display.toLowerCase());
-        node.tags.push(node.type.toLowerCase());
-        node.tags.push(node.item.toLowerCase());
+        addUniqueTags(node.display);
+        addUniqueTags(node.type);
+        addUniqueTags(node.item);
+        addUniqueTags(node.instance);
         return;
     }
 
