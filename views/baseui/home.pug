@@ -428,12 +428,12 @@ html
             //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
 
-            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.collapsible-header'}]")
+            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.dtcollapsible-header'}]")
                 
 
                 // ko if: children().length !== 0
                 #tree.pane(data-bind="css: treeStyle")
-                    ul.collapsible(data-bind="template: { name: 'node', foreach: children}")
+                    ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
                 // /ko
 
                 // ko if: children().length === 0
@@ -475,15 +475,15 @@ html
                 //- .node
                 //-     ul.collapsible
                 li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused}")
-                    .collapsible-header(data-bind="css: {active: expanded, childless: hasChildren() === false}")
+                    .dtcollapsible-header(data-bind="css: {active: expanded, childless: hasChildren() === false}")
                         i.collapse.material-icons(style="float: right") remove
                         i.expand.material-icons(style="float: right") add
-                        span(data-bind="text: name")
-                    .collapsible-body
+                        .nodeName(data-bind="text: name")
+                    .dtcollapsible-body(data-bind="visible: expanded")
                         //- span.displayInfo
                             //- .name(data-bind="text: name")
                             //- input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
-                        ul.collapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
+                        ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
 
 
                 //- // ko with:bindings

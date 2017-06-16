@@ -3121,15 +3121,15 @@ var dti = {
 
                 this.$container = $container;
 
-                $container.on('click', (event) => {
-                    var $target = $(event.target);
-                    //all valid skips
-                    //TODO cleanup
-                    if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
-                        // this.bindings.focusedNode(false);
-                        this.bindings.focusNode();
-                    }
-                });
+                // $container.on('click', (event) => {
+                //     var $target = $(event.target);
+                //     //all valid skips
+                //     //TODO cleanup
+                //     if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
+                //         // this.bindings.focusedNode(false);
+                //         this.bindings.focusNode();
+                //     }
+                // });
 
                 this.crawlerModes = {
                     TOPDOWN: 1,
@@ -3153,7 +3153,7 @@ var dti = {
                 });
 
                 this.initBindings();
-                // this.initDOM();
+                this.initDOM();
 
                 this.getDefaultTree(() => {
                     this.bindings.refreshTooltips();
@@ -3222,8 +3222,56 @@ var dti = {
                 let manager = this;
 
                 $.contextMenu({
-                    selector: '.collapsible-header',
+                    selector: '.dtcollapsible-header',
                     items: {
+                        add: {
+                            name: 'Add',
+                            items: {
+                                child: {
+                                    name: 'Sub Location',
+                                    callback(key, opt) {
+                                        let $target = opt.$trigger;
+                                        let context = ko.contextFor($target[0]);
+                                        let node = manager.getNodeByContext(context);
+
+                                        manager.bindings.addChild(node, {
+                                            name: 'Location',
+                                            fetched: true,
+                                            hasChildren: false,
+                                            expanded: true,
+                                            type: 'Area'
+                                        });
+
+                                        dti.log(node);                                
+                                    },
+                                    visible: (key, opt) => {
+                                        let $target = opt.$trigger;
+                                        let context = ko.contextFor($target[0]);
+                                        let node = manager.getNodeByContext(context);
+
+                                        return node.bindings.item() === 'Location';
+                                    }
+                                },
+                                sibling: {
+                                    name: 'Point',
+                                    callback(key, opt) {
+                                        let $target = opt.$trigger;
+                                        let context = ko.contextFor($target[0]);
+                                        let node = manager.getNodeByContext(context);
+
+                                        dti.log(node);                                
+                                    },
+                                    visible: (key, opt) => {
+                                        let $target = opt.$trigger;
+                                        let context = ko.contextFor($target[0]);
+                                        let node = manager.getNodeByContext(context);
+
+                                        return node.bindings.item() === 'Mechanical';
+                                    }
+                                }
+                            }
+                            
+                        }
                         // clone: {
                         //     name: 'Clone',
                         //     callback(key, opt) {
@@ -3270,17 +3318,34 @@ var dti = {
                         //         bindings.deleteBranch(ko.contextFor($target[0]));
                         //     }
                         // },
-                        expandAllRecursive: {
-                            name: 'Expand All',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let node = manager.getNodeByContext(ko.contextFor($target[0]));
+                        // expandAllRecursive: {
+                        //     name: 'Expand All',
+                        //     callback(key, opt) {
+                        //         let $target = opt.$trigger;
+                        //         let node = manager.getNodeByContext(ko.contextFor($target[0]));
 
-                                manager.bindings.expandRecursive(node, {
-                                    $target: $target
-                                });
-                            }
-                        }
+                        //         manager.bindings.expandRecursive(node, {
+                        //             $target: $target
+                        //         });
+                        //     }
+                        // }
+                    // },
+                    // events: {
+                    //     show: function(options) {
+                    //         let $target = opt.$trigger;
+                    //         let context = ko.contextFor($target[0]);
+                    //         let node = manager.getNodeByContext(context);
+
+                    //         if (node.item() !== 'Location') {
+
+                    //         }
+                    //     // },
+                    //     // hide: function(options) {
+                    //     //     var $target = options.$trigger,
+                    //     //         $row = $target.is('.listEntry') ? $target.parent() : $target;
+
+                    //     //     $row.removeClass('hovered');
+                    //     }
                     }
                 });
 
@@ -3352,8 +3417,10 @@ var dti = {
                             }
                         });
 
-                        dti.forEachArray(children, (child) => {
+                        dti.forEachArray(children, (rawChild) => {
                             let myParent = parent;
+                            let child = $.extend(true, {}, rawChild);
+                            child._data = $.extend(true, {}, rawChild._data);
 
                             if (child.item === 'Mechanical') {
                                 child.originalParentId = parentId;
@@ -3417,10 +3484,11 @@ var dti = {
                         }, obj, true);
                     },
 
-                    addChild(el, config, parent, skipAdd) {
-                        let node = ko.dataFor(el);
+                    // addChild(el, config, parent, skipAdd) {
+                    addChild(parent, config) {
+                        let node = parent;
 
-                        config.parentLocId = parent._id();
+                        config.parentLocId = parent.bindings._id();
                             
                         let child = manager.bindings.getNode(config || {});
 
@@ -3428,17 +3496,17 @@ var dti = {
                         
                         // parent.hasChanged(true);
 
-                        child.isNew = true;
+                        // child.isNew = true;
 
                         manager.createNode(child, parent);
-                        parent.expanded(true);
+                        parent.bindings.expanded(true);
                         // data.children.push(child);
                         // manager.bindings._addNode(data.children, child);
                         // manager.bindings.focusNode(child);
 
-                        if (!skipAdd) {
-                            manager.saveNewNode(child);
-                        }
+                        // if (!skipAdd) {
+                        //     manager.saveNewNode(child);
+                        // }
 
                         return child;
                     },
@@ -4345,6 +4413,7 @@ var dti = {
                 let template = dti.locations.LocationsNode.getTemplate();
 
                 let _normalize = (item, idx) => {
+                    item._data = $.extend(true, {}, item);
                     dti.forEach(template, function (val, prop) {
                         if (item[prop] === undefined) {
                             item[prop] = dti.utility.clone(val);

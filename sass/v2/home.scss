@@ -1920,7 +1920,7 @@ $treeTopHeight: 76px;
         border-left: 1px solid $blue-grey;
     }
 
-    .collapsible {
+    .dtcollapsible {
         margin: 0;
         border: none;
         box-shadow: none;
@@ -1928,7 +1928,8 @@ $treeTopHeight: 76px;
 
     $treeHeight: 2.2rem; //original 3rem
 
-    .collapsible-header {
+    .dtcollapsible-header {
+        cursor: pointer;
         background-color: initial;
         border-bottom: none;
         min-height: $treeHeight;
@@ -1940,13 +1941,28 @@ $treeTopHeight: 76px;
             line-height: $treeHeight;
             font-size: 1.2em;
         }
+
+        .nodeName {
+            // position: relative;
+            // top: 50%;
+            // transform: translateY(-50%);
+            // display: inline-block;
+            // vertical-align: middle;
+        }
+
+        // &:before {
+        //     content: '';
+        //     display: inline-block;
+        //     vertical-align: middle;
+        //     height: 100%;
+        // }
     }
 
     // .collapsible-body {
     //     box-shadow: inset 0 0 10px rgba(0, 0, 0, .4);
     // }
 
-    .collapsible-body {
+    .dtcollapsible-body {
         border-bottom: none;
     }
 
@@ -1955,7 +1971,7 @@ $treeTopHeight: 76px;
         display: none;
     }
 
-    .collapsible-header:not(.active)  > .collapse {
+    .dtcollapsible-header:not(.active)  > .collapse {
         display: none;
     }
 
@@ -2037,7 +2053,7 @@ $treeTopHeight: 76px;
 }
 
 #tree.style3 {
-    .collapsible {
+    .dtcollapsible {
         // three sided border, transparent background
 
         li {
@@ -2049,11 +2065,11 @@ $treeTopHeight: 76px;
         }
     }
 
-    & > .collapsible > li {
+    & > .dtcollapsible > li {
         border-left: none;
     }
 
-    .collapsible-header {
+    .dtcollapsible-header {
         transition: background-color .2s ease;
 
         &:hover {
