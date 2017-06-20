@@ -1379,6 +1379,7 @@ let reportsViewModel = function () {
         $globalCalculateText,
         $globalCalculate,
         $reportChartDiv,
+        $queryResultSize,
         longClickStart,
         longClickTimer = 100,
         mouseHoverStart,
@@ -1419,6 +1420,8 @@ let reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
+        millisecondsInHour = 1000 * 60 * 60,
+        timeOfUseDuration,
         currentUser,
         ENUMSTEMPLATESENUMS,
         reportCalc = {
@@ -1738,19 +1741,22 @@ let reportsViewModel = function () {
                 }
 
                 if (typeof self.selectedDuration() === "object") {
-                    self.selectedDuration().startTimeOffSet = self.durationStartTimeOffSet();
-                    self.selectedDuration().endTimeOffSet = self.durationEndTimeOffSet();
+                    let tempDuration = $.extend(true, {}, self.selectedDuration());
+                    tempDuration.startTimeOffSet = self.durationStartTimeOffSet();
+                    tempDuration.endTimeOffSet = self.durationEndTimeOffSet();
 
-                    if (self.selectedDuration().selectedRange === "Custom Range") {
-                        self.startDate(reportUtil.getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet()));
-                        self.endDate(reportUtil.getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet()));
+                    if (tempDuration.selectedRange === "Custom Range") {
+                        self.startDate(reportUtil.getAdjustedDatetimeUnix(tempDuration.startDate.unix(), self.durationStartTimeOffSet()));
+                        self.endDate(reportUtil.getAdjustedDatetimeUnix(tempDuration.endDate.unix(), self.durationEndTimeOffSet()));
                     } else {
-                        var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
-                        self.selectedDuration().startDate = reportUtil.getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
-                        self.selectedDuration().endDate = reportUtil.getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                        self.startDate(self.selectedDuration().startDate.unix());
-                        self.endDate(self.selectedDuration().endDate.unix());
+                        var dateRange = reportDateRanges(tempDuration.selectedRange);
+                        tempDuration.startDate = reportUtil.getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                        tempDuration.endDate = reportUtil.getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                        self.startDate(tempDuration.startDate.unix());
+                        self.endDate(tempDuration.endDate.unix());
+                        tempDuration.duration = tempDuration.startDate.diff(tempDuration.endDate);
                     }
+                    self.selectedDuration(tempDuration);
                 }
 
                 self.selectedDuration.valueHasMutated();
@@ -1875,6 +1881,20 @@ let reportsViewModel = function () {
             getExportFileName: () => {
                 let now = moment().format("YYYY-MM-DD_HHmm");
                 return reportName + "_" + now;
+            },
+            getTimeOfUseDuration: (selectedInterval) => {
+                let answer;
+                for (let i = 0; i < self.listOfIntervals().length; i++) {
+                    if (self.intervalPeriod() === self.listOfIntervals()[i].text) {
+                        if (i+1 < self.listOfIntervals().length) {
+                            answer = self.listOfIntervals()[i+1];
+                        } else {
+                            answer = self.listOfIntervals()[i];
+                        }
+                        break;
+                    }
+                }
+                return answer;
             }
         },
         pointSelector = {
@@ -2375,6 +2395,7 @@ let reportsViewModel = function () {
                 $reportColumns = $direports.find("#reportColumns");
                 $additionalFilters = $direports.find("#additionalFilters");
                 $reportChartDiv = $direports.find(".reportChartDiv");
+                $queryResultSize = $additionalFilters.find(".queryResultSize span");
             },
             blockUI: ($control, state) => {
                 if (state === true) {
@@ -2394,6 +2415,7 @@ let reportsViewModel = function () {
                     reportTypes,
                     chartTypes,
                     $reportRangeDropdown,
+                    $availableIntervalsContainer,
                     $reportStartDate,
                     $reportEndDate,
                     precisionEventsSet = false,
@@ -2407,6 +2429,7 @@ let reportsViewModel = function () {
                 setTimeout(function () {
                     if (!scheduledReport) {
                         $reportRangeDropdown = $additionalFilters.find('.reportRangeDropdown select');
+                        $availableIntervalsContainer = $additionalFilters.find('.availableIntervalsContainer .dropdown-button');
                         $reportStartDate = $additionalFilters.find("#reportStartDate");
                         $reportEndDate = $additionalFilters.find("#reportEndDate");
 
@@ -2456,31 +2479,39 @@ let reportsViewModel = function () {
                             }, 700);
                         });
 
-                        $reportRangeDropdown.on('change', function (e) {
-                            var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
-                                dateRange;
-                            self.selectedDuration().selectedRange = selectedRange;
-                            if (self.selectedDuration().selectedRange !== "Custom Range") {
-                                dateRange = reportDateRanges(self.selectedDuration().selectedRange);
-                                $reportStartDate.pickadate('picker').set({select: reportUtil.getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet()).unix() * 1000});
-                                $reportEndDate.pickadate('picker').set({select: reportUtil.getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet()).unix() * 1000});
-                            }
-
-                            $reportStartDate.pickadate('picker').set({max: new Date($reportEndDate.pickadate('picker').get('select').pick)});
-                            $reportEndDate.pickadate('picker').set({min: new Date($reportStartDate.pickadate('picker').get('select').pick)});
-                        });
-
                         if (self.reportType() !== "Property") {
+                            let tempDuration;
+                            $reportRangeDropdown.on('change', function (e) {
+                                var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
+                                    dateRange,
+                                    tempDuration = $.extend(true, {}, self.selectedDuration());
+
+                                tempDuration.selectedRange = selectedRange;
+                                if (tempDuration.selectedRange !== "Custom Range") {
+                                    dateRange = reportDateRanges(tempDuration.selectedRange);
+                                    tempDuration.startDate = reportUtil.getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                                    tempDuration.endDate = reportUtil.getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                                    $reportStartDate.pickadate('picker').set({select: tempDuration.startDate.unix() * 1000});
+                                    $reportEndDate.pickadate('picker').set({select: tempDuration.endDate.unix() * 1000});
+                                }
+
+                                $reportStartDate.pickadate('picker').set({max: new Date($reportEndDate.pickadate('picker').get('select').pick)});
+                                $reportEndDate.pickadate('picker').set({min: new Date($reportStartDate.pickadate('picker').get('select').pick)});
+                                self.selectedDuration(tempDuration);
+                            });
+
                             $reportStartDate.pickadate('picker').on({
                                 set: function (thingToSet) {
                                     if (!!thingToSet.select) {
+                                        tempDuration = $.extend(true, {}, self.selectedDuration());
                                         if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
                                             $reportRangeDropdown.val("Custom Range");
-                                            self.selectedDuration().selectedRange = $reportRangeDropdown.val();
-                                            self.selectedDuration.valueHasMutated();
+                                            tempDuration.selectedRange = $reportRangeDropdown.val();
+                                            tempDuration.startDate = reportUtil.getAdjustedDatetimeMoment(moment(this.get('select').pick), self.durationStartTimeOffSet());
                                             $reportRangeDropdown.material_select();
                                         }
                                         $reportEndDate.pickadate('picker').set({min: new Date(this.get('select').pick)});
+                                        self.selectedDuration(tempDuration);
                                     }
                                 }
                             });
@@ -2488,13 +2519,15 @@ let reportsViewModel = function () {
                             $reportEndDate.pickadate('picker').on({
                                 set: function (thingToSet) {
                                     if (!!thingToSet.select) {
+                                        tempDuration = $.extend(true, {}, self.selectedDuration());
                                         if ($reportStartDate.pickadate('picker').get('open') || $reportEndDate.pickadate('picker').get('open')) {
                                             $reportRangeDropdown.val("Custom Range");
-                                            self.selectedDuration().selectedRange = $reportRangeDropdown.val();
-                                            self.selectedDuration.valueHasMutated();
+                                            tempDuration.selectedRange = $reportRangeDropdown.val();
+                                            tempDuration.endDate = reportUtil.getAdjustedDatetimeMoment(moment(this.get('select').pick), self.durationEndTimeOffSet());
                                             $reportRangeDropdown.material_select();
                                         }
                                         $reportStartDate.pickadate('picker').set({max: new Date(this.get('select').pick)});
+                                        self.selectedDuration(tempDuration);
                                     }
                                 }
                             });
@@ -2893,17 +2926,29 @@ let reportsViewModel = function () {
 
                 intervals = [
                     {
-                        text: "Minute"
+                        text: "Minute",
+                        subDuration: 1000,
+                        labelformat: {second: '%M'}
                     }, {
-                        text: "Hour"
+                        text: "Hour",
+                        subDuration: 60 * 1000,
+                        labelformat: {minute: '%M'}
                     }, {
-                        text: "Day"
+                        text: "Day",
+                        subDuration: 60 * 60 * 1000,
+                        labelformat: {day: '%H:%M'}
                     }, {
-                        text: "Week"
+                        text: "Week",
+                        subDuration: 60 * 60 * 24 * 1000,
+                        labelformat: {day: '%A'}
                     }, {
-                        text: "Month"
+                        text: "Month",
+                        subDuration: 60 * 60 * 24 * 7 * 1000,
+                        labelformat: {week: '%e. %b'}
                     }, {
-                        text: "Year"
+                        text: "Year",
+                        subDuration: 60 * 60 * 24 * 30 * 1000,
+                        labelformat: {month: '%b'}
                     }
                 ];
 
@@ -2938,19 +2983,24 @@ let reportsViewModel = function () {
                     {
                         text: "Area",
                         value: "area"
-                    },
-                    {
-                        text: "Line",
-                        value: "line"
                     }, {
                         text: "Column",
                         value: "column"
+                    }, {
+                        text: "Line",
+                        value: "line"
                     }, {
                         text: "Pie",
                         value: "pie"
                     }, {
                         text: "Spline",
                         value: "spline"
+                    }, {
+                        text: "Timeslot",
+                        value: "timeslot"
+                    }, {
+                        text: "Sum Timeslot",
+                        value: "sum timeslot"
                     }
                 ];
 
@@ -3843,10 +3893,117 @@ let reportsViewModel = function () {
                     columnDataFound,
                     result = [],
                     fieldValue,
+                    timeslotForDuration,
                     columnSum = 0,
                     totalAmount = 0,
                     sumsForProperties = {},
-                    drilldown = {};
+                    sumsForTimeOfUse = {},
+                    drilldown = {},
+                    startOfDuration = moment().startOf(timeOfUseDuration.text),
+                    parseDuration = (millisecs) => { // in milliseconds
+                        let answer = {
+                                year: 0,
+                                month: 0,
+                                week: 0,
+                                day: 0,
+                                hour: 0,
+                                min: 0
+                            },
+                            duration = moment.duration(millisecs);
+
+                        switch (timeOfUseDuration.text) {
+                            case "Minute":
+                                answer.hour = duration.asHours();
+                                if (parseInt(answer.hour, 10) > 1) {
+                                    answer.min = duration.subtract(parseInt(answer.hour, 10) * millisecondsInHour).asMinutes();
+                                } else {
+                                    answer.hour = 0;
+                                    answer.min = duration.asMinutes();
+                                }
+                                break;
+                            case "Hour":
+                                answer.day = duration.asDays();
+                                if (parseInt(answer.day, 10) > 1) {
+                                    answer.hour = duration.subtract(parseInt(answer.day, 10) * 24 * millisecondsInHour).asHours();
+                                } else {
+                                    answer.day = 0;
+                                    answer.hour = duration.asHours();
+                                }
+
+                                answer.hour = duration.asHours();
+                                if (parseInt(answer.hour, 10) > 1) {
+                                    answer.min = duration.subtract(parseInt(answer.hour, 10) * millisecondsInHour).asMinutes();
+                                } else {
+                                    answer.hour = 0;
+                                    answer.min = duration.asMinutes();
+                                }
+
+                                break;
+                            case "Day":
+                                answer.day = duration.asDays();
+                                if (parseInt(answer.day, 10) > 1) {
+                                    answer.hour = duration.subtract(parseInt(answer.day, 10) * 24 * millisecondsInHour).asHours();
+                                } else {
+                                    answer.day = 0;
+                                    answer.hour = duration.asHours();
+                                }
+
+                                answer.hour = duration.asHours();
+                                if (parseInt(answer.hour, 10) > 1) {
+                                    answer.min = duration.subtract(parseInt(answer.hour, 10) * millisecondsInHour).asMinutes();
+                                } else {
+                                    answer.hour = 0;
+                                    answer.min = duration.asMinutes();
+                                }
+                                break;
+                            case "Week":
+                                answer.month = duration.asMonths();
+                                if (parseInt(answer.month, 10) > 1) {
+                                    answer.week = duration.subtract(parseInt(answer.month, 10) * 24 * 7 * 4 * millisecondsInHour).asWeeks();
+                                } else {
+                                    answer.month = 0;
+                                    answer.week = duration.asWeeks();
+                                }
+                                break;
+                            case "Month":
+                                answer.month = duration.asMonths();
+                                if (parseInt(answer.month, 10) > 1) {
+                                    answer.week = duration.subtract(parseInt(answer.month, 10) * 24 * 7 * 4 * millisecondsInHour).asWeeks();
+                                } else {
+                                    answer.month = 0;
+                                    answer.week = parseInt(duration.asWeeks(), 10);
+                                }
+                                break;
+                            case "Year":
+                                answer.year = duration.asYears();
+                                if (parseInt(answer.year, 10) > 1) {
+                                    answer.month = duration.subtract(parseInt(answer.year, 10) * 24 * 365 * millisecondsInHour).asMonths();
+                                } else {
+                                    answer.year = 0;
+                                    answer.month = duration.asMonths();
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+
+                        return answer;
+                    },
+                    getTimeOfUseDateTime = (rawtime) => {
+                        let mDateTime = moment.unix(rawtime),
+                            startOfThisDateTime = mDateTime.clone().startOf(timeOfUseDuration.text),
+                            duration = moment.duration(mDateTime.diff(startOfThisDateTime)),
+                            adjustedDateTime = startOfDuration.clone(),
+                            parsedDuration = parseDuration(duration.asMilliseconds());
+
+                        adjustedDateTime.add(parsedDuration.month, 'months');
+                        adjustedDateTime.add(parsedDuration.week, 'weeks');
+                        adjustedDateTime.add(parsedDuration.day, 'days');
+                        adjustedDateTime.add(parsedDuration.hour, 'hours');
+                        adjustedDateTime.add(parsedDuration.min, 'minutes');
+
+                        return adjustedDateTime.unix();
+                    };
 
                 if (self.reportType() === "Property") {
                     self.selectedChartType("Pie");
@@ -3861,21 +4018,41 @@ let reportsViewModel = function () {
                             columnData = [];
                         }
                         sumsForProperties[columnName] = {};
-                        for (i = 0; i < len; i++) {
+                        for (i = 0; i < len; i++) { // loop across entire column data set
                             columnDataFound = (data[i][columnName] !== undefined);
                             if (columnDataFound) {
                                 fieldValue = reportUtil.parseNumberValue(data[i][columnName].Value, data[i][columnName].rawValue, data[i][columnName].eValue);
                                 switch (self.reportType()) {
                                     case "History":
                                     case "Totalizer":
-                                        if (self.selectedChartType() === "Pie") {
-                                            columnSum += parseFloat(data[i][columnName].rawValue);
-                                        } else {
-                                            columnData.push({
-                                                timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                                value: fieldValue,
-                                                enumText: (!!columnConfig.valueOptions ? reportUtil.getKeyBasedOnValue(columnConfig.valueOptions, fieldValue) : "")
-                                            });
+                                        switch (self.selectedChartType()) {
+                                            case "Pie":
+                                                columnSum += parseFloat(data[i][columnName].rawValue);
+                                                break;
+                                            case "Timeslot":
+                                                timeslotForDuration = getTimeOfUseDateTime(data[i].Date.rawValue);
+                                                columnData.push({
+                                                    x: moment.unix(timeslotForDuration).toDate(),
+                                                    y: fieldValue,
+                                                    timeStamp: data[i].Date.rawValue
+                                                });
+                                                break;
+                                            case "Sum Timeslot":
+                                                timeslotForDuration = getTimeOfUseDateTime(data[i].Date.rawValue);
+                                                if (sumsForTimeOfUse[timeslotForDuration] === undefined) {
+                                                    sumsForTimeOfUse[timeslotForDuration] = {};
+                                                    sumsForTimeOfUse[timeslotForDuration].sum = 0;
+                                                }
+
+                                                sumsForTimeOfUse[timeslotForDuration].sum += fieldValue;
+                                                break;
+                                            default:
+                                                columnData.push({
+                                                    timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
+                                                    value: fieldValue,
+                                                    enumText: (!!columnConfig.valueOptions ? reportUtil.getKeyBasedOnValue(columnConfig.valueOptions, fieldValue) : "")
+                                                });
+                                                break;
                                         }
                                         break;
                                     case "Property":
@@ -3884,7 +4061,6 @@ let reportsViewModel = function () {
                                                 sumsForProperties[columnName][data[i][columnName].rawValue] = 0;
                                             }
                                             sumsForProperties[columnName][data[i][columnName].rawValue] += 1;
-                                            // columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
                                         } else {
                                             columnData.push({
                                                 value: fieldValue
@@ -3899,62 +4075,97 @@ let reportsViewModel = function () {
                                 console.log("data[" + i + " ][" + columnName + "] not found");
                             }
                         }
+
                         if (self.reportType() === "Property") {
                             drilldown.series = [];
-                            // TODO drilldown data specific to Property & Pie chart
-                            // for (let fieldName in sumsForProperties) {
-                                let fieldName = columnName;
-                                if (sumsForProperties.hasOwnProperty(fieldName)) {
-                                    columnData = [];
-                                    columnDrillDownData = [];
-                                    for (var enumName in sumsForProperties[fieldName]) {
-                                        if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
-                                            columnData.push({
-                                                name: enumName,
-                                                y: parseFloat(sumsForProperties[fieldName][enumName]),
-                                                drilldown: enumName
-                                            });
+                            let fieldName = columnName;
+                            if (sumsForProperties.hasOwnProperty(fieldName)) {
+                                columnData = [];
+                                columnDrillDownData = [];
+                                for (var enumName in sumsForProperties[fieldName]) {
+                                    if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
+                                        columnData.push({
+                                            name: enumName,
+                                            y: parseFloat(sumsForProperties[fieldName][enumName]),
+                                            drilldown: enumName
+                                        });
 
-                                            console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
-                                            columnDrillDownData.push({
-                                                enumName: parseFloat(sumsForProperties[fieldName][enumName])
+                                        // console.log(fieldName + " has " + enumName + " = " + sumsForProperties[fieldName][enumName]);
+                                        columnDrillDownData.push({
+                                            enumName: parseFloat(sumsForProperties[fieldName][enumName])
+                                        });
+                                        totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
+                                    }
+                                }
+                                // TODO if we want to drill down into layers of data
+                                // drilldown.series.push({
+                                //     name: fieldName,
+                                //     id: fieldName,
+                                //     data: columnDrillDownData
+                                // });
+
+                                for (i = 0; i < columnData.length; i++) {
+                                    columnData[i].y = parseFloat(reportUtil.toFixed((columnData[i].y / totalAmount) * 100, 3));
+                                }
+
+                                result.push({
+                                    name: fieldName,
+                                    colorByPoint: true,
+                                    data: columnData,
+                                    drilldown: drilldown
+                                });
+                            }
+                        } else {
+                            switch (self.selectedChartType()) {
+                                case "Pie":
+                                    columnData.push({
+                                        name: columnConfig.colName,
+                                        y: parseFloat(columnSum)
+                                    });
+                                    totalAmount += parseFloat(columnSum);
+                                    break;
+                                case "Timeslot":
+                                    if (columnData.length > 0) {
+                                        result.push({
+                                            data: columnData,
+                                            name: columnConfig.colName,
+                                            // marker: (self.selectedChartType() !== "Timeslot") ? undefined : {
+                                            //     // symbol: "circle",
+                                            //     fillColor: "rgba(140, 95, 138, 0.35)"
+                                            // },
+                                            // _colorIndex: (self.selectedChartType() !== "Timeslot") ? undefined : 0,  // TODO  color seems to be broken
+                                            color: "rgba(140, 95, 138, 0.35)",
+                                            // fillColor: "rgba(140, 95, 138, 0.35)",
+                                            pointInterval: (24 * 3600 * 1000) // one day (in milisec.)
+                                        });
+                                    }
+                                    break;
+                                case "Sum Timeslot":
+                                    for (let key in sumsForTimeOfUse) {
+                                        if (sumsForTimeOfUse.hasOwnProperty(key)) {
+                                            columnData.push({
+                                                x: moment.unix(key).toDate(),
+                                                y: sumsForTimeOfUse[key].sum
                                             });
-                                            totalAmount += parseFloat(sumsForProperties[fieldName][enumName]);
                                         }
                                     }
-                                    drilldown.series.push({
-                                        name: fieldName,
-                                        id: fieldName,
-                                        data: columnDrillDownData
-                                    });
-
-                                    for (i = 0; i < columnData.length; i++) {
-                                        columnData[i].y = parseFloat(reportUtil.toFixed((columnData[i].y / totalAmount) * 100, 3));
-                                    }
 
                                     result.push({
-                                        name: fieldName,
-                                        colorByPoint: true,
-                                        data: columnData,
-                                        drilldown: drilldown
-                                    });
-                                }
-                            // }
-                        } else {
-                            if (self.selectedChartType() === "Pie") {
-                                columnData.push({
-                                    name: columnConfig.colName,
-                                    y: parseFloat(columnSum)
-                                });
-                                totalAmount += parseFloat(columnSum);
-                            } else {
-                                if (columnData.length > 0) {
-                                    result.push({
-                                        data: columnData,
                                         name: columnConfig.colName,
-                                        yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                        data: columnData,
+                                        pointInterval: (24 * 3600 * 1000) // one day (in milisec.)
                                     });
-                                }
+
+                                    break;
+                                default:
+                                    if (columnData.length > 0) {
+                                        result.push({
+                                            data: columnData,
+                                            name: columnConfig.colName,
+                                            yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
+                                        });
+                                    }
+                                    break;
                             }
                         }
                     }
@@ -3970,7 +4181,7 @@ let reportsViewModel = function () {
                         drilldown: drilldown
                     });
                 }
-                return (self.selectedChartType() !== "Pie") ? dataParse.setYaxisValues(result) : result;
+                return (self.selectedChartType() !== "Pie" && self.selectedChartType() !== "Timeslot") ? dataParse.setYaxisValues(result) : result;
             }
         },
         formatForPDF = {
@@ -4397,13 +4608,36 @@ let reportsViewModel = function () {
                 let maxDataRowsForChart = 50000,
                     chartType,
                     chartTitle = self.reportDisplayTitle(),
+                    trendPlotChart,
+                    timeOfUseChart,
                     subTitle = "",
                     toolTip,
                     yAxisTitle,
                     spinnerText,
+                    chartConfig = {},
                     chartWidth,
                     chartHeight,
+                    plotOptions = {},
                     $tabContent = $tabViewReport.find(".tab-content"),
+                    xAxisExtremes = (e) => {
+                        if (e.trigger === "zoom") {
+                            if (e.min && e.max) {
+                                $reportChartDiv.highcharts().showResetZoom();
+                            } else {
+                                // $reportChartDiv.highcharts().resetZoomButton.destroy();
+                            }
+                        }
+                    },
+                    buildSubTitle = (startDate, endDate) => {
+                        let datetimeFormat;
+                        if (self.selectedChartType() === "Timeslot") {
+                            datetimeFormat = "MM/DD/YYYY";
+                        } else {
+                            datetimeFormat = "MM/DD/YYYY hh:mm a";
+                        }
+
+                        return "by " + self.intervalPeriod() + " <br/> " + startDate.format(datetimeFormat) + " - " + endDate.format(datetimeFormat);
+                    },
                     getChartWidth = () => {
                         var answer;
 
@@ -4450,11 +4684,8 @@ let reportsViewModel = function () {
                     if (reportChartData[0].data.length < maxDataRowsForChart) {
                         switch (self.reportType()) {
                             case "History":
-                                subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
-                                yAxisTitle = "Totals";
-                                break;
                             case "Totalizer":
-                                subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
+                                subTitle = buildSubTitle(self.selectedDuration().startDate, self.selectedDuration().endDate);
                                 yAxisTitle = "Totals";
                                 break;
                             case "Property":
@@ -4472,111 +4703,239 @@ let reportsViewModel = function () {
 
                         setTimeout(function () {
                             if ($reportChartDiv.length > 0) {
-                                if (self.selectedChartType() === "Pie") {
-                                    if (reportChartData.length > 1) {
-                                        $reportChartDiv.css("overflow-y", "auto");
-                                        $reportChartDiv.css("height", chartHeight);
-                                        $reportChartDiv.addClass("thinScroll");
-                                    } else {
-                                        $reportChartDiv.css("overflow-y", "hidden");
-                                        $reportChartDiv.removeClass("thinScroll");
-                                    }
-                                    for (let dataIndex = 0; dataIndex < reportChartData.length; dataIndex++) {
-                                        let chunkOfChartData = [];
-                                        let $chartDiv = $("<div chartIndex='" + dataIndex +"'></div>");
-                                        $chartDiv.appendTo($reportChartDiv);
-                                        chunkOfChartData.push(reportChartData[dataIndex]);
-                                        $chartDiv.highcharts({
-                                            turboThreshold: maxDataRowsForChart,
-                                            chart: {
-                                                width: chartWidth,
-                                                height: chartHeight,
-                                                plotBackgroundColor: null,
-                                                plotBorderWidth: null,
-                                                plotShadow: false,
-                                                type: "pie"
-                                            },
-                                            title: {
-                                                text: chartTitle
-                                            },
-                                            subtitle: {
-                                                text: subTitle
-                                            },
-                                            tooltip: {
-                                                pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>"
-                                            },
-                                            plotOptions: {
-                                                pie: {
-                                                    allowPointSelect: true,
-                                                    cursor: "pointer",
-                                                    dataLabels: {
-                                                        enabled: true,
-                                                        format: "<b>{point.name}</b>: {point.percentage:.1f} %",
-                                                        style: {
-                                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || "black"
+                                switch (self.selectedChartType()) {
+                                    case "Pie":
+                                        if (reportChartData.length > 1) {
+                                            $reportChartDiv.css("overflow-y", "auto");
+                                            $reportChartDiv.css("height", chartHeight);
+                                            $reportChartDiv.addClass("thinScroll");
+                                        } else {
+                                            $reportChartDiv.css("overflow-y", "hidden");
+                                            $reportChartDiv.removeClass("thinScroll");
+                                        }
+                                        for (let dataIndex = 0; dataIndex < reportChartData.length; dataIndex++) {
+                                            let chunkOfChartData = [];
+                                            let $chartDiv = $("<div chartIndex='" + dataIndex + "'></div>");
+                                            $chartDiv.appendTo($reportChartDiv);
+                                            chunkOfChartData.push(reportChartData[dataIndex]);
+                                            subTitle = chunkOfChartData[0].name;
+                                            // $chartDiv.highcharts({
+                                            chartConfig = {
+                                                turboThreshold: maxDataRowsForChart,
+                                                target: $chartDiv,
+                                                chart: {
+                                                    width: chartWidth,
+                                                    height: chartHeight,
+                                                    plotBackgroundColor: null,
+                                                    plotBorderWidth: null,
+                                                    plotShadow: false,
+                                                    type: "pie"
+                                                },
+                                                title: chartTitle,
+                                                subtitle: subTitle,
+                                                tooltip: {
+                                                    pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>"
+                                                },
+                                                credits: {
+                                                    enabled: false
+                                                },
+                                                plotOptions: {
+                                                    pie: {
+                                                        allowPointSelect: true,
+                                                        cursor: "pointer",
+                                                        dataLabels: {
+                                                            enabled: true,
+                                                            format: "<b>{point.name}</b>: {point.percentage:.1f} %",
+                                                            style: {
+                                                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || "black"
+                                                            }
                                                         }
                                                     }
+                                                },
+                                                data: chunkOfChartData
+                                            };
+
+                                            let trendPlotPieChart = new TrendPlot(chartConfig);
+                                        }
+                                        break;
+                                    case "Timeslot":
+                                        chartConfig = {
+                                            chart: {
+                                                type: 'scatter',
+                                                renderTo: $reportChartDiv[0],
+                                                width: chartWidth,
+                                                height: chartHeight,
+                                                zoomType: 'xy'
+                                            },
+                                            credits: {
+                                                enabled: false
+                                            },
+                                            title: {
+                                                text: "Timeslot"
+                                            },
+                                            subtitle: {
+                                                text: buildSubTitle(self.selectedDuration().startDate, self.selectedDuration().endDate)
+                                            },
+                                            xAxis: {
+                                                title: {
+                                                    enabled: true,
+                                                    text: 'Time'
+                                                },
+                                                type: "datetime",
+                                                tickInterval: timeOfUseDuration.subDuration,
+                                                dateTimeLabelFormats: timeOfUseDuration.labelformat,
+                                                showFirstLabel: true,
+                                                showLastLabel: true
+                                            },
+                                            yAxis: {
+                                                title: {
+                                                    text: 'Total'
                                                 }
                                             },
-                                            series: chunkOfChartData
-                                        });
-                                    }
-                                } else {
-                                    if (self.selectedChartType() !== "Column") {
-                                        toolTip = {
-                                            formatter: function () {
-                                                return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
-                                            }
+                                            legend: {
+                                                align: 'center',
+                                                verticalAlign: 'bottom',
+                                                borderWidth: 1
+                                            },
+                                            plotOptions: {
+                                                scatter: {
+                                                    tooltip: {
+                                                        pointFormatter: function() {
+                                                            return '<b>' + moment.unix(this.timeStamp).format("MM/DD/YYYY HH:mm") + ', ' + this.y + '</b><br/>';
+                                                        }
+                                                    }
+                                                },
+                                                series: {
+                                                    turboThreshold: maxDataRowsForChart
+                                                }
+                                            },
+                                            series: reportChartData
                                         };
-                                    }
 
-                                    var trendPlot = new TrendPlot({
-                                        turboThreshold: maxDataRowsForChart,
-                                        width: chartWidth,
-                                        height: chartHeight,
-                                        target: $reportChartDiv,
-                                        title: chartTitle,
-                                        subtitle: subTitle,
-                                        y: "value",
-                                        x: "timeStamp",
-                                        enumText: "enumText",
-                                        //highlightMax: true,
-                                        data: reportChartData,
-                                        type: chartType,
-                                        chart: {
-                                            zoomType: "x"
-                                        },
-                                        tooltip: toolTip,
-                                        //plotOptions: {
-                                        //    series: {
-                                        //        cursor: "pointer",
-                                        //        point: {
-                                        //            events: {
-                                        //                click: () => {
-                                        //                    alert("x: " + this.x + ", y: " + this.y);
-                                        //                }
-                                        //            }
-                                        //        }
-                                        //    }
-                                        //},
-                                        navigator: {
-                                            enabled: (!scheduledReport && !formatForPrint)
-                                        },
-                                        xAxis: {
-                                            allowDecimals: false
-                                        },
-                                        legend: {
-                                            layout: "vertical",
-                                            align: "right",
-                                            verticalAlign: "middle",
-                                            borderWidth: 0
-                                        },
-                                        yAxisTitle: yAxisTitle
-                                    });
+                                        timeOfUseChart = Highcharts.chart(chartConfig);
+                                        break;
+                                    case "Sum Timeslot":
+                                        chartConfig = {
+                                            chart: {
+                                                type: 'column',
+                                                renderTo: $reportChartDiv[0],
+                                                width: chartWidth,
+                                                height: chartHeight,
+                                                zoomType: 'x'
+                                            },
+                                            credits: {
+                                                enabled: false
+                                            },
+                                            title: {
+                                                text: "Sum Timeslot"
+                                            },
+                                            subtitle: {
+                                                text: buildSubTitle(self.selectedDuration().startDate, self.selectedDuration().endDate)
+                                            },
+                                            xAxis: {
+                                                title: {
+                                                    enabled: true,
+                                                    text: 'Time'
+                                                },
+                                                type: "datetime",
+                                                tickInterval: timeOfUseDuration.subDuration,
+                                                dateTimeLabelFormats: timeOfUseDuration.labelformat,
+                                                showFirstLabel: true,
+                                                showLastLabel: true
+                                            },
+                                            yAxis: {
+                                                title: {
+                                                    text: 'Total'
+                                                }
+                                            },
+                                            legend: {
+                                                align: 'center',
+                                                verticalAlign: 'bottom',
+                                                borderWidth: 1
+                                            },
+                                            plotOptions: {
+                                                series: {
+                                                    turboThreshold: maxDataRowsForChart
+                                                }
+                                            },
+                                            tooltip: {
+                                                formatter: function() {
+                                                    return this.series.name + ': <b>' + reportUtil.toFixedComma(this.y, 2) + '</b><br/>';
+                                                }
+                                            },
+                                            series: reportChartData
+                                        };
+
+                                        timeOfUseChart = Highcharts.chart(chartConfig);
+                                        break;
+                                    default:
+                                        if (self.selectedChartType() !== "Column") {
+                                            toolTip = {
+                                                formatter: function () {
+                                                    return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                                }
+                                            };
+                                        }
+
+                                        chartConfig = {
+                                            turboThreshold: maxDataRowsForChart,
+                                            width: chartWidth,
+                                            height: chartHeight,
+                                            target: $reportChartDiv,
+                                            title: chartTitle,
+                                            subtitle: subTitle,
+                                            y: "value",
+                                            x: "timeStamp",
+                                            enumText: "enumText",
+                                            //highlightMax: true,
+                                            data: reportChartData,
+                                            type: chartType,
+                                            chart: {
+                                                zoomType: (self.selectedChartType() === "Timeslot") ? "xy" : "x"
+                                            },
+                                            tooltip: toolTip,
+                                            plotOptions: plotOptions,
+                                            //plotOptions: {
+                                            //    series: {
+                                            //        cursor: "pointer",
+                                            //        point: {
+                                            //            events: {
+                                            //                click: () => {
+                                            //                    alert("x: " + this.x + ", y: " + this.y);
+                                            //                }
+                                            //            }
+                                            //        }
+                                            //    }
+                                            //},
+                                            navigator: {
+                                                enabled: (!scheduledReport && !formatForPrint)
+                                            },
+                                            events: {
+                                                redraw: function (event) {
+                                                    this.setTitle(null, {text: buildSubTitle(moment(event.target.xAxis[0].min), moment(event.target.xAxis[0].max))}); // sets subtitle
+                                                }
+                                            },
+                                            xAxis: {
+                                                allowDecimals: false,
+                                                events: {
+                                                    setExtremes: xAxisExtremes
+                                                }
+                                            },
+                                            legend: {
+                                                layout: "vertical",
+                                                align: "right",
+                                                verticalAlign: "middle",
+                                                borderWidth: 0
+                                            },
+                                            yAxisTitle: yAxisTitle
+                                        };
+
+                                        trendPlotChart = new TrendPlot(chartConfig);
+                                        break;
                                 }
+                                self.activeRequestForChart(false);
+                                self.activeRequestDataDrawn(true);
                             }
-                            self.activeRequestForChart(false);
-                            self.activeRequestDataDrawn(true);
                         }, 110);
                     } else {
                         $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
@@ -5358,14 +5717,16 @@ let reportsViewModel = function () {
                                     getUnique = (theArray) => {
                                         var n = {},
                                             result = [],
+                                            value,
                                             v;
                                         for (var i = 0; i < theArray.length; i++) {
+                                            value = theArray[i].Value;
                                             // console.log("---- theArray[" + i + "].Value = " + theArray[i].Value);
                                             // console.log("-------- theArray[" + i + "].rawValue = " + theArray[i].rawValue);
-                                            if (theArray[i].Value === 'string') {
-                                                v = theArray[i].Value.trim();
+                                            if (value !== undefined && value !== null) {
+                                                v = value;
                                             } else {
-                                                v = (theArray[i].Value !== undefined && theArray[i].Value !== null ? theArray[i].Value : "");
+                                                v = "";
                                             }
                                             if (!n[v] && v !== "") {
                                                 // console.log("---- theArray[" + i + "].Value = " + theArray[i].Value);
@@ -5390,16 +5751,20 @@ let reportsViewModel = function () {
                                 } else if (uniqueData.length > 0) {
                                     let $selectFilter = $('<select><option value=""></option></select>').appendTo($element);
 
+                                    let startTimeForLoop = moment();
                                     for (let i = 0; i < uniqueData.length; i++) {
-                                        if (searchFilterValue === uniqueData[i]) {
+                                        // TODO speed this up
+                                        // console.log("searchFilterValue = (" + searchFilterValue + ")");
+                                        // console.log("uniqueData[" + i + "] = (" + uniqueData[i] + ")");
+
+                                        if (searchFilterValue !== undefined && searchFilterValue == uniqueData[i]) {
                                             $selectFilter.append('<option class="active" value="' + uniqueData[i] + '">' + uniqueData[i] + '</option>');
+                                            $selectFilter[0].options.selectedIndex = i + 1;
                                         } else {
                                             $selectFilter.append('<option value="' + uniqueData[i] + '">' + uniqueData[i] + '</option>');
                                         }
-                                        if (searchFilterValue === $selectFilter[0].options[$selectFilter[0].options.length - 1].value) {
-                                            $selectFilter[0].options.selectedIndex = $selectFilter[0].options.length - 1;
-                                        }
                                     }
+                                    console.log("buildFilterSelectForLoop()  end - - -   diff = " + moment.duration(moment().diff(startTimeForLoop)).asMilliseconds() + "ms");
                                     $selectFilter.material_select();
 
                                     $selectFilter.on('change', function (e) {
@@ -6731,9 +7096,14 @@ let reportsViewModel = function () {
                 self.startDate.valueHasMutated();
                 self.endDate.valueHasMutated();
                 if (self.reportType() !== "Property" && !scheduledReport) {
+                    let $reportStartDatePicker = $additionalFilters.find("#reportStartDate").pickadate('picker'),
+                        $reportEndDatePicker = $additionalFilters.find("#reportEndDate").pickadate('picker');
+
                     $additionalFilters.find(".reportRangeDropdown select").material_select();
-                    $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
-                    $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+                    $reportStartDatePicker.set('select', self.startDate() * 1000);
+                    $reportEndDatePicker.set({min: new Date(self.startDate() * 1000)});
+                    $reportEndDatePicker.set('select', self.endDate() * 1000);
+                    $reportStartDatePicker.set({max: new Date(self.endDate() * 1000)});
                     // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
                     // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
                 }
@@ -6882,6 +7252,14 @@ let reportsViewModel = function () {
                     self.columnPropertiesSearchFilter(""); // computed props jolt
                     self.filterPropertiesSearchFilter.valueHasMutated();
                     self.columnPropertiesSearchFilter.valueHasMutated();
+                    if (self.reportType() === "Property") {
+                        // property reports only use Pie charts
+                        self.listOfChartTypes([{
+                            text: "Pie",
+                            value: "pie"
+                        }]);
+                    }
+
                     initializeForMaterialize();
                 }
 
@@ -7557,17 +7935,21 @@ let reportsViewModel = function () {
         var result = [],
             resetInterval = true,
             intervalDuration,
-            currentDuration;
+            sizeOfDataSet = 0,
+            tooLargeSize = 100000,
+            tempDuration = $.extend(true, {}, self.selectedDuration());
 
-        if (!!self.selectedDuration() && self.selectedDuration().endDate) {
-            self.selectedDuration().startDate = reportUtil.getAdjustedDatetimeMoment(self.selectedDuration().startDate, self.durationStartTimeOffSet());
-            self.selectedDuration().endDate = reportUtil.getAdjustedDatetimeMoment(self.selectedDuration().endDate, self.durationEndTimeOffSet());
-            currentDuration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
-            self.durationError(currentDuration < 0);
+        if (!!tempDuration && tempDuration.endDate) {
+            tempDuration.startDate = reportUtil.getAdjustedDatetimeMoment(tempDuration.startDate, self.durationStartTimeOffSet());
+            tempDuration.endDate = reportUtil.getAdjustedDatetimeMoment(tempDuration.endDate, self.durationEndTimeOffSet());
+            tempDuration.duration = tempDuration.endDate.diff(tempDuration.startDate);
+            self.durationError(tempDuration.duration < 0);
 
             if (!self.durationError()) {
                 result = self.listOfIntervals().filter(function (interval) {
-                    return (moment.duration(1, interval.text).asMilliseconds() <= currentDuration);
+                    intervalDuration = moment.duration(1, interval.text).asMilliseconds();
+                    // sizeOfDataSet = (tempDuration.duration / intervalDuration) * (self.listOfColumns().length - 1);
+                    return (intervalDuration <= tempDuration.duration && sizeOfDataSet < tooLargeSize);
                 });
 
                 if (result.length > 0) {
@@ -7577,18 +7959,32 @@ let reportsViewModel = function () {
                         }
                     });
 
+                    intervalDuration = moment.duration(1, self.intervalPeriod()).asMilliseconds();
                     if (resetInterval) {
                         self.intervalPeriod(result[result.length - 1].text);
                         self.intervalValue(1);
                     } else {
-                        intervalDuration = moment.duration(1, self.intervalPeriod()).asMilliseconds();
-                        if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                        if ((intervalDuration * self.intervalValue()) > tempDuration.duration) {
                             self.intervalValue(1);
                         }
                     }
+                    sizeOfDataSet = (tempDuration.duration / intervalDuration) * (self.listOfColumns().length - 1);
                 }
+
             } else {
                 ui.displayError("Invalid Date Time selection");
+            }
+            self.selectedDuration(tempDuration);
+        }
+
+        timeOfUseDuration = reportUtil.getTimeOfUseDuration(self.intervalPeriod());
+        if (!!$queryResultSize) {
+            $queryResultSize.html("Result set size: " + reportUtil.toFixedComma(sizeOfDataSet, 0));
+            $queryResultSize.parent().attr("title", reportUtil.toFixedComma(sizeOfDataSet, 0) + " individual points of data in result set.");
+            if (sizeOfDataSet > tooLargeSize) { // we're calling a result set > 100000 "too large"
+                $queryResultSize.addClass("toolarge");
+            } else {
+                $queryResultSize.removeClass("toolarge");
             }
         }
 

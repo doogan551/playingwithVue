@@ -164,6 +164,7 @@ input.input.form-control.durationDateRangeTime {
     min-width: 50px;
 }
 .availableIntervalsContainer {
+    width: 110px;
     padding-left: 15px;
 }
 .availableIntervalsContainer .dropdown-content {
@@ -173,6 +174,17 @@ input.input.form-control.durationDateRangeTime {
 }
 .availableIntervalsContainer a.dropdown-button {
     margin-top: 26px;
+}
+.queryResultSize {
+    margin-top: 34px;
+    margin-left: 27px;
+    cursor: default;
+}
+.queryResultSize span {
+    color: rgba(96, 125, 139, 0.61)
+}
+.queryResultSize span.toolarge {
+    color: rgba(228, 36, 21, 0.71)
 }
 .availableDurationsContainer .dropdown-content {
     cursor: pointer;

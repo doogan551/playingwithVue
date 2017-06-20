@@ -541,6 +541,8 @@ html.direports
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.intervalPeriod, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
+                                        .queryResultSize
+                                            span
                                     // /ko
                                 div#schedule.tab-pane
                                     .row
@@ -728,6 +730,7 @@ html.direports
     script(type="text/javascript" src='/js/lib/pdfmake.min.js')
     script(type="text/javascript" src='/js/lib/vfs_fonts.js')
     script(type="text/javascript" src='/js/lib/highstock.src.js')
+    //script(type="text/javascript" src='/js/lib/modules/boost.js')
     script(type="text/javascript" src='/js/trendPlots/trendplot.js')
     script(type="text/javascript" src='/js/lib/jquery.printarea.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
