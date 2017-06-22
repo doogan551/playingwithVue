@@ -3897,7 +3897,7 @@ let reportsViewModel = function () {
                     columnSum = 0,
                     totalAmount = 0,
                     sumsForProperties = {},
-                    sumsForTimeOfUse = {},
+                    sumsForTimeOfUse,
                     drilldown = {},
                     startOfDuration = moment().startOf(timeOfUseDuration.text),
                     parseDuration = (millisecs) => { // in milliseconds
@@ -4018,6 +4018,7 @@ let reportsViewModel = function () {
                             columnData = [];
                         }
                         sumsForProperties[columnName] = {};
+                        sumsForTimeOfUse = {};
                         for (i = 0; i < len; i++) { // loop across entire column data set
                             columnDataFound = (data[i][columnName] !== undefined);
                             if (columnDataFound) {
