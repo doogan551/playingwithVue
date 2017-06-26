@@ -5,6 +5,37 @@ const Common = require('./common');
 const LOCATION = 'Location';
 const MECHANICAL = 'Mechanical';
 
+const models = {
+    common: {
+        _id: 0,
+        parent: 0,
+        display: '',
+        nameSeg: '',
+        tags: [],
+        meta: {}
+    },
+    location: {
+        nodeType: 'Location',
+        locType: ''
+    },
+    equipment: {
+        nodeType: 'Equipment',
+        mechType: '',
+        libraryId: 0
+    },
+    category: {
+        nodeType: 'Category',
+        mechType: ''
+    },
+    point: {
+        nodeType: 'Point',
+        mechType: '',
+        libraryId: 0,
+        pointId: 0,
+        isReference: false
+    }
+};
+
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
@@ -61,7 +92,7 @@ const Hierarchy = class Hierarchy extends Common {
     add(data, cb) {
         let display = data.display;
         let id = this.getNumber(data._id);
-        let refs = data.refs;
+        let parent = data.parent;
         let type = data.type;
         let item = data.item;
         let instance = this.getDefault(data.instance, '');
