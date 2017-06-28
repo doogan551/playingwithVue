@@ -15,13 +15,11 @@
 }
 .rightPanel {
     z-index: 0;
-    position: absolute;
-    left: 86px;
+    padding-left: 75px;
     right: 0px;
     top: 0px;
     bottom: 0px;
     background-color: #fff;
-    /*overflow-x: auto;*/
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -105,8 +103,6 @@ input.input.form-control.durationDateRangeTime {
 }
 .viewReportNav {
     width: 400px !important;
-    /*height: 53px !important;*/
-    /*margin-left: 8px !important;*/
 }
 .viewReportNav li {
     margin-right: 5px;
@@ -396,7 +392,6 @@ td.filterName {
 .tabConfiguration .tab-content {
     background-color: #fff;
     border-radius: 0px 0px 7px 7px;
-    margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
     padding-left: 20px;

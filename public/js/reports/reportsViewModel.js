@@ -3046,8 +3046,8 @@ let reportsViewModel = function () {
                 }
             },
             adjustConfigTabActivePaneHeight: () => {
-                var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
-                $configPanes.css("height", (window.innerHeight - 150));
+                let $configPanes = $tabConfiguration.find(".configurationContent .tab-content .tab-pane");
+                $configPanes.css("height", (window.innerHeight - 100));
             },
             handleResize: () => {
                 lastResize = new Date();

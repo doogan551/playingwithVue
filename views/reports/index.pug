@@ -41,7 +41,7 @@ html.direports
                                         .circle
                             .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
                                 i.material-icons.center thumb_up
-            #page-content-wrapper.rightPanel
+            .rightPanel
                 .container-fluid
                     .runReportSpinner.blue-grey-text(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
                         div.preloader-wrapper.small.active
@@ -165,7 +165,7 @@ html.direports
                                                 input.form-control.filled-in(data-bind="checked: $root.displayGridCalculations, enable: $root.canEdit(), attr: {id : 'displayColumnCalculations' }", type="checkbox")
                                                 label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnCalculations' }") Display Calculations
                                             // /ko
-                                .tab-pane#reportColumns
+                                div.tab-pane#reportColumns
                                     h6.strong.panel-title
                                     table.columnsGrid.small.grid.table
                                         thead

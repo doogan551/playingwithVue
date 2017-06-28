@@ -548,7 +548,7 @@ var trendPlots = {
                     return pt;
                 };
 
-            if (cfg.chart.type === "pie") {
+            if (cfg.type === "pie" || (!!cfg.chart && cfg.chart.type === "pie")) {
                 data = rawData;
             } else {
                 for (c = 0; c < len; c++) {

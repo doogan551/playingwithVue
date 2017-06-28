@@ -10,8 +10,8 @@ const accountSid = config.get('Twilio').accountSid;
 const authToken = config.get('Twilio').authToken;
 const phoneNumbers = config.get('Twilio').phoneNumbers;
 const numNumbers = phoneNumbers.length;
-const smsNumberIndex = 0;
-const voiceNumberIndex = 0;
+let smsNumberIndex = 0;
+let voiceNumberIndex = 0;
 
 const client = require('twilio')(accountSid, authToken);
 
