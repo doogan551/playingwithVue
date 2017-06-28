@@ -401,6 +401,7 @@ td.filterName {
     width: 100%;
     height: 100%;
     padding-top: 0px;
+    padding-left: 10px;
     min-width: 850px;
 }
 .tabViewReport ul.nav.nav-tabs {
