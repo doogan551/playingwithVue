@@ -428,33 +428,33 @@ html
             //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
 
-            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.dtcollapsible-header'}]")
+            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}]")
                 
 
-                // ko if: children().length !== 0
+                //- // ko if: children().length !== 0
                 #tree.pane(data-bind="css: treeStyle")
                     ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
-                // /ko
 
-                // ko if: children().length === 0
-                .col.s5.pane
-                    button.btn.btn-flat.stayFocused(data-bind="click: $root.addRootNode") Add Node
-                // /ko
+                    .treeBar 
+                        .card.blue-grey.darken-2
+                            .card-content.white-text
+                                span Dark Mode
+                                .switch
+                                    label.white-text
+                                        | Off
+                                        input(type='checkbox', data-bind="checked: dti.bindings.darkMode")
+                                        span.lever
+                                        |       On
+                //- // /ko
 
-                //- #rightPane.col.s7.pane
-                    .details(data-bind="visible: focusedNode")
-                        .row
-                            .col.s6.input-field
-                                input#focusedNodeName(type="text", data-bind="textInput: focusedNodeName")
-                                label(for="focusedNodeName") Name
-                        .row
-                            .col.s6
-                                // ko foreach: $root.availableTypes
-                                p
-                                    input(type="radio", data-bind="attr: {name: 'focusedNodeType', id: 'focusedNodeType_' + $index()}, value: $data, checked: $root.focusedNodeType")
-                                    label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
-                                // /ko
+                //- // ko if: children().length === 0
+                //- .col.s5.pane
+                //-     button.btn.btn-flat.stayFocused(data-bind="click: $root.addRootNode") Add Node
+                //- // /ko
+
                 .treeOptions
+                    .currentNode(data-bind="text: currNodeName")
+                    
                     //- .row
                     //-     span Tree Styles
                     //-     .treeStyles(data-bind="foreach: treeStyles")
@@ -471,15 +471,31 @@ html
                     //-         label(for="showTreeFlat") No
 
 
+                //- #rightPane.col.s7.pane
+                    .details(data-bind="visible: focusedNode")
+                        .row
+                            .col.s6.input-field
+                                input#focusedNodeName(type="text", data-bind="textInput: focusedNodeName")
+                                label(for="focusedNodeName") Name
+                        .row
+                            .col.s6
+                                // ko foreach: $root.availableTypes
+                                p
+                                    input(type="radio", data-bind="attr: {name: 'focusedNodeType', id: 'focusedNodeType_' + $index()}, value: $data, checked: $root.focusedNodeType")
+                                    label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
+                                // /ko
+
             script#node(type='text/html')
                 //- .node
                 //-     ul.collapsible
-                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused}")
-                    .dtcollapsible-header(data-bind="css: {active: expanded, childless: hasChildren() === false}")
-                        i.collapse.material-icons(style="float: right") remove
-                        i.expand.material-icons(style="float: right") add
+                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused, active: expanded, childless: hasChildren() === false}")
+                    .collapseToggle
+                        //- i.collapse.material-icons keyboard_arrow_down
+                        i.expand.material-icons keyboard_arrow_right
+
+                    .dtcollapsible-header
                         .nodeName(data-bind="text: name")
-                    .dtcollapsible-body(data-bind="visible: expanded")
+                    .dtcollapsible-body
                         //- span.displayInfo
                             //- .name(data-bind="text: name")
                             //- input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
@@ -521,7 +537,7 @@ html
         // /ko
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading(), darkMode: dti.bindings.darkMode }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
                     a.white-text(href="javascript://")

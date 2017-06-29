@@ -331,6 +331,11 @@ $modalHeaderHeight: 42px;
         }
     }
 
+    .switch label input[type=checkbox]:checked + .lever,
+    .switch label input[type=checkbox]:checked + .lever:after {
+        background-color: $blue-grey !important;
+    }
+
     [type="radio"]:not(:checked) + label::before,
     [type="radio"]:not(:checked) + label::after {
         border-color: $blue-grey !important;
@@ -1719,11 +1724,32 @@ input:focus {
 
 
 $treeTopHeight: 76px;
+$treeBarHeight: 84px;
+$treeIconWidth: 22px;
 
 .locations {
     height: 100%;
     // overflow: auto;
     padding-top: $treeTopHeight;
+
+    $treeHeight: 2.2rem; //original 3rem
+
+    .collapseToggle {
+        cursor: pointer;
+    }
+
+    i {
+        width: $treeIconWidth;
+        line-height: $treeHeight;
+        font-size: 1.2em;
+        float: left;
+        padding-left: calc(#{$treeIconWidth} / 10);
+        // margin-right: 2px;
+
+        &:hover {
+
+        }
+    }
 
     .treeTop {
         position: absolute;
@@ -1739,8 +1765,19 @@ $treeTopHeight: 76px;
         // overflow: auto;
     }
 
+    .treeBar {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+        .card {
+            margin: 0;
+        }
+    }
+
     .treeOptions {
         padding: 10px;
+        width: 100%;
     }
 
     .hidden {
@@ -1765,13 +1802,13 @@ $treeTopHeight: 76px;
     
     .pane {
         position: relative;
-        overflow: auto;
+        // overflow: auto;
         // flex-grow: 1;
         /*display: inline-block;*/
         // padding-left: 15px;
         padding-right: 0;
         // margin-left: 15px;
-        width: 380px;
+        width: 420px;
         border-right: 1px solid rgba(96, 125, 139, 0.5);
     }
 
@@ -1800,7 +1837,7 @@ $treeTopHeight: 76px;
     }
 
     .children {
-        padding-left: 20px;
+        // padding-left: 20px;
         position: relative;
 
         // &:before {
@@ -1924,9 +1961,9 @@ $treeTopHeight: 76px;
         margin: 0;
         border: none;
         box-shadow: none;
+        overflow: auto;
+        max-height: calc(100% - #{$treeBarHeight});
     }
-
-    $treeHeight: 2.2rem; //original 3rem
 
     .dtcollapsible-header {
         cursor: pointer;
@@ -1934,13 +1971,9 @@ $treeTopHeight: 76px;
         border-bottom: none;
         min-height: $treeHeight;
         line-height: $treeHeight;
-        padding: 0 .6rem;
+        // padding: 0 .6rem;
 
-        i {
-            width: 30px;
-            line-height: $treeHeight;
-            font-size: 1.2em;
-        }
+      
 
         .nodeName {
             // position: relative;
@@ -1964,16 +1997,26 @@ $treeTopHeight: 76px;
 
     .dtcollapsible-body {
         border-bottom: none;
-    }
-
-
-    .active > .expand {
+        padding-left: calc(#{$treeIconWidth} + 2px);
         display: none;
     }
 
-    .dtcollapsible-header:not(.active)  > .collapse {
-        display: none;
+    .expand {
+        transition: transform .2s ease;
     }
+
+    .active > .collapseToggle .expand {
+        transform: rotate(90deg);
+        // display: none;
+    }
+
+    .active > .dtcollapsible-body {
+        display: block;
+    }
+
+    // .treeNode:not(.active)  > .collapse {
+    //     display: none;
+    // }
 
     .treeOptions label {
         margin-right: 20px;
@@ -2057,9 +2100,10 @@ $treeTopHeight: 76px;
         // three sided border, transparent background
 
         li {
+            position: relative;
             // border-left: 2px solid rgba(96, 125, 139, 0.5);
             border-left: none;
-            box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.35);
+            // box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.35);
             // background-color: rgba(96, 125, 139, 0.07);
             color: black;
         }
@@ -2069,15 +2113,73 @@ $treeTopHeight: 76px;
         border-left: none;
     }
 
-    .dtcollapsible-header {
-        transition: background-color .2s ease;
+    .treeNode > .collapseToggle {
+        position: absolute;
+        height: 100%;
+    }
 
-        &:hover {
-            background-color: $blue-grey-lighten-5;
-        }
+    .dtcollapsible-header {
+        padding-left: calc(#{$treeIconWidth} + 2px);
+    }
+
+    .dtcollapsible-header,
+    .treeNode > .collapseToggle {
+        transition: background-color .2s ease;
+     }
+
+    .dtcollapsible-header:hover,
+    .treeNode > .collapseToggle:hover  {
+        background-color: $blue-grey-lighten-5;
+    }
+
+    .dtcollapsible-header i {
+        visibility: hidden;
+    }
+
+    .dtcollapsible-header:hover i {
+        visibility: visible;
     }
 }
 
 .tooltipster-base {
     height: 400px !important;
+}
+
+
+.darkMode {
+    .card-toolbar {
+        background-color: $blue-grey-darken-2 !important;
+    }
+
+    .card-body {
+        background-color: $blue-grey !important;
+    }
+
+
+    .locations {
+        .pane {
+            border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .currentNode {
+            color: white;
+        }
+
+        i,
+        .nodeName {
+            color: white !important;
+        }
+
+        .dtcollapsible li {
+            // border-left: 1px solid rgba(255, 255, 255, .6) !important;
+            // box-shadow: none !important;
+            // box-shadow: -3px 0px 3px -2px rgba(255, 255, 255, 0.35) !important;
+        }
+
+
+        .dtcollapsible-header:hover,
+        .treeNode > .collapseToggle:hover {
+            background-color: $blue-grey-lighten-2 !important;
+        }
+    }
 }

@@ -3364,6 +3364,7 @@ var dti = {
                     focusedNode: false,
                     busy: false,
                     showGrouped: true,
+                    currNodeName: '',
                     treeStyle: 'style3',
                     treeStyles: ['style1', 'style2', 'style3'],
                     focusedNodeName: '',
@@ -3462,6 +3463,14 @@ var dti = {
                         });
 
                         manager.sortNodes(parent.bindings.children);
+                    },
+
+                    loadNode(event) {
+                        let node = manager.getNodeByContext(ko.contextFor(event.target));
+
+                        manager.bindings.currNodeName(node.bindings.display());
+
+                        event.stopPropagation();
                     },
 
                     getBranch(event) {
@@ -6293,6 +6302,7 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
+        darkMode: ko.observable(true),
         hasAccess: function(obj) {
             var cfg = ko.toJS(obj.value);
 
