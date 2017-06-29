@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const async = require('async');
 
 const Common = require('./common');
@@ -8,31 +9,33 @@ const MECHANICAL = 'Mechanical';
 const models = {
     common: {
         _id: 0,
+        id: '',
         parent: 0,
         display: '',
-        nameSeg: '',
         tags: [],
         meta: {}
     },
     location: {
         nodeType: 'Location',
-        locType: ''
+        locationType: ''
     },
     equipment: {
         nodeType: 'Equipment',
-        mechType: '',
         libraryId: 0
     },
     category: {
-        nodeType: 'Category',
-        mechType: ''
+        nodeType: 'Category'
     },
     point: {
         nodeType: 'Point',
-        mechType: '',
         libraryId: 0,
         pointId: 0,
         isReference: false
+    },
+    application: {
+        nodeType: 'Application',
+        applicationType: '',
+        pointId: 0
     }
 };
 
@@ -56,21 +59,16 @@ const Hierarchy = class Hierarchy extends Common {
 
         this.getAll({
             query: {
-                'hierarchyRefs': {
-                    $elemMatch: {
-                        value: id
-                    }
-                }
+                'parent': id
             },
             sort: {
                 'display': 1
             },
             fields: {
                 display: 1,
-                hierarchyRefs: 1,
-                type: 1,
-                item: 1,
-                systemTags: 1
+                parent: 1,
+                nodeType: 1,
+                locationType: 1
             }
         }, cb);
     }
@@ -89,17 +87,18 @@ const Hierarchy = class Hierarchy extends Common {
         return template;
     }
 
+    getModel(nodeType) {
+        let model = {};
+        let common = _.cloneDeep(models.common);
+        let type = _.cloneDeep(models[nodeType]);
+        return _.cloneDeep(_.extend(model, common, type));
+    }
+
     add(data, cb) {
-        let display = data.display;
-        let id = this.getNumber(data._id);
-        let parent = data.parent;
-        let type = data.type;
-        let item = data.item;
+        let node = data;
+        delete node.id;
+
         let instance = this.getDefault(data.instance, '');
-        let systemTags = this.getDefault(data.systemTags, {
-            properties: [],
-            qualifiers: []
-        });
         let meta = this.getDefault(data.meta, {
             coords: {
                 lat: 0,
@@ -113,18 +112,6 @@ const Hierarchy = class Hierarchy extends Common {
             tz: ''
         });
 
-        // let meta = this.buildMeta(data.meta, (!!parent) ? parent.meta : {});
-        let node = {
-            item: item,
-            _id: id,
-            display: display,
-            hierarchyRefs: refs,
-            type: type,
-            meta: meta,
-            tags: [],
-            systemTags: systemTags,
-            instance: instance
-        };
         this.recreateTags(node);
         this.insert({
             insertObj: node
@@ -228,11 +215,8 @@ const Hierarchy = class Hierarchy extends Common {
             let parent = nodes[p];
             for (var c = 0; c < nodes.length; c++) {
                 let child = nodes[c];
-                for (var r = 0; r < child.refs.length; r++) {
-                    let ref = child.refs[r];
-                    if (ref.value === parent.id) {
-                        ref.value = parent._id;
-                    }
+                if (child.parent === parent.id) {
+                    child.parent = parent._id;
                 }
             }
         }
@@ -333,11 +317,7 @@ const Hierarchy = class Hierarchy extends Common {
         let pipeline = [];
         pipeline.push({
             '$match': {
-                'hierarchyRefs': {
-                    '$elemMatch': {
-                        'value': id
-                    }
-                }
+                'parent': id
             }
         });
         pipeline.push({
@@ -345,8 +325,17 @@ const Hierarchy = class Hierarchy extends Common {
                 'from': 'hierarchy',
                 'startWith': '$_id',
                 'connectFromField': '_id',
-                'connectToField': 'hierarchyRefs.value',
+                'connectToField': 'parent',
                 'as': 'children'
+            }
+        });
+        pipeline.push({
+            '$project': {
+                'display': 1,
+                'parent': 1,
+                'nodeType': 1,
+                'locationType': 1,
+                'children': 1
             }
         });
 
@@ -360,7 +349,7 @@ const Hierarchy = class Hierarchy extends Common {
                 newDescendants.push(descendant);
             });
 
-            // descendants = this.orderDescendants(item, newDescendants, id);
+            descendants = this.orderDescendants(newDescendants, id);
             cb(err, descendants);
         });
     }
@@ -456,17 +445,15 @@ const Hierarchy = class Hierarchy extends Common {
         return newPath;
     }
 
-    orderDescendants(item, descendants, parentId) {
+    orderDescendants(descendants, parentId) {
         let newPath = [];
         let findNextChild = (parentId) => {
             for (var d = 0; d < descendants.length; d++) {
                 let node = descendants[d];
-                for (var h = 0; h < node.hierarchyRefs.length; h++) {
-                    let hierRef = node.hierarchyRefs[h];
-                    if (hierRef.value === parentId && hierRef.item === item) {
-                        newPath.push(node);
-                        findNextChild(node._id);
-                    }
+
+                if (node.parent === parentId) {
+                    newPath.push(node);
+                    findNextChild(node._id);
                 }
             }
         };
@@ -602,33 +589,31 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     recreateTags(node) {
+        const skipProperties = ['tags', '_id', 'parent', 'libraryId', 'pointId', 'isReference'];
+
         let addUniqueTags = (tag) => {
             let tags = tag.toLowerCase().split(' ');
             tags = tags.filter((tag) => !node.tags.includes(tag) && tag !== '');
             node.tags.push(...tags);
         };
 
+        let iterateModel = (model) => {
+            for (var prop in model) {
+                let property = model[prop];
+                if (!skipProperties.includes(prop)) {
+                    if (property instanceof Object) {
+                        iterateModel(property);
+                    } else {
+                        addUniqueTags(property);
+                    }
+                }
+            }
+        };
+
         node.tags = [];
 
-        if (node.hasOwnProperty('systemTags')) {
-            node.systemTags.properties.forEach((tag) => {
-                addUniqueTags(tag);
-            });
-            node.systemTags.qualifiers.forEach((tag) => {
-                addUniqueTags(tag);
-            });
-        }
+        iterateModel(node);
 
-        node.hierarchyRefs.forEach((ref) => {
-            ref.categories.forEach((cat) => {
-                addUniqueTags(cat);
-            });
-        });
-
-        addUniqueTags(node.display);
-        addUniqueTags(node.type);
-        addUniqueTags(node.item);
-        addUniqueTags(node.instance);
         return;
     }
 
