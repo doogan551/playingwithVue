@@ -248,6 +248,7 @@ const Point = class Point extends Common {
             return cb(err, points, count);
         });
     }
+
     getDistinctValues(data, cb) {
         // data is an array of objects indicating the properties for which you want unique Values:
         // [{
@@ -304,6 +305,7 @@ const Point = class Point extends Common {
             });
         });
     }
+
     getDistinctValuesTemp(data, cb) {
         this.getOne({
             collection: 'dev',
@@ -318,6 +320,7 @@ const Point = class Point extends Common {
             }
         });
     }
+
     globalSearch(data, cb) {
         // data = {
         //   searchTerms: [{
@@ -438,6 +441,7 @@ const Point = class Point extends Common {
         //   });
         // }
     }
+
     searchDependencies(data, cb) {
         let returnObj = {
             target: {},
@@ -490,7 +494,7 @@ const Point = class Point extends Common {
                     callback(err);
                 });
             }, (err) => {
-                criteria = {
+                let criteria = {
                     query: {
                         'Point Refs.PointInst': upi,
                         _pStatus: 0
@@ -588,7 +592,7 @@ const Point = class Point extends Common {
         let buildPointRefs = (upi, callback) => {
             let deviceUpi = 0;
             if (upi !== 0) {
-                criteria = {
+                let criteria = {
                     query: {
                         _id: upi
                     },
@@ -618,7 +622,7 @@ const Point = class Point extends Common {
 
         let findDevicePoint = (upi, callback) => {
             if (upi !== 0) {
-                criteria = {
+                let criteria = {
                     query: {
                         _id: upi
                     },
@@ -633,6 +637,7 @@ const Point = class Point extends Common {
             }
         };
     }
+
     getNames(data, cb) {
         let upis = data.upis;
         async.map(upis, (upi, callback) => {
@@ -648,10 +653,35 @@ const Point = class Point extends Common {
             this.getOne(criteria, callback);
         }, cb);
     }
+
+    rebuildName(point) {
+        point._name1 = (point.name1) ? point.name1.toLowerCase() : '';
+        point._name2 = (point.name2) ? point.name2.toLowerCase() : '';
+        point._name3 = (point.name3) ? point.name3.toLowerCase() : '';
+        point._name4 = (point.name4) ? point.name4.toLowerCase() : '';
+
+        point.Name = '';
+
+        if (point.name1) {
+            point.Name += point.name1;
+        }
+        if (point.name2) {
+            point.Name = point.Name + '_' + point.name2;
+        }
+        if (point.name3) {
+            point.Name = point.Name + '_' + point.name3;
+        }
+        if (point.name4) {
+            point.Name = point.Name + '_' + point.name4;
+        }
+
+        point._Name = point.Name.toLowerCase();
+    }
+
     initPoint(data, cb) {
         const alarmDefs = new AlarmDefs();
         const system = new System();
-        const upi = new Upi();
+        const counterModel = new Counter();
         let criteria = {};
 
         let Name;
@@ -679,39 +709,36 @@ const Point = class Point extends Common {
                 }
 
                 system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    upi.getNextUpi((pointType === 'Device'), (err, upiObj) => {
-                        if (err) {
-                            return callback(err);
-                        }
+                    if (err) {
+                        return callback(err);
+                    }
 
-                        // if (pointType === 'Schedule Entry') {
-                        //     name2 = upiObj._id.toString();
-                        //     buildName(name1, name2, name3, name4);
-                        // }
+                    // if (pointType === 'Schedule Entry') {
+                    //     name2 = '0';
+                    //     buildName(name1, name2, name3, name4);
+                    // }
 
-                        if (targetUpi && targetUpi !== 0) {
-                            criteria = {
-                                query: {
-                                    _id: targetUpi
-                                }
-                            };
+                    if (targetUpi && targetUpi !== 0) {
+                        criteria = {
+                            query: {
+                                _id: targetUpi
+                            }
+                        };
 
-                            this.getOne(criteria, (err, targetPoint) => {
-                                if (err) {
-                                    return cb(err);
-                                }
+                        this.getOne(criteria, (err, targetPoint) => {
+                            if (err) {
+                                return cb(err);
+                            }
 
-                                if (!targetPoint) {
-                                    return callback('Target point not found.');
-                                }
+                            if (!targetPoint) {
+                                return callback('Target point not found.');
+                            }
 
-                                targetPoint._pStatus = 1;
-                                fixPoint(upiObj, targetPoint, true, sysInfo, callback);
-                            });
-                        } else {
-                            fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, sysInfo, callback);
-                        }
-                    });
+                            fixPoint(targetPoint, true, sysInfo, callback);
+                        });
+                    } else {
+                        fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
+                    }
                 });
             });
         };
@@ -772,7 +799,9 @@ const Point = class Point extends Common {
             });
         };
 
-        let fixPoint = (upiObj, template, isClone, sysInfo, callback) => {
+        let fixPoint = (template, isClone, sysInfo, callback) => {
+            template.id = null;
+            template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
             template.Name = Name;
             template._Name = _Name;
             template._id = upiObj._id;
@@ -782,7 +811,7 @@ const Point = class Point extends Common {
             template._cfgRequired = true;
 
             if (template['Point Type'].Value === 'Display') { // default background color for new Displays
-                template['Background Color'].Value = Config.Templates.getTemplate('Display')['Background Color'];
+                template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
             }
 
             utils.setupNonFieldPoints(template);
@@ -855,12 +884,12 @@ const Point = class Point extends Common {
         };
 
         let addTemplateToDB = (template, callback) => {
-            criteria = {
-                insertObj: template
-            };
-            this.insert(criteria, (err) => {
-                return callback(err, template);
-            });
+            // criteria = {
+            //     insertObj: template
+            // };
+            // this.insert(criteria, (err) => {
+            return callback(null, template);
+            // });
         };
 
         if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
@@ -875,6 +904,7 @@ const Point = class Point extends Common {
 
         doInitPoint(pointType, targetUpi, subType, cb);
     }
+
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};
         let filterProps = {
@@ -907,6 +937,7 @@ const Point = class Point extends Common {
             return cb(null, null, point);
         });
     }
+
     getPointRefsInstance(data, cb) {
         this.getPointRefsSmall(data, (err, msg, result) => {
             if (!!err) {
@@ -946,6 +977,7 @@ const Point = class Point extends Common {
             });
         });
     }
+
     findAlarmDisplays(data, cb) {
         const security = new Security();
         let criteria = {};
@@ -1034,6 +1066,7 @@ const Point = class Point extends Common {
             });
         };
     }
+
     getControls(data, cb) {
         let searchCriteria = {};
         let filterProps = {
@@ -1056,6 +1089,7 @@ const Point = class Point extends Common {
             return cb(null, point);
         });
     }
+
     //io, updateSequencePoints, runScheduleEntry(tcp), updateDependencies
     newUpdate(oldPoint, newPoint, flags, user, callback) {
         const security = new Security();
@@ -1511,7 +1545,7 @@ const Point = class Point extends Common {
                                 case 'Integer Register Names':
                                 case 'Point Register Names':
                                 case 'Real Register Names':
-                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].script.enum) {
+                                    if (newPoint['Point Type'].eValue !== Config.Enums['Point Types'].Script.enum) {
                                         downloadPoint = true;
                                     }
                                     break;
@@ -1893,13 +1927,13 @@ const Point = class Point extends Common {
                 }
             };
 
-            if (newPoint['Point Type'].Value === 'Script' && newPoint['Script Source File'] !== oldPoint['Script Source File'] && !!flags.path) {
-                script.commitScript({
+            if (newPoint['Point Type'].Value === 'Script' && !!flags.path) {
+                script.commit({
                     point: newPoint,
                     path: flags.path
-                }, (response) => {
-                    if (response.err) {
-                        return callback(response.err);
+                }, (err) => {
+                    if (!!err) {
+                        return callback(err);
                     }
                     updateProperties();
                 });
@@ -1932,6 +1966,7 @@ const Point = class Point extends Common {
             }
         };
     }
+
     // newupdate
     updateRefs(updateReferences, newPoint, flags, user, callback) {
         if (updateReferences === true) {
@@ -1945,6 +1980,7 @@ const Point = class Point extends Common {
             return callback(null);
         }
     }
+
     //newupdate
     fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
         if (!!updateCfgReq) {
@@ -1987,6 +2023,7 @@ const Point = class Point extends Common {
             callback();
         }
     }
+
     //newupdate
     updateModel(updateModelType, newPoint, callback) {
         if (!!updateModelType) {
@@ -2015,6 +2052,7 @@ const Point = class Point extends Common {
             callback();
         }
     }
+
     // newupdate
     updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
         if (updateDownlinkNetwk) {
@@ -2046,6 +2084,7 @@ const Point = class Point extends Common {
             callback(null);
         }
     }
+
     // newupdate
     updPoint(downloadPoint, newPoint, callback) {
         // const zmq = new ZMQ();
@@ -2093,6 +2132,7 @@ const Point = class Point extends Common {
             callback(null, 'success');
         }
     }
+
     //renamePoint(depre), deletePoint, restorePoint(io), updateRefs (common)
     updateDependencies(refPoint, flags, user, callback) {
         // schedule entries collection - find the control point properties and
@@ -2190,7 +2230,7 @@ const Point = class Point extends Common {
                                         }
 
                                         /*if (dependency["Point Refs"][i]["Point Type"].Value === "Script")
-                                          data.newPoint._cfgRequired = true;*/
+                                         data.newPoint._cfgRequired = true;*/
                                         Config.Update.formatPoint(data);
                                         if (data.err !== undefined) {
                                             logger.error('data.err: ', data.err);
@@ -2375,7 +2415,7 @@ const Point = class Point extends Common {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
-        const upiModel = new Upi();
+
         let _point,
             _updateFromSchedule = !!options && options.from === 'updateSchedules',
             _upi = parseInt(upi, 10),
@@ -2451,12 +2491,7 @@ const Point = class Point extends Common {
                     return cb(null);
                 }
 
-                upiModel.deleteUpi(_upi, (err, result) => {
-                    if (err) {
-                        _buildWarning('could not update the UPI collection');
-                    }
-                    cb(null);
-                });
+                cb(null);
             },
             _deleteHistory = (cb) => {
                 // We only remove entries from the history collection if the point is hard deleted (destroyed)
@@ -2602,6 +2637,7 @@ const Point = class Point extends Common {
             callback(err);
         });
     }
+
     //updateDependencies, deleteChildren, updateSchedules(io)
     signalHostTOD(signalTOD, callback) {
         // const zmq = new ZMQ();
@@ -2617,6 +2653,7 @@ const Point = class Point extends Common {
             callback(null, 'success');
         }
     }
+
     //updateDependencies, deleteChildren
     updateScheduleEntries(scheduleEntry, devices, refPoint, callback) {
         let signalTOD = false;
@@ -2652,6 +2689,7 @@ const Point = class Point extends Common {
             }
         }
     }
+
     //addpoint (io), deletepoint
     updateCfgRequired(point, callback) {
         if (point['Point Type'].Value === 'Device') {
@@ -2682,7 +2720,7 @@ const Point = class Point extends Common {
 
     addPoint(data, user, options, callback) {
         const activityLog = new ActivityLog();
-        let point = data.point;
+        let point = data.newPoint;
         let logData = {
             user: user,
             timestamp: Date.now(),
@@ -2690,35 +2728,25 @@ const Point = class Point extends Common {
             activity: 'Point Add',
             log: 'Point added'
         };
-        let updateObj = {
-            $set: {}
-        };
 
         this.updateCfgRequired(point, (err) => {
             if (err) {
                 callback(err);
             }
 
-            updateObj.$set._pStatus = 0;
+            delete point.id;
+            point._pStatus = 0;
+            point.Security = [];
+            point._actvAlmId = ObjectID(point._actvAlmId);
+            // point._curAlmId = ObjectID(updateObj._curAlmId);
 
-            let searchQuery = {};
-
-            updateObj.$set.Security = [];
-
-            searchQuery._id = point._id;
-            updateObj.$set._actvAlmId = ObjectID(point._actvAlmId);
-            // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
-
-
-            this.updateOne({
-                query: searchQuery,
-                updateObj: updateObj
-            }, (err, freeName) => {
+            this.insert({
+                insertObj: point
+            }, (err, result) => {
                 if (err) {
                     callback(err);
                 } else {
-                    point._id = searchQuery._id;
-                    logData.point._id = searchQuery._id;
+                    logData.point = point;
                     if (!options || (!!options && options.from !== 'updateSchedules')) {
                         activityLog.create(logData, (err, result) => {});
                     }
@@ -2740,6 +2768,70 @@ const Point = class Point extends Common {
                 }
             });
         });
+    }
+
+    bulkAdd(points, user, options, cb) {
+        let updatedPoints = [];
+        this.changeNewIds(points, (err, points) => {
+            async.eachSeries(points, (point, callback) => {
+                this.addPoint(point, user, options, (err, point) => {
+                    if (!!err && !err.hasOwnProperty('msg')) {
+                        return callback(err);
+                    }
+                    updatedPoints.push(point);
+                    return callback();
+                });
+            }, (err) => {
+                if (err) {
+                    return cb(err);
+                }
+                return cb({
+                    msg: 'success'
+                }, updatedPoints);
+            });
+        });
+    }
+
+    changeNewIds(points, cb) {
+        this.updateIds(points, (err) => {
+            this.reassignRefs(points);
+            cb(null, points);
+        });
+    }
+
+    updateIds(points, callback) {
+        let counterModel = new Counter();
+        async.eachSeries(points, (point, seriesCallback) => {
+            if (point.newPoint.hasOwnProperty('id')) {
+                counterModel.getUpiForPointType(point.newPoint['Point Type'].eValue, (err, newUpi) => {
+                    point.newPoint._id = newUpi;
+                    if (point.newPoint['Point Type'] === 'Schedule Entry') {
+                        point.newPoint.name2 = newUpi;
+                        this.rebuildName(point.newPoint);
+                    }
+                    seriesCallback(err);
+                });
+            } else {
+                return seriesCallback();
+            }
+        }, callback);
+    }
+
+    reassignRefs(points) {
+        for (var p = 0; p < points.length; p++) {
+            let point = points[p].newPoint;
+            for (var rp = 0; rp < points.length; rp++) {
+                let refPoint = points[rp].newPoint;
+                let refs = refPoint['Point Refs'];
+                for (var r = 0; r < refs.length; r++) {
+                    let ref = refs[r];
+                    if (ref.Value === point.id) {
+                        ref.Value = point._id;
+                        ref.PointInst = point._id;
+                    }
+                }
+            }
+        }
     }
 
     ////////////////////////////////////////////
@@ -2901,6 +2993,7 @@ const Point = class Point extends Common {
             return cb(err);
         });
     }
+
     removeGroups(data, cb) {
         let groupUpis = (data['User Group Upis']) ? data['User Group Upis'] : [];
         let points = (data.Points) ? data.Points : [];
@@ -2945,6 +3038,59 @@ const Point = class Point extends Common {
             });
         }, cb);
     }
+
+    linkWithOldUpi(upi, cb) {
+        this.getOne({
+            _id: upi
+        }, {
+            fields: {
+                _oldUpi: 1
+            }
+        }, (err, point) => {
+            return cb(err, point._oldUpi);
+        });
+    }
+
+    doPointPackage(data, cb) {
+        // reassignids for new blocks
+        // update refs on blocks and on gpl
+        let user = data.user;
+        let _options = {
+            method: 'update',
+            from: 'ui'
+        };
+        async.waterfall([(callback) => {
+            this.changeNewIds(data.updates, (err, points) => {
+                async.mapSeries(points, (point, mapCallback) => {
+                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                        this.addPoint(point, user, null, (err, result) => {
+                            mapCallback(err.err, result);
+                        });
+                    } else {
+                        this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
+                            mapCallback(response.err, updatedPoint);
+                        });
+                    }
+                }, (err, newPoints) => {
+                    callback(err, newPoints);
+                });
+            });
+        }, (returnPoints, callback) => {
+            async.mapSeries(data.deletes, (upi, mapCallback) => {
+                this.deletePoint(upi, 'hard', user, null, (response) => {
+                    mapCallback(response.err);
+                });
+            }, (err, newPoints) => {
+                callback(err, returnPoints);
+            });
+        }], (err, returnPoints) => {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, returnPoints);
+            }
+        });
+    }
 };
 
 module.exports = Point;
@@ -2956,4 +3102,4 @@ const History = require('./history');
 const Schedule = require('./schedule');
 const Security = require('./security');
 const Script = require('./scripts');
-const Upi = require('./upi');
+const Counter = require('./counter');

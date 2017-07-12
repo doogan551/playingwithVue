@@ -9,6 +9,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     function ViewModel(params) {
         var self = this;
         this.id = params.id;
+        this.upi = params.rootContext.id;
         apiEndpoint = params.rootContext.apiEndpoint;
         this.searchTerm  = ko.observable('');
         this.gettingData = ko.observable(true);
@@ -92,23 +93,31 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     $searchInput.css('width', 175);
                 });
             };
-        
+
         this.gettingData(true);
-        getData(this.id).done(function(data) {
-            var pointRefs = data.Involvement['Point Refs'],
-                dependencies = data.Involvement.Dependencies,
+        getData(self.id).done(function(data) {
+            let pointRefs = [],
+                dependencies = [],
                 cleanProperties = function (item) {
                     item['Device Name'] = item.Device ? item.Device.Name : '';
                     item['Point Type']  = item['Point Type'] ? item['Point Type'] : '';
                     item.Property       = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
                     item.Name           = item.Name ? item.Name : '';
                 };
-            pointRefs.forEach(cleanProperties);
-            dependencies.forEach(cleanProperties);
-            
+
+            if (data.err) {
+                if (data.err === "Point not found.") {
+                    console.log("  getData(" + (self.id || self.upi) + ") = " + data.err);
+                }
+            } else {
+                pointRefs = data.Involvement['Point Refs'];
+                dependencies = data.Involvement.Dependencies;
+                pointRefs.forEach(cleanProperties);
+                dependencies.forEach(cleanProperties);
+            }
             self.pointRefs = pointRefs;
             self.dependencies = dependencies;
-            
+
             self.networkError(false);
             self.searchTerm.valueHasMutated(); // Force our computed to run & populate DOM
         }).fail(function (jqXHR, textStatus) {

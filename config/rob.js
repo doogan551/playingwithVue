@@ -5,7 +5,7 @@ var rob = {
             'dbName': 'hierarchy'
         },
         'zmqConfig': {
-            'server': 'info-int'
+            'server': 'localhost'
         },
         'files': {
             'driveLetter': 'C'

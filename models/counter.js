@@ -1,3 +1,4 @@
+const Config = require('../public/js/lib/config');
 const Common = require('./common');
 
 const Counter = class Counter extends Common {
@@ -6,11 +7,15 @@ const Counter = class Counter extends Common {
         super('counters');
     }
 
-    getNextSequence(name, callback) {
+    getNextSequence(id, callback) {
+        let query = {};
+        if (this.isNumber(id)) {
+            query.enum = id;
+        } else {
+            query._id = id;
+        }
         this.findAndModify({
-            query: {
-                _id: name
-            },
+            query: query,
             updateObj: {
                 $inc: {
                     count: 1
@@ -38,7 +43,8 @@ const Counter = class Counter extends Common {
             var results = targetCollection.insert(doc);
 
             if (results.hasWriteError()) {
-                if (results.writeError.code === 11000 /* dup key */) {
+                if (results.writeError.code === 11000) {
+                    // dup key
                     continue;
                 } else {
                     print('unexpected error inserting data: ' + JSON.stringify(results));
@@ -47,6 +53,16 @@ const Counter = class Counter extends Common {
 
             break;
         }
+    }
+
+    getUpiForPointType(pointType, callback) {
+        if (!this.isNumber(pointType)) {
+            pointType = Config.Enums['Point Types'][pointType].enum;
+        }
+        this.getNextSequence(pointType, (err, newId) => {
+            let newUpi = (pointType << 22) + newId;
+            callback(err, newUpi);
+        });
     }
 };
 module.exports = Counter;

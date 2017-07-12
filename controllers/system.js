@@ -2,6 +2,7 @@ let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
 let System = require('../models/system');
+let AlarmDefs = require('../models/alarmdefs');
 let utils = require('../helpers/utils');
 
 // Checked
@@ -186,11 +187,11 @@ router.post('/updateCustomColors', function (req, res, next) {
 });
 
 router.get('/getAlarmTemplates', function (req, res, next) {
-    const system = new System();
+    const alarmDefModel = new AlarmDefs();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    system.getAlarmTemplates(data, function (err, alarmTemplates) {
+    alarmDefModel.get({}, function (err, alarmTemplates) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -201,11 +202,11 @@ router.get('/getAlarmTemplates', function (req, res, next) {
 });
 
 router.post('/updateAlarmTemplate', function (req, res, next) {
-    const system = new System();
+    const alarmDefModel = new AlarmDefs();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    system.updateAlarmTemplate(data, function (err, result) {
+    alarmDefModel.updateAlarmTemplate(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -218,11 +219,11 @@ router.post('/updateAlarmTemplate', function (req, res, next) {
 });
 
 router.post('/deleteAlarmTemplate', function (req, res, next) {
-    const system = new System();
+    const alarmDefModel = new AlarmDefs();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    system.deleteAlarmTemplate(data, function (err, result) {
+    alarmDefModel.deleteAlarmTemplate(data, function (err, result) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
