@@ -87,13 +87,6 @@ const Hierarchy = class Hierarchy extends Common {
         return template;
     }
 
-    getModel(nodeType) {
-        let model = {};
-        let common = _.cloneDeep(models.common);
-        let type = _.cloneDeep(models[nodeType]);
-        return _.cloneDeep(_.extend(model, common, type));
-    }
-
     add(data, cb) {
         let node = data;
         delete node.id;

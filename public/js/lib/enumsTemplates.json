@@ -4284,9 +4284,19 @@
         }
     },
     "Templates": {
-        "_common": {
+        "Hierarchy":{
             "_id": 0,
-            "_pStatus": 1,
+            "parentNode": 0,
+            "display": "",
+            "tags": [],
+            "meta": {},
+            "nodeType": "",
+            "libraryId": 0,
+            "refNode": 0,
+            "_pStatus": 0,
+            "Name": ""
+        },
+        "_common": {
             "_relDevice": 0,
             "_relRMU": 0,
             "_relPoint": 0,
@@ -4301,15 +4311,6 @@
             "_updTOD": false,
             "_cfgRequired": true,
             "_actvAlmId": 0,
-            "name1": "",
-            "name2": "",
-            "name3": "",
-            "name4": "",
-            "Name": "",
-            "_name1": "",
-            "_name2": "",
-            "_name3": "",
-            "_name4": "",
             "_Name": "",
             "Point Type": {
                 "isDisplayable": true,
@@ -4318,8 +4319,7 @@
                 "Value": "",
                 "eValue": 0
             },
-            "Security": [],
-            "taglist": []
+            "Security": []
         },
         "Points": {
             "Report": {

@@ -654,26 +654,15 @@ const Point = class Point extends Common {
         const upi = new Upi();
         let criteria = {};
 
-        let name1 = data.name1;
-        let name2 = data.name2;
-        let name3 = data.name3;
-        let name4 = data.name4;
-
         let Name;
         let _Name;
-        let _name1;
-        let _name2;
-        let _name3;
-        let _name4;
         let subType = {};
 
         let pointType = data.pointType;
         let targetUpi = (data.targetUpi) ? parseInt(data.targetUpi, 10) : 0;
         let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
 
-        let doInitPoint = (name1, name2, name3, name4, pointType, targetUpi, subType, callback) => {
-            buildName(name1, name2, name3, name4);
-
+        let doInitPoint = (pointType, targetUpi, subType, callback) => {
             criteria = {
                 query: {
                     _Name: _Name
@@ -695,10 +684,10 @@ const Point = class Point extends Common {
                             return callback(err);
                         }
 
-                        if (pointType === 'Schedule Entry') {
-                            name2 = upiObj._id.toString();
-                            buildName(name1, name2, name3, name4);
-                        }
+                        // if (pointType === 'Schedule Entry') {
+                        //     name2 = upiObj._id.toString();
+                        //     buildName(name1, name2, name3, name4);
+                        // }
 
                         if (targetUpi && targetUpi !== 0) {
                             criteria = {
@@ -725,30 +714,6 @@ const Point = class Point extends Common {
                     });
                 });
             });
-        };
-
-        let buildName = (name1, name2, name3, name4) => {
-            _name1 = (name1) ? name1.toLowerCase() : '';
-            _name2 = (name2) ? name2.toLowerCase() : '';
-            _name3 = (name3) ? name3.toLowerCase() : '';
-            _name4 = (name4) ? name4.toLowerCase() : '';
-
-            Name = '';
-
-            if (name1) {
-                Name += name1;
-            }
-            if (name2) {
-                Name = Name + '_' + name2;
-            }
-            if (name3) {
-                Name = Name + '_' + name3;
-            }
-            if (name4) {
-                Name = Name + '_' + name4;
-            }
-
-            _Name = Name.toLowerCase();
         };
 
         let cloneGPLSequence = (oldSequence, callback) => {
@@ -809,17 +774,7 @@ const Point = class Point extends Common {
 
         let fixPoint = (upiObj, template, isClone, sysInfo, callback) => {
             template.Name = Name;
-            template.name1 = (name1) ? name1 : '';
-            template.name2 = (name2) ? name2 : '';
-            template.name3 = (name3) ? name3 : '';
-            template.name4 = (name4) ? name4 : '';
-
             template._Name = _Name;
-            template._name1 = (_name1) ? _name1 : '';
-            template._name2 = (_name2) ? _name2 : '';
-            template._name3 = (_name3) ? _name3 : '';
-            template._name4 = (_name4) ? _name4 : '';
-
             template._id = upiObj._id;
 
             template._actvAlmId = ObjectID('000000000000000000000000');
@@ -918,7 +873,7 @@ const Point = class Point extends Common {
             subType.eValue = 0; // TODO
         }
 
-        doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
+        doInitPoint(pointType, targetUpi, subType, cb);
     }
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};
