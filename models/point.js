@@ -222,7 +222,7 @@ const Point = class Point extends Common {
 
             // JSON.parse because these letiables are received as strings
             if (JSON.parse(includeInactivePoints)) {
-                _pStatus = 1;
+                _pStatus = 3;
             } else if (JSON.parse(includeSoftDeletedPoints)) {
                 _pStatus = 2;
             }
@@ -786,7 +786,7 @@ const Point = class Point extends Common {
             }, callback);
         };
 
-        let setIpPort = (point, cb) => {
+        let setIpPort = (point, callback) => {
             system.getSystemInfoByName('Preferences', (err, prefs) => {
                 let ipPort = prefs['IP Port'];
                 if (point['Point Type'].Value === 'Device') {
@@ -795,7 +795,7 @@ const Point = class Point extends Common {
                 } else if (point['Point Type'].Value === 'Remote Unit' && [5, 9, 10, 11, 12, 13, 14, 16].indexOf(point['Model Type'].eValue) < 0) {
                     point['Ethernet IP Port'].Value = ipPort;
                 }
-                return cb();
+                return callback();
             });
         };
 
@@ -804,7 +804,6 @@ const Point = class Point extends Common {
             template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
             template.Name = Name;
             template._Name = _Name;
-            template._id = upiObj._id;
 
             template._actvAlmId = ObjectID('000000000000000000000000');
 
@@ -3089,6 +3088,45 @@ const Point = class Point extends Common {
             } else {
                 cb(null, returnPoints);
             }
+        });
+    }
+
+    addPointToHierarchy(data, cb) {
+        let upi = this.getNumber(data.upi);
+        let parentNode = this.getNumber(data.parentNode);
+        let display = this.getDefault(data.display, '');
+        let nodeType = this.getDefault(data.nodeType, '');
+        let nodeSubType = this.getDefault(data.nodeSubType, '');
+        this.buildNamePath(parentNode, display, (err, Name) => {
+            this.findAndModify({
+                query: {
+                    _id: upi
+                },
+                updateObj: {
+                    $set: {
+                        parentNode,
+                        display,
+                        nodeType,
+                        nodeSubType,
+                        Name,
+                        _pStatus: 0
+                    }
+                }
+            }, cb);
+        });
+    }
+
+    buildNamePath(parentId, display, cb) {
+        if (parentId === 0) {
+            return cb(null, display);
+        }
+        this.getOne({
+            query: {
+                _id: parentId
+            }
+        }, (err, parent) => {
+            let Name = parent.Name + '_' + display;
+            cb(err, Name);
         });
     }
 };

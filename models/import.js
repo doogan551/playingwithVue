@@ -2900,7 +2900,7 @@ let Import = class Import extends Common {
             });
         });
     }
-    setupCounters(callback) {
+    setupCounters(cb) {
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
@@ -2919,7 +2919,21 @@ let Import = class Import extends Common {
         this.insert({
             collection: 'counters',
             insertObj: counters
-        }, callback);
+        }, cb);
+    }
+    addHierarchyProperties(point, cb) {
+        point.parentNode = 0;
+        point.display = '';
+        point.tags = [];
+        point.meta = {};
+        point.nodeType = 'Point';
+        point.nodeSubType = '';
+        point.libraryId = 0;
+        point.refNode = 0;
+        point._pStatus = Config.Enums['Point Statuses'].NotInHierarchy.enum;
+
+        delete point.taglist;
+        cb();
     }
 };
 

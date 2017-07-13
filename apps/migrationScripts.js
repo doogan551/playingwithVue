@@ -1958,6 +1958,39 @@ let scripts = {
                 });
             });
         });
+    },
+    fixHierarchyModel: function (callback) {
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'fixHierarchyModel',
+                errors: null,
+                results: null
+            });
+        }
+
+        let importApp = new Import();
+        Utility.iterateCursor({
+            collection: 'points'
+        }, function (err, doc, cb) {
+            importApp.addHierarchyProperties(doc, (err) => {
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _id: doc._id
+                    },
+                    updateObj: doc
+                }, (err, result) => {
+                    cb(err);
+                });
+            });
+        }, function (err, count) {
+            logger.info('Finished with fixHierarchyModel');
+            callback(null, {
+                fn: 'fixHierarchyModel',
+                errors: null
+            });
+        });
     }
 };
 
@@ -1972,7 +2005,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.convertSQLiteDB];
+    tasks = [scripts.fixHierarchyModel];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result

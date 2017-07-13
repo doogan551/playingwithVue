@@ -309,79 +309,79 @@
         },
         "Calculation Types": {
             "Enthalpy": {
-                "enum" : 0
+                "enum": 0
             },
             "Dew Point": {
-                "enum" : 1
+                "enum": 1
             },
             "Wet Bulb": {
-                "enum" : 2
+                "enum": 2
             },
             "Low Value": {
-                "enum" : 0
+                "enum": 0
             },
             "High Value": {
-                "enum" : 1
+                "enum": 1
             },
             "Sum": {
-                "enum" : 0
+                "enum": 0
             },
             "Average": {
-                "enum" : 1
+                "enum": 1
             },
             "P Only": {
-                "enum" : 1
+                "enum": 1
             },
             "PI": {
-                "enum" : 2
+                "enum": 2
             },
             "PID": {
-                "enum" : 3
+                "enum": 3
             },
             "Add": {
-                "enum" : 0
+                "enum": 0
             },
             "Subtract": {
-                "enum" : 1
+                "enum": 1
             },
             "Multiply": {
-                "enum" : 2
+                "enum": 2
             },
             "Divide": {
-                "enum" : 3
+                "enum": 3
             },
             "Delay": {
-                "enum" : 0
+                "enum": 0
             },
             "Pulsed": {
-                "enum" : 1
+                "enum": 1
             },
             ">": {
-                "enum" : 0
+                "enum": 0
             },
             ">=": {
-                "enum" : 1
+                "enum": 1
             },
             "<": {
-                "enum" : 2
+                "enum": 2
             },
             "<=": {
-                "enum" : 3
+                "enum": 3
             },
             "<>": {
-                "enum" : 4
+                "enum": 4
             },
             "=": {
-                "enum" : 5
+                "enum": 5
             },
             "And": {
-                "enum" : 0
+                "enum": 0
             },
             "Or": {
-                "enum" : 1
+                "enum": 1
             },
             "XOr": {
-                "enum" : 2
+                "enum": 2
             }
         },
         "Channels": {
@@ -819,6 +819,17 @@
                 "enum": 8
             }
         },
+        "Hierarchy Types": {
+            "Location": {
+                "enum": 511
+            },
+            "Category": {
+                "enum": 510
+            },
+            "Equipment": {
+                "enum": 509
+            }
+        },
         "Input Ranges": {
             "1": {
                 "enum": 0
@@ -968,20 +979,20 @@
                 "enum": 6
             }
         },
-        "Location Types":{
-            "Site":{
+        "Location Types": {
+            "Site": {
                 "enum": 1
             },
-            "Building":{
+            "Building": {
                 "enum": 2
             },
-            "Floor":{
+            "Floor": {
                 "enum": 3
             },
-            "Room":{
+            "Room": {
                 "enum": 4
             },
-            "Area":{
+            "Area": {
                 "enum": 5
             }
         },
@@ -1234,6 +1245,9 @@
             },
             "Deleted": {
                 "enum": 2
+            },
+            "NotInHierarchy": {
+                "enum": 3
             }
         },
         "Polarities": {
@@ -4237,7 +4251,7 @@
             "_actvAlmId": {
                 "enum": 16
             },
-            "_oldUpi":{
+            "_oldUpi": {
                 "enum": 17
             }
         },
@@ -4287,7 +4301,7 @@
         }
     },
     "Templates": {
-        "Hierarchy":{
+        "Hierarchy": {
             "_id": 0,
             "parentNode": 0,
             "display": "",
