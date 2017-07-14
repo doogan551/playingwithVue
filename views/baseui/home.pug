@@ -265,6 +265,20 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
+            #addNodeModal.modal
+                .modal-content
+                    h4 Add Node
+                    .row
+                        .input-field.col.s4
+                            input#nodeDisplay(placeholder="Name", type="text", data-bind="hasFocus: locations.modalOpen, value: locations.nodeDisplay")
+                            label(for="nodeDisplay") Name
+                    .row
+                        .input-field.col.s6
+                            select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                            label Type                  
+                    .row
+                        .col.s12.error.red-text(data-bind='html: locations.error')
+
             #bulkAddModal.modal
                 .modal-content
                     h4 Bulk Add
@@ -488,8 +502,8 @@ html
             script#node(type='text/html')
                 //- .node
                 //-     ul.collapsible
-                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused, active: expanded, childless: hasChildren() === false}")
-                    .collapseToggle
+                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused, active: expanded}")
+                    .collapseToggle(data-bind="css: {childless: hasChildren() === false}")
                         //- i.collapse.material-icons keyboard_arrow_down
                         i.expand.material-icons keyboard_arrow_right
 

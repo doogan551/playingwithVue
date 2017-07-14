@@ -3224,54 +3224,117 @@ var dti = {
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
                     items: {
-                        add: {
-                            name: 'Add',
-                            items: {
-                                child: {
-                                    name: 'Sub Location',
-                                    callback(key, opt) {
-                                        let $target = opt.$trigger;
-                                        let context = ko.contextFor($target[0]);
-                                        let node = manager.getNodeByContext(context);
+                        location: {
+                            name: 'Location',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
 
-                                        manager.bindings.addChild(node, {
-                                            name: 'Location',
-                                            fetched: true,
-                                            hasChildren: false,
-                                            expanded: true,
-                                            type: 'Area'
-                                        });
+                                manager.bindings.addChild(node, {
+                                    name: 'Location',
+                                    fetched: true,
+                                    hasChildren: false,
+                                    expanded: true,
+                                    type: 'Area'
+                                });
 
-                                        dti.log(node);                                
-                                    },
-                                    visible: (key, opt) => {
-                                        let $target = opt.$trigger;
-                                        let context = ko.contextFor($target[0]);
-                                        let node = manager.getNodeByContext(context);
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
 
-                                        return node.bindings.item() === 'Location';
-                                    }
-                                },
-                                sibling: {
-                                    name: 'Point',
-                                    callback(key, opt) {
-                                        let $target = opt.$trigger;
-                                        let context = ko.contextFor($target[0]);
-                                        let node = manager.getNodeByContext(context);
-
-                                        dti.log(node);                                
-                                    },
-                                    visible: (key, opt) => {
-                                        let $target = opt.$trigger;
-                                        let context = ko.contextFor($target[0]);
-                                        let node = manager.getNodeByContext(context);
-
-                                        return node.bindings.item() === 'Mechanical';
-                                    }
-                                }
+                            //     return node.bindings.nodeType() === 'Location';
                             }
-                            
+                        },
+                        application: {
+                            name: 'Application',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
+
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
+
+                            //     return node.bindings.nodeType() === 'Equipment';
+                            }
+                        },
+                        equipment: {
+                            name: 'Equipment',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
+
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
+
+                            //     return node.bindings.nodeType() === 'Equipment';
+                            }
+                        },
+                        category: {
+                            name: 'Category',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
+
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
+
+                            //     return node.bindings.nodeType() === 'Equipment';
+                            }
+                        },
+                        point: {
+                            name: 'Point',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
+
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
+
+                            //     return node.bindings.nodeType() === 'Equipment';
+                            }
+                        },
+                        referencePoint: {
+                            name: 'Reference Point',
+                            callback(key, opt) {
+                                let $target = opt.$trigger;
+                                let context = ko.contextFor($target[0]);
+                                let node = manager.getNodeByContext(context);
+
+                                dti.log(node);                                
+                            // },
+                            // visible: (key, opt) => {
+                            //     let $target = opt.$trigger;
+                            //     let context = ko.contextFor($target[0]);
+                            //     let node = manager.getNodeByContext(context);
+
+                            //     return node.bindings.nodeType() === 'Equipment';
+                            }
                         }
+                            
                         // clone: {
                         //     name: 'Clone',
                         //     callback(key, opt) {
@@ -3405,61 +3468,66 @@ var dti = {
                         let paths = {};
                         let parentId = parent.bindings._id();
 
-                        dti.forEachArray(children, (child) => {
-                            if (child.item === 'Mechanical') {
-                                let pointRefs = manager.getHierarchyRefsById(parent, child);
+                        // dti.forEachArray(children, (child) => {
+                        //     if (child.item === 'Mechanical') {
+                        //         let pointRefs = manager.getHierarchyRefsById(parent, child);
 
-                                dti.forEachArray(pointRefs, (pointRef) => {
-                                    let groups = pointRef.categories.join('-');
+                        //         dti.forEachArray(pointRefs, (pointRef) => {
+                        //             let groups = pointRef.categories.join('-');
 
-                                    paths[groups] = paths[groups] || 0;
-                                    paths[groups]++;
-                                });
-                            }
-                        });
+                        //             paths[groups] = paths[groups] || 0;
+                        //             paths[groups]++;
+                        //         });
+                        //     }
+                        // });
 
                         dti.forEachArray(children, (rawChild) => {
                             let myParent = parent;
                             let child = $.extend(true, {}, rawChild);
-                            child._data = $.extend(true, {}, rawChild._data);
+                        //     child._data = $.extend(true, {}, rawChild._data);
 
-                            if (child.item === 'Mechanical') {
-                                child.originalParentId = parentId;
+                        //     //child.item should be child.nodeType
+                        //     // dti.log('Child.item:', child.item);
 
-                                let pointRefs = manager.getHierarchyRefsById(parent, child);
+                        //     if (child.item === 'Mechanical') {
 
-                                dti.forEachArray(pointRefs, (pointRef) => {
-                                    let groups = pointRef.categories;
-                                    myParent = parent;
+                        //         child.originalParentId = parentId;
 
-                                    // if (groups.length > 0 || child.type === 'End Point') {
-                                    //     child.fetched = true;
-                                    // }
+                        //         let pointRefs = manager.getHierarchyRefsById(parent, child);
 
-                                    // if (groups.length > 0) {
-                                    //     let name = groups.join(' ');
-                                    //     let flatChild = $.extend(true, {
-                                    //         display: name + ' ' + child.display,
-                                    //         grouped: paths[groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
-                                    //     }, child);
+                        //         dti.forEachArray(pointRefs, (pointRef) => {
+                        //             dti.log('in point refs');
+                        //             let groups = pointRef.categories;
+                        //             myParent = parent;
 
-                                    //     manager.createNode(flatChild, parent, true, false);
-                                    // }
+                        //             // if (groups.length > 0 || child.type === 'End Point') {
+                        //             //     child.fetched = true;
+                        //             // }
 
-                                    dti.forEachArray(groups, (group) => {
-                                        myParent = manager.createNode({
-                                            display: group,
-                                            originalParentId: parentId,
-                                            item: 'Mechanical',
-                                            fetched: true,
-                                            grouped: null
-                                        }, myParent, true, false);
-                                    });
-                                    manager.createNode(child, myParent, true, false);
-                                });
-                            } else {
+                        //             // if (groups.length > 0) {
+                        //             //     let name = groups.join(' ');
+                        //             //     let flatChild = $.extend(true, {
+                        //             //         display: name + ' ' + child.display,
+                        //             //         grouped: paths[groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
+                        //             //     }, child);
+
+                        //             //     manager.createNode(flatChild, parent, true, false);
+                        //             // }
+
+                        //             dti.forEachArray(groups, (group) => {
+                        //                 myParent = manager.createNode({
+                        //                     display: group,
+                        //                     originalParentId: parentId,
+                        //                     item: 'Mechanical',
+                        //                     fetched: true,
+                        //                     grouped: null
+                        //                 }, myParent, true, false);
+                        //             });
+                        //             manager.createNode(child, myParent, true, false);
+                        //         });
+                        //     } else {
                                 manager.createNode(child, myParent, true, false);
-                            }
+                            // }
                         });
 
                         manager.sortNodes(parent.bindings.children);
@@ -3485,13 +3553,6 @@ var dti = {
                         }
                     },
 
-                    addChildRaw(obj, event) {
-                        manager.bindings.addChild(event.target, {
-                            fetched: true,
-                            expanded: true,
-                            isNew: true
-                        }, obj, true);
-                    },
 
                     // addChild(el, config, parent, skipAdd) {
                     addChild(parent, config) {
@@ -3520,13 +3581,6 @@ var dti = {
                         return child;
                     },
 
-                    addSiblingRaw(obj, event) {
-                        manager.bindings.addSibling(event.target, {
-                            fetched: true,
-                            expanded: true,
-                            isNew: true
-                        }, true);
-                    },
 
                     addSibling(el, config, skipAdd) {
                         // var parent = ko.contextFor(el).$parent,
@@ -3560,172 +3614,6 @@ var dti = {
                         // }
                     },
 
-                    bulkAddRaw(obj, event) {
-                        manager.bindings.bulkAdd('Siblings', obj, event);
-                    },
-
-                    bulkAdd(destination, obj, event) {
-                        var $bulkAddModal = $('#bulkAddModal'),
-                            bindings = manager.bindings,
-                            name = obj.name(),
-                            type = name.replace(/\d+/g, ''),
-                            number = parseInt(name.replace(type, ''), 10);
-
-                        if (destination === 'Children' || isNaN(number)) {
-                            number = 1;
-                        }
-
-                        bindings.startEntry(number + 1);
-                        bindings.endEntry(number + 9);
-                        bindings.entryFormat(type + '#');
-                        bindings.bulkAddDestination(destination);
-                        bindings.entryType(obj.type());
-                        bindings.currEntry = {
-                            node: obj,
-                            el: event.target
-                        };
-
-                        $bulkAddModal.openModal({
-                            ready() {
-                                bindings.modalOpen(true);
-                            },
-                            complete() {
-                                bindings.modalOpen(false);
-                                bindings.currEntry = null;
-                                bindings.error('');
-                            }
-                        });
-
-                        // bindings.modalOpen(false);
-                    },
-
-                    doBulkAdd() {
-                        var $bulkAddModal = $('#bulkAddModal'),
-                            bindings = manager.bindings,
-                            format = bindings.entryFormat(),
-                            startEntry = bindings.startEntry(),
-                            endEntry = bindings.endEntry(),
-                            currEntry = bindings.currEntry,
-                            name = currEntry.node.name(),
-                            destination = bindings.bulkAddDestination(),
-                            newNodes = [];
-
-                        if (!format.match('#')) {
-                            bindings.error('Format missing placeholder');
-                        } else {
-                            $bulkAddModal.closeModal({
-                                complete: () => {
-                                    dti.timedEach({
-                                        start: startEntry,
-                                        end: endEntry,
-                                        delay: 2,
-                                        fn: (c) => {
-                                            if (destination === 'Siblings') {
-                                                newNodes.push(bindings.addSibling(currEntry.el, {
-                                                    name: format.replace('#', c),
-                                                    type: currEntry.node.type(),
-                                                    fetched: true,
-                                                    expanded: true,
-                                                    isNew: true
-                                                }, true));
-                                            } else {
-                                                newNodes.push(bindings.addChild(currEntry.el, {
-                                                    name: format.replace('#', c),
-                                                    fetched: true,
-                                                    expanded: true,
-                                                    isNew: true
-                                                }, currEntry.node, true));
-                                            }
-                                        },
-                                        cb: () => {
-                                            bindings.focusNode();
-
-                                            manager.saveNewNodes(newNodes);
-                                        }
-                                    });
-                                }
-                            });
-
-                        }
-                    },
-
-                    bulkClone($target, context) {
-                        var $bulkCloneModal = $('#bulkCloneModal'),
-                            bindings = manager.bindings,
-                            obj = context.$data,
-                            name = obj.name(),
-                            type = name.replace(/\d+/g, ''),
-                            number = parseInt(name.replace(type, ''), 10);
-
-                        bindings.startEntry(number + 1);
-                        bindings.endEntry(number + 9);
-                        bindings.entryFormat(type + '#');
-                        // bindings.entryType(obj.type());
-                        bindings.currEntry = {
-                            node: obj,
-                            el: event.target,
-                            $target: $target,
-                            context: context
-                        };
-
-                        $bulkCloneModal.openModal({
-                            ready() {
-                                bindings.modalOpen(true);
-                            },
-                            complete() {
-                                bindings.modalOpen(false);
-                                bindings.currEntry = null;
-                                bindings.error('');
-                            }
-                        });
-
-                    },
-
-                    doBulkClone() {
-                        var $bulkCloneModal = $('#bulkCloneModal'),
-                            bindings = manager.bindings,
-                            format = bindings.entryFormat(),
-                            startEntry = +bindings.startEntry(),
-                            endEntry = +bindings.endEntry(),
-                            currEntry = bindings.currEntry,
-                            node = currEntry.node,
-                            name = node.name(),
-                            $target = currEntry.$target,
-                            context = currEntry.context,
-                            newNodes = [];
-
-                        if (!format.match('#')) {
-                            bindings.error('Format missing placeholder');
-                        } else {
-                            $bulkCloneModal.closeModal({
-                                complete: () => {
-                                    // $('.locations').block({
-                                    //     message: 'Cloning'
-                                    // });
-
-                                    dti.timedEach({
-                                        start: startEntry,
-                                        end: endEntry,
-                                        delay: 2,
-                                        fn: (c) => {
-                                            newNodes.push(bindings.cloneNode(context, {
-                                                name: format.replace('#', c),
-                                                parentLocId: node.parentLocId()
-                                            }, true));
-                                        },
-                                        cb: () => {
-                                            $bulkCloneModal.closeModal();
-                                            bindings.focusNode();
-
-                                            // $('.locations').unblock();
-
-                                            manager.saveNewNodes(newNodes);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    },
 
                     cloneNode(context, cfg, skipAdd) {
                         // var node = ko.viewmodel.toModel(context.$data),
@@ -3790,7 +3678,7 @@ var dti = {
                             data: {
                                 id: node.bindings._id(),
                                 deleteChildren: true,
-                                item: 'Location'
+                                item: 'Location'//todo
                             }
                         }).done((results) => {
                             dti.log(results);
@@ -3799,52 +3687,6 @@ var dti = {
                         manager.bindings.focusNode();
                     },
 
-                    expandRecursive(node) {
-                        manager.bindings.busy(true);
-
-                        if (!node.bindings.fetched()) {
-                            manager.ajax({
-                                url: '/api/hierarchy/locations/getDescendants',
-                                data: {
-                                    id: node.bindings._id(),
-                                    item: 'Location'
-                                }
-                            }).done(function (data) {
-                                var root = context.$parent && context.$parent.children && context.$parent.children() || manager.bindings.data();
-
-                                manager.buildTree(manager.normalize(data, {
-                                    expanded: true,
-                                    fetched: true,
-                                    new: false
-                                }), root);
-
-                                manager.bindings.forEachNode(function (child, parent) {
-                                    if (child.fetched() && child.children().length === 0) {
-                                        child.hasChildren(false);
-                                    } else {
-                                        manager.sortNodes(child.children);
-                                    }
-                                }, root);
-
-                                // manager.bindings.forEachNode(function (child, parent) {
-                                //     child.expanded(true);
-                                // }, root);
-
-                                manager.bindings.busy(false);
-                            });
-                        } else {
-                            context.$data.expanded(true);
-                            manager.bindings.forEachNode(function (child, parent) {
-                                child.expanded(true);
-                                if (child.fetched() && child.children().length === 0) {
-                                    child.hasChildren(false);
-                                } else {
-                                    manager.sortNodes(child.children);
-                                }
-                            }, context.$data.children(), context.$data);
-                            manager.bindings.busy(false);
-                        }
-                    },
 
                     search(terms) {
                         if (terms !== '') {
@@ -4277,10 +4119,9 @@ var dti = {
             }
 
             createNode(config, parent, noFocus, expandParent) {
-                config.manager = this;
-
                 let newNode = null;
 
+                config.manager = this;
 
                 if (parent) {// check for duplicates
                     this.bindings.forEachNode((node) => {
