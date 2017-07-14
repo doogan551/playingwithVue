@@ -17,7 +17,6 @@ let morgan = require('morgan');
 let loggerStream = require('./helpers/loggerStream');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
-let multer = require('multer');
 let session = require('express-session');
 let favicon = require('serve-favicon');
 let RedisStore = require('connect-redis')(session);

@@ -4933,23 +4933,30 @@ var Config = (function (obj) {
 
     obj.Templates = {
         getTemplate: function (pointType) {
-            var template = {},
-                common = enumsTemplatesJson.Templates._common, // Common point property attributes
-                unique = enumsTemplatesJson.Templates.Points[pointType], // Unique point property attributes
-                templateClone = function (o) {
-                    // Return the value if it's not an object; shallow copy mongo ObjectID objects
-                    if ((o === null) || (typeof (o) !== 'object')) {
-                        return o;
-                    }
+            var hierarchyTypes = ['Location', 'Category', 'Equipment'];
+            var template = {};
+            var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
+            if (hierarchyTypes.contains(pointType)) {
+                template = templateClone(hierarchy);
+                hierarchy.nodeType = pointType;
+                return hierarchy;
+            }
+            var common = enumsTemplatesJson.Templates._common; // Common point property attributes
+            var unique = enumsTemplatesJson.Templates.Points[pointType]; // Unique point property attributes
+            var templateClone = function (o) {
+                // Return the value if it's not an object; shallow copy mongo ObjectID objects
+                if ((o === null) || (typeof (o) !== 'object')) {
+                    return o;
+                }
 
-                    var temp = o.constructor();
+                var temp = o.constructor();
 
-                    for (var key in o) {
-                        temp[key] = templateClone(o[key]);
-                    }
-                    return temp;
-                };
-            _.extend(template, common, unique); // Combine common and unique attributes & stuff into template object var
+                for (var key in o) {
+                    temp[key] = templateClone(o[key]);
+                }
+                return temp;
+            };
+            _.extend(template, common, unique, hierarchy); // Combine common and unique attributes & stuff into template object var
             template['Point Type'].Value = pointType;
             template['Point Type'].eValue = enumsTemplatesJson.Enums['Point Types'][pointType].enum;
             return templateClone(template);

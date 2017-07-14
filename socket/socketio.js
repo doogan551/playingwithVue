@@ -9,7 +9,7 @@ let config = require('config');
 
 // OTHERS
 let Config = require('../public/js/lib/config');
-let compiler = require('../helpers/scriptCompiler');
+let Compiler = require('../helpers/scriptCompiler');
 let logger = require('../helpers/logger')(module);
 let zmq = require('../helpers/zmq');
 
@@ -313,6 +313,24 @@ module.exports = function socketio(_common) {
                 socket.emit('sequenceUpdateMessage', result);
             });
         });
+        // Checked
+        sock.on('doPointPackage', function (data) {
+            data.user = user;
+            const pointModel = new Point();
+            logger.debug('doPointPackage');
+            pointModel.doPointPackage(data, function (err, returnPoints) {
+                if (err) {
+                    sock.emit('pointPackage', {
+                        err: err
+                    });
+                } else {
+                    sock.emit('pointPackage', {
+                        message: 'success',
+                        points: returnPoints
+                    });
+                }
+            });
+        });
         // NOT CHECKED - will check on 88
         sock.on('compileScript', function (data) {
             logger.debug('compileScript');
@@ -360,24 +378,18 @@ module.exports = function socketio(_common) {
 
             async.waterfall([
                 function (callback) {
-                    async.mapSeries(data.adds, function (point, callback) {
-                        pointModel.addPoint({
-                            point: point
-                        }, user, null, function (response, updatedPoint) {
-                            callback(response.err, updatedPoint);
-                        });
-                    }, function (err, newPoints) {
-                        callback(err, returnPoints.concat(newPoints));
+                    pointModel.bulkAdd(data.adds, user, null, function (response, updatedPoint) {
+                        callback(response.err, updatedPoint);
                     });
                 },
 
                 function (returnPoints, callback) {
-                    async.mapSeries(data.updates, function (point, callback) {
+                    async.mapSeries(data.updates, function (point, mapCallback) {
                         pointModel.newUpdate(point.oldPoint, point.newPoint, {
                             method: 'update',
                             from: 'ui'
                         }, user, function (response, updatedPoint) {
-                            callback(response.err, updatedPoint);
+                            mapCallback(response.err, updatedPoint);
                         });
                     }, function (err, newPoints) {
                         callback(err, returnPoints.concat(newPoints));
@@ -385,9 +397,9 @@ module.exports = function socketio(_common) {
                 },
 
                 function (returnPoints, callback) {
-                    async.mapSeries(data.deletes, function (upi, callback) {
+                    async.mapSeries(data.deletes, function (upi, mapCallback) {
                         pointModel.deletePoint(upi, 'hard', user, null, function (response) {
-                            callback(response.err);
+                            mapCallback(response.err);
                         });
                     }, function (err, newPoints) {
                         callback(err, returnPoints);
@@ -410,11 +422,7 @@ module.exports = function socketio(_common) {
         sock.on('addPoint', function (data) {
             const point = new Point();
             logger.debug('addPoint');
-            point.addPoint({
-                point: data.newPoint,
-                oldPoint: data.oldPoint,
-                path: data.path
-            }, user, null, function (response, point) {
+            point.bulkAdd(data, user, null, function (response, points) {
                 if (response.err) {
                     sock.emit('pointUpdated', {
                         err: response.err
@@ -422,7 +430,7 @@ module.exports = function socketio(_common) {
                 } else {
                     sock.emit('pointUpdated', {
                         message: response.msg,
-                        point: point
+                        points: points
                     });
                 }
             });
@@ -620,17 +628,6 @@ function doUpdateSequence(data, cb) {
         sequenceData = data.sequenceData,
         pointRefs = data.pointRefs;
 
-    // mydb.collection('points').findOne({
-    //     "Name": name
-    // }, {
-    //     '_id': 1
-    // },
-    // function(err, result) {
-    //     if(result) {
-    //         let _id = result._id;
-
-    //         if(!err) {
-
     point.updateOne({
         query: {
             'Name': name
@@ -645,34 +642,9 @@ function doUpdateSequence(data, cb) {
         if (updateErr) {
             cb('Error: ' + updateErr.err);
         } else {
-            /*let logData = {
-              user: data.user,
-              timestamp: Date.now(),
-              // point: data.point,
-              activity: actLogsEnums["GPL Edit"].enum,
-              log: "Sequence edited."
-            };
-            activityLog.create(logData, function(err, result) {});*/
             return cb('success');
         }
     });
-    //         } else {
-    //             socket.emit('sequenceUpdateMessage', {
-    //                 type: 'error',
-    //                 message: err.err,
-    //                 name: name
-    //             });
-    //             complete();
-    //         }
-    //     } else {
-    //         socket.emit('sequenceUpdateMessage', {
-    //             type: 'empty',
-    //             message: 'empty',
-    //             name: name
-    //         });
-    //         complete();
-    //     }
-    // });
 }
 
 function getVals(upis) {
@@ -710,6 +682,7 @@ function getVals(upis) {
 }
 
 function compileScript(data, callback) {
+    const compiler = new Compiler();
     let script, fileName, filepath, re;
 
     re = new RegExp('"(.*), ');
@@ -842,10 +815,10 @@ function updateSchedules(data, callback) {
                     }
                 }
 
-                point.addPoint({
-                    point: newSched,
+                point.bulkAdd([{
+                    newPoint: newSched,
                     oldPoint: oldPoint
-                }, user, options, function (returnData) {
+                }], user, options, function (returnData) {
                     if (returnData.err) {
                         feCB(returnData.err);
                     }

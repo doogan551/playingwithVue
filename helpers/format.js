@@ -1,115 +1,552 @@
-{"instance":"", "refs":[{"value":0, "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Site", "display":"MSFC", "item":"Location", "id":"a", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"a", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Building", "display":"4220", "item":"Location", "id":"b", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"b", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Floor", "display":"Floor 1", "item":"Location", "id":"c", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"c", "item": "Location", "categories":[], "primary":true, "isServedBy":false},{"value":"i", "item": "Location", "categories":[], "primary":false, "isServedBy":false}], "type":"Room", "display":"Room 101", "item":"Location", "id":"d", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"d", "item": "Location", "categories":[], "primary":true, "isServedBy":false},{"value":"f", "item": "Mechanical", "categories":["Space"], "primary":false, "isServedBy":false},{"value":"v", "item": "Mechanical", "categories":["Return Air"], "primary":false, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"e", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
-{"instance":"1101", "refs":[{"value":"d", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Equipment", "display":"VAV", "item":"Mechanical", "id":"f", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}},
-{"instance":"G", "refs":[{"value":"e", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}], "type":"Point", "display":"Cooling Setpoint", "item":"Mechanical", "id":"g", "systemTags":{"properties":["Cooling Setpoint"], "qualifiers":["Air","Sensor"]}},
-{"instance":"H", "refs":[{"value":"f", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"h", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
-{"instance":"", "refs":[{"value":"c", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Area", "display":"HVAC Zone 1", "item":"Location", "id":"i", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"b", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Floor", "display":"Floor 2", "item":"Location", "id":"j", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"j", "item": "Location", "categories":[], "primary":true, "isServedBy":false},{"value":"n", "item": "Location", "categories":[], "primary":false, "isServedBy":false}], "type":"Room", "display":"Room 202", "item":"Location", "id":"k", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"2202", "refs":[{"value":"k", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Equipment", "display":"VAV", "item":"Mechanical", "id":"l", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}},
-{"instance":"M", "refs":[{"value":"l", "item": "Mechanical", "categories":["Space"], "primary":true, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"m", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
-{"instance":"", "refs":[{"value":"j", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Area", "display":"HVAC Zone 2", "item":"Location", "id":"n", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "refs":[{"value":"j", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Room", "display":"Room 222", "item":"Location", "id":"o", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"2222", "refs":[{"value":"o", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Equipment", "display":"VAV", "item":"Mechanical", "id":"p", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}},
-{"instance":"Q", "refs":[{"value":"p", "item": "Mechanical", "categories":["Space"], "primary":true, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"q", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
-{"instance":"R", "refs":[{"value":"q", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}], "type":"Point", "display":"Cooling Adjust Setpoint", "item":"Mechanical", "id":"r", "systemTags":{"properties":["Cooling Adjust Setpoint"], "qualifiers":["Air","Sensor"]}},
-{"instance":"2001", "refs":[{"value":"j", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Equipment", "display":"VAV", "item":"Mechanical", "id":"s", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}},
-{"instance":"QQQ", "refs":[{"value":"s", "item": "Mechanical", "categories":["Space"], "primary":true, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"qqq", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
-{"instance":"T", "refs":[{"value":"qqq", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}], "type":"Point", "display":"Heating Setpoint", "item":"Mechanical", "id":"t", "systemTags":{"properties":["Heating Setpoint"], "qualifiers":["Air","Sensor"]}},
-{"instance":"", "refs":[{"value":"b", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Floor", "display":"Penthouse", "item":"Location", "id":"u", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"1", "refs":[{"value":"u", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Equipment", "display":"AHU 1", "item":"Mechanical", "id":"v", "systemTags":{"properties":["AHU"], "qualifiers":["Equipment"]}},
-{"instance":"W", "refs":[{"value":"f", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}], "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"w", "systemTags":{"properties":["Temperature"], "qualifiers":["Air","Sensor"]}},
+[{
+        "_id": 1,
+        "parentNode": 0,
+        "display": "MSFC",
+        "tags": [],
+        "meta": {},
+        "nodeType": "Location",
+        "nodeSubType": "Site",
+        "libraryId": 0,
+        "refNode": 0,
+        "_pStatus": 0,
+        "Name": "MSFC"
+    },
+    {
+        "_id": 2,
+        "parentNode": 1,
+        "display": "4250",
+        "tags": [],
+        "meta": {},
+        "nodeType": "Location",
+        "nodeSubType": "Building",
+        "libraryId": 0,
+        "refNode": 0,
+        "_pStatus": 0,
+        "Name": "4250"
+    },
+    {
+        "_id": 3,
+        "parentNode": 2,
+        "display": "Room 58",
+        "tags": [],
+        "meta": {},
+        "nodeType": "Location",
+        "nodeSubType": "Room",
+        "libraryId": 0,
+        "refNode": 0,
+        "_pStatus": 0,
+        "Name": "Room 58"
+    },
+    {
+        "parentNode": 3,
+        "display": "Temperature",
+        "tags": [],
+        "meta": {},
+        "nodeType": "Point",
+        "nodeSubType": "",
+        "libraryId": 0,
+        "refNode": 0,
+        "Name": "4250_MSFC_Room 58_Temperature",
+        "_id": 9215,
+        "Security": [
 
+        ],
+        "_pStatus": 0,
+        "_pAccess": 0,
+        "_cfgRequired": true,
+        "_cfgDevice": false,
+        "_forceAllCOV": false,
+        "_relDevice": 129,
+        "_relRMU": 0,
+        "_relPoint": 0,
+        "_updPoint": false,
+        "_updTOD": false,
+        "_pollTime": 0,
+        "_devModel": 19,
+        "_rmuModel": 0,
+        "_parentUpi": 0,
+        "_actvAlmId": ObjectId("000000000000000000000000"),
+        "Alarm Messages": [{
+                "msgType": 17,
+                "msgId": ObjectId("592412c731f4a3a7587dff2b"),
+                "ack": false,
+                "notify": false
+            },
+            {
+                "msgType": 2,
+                "msgId": ObjectId("592412c731f4a3a7587dff1b"),
+                "ack": false,
+                "notify": false
+            },
+            {
+                "msgType": 4,
+                "msgId": ObjectId("592412c731f4a3a7587dff1d"),
+                "ack": false,
+                "notify": false
+            },
+            {
+                "msgType": 3,
+                "msgId": ObjectId("592412c731f4a3a7587dff1c"),
+                "ack": false,
+                "notify": false
+            },
+            {
+                "msgType": 48,
+                "msgId": ObjectId("592412c731f4a3a7587dff41"),
+                "ack": false,
+                "notify": false
+            },
+            {
+                "msgType": 47,
+                "msgId": ObjectId("592412c731f4a3a7587dff40"),
+                "ack": false,
+                "notify": false
+            }
+        ],
+        "Input Type": {
+            "ValueType": 5,
+            "Value": "20 mA LP",
+            "eValue": 4,
+            "ValueOptions": {
+                "Resistance": 0,
+                "5 Volt": 1,
+                "10 Volt": 2,
+                "20 mA SP": 3,
+                "20 mA LP": 4,
+                "Rate Input": 5
+            },
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Conversion Adjustment": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Conversion Coefficient 1": {
+            "ValueType": 1,
+            "Value": 9.5,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Conversion Coefficient 2": {
+            "ValueType": 1,
+            "Value": 5.625,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Conversion Coefficient 3": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": false,
+            "isReadOnly": true
+        },
+        "Conversion Coefficient 4": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": false,
+            "isReadOnly": true
+        },
+        "Conversion Type": {
+            "ValueType": 5,
+            "Value": "Linear",
+            "eValue": 1,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Alarm Deadband": {
+            "ValueType": 1,
+            "Value": 3,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Disable Limit Fault": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Instance": {
+            "ValueType": 4,
+            "Value": 7,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Filter Weight": {
+            "ValueType": 1,
+            "Value": 1,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "High Alarm Limit": {
+            "ValueType": 1,
+            "Value": 90,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "High Warning Limit": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Value Deadband": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Low Alarm Limit": {
+            "ValueType": 1,
+            "Value": 50,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Low Warning Limit": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Maximum Value": {
+            "ValueType": 1,
+            "Value": 122,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Minimum Value": {
+            "ValueType": 1,
+            "Value": 32,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Warning Adjust Band": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Enable Warning Alarms": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm Adjust Band": {
+            "ValueType": 1,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm Class": {
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm Delay Time": {
+            "ValueType": 13,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm Repeat Enable": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm Repeat Time": {
+            "ValueType": 17,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarms Off": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Alarm State": {
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Broadcast Enable": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Channel": {
+            "ValueType": 5,
+            "Value": "7",
+            "eValue": 7,
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueOptions": {
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8,
+                "9": 9,
+                "10": 10,
+                "11": 11,
+                "12": 12,
+                "13": 13,
+                "14": 14,
+                "15": 15,
+                "16": 16
+            }
+        },
+        "COV Enable": {
+            "ValueType": 7,
+            "Value": true,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "COV Increment": {
+            "ValueType": 1,
+            "Value": 1,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Poll Register": {
+            "ValueType": 4,
+            "Value": 7,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Engineering Units": {
+            "ValueType": 2,
+            "Value": "DEGF",
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Interlock State": {
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0,
+            "ValueOptions": {
+                "Off": 0,
+                "On": 1
+            },
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Last Report Time": {
+            "ValueType": 11,
+            "Value": 1495026622,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Poll Function": {
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Modbus Order": {
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Out of Service": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Value": {
+            "ValueType": 1,
+            "Value": 72.727783203125,
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "oosValue": 72.727783203125
+        },
+        "Quality Code Enable": {
+            "ValueType": 18,
+            "Value": 255,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Read Only": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Reliability": {
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Poll Data Type": {
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0,
+            "isDisplayable": false,
+            "isReadOnly": false
+        },
+        "Status Flags": {
+            "ValueType": 18,
+            "Value": 0,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Trend COV Increment": {
+            "ValueType": 1,
+            "Value": 1,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Trend Interval": {
+            "ValueType": 13,
+            "Value": 900,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Trend Enable": {
+            "ValueType": 7,
+            "Value": false,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Trend Samples": {
+            "ValueType": 4,
+            "Value": 255,
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Remarks": {
+            "ValueType": 2,
+            "Value": "",
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Description": {
+            "ValueType": 2,
+            "Value": "",
+            "isDisplayable": true,
+            "isReadOnly": false
+        },
+        "Point Type": {
+            "ValueType": 5,
+            "Value": "Analog Input",
+            "eValue": 0,
+            "isDisplayable": true,
+            "isReadOnly": true
+        },
+        "Point Refs": [{
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "Value": 36700264,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "4250_UNV01",
+                "PointInst": 36700264,
+                "DevInst": 36700264,
+                "PointType": 8
+            },
+            {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "Value": 0,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "",
+                "PointInst": 0,
+                "DevInst": 0,
+                "PointType": 0
+            },
+            {
+                "PropertyName": "Sensor Point",
+                "PropertyEnum": 154,
+                "Value": 859832448,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "Sensor_MS5(32to122",
+                "PointInst": 859832448,
+                "DevInst": 0,
+                "PointType": 205
+            },
+            {
+                "PropertyName": "Alarm Adjust Point",
+                "PropertyEnum": 136,
+                "Value": 0,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "",
+                "PointInst": 0,
+                "DevInst": 0,
+                "PointType": 0
+            },
+            {
+                "PropertyName": "Alarm Display Point",
+                "PropertyEnum": 137,
+                "Value": 0,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "",
+                "PointInst": 0,
+                "DevInst": 0,
+                "PointType": 0
+            },
+            {
+                "PropertyName": "Interlock Point",
+                "PropertyEnum": 148,
+                "Value": 0,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "PointName": "",
+                "PointInst": 0,
+                "DevInst": 0,
+                "PointType": 0
+            }
+        ],
+        "_Name": "4250_ah5_sptz2",
+        "Notify Policies": [
 
+        ],
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Trend Last Status": {
+            "isDisplayable": false,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Trend Last Value": {
+            "isDisplayable": false,
+            "isReadOnly": true,
+            "ValueType": 1,
+            "Value": 0
+        },
+        "_oldUpi": 72247
 
-
-{"instance":"", "refs":[{"value":"a", "item": "Location", "categories":[], "primary":true, "isServedBy":false}], "type":"Building", "display":"5050", "item":"Location", "id":"aaa", "systemTags":{"properties":[], "qualifiers":[]}},
-{"instance":"", "type":"Floor", "display":"1st", "item":"Location", "id":"aab", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aaa", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"", "type":"Room", "display":"1001", "item":"Location", "id":"aac", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aab", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1001", "type":"Equipment", "display":"VAV", "item":"Mechanical", "id":"aad", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}, "refs":[{"value":"aac", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAE", "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"aae", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAF", "type":"Point", "display":"Humidity", "item":"Mechanical", "id":"aaf", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAG", "type":"Point", "display":"CO2", "item":"Mechanical", "id":"aag", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAH", "type":"Point", "display":"Temperature", "item":"Mechanical", "id":"aah", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAI", "type":"Point", "display":"Flow", "item":"Mechanical", "id":"aai", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"1001-Fan1", "type":"Equipment", "display":"Fan", "item":"Mechanical", "id":"aaj", "systemTags":{"properties":["Fan"], "qualifiers":["Equipment"]}, "refs":[{"value":"aad", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAK", "type":"Point", "display":"Status", "item":"Mechanical", "id":"aak", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"aaj", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAL", "type":"Point", "display":"Command", "item":"Mechanical", "id":"aal", "systemTags":{"properties":["Command"], "qualifiers":["Control"]}, "refs":[{"value":"aaj", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-
-{"instance":"", "id":"aam", "display":"1002", "type":"Room", "item":"Location", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aab", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1002", "id":"aan", "display":"VAV", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}, "refs":[{"value":"aam", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAO", "id":"aao", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAP", "id":"aap", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAQ", "id":"aaq", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAR", "id":"aar", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAS", "id":"aas", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"1002-Fan1", "id":"aat", "display":"Fan", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Fan"], "qualifiers":["Equipment"]}, "refs":[{"value":"aan", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAU", "id":"aau", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"aat", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAV", "id":"aav", "display":"Command", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Command"], "qualifiers":["Control"]}, "refs":[{"value":"aat", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-
-
-{"instance":"", "id":"aaw", "display":"1003", "type":"Room", "item":"Location", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aab", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1003", "id":"aax", "display":"VAV", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}, "refs":[{"value":"aaw", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"AAY", "id":"aay", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AAZ", "id":"aaz", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABA", "id":"aba", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABB", "id":"abb", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABC", "id":"abc", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"1003-Fan1", "id":"abd", "display":"Fan", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Fan"], "qualifiers":["Equipment"]}, "refs":[{"value":"aax", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABE", "id":"abe", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"abd", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABF", "id":"abf", "display":"Command", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Command"], "qualifiers":["Control"]}, "refs":[{"value":"abd", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-
-
-{"instance":"", "id":"abg", "display":"1004", "type":"Room", "item":"Location", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aab", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1004", "id":"abh", "display":"VAV", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}, "refs":[{"value":"abg", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABI", "id":"abi", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABJ", "id":"abj", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABK", "id":"abk", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABL", "id":"abl", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABM", "id":"abm", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"1004-Fan1", "id":"abn", "display":"Fan", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Fan"], "qualifiers":["Equipment"]}, "refs":[{"value":"abh", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABO", "id":"abo", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"abn", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABP", "id":"abp", "display":"Command", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Command"], "qualifiers":["Control"]}, "refs":[{"value":"abn", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-
-{"instance":"", "id":"abq", "display":"1005", "type":"Room", "item":"Location", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aab", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1005", "id":"abr", "display":"VAV", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["VAV"], "qualifiers":["Equipment"]}, "refs":[{"value":"abq", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABS", "id":"abs", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABT", "id":"abt", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABU", "id":"abu", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":["Space Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABV", "id":"abv", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"ABW", "id":"abw", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"1005-Fan1", "id":"abx", "display":"Fan", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Fan"], "qualifiers":["Equipment"]}, "refs":[{"value":"abr", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABY", "id":"aby", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"abx", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"ABZ", "id":"abz", "display":"Command", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Command"], "qualifiers":["Control"]}, "refs":[{"value":"abx", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-
-{"instance":"", "id":"cca", "display":"Penthouse", "type":"Floor", "item":"Location", "systemTags":{"properties":[], "qualifiers":[]}, "refs":[{"value":"aaa", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"1", "id":"ccb", "display":"AHU", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["AHU"], "qualifiers":["Equipment"]}, "refs":[{"value":"cca", "item": "Location", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CCC", "id":"ccc", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCD", "id":"ccd", "display":"High Static", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["High Static"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCE", "id":"cce", "display":"Static Pressure", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Static Pressure"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCF", "id":"ccf", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AHU1-Humidifier1", "id":"ccg", "display":"Humidifier", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Humidifier"], "qualifiers":["Equipment"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Supply Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCH", "id":"cch", "display":"Enable", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Enable"], "qualifiers":["Control"]}, "refs":[{"value":"ccg", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CCI", "id":"cci", "display":"Control", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Control"], "qualifiers":["Control"]}, "refs":[{"value":"ccg", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CCJ", "id":"ccj", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCK", "id":"cck", "display":"Static Pressure", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Static Pressure"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCL", "id":"ccl", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCM", "id":"ccm", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCN", "id":"ccn", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AHU1-Damper1", "id":"cco", "display":"Damper", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Damper"], "qualifiers":["Equipment"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Return Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCP", "id":"ccp", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"cco", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CCQ", "id":"ccq", "display":"Control", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Control"], "qualifiers":["Control"]}, "refs":[{"value":"cco", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CCR", "id":"ccr", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Mixed Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCS", "id":"ccs", "display":"Freeze Limit", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Freeze Limit"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Mixed Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCT", "id":"cct", "display":"Filter Pressure", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Filter Pressure"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Mixed Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCU", "id":"ccu", "display":"Temperature", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Temperature"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCV", "id":"ccv", "display":"CO2", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["CO2"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCW", "id":"ccw", "display":"Static Pressure", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Static Pressure"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCX", "id":"ccx", "display":"Humidity", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Humidity"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CCY", "id":"ccy", "display":"Flow", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Flow"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"AHU1-Damper2", "id":"ccz", "display":"Damper", "type":"Equipment", "item":"Mechanical", "systemTags":{"properties":["Damper"], "qualifiers":["Equipment"]}, "refs":[{"value":"ccb", "item": "Mechanical", "categories":["Outside Air"], "primary":true, "isServedBy":false}]},
-{"instance":"CDA", "id":"cda", "display":"Status", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Status"], "qualifiers":["Sensor"]}, "refs":[{"value":"ccz", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]},
-{"instance":"CDB", "id":"cdb", "display":"Control", "type":"Point", "item":"Mechanical", "systemTags":{"properties":["Control"], "qualifiers":["Control"]}, "refs":[{"value":"ccz", "item": "Mechanical", "categories":[], "primary":true, "isServedBy":false}]}
+    }
+]

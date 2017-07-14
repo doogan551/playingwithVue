@@ -2,10 +2,10 @@ var rob = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost',
-            'dbName': 'hierarchy'
+            'dbName': 'infoscan'
         },
         'zmqConfig': {
-            'server': 'info-int'
+            'server': 'localhost'
         },
         'files': {
             'driveLetter': 'C'

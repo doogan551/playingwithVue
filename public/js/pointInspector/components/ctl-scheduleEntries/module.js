@@ -1146,7 +1146,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
     ViewModel.prototype.dispose = function() {
-        this.isTabLoaded.dispose();
+        // this.isTabLoaded.dispose();
     };
 
     ko.bindingHandlers.setEnumTextValue = {

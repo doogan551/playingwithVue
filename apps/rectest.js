@@ -1,4 +1,4 @@
-// const async = require('async');
+const async = require('async');
 const db = require('../helpers/db');
 const Utility = require('../models/utility');
 // const Config = require('../public/js/lib/config.js');
@@ -7,7 +7,7 @@ const config = require('config');
 const dbConfig = config.get('Infoscan.dbConfig');
 const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-let runTest = () => {
+let runEqpTest = () => {
     const MechTemplate = require('../models/mechanical/mechanical');
     let mechTemplate = new MechTemplate('Air Handling');
     let vav1 = mechTemplate.build('Equipment', 'VAV');
@@ -76,10 +76,52 @@ let iterateEquip = (model, spacing = '-') => {
     }
 };
 
-db.connect(connectionString.join(''), function (err) {
-    // runTest();
-    runAutoVAV();
+let test = () => {
+    let ImportApp = require('../models/import');
+    let importApp = new ImportApp();
+    importApp.fixToUUtil((err) => {
+        console.log('done');
+    });
+    // let System = require('../models/system');
+    // let Point = require('../models/point');
+    // let systemModel = new System();
+    // let pointModel = new Point();
 
+    // systemModel.getOne({
+    //     query: {
+    //         Name: 'Weather'
+    //     }
+    // }, (err, weather) => {
+    //     async.eachOfSeries(weather, (value, prop, callback) => {
+    //         if (typeof value === 'number') {
+    //             pointModel.getOne({
+    //                 query: {
+    //                     _oldUpi: value
+    //                 }
+    //             }, (err, refPoint) => {
+    //                 weather[prop] = (!!refPoint) ? refPoint._id : 0;
+    //                 callback(err);
+    //             });
+    //         } else {
+    //             return callback();
+    //         }
+    //     }, (err) => {
+    //         systemModel.update({
+    //             query: {
+    //                 Name: 'Weather'
+    //             },
+    //             updateObj: weather
+    //         }, (err) => {
+    //             console.log('err', err);
+    //         });
+    //     });
+    // });
+};
+
+db.connect(connectionString.join(''), function (err) {
+    // runEqpTest();
+    // runAutoVAV();
+    test();
     // class Test {
     //     tester() {
     //         this.run();

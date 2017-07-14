@@ -2,6 +2,7 @@ const _ = require('lodash');
 const async = require('async');
 
 const Common = require('./common');
+const Config = require('../public/js/lib/config.js');
 
 const LOCATION = 'Location';
 const MECHANICAL = 'Mechanical';
@@ -42,7 +43,7 @@ const models = {
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
-        super('hierarchy');
+        super('points');
     }
 
     getNode(data, cb) {
@@ -87,18 +88,12 @@ const Hierarchy = class Hierarchy extends Common {
         return template;
     }
 
-    getModel(nodeType) {
-        let model = {};
-        let common = _.cloneDeep(models.common);
-        let type = _.cloneDeep(models[nodeType]);
-        return _.cloneDeep(_.extend(model, common, type));
-    }
-
     add(data, cb) {
+        const pointModel = new Point();
         let node = data;
         delete node.id;
+        node._pStatus = 0;
 
-        let instance = this.getDefault(data.instance, '');
         let meta = this.getDefault(data.meta, {
             coords: {
                 lat: 0,
@@ -111,23 +106,28 @@ const Hierarchy = class Hierarchy extends Common {
             },
             tz: ''
         });
-
-        this.recreateTags(node);
-        this.insert({
-            insertObj: node
-        }, (err, result) => {
-            if (err) {
-                return cb(err);
-            } else if (!!result) {
-                return cb(null, result.ops[0]);
-            }
-            return cb(null, null);
+        pointModel.buildNamePath(node.parentNode, node.display, (err, newName) => {
+            node.Name = newName;
+            this.recreateTags(node);
+            this.insert({
+                insertObj: node
+            }, (err, result) => {
+                if (err) {
+                    return cb(err);
+                } else if (!!result) {
+                    return cb(null, result.ops[0]);
+                }
+                return cb(null, null);
+            });
         });
     }
 
-    getNewId(cb) {
+    getNewId(type, cb) {
         let counterModel = new Counter();
-        counterModel.getNextSequence('hierarchy', cb);
+        let typeEnum = Config.Enums['Hierarchy Types'][type].enum;
+        counterModel.getNextSequence(type.toLowerCase(), (err, count) => {
+            cb(err, (typeEnum << 22) + count);
+        });
     }
 
     addAll(data, cb) {
@@ -195,7 +195,7 @@ const Hierarchy = class Hierarchy extends Common {
         let assignParentId = (parentCallback) => {
             async.eachSeries(nodes, (node, callback) => {
                 if (node.hasOwnProperty('id')) {
-                    this.getNewId((err, newId) => {
+                    this.getNewId(node.nodeType, (err, newId) => {
                         node._id = newId;
                         return callback(err);
                     });
@@ -215,8 +215,8 @@ const Hierarchy = class Hierarchy extends Common {
             let parent = nodes[p];
             for (var c = 0; c < nodes.length; c++) {
                 let child = nodes[c];
-                if (child.parent === parent.id) {
-                    child.parent = parent._id;
+                if (child.parentNode === parent.id) {
+                    child.parentNode = parent._id;
                 }
             }
         }
@@ -589,7 +589,7 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     recreateTags(node) {
-        const skipProperties = ['tags', '_id', 'parent', 'libraryId', 'pointId', 'isReference'];
+        const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId'];
 
         let addUniqueTags = (tag) => {
             let tags = tag.toLowerCase().split(' ');
@@ -653,8 +653,8 @@ const Hierarchy = class Hierarchy extends Common {
         // change node to normal structure before name check
         let problems = [];
         async.eachSeries(nodes, (node, callback) => {
-            if (this.isNumber(node.parentLocId)) {
-                this.checkForExistingName(node, node.parentLocId, (err, exists) => {
+            if (this.isNumber(node.parentNode)) {
+                this.checkForExistingName(node, node.parentNode, (err, exists) => {
                     if (!!exists) {
                         problems.push({
                             err: 'Name already exists under this parent location',
@@ -671,24 +671,14 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    checkForExistingName(node, item, cb) {
-        let parent = {};
-        if (this.isNumber(item)) {
-            parent.value = item;
-        } else {
-            node.hierarchyRefs.forEach((ref) => {
-                if (ref.item === item) {
-                    parent = ref;
-                }
-            });
-        }
+    checkForExistingName(node, parentNode, cb) {
         this.count({
             query: {
                 _id: {
                     $ne: node._id
                 },
                 display: node.display,
-                'hierarchyRefs.value': parent.value
+                parentNode: parentNode
             }
         }, (err, count) => {
             return cb(err, (count > 0));
@@ -698,3 +688,4 @@ const Hierarchy = class Hierarchy extends Common {
 
 module.exports = Hierarchy;
 const Counter = require('./counter');
+const Point = require('./point');

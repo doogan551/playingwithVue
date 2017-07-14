@@ -145,20 +145,20 @@ let ImportUpdate = () => {
                 fixPowerMeters(function (err, count) {
                     logger.info('number of powermeters changed:', count);
                     logger.info('before changeUpis', err, new Date());
-                    // changeUpis(function(err) {
-                    fixUpisCollection(db, 'new_points', function (err) {
-                        // updateHistory(function(err) {
-                        // logger.info('finished updateHistory', err);
-                        // cleanupDB(db, function(err) {
-                        if (err) {
-                            logger.info('updateGPLReferences err:', err);
-                        }
-                        logger.info('done', err, new Date());
-                        process.exit(0);
-                        // });
+                    changeUpis(function (err) {
+                        fixUpisCollection(db, 'new_points', function (err) {
+                            updateHistory(function (err) {
+                                logger.info('finished updateHistory', err);
+                                cleanupDB(db, function (err) {
+                                    if (err) {
+                                        logger.info('updateGPLReferences err:', err);
+                                    }
+                                    logger.info('done', err, new Date());
+                                    process.exit(0);
+                                });
+                            });
+                        });
                     });
-                    // });
-                    // });
                 });
             });
         });
@@ -387,7 +387,7 @@ let setupCfgRequired = (db, callback) => {
 };
 
 let createEmptyCollections = (db, callback) => {
-    let collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'Schedules', 'dev', 'Options'];
+    let collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions', 'Schedules', 'dev', 'Options', 'counters'];
     async.forEach(collections, function (coll, cb) {
         db.createCollection(coll, function (err, result) {
             cb(err);
@@ -569,9 +569,6 @@ let changeUpis = (callback) => {
     let centralDeviceUPI = 0;
     let newPoints = 'new_points';
     let points = 'points';
-    let newUpi = 0;
-    let lowest = 1;
-    let highestDevice = 4194302;
 
     let updateDependencies = function (oldId, newId, collection, cb) {
         Utility.iterateCursor({
@@ -1245,7 +1242,9 @@ let initImport = (db, callback) => {
                         // setupCurAlmIds(db, function(err) {
                         setupCfgRequired(db, function (err) {
                             setupProgramPoints(db, function (err) {
-                                callback(null);
+                                setupCounters(function (err) {
+                                    callback(null);
+                                });
                             });
                         });
                     });
@@ -2718,6 +2717,25 @@ let setupProgramPoints = (db, callback) => {
     }, function (err, result) {
         callback(err);
     });
+};
+
+let setupCounters = (callback) => {
+    let pointTypes = Config.Enums['Point Types'];
+    let counters = [];
+    for (var type in pointTypes) {
+        let typeId = type.split(' ');
+        typeId[0] = typeId[0].toLowerCase();
+        typeId = typeId.join('') + 'Id';
+        counters.push({
+            _id: typeId,
+            counter: (type === 'Device') ? 3145727 : 0,
+            enum: pointTypes[type].enum
+        });
+    }
+    Utility.insert({
+        collection: 'counters',
+        insertObj: counters
+    }, callback);
 };
 
 let updateAllProgramPoints = (db, callback) => {

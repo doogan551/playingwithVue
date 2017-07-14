@@ -236,6 +236,7 @@ const Utility = class Utility {
         let fields = (!!criteria.fields) ? criteria.fields : {};
         let sort = (!!criteria.sort) ? criteria.sort : {};
         let skip = (!!criteria.skip) ? criteria.skip : 0;
+        let timeout = (!!criteria.timeout) ? criteria.timeout : true;
         let collection;
 
         if (!coll) {
@@ -247,7 +248,10 @@ const Utility = class Utility {
         // console.log(query, coll);
         collection = db.get().collection(coll);
 
-        let cursor = collection.find(query, fields).limit(limit).sort(sort).skip(skip);
+        let cursor = collection.find(query, {
+            fields,
+            timeout
+        }).limit(limit).sort(sort).skip(skip);
         cb(cursor);
     }
 
