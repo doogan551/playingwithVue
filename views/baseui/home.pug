@@ -445,7 +445,7 @@ html
             .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}]")
                 
 
-                //- // ko if: children().length !== 0
+                //- // k0o if: children().length !== 0
                 #tree.pane(data-bind="css: treeStyle")
                     ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
 

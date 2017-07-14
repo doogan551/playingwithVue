@@ -3013,23 +3013,30 @@ var dti = {
     },
     locations: {
         LocationsNode: class LocationsNode { 
-            static getTemplate() {
-                return {
-                    id: dti.makeId(),
-                    _id: dti.makeId(),
-                    name: 'Name',
-                    _name: 'Name',
-                    type: 'Area',
-                    _type: 'Area',
+            static getTemplate(config = {}) {
+                return { 
+                    _id: dti.makeId(), 
+                    nodeId: dti.makeId(),
+                    parentLocId: 0, 
+ 
+                    children: [], 
+                    _data: {},  //if we get it from the server, we store the db object here 
+ 
+                    name: config.display || 'Name', 
+                    _name: config.display || 'Name', 
+                    display: config.display || 'Name',
+                    type: 'Area', 
+                    _type: 'Area', 
                     item: 'Location',
-                    focused: false,
-                    expanded: false,
-                    fetched: false,
-                    hasChildren: true,
-                    new: true,
-                    hasChanged: false,
-                    parentLocId: 0,
-                    children: []
+ 
+                    grouped: null,
+                    focused: false, 
+                    expanded: false, 
+                    fetched: false, 
+                    hasChanged: false, 
+ 
+                    hasChildren: false, 
+                    isNew: false 
                 };
             }
 
@@ -3063,7 +3070,7 @@ var dti = {
                 this.bindings = ko.viewmodel.fromModel(this.defaultConfig); 
 
                 this.bindings.hasChildren = ko.pureComputed(() => { 
-                    return !this.bindings.fetched() || (this.bindings.fetched() && this.bindings.children().length > 0); 
+                    return typeof this.bindings._id() === 'string' || !this.bindings.fetched() || (this.bindings.fetched() && this.bindings.children().length > 0); 
                 }); 
  
                 this.bindings.isNew = ko.pureComputed(() => { 
@@ -3120,6 +3127,7 @@ var dti = {
                 $container.append(markup);
 
                 this.$container = $container;
+                this.$addNodeModal = $('#addNodeModal');
 
                 // $container.on('click', (event) => {
                 //     var $target = $(event.target);
@@ -3220,34 +3228,27 @@ var dti = {
             initDOM() {
                 // var bindings = this.bindings;
                 let manager = this;
+                let makeHandler = (config) => {
+
+                    return (key, opt) => {
+                        let $target = opt.$trigger;
+                        let context = ko.contextFor($target[0]);
+                        let node = manager.getNodeByContext(context);
+
+                        config.parent = node;
+
+                        manager.showAddNodeModal(config);
+                    };
+                };
 
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
                     items: {
                         location: {
                             name: 'Location',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                manager.bindings.addChild(node, {
-                                    name: 'Location',
-                                    fetched: true,
-                                    hasChildren: false,
-                                    expanded: true,
-                                    type: 'Area'
-                                });
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Location';
-                            }
+                            callback: makeHandler({
+                                nodeType: 'Location'
+                            })
                         },
                         application: {
                             name: 'Application',
@@ -3455,7 +3456,7 @@ var dti = {
                         });
 
                         //TODO replace bindings.data with manager.root/tree/something
-                        manager.createNode(rootNode);
+                        manager.createNode(rootNode, null, true);
 
                         // manager.bindings.children.push(rootNode);
 
@@ -3797,7 +3798,7 @@ var dti = {
                         }
 
                         // return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, manager.template), cfg || {}));
-                        return $.extend(true, $.extend(true, {}, dti.locations.LocationsNode.getTemplate()), cfg || {});
+                        return $.extend(true, $.extend(true, {}, dti.locations.LocationsNode.getTemplate(cfg)), cfg || {});
                     },
 
                     expand(obj, event) {
@@ -4110,6 +4111,11 @@ var dti = {
 
 
             // methods
+            showAddNodeModal(config) {
+                this.$addNodeModal.openModal();
+                dti.log(this);
+            }
+
             sortNodes(nodeList) {
                 nodeList.sort((a, b) => {
                     var res = this.collator.compare(a.name(), b.name());
@@ -4445,14 +4451,19 @@ var dti = {
             handleTreeResults(results, overwrite, cb) {
                 var bindings = this.bindings;
 
-                this.tree = this.normalize(results, {
-                    isNew: false,
-                    expanded: false
-                });
+                if (results.length > 0) {
+                    this.tree = this.normalize(results, {
+                        isNew: false,
+                        expanded: false
+                    });
 
-                dti.forEachArray(this.tree, (branch) => {
-                    this.createNode(branch, null, true);
-                });
+                    dti.forEachArray(this.tree, (branch) => {
+                        this.createNode(branch, null, true);
+                    });
+                } else {
+                    this.bindings.addRootNode();
+                }
+
 
                 // if (!overwrite) {
                 //     bindings.children(ko.viewmodel.fromModel(this.tree)());
