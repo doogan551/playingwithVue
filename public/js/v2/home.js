@@ -33,6 +33,7 @@ var dti = {
                 standalone: true,
                 singleton: true,
                 initFn: 'locations.initLocations',
+                showLoading: true,
                 fullScreen: false,
                 options: {
                     retainNames: false
@@ -987,10 +988,15 @@ var dti = {
                 $container: self.$windowEl.find('.markupContent'),
                 windowID: self.$windowEl.attr('id'),
                 onActive: self.bindings.active,
-                id: windowId
+                id: windowId,
+                getWindow() {
+                    return self;
+                }
             });
 
-            self.bindings.loading(false);
+            if (!config.showLoading) {
+                self.bindings.loading(false);
+            }
         }
 
         return {
@@ -3016,54 +3022,24 @@ var dti = {
             static getTemplate(config = {}) {
                 return { 
                     _id: dti.makeId(), 
-                    nodeId: dti.makeId(),
-                    parentLocId: 0, 
+                    parentNode: 0,     
+                    nodeType: '',
+                    nodeSubType: '',
+                    refNode: 0,               
  
                     children: [], 
-                    _data: {},  //if we get it from the server, we store the db object here 
  
-                    name: config.display || 'Name', 
-                    _name: config.display || 'Name', 
-                    display: config.display || 'Name',
-                    type: 'Area', 
-                    _type: 'Area', 
-                    item: 'Location',
+                    display: config.display || 'Display',
  
-                    grouped: null,
-                    focused: false, 
                     expanded: false, 
                     fetched: false, 
-                    hasChanged: false, 
  
-                    hasChildren: false, 
-                    isNew: false 
+                    hasChildren: false
                 };
             }
 
             constructor(config) { 
-                this.defaultConfig = { 
-                    _id: dti.makeId(), 
-                    nodeId: dti.makeId(),
-                    parentLocId: 0, 
- 
-                    children: [], 
-                    _data: {},  //if we get it from the server, we store the db object here 
- 
-                    name: config.display || 'Name', 
-                    _name: config.display || 'Name', 
-                    type: 'Area', 
-                    _type: 'Area', 
-                    item: 'Location',
- 
-                    grouped: null,
-                    focused: false, 
-                    expanded: false, 
-                    fetched: false, 
-                    hasChanged: false, 
- 
-                    hasChildren: false, 
-                    isNew: false 
-                }; 
+                this.defaultConfig = dti.locations.LocationsNode.getTemplate(config);
  
                 this.manager = config.manager; 
                 this.defaultConfig = $.extend(true, this.defaultConfig, config); 
@@ -3082,30 +3058,6 @@ var dti = {
                 let bindings = ko.toJS(this.bindings);
 
                 return $.extend(true, {}, this.defaultConfig, bindings);
-            }
-
-            fetch() {   // (fetches children/descendants) //contents TDB 
-
-            }
-
-            expand() { 
-                this.bindings.expanded(true); 
-            }
-
-            collapse() { 
-                this.bindings.expanded(false); 
-            }
-
-            focus() { 
-                this.bindings.focused(true); 
-            }
-
-            name() {
-                return this.bindings.name();
-            }
-
-            type() {
-                return this.bindings.type();
             }
 
             deleteChild(node) {
@@ -3129,28 +3081,6 @@ var dti = {
                 this.$container = $container;
                 this.$addNodeModal = $('#addNodeModal');
 
-                // $container.on('click', (event) => {
-                //     var $target = $(event.target);
-                //     //all valid skips
-                //     //TODO cleanup
-                //     if (!$target.hasClass('node') && $target.parents('.node').length === 0 && $target.parents('#rightPane').length === 0 && !$target.hasClass('stayFocused')) {
-                //         // this.bindings.focusedNode(false);
-                //         this.bindings.focusNode();
-                //     }
-                // });
-
-                this.crawlerModes = {
-                    TOPDOWN: 1,
-                    BOTTOMUP: 2,
-                    LATERAL: 3,
-                    LATERALREV: 4
-                };
-
-                this.blankNode = {
-                    name: '',
-                    type: ''
-                };
-
                 this.nodeMatrix = {};
 
                 this.tree = [];
@@ -3164,33 +3094,9 @@ var dti = {
                 this.initDOM();
 
                 this.getDefaultTree(() => {
-                    this.bindings.refreshTooltips();
+                    config.getWindow().bindings.loading(false);
+                    // this.bindings.busy(false);
                 });
-            }
-
-            splitSystemTags(tagString) {
-                // Group,Group/Property;Type
-                // Supply,Air/Temperature;Sensor
-                let tokens = tagString.split('/');
-                let token = tokens[1].split(';');
-
-                let groups = tokens[0].split(',');     
-                if (groups[0] === '') {
-                    groups = [];
-                }           
-
-                let props = token[0].split(',');
-                let types = token[1].split(',');
-
-                // tags.groups = tagString.split('/')[0].split(',');
-                // tags.props = tagString.split('/')[1].split(';')[0].split(',');
-                // tags.types = tagString.split('/')[1].split(';')[1].split(',');
-
-                return {
-                    groups: groups,
-                    types: types,
-                    props: props
-                };
             }
 
             getNodeById(id) {
@@ -3198,13 +3104,13 @@ var dti = {
             }
 
             getNodeByContext(context) {
-                let _id = context.$data.nodeId();
+                let _id = context.$data._id();
 
                 return this.getNodeById(_id);
             }
 
             getNodeByBindings(nodeBindings) {
-                let _id = nodeBindings.nodeId();
+                let _id = nodeBindings._id();
 
                 return this.getNodeById(_id);
             }
@@ -3235,9 +3141,13 @@ var dti = {
                         let context = ko.contextFor($target[0]);
                         let node = manager.getNodeByContext(context);
 
-                        config.parent = node;
+                        config.parentNode = node;
 
-                        manager.showAddNodeModal(config);
+                        if (!config.cb) {
+                            manager.showAddNodeModal(config);
+                        } else {
+                            config.cb.call(manager, config);
+                        }
                     };
                 };
 
@@ -3250,170 +3160,63 @@ var dti = {
                                 nodeType: 'Location'
                             })
                         },
-                        application: {
-                            name: 'Application',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Equipment';
-                            }
-                        },
                         equipment: {
                             name: 'Equipment',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Equipment';
-                            }
+                            callback: makeHandler({
+                                nodeType: 'Equipment'
+                            })
                         },
                         category: {
                             name: 'Category',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Equipment';
-                            }
+                            callback: makeHandler({
+                                nodeType: 'Category'
+                            })
                         },
                         point: {
                             name: 'Point',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Equipment';
-                            }
+                            callback: makeHandler({
+                                nodeType: 'Point'
+                            })
                         },
-                        referencePoint: {
-                            name: 'Reference Point',
-                            callback(key, opt) {
-                                let $target = opt.$trigger;
-                                let context = ko.contextFor($target[0]);
-                                let node = manager.getNodeByContext(context);
-
-                                dti.log(node);                                
-                            // },
-                            // visible: (key, opt) => {
-                            //     let $target = opt.$trigger;
-                            //     let context = ko.contextFor($target[0]);
-                            //     let node = manager.getNodeByContext(context);
-
-                            //     return node.bindings.nodeType() === 'Equipment';
-                            }
+                        reference: {
+                            name: 'Reference',
+                            callback: makeHandler({
+                                nodeType: 'Reference'
+                            })
+                        },
+                        application: {
+                            name: 'Application',
+                            callback: makeHandler({
+                                nodeType: 'Application'
+                            })
+                        },
+                        sep1: '------',
+                        delete: {
+                            name: 'Delete',
+                            callback: makeHandler({
+                                cb: manager.deleteBranch
+                            })
                         }
-                            
-                        // clone: {
-                        //     name: 'Clone',
-                        //     callback(key, opt) {
-                        //         var $target = opt.$trigger,
-                        //             ctx = ko.contextFor($target[0]);
-
-                        //         bindings.cloneNode(ctx);
-                        //     }
-                        // },
-                        // cloneMultiple: {
-                        //     name: 'Clone Multiple',
-                        //     callback(key, opt) {
-                        //         var $target = opt.$trigger,
-                        //             data = ko.contextFor($target[0]);
-
-                        //         bindings.bulkClone($target, data);
-                        //     }
-                        // },
-                        // bulkAddSiblings: {
-                        //     name: 'Add Siblings',
-                        //     callback(key, opt) {
-                        //         var $target = opt.$trigger;
-
-                        //         bindings.bulkAdd('Siblings', ko.dataFor($target[0]), {
-                        //             target: $target[0]
-                        //         });
-                        //     }
-                        // },
-                        // bulkAddChildren: {
-                        //     name: 'Add Children',
-                        //     callback(key, opt) {
-                        //         var $target = opt.$trigger;
-
-                        //         bindings.bulkAdd('Children', ko.dataFor($target[0]), {
-                        //             target: $target[0]
-                        //         });
-                        //     }
-                        // },
-                        // delete: {
-                        //     name: 'Delete',
-                        //     callback(key, opt) {
-                        //         var $target = opt.$trigger;
-
-                        //         bindings.deleteBranch(ko.contextFor($target[0]));
-                        //     }
-                        // },
-                        // expandAllRecursive: {
-                        //     name: 'Expand All',
+                        // application: {
+                        //     name: 'Application',
                         //     callback(key, opt) {
                         //         let $target = opt.$trigger;
-                        //         let node = manager.getNodeByContext(ko.contextFor($target[0]));
+                        //         let context = ko.contextFor($target[0]);
+                        //         let node = manager.getNodeByContext(context);
 
-                        //         manager.bindings.expandRecursive(node, {
-                        //             $target: $target
-                        //         });
+                        //         dti.log(node);                                
+                        //     // },
+                        //     // visible: (key, opt) => {
+                        //     //     let $target = opt.$trigger;
+                        //     //     let context = ko.contextFor($target[0]);
+                        //     //     let node = manager.getNodeByContext(context);
+
+                        //     //     return node.bindings.nodeType() === 'Equipment';
                         //     }
-                        // }
-                    // },
-                    // events: {
-                    //     show: function(options) {
-                    //         let $target = opt.$trigger;
-                    //         let context = ko.contextFor($target[0]);
-                    //         let node = manager.getNodeByContext(context);
-
-                    //         if (node.item() !== 'Location') {
-
-                    //         }
-                    //     // },
-                    //     // hide: function(options) {
-                    //     //     var $target = options.$trigger,
-                    //     //         $row = $target.is('.listEntry') ? $target.parent() : $target;
-
-                    //     //     $row.removeClass('hovered');
-                    //     }
+                        // },
                     }
                 });
 
-                //TODO base off of root
                 this.$container.find('select').material_select();
             }
 
@@ -3425,18 +3228,15 @@ var dti = {
                 manager.bindings = ko.viewmodel.fromModel({
                     root: true, //hack
                     modalOpen: false,
-                    focusedNode: false,
                     busy: false,
-                    showGrouped: true,
-                    currNodeName: '',
+                    currNodeDisplay: '',
+                    currNodeType: '',
+                    currNodeSubType: '',
                     treeStyle: 'style3',
                     treeStyles: ['style1', 'style2', 'style3'],
-                    focusedNodeName: '',
-                    focusedNodeType: '',
                     startEntry: 1,
                     endEntry: 10,
                     entryFormat: '',
-                    entryType: '',
                     searchString: '',
                     error: '&nbsp;',
                     bulkAddDestination: '',
@@ -3445,90 +3245,26 @@ var dti = {
                 });
 
                 manager.bindings = $.extend(true, manager.bindings, {
-                    newestNode: {},
-
                     addRootNode() {
                         var rootNode = manager.bindings.getNode({
-                            name: 'Root',
+                            display: 'Root',
                             fetched: true,
                             expanded: true,
-                            type: 'Area'
+                            nodeType: 'Location',
+                            nodeSubType: 'Area'
                         });
 
-                        //TODO replace bindings.data with manager.root/tree/something
                         manager.createNode(rootNode, null, true);
-
-                        // manager.bindings.children.push(rootNode);
-
-                        // manager.bindings.focusNode(rootNode);
-
-                        // manager.bindings._addNode(rootNode);
                     },
 
                     addBranch(children, parent) {
                         let paths = {};
                         let parentId = parent.bindings._id();
 
-                        // dti.forEachArray(children, (child) => {
-                        //     if (child.item === 'Mechanical') {
-                        //         let pointRefs = manager.getHierarchyRefsById(parent, child);
-
-                        //         dti.forEachArray(pointRefs, (pointRef) => {
-                        //             let groups = pointRef.categories.join('-');
-
-                        //             paths[groups] = paths[groups] || 0;
-                        //             paths[groups]++;
-                        //         });
-                        //     }
-                        // });
-
                         dti.forEachArray(children, (rawChild) => {
                             let myParent = parent;
                             let child = $.extend(true, {}, rawChild);
-                        //     child._data = $.extend(true, {}, rawChild._data);
-
-                        //     //child.item should be child.nodeType
-                        //     // dti.log('Child.item:', child.item);
-
-                        //     if (child.item === 'Mechanical') {
-
-                        //         child.originalParentId = parentId;
-
-                        //         let pointRefs = manager.getHierarchyRefsById(parent, child);
-
-                        //         dti.forEachArray(pointRefs, (pointRef) => {
-                        //             dti.log('in point refs');
-                        //             let groups = pointRef.categories;
-                        //             myParent = parent;
-
-                        //             // if (groups.length > 0 || child.type === 'End Point') {
-                        //             //     child.fetched = true;
-                        //             // }
-
-                        //             // if (groups.length > 0) {
-                        //             //     let name = groups.join(' ');
-                        //             //     let flatChild = $.extend(true, {
-                        //             //         display: name + ' ' + child.display,
-                        //             //         grouped: paths[groups.join('-')] === 1 ? null : false//if only one, set to null so it always shows
-                        //             //     }, child);
-
-                        //             //     manager.createNode(flatChild, parent, true, false);
-                        //             // }
-
-                        //             dti.forEachArray(groups, (group) => {
-                        //                 myParent = manager.createNode({
-                        //                     display: group,
-                        //                     originalParentId: parentId,
-                        //                     item: 'Mechanical',
-                        //                     fetched: true,
-                        //                     grouped: null
-                        //                 }, myParent, true, false);
-                        //             });
-                        //             manager.createNode(child, myParent, true, false);
-                        //         });
-                        //     } else {
-                                manager.createNode(child, myParent, true, false);
-                            // }
+                            manager.createNode(child, myParent, true, false);
                         });
 
                         manager.sortNodes(parent.bindings.children);
@@ -3537,7 +3273,9 @@ var dti = {
                     loadNode(event) {
                         let node = manager.getNodeByContext(ko.contextFor(event.target));
 
-                        manager.bindings.currNodeName(node.bindings.display());
+                        manager.bindings.currNodeDisplay(node.bindings.display());
+                        manager.bindings.currNodeType(node.bindings.nodeType());
+                        manager.bindings.currNodeSubType(node.bindings.nodeSubType());
 
                         event.stopPropagation();
                     },
@@ -3554,140 +3292,19 @@ var dti = {
                         }
                     },
 
-
-                    // addChild(el, config, parent, skipAdd) {
                     addChild(parent, config) {
                         let node = parent;
 
-                        config.parentLocId = parent.bindings._id();
+                        config.parentNode = parent.bindings._id();
                             
                         let child = manager.bindings.getNode(config || {});
 
-                        // parent.hasChildren(true);
-                        
-                        // parent.hasChanged(true);
-
-                        // child.isNew = true;
 
                         manager.createNode(child, parent);
                         parent.bindings.expanded(true);
-                        // data.children.push(child);
-                        // manager.bindings._addNode(data.children, child);
-                        // manager.bindings.focusNode(child);
-
-                        // if (!skipAdd) {
-                        //     manager.saveNewNode(child);
-                        // }
 
                         return child;
                     },
-
-
-                    addSibling(el, config, skipAdd) {
-                        // var parent = ko.contextFor(el).$parent,
-                        //     children,
-                        //     child;
-
-                        // let child = manager.getNodeByContext(ko.contextFor(el));
-                        let parent = manager.getNodeByBindings(ko.contextFor(el).$parent);
-
-                        config.isNew = true;
-
-                        // if (parent) {
-                        return manager.createNode(config, parent);
-                            // config.parentLocId = parent._id && parent._id() || 0;
-                            // child = manager.bindings.getNode(config || {});
-                            // if (parent.children) {
-                            //     parent.children.push(child);
-                            // } else {
-                            //     parent.data.push(child);
-                            // }
-                            // manager.bindings._addNode(parent.children || parent.data, child);
-                            // manager.bindings.focusNode(child);
-
-                            // if (!skipAdd) {
-                            //     manager.saveNewNode(child);
-                            // }
-
-                        //     return child;
-                        // } else {
-                        //     manager.createNode(config);
-                        // }
-                    },
-
-
-                    cloneNode(context, cfg, skipAdd) {
-                        // var node = ko.viewmodel.toModel(context.$data),
-                        //     data = context.$data,
-                        //     parent = context.$parent,
-                        //     koSiblings = parent.children || manager.bindings.data,
-                        //     jsSiblings = koSiblings(),
-                        //     ret = [];
-
-                        let node = manager.getNodeByContext(context);
-                        let cloneConfig = node.getConfig();
-                        let parent = manager.getNodeByBindings(context.$parent);
-
-                        cloneConfig.name = (cfg && cfg.name) || 'Name';
-                        cloneConfig._id = dti.makeId();
-
-                        $.extend(true, cloneConfig, cfg);
-
-                        let newNode = manager.createNode(cloneConfig, parent);
-                        // node = ko.viewmodel.fromModel(node);
-                        // bindings.forEachNode(function processChild (child) {
-                        //     child._id(dti.makeId());
-                        // });
-
-                        manager.bindings._addNode(newNode);
-
-                        // ret.push(node);
-
-                        // manager.bindings.forEachNode((node, base, parent) => {
-                        //     node._id(null);
-                        //     node.id(dti.makeId());
-                        //     // node.new(true);
-                        //     ret.push(node);
-                        //     node.parentLocId(parent.id());
-                        // }, node.children(), node);
-
-                        if (!skipAdd) {
-                            manager.saveNewNode(newNode);
-                        }
-
-                        return newNode;
-                    },
-
-                    deleteBranch(context) {
-                        let node = manager.getNodeByContext(context);
-                        let parent = manager.getNodeById(node.bindings.parentLocId());
-                        // let siblings = parent.bindings.children();
-                        // var data = context.$data,
-                        //     parent = context.$parent,
-                        //     siblings = parent && parent.children && parent.children || manager.bindings.data;
-
-                        parent.deleteChild(node);
-                        // siblings.remove(node.bindings);
-
-                        //no siblings and has a parent
-                        // if (siblings().length === 0 && parent.hasChildren) {
-                        //     parent.hasChildren(false);
-                        // }
-
-                        manager.ajax({
-                            url: '/api/hierarchy/delete',
-                            data: {
-                                id: node.bindings._id(),
-                                deleteChildren: true,
-                                item: 'Location'//todo
-                            }
-                        }).done((results) => {
-                            dti.log(results);
-                        });
-
-                        manager.bindings.focusNode();
-                    },
-
 
                     search(terms) {
                         if (terms !== '') {
@@ -3715,108 +3332,17 @@ var dti = {
                         });
                     },
 
-                    focusNode(obj) {//obj === bindings
-                        var bindings = manager.bindings,
-                            prevNode = manager._origFocusNode,
-                            prevNodeValues = manager._origFocusNodeJS,
-                            propsToCheck = ['name', 'type'],
-                            hasChanged = false,
-                            handler = function (val, node) {
-                                //if it's not focused
-                                if (!val) {
-                                    manager.bindings.focusedNode(false);
-                                    dti.forEachArrayRev(focusSubscriptions, (subscription) => {
-                                        subscription.dispose();
-                                        focusSubscriptions.pop();
-                                    });
-                                }
-                            },
-                            makeHandler = function () {
-                                var node = obj;
-
-                                return (val) => {
-                                    handler(val, node);
-                                };
-                            };
-
-                        if (prevNode) {
-                            dti.forEachArray(propsToCheck, (prop) => {
-                                if (prevNode[prop]() !== prevNodeValues[prop]) {
-                                    dti.log('has changed', prop, prevNodeValues[prop], prevNode[prop]());
-                                    prevNode.hasChanged(true);
-                                    hasChanged = true;
-                                    return false;
-                                }
-                            });
-
-                            if (hasChanged || prevNodeValues.isNew) {
-                                // if (!prevNodeValues._id && prevNodeValues._id === 0) {
-                                if (typeof prevNodeValues._id === 'string') { //temp id} prevNodeValues.isNew) {
-                                    // prevNode.new(false);
-                                    manager.saveNewNode(prevNode);
-                                } else {
-                                    manager.editNode(prevNode);
-                                }
-                            }
-                        }
-
-                        if (obj) {
-                            manager._origFocusNodeJS = ko.toJS(obj);
-                            manager._origFocusNode = obj;
-                        // } else {
-                        //     manager._origFocusNodeJS = null;
-                        //     manager._origFocusNode = null;
-                        }
-
-                        if (bindings.focusedNode()) {
-                            bindings._focusedNode.focused(false);
-                            bindings.focusedNode(false);
-                        }
-
-                        if (obj) {
-                            bindings.focusedNode(true);
-                            bindings._focusedNode = obj;
-                            bindings._focusedNodeName = obj.name();
-                            obj.focused(true);
-                            focusSubscriptions.push(obj.name.subscribe(function syncNameToRight(val) {
-                                bindings.focusedNodeName(val);
-                            }));
-                            focusSubscriptions.push(obj.focused.subscribe(makeHandler()));
-                        } else {
-                            if (bindings._focusedNode) {
-                                bindings.focusedNode(false);
-                                bindings._focusedNode.focused(false);
-                                bindings._focusedNodeName = null;
-                            }
-                        }
-                    },
-
                     getNode(cfg) {
                         if (!cfg.id) {
                             cfg.id = dti.makeId();
-                            // cfg.fetched = false;//change to true for local only stuff
                         }
 
-                        // return ko.viewmodel.fromModel($.extend(true, $.extend(true, {}, manager.template), cfg || {}));
                         return $.extend(true, $.extend(true, {}, dti.locations.LocationsNode.getTemplate(cfg)), cfg || {});
                     },
 
                     expand(obj, event) {
                         event.preventDefault();
                         obj.expanded(!obj.expanded());
-                    },
-
-                    expandAll() {
-                        manager.bindings.forEachNode((child, parent) => {
-                            if (child.fetched()) {
-                                child.expanded(true);
-                            } else {
-                                manager.bindings.expandRecursive({
-                                    $parent: parent,
-                                    $data: child
-                                });
-                            }
-                        });
                     },
 
                     moveNode(from, to) {
@@ -3843,181 +3369,12 @@ var dti = {
                         });
                     },
 
-                    collapseAll() {
-                        manager.bindings.forEachNode(function (child) {
-                            child.expanded(false);
-                        });
-                    },
-
                     select(obj, event) {
                         event.target.select();
-                    },
-
-                    refreshTooltips() {
-                        setTimeout(function fireTooltips () {
-                            manager.$container.find('.collapsible').collapsible({
-                                accordion: false
-                            });
-                        //     $('.locations .tooltipped:not([data-tooltip-id])').tooltip();
-                        }, 100);
-                    },
-
-                    _addNode(childrenArray, node) {
-                        manager.bindings.newestNode = {
-                            node: node,
-                            childrenArray: childrenArray
-                        };
-
-                        manager.bindings.refreshTooltips();
-                    },
-
-                    handleEscape(obj, event) {
-                        var lastNode = manager.bindings.newestNode,
-                            currNode = manager.bindings.focusedNode() && manager.bindings._focusedNode;
-
-                        if (obj === lastNode.node) {
-                            lastNode.childrenArray.remove(obj);
-                        }
-
-                        if (currNode && currNode.name && currNode.focused()) {
-                            currNode.focused(false);
-                            currNode.name(manager.bindings._focusedNodeName);
-                        }
-                    },
-
-                    navigate(obj, event, dir, previousContext) {
-                        var context = previousContext || ko.contextFor(event.target),
-                            subsequent = !!previousContext,
-                            parent = context.$parent,
-                            bindings = manager.bindings,
-                            siblings = parent && parent.children && parent.children() || parent.data(),
-                            position = siblings && siblings.indexOf(obj),
-                            children = context.$data.children && context.$data.children(),
-                            handlers = {
-                                left() {
-                                    if (parent && !parent.root) {
-                                        bindings.focusNode(parent);
-                                    }
-                                },
-                                up() {
-                                    var sibling,
-                                        kids;
-                                    if (position > 0) {
-                                        sibling = siblings[position - 1];
-                                        kids = sibling.children();
-
-                                        if (kids.length > 0) {
-                                            bindings.focusNode(kids[kids.length - 1]);
-                                        } else {
-                                            bindings.focusNode(siblings[position - 1]);
-                                        }
-                                    } else if (position === 0) {
-                                        bindings.focusNode(parent);
-                                    }
-                                },
-                                right() {
-                                    if (children.length > 0) {
-                                        bindings.focusNode(children[0]);
-                                    }
-                                },
-                                down() {
-                                    if (!subsequent && children.length > 0) {
-                                        bindings.focusNode(children[0]);
-                                    } else if (siblings && position < siblings.length - 1) { // not end child
-                                        bindings.focusNode(siblings[position + 1]);
-                                    } else {
-                                        if (context.$parentContext) {
-                                            bindings.navigate(parent, null, 'down', context.$parentContext);
-                                        }
-                                    }
-                                }
-                            };
-
-                        handlers[dir]();
-                    },
-
-                    handleKeyUp(obj, event) {
-                        var el = event.target,
-                            key = event.keyCode,
-                            shift = event.shiftKey,
-                            bindings = manager.bindings,
-                            handlers = {
-                                13: function () { // enter
-                                    bindings.addSibling(event.target, {
-                                        fetched: true,
-                                        expanded: true
-                                    }, true);
-                                },
-                                9: function () { // tab
-                                    bindings.addChild(event.target, {
-                                        fetched: true,
-                                        expanded: true
-                                    }, obj, true);
-                                },
-                                27: function () { // escape
-                                    bindings.handleEscape(obj, event);
-                                },
-                                37: function () { // left arrow
-                                    bindings.navigate(obj, event, 'left');
-                                },
-                                38: function () { // up arrow
-                                    bindings.navigate(obj, event, 'up');
-                                },
-                                39: function () { // right arrow
-                                    bindings.navigate(obj, event, 'right');
-                                },
-                                40: function () { // bottom arrow
-                                    bindings.navigate(obj, event, 'down');
-                                }
-                            },
-                            shiftHandlers = {
-                                9: function () { // enter
-
-                                }
-                            },
-                            handler = (!shift && handlers[key]) || (shift && shiftHandlers[key]);
-
-                        // console.log(key);
-
-                        if (handler) {
-                            event.preventDefault();
-                            handler();
-                        } else {
-                            return true;
-                        }
                     }
                 });
 
                 // manager.bindings._focusedNode = manager.bindings.getNode(manager.blankNode);
-
-                manager.bindings.focusedNode.subscribe(function stupidMaterialSelect(val) {
-                    var bindings = manager.bindings;
-
-                    if (val) {
-                        setTimeout(function bahMaterialize() {
-                            bindings.focusedNodeName(bindings._focusedNode.name());
-                            bindings.focusedNodeType(bindings._focusedNode.type() || 'Area');
-                            manager.$container.find('select').material_select();
-                            Materialize.updateTextFields();
-                        }, 1);
-                    }
-                });
-
-                manager.bindings.focusedNodeName.subscribe(function updateNodeName(val) {
-                    if (manager.bindings._focusedNode) {
-                        setTimeout(function syncName() {
-                            manager.bindings._focusedNode.name(val);
-                        }, 1);
-                    }
-                });
-
-                manager.bindings.focusedNodeType.subscribe(function updateNodeType(val) {
-                    if (manager.bindings._focusedNode) {
-                        setTimeout(function syncType() {
-                            manager.bindings._focusedNode.type(val);
-                        }, 1);
-                    }
-                });
 
                 manager.bindings.searchInput = ko.computed(manager.bindings.searchString).extend({
                     throttle: 1000
@@ -4054,44 +3411,8 @@ var dti = {
                         if (observable()) {
                             setTimeout(() => {
                                 $(element).focus();
-                            }, 1);
+                            }, 100);
                         }
-                    }
-                };
-
-                ko.bindingHandlers.dragNode = {
-                    originEl: null,
-                    init(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-                        var $element = $(element);
-
-                        $element.draggable({
-                            revert: 'invalid',
-                            // containment: '#tree',
-                            cursor: 'move',
-                            helper: 'clone',
-                            start(event, ui) {
-                                ko.bindingHandlers.dragNode.originEl = event.toElement;
-                            }
-                        });
-
-                        $element.droppable({
-                            accept: '.displayInfo',
-                            greedy: true,
-                            tolerance: 'pointer',
-                            hoverClass: 'nodeHover',
-                            drop(event, ui) {
-                                var dest = event.target,
-                                    from = ko.bindingHandlers.dragNode.originEl;
-
-                                manager.bindings.moveNode(from, dest);
-                                $('.locations .nodeHover').removeClass('nodeHover');
-                            }
-                        });
-
-                        ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
-                            $element.draggable('destroy');
-                            $element.droppable('destroy');
-                        });
                     }
                 };
 
@@ -4111,36 +3432,148 @@ var dti = {
 
 
             // methods
+            handleChoosePoint(point) {
+                let manager = dti.bindings.locations.manager;
+
+                dti.bindings.locations.newNodePointName(point.name);
+                manager._addNodePoint = point;
+                dti.log(point);
+            }
+
+            chooseNodePoint() {
+                dti.navigator.showNavigator({
+                    pointTypes: [],
+                    showInactive: dti.bindings.locations.manager._addNodeConfig.nodeType !== 'Reference',
+                    callback: dti.bindings.locations.manager.handleChoosePoint
+                });
+            }
+
+            buildNodeFromModalOptions() {
+                let config = this._addNodeConfig;
+                let bindings = dti.bindings.locations;
+                let ret = {
+                    display: bindings.newNodeDisplay(),
+                    nodeType: config.nodeType,
+                    nodeSubType: bindings.newNodeSubType(),
+                    parentNode: config._id
+                };
+
+                if (config.nodeType === 'Reference') {
+                    ret.refNode = this._addNodePoint._id;
+                }
+
+                return ret;
+            }
+
+            validateNewNodeOptions() {
+                let bindings = dti.bindings.locations;
+                let config = this._addNodeConfig;
+                let messages = [];
+
+                if (bindings.newNodeDisplay() === '') {
+                    messages.push('Display must not be empty');
+                }
+
+                if (bindings.needsPoint() && bindings.newNodePointName() === '') {
+                    messages.push('Must choose a point');
+                }
+
+                return messages.length === 0 || messages.join('<br/>');
+            }
+
+            deleteBranch(config) {
+                let node = config.parentNode;
+                let parent = node.parentNode;
+
+                parent.deleteChild(node);
+
+                this.ajax({
+                    url: '/api/hierarchy/delete',
+                    data: {
+                        id: node.bindings._id(),
+                        deleteChildren: true
+                    }
+                }).done((results) => {
+                    Materialize.toast('Delete result: ' + results.message || results.err || results.error, 1000);
+                });
+            }
+
+            addNode() {
+                let valid = this.validateNewNodeOptions();
+                let config = this._addNodeConfig;
+                let parent = config.parentNode;
+                let manager = this;
+
+                if (valid === true) {
+                    let node = manager.buildNodeFromModalOptions();
+                    manager.bindings.busy(true);
+
+                    node = manager.createNode(node, parent);
+
+                    if (dti.bindings.locations.needsPoint()) {
+                        manager.addPointToTree(node, (response) => {
+                            dti.log(response);
+                        });
+                    } else {
+                        manager.saveNewNode(node, (response) => {
+                            dti.log(response);
+                            // manager.createNode(manager.buildNodeFromModalOptions(), parent);    
+                        });
+                    }
+                    dti.bindings.locations.modalOpen(false);
+                    manager.$addNodeModal.closeModal();
+                } else {
+                    dti.bindings.locations.error(valid);
+                    setTimeout(() => {
+                        dti.bindings.locations.error('');
+                    }, 2000);
+                }
+            }
+
             showAddNodeModal(config) {
+                let needsPoint = false;
+                let typesNeedingPoint = ['Point', 'Application', 'Reference'];
+
+                dti.bindings.locations.error('');
+                dti.bindings.locations.newNodeDisplay('');
+                dti.bindings.locations.newNodePointName('');
+                
+                this._addNodeConfig = config;
+                // this._addNodeParent = config.parent;
+
+                dti.bindings.locations.needsPoint(typesNeedingPoint.indexOf(config.nodeType) >= 0);
+                dti.bindings.locations.newNodeType(config.nodeType);
+
                 this.$addNodeModal.openModal();
-                dti.log(this);
+                this.$addNodeModal.find('select').material_select();
+                dti.bindings.locations.modalOpen(true);
             }
 
             sortNodes(nodeList) {
                 nodeList.sort((a, b) => {
-                    var res = this.collator.compare(a.name(), b.name());
+                    var res = this.collator.compare(a.display(), b.display());
 
                     return res;
                 });
             }
 
-            createNode(config, parent, noFocus, expandParent) {
+            createNode(node, parent, noFocus, expandParent) {
                 let newNode = null;
 
-                config.manager = this;
+                node.manager = this;
 
                 if (parent) {// check for duplicates
                     this.bindings.forEachNode((node) => {
-                        if (node.display() === config.display) {
+                        if (node.display() === node.display) {
                             newNode = this.getNodeByBindings(node);
                         }
                     }, parent.bindings.children(), parent);
                 }
 
                 if (!newNode) {
-                    newNode = new dti.locations.LocationsNode(config);
+                    newNode = new dti.locations.LocationsNode(node);
 
-                    this.nodeMatrix[newNode.bindings.nodeId()] = newNode;
+                    this.nodeMatrix[newNode.bindings._id()] = newNode;
 
                     if (!parent) {
                         this.bindings.children.push(newNode.bindings);
@@ -4153,7 +3586,7 @@ var dti = {
                             nodeParent = parent;
                         }
 
-                        newNode.parent = parent;
+                        newNode.parentNode = parent;
 
                         parent.addChild(newNode);
 
@@ -4161,19 +3594,9 @@ var dti = {
                             parent.bindings.expanded(true);
                         }
                     }
-
-                    if (!noFocus) {
-                        this.bindings.focusNode(newNode.bindings);
-                    }
-
-                    this.bindings._addNode(newNode);
                 }
 
                 return newNode;
-            }
-
-            getParent(child) {
-                 
             }
 
             getSaveData(data) {
@@ -4181,12 +3604,28 @@ var dti = {
 
                 return {
                     id: obj._id,
-                    parentLocId: obj.parentLocId,
-                    parentMechId: dti.makeId(),
-                    display: obj.name,
-                    type: obj.type,
-                    item: 'Location'
+                    parentNode: data.parentNode.bindings._id(),
+                    display: obj.display,
+                    nodeType: obj.nodeType,
+                    nodeSubType: obj.nodeSubType,
+                    tags: [],
+                    meta: {},
+                    refNode: obj.refNode || 0,
+                    Name: obj.display,
+                    libraryId: 0
                 };
+            }
+
+            getImportData(data) {
+                var obj = ko.toJS(data.bindings || data); //takes node or node.bindings
+
+                return {
+                    upi: this._addNodePoint._id,
+                    parentNode: data.parentNode.bindings._id(),
+                    display: obj.display,
+                    nodeType: obj.nodeType,
+                    nodeSubType: this._addNodePoint['Point Type'].Value
+                };                
             }
 
             saveNewNodes(newNodes) {
@@ -4202,40 +3641,63 @@ var dti = {
                     url: '/api/hierarchy/add',
                     data: data
                 }).done((response) => {
+
                     Materialize.toast('Added nodes', 1000);
                     dti.forEachArray(response, (node, idx) => {
                         newNodes[idx]._id(node.newNode._id);
-                        newNodes[idx].parentLocId(node.newNode.hierarchyRefs[0].value);
+                        newNodes[idx].parentNode(node.newNode.hierarchyRefs[0].value);
                     });
                 });
             }
 
             saveNewNode(node) {
-                var data = {
+                let manager = this;
+                let data = {
                     nodes: [this.getSaveData(node)]
                 };
 
-                this.ajax({
+                manager.ajax({
                     url: '/api/hierarchy/add',
                     data: data
                 }).done((response) => {
                     // obj.new(false);
                     let bindings = node.bindings || node;
 
-                    bindings.hasChanged(false);
-                    this.markNodeSaved(node, bindings._id(), response[0].newNode._id);
+                    manager.bindings.busy(false);
+                    manager.markNodeSaved(node, bindings._id(), response[0].newNode._id);
                     bindings._id(response[0].newNode._id);
                     dti.log(response);
                     Materialize.toast('Node added', 1000);
                 });
             }
 
-            markNodeSaved(node, oldId, newId) {
-                this.bindings.forEachNode((node) => {
-                    if (node.parentLocId() === oldId) {
-                        node.parentLocId(newId);
-                    }
+            addPointToTree(node) {
+                let manager = this;
+                let data = manager.getImportData(node);
+
+                manager.ajax({
+                    url: '/api/points/addPointToHierarchy',
+                    data: data
+                }).done((response) => {
+                    // obj.new(false);
+                    let bindings = node.bindings || node;
+
+                    manager.bindings.busy(false);
+                    manager.markNodeSaved(node, bindings._id(), response._id);
+                    bindings._id(response._id);
+                    dti.log(response);
+                    Materialize.toast('Point added', 1000);
                 });
+            }
+
+            markNodeSaved(node, oldId, newId) {
+                // this.bindings.forEachNode((node) => {
+                //     if (node.parentNode() === oldId) {
+                //         node.parentNode(newId);
+                //     }
+                // });
+                dti.log('setting parentNode from', oldId, 'to', newId);
+                node.bindings.parentNode(newId);
 
                 this.nodeMatrix[newId] = node;
                 delete this.nodeMatrix[oldId];
@@ -4244,8 +3706,8 @@ var dti = {
             editNode(obj) {
                 var data = {
                     id: obj._id(),
-                    display: obj.name(),
-                    type: obj.type()
+                    display: obj.display(),
+                    nodeType: obj.nodeType()
                 };
 
                 this.ajax({
@@ -4254,11 +3716,7 @@ var dti = {
                 }).done((response) => {
                     if (response.err) {
                         Materialize.toast('Error: ' + response.err, 2000);
-                        obj.name(obj._name());
-                        obj.type(obj._type());
                     } else {
-                        obj._name(obj.name());
-                        obj._type(obj.type());
                         dti.log(response);
                         Materialize.toast('Node edited', 1000);
                     }
@@ -4269,21 +3727,14 @@ var dti = {
                 let template = dti.locations.LocationsNode.getTemplate();
 
                 let _normalize = (item, idx) => {
-                    item._data = $.extend(true, {}, item);
+                    // item._data = $.extend(true, {}, item);
                     dti.forEach(template, function (val, prop) {
                         if (item[prop] === undefined) {
                             item[prop] = dti.utility.clone(val);
                         }
 
-                        if (item.display) {
-                            item.name = item.display;
-                        }
-
-                        item._name = item.name;
-                        item._type = item.type;
-
                         if (item.hierarchyRefs) {
-                            item.parentLocId = item.hierarchyRefs[0].value;
+                            item.parentNode = item.hierarchyRefs[0].value;
                         }
 
                         if (cfg) {
@@ -4305,28 +3756,8 @@ var dti = {
                 return arr;
             }
 
-            findNode(id, rootArr, level) {
-                var ret = false,
-                    lvl = level || 1;
-
-                // console.log(level);
-
-                dti.forEachArray(rootArr, function (item) {
-                    if (item._id() === id) {
-                        ret = item;
-                        return false;
-                    }
-                });
-
-                if (!ret) {
-                    dti.forEachArray(rootArr, function (item) {
-                        ret = this.findNode(id, item.children(), lvl + 1);
-
-                        return !ret;
-                    });
-                }
-
-                return ret;
+            findNode(id) {
+                return this.nodeMatrix[id] || null;
             }
 
             buildTree(arr, root) {
@@ -4340,10 +3771,10 @@ var dti = {
 
                     target = item[key][0].value;
 
-                    node = this.findNode(target, ret);
+                    node = this.findNode(target);
 
                     if (node) {
-                        item.parentLocId = node._id();
+                        item.parentNode = node._id();
                         //= new locationnode
                         //add parentid equal to root
                         newNode = ko.viewmodel.fromModel(item);
@@ -4363,89 +3794,11 @@ var dti = {
                     url: '/api/hierarchy/locations/getChildren',
                     data: {
                         id: id || 0
-                        // item: obj.bindings.item()
                     }
                 }).done((results) => {
-                    // let ret = [];
-                    // dti.forEachArrayRev(results, (obj, idx) => {
-                    //     let skip = false;
-                        //so you don't see children as their own aunt/uncle
-                        //decided 6/7/17 to not remove
-                        // if (obj.item === 'Mechanical') {// && obj.type === 'End Point') {
-                        //     dti.forEachArrayRev(results, (child) => {
-                        //         //if any  obj.hierarchyRefs.item===mechanical match child._id
-                        //         if (obj.hierarchyRefs[1].value === child._id) {
-                        //             skip = true;
-                        //             return false;
-                        //         }
-                        //     });
-                        // }
-
-                    //     if (!skip) {
-                    //         ret.push(obj);
-                    //     }
-                    // });
-
-                    // group/ungroup?
                     let data = this.normalize(results);
                     cb(data, obj);
                 });
-            }
-
-            rebuildTree(data) {
-                var ret = ko.viewmodel.fromModel([]);
-
-                dti.forEachArray(data, (result) => {
-                    let parentId = 0;
-                    let normalized = this.normalize(result, {
-                        new: false,
-                        fetched: true,
-                        expanded: true
-                    });
-                    dti.forEachArray(normalized.path, (pathEntry) => {
-                        let targetId = pathEntry._id;
-                        let normPath = this.normalize(pathEntry, {
-                            new: false,
-                            fetched: true,
-                            expanded: true
-                        });
-                        let node = this.findNode(targetId, ret());
-
-                        if (node) { //existing
-                            // dti.log('existing node');
-                        } else { //new
-                            let parentNode = this.findNode(pathEntry.hierarchyRefs[0].value, ret());
-
-                            if (parentNode) { //parent exists
-
-                                parentNode.children.push(ko.viewmodel.fromModel(normPath));
-                            } else { //root
-
-                                ret.push(ko.viewmodel.fromModel(normPath));
-                            }
-                        }
-
-                        parentId = targetId;
-                    });
-
-                    let parent = this.findNode(parentId, ret());
-
-                    if (parent) {
-                        parent.children.push(ko.viewmodel.fromModel(normalized));
-                    } else {
-                        this.getDefaultTree(null, true);
-                    }
-                });
-
-                this.bindings.forEachNode(function (child, parent) {
-                    if (child.fetched() && child.children().length === 0) {
-                        child.hasChildren(false);
-                    } else {
-                        this.sortNodes(child.children);
-                    }
-                }, ret());
-
-                this.bindings.data(ret());
             }
 
             handleTreeResults(results, overwrite, cb) {
@@ -4453,7 +3806,6 @@ var dti = {
 
                 if (results.length > 0) {
                     this.tree = this.normalize(results, {
-                        isNew: false,
                         expanded: false
                     });
 
@@ -4490,7 +3842,8 @@ var dti = {
             }
         },
         initLocations: (config) => {
-            dti.locations.locationManager = new dti.locations.LocationManager(config);
+            dti.locations.manager = new dti.locations.LocationManager(config);
+            dti.bindings.locations.manager = dti.locations.manager;
         }
     },
     navigator: {
@@ -6163,21 +5516,23 @@ var dti = {
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },
-        locations: ko.viewmodel.fromModel({
+        locations: $.extend(ko.viewmodel.fromModel({
             root: true, //hack
             modalOpen: false,
             focusedNode: false,
-            busy: false,
-            focusedNodeName: '',
-            focusedNodeType: '',
-            startEntry: 1,
-            endEntry: 10,
-            entryFormat: '',
-            entryType: '',
+            needsPoint: false,
             searchString: '',
             error: '&nbsp;',
-            bulkAddDestination: '',
-            availableTypes: ['Area', 'Building', 'Floor', 'Room']
+            availableTypes: ['Area', 'Building', 'Floor', 'Room'],
+            //add node stuff
+            newNodeDisplay: '',
+            newNodeType: '',
+            newNodeSubType: '',
+            newNodePointName: ''
+        }), {
+            addNode() {
+                dti.locations.manager.addNode();
+            }
         }),
         globalSearch: {
             gettingData: ko.observable(false),

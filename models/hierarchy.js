@@ -589,7 +589,7 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     recreateTags(node) {
-        const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId'];
+        const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId', '_pStatus'];
 
         let addUniqueTags = (tag) => {
             let tags = tag.toLowerCase().split(' ');

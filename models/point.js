@@ -3125,7 +3125,7 @@ const Point = class Point extends Common {
                 _id: parentId
             }
         }, (err, parent) => {
-            let Name = parent.Name + '_' + display;
+            let Name = (parent && (parent.Name + '_')) + display;
             cb(err, Name);
         });
     }

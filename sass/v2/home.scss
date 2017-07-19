@@ -1788,7 +1788,7 @@ $treeIconWidth: 22px;
         visibility: hidden;
     }
 
-    .busy > .fetching {
+    &.busy .fetching {
         visibility: visible;
     }
 
@@ -2147,6 +2147,19 @@ $treeIconWidth: 22px;
 
 
 .darkMode {
+
+    .cssload-whirlpool,
+    .cssload-whirlpool::before,
+    .cssload-whirlpool::after {
+        border-color: $blue-grey-lighten-1;
+        border-left-color: #fff;
+    }
+
+    &.loading .windowMask,
+    &.loading .iframeFull {
+        background-color: $blue-grey !important;
+    }
+
     .card-toolbar {
         background-color: $blue-grey-darken-2 !important;
     }
@@ -2155,13 +2168,21 @@ $treeIconWidth: 22px;
         background-color: $blue-grey !important;
     }
 
+    .progress {
+        background-color: $blue-grey !important;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey-darken-2 !important;
+    }
+
 
     .locations {
         .pane {
             border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
         }
 
-        .currentNode {
+        .treeOptions {
             color: white;
         }
 

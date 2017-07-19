@@ -267,62 +267,62 @@ html
 
             #addNodeModal.modal
                 .modal-content
-                    h4 Add Node
-                    .row
-                        .input-field.col.s4
-                            input#nodeDisplay(placeholder="Name", type="text", data-bind="hasFocus: locations.modalOpen, value: locations.nodeDisplay")
-                            label(for="nodeDisplay") Name
+                    h4(data-bind="text: 'Add ' + locations.newNodeType()")
                     .row
                         .input-field.col.s6
-                            select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: locations.modalOpen, value: locations.newNodeDisplay")
+                            label(for="newNodeDisplay") Display
+                    // ko if: locations.newNodeType() === 'Location'
+                    .row
+                        .input-field.col.s3
+                            select(data-bind="options: locations.availableTypes, value: locations.newNodeSubType")
                             label Type                  
+                    // /ko
+                    // ko if: locations.newNodeType() === 'Equipment'
+                    //- .row
+                    //-     .input-field.col.s3
+                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         label Type                  
+                    // /ko
+                    // ko if: locations.newNodeType() === 'Category'
+                    //- .row
+                    //-     .input-field.col.s3
+                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         label Type                  
+                    // /ko
+                    // ko if: locations.newNodeType() === 'Point'
+
+
+                    // /ko
+                    // ko if: locations.newNodeType() === 'Reference'
+                    //- .row
+                    //-     .input-field.col.s3
+                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         label Type                  
+                    // /ko
+                    // ko if: locations.newNodeType() === 'Application'
+                    //- .row
+                    //-     .input-field.col.s3
+                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         label Type                  
+                    // /ko
+
+                    // ko if: locations.needsPoint() === true
+                    .row
+                        .col.s9.valign-wrapper
+                            button.btn.blue-grey(data-bind="click: locations.manager.chooseNodePoint") Choose Point
+
+                            .valign(data-bind="text: locations.newNodePointName")
+
+
+                    // /ko
+
                     .row
                         .col.s12.error.red-text(data-bind='html: locations.error')
-
-            #bulkAddModal.modal
-                .modal-content
-                    h4 Bulk Add
-                    .row
-                        .input-field.col.s3
-                            input#startEntry(placeholder="#", type="number", data-bind="hasFocus: locations.modalOpen, value: locations.startEntry")
-                            label(for="startEntry") Node start #
-                        .input-field.col.s3
-                            input#endEntry(placeholder="#", type="number", data-bind="value: locations.endEntry")
-                            label(for="endEntry") Node end #                        
-                    .row
-                        .input-field.col.s6
-                            input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
-                            label(for="entryformat") Entry format (# for index placeholder)
-                        .input-field.col.s6
-                            select(data-bind="options: locations.availableTypes, value: locations.entryType")
-                            label Type               
-                    .row
-                        .col.s12.error.red-text(data-bind='html: locations.error')
-
                 .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: locations.doBulkAdd") Add
+                    button.btn.blue-grey.waves-effect(data-bind="click: locations.addNode, attr: {disabled: locations.allowAddNode}") Add
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
-            #bulkCloneModal.modal
-                .modal-content
-                    h4 Bulk Clone
-                    .row
-                        .input-field.col.s3
-                            input#startEntry(placeholder="#", type="number", data-bind="hasFocus: locations.modalOpen, value: locations.startEntry")
-                            label(for="startEntry") Node start #
-                        .input-field.col.s3
-                            input#endEntry(placeholder="#", type="number", data-bind="value: locations.endEntry")
-                            label(for="endEntry") Node end #                        
-                    .row
-                        .input-field.col.s6
-                            input#entryformat(placeholder="format", type="text", data-bind="value: locations.entryFormat")
-                            label(for="entryformat") Entry format (# for index placeholder)
-                    .row
-                        .col.s12.error.red-text(data-bind='html: locations.error')
-
-                .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: locations.doBulkClone") Add
-                    button.btn-flat.modal-action.modal-close.waves-effect Cancel            
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -467,72 +467,26 @@ html
                 //- // /ko
 
                 .treeOptions
-                    .currentNode(data-bind="text: currNodeName")
+                    div(data-bind="text: currNodeDisplay")
+                    div(data-bind="text: currNodeType")
+                    div(data-bind="text: currNodeSubType")
+
                     
-                    //- .row
-                    //-     span Tree Styles
-                    //-     .treeStyles(data-bind="foreach: treeStyles")
-                    //-         span.treeStyle
-                    //-             input(type="radio", data-bind="attr: {name: 'treeStyle', id: 'treeStyle_' + $index()}, value: $data, checked: $root.treeStyle")
-                    //-             label(data-bind="text: $index, attr: { for: 'treeStyle_' + $index()}")
-                    //- .row
-                    //-     div Show Grouped
-                    //-     span
-                    //-         input#showTreeGrouped(type="radio", name="showTreeGrouped", data-bind="value: true, checked: $root.showGrouped")
-                    //-         label(for="showTreeGrouped") Yes
-                    //-     span
-                    //-         input#showTreeFlat(type="radio", name="showTreeGrouped", data-bind="value: false, checked: $root.showGrouped")
-                    //-         label(for="showTreeFlat") No
-
-
-                //- #rightPane.col.s7.pane
-                    .details(data-bind="visible: focusedNode")
-                        .row
-                            .col.s6.input-field
-                                input#focusedNodeName(type="text", data-bind="textInput: focusedNodeName")
-                                label(for="focusedNodeName") Name
-                        .row
-                            .col.s6
-                                // ko foreach: $root.availableTypes
-                                p
-                                    input(type="radio", data-bind="attr: {name: 'focusedNodeType', id: 'focusedNodeType_' + $index()}, value: $data, checked: $root.focusedNodeType")
-                                    label(data-bind="text: $data, attr: { for: 'focusedNodeType_' + $index()}")
-                                // /ko
-
             script#node(type='text/html')
                 //- .node
                 //-     ul.collapsible
-                li.treeNode(data-bind="visible: grouped() === null || $root.showGrouped() === grouped(), css: {focused: focused, active: expanded}")
-                    .collapseToggle(data-bind="css: {childless: hasChildren() === false}")
+                li.treeNode(data-bind="css: {active: expanded}")
+                    .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
                         //- i.collapse.material-icons keyboard_arrow_down
                         i.expand.material-icons keyboard_arrow_right
 
                     .dtcollapsible-header
-                        .nodeName(data-bind="text: name")
+                        .nodeName(data-bind="text: display")
                     .dtcollapsible-body
                         //- span.displayInfo
                             //- .name(data-bind="text: name")
                             //- input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
                         ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
-
-
-                //- // ko with:bindings
-                //- .node.blue-grey-form(data-bind="css: { focused: focused }")
-
-                //-     //- // ko if: hasChildren()   --- hidden: !hasChildren(), 
-                //-     a.expandcollapse(href="#", data-bind="css: { expanded: expanded(), collapsed: !expanded()}")
-                //-         i.collapse.material-icons keyboard_arrow_right
-                //-         i.expand.material-icons expand_more
-
-                //-     span.displayInfo(data-bind="dragNode: true")
-                //-         .name(data-bind='text: name, click: $root.focusNode')
-                //-         input(type='text', data-bind='textInput: name, shouldFocus: focused, event: { keydown: $root.handleKeyUp, focus: $root.select }, autocomplete: true')
-                //-         a.bulkAdd.tooltipped(title="Add Sibling", data-tooltip="Add Sibling", data-position="bottom", href="#")
-                //-             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addSibling") arrow_downward
-                //-         a.bulkAdd.tooltipped(title="Add Child", data-tooltip="Add Child", data-position="bottom", href="#")
-                //-             i.material-icons.green-text(data-bind="tooltipped: true, click: $root.addChildRaw") arrow_forward
-                //-     .children(data-bind="visible: expanded, template: { name: 'node', foreach: children }")
-                //- // /ko
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
