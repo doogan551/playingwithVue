@@ -57,18 +57,19 @@ const Hierarchy = class Hierarchy extends Common {
 
     getChildren(data, cb) {
         let id = this.getNumber(data.id);
-
         this.getAll({
             query: {
-                'parent': id
+                'parentNode': id,
+                '_pStatus': 0
             },
             sort: {
                 'display': 1
             },
             fields: {
                 display: 1,
-                parent: 1,
+                parentNode: 1,
                 nodeType: 1,
+                nodeSubType: 1,
                 locationType: 1
             }
         }, cb);
