@@ -342,9 +342,13 @@ const Utility = class Utility {
                         cb(err, points, count);
                     });
                 } else {
-                    this.count(criteria, (err, count) => {
-                        cb(err, points, count);
-                    });
+                    if (criteria.count !== false) {
+                        this.count(criteria, (err, count) => {
+                            cb(err, points, count);
+                        });
+                    } else {
+                        cb(err, points);
+                    }
                 }
             });
         });

@@ -238,7 +238,8 @@ const Point = class Point extends Common {
             sort: sort,
             _limit: limit,
             fields: projection,
-            data: data
+            data: data,
+            count: false
         };
 
         this.getWithSecurity(criteria, (err, points, count) => {

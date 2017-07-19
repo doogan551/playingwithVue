@@ -18,6 +18,7 @@
         "fabric": true,
         "define": true,
         "CustomColorsPicker": true,
-        "checkValues": true
+        "checkValues": true,
+        "mbox": true
     }
 }

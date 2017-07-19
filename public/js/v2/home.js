@@ -3067,7 +3067,17 @@ var dti = {
             }
 
             addChild(node) {
-                this.bindings.children.push(node.bindings);
+                let duplicate = false;
+                dti.forEachArray(this.bindings.children(), (child) => {
+                    if (child._id() === node.bindings._id()) {
+                        duplicate = true;
+                        return false;
+                    }
+                });
+
+                if (!duplicate) {
+                    this.bindings.children.push(node.bindings);
+                }
             }
         }, 
         LocationManager: class NodeManager {
@@ -3178,12 +3188,12 @@ var dti = {
                                 nodeType: 'Point'
                             })
                         },
-                        reference: {
-                            name: 'Reference',
-                            callback: makeHandler({
-                                nodeType: 'Reference'
-                            })
-                        },
+                        // reference: {
+                        //     name: 'Reference',
+                        //     callback: makeHandler({
+                        //         nodeType: 'Reference'
+                        //     })
+                        // },
                         application: {
                             name: 'Application',
                             callback: makeHandler({
@@ -3485,16 +3495,20 @@ var dti = {
                 let node = config.parentNode;
                 let parent = node.parentNode;
 
-                parent.deleteChild(node);
+                mbox.confirm('Are you sure you want to delete ' + node.bindings.display() + '?', (yes) => {
+                    if (yes) {
+                        parent.deleteChild(node);
 
-                this.ajax({
-                    url: '/api/hierarchy/delete',
-                    data: {
-                        id: node.bindings._id(),
-                        deleteChildren: true
+                        this.ajax({
+                            url: '/api/hierarchy/delete',
+                            data: {
+                                id: node.bindings._id(),
+                                deleteChildren: true
+                            }
+                        }).done((results) => {
+                            Materialize.toast('Delete result: ' + results.message || results.err || results.error, 1000);
+                        });
                     }
-                }).done((results) => {
-                    Materialize.toast('Delete result: ' + results.message || results.err || results.error, 1000);
                 });
             }
 
@@ -3508,17 +3522,10 @@ var dti = {
                     let node = manager.buildNodeFromModalOptions();
                     manager.bindings.busy(true);
 
-                    node = manager.createNode(node, parent);
-
-                    if (dti.bindings.locations.needsPoint()) {
-                        manager.addPointToTree(node, (response) => {
-                            dti.log(response);
-                        });
+                    if (dti.bindings.locations.needsPoint() && config.nodeType !== 'Reference') {
+                        manager.addPointToTree(node, parent);
                     } else {
-                        manager.saveNewNode(node, (response) => {
-                            dti.log(response);
-                            // manager.createNode(manager.buildNodeFromModalOptions(), parent);    
-                        });
+                        manager.saveNewNode(node, parent);
                     }
                     dti.bindings.locations.modalOpen(false);
                     manager.$addNodeModal.closeModal();
@@ -3599,12 +3606,16 @@ var dti = {
                 return newNode;
             }
 
-            getSaveData(data) {
-                var obj = ko.toJS(data.bindings || data); //takes node or node.bindings
+            getSaveData(data, parent) {
+                let obj = ko.toJS(data.bindings || data); //takes node or node.bindings
+
+                if (!obj._id) {
+                    obj._id = dti.makeId();
+                }
 
                 return {
                     id: obj._id,
-                    parentNode: data.parentNode.bindings._id(),
+                    parentNode: parent.bindings._id(),
                     display: obj.display,
                     nodeType: obj.nodeType,
                     nodeSubType: obj.nodeSubType,
@@ -3650,10 +3661,10 @@ var dti = {
                 });
             }
 
-            saveNewNode(node) {
+            saveNewNode(node, parent) {
                 let manager = this;
                 let data = {
-                    nodes: [this.getSaveData(node)]
+                    nodes: [this.getSaveData(node, parent)]
                 };
 
                 manager.ajax({
@@ -3662,16 +3673,21 @@ var dti = {
                 }).done((response) => {
                     // obj.new(false);
                     let bindings = node.bindings || node;
-
                     manager.bindings.busy(false);
-                    manager.markNodeSaved(node, bindings._id(), response[0].newNode._id);
-                    bindings._id(response[0].newNode._id);
-                    dti.log(response);
-                    Materialize.toast('Node added', 1000);
+
+                    if (response.err) {
+                        Materialize.toast('Error adding node: ' + response.err[0].err, 1000);
+                    } else {
+                        node = manager.createNode(node, parent);
+                        manager.markNodeSaved(node, node.bindings._id(), response[0].newNode._id);
+                        node.bindings._id(response[0].newNode._id);
+                        dti.log(response);
+                        Materialize.toast('Node added', 1000);
+                    }
                 });
             }
 
-            addPointToTree(node) {
+            addPointToTree(node, parent) {
                 let manager = this;
                 let data = manager.getImportData(node);
 
@@ -5523,7 +5539,7 @@ var dti = {
             needsPoint: false,
             searchString: '',
             error: '&nbsp;',
-            availableTypes: ['Area', 'Building', 'Floor', 'Room'],
+            availableTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
             //add node stuff
             newNodeDisplay: '',
             newNodeType: '',
