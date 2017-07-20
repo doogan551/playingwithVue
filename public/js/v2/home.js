@@ -3052,6 +3052,12 @@ var dti = {
                 this.bindings.isNew = ko.pureComputed(() => { 
                     return (this.bindings._id() === 0); 
                 }); 
+
+                this.bindings.expanded.subscribe((expanded) => {
+                    if (!!expanded) {
+                        this.manager.sortNodes(this.bindings.children);
+                    }
+                });
             } 
 
             getConfig() {
@@ -3557,11 +3563,13 @@ var dti = {
             }
 
             sortNodes(nodeList) {
-                nodeList.sort((a, b) => {
+                let jsNodeList = nodeList();
+                jsNodeList.sort((a, b) => {
                     var res = this.collator.compare(a.display(), b.display());
 
                     return res;
                 });
+                nodeList.valueHasMutated();
             }
 
             createNode(node, parent, noFocus, expandParent) {
@@ -3627,12 +3635,12 @@ var dti = {
                 };
             }
 
-            getImportData(data) {
+            getImportData(data, parent) {
                 var obj = ko.toJS(data.bindings || data); //takes node or node.bindings
 
                 return {
                     upi: this._addNodePoint._id,
-                    parentNode: data.parentNode.bindings._id(),
+                    parentNode: parent.bindings._id(),
                     display: obj.display,
                     nodeType: obj.nodeType,
                     nodeSubType: this._addNodePoint['Point Type'].Value
@@ -3689,13 +3697,14 @@ var dti = {
 
             addPointToTree(node, parent) {
                 let manager = this;
-                let data = manager.getImportData(node);
+                let data = manager.getImportData(node, parent);
 
                 manager.ajax({
                     url: '/api/points/addPointToHierarchy',
                     data: data
                 }).done((response) => {
                     // obj.new(false);
+                    node = manager.createNode(node, parent);
                     let bindings = node.bindings || node;
 
                     manager.bindings.busy(false);
