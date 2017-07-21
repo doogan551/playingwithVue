@@ -44,6 +44,7 @@ module.exports = function (controllers) {
     router.use('/api/devicetree', controllers.devicetree);
     router.use('/api/firmwareloader', controllers.firmwareloader);
     router.use('/api/hierarchy', controllers.hierarchy);
+    router.use('/api/mechanical', controllers.mechanical);
     router.use('/api/meters', controllers.history);
     router.use('/api/points', controllers.points);
     router.use('/api/policies', controllers.policies);
