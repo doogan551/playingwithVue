@@ -2178,6 +2178,10 @@ $treeIconWidth: 22px;
 
 
     .locations {
+
+        .locSearch input {
+            color: white !important;
+        }
         .pane {
             border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
         }
