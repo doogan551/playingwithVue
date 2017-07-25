@@ -1370,7 +1370,7 @@ let Import = class Import extends Common {
             },
             options: {},
             collection: 'new_points'
-        } {
+        }, {
             index: {
                 'msgTime': 1
             },
