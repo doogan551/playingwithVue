@@ -3323,20 +3323,20 @@ var dti = {
                     },
 
                     search(terms) {
-                        if (terms !== '') {
-                            manager.bindings.busy(true);
-                            manager.ajax({
-                                url: '/api/hierarchy/search',
-                                data: {
-                                    terms: terms.split(',')
-                                }
-                            }).done((results) => {
-                                manager.rebuildTree(results);
-                                manager.bindings.busy(false);
-                            });
-                        } else {
-                            manager.getDefaultTree(null, true);
-                        }
+                        // if (terms !== '') {
+                        //     manager.bindings.busy(true);
+                        //     manager.ajax({
+                        //         url: '/api/hierarchy/search',
+                        //         data: {
+                        //             terms: terms.split(',')
+                        //         }
+                        //     }).done((results) => {
+                        //         manager.rebuildTree(results);
+                        //         manager.bindings.busy(false);
+                        //     });
+                        // } else {
+                        //     manager.getDefaultTree(null, true);
+                        // }
                     },
 
                     forEachNode(fn, root, parent) {
