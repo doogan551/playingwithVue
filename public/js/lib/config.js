@@ -4936,7 +4936,7 @@ var Config = (function (obj) {
             var hierarchyTypes = ['Location', 'Category', 'Equipment'];
             var template = {};
             var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
-            if (hierarchyTypes.contains(pointType)) {
+            if (hierarchyTypes.includes(pointType)) {
                 template = templateClone(hierarchy);
                 hierarchy.nodeType = pointType;
                 return hierarchy;
