@@ -3238,31 +3238,6 @@
                 "valueType": "UniquePID",
                 "reportEnable": true
             },
-            "Name": {
-                "enum": 129,
-                "valueType": "String",
-                "reportEnable": true
-            },
-            "name1": {
-                "enum": 307,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name2": {
-                "enum": 308,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name3": {
-                "enum": 309,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name4": {
-                "enum": 310,
-                "valueType": "String",
-                "reportEnable": false
-            },
             "Network Segment": {
                 "enum": 167,
                 "valueType": "Unsigned",
@@ -4002,11 +3977,6 @@
                 "valueType": "Bool",
                 "reportEnable": true
             },
-            "taglist": {
-                "enum": 311,
-                "valueType": "Array",
-                "reportEnable": false
-            },
             "Time Zone": {
                 "enum": 406,
                 "valueType": "Enum",
@@ -4280,7 +4250,6 @@
             "_cfgRequired": true,
             "_actvAlmId": 0,
             "_oldUpi": 0,
-            "Name": "",
             "Point Type": {
                 "isDisplayable": true,
                 "isReadOnly": true,
