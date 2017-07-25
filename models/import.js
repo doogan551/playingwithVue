@@ -160,15 +160,20 @@ let Import = class Import extends Common {
                                                                     if (err) {
                                                                         logger.info('updateTrend', err);
                                                                     }
-                                                                    this.rearrangeProperties(point, (err) => {
+                                                                    this.addHierarchyProperties(point, (err) => {
                                                                         if (err) {
-                                                                            logger.info('rearrangeProperties', err);
+                                                                            logger.info('addHierarchyProperties', err);
                                                                         }
-                                                                        this.updatePoint(point, (err) => {
+                                                                        this.rearrangeProperties(point, (err) => {
                                                                             if (err) {
-                                                                                logger.info('updatePoint', err);
+                                                                                logger.info('rearrangeProperties', err);
                                                                             }
-                                                                            cb(null);
+                                                                            this.updatePoint(point, (err) => {
+                                                                                if (err) {
+                                                                                    logger.info('updatePoint', err);
+                                                                                }
+                                                                                cb(null);
+                                                                            });
                                                                         });
                                                                     });
                                                                 });
