@@ -564,8 +564,7 @@ let Import = class Import extends Common {
                     callback(err, point._id || 0);
                 });
             };
-            // go through each point and find point refs.value that equals old _id and change all occurrences on each point.
-            // remove below and do this on line 641
+
             this.iterateCursor({
                 collection: newPoints,
                 options: {
@@ -672,7 +671,8 @@ let Import = class Import extends Common {
                         updateObj: doc,
                         collection: pointsCollection
                     }, (err, result) => {
-                        updateDependencies(doc._newUpi, doc._oldUpi, 'points', cb);
+                        cb(err);
+                        // updateDependencies(doc._oldUpi, doc._newUpi, 'points', cb);
                     });
                 });
             }, (err, count) => {
@@ -701,7 +701,7 @@ let Import = class Import extends Common {
                         });
                     }, (err, count) => {
                         callback(err);
-                        // changeReferenceValues(callback);
+                        changeReferenceValues(callback);
                         // this.iterateCursor({
                         //     collection: newPoints,
                         //     query: {}
@@ -1365,6 +1365,12 @@ let Import = class Import extends Common {
             },
             collection: 'new_points'
         }, {
+            index: {
+                '_oldUpi': 1
+            },
+            options: {},
+            collection: 'new_points'
+        } {
             index: {
                 'msgTime': 1
             },
