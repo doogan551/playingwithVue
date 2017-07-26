@@ -1240,7 +1240,7 @@
             }
         },
         "Point Name Separator": {
-            "Value": "►"   // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+            "Value": "►"
         },
         "Point Statuses": {
             "Active": {
