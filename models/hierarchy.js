@@ -613,7 +613,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         node.tags = [];
 
-        iterateModel(node);
+        // iterateModel(node);
 
         return;
     }
