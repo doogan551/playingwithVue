@@ -1239,6 +1239,9 @@
                 "enum": 1
             }
         },
+        "Point Name Separator": {
+            "Value": "►"
+        },
         "Point Statuses": {
             "Active": {
                 "enum": 0

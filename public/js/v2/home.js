@@ -32,7 +32,7 @@ var dti = {
                 group: 'Navigatorv2',
                 standalone: true,
                 singleton: true,
-                initFn: 'locations.initLocations',
+                initFn: 'hierarchy.initHierarchy',
                 showLoading: true,
                 fullScreen: false,
                 options: {
@@ -3017,8 +3017,8 @@ var dti = {
             });
         }
     },
-    locations: {
-        LocationsNode: class LocationsNode { 
+    hierarchy: {
+        HierarchyNode: class HierarchyNode { 
             static getTemplate(config = {}) {
                 return { 
                     _id: dti.makeId(), 
@@ -3039,7 +3039,7 @@ var dti = {
             }
 
             constructor(config) { 
-                this.defaultConfig = dti.locations.LocationsNode.getTemplate(config);
+                this.defaultConfig = dti.hierarchy.HierarchyNode.getTemplate(config);
  
                 this.manager = config.manager; 
                 this.defaultConfig = $.extend(true, this.defaultConfig, config); 
@@ -3086,11 +3086,11 @@ var dti = {
                 }
             }
         }, 
-        LocationManager: class NodeManager {
+        NodeManager: class NodeManager {
 
             constructor(config) {
                 let $container = config.$container;
-                let markup = dti.utility.getTemplate('#locationsTemplate');
+                let markup = dti.utility.getTemplate('#hierarchyTemplate');
 
                 $container.append(markup);
 
@@ -3170,48 +3170,73 @@ var dti = {
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
                     items: {
-                        location: {
-                            name: 'Location',
-                            callback: makeHandler({
-                                nodeType: 'Location'
-                            })
+                        add: {
+                            name: 'Add',
+                            items: {
+                                location: {
+                                    name: 'Location',
+                                    callback: makeHandler({
+                                        nodeType: 'Location'
+                                    })
+                                },
+                                equipment: {
+                                    name: 'Equipment',
+                                    callback: makeHandler({
+                                        nodeType: 'Equipment'
+                                    })
+                                },
+                                category: {
+                                    name: 'Category',
+                                    callback: makeHandler({
+                                        nodeType: 'Category'
+                                    })
+                                },
+                                point: {
+                                    name: 'Point',
+                                    callback: makeHandler({
+                                        nodeType: 'Point'
+                                    })
+                                },
+                                // reference: {
+                                //     name: 'Reference',
+                                //     callback: makeHandler({
+                                //         nodeType: 'Reference'
+                                //     })
+                                // },
+                                application: {
+                                    name: 'Application',
+                                    callback: makeHandler({
+                                        nodeType: 'Application'
+                                    })
+                                }
+                            }
                         },
-                        equipment: {
-                            name: 'Equipment',
-                            callback: makeHandler({
-                                nodeType: 'Equipment'
-                            })
-                        },
-                        category: {
-                            name: 'Category',
-                            callback: makeHandler({
-                                nodeType: 'Category'
-                            })
-                        },
-                        point: {
-                            name: 'Point',
-                            callback: makeHandler({
-                                nodeType: 'Point'
-                            })
-                        },
-                        // reference: {
-                        //     name: 'Reference',
+                        // select: {
+                        //     name: 'Select',
                         //     callback: makeHandler({
-                        //         nodeType: 'Reference'
+                        //         cb: manager.bindings.loadNode
                         //     })
                         // },
-                        application: {
-                            name: 'Application',
-                            callback: makeHandler({
-                                nodeType: 'Application'
-                            })
-                        },
-                        sep1: '------',
+                        // cut: {
+                        //     name: 'Cut',
+                        //     callback: makeHandler({
+                        //         cb: manager.cutNode
+                        //     })
+                        // },
+                        // paste: {
+                        //     name: 'Paste',
+                        //     callback: makeHandler({
+                        //         cb: manager.pasteNode
+                        //     })
+                        // },
                         delete: {
                             name: 'Delete',
                             callback: makeHandler({
                                 cb: manager.deleteBranch
-                            })
+                            }),
+                            disabled: () => {
+                                return manager.getCutNode();
+                            }
                         }
                         // application: {
                         //     name: 'Application',
@@ -3263,14 +3288,15 @@ var dti = {
                 manager.bindings = $.extend(true, manager.bindings, {
                     addRootNode() {
                         var rootNode = manager.bindings.getNode({
-                            display: 'Root',
+                            display: 'InfoScan',
                             fetched: true,
                             expanded: true,
                             nodeType: 'Location',
-                            nodeSubType: 'Area'
+                            nodeSubType: 'Site',
+                            _isRoot: true
                         });
 
-                        manager.createNode(rootNode, null, true);
+                        manager.rootNode = manager.createNode(rootNode, null, true);
                     },
 
                     addBranch(children, parent) {
@@ -3353,7 +3379,7 @@ var dti = {
                             cfg.id = dti.makeId();
                         }
 
-                        return $.extend(true, $.extend(true, {}, dti.locations.LocationsNode.getTemplate(cfg)), cfg || {});
+                        return $.extend(true, $.extend(true, {}, dti.hierarchy.HierarchyNode.getTemplate(cfg)), cfg || {});
                     },
 
                     expand(obj, event) {
@@ -3448,25 +3474,48 @@ var dti = {
 
 
             // methods
-            handleChoosePoint(point) {
-                let manager = dti.bindings.locations.manager;
+            cutNode(config) {
+                dti.log(this);
+                this._cutNode = config.parentNode;
+            }
 
-                dti.bindings.locations.newNodePointName(point.name);
+            getCutNode() {
+                return this._cutNode || null;
+            }
+
+            pasteNode(config) {
+                dti.log(this);
+                this._cutNode = null;
+            }
+
+            handleChoosePoint(point) {
+                let manager = dti.bindings.hierarchy.manager;
+
+                dti.bindings.hierarchy.newNodePointName(point.name);
                 manager._addNodePoint = point;
                 dti.log(point);
             }
 
             chooseNodePoint() {
+                let config = dti.hierarchy.manager._addNodeConfig;
+                let pointTypes = [];
+
+                if (config.nodeType === 'Application') {
+                    pointTypes = ['Sequence', 'Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer', 'Device', 'Remote Unit', 'Display', 'Program', 'Script', 'Report', 'Schedule', 'Sensor', 'Slide Show', 'Lift Station', 'Optimum Start', 'VAV'];
+                } else {
+                    pointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+                }
+                
                 dti.navigator.showNavigator({
-                    pointTypes: [],
-                    showInactive: dti.bindings.locations.manager._addNodeConfig.nodeType !== 'Reference',
-                    callback: dti.bindings.locations.manager.handleChoosePoint
+                    pointTypes: pointTypes,
+                    showInactive: dti.bindings.hierarchy.manager._addNodeConfig.nodeType !== 'Reference',
+                    callback: dti.bindings.hierarchy.manager.handleChoosePoint
                 });
             }
 
             buildNodeFromModalOptions() {
                 let config = this._addNodeConfig;
-                let bindings = dti.bindings.locations;
+                let bindings = dti.bindings.hierarchy;
                 let ret = {
                     display: bindings.newNodeDisplay(),
                     nodeType: config.nodeType,
@@ -3482,7 +3531,7 @@ var dti = {
             }
 
             validateNewNodeOptions() {
-                let bindings = dti.bindings.locations;
+                let bindings = dti.bindings.hierarchy;
                 let config = this._addNodeConfig;
                 let messages = [];
 
@@ -3503,7 +3552,12 @@ var dti = {
 
                 mbox.confirm('Are you sure you want to delete ' + node.bindings.display() + '?', (yes) => {
                     if (yes) {
-                        parent.deleteChild(node);
+                        if (parent) {
+                            parent.deleteChild(node);
+                        } else {
+                            this.rootNode.bindings.children.remove(node.bindings);
+                            // this.bindings.children.remove(node.bindings);
+                        }
 
                         this.ajax({
                             url: '/api/hierarchy/delete',
@@ -3528,17 +3582,17 @@ var dti = {
                     let node = manager.buildNodeFromModalOptions();
                     manager.bindings.busy(true);
 
-                    if (dti.bindings.locations.needsPoint() && config.nodeType !== 'Reference') {
+                    if (dti.bindings.hierarchy.needsPoint() && config.nodeType !== 'Reference') {
                         manager.addPointToTree(node, parent);
                     } else {
                         manager.saveNewNode(node, parent);
                     }
-                    dti.bindings.locations.modalOpen(false);
+                    dti.bindings.hierarchy.modalOpen(false);
                     manager.$addNodeModal.closeModal();
                 } else {
-                    dti.bindings.locations.error(valid);
+                    dti.bindings.hierarchy.error(valid);
                     setTimeout(() => {
-                        dti.bindings.locations.error('');
+                        dti.bindings.hierarchy.error('');
                     }, 2000);
                 }
             }
@@ -3547,19 +3601,19 @@ var dti = {
                 let needsPoint = false;
                 let typesNeedingPoint = ['Point', 'Application', 'Reference'];
 
-                dti.bindings.locations.error('');
-                dti.bindings.locations.newNodeDisplay('');
-                dti.bindings.locations.newNodePointName('');
+                dti.bindings.hierarchy.error('');
+                dti.bindings.hierarchy.newNodeDisplay('');
+                dti.bindings.hierarchy.newNodePointName('');
                 
                 this._addNodeConfig = config;
                 // this._addNodeParent = config.parent;
 
-                dti.bindings.locations.needsPoint(typesNeedingPoint.indexOf(config.nodeType) >= 0);
-                dti.bindings.locations.newNodeType(config.nodeType);
+                dti.bindings.hierarchy.needsPoint(typesNeedingPoint.indexOf(config.nodeType) >= 0);
+                dti.bindings.hierarchy.newNodeType(config.nodeType);
 
                 this.$addNodeModal.openModal();
                 this.$addNodeModal.find('select').material_select();
-                dti.bindings.locations.modalOpen(true);
+                dti.bindings.hierarchy.modalOpen(true);
             }
 
             sortNodes(nodeList) {
@@ -3572,7 +3626,7 @@ var dti = {
                 nodeList.valueHasMutated();
             }
 
-            createNode(node, parent, noFocus, expandParent) {
+            createNode(node, parent, noFocus) {
                 let newNode = null;
 
                 node.manager = this;
@@ -3586,12 +3640,16 @@ var dti = {
                 }
 
                 if (!newNode) {
-                    newNode = new dti.locations.LocationsNode(node);
+                    newNode = new dti.hierarchy.HierarchyNode(node);
 
                     this.nodeMatrix[newNode.bindings._id()] = newNode;
 
                     if (!parent) {
-                        this.bindings.children.push(newNode.bindings);
+                        if (node._isRoot) {
+                            this.bindings.children.push(newNode.bindings);
+                        } else {
+                            this.rootNode.bindings.children.push(newNode.bindings);
+                        }
                     } else {
                         let nodeParent = parent;
 
@@ -3605,9 +3663,7 @@ var dti = {
 
                         parent.addChild(newNode);
 
-                        if (expandParent) {
-                            parent.bindings.expanded(true);
-                        }
+                        parent.bindings.expanded(true);
                     }
                 }
 
@@ -3623,7 +3679,7 @@ var dti = {
 
                 return {
                     id: obj._id,
-                    parentNode: parent.bindings._id(),
+                    parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                     display: obj.display,
                     nodeType: obj.nodeType,
                     nodeSubType: obj.nodeSubType,
@@ -3749,7 +3805,7 @@ var dti = {
             }
 
             normalize(arr, cfg) {
-                let template = dti.locations.LocationsNode.getTemplate();
+                let template = dti.hierarchy.HierarchyNode.getTemplate();
 
                 let _normalize = (item, idx) => {
                     // item._data = $.extend(true, {}, item);
@@ -3829,7 +3885,9 @@ var dti = {
             handleTreeResults(results, overwrite, cb) {
                 var bindings = this.bindings;
 
-                if (results.length > 0) {
+                this.bindings.addRootNode();
+
+                // if (results.length > 0) {
                     this.tree = this.normalize(results, {
                         expanded: false
                     });
@@ -3837,15 +3895,8 @@ var dti = {
                     dti.forEachArray(this.tree, (branch) => {
                         this.createNode(branch, null, true);
                     });
-                } else {
-                    this.bindings.addRootNode();
-                }
-
-
-                // if (!overwrite) {
-                //     bindings.children(ko.viewmodel.fromModel(this.tree)());
                 // } else {
-                //     bindings.children(ko.viewmodel.fromModel(this.tree)());
+                //     this.bindings.addRootNode();
                 // }
 
                 if (cb) {
@@ -3866,9 +3917,9 @@ var dti = {
                 });
             }
         },
-        initLocations: (config) => {
-            dti.locations.manager = new dti.locations.LocationManager(config);
-            dti.bindings.locations.manager = dti.locations.manager;
+        initHierarchy: (config) => {
+            dti.hierarchy.manager = new dti.hierarchy.NodeManager(config);
+            dti.bindings.hierarchy.manager = dti.hierarchy.manager;
         }
     },
     navigator: {
@@ -5198,8 +5249,43 @@ var dti = {
         }
     },
     pointSelector: {
-        init: function() {
+        Selector: class PointSelector {
+            constructor(config) {
+                this.emptyFn = () => {};
+                this.exposedMethods = ['handleChoosePoint', 'show'];
 
+                dti.forEachArray(this.exposedMethods, (method) => {
+                    dti.pointSelector[method] = this[method];
+                });
+
+                this.$modal = $('#pointSelectorModal');
+                this.callback = this.emptyFn;
+            }
+
+            initBindings() {
+                dti.bindings.pointSelector = {
+                    handleChoosePoint: this.handleChoosePoint
+                };
+            }
+
+
+            //exposed methods
+            handleChoosePoint(data) {
+                dti.log(data);
+                this.callback(data);
+                this.callback = this.emptyFn;
+            }
+
+            show(config) {
+                dti.log(config);
+                this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary 
+                this.$modal.openModal();
+            }
+        },
+
+
+        init() {
+            dti.pointSelector.selector = new dti.pointSelector.Selector();
         }
     },
     messaging: {
@@ -5265,6 +5351,23 @@ var dti = {
                         config.callback = callback;
 
                         dti.navigator.showNavigator(config);
+                    },
+                    showPointSelectorNew: function() {
+                        var sourceWindowId = config._windowId,
+                            callback = function(data) {
+                                dti.messaging.sendMessage({
+                                    messageID: messageID,
+                                    key: sourceWindowId,
+                                    message: 'pointSelected',
+                                    value: {
+                                        point: data
+                                    }
+                                });
+                            };
+
+                        config.callback = callback;
+
+                        dti.pointSelector.show(config);
                     },
                     showCreatePoint: function() {
                         var sourceWindowId = config._windowId,
@@ -5541,7 +5644,7 @@ var dti = {
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },
-        locations: $.extend(ko.viewmodel.fromModel({
+        hierarchy: $.extend(ko.viewmodel.fromModel({
             root: true, //hack
             modalOpen: false,
             focusedNode: false,
@@ -5556,7 +5659,7 @@ var dti = {
             newNodePointName: ''
         }), {
             addNode() {
-                dti.locations.manager.addNode();
+                dti.hierarchy.manager.addNode();
             }
         }),
         globalSearch: {

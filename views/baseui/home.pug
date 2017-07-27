@@ -206,121 +206,72 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            //- #pointID.modal.modal-fixed-footer
+            #pointSelectorModal.modal.modal-fixed-footer
                 .modal-content
-                    h4.blue-grey-text Point Identification
+                    h4 Select Point
 
-                    .row.sectionHeader
-                        .col.s3.blue-grey-text Attribute
-                        .col.s9.blue-grey-text Value
-                    .row
-                        .col.s3 Address
-                        .col.s9.input-field
-                            input#inputAddress(type='text')
-                            label(for='inputAddress') Address
-
-                    .row
-
-                    .row.sectionHeader
-                        .col.s3.blue-grey-text Class
-                        .col.s9.blue-grey-text Tag
-                    .row
-                        .col.s3 Building
-                        .col.s9.input-field
-                            select(value='4194')
-                                option 4194
-                    .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Equipment
-                        .col.s9.input-field
-                            input#inputEquipment(type='text')
-                            label(for='inputEquipment') Equipment
-                    .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Equipment Type
-                        .col.s9.input-field
-                            input#inputEquipmentType(type='text')
-                            label(for='inputEquipmentType') Equipment Type
-                    .row
-                        .col.s3.userDefined 
-                           a(href='javascript://')
-                                 i.material-icons highlight_off
-                            span Floor
-                        .col.s9.input-field
-                            input#inputFloor(type='text')
-                            label(for='inputFloor') Floor
-                    .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Zone
-                        .col.s9.input-field
-                            input#inputZone(type='text')
-                            label(for='inputZone') Zone
+                    
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
+                    button.btn.blue-grey.waves-effect Select
+                    button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
             #addNodeModal.modal
                 .modal-content
-                    h4(data-bind="text: 'Add ' + locations.newNodeType()")
+                    h4(data-bind="text: 'Add ' + hierarchy.newNodeType()")
                     .row
                         .input-field.col.s6
-                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: locations.modalOpen, value: locations.newNodeDisplay")
+                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: hierarchy.modalOpen, value: hierarchy.newNodeDisplay")
                             label(for="newNodeDisplay") Display
-                    // ko if: locations.newNodeType() === 'Location'
+                    // ko if: hierarchy.newNodeType() === 'Location'
                     .row
                         .input-field.col.s3
-                            select(data-bind="options: locations.availableTypes, value: locations.newNodeSubType")
+                            select(data-bind="options: hierarchy.availableTypes, value: hierarchy.newNodeSubType")
                             label Type                  
                     // /ko
-                    // ko if: locations.newNodeType() === 'Equipment'
+                    // ko if: hierarchy.newNodeType() === 'Equipment'
                     //- .row
                     //-     .input-field.col.s3
-                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         select(data-bind="options: hierarchy.availableTypes, value: hierarchy.entryType")
                     //-         label Type                  
                     // /ko
-                    // ko if: locations.newNodeType() === 'Category'
+                    // ko if: hierarchy.newNodeType() === 'Category'
                     //- .row
                     //-     .input-field.col.s3
-                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         select(data-bind="options: hierarchy.availableTypes, value: hierarchy.entryType")
                     //-         label Type                  
                     // /ko
-                    // ko if: locations.newNodeType() === 'Point'
+                    // ko if: hierarchy.newNodeType() === 'Point'
 
 
                     // /ko
-                    // ko if: locations.newNodeType() === 'Reference'
+                    // ko if: hierarchy.newNodeType() === 'Reference'
                     //- .row
                     //-     .input-field.col.s3
-                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         select(data-bind="options: hierarchy.availableTypes, value: hierarchy.entryType")
                     //-         label Type                  
                     // /ko
-                    // ko if: locations.newNodeType() === 'Application'
+                    // ko if: hierarchy.newNodeType() === 'Application'
                     //- .row
                     //-     .input-field.col.s3
-                    //-         select(data-bind="options: locations.availableTypes, value: locations.entryType")
+                    //-         select(data-bind="options: hierarchy.availableTypes, value: hierarchy.entryType")
                     //-         label Type                  
                     // /ko
 
-                    // ko if: locations.needsPoint() === true
+                    // ko if: hierarchy.needsPoint() === true
                     .row
                         .col.s9.valign-wrapper
-                            button.btn.blue-grey(data-bind="click: locations.manager.chooseNodePoint") Choose Point
+                            button.btn.blue-grey(data-bind="click: hierarchy.manager.chooseNodePoint") Choose Point
 
-                            .valign(data-bind="text: locations.newNodePointName")
+                            .valign(data-bind="text: hierarchy.newNodePointName")
 
 
                     // /ko
 
                     .row
-                        .col.s12.error.red-text(data-bind='html: locations.error')
+                        .col.s12.error.red-text(data-bind='html: hierarchy.error')
                 .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: locations.addNode, attr: {disabled: locations.allowAddNode}") Add
+                    button.btn.blue-grey.waves-effect(data-bind="click: hierarchy.addNode, attr: {disabled: hierarchy.allowAddNode}") Add
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
 
@@ -427,7 +378,7 @@ html
 
         iframe#thumbnailGen.hide
 
-    script#locationsTemplate(type='text/html')
+    script#hierarchyTemplate(type='text/html')
         .locations.blue-grey-form(data-bind="css: { busy: busy }")
             .treeTop
                 .fetching
