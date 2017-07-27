@@ -98,71 +98,71 @@ let Import = class Import extends Common {
                 if (err) {
                     logger.info('updateSequences', err);
                 }
-                this.updateTaglist(point, (err) => {
+                this.updateCfgRequired(point, (err) => {
                     if (err) {
-                        logger.info('updateTaglist', err);
+                        logger.info('updateCfgRequired', err);
                     }
-                    this.updateCfgRequired(point, (err) => {
+                    this.updateOOSValue(point, (err) => {
                         if (err) {
-                            logger.info('updateCfgRequired', err);
+                            logger.info('updateOOSValue', err);
                         }
-                        this.updateOOSValue(point, (err) => {
+                        this.addTrendProperties(point, (err) => {
                             if (err) {
-                                logger.info('updateOOSValue', err);
+                                logger.info('addTrendProperties', err);
                             }
-                            this.addTrendProperties(point, (err) => {
+                            this.updateScriptPoint(point, (err) => {
                                 if (err) {
-                                    logger.info('addTrendProperties', err);
+                                    logger.info('updateScriptPoint', err);
                                 }
-                                this.updateScriptPoint(point, (err) => {
+                                /*this.updateProgramPoints(point, db, function(err) {
+                                    if (err)
+                                      logger.info("updateProgramPoints", err);*/
+                                this.updateMultiplexer(point, (err) => {
                                     if (err) {
-                                        logger.info('updateScriptPoint', err);
+                                        logger.info('updateMultiplexer', err);
                                     }
-                                    /*this.updateProgramPoints(point, db, function(err) {
-                                        if (err)
-                                          logger.info("updateProgramPoints", err);*/
-                                    this.updateMultiplexer(point, (err) => {
+                                    this.updateGPLBlocks(point, (err) => {
                                         if (err) {
-                                            logger.info('updateMultiplexer', err);
+                                            logger.info('updateGPLBlocks', err);
                                         }
-                                        this.updateGPLBlocks(point, (err) => {
+                                        /*this.updateSensorPoints(point, function(err) {
+                                          if (err)
+                                            logger.info("updateSensorPoints", err);*/
+                                        this.updateReferences(point, (err) => {
                                             if (err) {
-                                                logger.info('updateGPLBlocks', err);
+                                                logger.info('updateReferences', err);
                                             }
-                                            /*this.updateSensorPoints(point, function(err) {
-                                              if (err)
-                                                logger.info("updateSensorPoints", err);*/
-                                            this.updateReferences(point, (err) => {
-                                                if (err) {
-                                                    logger.info('updateReferences', err);
-                                                }
-                                                // needs to be done after point refs is added to point
-                                                utils.setupNonFieldPoints(point);
+                                            // needs to be done after point refs is added to point
+                                            utils.setupNonFieldPoints(point);
 
-                                                utils.setChannelOptions(point);
-                                                this.updateTimeZones(point, (err) => {
+                                            utils.setChannelOptions(point);
+                                            this.updateTimeZones(point, (err) => {
+                                                if (err) {
+                                                    logger.info('updateTimeZones', err);
+                                                }
+                                                this.updateDevices(point, (err) => {
                                                     if (err) {
-                                                        logger.info('updateTimeZones', err);
+                                                        logger.info('updateDevices', err);
                                                     }
-                                                    this.updateDevices(point, (err) => {
+                                                    this.updateModels(point, (err) => {
                                                         if (err) {
-                                                            logger.info('updateDevices', err);
+                                                            logger.info('updateModels', err);
                                                         }
-                                                        this.updateModels(point, (err) => {
+                                                        this.updateAlarmMessages(point, (err) => {
                                                             if (err) {
-                                                                logger.info('updateModels', err);
+                                                                logger.info('updateAlarmMessages', err);
                                                             }
-                                                            this.updateAlarmMessages(point, (err) => {
+                                                            this.addBroadcastPeriod(point, (err) => {
                                                                 if (err) {
-                                                                    logger.info('updateAlarmMessages', err);
+                                                                    logger.info('addBroadcastPeriod', err);
                                                                 }
-                                                                this.addBroadcastPeriod(point, (err) => {
+                                                                this.updateTrend(point, (err) => {
                                                                     if (err) {
-                                                                        logger.info('addBroadcastPeriod', err);
+                                                                        logger.info('updateTrend', err);
                                                                     }
-                                                                    this.updateTrend(point, (err) => {
+                                                                    this.addHierarchyProperties(point, (err) => {
                                                                         if (err) {
-                                                                            logger.info('updateTrend', err);
+                                                                            logger.info('addHierarchyProperties', err);
                                                                         }
                                                                         this.rearrangeProperties(point, (err) => {
                                                                             if (err) {
@@ -563,12 +563,12 @@ let Import = class Import extends Common {
                     }
                 }, (err, point) => {
                     if (!point) {
-                        console.log(refProp);
                         point = {};
                     }
                     callback(err, point._id || 0);
                 });
             };
+
             this.iterateCursor({
                 collection: newPoints,
                 options: {
@@ -576,8 +576,7 @@ let Import = class Import extends Common {
                 }
             }, (err, doc, next) => {
                 let pointRefs = doc['Point Refs'];
-                async.each(pointRefs, (_pointRef, eachCallback) => {
-                    let pointRef = _.cloneDeep(_pointRef);
+                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
                     async.parallel([(callback) => {
                         getRef(pointRef.Value, (err, newValue) => {
                             pointRef.Value = newValue;
@@ -597,7 +596,13 @@ let Import = class Import extends Common {
                         eachCallback(err);
                     });
                 }, (err) => {
+                    if (err) {
+                        console.log(11111, err);
+                    }
                     getRef(doc._parentUpi, (err, newValue) => {
+                        if (err) {
+                            console.log(22222, err);
+                        }
                         doc._parentUpi = newValue;
                         this.update({
                             collection: newPoints,
@@ -641,10 +646,18 @@ let Import = class Import extends Common {
                         updateObj: doc,
                         collection: pointsCollection
                     }, (err, result) => {
-                        cb(err);
+                        doc._id = doc._newUpi;
+                        this.insert({
+                            collection: newPoints,
+                            insertObj: doc
+                        }, (err) => {
+                            cb(err);
+                        });
+                        // updateDependencies(doc._oldUpi, doc._newUpi, 'points', cb);
                     });
                 });
             }, (err, count) => {
+                console.log('-------', err, count);
                 this.update({
                     collection: 'SystemInfo',
                     query: {
@@ -656,31 +669,18 @@ let Import = class Import extends Common {
                         }
                     }
                 }, (err, sysinfo) => {
-                    this.iterateCursor({
-                        collection: pointsCollection,
-                        query: {}
-                    }, (err, doc, cb) => {
-                        doc._id = doc._newUpi;
-
-                        this.insert({
-                            collection: newPoints,
-                            insertObj: doc
-                        }, (err) => {
-                            cb(err);
-                        });
-                    }, (err, count) => {
-                        changeReferenceValues(callback);
-                        // this.iterateCursor({
-                        //     collection: newPoints,
-                        //     query: {}
-                        // }, (err, doc, cb) => {
-                        //     updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
-                        //         cb(err);
-                        //     });
-                        // }, (err, count) => {
-                        //     callback(err);
-                        // });
-                    });
+                    // callback(err);
+                    changeReferenceValues(callback);
+                    // this.iterateCursor({
+                    //     collection: newPoints,
+                    //     query: {}
+                    // }, (err, doc, cb) => {
+                    //     updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
+                    //         cb(err);
+                    //     });
+                    // }, (err, count) => {
+                    //     callback(err);
+                    // });
                 });
             });
         });
@@ -1331,6 +1331,12 @@ let Import = class Import extends Common {
             options: {
                 name: 'PT, _name1-4'
             },
+            collection: 'new_points'
+        }, {
+            index: {
+                '_oldUpi': 1
+            },
+            options: {},
             collection: 'new_points'
         }, {
             index: {
@@ -2396,9 +2402,15 @@ let Import = class Import extends Common {
     }
     updateNameSegments(point, callback) {
         point._name1 = point.name1.toLowerCase();
-        point._name2 = point.name2.toString().toLowerCase();
-        point._name3 = point.name3.toLowerCase();
-        point._name4 = point.name4.toLowerCase();
+        if (point.hasOwnProperty('name2')) {
+            point._name2 = point.name2.toString().toLowerCase();
+        }
+        if (point.hasOwnProperty('name3')) {
+            point._name3 = point.name3.toLowerCase();
+        }
+        if (point.hasOwnProperty('name4')) {
+            point._name4 = point.name4.toLowerCase();
+        }
         point._Name = point.Name.toLowerCase();
         /*db.collection(pointsCollection).update({
           _id: point._id
@@ -2412,12 +2424,6 @@ let Import = class Import extends Common {
     updateSequences(point, callback) {
         if (point['Point Type'].Value === 'Sequence') {
             point._parentUpi = 0;
-        }
-        callback();
-    }
-    updateTaglist(point, callback) {
-        for (var i = 0; i < point.taglist.length; i++) {
-            point.taglist[i] = point.taglist[i].toLowerCase();
         }
         callback();
     }
@@ -2901,20 +2907,23 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
+        const hierarchyCounters = ['location', 'equipment', 'category', 'reference'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
-            let typeId = type.toLowerCase().split(' ');
-            typeId = typeId.join('');
+            let typeId = type.toLowerCase().split(' ').join('');
             counters.push({
                 _id: typeId,
                 count: (type === 'Device') ? 3145727 : 0,
                 enum: pointTypes[type].enum
             });
         }
-        counters.push({
-            _id: 'hierarchy',
-            counter: 0
+        hierarchyCounters.forEach((counter) => {
+            counters.push({
+                _id: counter,
+                count: 0,
+                enum: Config.Enums['Hierarchy Types'][counter].enum
+            });
         });
         this.insert({
             collection: 'counters',
@@ -2925,8 +2934,9 @@ let Import = class Import extends Common {
         point.parentNode = 0;
         point.display = '';
         point.tags = [];
+        point.path = [];
         point.meta = {};
-        point.nodeType = 'Point';
+        point.nodeType = '';
         point.nodeSubType = '';
         point.libraryId = 0;
         point.refNode = 0;

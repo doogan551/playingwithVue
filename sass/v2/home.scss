@@ -2176,8 +2176,17 @@ $treeIconWidth: 22px;
         background-color: $blue-grey-darken-2 !important;
     }
 
-
     .locations {
+
+        .locSearch input {
+            color: white !important;
+        }
+
+        .locSearch input:focus {
+            border-bottom-color: #e0e0e0 !important;
+            // border-bottom-color: $blue-grey-darken-2 !important;
+        }
+
         .pane {
             border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
         }

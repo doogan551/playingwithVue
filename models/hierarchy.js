@@ -93,7 +93,7 @@ const Hierarchy = class Hierarchy extends Common {
         const pointModel = new Point();
         let node = data;
         delete node.id;
-        node._pStatus = 0;
+        node._pStatus = Config.Enums['Point Statuses'].Active.enum;
 
         let meta = this.getDefault(data.meta, {
             coords: {
@@ -107,8 +107,8 @@ const Hierarchy = class Hierarchy extends Common {
             },
             tz: ''
         });
-        pointModel.buildNamePath(node.parentNode, node.display, (err, newName) => {
-            node.Name = newName;
+        pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
+            node.path = newPath;
             this.recreateTags(node);
             this.insert({
                 insertObj: node
@@ -126,7 +126,7 @@ const Hierarchy = class Hierarchy extends Common {
     getNewId(type, cb) {
         let counterModel = new Counter();
         let typeEnum = Config.Enums['Hierarchy Types'][type].enum;
-        counterModel.getNextSequence(type.toLowerCase(), (err, count) => {
+        counterModel.getNextSequence(type, (err, count) => {
             cb(err, (typeEnum << 22) + count);
         });
     }
@@ -613,7 +613,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         node.tags = [];
 
-        iterateModel(node);
+        // iterateModel(node);
 
         return;
     }
@@ -685,6 +685,7 @@ const Hierarchy = class Hierarchy extends Common {
             return cb(err, (count > 0));
         });
     }
+
 };
 
 module.exports = Hierarchy;

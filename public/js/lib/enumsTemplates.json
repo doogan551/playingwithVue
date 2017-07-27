@@ -828,6 +828,9 @@
             },
             "Equipment": {
                 "enum": 509
+            },
+            "Reference": {
+                "enum": 508
             }
         },
         "Input Ranges": {
@@ -1235,6 +1238,9 @@
             "Momentary": {
                 "enum": 1
             }
+        },
+        "Point Name Separator": {
+            "Value": "►"
         },
         "Point Statuses": {
             "Active": {
@@ -3235,31 +3241,6 @@
                 "valueType": "UniquePID",
                 "reportEnable": true
             },
-            "Name": {
-                "enum": 129,
-                "valueType": "String",
-                "reportEnable": true
-            },
-            "name1": {
-                "enum": 307,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name2": {
-                "enum": 308,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name3": {
-                "enum": 309,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name4": {
-                "enum": 310,
-                "valueType": "String",
-                "reportEnable": false
-            },
             "Network Segment": {
                 "enum": 167,
                 "valueType": "Unsigned",
@@ -3999,11 +3980,6 @@
                 "valueType": "Bool",
                 "reportEnable": true
             },
-            "taglist": {
-                "enum": 311,
-                "valueType": "Array",
-                "reportEnable": false
-            },
             "Time Zone": {
                 "enum": 406,
                 "valueType": "Enum",
@@ -4202,59 +4178,6 @@
                 "enum": 13
             }
         },
-        "Internal Properties": {
-            "_id": {
-                "enum": 1
-            },
-            "_pAccess": {
-                "enum": 2
-            },
-            "_relDevice": {
-                "enum": 3
-            },
-            "_relRMU": {
-                "enum": 4
-            },
-            "_relPoint": {
-                "enum": 5
-            },
-            "_devModel": {
-                "enum": 6
-            },
-            "_rmuModel": {
-                "enum": 7
-            },
-            "_cfgDevice": {
-                "enum": 8
-            },
-            "_updPoint": {
-                "enum": 9
-            },
-            "_updTOD": {
-                "enum": 10
-            },
-            "_parentUpi": {
-                "enum": 11
-            },
-            "_pollTime": {
-                "enum": 12
-            },
-            "_pStatus": {
-                "enum": 13
-            },
-            "_cfgRequired": {
-                "enum": 14
-            },
-            "_forceAllCOV": {
-                "enum": 15
-            },
-            "_actvAlmId": {
-                "enum": 16
-            },
-            "_oldUpi": {
-                "enum": 17
-            }
-        },
         "Value Types": {
             "None": {
                 "enum": 0
@@ -4308,10 +4231,11 @@
             "tags": [],
             "meta": {},
             "nodeType": "",
+            "nodeSubType": "",
             "libraryId": 0,
             "refNode": 0,
             "_pStatus": 0,
-            "Name": ""
+            "path": []
         },
         "_common": {
             "_relDevice": 0,
@@ -4329,7 +4253,6 @@
             "_cfgRequired": true,
             "_actvAlmId": 0,
             "_oldUpi": 0,
-            "_Name": "",
             "Point Type": {
                 "isDisplayable": true,
                 "isReadOnly": true,

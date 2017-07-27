@@ -930,6 +930,17 @@ var Config = (function (obj) {
             return enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum;
         },
 
+        getPointName: (pointPath) => {
+            "use strict";
+            let result = "";
+
+            if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
+                result = pointPath.join(obj.Enums["Point Name Separator"].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+            }
+
+            return result;
+        },
+
         getRmuValueOptions: function (devModel) {
             var rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
                 deviceEnums = enumsTemplatesJson.Enums['Device Model Types'];
@@ -4936,7 +4947,7 @@ var Config = (function (obj) {
             var hierarchyTypes = ['Location', 'Category', 'Equipment'];
             var template = {};
             var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
-            if (hierarchyTypes.contains(pointType)) {
+            if (hierarchyTypes.includes(pointType)) {
                 template = templateClone(hierarchy);
                 hierarchy.nodeType = pointType;
                 return hierarchy;
