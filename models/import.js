@@ -563,7 +563,6 @@ let Import = class Import extends Common {
                     }
                 }, (err, point) => {
                     if (!point) {
-                        console.log(refProp);
                         point = {};
                     }
                     callback(err, point._id || 0);
@@ -577,8 +576,7 @@ let Import = class Import extends Common {
                 }
             }, (err, doc, next) => {
                 let pointRefs = doc['Point Refs'];
-                async.each(pointRefs, (_pointRef, eachCallback) => {
-                    let pointRef = _.cloneDeep(_pointRef);
+                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
                     async.parallel([(callback) => {
                         getRef(pointRef.Value, (err, newValue) => {
                             pointRef.Value = newValue;
@@ -598,7 +596,13 @@ let Import = class Import extends Common {
                         eachCallback(err);
                     });
                 }, (err) => {
+                    if (err) {
+                        console.log(11111, err);
+                    }
                     getRef(doc._parentUpi, (err, newValue) => {
+                        if (err) {
+                            console.log(22222, err);
+                        }
                         doc._parentUpi = newValue;
                         this.update({
                             collection: newPoints,
@@ -612,40 +616,6 @@ let Import = class Import extends Common {
                     });
                 });
             }, cb);
-        };
-
-        let updatePointRefValues = (newValue, oldValue, cb) => {
-            this.get({
-                collection: 'points',
-                query: {
-                    $or: [{
-                        'Point Refs.Value': oldValue
-                    }, {
-                        'Point Refs.DevInst': oldValue
-                    }, {
-                        'Point Refs.PointInst': oldValue
-                    }]
-                }
-            }, (err, references) => {
-                async.each(references, (reference, callback) => {
-                    if (reference['Point Refs'].Value === oldValue) {
-                        reference['Point Refs'].Value = newValue;
-                    }
-                    if (reference['Point Refs'].DevInst === oldValue) {
-                        reference['Point Refs'].DevInst = newValue;
-                    }
-                    if (reference['Point Refs'].PointInst === oldValue) {
-                        reference['Point Refs'].PointInst = newValue;
-                    }
-                    this.update({
-                        collection: 'points',
-                        query: {
-                            _id: reference._id
-                        },
-                        updateObj: reference
-                    }, callback);
-                }, cb);
-            });
         };
 
         this.getOne({
@@ -676,11 +646,18 @@ let Import = class Import extends Common {
                         updateObj: doc,
                         collection: pointsCollection
                     }, (err, result) => {
-                        cb(err);
+                        doc._id = doc._newUpi;
+                        this.insert({
+                            collection: newPoints,
+                            insertObj: doc
+                        }, (err) => {
+                            cb(err);
+                        });
                         // updateDependencies(doc._oldUpi, doc._newUpi, 'points', cb);
                     });
                 });
             }, (err, count) => {
+                console.log('-------', err, count);
                 this.update({
                     collection: 'SystemInfo',
                     query: {
@@ -692,32 +669,18 @@ let Import = class Import extends Common {
                         }
                     }
                 }, (err, sysinfo) => {
-                    this.iterateCursor({
-                        collection: pointsCollection,
-                        query: {}
-                    }, (err, doc, cb) => {
-                        doc._id = doc._newUpi;
-
-                        this.insert({
-                            collection: newPoints,
-                            insertObj: doc
-                        }, (err) => {
-                            cb(err);
-                        });
-                    }, (err, count) => {
-                        callback(err);
-                        changeReferenceValues(callback);
-                        // this.iterateCursor({
-                        //     collection: newPoints,
-                        //     query: {}
-                        // }, (err, doc, cb) => {
-                        //     updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
-                        //         cb(err);
-                        //     });
-                        // }, (err, count) => {
-                        //     callback(err);
-                        // });
-                    });
+                    // callback(err);
+                    changeReferenceValues(callback);
+                    // this.iterateCursor({
+                    //     collection: newPoints,
+                    //     query: {}
+                    // }, (err, doc, cb) => {
+                    //     updateDependencies(doc._oldUpi, doc._newUpi, newPoints, (err, count) => {
+                    //         cb(err);
+                    //     });
+                    // }, (err, count) => {
+                    //     callback(err);
+                    // });
                 });
             });
         });
@@ -2944,12 +2907,11 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
-        const hierarchyCounters = ['Location', 'Equipment', 'Category', 'Reference'];
+        const hierarchyCounters = ['location', 'equipment', 'category', 'reference'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
-            let typeId = type.toLowerCase().split(' ');
-            typeId = typeId.join('');
+            let typeId = type.toLowerCase().split(' ').join('');
             counters.push({
                 _id: typeId,
                 count: (type === 'Device') ? 3145727 : 0,
@@ -2959,7 +2921,7 @@ let Import = class Import extends Common {
         hierarchyCounters.forEach((counter) => {
             counters.push({
                 _id: counter,
-                counter: 0,
+                count: 0,
                 enum: Config.Enums['Hierarchy Types'][counter].enum
             });
         });
@@ -2972,6 +2934,7 @@ let Import = class Import extends Common {
         point.parentNode = 0;
         point.display = '';
         point.tags = [];
+        point.path = [];
         point.meta = {};
         point.nodeType = '';
         point.nodeSubType = '';

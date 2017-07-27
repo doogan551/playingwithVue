@@ -12,7 +12,7 @@ const Counter = class Counter extends Common {
         if (this.isNumber(id)) {
             query.enum = id;
         } else {
-            query._id = id;
+            query._id = id.toLowerCase().split(' ').join('');
         }
         this.findAndModify({
             query: query,

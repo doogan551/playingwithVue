@@ -3098,7 +3098,7 @@ const Point = class Point extends Common {
         let display = this.getDefault(data.display, '');
         let nodeType = this.getDefault(data.nodeType, '');
         let nodeSubType = this.getDefault(data.nodeSubType, '');
-        this.buildNamePath(parentNode, display, (err, Name) => {
+        this.buildPath(parentNode, display, (err, path) => {
             this.findAndModify({
                 query: {
                     _id: upi
@@ -3109,7 +3109,7 @@ const Point = class Point extends Common {
                         display,
                         nodeType,
                         nodeSubType,
-                        Name,
+                        path,
                         _pStatus: 0
                     }
                 }
@@ -3117,17 +3117,20 @@ const Point = class Point extends Common {
         });
     }
 
-    buildNamePath(parentId, display, cb) {
+    buildPath(parentId, display, cb) {
         if (parentId === 0) {
-            return cb(null, display);
+            return cb(null, [display]);
         }
         this.getOne({
             query: {
                 _id: parentId
             }
         }, (err, parent) => {
-            let Name = (parent && (parent.Name + '_')) + display;
-            cb(err, Name);
+            let path = [display];
+            if (!!parent) {
+                path.unshift(...parent.path);
+            }
+            cb(err, path);
         });
     }
 };
