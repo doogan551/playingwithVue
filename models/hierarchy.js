@@ -652,24 +652,25 @@ const Hierarchy = class Hierarchy extends Common {
     checkAllNames(nodes, cb) {
         // if parentId is fake, ignore it
         // change node to normal structure before name check
-        let problems = [];
-        async.eachSeries(nodes, (node, callback) => {
-            if (this.isNumber(node.parentNode)) {
-                this.checkForExistingName(node, node.parentNode, (err, exists) => {
-                    if (!!exists) {
-                        problems.push({
-                            err: 'Name already exists under this parent location',
-                            node: node
-                        });
-                    }
-                    callback(err);
-                });
-            } else {
-                return callback();
-            }
-        }, (err) => {
-            return cb(err || problems);
-        });
+        return cb([]);
+        // let problems = [];
+        // async.eachSeries(nodes, (node, callback) => {
+        //     if (this.isNumber(node.parentNode)) {
+        //         this.checkForExistingName(node, node.parentNode, (err, exists) => {
+        //             if (!!exists) {
+        //                 problems.push({
+        //                     err: 'Name already exists under this parent location',
+        //                     node: node
+        //                 });
+        //             }
+        //             callback(err);
+        //         });
+        //     } else {
+        //         return callback();
+        //     }
+        // }, (err) => {
+        //     return cb(err || problems);
+        // });
     }
 
     checkForExistingName(node, parentNode, cb) {
