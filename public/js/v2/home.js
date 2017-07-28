@@ -3716,7 +3716,7 @@ var dti = {
 
                 return {
                     upi: this._addNodePoint._id,
-                    parentNode: parent.bindings._id(),
+                    parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                     display: obj.display,
                     nodeType: obj.nodeType,
                     nodeSubType: this._addNodePoint['Point Type'].Value
