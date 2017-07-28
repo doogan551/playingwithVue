@@ -3778,9 +3778,9 @@ var dti = {
 
                     if (result.err) {
                         if (typeof result.err === 'string') {
-                            Materialize.toast('Error adding node: ' + result.err, 1000);
+                            Materialize.toast('Error adding node: ' + result.err, 3000);
                         } else {
-                            Materialize.toast('Error adding node: ' + result.err.errmsg, 1000);
+                            Materialize.toast('Error adding node: ' + result.err.errmsg, 3000);
                         }
                     } else {
                         node = manager.createNode(node, parent);
@@ -3804,8 +3804,8 @@ var dti = {
                     let bindings = node.bindings || node;
 
                     manager.bindings.busy(false);
-                    manager.markNodeSaved(node, bindings._id(), response._id);
-                    bindings._id(response._id);
+                    manager.markNodeSaved(node, bindings._id(), response[0].newNode._id);
+                    // bindings._id(response._id);
                     dti.log(response);
                     Materialize.toast('Point added', 1000);
                 });
@@ -3817,8 +3817,8 @@ var dti = {
                 //         node.parentNode(newId);
                 //     }
                 // });
-                dti.log('setting parentNode from', oldId, 'to', newId);
-                node.bindings.parentNode(newId);
+                dti.log('setting _id from', oldId, 'to', newId);
+                node.bindings._id(newId);
 
                 this.nodeMatrix[newId] = node;
                 delete this.nodeMatrix[oldId];
