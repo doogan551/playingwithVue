@@ -785,6 +785,10 @@ var dti = {
 
                 dti.fire('closeWindow', self);
 
+                if (self.onCloseFn) {
+                    self.onCloseFn();
+                }
+
                 if (self.$iframe && self.$iframe[0].contentWindow) {
                     if (self.$iframe[0].contentWindow.destroy) {
                         self.$iframe[0].contentWindow.destroy();
@@ -991,6 +995,9 @@ var dti = {
                 id: windowId,
                 getWindow() {
                     return self;
+                },
+                onClose(fn) {
+                    self.onCloseFn = fn;
                 }
             });
 
@@ -3107,7 +3114,7 @@ var dti = {
                 });
 
                 this.initBindings();
-                this.initDOM();
+                this.initDOM(config);
 
                 this.getDefaultTree(() => {
                     config.getWindow().bindings.loading(false);
@@ -3147,7 +3154,7 @@ var dti = {
                 return ret;
             }
 
-            initDOM() {
+            initDOM(config) {
                 // var bindings = this.bindings;
                 let manager = this;
                 let getNode = (key, opt) => {
@@ -3200,16 +3207,21 @@ var dti = {
                                         nodeType: 'Category'
                                     })
                                 },
-                                point: {
-                                    name: 'Point',
-                                    callback: makeHandler({
-                                        nodeType: 'Point'
-                                    })
-                                },
                                 reference: {
                                     name: 'Reference',
                                     callback: makeHandler({
                                         nodeType: 'Reference'
+                                    })
+                                }
+                            }
+                        }, 
+                        insert: {
+                            name: 'Insert',
+                            items: {
+                                point: {
+                                    name: 'Point',
+                                    callback: makeHandler({
+                                        nodeType: 'Point'
                                     })
                                 },
                                 application: {
@@ -3273,6 +3285,10 @@ var dti = {
                 });
 
                 this.$container.find('select').material_select();
+
+                config.onClose(() => {
+                    $.contextMenu('destroy', '.dtcollapsible-header');
+                });
             }
 
             initBindings() {
@@ -5684,6 +5700,9 @@ var dti = {
         }), {
             addNode() {
                 dti.hierarchy.manager.addNode();
+            },
+            chooseNodePoint() {
+                dti.hierarchy.manager.bindings.chooseNodePoint();
             }
         }),
         globalSearch: {
