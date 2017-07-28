@@ -3622,6 +3622,9 @@ var dti = {
                 dti.bindings.hierarchy.error('');
                 dti.bindings.hierarchy.newNodeDisplay('');
                 dti.bindings.hierarchy.newNodePointName('');
+                dti.bindings.hierarchy.newNodeType('');
+                dti.bindings.hierarchy.newNodeSubType('');
+
 
                 this._addNodeConfig = config;
                 // this._addNodeParent = config.parent;
@@ -3754,14 +3757,19 @@ var dti = {
                 }).done((response) => {
                     // obj.new(false);
                     let bindings = node.bindings || node;
+                    let result = response[0];
                     manager.bindings.busy(false);
 
-                    if (response.err) {
-                        Materialize.toast('Error adding node: ' + response.err[0].err, 1000);
+                    if (result.err) {
+                        if (typeof result.err === 'string') {
+                            Materialize.toast('Error adding node: ' + result.err, 1000);
+                        } else {
+                            Materialize.toast('Error adding node: ' + result.err.errmsg, 1000);
+                        }
                     } else {
                         node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), response[0].newNode._id);
-                        node.bindings._id(response[0].newNode._id);
+                        manager.markNodeSaved(node, node.bindings._id(), result.newNode._id);
+                        node.bindings._id(result.newNode._id);
                         // Materialize.toast('Node added', 1000);
                     }
                 });
