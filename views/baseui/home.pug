@@ -489,7 +489,10 @@ html
 
     script#navigatorModalTemplate(type='text/html')
         .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
-            .modal-header(data-bind="text: modalText")
+            .modal-header
+                .modalTitle(data-bind="text: modalText")
+                a.modal-action.modal-close(href="#")
+                    i.material-icons.right-align close
             .modal-content.modal-content-no-padding
             .modal-footer(data-bind="css: mode")
                 span.modalControls.filterActions

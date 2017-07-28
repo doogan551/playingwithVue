@@ -3150,19 +3150,28 @@ var dti = {
             initDOM() {
                 // var bindings = this.bindings;
                 let manager = this;
-                let makeHandler = (config) => {
-
-                    return (key, opt) => {
-                        let $target = opt.$trigger;
+                let getNode = (key, opt) => {
+                    let $target = opt.$trigger;
+                    if ($target) {
                         let context = ko.contextFor($target[0]);
                         let node = manager.getNodeByContext(context);
+                        return node;
+                    }
 
-                        config.parentNode = node;
+                    dti.log('no node found', key, opt);
+                };
+                let makeHandler = (config) => {
+                    return (key, opt) => {
+                        let node = getNode(key, opt);
 
-                        if (!config.cb) {
-                            manager.showAddNodeModal(config);
-                        } else {
-                            config.cb.call(manager, config);
+                        if (node) {
+                            config.parentNode = node;
+
+                            if (!config.cb) {
+                                manager.showAddNodeModal(config);
+                            } else {
+                                config.cb.call(manager, config);
+                            }
                         }
                     };
                 };
@@ -3211,32 +3220,37 @@ var dti = {
                                 }
                             }
                         },
-                        // select: {
-                        //     name: 'Select',
-                        //     callback: makeHandler({
-                        //         cb: manager.bindings.loadNode
-                        //     })
-                        // },
-                        // cut: {
-                        //     name: 'Cut',
-                        //     callback: makeHandler({
-                        //         cb: manager.cutNode
-                        //     })
-                        // },
-                        // paste: {
-                        //     name: 'Paste',
-                        //     callback: makeHandler({
-                        //         cb: manager.pasteNode
-                        //     })
-                        // },
+                        select: {
+                            name: 'Select',
+                            callback: makeHandler({
+                                cb: manager.bindings.loadNode
+                            })
+                        },
+                        cut: {
+                            name: 'Cut',
+                            callback: makeHandler({
+                                cb: manager.cutNode
+                            })
+                        },
+                        paste: {
+                            name: 'Paste',
+                            callback: makeHandler({
+                                cb: manager.pasteNode
+                            }),
+                            // visible: (key, opt) => {
+                            //     let node = getNode(key, opt);
+
+                            //     return manager.isValidPaste(node);
+                            // }
+                            visible: makeHandler({
+                                cb: manager.isValidPaste
+                            })
+                        },
                         delete: {
                             name: 'Delete',
                             callback: makeHandler({
                                 cb: manager.deleteBranch
-                            }),
-                            disabled: () => {
-                                return manager.getCutNode();
-                            }
+                            })
                         }
                         // application: {
                         //     name: 'Application',
@@ -3472,15 +3486,19 @@ var dti = {
                 });
             }
 
-
             // methods
             cutNode(config) {
-                dti.log(this);
                 this._cutNode = config.parentNode;
             }
 
             getCutNode() {
                 return this._cutNode || null;
+            }
+
+            isValidPaste(node) {
+                let cutNode = this.getCutNode();
+
+                return cutNode && node !== cutNode;
             }
 
             pasteNode(config) {
@@ -3493,7 +3511,6 @@ var dti = {
 
                 dti.bindings.hierarchy.newNodePointName(point.name);
                 manager._addNodePoint = point;
-                dti.log(point);
             }
 
             chooseNodePoint() {
@@ -3509,7 +3526,8 @@ var dti = {
                 dti.navigator.showNavigator({
                     pointTypes: pointTypes,
                     showInactive: dti.bindings.hierarchy.manager._addNodeConfig.nodeType !== 'Reference',
-                    callback: dti.bindings.hierarchy.manager.handleChoosePoint
+                    callback: dti.bindings.hierarchy.manager.handleChoosePoint,
+                    disableNewPoint: true
                 });
             }
 
@@ -3744,7 +3762,6 @@ var dti = {
                         node = manager.createNode(node, parent);
                         manager.markNodeSaved(node, node.bindings._id(), response[0].newNode._id);
                         node.bindings._id(response[0].newNode._id);
-                        dti.log(response);
                         // Materialize.toast('Node added', 1000);
                     }
                 });
