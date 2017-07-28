@@ -3233,7 +3233,7 @@ var dti = {
                             }
                         },
                         select: {
-                            name: 'Select',
+                            name: 'select',
                             callback: makeHandler({
                                 cb: manager.bindings.loadNode
                             })
