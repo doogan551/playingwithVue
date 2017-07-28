@@ -3686,7 +3686,6 @@ var dti = {
                     tags: [],
                     meta: {},
                     refNode: obj.refNode || 0,
-                    Name: obj.display,
                     libraryId: 0
                 };
             }
