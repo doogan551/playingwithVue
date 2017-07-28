@@ -3197,12 +3197,12 @@ var dti = {
                                         nodeType: 'Point'
                                     })
                                 },
-                                // reference: {
-                                //     name: 'Reference',
-                                //     callback: makeHandler({
-                                //         nodeType: 'Reference'
-                                //     })
-                                // },
+                                reference: {
+                                    name: 'Reference',
+                                    callback: makeHandler({
+                                        nodeType: 'Reference'
+                                    })
+                                },
                                 application: {
                                     name: 'Application',
                                     callback: makeHandler({
@@ -3745,7 +3745,7 @@ var dti = {
                         manager.markNodeSaved(node, node.bindings._id(), response[0].newNode._id);
                         node.bindings._id(response[0].newNode._id);
                         dti.log(response);
-                        Materialize.toast('Node added', 1000);
+                        // Materialize.toast('Node added', 1000);
                     }
                 });
             }
