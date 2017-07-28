@@ -5702,7 +5702,7 @@ var dti = {
                 dti.hierarchy.manager.addNode();
             },
             chooseNodePoint() {
-                dti.hierarchy.manager.bindings.chooseNodePoint();
+                dti.hierarchy.manager.chooseNodePoint();
             }
         }),
         globalSearch: {
