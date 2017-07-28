@@ -1252,9 +1252,7 @@ let Import = class Import extends Common {
             index: {
                 Name: 1
             },
-            options: {
-                unique: true
-            },
+            options: {},
             collection: 'new_points'
         }, {
             index: {
