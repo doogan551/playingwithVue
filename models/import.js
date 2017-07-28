@@ -1150,9 +1150,7 @@ let Import = class Import extends Common {
             index: {
                 Name: 1
             },
-            options: {
-                unique: true
-            },
+            options: {},
             collection: pointsCollection
         }, {
             index: {
@@ -2907,7 +2905,7 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
-        const hierarchyCounters = ['location', 'equipment', 'category', 'reference'];
+        const hierarchyCounters = ['Location', 'Equipment', 'Category', 'Reference'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
@@ -2920,7 +2918,7 @@ let Import = class Import extends Common {
         }
         hierarchyCounters.forEach((counter) => {
             counters.push({
-                _id: counter,
+                _id: counter.toLowerCase(),
                 count: 0,
                 enum: Config.Enums['Hierarchy Types'][counter].enum
             });
