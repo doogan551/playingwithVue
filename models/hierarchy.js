@@ -227,12 +227,7 @@ const Hierarchy = class Hierarchy extends Common {
         let terms = this.getDefault(data.terms, []);
         let pipeline = [];
 
-        terms = terms.map((term) => {
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
-            }
-            return new RegExp('[.]*' + term + '[.]*', 'i');
-        });
+        terms = this.buildSearchTerms(terms);
 
         pipeline.push(this.getPathLookup());
 
@@ -309,6 +304,15 @@ const Hierarchy = class Hierarchy extends Common {
             }, (err) => {
                 cb(err, descendants);
             });
+        });
+    }
+
+    buildSearchTerms(terms) {
+        return terms.map((term) => {
+            if (term.match(/"/)) {
+                return term.replace(/"/g, '');
+            }
+            return new RegExp('[.]*' + term + '[.]*', 'i');
         });
     }
 
@@ -685,6 +689,37 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, count) => {
             return cb(err, (count > 0));
         });
+    }
+
+    getFilteredPoints(data, cb) {
+        let terms = data.terms;
+        let pointTypes = data.pointTypes;
+
+        this.aggregate({
+            pipeline: [{
+                $match: {
+                    $and: [{
+                        path: {
+                                $all: this.buildSearchTerms(terms)
+                            }
+                    },
+                    {
+                        'Point Type.Value': {
+                                $in: pointTypes
+                            }
+                    }
+                    ]
+                }
+            }, {
+                $project: {
+                    _id: 1,
+                    'Point Type.Value': 1,
+                    path: 1,
+                    display: 1,
+                    parentNode: 1
+                }
+            }]
+        }, cb);
     }
 
 };

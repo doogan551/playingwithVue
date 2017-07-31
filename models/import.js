@@ -1126,6 +1126,15 @@ let Import = class Import extends Common {
     updateIndexes(callback) {
         var indexes = [{
             index: {
+                'path': 1,
+                'Point Type.Value': 1
+            },
+            options: {
+                name: 'hierarchyPathAndType'
+            },
+            collection: pointsCollection
+        }, {
+            index: {
                 name1: 1,
                 name2: 1,
                 name3: 1,
