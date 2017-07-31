@@ -61,11 +61,25 @@ var dtiUtility = {
             });
         }
 
-        dtiUtility.initKnockout();
         dtiUtility.initEventListener();
     },
 
-    initKnockout: () => {
+    initKnockout: (() => {
+        var utils = {
+            formatInputField: (fieldValue, stripSpaces, replaceDoubleSpaces) => {
+                let result = fieldValue;
+
+                if (stripSpaces && !!result) {
+                    result = result.trim();
+                }
+                if (replaceDoubleSpaces && !!result) {
+                    result = result.replace(/ {2,}/g, ' ');
+                }
+
+                return result;
+            }
+        };
+
         ko.bindingHandlers.diPointName = {
             init: function (element, valueAccessor) {
                 var pointPathArray = ko.unwrap(valueAccessor()),
@@ -81,8 +95,30 @@ var dtiUtility = {
                 $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
                 // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
             }
-        }
-    },
+        };
+
+        ko.bindingHandlers.diTextInput = {
+            init: function (element, valueAccessor, allBindingsAccessor) {
+                var fieldValue = ko.unwrap(valueAccessor()),
+                    allBindings = allBindingsAccessor(),
+                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
+                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
+                    $element = $(element);
+
+                $element.val(utils.formatInputField(fieldValue, stripSpaces, stripDoubleSpace));
+            },
+            update: function (element, valueAccessor, allBindingsAccessor) {
+                var fieldValue = ko.unwrap(valueAccessor()),
+                    allBindings = allBindingsAccessor(),
+                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
+                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
+                    $element = $(element);
+
+                $element.val(utils.formatInputField(fieldValue, stripSpaces, stripDoubleSpace));
+            }
+        };
+
+    })(),
 
     defaultHandler: function (e) {
         console.log('Default handler:', e);
