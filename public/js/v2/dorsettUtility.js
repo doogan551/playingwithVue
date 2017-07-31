@@ -66,17 +66,21 @@ var dtiUtility = {
 
     initKnockout: (() => {
         var utils = {
-            formatInputField: (fieldValue, stripSpaces, replaceDoubleSpaces) => {
-                let result = fieldValue;
+            formatInputField: (element, valueAccessor, allBindingsAccessor) => {
+                var fieldValue = ko.unwrap(valueAccessor()),
+                    allBindings = allBindingsAccessor(),
+                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
+                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
+                    $element = $(element);
 
-                if (stripSpaces && !!result) {
-                    result = result.trim();
+                if (stripSpaces && !!fieldValue) {
+                    fieldValue = fieldValue.trim();
                 }
-                if (replaceDoubleSpaces && !!result) {
-                    result = result.replace(/ {2,}/g, ' ');
+                if (stripDoubleSpace && !!fieldValue) {
+                    fieldValue = fieldValue.replace(/ {2,}/g, ' ');
                 }
 
-                return result;
+                $element.val(fieldValue);
             }
         };
 
@@ -99,22 +103,10 @@ var dtiUtility = {
 
         ko.bindingHandlers.diTextInput = {
             init: function (element, valueAccessor, allBindingsAccessor) {
-                var fieldValue = ko.unwrap(valueAccessor()),
-                    allBindings = allBindingsAccessor(),
-                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
-                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
-                    $element = $(element);
-
-                $element.val(utils.formatInputField(fieldValue, stripSpaces, stripDoubleSpace));
+                utils.formatInputField(element, valueAccessor, allBindingsAccessor);
             },
             update: function (element, valueAccessor, allBindingsAccessor) {
-                var fieldValue = ko.unwrap(valueAccessor()),
-                    allBindings = allBindingsAccessor(),
-                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
-                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
-                    $element = $(element);
-
-                $element.val(utils.formatInputField(fieldValue, stripSpaces, stripDoubleSpace));
+                utils.formatInputField(element, valueAccessor, allBindingsAccessor);
             }
         };
 
