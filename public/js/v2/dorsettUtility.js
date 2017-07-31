@@ -61,7 +61,27 @@ var dtiUtility = {
             });
         }
 
+        dtiUtility.initKnockout();
         dtiUtility.initEventListener();
+    },
+
+    initKnockout: () => {
+        ko.bindingHandlers.diPointName = {
+            init: function (element, valueAccessor) {
+                var pointPathArray = ko.unwrap(valueAccessor()),
+                    $element = $(element);
+
+                $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
+                // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+            },
+            update: function (element, valueAccessor) {
+                var pointPathArray = ko.unwrap(valueAccessor()),
+                    $element = $(element);
+
+                $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
+                // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+            }
+        }
     },
 
     defaultHandler: function (e) {

@@ -3214,7 +3214,7 @@ var dti = {
                                     })
                                 }
                             }
-                        }, 
+                        },
                         insert: {
                             name: 'Insert',
                             items: {
@@ -6195,14 +6195,6 @@ var dti = {
                     } else {
                         dti.animations.fadeOut($element);
                     }
-                }
-            };
-
-            ko.bindingHandlers.dynamicPointName = {
-                update: function (element, valueAccessor) {
-                    let pointPathArray = ko.unwrap(valueAccessor()),
-                        $element = $(element);
-                    $element.text(dti.workspaceManager.config.Utility.getPointName(pointPathArray));
                 }
             };
 
