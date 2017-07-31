@@ -6788,7 +6788,7 @@ gpl.BlockManager = function (manager) {
                 }
             } else if (block.upi && !isNaN(block.upi)) {
                 pointRef = gpl.getBlockPointRef(block);
-                console.log("    - - - - - - - - -   bmSelf.registerBlock()  - - - - - - - - - - " + block.upi);
+                // console.log("    - - - - - - - - -   bmSelf.registerBlock()  - - - - - - - - - - " + block.upi);
                 // block.setPointData(unpersistedPoint[0], true);
             }
         }
@@ -9295,6 +9295,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.initKnockout = function () {
+        dtiUtility.initKnockout();
         ko.applyBindings(managerSelf.bindings);
     };
 

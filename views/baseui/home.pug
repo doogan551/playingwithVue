@@ -175,7 +175,7 @@ html
                         // ko with: value
                         a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
                             i.center-align(data-bind="css: iconClass, text: iconText")
-                            span(data-bind="text: title")             
+                            span(data-bind="text: title")
                         // /ko
                         // /ko
 
@@ -210,7 +210,7 @@ html
                 .modal-content
                     h4 Select Point
 
-                    
+
 
                 .modal-footer
                     button.btn.blue-grey.waves-effect Select
@@ -227,7 +227,7 @@ html
                     .row
                         .input-field.col.s3
                             select(data-bind="options: hierarchy.availableTypes, value: hierarchy.newNodeSubType")
-                            label Type                  
+                            label Type
                     // /ko
 
                     // ko if: hierarchy.needsPoint() === true
@@ -258,7 +258,7 @@ html
                         // /ko
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
 
             //- #desktop
                 .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
@@ -358,20 +358,20 @@ html
 
                 .locSearch
                     i.material-icons search
-                    input#locationsearch(type='search', data-bind="textInput: $root.searchString")    
-                
+                    input#locationsearch(type='search', data-bind="textInput: $root.searchString")
+
             //- button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
             //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
 
             .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}]")
-                
+
 
                 //- // k0o if: children().length !== 0
                 #tree.pane(data-bind="css: treeStyle")
                     ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
 
-                    .treeBar 
+                    .treeBar
                         .card.blue-grey.darken-2
                             .card-content.white-text
                                 span Dark Mode
@@ -393,7 +393,7 @@ html
                     div(data-bind="text: currNodeType")
                     div(data-bind="text: currNodeSubType")
 
-                    
+
             script#node(type='text/html')
                 //- .node
                 //-     ul.collapsible
@@ -468,7 +468,7 @@ html
             .modal-footer(data-bind="css: mode")
                 span.modalControls.filterActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: doAcceptFilter") Accept Filter
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
                 span.modalControls.createActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
@@ -489,7 +489,7 @@ html
                         label.label-tight(data-bind="attr: { for: id() + '_showInactive' }") Show Inactive
                     p.pointType
                         input.filled-in(type='checkbox', data-bind="checked: showDeleted, attr: { id: id() + '_showDeleted' }")
-                        label.label-tight(data-bind="attr: { for: id() + '_showDeleted' }") Show Deleted                                    
+                        label.label-tight(data-bind="attr: { for: id() + '_showDeleted' }") Show Deleted
                     a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
                         i.material-icons.left clear
                         | Clear Names
@@ -506,17 +506,17 @@ html
                         input(type='text', data-bind="textInput: name2, attr: { id: id() + '_name2' }")
                         label(data-bind="updateLabel: name2, attr: { for: id() + '_name2' }") Name 2
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }, visible: name2() !== '' ")
-                            i.material-icons.suffix clear                                    
+                            i.material-icons.suffix clear
                     .name3.input-field.col
                         input(type='text', data-bind="textInput: name3, attr: { id: id() + '_name3' }")
                         label(data-bind="updateLabel: name3, attr: { for: id() + '_name3' }") Name 3
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }, visible: name3() !== '' ")
-                            i.material-icons.suffix clear                                    
+                            i.material-icons.suffix clear
                     .name4.input-field.col
                         input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
                         label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }, visible: name4() !== '' ")
-                            i.material-icons.suffix clear                                                                                                                                       
+                            i.material-icons.suffix clear
                     //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
 
@@ -584,7 +584,7 @@ html
                 i(data-bind="text: iconText, css: iconClass")
                 span(data-bind="text: title")
 
-    script#taskbarMenuTemplate(type='text/html')                    
+    script#taskbarMenuTemplate(type='text/html')
         // ko stopBindings: true
         .slideDownMenu.white.z-depth-1
             // ko if: singleton() === false
@@ -647,4 +647,4 @@ html
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/lib/mbox.js')
     script(type='text/javascript', src='/js/v2/home.js')
-    script(type='text/javascript', src='/js/v2/dorsettUtility.js')        
+    script(type='text/javascript', src='/js/v2/dorsettUtility.js')
