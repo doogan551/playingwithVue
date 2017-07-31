@@ -3032,6 +3032,7 @@ var dti = {
                     parentNode: 0,
                     nodeType: '',
                     nodeSubType: '',
+                    path: [],
                     refNode: 0,
 
                     children: [],
@@ -3795,7 +3796,7 @@ var dti = {
                         }
                     } else {
                         node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), result.newNode._id);
+                        manager.markNodeSaved(node, node.bindings._id(), result);
                         node.bindings._id(result.newNode._id);
                         // Materialize.toast('Node added', 1000);
                     }
@@ -3815,21 +3816,23 @@ var dti = {
                     let bindings = node.bindings || node;
 
                     manager.bindings.busy(false);
-                    manager.markNodeSaved(node, bindings._id(), response[0].newNode._id);
+                    manager.markNodeSaved(node, bindings._id(), response[0]);
                     // bindings._id(response._id);
                     dti.log(response);
                     Materialize.toast('Point added', 3000);
                 });
             }
 
-            markNodeSaved(node, oldId, newId) {
+            markNodeSaved(node, oldId, data) {
                 // this.bindings.forEachNode((node) => {
                 //     if (node.parentNode() === oldId) {
                 //         node.parentNode(newId);
                 //     }
                 // });
+                let newId = data.newNode._id;
                 dti.log('setting _id from', oldId, 'to', newId);
                 node.bindings._id(newId);
+                node.bindings.path(data.newNode.path);
 
                 this.nodeMatrix[newId] = node;
                 delete this.nodeMatrix[oldId];
