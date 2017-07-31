@@ -389,9 +389,20 @@ html
                 //- // /ko
 
                 .treeOptions
-                    div(data-bind="text: currNodeDisplay")
-                    div(data-bind="text: currNodeType")
-                    div(data-bind="text: currNodeSubType")
+                    // ko if: currNodeDisplay() !== ''
+                    .row
+                        .col.s2 Display:
+                        .col.s10(data-bind="text: currNodeDisplay")
+                    .row
+                        .col.s2 Type:
+                        .col.s10(data-bind="text: currNodeType")
+                    .row
+                        .col.s2 SubType:
+                        .col.s10(data-bind="text: currNodeSubType")
+                    .row
+                        .col.s2 Path:
+                        .col.s10(data-bind="text: currNodePath")
+                    // /ko
 
                     
             script#node(type='text/html')
