@@ -3565,7 +3565,8 @@ var dti = {
                     display: bindings.newNodeDisplay(),
                     nodeType: config.nodeType,
                     nodeSubType: bindings.newNodeSubType(),
-                    parentNode: config.parentNode.bindings._id()
+                    parentNode: config.parentNode.bindings._id(),
+                    fetched: true
                 };
 
                 if (config.nodeType === 'Reference') {
@@ -3811,24 +3812,17 @@ var dti = {
                     url: '/api/points/addPointToHierarchy',
                     data: data
                 }).done((response) => {
-                    // obj.new(false);
                     node = manager.createNode(node, parent);
                     let bindings = node.bindings || node;
 
                     manager.bindings.busy(false);
                     manager.markNodeSaved(node, bindings._id(), response[0]);
-                    // bindings._id(response._id);
                     dti.log(response);
                     Materialize.toast('Point added', 3000);
                 });
             }
 
             markNodeSaved(node, oldId, data) {
-                // this.bindings.forEachNode((node) => {
-                //     if (node.parentNode() === oldId) {
-                //         node.parentNode(newId);
-                //     }
-                // });
                 let newId = data.newNode._id;
                 dti.log('setting _id from', oldId, 'to', newId);
                 node.bindings._id(newId);
