@@ -9295,7 +9295,6 @@ gpl.Manager = function () {
     };
 
     managerSelf.initKnockout = function () {
-        dtiUtility.initKnockout();
         ko.applyBindings(managerSelf.bindings);
     };
 

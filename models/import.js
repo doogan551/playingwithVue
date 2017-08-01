@@ -2056,9 +2056,57 @@ let Import = class Import extends Common {
                 } else {
                     cb();
                 }
-            };
+            },
+            cleanupBlockFields = () => {
+            let oldPrecision,
+                chars,
+                decimals,
+                block,
+                i;
+
+            for (i = 0; i < blocks.length; i++) {
+                block = blocks[i];
+
+                if (block.presentValueVisible !== undefined) { // convert to Bool
+                    block.presentValueVisible = (block.presentValueVisible === true || block.presentValueVisible === 1);
+                }
+
+                if (block.presentvalueVisible !== undefined) {
+                    block.presentValueVisible = (block.presentvalueVisible === true || block.presentvalueVisible === 1);
+                    delete block.presentvalueVisible;
+                }
+
+                if (block.labelVisible !== undefined) { // convert to Bool
+                    block.labelVisible = (block.labelVisible === true || block.labelVisible === 1);
+                }
+
+                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== 'object')) {
+                    oldPrecision = block.precision;
+                    chars = 3; // defaults
+                    decimals = 1; // defaults
+                    block.precision = {};
+
+                    if (!isNaN(oldPrecision)) {
+                        if (String(oldPrecision).indexOf('.') > -1) {
+                            if (!isNaN(String(oldPrecision).split('.')[0])) {
+                                chars = parseInt(String(oldPrecision).split('.')[0], 10);
+                            }
+                            if (!isNaN(String(oldPrecision).split('.')[1])) {
+                                decimals = parseInt(String(oldPrecision).split('.')[1], 10);
+                            }
+                        } else {
+                            chars = oldPrecision;
+                            decimals = 0;
+                        }
+                    }
+                    block.precision.characters = chars;
+                    block.precision.decimals = decimals;
+                }
+            }
+        };
 
         setGPLPointData();
+        cleanupBlockFields();
     }
     updateReferences(point, mainCallback) {
         var uniquePID = (pointRefs) => {

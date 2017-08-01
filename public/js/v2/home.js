@@ -3032,6 +3032,7 @@ var dti = {
                     parentNode: 0,
                     nodeType: '',
                     nodeSubType: '',
+                    path: [],
                     refNode: 0,
 
                     children: [],
@@ -3303,6 +3304,7 @@ var dti = {
                     currNodeDisplay: '',
                     currNodeType: '',
                     currNodeSubType: '',
+                    currNodePath: '',
                     treeStyle: 'style3',
                     treeStyles: ['style1', 'style2', 'style3'],
                     startEntry: 1,
@@ -3344,16 +3346,19 @@ var dti = {
 
                     loadNode(event) {
                         let node = manager.getNodeByContext(ko.contextFor(event.target));
+                        let pointName = dti.utility.getConfig('Utility.getPointName', [node.bindings.path()]);
 
                         manager.bindings.currNodeDisplay(node.bindings.display());
                         manager.bindings.currNodeType(node.bindings.nodeType());
                         manager.bindings.currNodeSubType(node.bindings.nodeSubType());
+                        manager.bindings.currNodePath(pointName);
+                        // manager.bindings.currNodePath(node.bindings.nodePath());
 
                         event.stopPropagation();
                     },
 
                     getBranch(event) {
-                        let obj = manager.getNodeByContext(ko.contextFor(event.target));
+                        let obj = manager.getNodeByBindings(ko.dataFor(event.target));
 
                         if (obj.bindings.fetched() === false) {
                             obj.bindings.fetched(true);
@@ -3550,11 +3555,18 @@ var dti = {
             buildNodeFromModalOptions() {
                 let config = this._addNodeConfig;
                 let bindings = dti.bindings.hierarchy;
+                let point = this._addNodePoint;
+
+                if (bindings.needsPoint()) {
+                    bindings.newNodeSubType(point.pointType);
+                }
+
                 let ret = {
                     display: bindings.newNodeDisplay(),
                     nodeType: config.nodeType,
                     nodeSubType: bindings.newNodeSubType(),
-                    parentNode: config._id
+                    parentNode: config.parentNode.bindings._id(),
+                    fetched: true
                 };
 
                 if (config.nodeType === 'Reference') {
@@ -3609,6 +3621,7 @@ var dti = {
             addNode() {
                 let valid = this.validateNewNodeOptions();
                 let config = this._addNodeConfig;
+                let point = this._addNodePoint;
                 let parent = config.parentNode;
                 let manager = this;
 
@@ -3784,7 +3797,7 @@ var dti = {
                         }
                     } else {
                         node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), result.newNode._id);
+                        manager.markNodeSaved(node, node.bindings._id(), result);
                         node.bindings._id(result.newNode._id);
                         // Materialize.toast('Node added', 1000);
                     }
@@ -3799,26 +3812,21 @@ var dti = {
                     url: '/api/points/addPointToHierarchy',
                     data: data
                 }).done((response) => {
-                    // obj.new(false);
                     node = manager.createNode(node, parent);
                     let bindings = node.bindings || node;
 
                     manager.bindings.busy(false);
-                    manager.markNodeSaved(node, bindings._id(), response[0].newNode._id);
-                    // bindings._id(response._id);
+                    manager.markNodeSaved(node, bindings._id(), response[0]);
                     dti.log(response);
-                    Materialize.toast('Point added', 1000);
+                    Materialize.toast('Point added', 3000);
                 });
             }
 
-            markNodeSaved(node, oldId, newId) {
-                // this.bindings.forEachNode((node) => {
-                //     if (node.parentNode() === oldId) {
-                //         node.parentNode(newId);
-                //     }
-                // });
+            markNodeSaved(node, oldId, data) {
+                let newId = data.newNode._id;
                 dti.log('setting _id from', oldId, 'to', newId);
                 node.bindings._id(newId);
+                node.bindings.path(data.newNode.path);
 
                 this.nodeMatrix[newId] = node;
                 delete this.nodeMatrix[oldId];
@@ -5293,9 +5301,12 @@ var dti = {
             constructor(config) {
                 this.emptyFn = () => {};
                 this.exposedMethods = ['handleChoosePoint', 'show'];
+                let selector = this;
 
                 dti.forEachArray(this.exposedMethods, (method) => {
-                    dti.pointSelector[method] = this[method];
+                    dti.pointSelector[method] = function callMethod() {
+                        this[method].apply(selector, arguments);
+                    };
                 });
 
                 this.$modal = $('#pointSelectorModal');
@@ -5303,9 +5314,39 @@ var dti = {
             }
 
             initBindings() {
-                dti.bindings.pointSelector = {
-                    handleChoosePoint: this.handleChoosePoint
-                };
+                this.bindings = ko.viewmodel.fromModel({
+                    searchString: '',
+                    busy: false
+                });
+
+                this.bindings.handleChoosePoint = this.handleChoosePoint;
+
+                this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
+                    throttle: 1000
+                });
+
+                this.bindings.searchInput.subscribe((val) => {
+                    this.search(val);
+                });
+
+                dti.bindings.pointSelector = this.bindings;
+            }
+
+            search(terms) {
+                if (terms !== '') {
+                    this.bindings.busy(true);
+                    this.ajax({
+                        url: '/api/hierarchy/search',
+                        data: {
+                            terms: terms.split(',')
+                        }
+                    }).done((results) => {
+                        this.rebuildTree(results);
+                        this.bindings.busy(false);
+                    });
+                } else {
+                    this.getDefaultTree(null, true);
+                }
             }
 
 
@@ -5318,7 +5359,11 @@ var dti = {
 
             show(config) {
                 dti.log(config);
-                this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
+                if (typeof config === 'object') {
+                    this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
+                } else {
+                    //string
+                }
                 this.$modal.openModal();
             }
         },
@@ -5375,7 +5420,7 @@ var dti = {
                     'debug': true
                 },
                 callbacks = {
-                    showPointSelector: function() {
+                    showPointSelectorOld: function() {
                         var sourceWindowId = config._windowId,
                             callback = function(data) {
                                 dti.messaging.sendMessage({
@@ -5392,7 +5437,7 @@ var dti = {
 
                         dti.navigator.showNavigator(config);
                     },
-                    showPointSelectorNew: function() {
+                    showPointSelector: function() {
                         var sourceWindowId = config._windowId,
                             callback = function(data) {
                                 dti.messaging.sendMessage({
@@ -5816,7 +5861,8 @@ var dti = {
             if (object.standalone()) {
                 dti.bindings.startMenuClick(object);
             } else {
-                dti.bindings.showNavigator(object.group());
+                dti.pointSelector.show(object.group());
+                // dti.bindings.showNavigator(object.group());
             }
         },
         showNavigator: function(group, isStartMenu) {
