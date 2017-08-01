@@ -3198,7 +3198,7 @@ var dti = {
                             if (!config.cb) {
                                 manager.showAddNodeModal(config);
                             } else {
-                                config.cb.call(manager, config);
+                                return config.cb.call(manager, config);
                             }
                         }
                     };
@@ -3255,10 +3255,9 @@ var dti = {
                         },
                         open: {
                             name: 'Open',
-                            visible: true,
-                            // visible: makeHandler({    // TODO  not functioning correctly
-                            //     cb: manager.isValidOpenAction
-                            // }),
+                            visible: makeHandler({    
+                                cb: manager.isValidOpenAction
+                            }),
                             callback: makeHandler({
                                 cb: manager.handleOpenNode
                             })
@@ -3280,11 +3279,6 @@ var dti = {
                             callback: makeHandler({
                                 cb: manager.pasteNode
                             }),
-                            // visible: (key, opt) => {
-                            //     let node = getNode(key, opt);
-
-                            //     return manager.isValidPaste(node);
-                            // }
                             visible: makeHandler({
                                 cb: manager.isValidPaste
                             })
@@ -3542,23 +3536,22 @@ var dti = {
                 return this._cutNode || null;
             }
 
-            isValidPaste(node) {
+            isValidPaste(cfg) {
                 let cutNode = this.getCutNode();
 
-                return cutNode && node !== cutNode;
+                return cutNode && cfg && cfg.parentNode !== cutNode;
             }
 
-            isValidOpenAction(node) {
+            isValidOpenAction(cfg) {
                 let answer = false,
                     validNodetypesToOpen = ["Reference", "Point", "Application"];
 
-                if (node) {
-                    if (validNodetypesToOpen.indexOf(node.parentNode.defaultConfig.nodeType) !== -1) {
+                if (cfg) {
+                    if (validNodetypesToOpen.indexOf(cfg.parentNode.bindings.nodeType()) !== -1) {
                         answer = true;
                     }
                 }
 
-                console.log(" - - - - - -    " + node.parentNode.defaultConfig.nodeType + " = " + answer);
                 return answer;
             }
 
