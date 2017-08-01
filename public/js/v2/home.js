@@ -3178,8 +3178,12 @@ var dti = {
                     let $target = opt.$trigger;
                     if ($target) {
                         let context = ko.contextFor($target[0]);
-                        let node = manager.getNodeByContext(context);
-                        return node;
+
+                        //sometimes after delete there's no context (element was removed?)
+                        if (context) {
+                            let node = manager.getNodeByContext(context);
+                            return node;
+                        }
                     }
 
                     dti.log('no node found', key, opt);
@@ -3367,14 +3371,19 @@ var dti = {
                         manager.bindings.currNodeDisplay(node.bindings.display());
                         manager.bindings.currNodeType(node.bindings.nodeType());
                         manager.bindings.currNodeSubType(node.bindings.nodeSubType());
-                        manager.bindings.currNodePath(pointName);
-                        // manager.bindings.currNodePath(node.bindings.nodePath());
+                        manager.bindings.currNodePath(node.bindings.path());
 
                         event.stopPropagation();
                     },
 
-                    getBranch(event) {
-                        let obj = manager.getNodeByBindings(ko.dataFor(event.target));
+                    getBranch(event, cb) {
+                        let node = event;
+                        let callback = function handleBranch() {
+                            manager.bindings.addBranch.apply(this, arguments);
+                            if (cb) {
+                                cb.apply(null, arguments);
+                            }
+                        };
 
                         if (!(node instanceof dti.hierarchy.HierarchyNode)) {
                             node = manager.getNodeByBindings(ko.dataFor(event.target));
@@ -3401,7 +3410,8 @@ var dti = {
 
 
                         manager.createNode(child, parent);
-                        parent.bindings.expanded(true);
+
+                        // parent.bindings.expanded(true);//needs to fetch and expand
 
                         return child;
                     },
@@ -3538,6 +3548,7 @@ var dti = {
 
                 dti.bindings.hierarchy.newNodePointName(point.name);
                 manager._addNodePoint = point;
+                manager._addNodeFilter = point.filter;
             }
 
             chooseNodePoint() {
@@ -3552,6 +3563,9 @@ var dti = {
 
                 dti.navigator.showNavigator({
                     pointTypes: pointTypes,
+                    restrictPointTypes: true,
+                    hideOptions: true,
+                    retainNames: true,
                     showInactive: dti.bindings.hierarchy.manager._addNodeConfig.nodeType !== 'Reference',
                     callback: dti.bindings.hierarchy.manager.handleChoosePoint,
                     disableNewPoint: true
@@ -3808,6 +3822,7 @@ var dti = {
                             manager.markNodeSaved(node, node.bindings._id(), result);
                             node.bindings._id(result.newNode._id);
                         // Materialize.toast('Node added', 1000);
+                        });
                     }
                 });
             }
@@ -3820,8 +3835,9 @@ var dti = {
                     url: '/api/points/addPointToHierarchy',
                     data: data
                 }).done((response) => {
-                    node = manager.createNode(node, parent);
-                    let bindings = node.bindings || node;
+                    manager.bindings.getBranch(parent, () => {
+                        node = manager.createNode(node, parent);
+                        let bindings = node.bindings || node;
 
                         manager.bindings.busy(false);
                         manager.markNodeSaved(node, bindings._id(), response[0]);
@@ -4075,6 +4091,7 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            hideOptions: false,
                             dropdownColumnCount: 5,
                             dropdownOpen: false,
                             restrictCreate: false,
@@ -4606,7 +4623,7 @@ var dti = {
             self.applyConfig = function(cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['pointType', 'showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
+                    propertiesToApply = ['pointType', 'hideOptions', 'showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 self.bindings.restrictPointTypes(config.restrictPointTypes);
                 self.bindings.disableNewPoint(config.disableNewPoint);
@@ -5318,21 +5335,24 @@ var dti = {
             constructor(config) {
                 this.emptyFn = () => {};
                 this.exposedMethods = ['handleChoosePoint', 'show'];
-                let selector = this;
 
                 dti.forEachArray(this.exposedMethods, (method) => {
-                    dti.pointSelector[method] = function callMethod() {
-                        this[method].apply(selector, arguments);
-                    };
+                    dti.pointSelector[method] = this[method].bind(this);
+                    // function callMethod() {
+                    //     this[method].apply(this, arguments);
+                    // };
                 });
 
                 this.$modal = $('#pointSelectorModal');
                 this.callback = this.emptyFn;
+
+                this.initBindings();
             }
 
             initBindings() {
                 this.bindings = ko.viewmodel.fromModel({
                     searchString: '',
+                    results: [],
                     busy: false
                 });
 
