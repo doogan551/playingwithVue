@@ -3134,8 +3134,6 @@ var Config = (function (obj) {
 
             // Adding a reference point
             if (!!refPoint && (propertyObject.Value !== 0)) {
-                propertyObject.PointName = refPoint.Name;
-                propertyObject.PointType = refPoint['Point Type'].eValue;
                 propertyObject.PointInst = refPoint._id;
 
                 if (refPoint['Point Type'].Value === 'Device') {
@@ -3147,10 +3145,6 @@ var Config = (function (obj) {
                 }
                 // Removing a reference point
             } else {
-                if (propertyObject.Value === 0) {
-                    propertyObject.PointName = '';
-                }
-
                 propertyObject.DevInst = 0;
                 propertyObject.PointInst = 0;
             }

@@ -256,9 +256,17 @@ router.post('/addPointToHierarchy', function (req, res) {
 });
 // POSTMAN
 router.get('/:id', function (req, res) {
+    // The default behavior of this routine is to resolve "Point Refs" by looking up all
+    // referenced points in the Point Refs array to get each point refs' point name
+    // To disable this behavior, call this API like so:
+    // /:id?resolvePointRefs=false
     const point = new Point();
-    let data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
+
+    if (data.hasOwnProperty("resolvePointRefs") === false) {
+        data.resolvePointRefs = true;
+    }
 
     point.getPointById(data, function (err, message, point) {
         if (err) {

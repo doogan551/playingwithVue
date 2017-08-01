@@ -21,20 +21,123 @@ const Point = class Point extends Common {
 
     getPointById(data, cb) {
         const security = new Security();
-        let searchCriteria = {};
+        let criteria = {
+            pipeline: []
+        };
         let upi = parseInt(data.id, 10);
+        let point = null;
+        let resolvedPointsMap = {};
+        let pointRef;
 
-        searchCriteria._id = upi;
+        // Pipeline stages
+        let stage1 = {
+            $match: {
+                _id: upi
+            }
+        };
+        let stage2 = {
+            $facet: {
+                // 2A - This saves our point in the output document
+                point: [{
+                    // This is a dummy aggregate operation just to save our point in the output document
+                    $sort: {
+                        "_id": 1
+                    }
+                }],
+                // 2B - This gets all the points referenced in "Point Refs"
+                resolvedPoints: [{
+                    // 2B.1 - Create a new document for each Point Refs array entry
+                    $unwind: "$Point Refs"
+                }, {
+                    // 2B.2 - Remove entries that don't have a point ref defined
+                    $match: {
+                        "Point Refs.Value": {
+                            $ne: 0
+                        }
+                    }
+                }, {
+                    // 2B.3 - Lookup each point ref from the points collection; adds a "Points" array containing all the referenced points
+                    $lookup: {
+                        from: "points",
+                        localField: "Point Refs.Value",
+                        foreignField: "_id",
+                        as: "Points"
+                    }
+                }, {
+                    // 2B.4 - Create a new document for each resolved point reference
+                    $unwind: {
+                        path: "$Points"
+                    }
+                }, {
+                    // 2B.5 - Only keep the referenced point's _id and path fields
+                    $project: {
+                        "Points._id": 1,
+                        "Points.path": 1
+                    }
+                }, {
+                    // 2B.6 - Restructure the resultant array, i.e. from this:
+                    // [{
+                    //     _id : ##1,           // Target point UPI
+                    //     Points : {           // Resolved Points
+                    //         _id : ##2,       // Resolved point UPI
+                    //         path : [...]     // Resolved point path
+                    //     }
+                    // }, {
+                    //     ...
+                    // }]
+                    //
+                    // To this:
+                    // [{
+                    //     _id : ##2,
+                    //     path : [...]
+                    // }, {
+                    //     ...
+                    // }]
+                    $replaceRoot: {
+                        newRoot: "$Points"
+                    }
+                }]
+            }
+        };
+        let stage3 = {
+            // Stage 3 - Convert point from array to object
+            // The document entering this stage looks like:
+            // {
+            //     point: [{...}],
+            //     resolvedPoints: [{...}, {...},]
+            // }
+            $unwind: {
+                path: "$point"
+            }
+            // Our document leaves this stage looking like:
+            // {
+            //     point: {...},
+            //     resolvedPoints: [{...}, {...},]
+            // }
+        };
+
+        criteria.pipeline.push(stage1);
+        if (data.resolvePointRefs) {
+            criteria.pipeline.push(stage2);
+            criteria.pipeline.push(stage3);
+        }
 
         security.getPermissions(data.user, (err, permissions) => {
-            this.getOne({
-                query: searchCriteria
-            }, (err, point) => {
+            this.aggregate(criteria, (err, doc) => {
                 if (err) {
                     return cb(err, null, null);
                 }
 
-                if (permissions === true || permissions.hasOwnProperty(upi) || point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                if (doc.length) {
+                    doc = doc[0];
+                    if (data.resolvePointRefs) {
+                        point = doc.point;
+                    } else {
+                        point = doc;
+                    }
+                }
+
+                if (permissions === true || permissions.hasOwnProperty(upi)) {
                     if (!point) {
                         return cb(null, 'No Point Found', null);
                     }
@@ -43,6 +146,25 @@ const Point = class Point extends Common {
                     } else {
                         point._pAccess = 15;
                     }
+
+                    if (data.resolvePointRefs) {
+                        // Build a map for the resolved point references
+                        doc.resolvedPoints.forEach((pt) => {
+                            resolvedPointsMap[pt._id] = pt;
+                        });
+
+                        // Add referenced point names to each "Point Refs" entry
+                        point["Point Refs"].forEach((pointRef) => {
+                            let resolvedPoint = resolvedPointsMap[pointRef.Value];
+                            if (resolvedPoint) {
+                                pointRef.PointName = Config.Utility.getPointName(resolvedPoint.path);
+                            } else {
+                                // TODO - Should we put an error message instead of empty string? Not elegant but effective.
+                                pointRef.PointName = "";
+                            }
+                        });
+                    }
+
                     return cb(null, null, point);
                 }
                 return cb('Permission Denied', null, null);
@@ -1280,7 +1402,6 @@ const Point = class Point extends Common {
                                     downloadPoint = true;
                                     break;
 
-                                case 'Name':
                                 case 'Compiled Code':
                                     updateReferences = true;
                                     break;
@@ -1843,6 +1964,14 @@ const Point = class Point extends Common {
                     } else if (flags.from === 'updateDependencies') {
                         updateObject._updPoint = true;
                         downloadPoint = false;
+                    }
+
+                    // Removing "PointName" and "PointType" from "Point Refs" as part of effort: 'Remove PointName from Point Refs'
+                    if (updateObject["Point Refs"]) {
+                        updateObject["Point Refs"].forEach((ref) => {
+                            delete ref.PointName;
+                            delete ref.PointType;
+                        });
                     }
 
                     security.updSecurity(newPoint, (err) => {

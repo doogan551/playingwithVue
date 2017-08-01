@@ -52,7 +52,7 @@ const Utility = class Utility {
     }
 
     aggregate(criteria, cb) {
-        let pipeline = (!!criteria.pipeline) ? criteria.pipeline : {};
+        let pipeline = (!!criteria.pipeline) ? criteria.pipeline : [];
         let coll = criteria.collection || this.collection;
         let collection;
 
