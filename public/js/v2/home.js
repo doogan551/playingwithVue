@@ -3553,19 +3553,19 @@ var dti = {
                     validNodetypesToOpen = ["Reference", "Point", "Application"];
 
                 if (node) {
-                    if (validNodetypesToOpen.indexOf(node.parentNode.defaultConfig.nodeType) !== -1) {
+                    if (validNodetypesToOpen.indexOf(node.parentNode.bindings.nodeType()) !== -1) {
                         answer = true;
                     }
                 }
 
-                console.log(" - - - - - -    " + node.parentNode.defaultConfig.nodeType + " = " + answer);
+                dti.log(" - - - - - -    " + node.parentNode.bindings.nodeType() + " = " + answer);
                 return answer;
             }
 
             handleOpenNode(config) {
                 dti.windows.openWindow({
-                    pointType: config.parentNode.defaultConfig._id >> 22,
-                    upi: config.parentNode.defaultConfig._id
+                    pointType: config.parentNode.bindings._id() >> 22,
+                    upi: config.parentNode.bindings._id()
                 });
             }
 
