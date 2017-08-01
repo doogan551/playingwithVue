@@ -141,6 +141,12 @@ var ActivityLogsManager = function (conf) {
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
+
+            // Populate activity log point name
+            // TODO - uncomment after 'Name' is removed and 'path' is added to activity logs
+            // dtiUtility.getConfig('Utility.getPointName', [activityLog.path], (pointName) => {
+            //     activityLog.Name = pointName;
+            // });
         },
         updateNumberOfPages = function (count, activityLogTable) {
             var sortAsc = self.sortAscending(),

@@ -739,6 +739,7 @@ var AlarmManager = function (conf) {
                 alarm.displayId = 0;
 
             // Build concatenated name string & attach to alarm
+            // TODO delete after 'path' is added to alarm entries
             for (i = 2; i < 5; i++) {
                 key = 'Name' + i;
                 if (alarm[key] === '')
@@ -746,6 +747,10 @@ var AlarmManager = function (conf) {
                 name += "_" + alarm[key];
             }
             alarm.Name = name;
+            // TODO uncomment after 'path' is added to alarm entries
+            // dtiUtility.getConfig('Utility.getPointName', [alarm.path], (pointName) => {
+            //     alarm.Name = pointName;
+            // });
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -3189,7 +3194,7 @@ function applyBindings () {
     } else {
         window.manager = new AlarmManager({});
         ko.applyBindings(window.manager);
-        manager.handleResize();
+        window.manager.handleResize();
     }
 }
 
