@@ -3557,8 +3557,8 @@ var dti = {
 
             handleOpenNode(config) {
                 dti.windows.openWindow({
-                    pointType: config.parentNode.defaultConfig._id >> 22,
-                    upi: config.parentNode.defaultConfig._id
+                    pointType: config.parentNode.bindings._id() >> 22,
+                    upi: config.parentNode.bindings._id()
                 });
             }
 
