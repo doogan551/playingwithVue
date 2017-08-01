@@ -3253,6 +3253,16 @@ var dti = {
                                 }
                             }
                         },
+                        open: {
+                            name: 'Open',
+                            visible: true,
+                            // visible: makeHandler({    // TODO  not functioning correctly
+                            //     cb: manager.isValidOpenAction
+                            // }),
+                            callback: makeHandler({
+                                cb: manager.handleOpenNode
+                            })
+                        },
                         select: {
                             name: 'Select',
                             callback: makeHandler({
@@ -3536,6 +3546,27 @@ var dti = {
                 let cutNode = this.getCutNode();
 
                 return cutNode && node !== cutNode;
+            }
+
+            isValidOpenAction(node) {
+                let answer = false,
+                    validNodetypesToOpen = ["Reference", "Point", "Application"];
+
+                if (node) {
+                    if (validNodetypesToOpen.indexOf(node.parentNode.defaultConfig.nodeType) !== -1) {
+                        answer = true;
+                    }
+                }
+
+                console.log(" - - - - - -    " + node.parentNode.defaultConfig.nodeType + " = " + answer);
+                return answer;
+            }
+
+            handleOpenNode(config) {
+                dti.windows.openWindow({
+                    pointType: config.parentNode.defaultConfig._id >> 22,
+                    upi: config.parentNode.defaultConfig._id
+                });
             }
 
             pasteNode(config) {
