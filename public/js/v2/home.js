@@ -3113,6 +3113,7 @@ var dti = {
         NodeManager: class NodeManager {
 
             constructor(config) {
+                this.$treePane = null;
                 let $container = config.$container;
                 let markup = dti.utility.getTemplate('#hierarchyTemplate');
 
@@ -3203,6 +3204,8 @@ var dti = {
                         }
                     };
                 };
+
+                this.$treePane = $('#tree');
 
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
@@ -3313,6 +3316,11 @@ var dti = {
 
                 config.onClose(() => {
                     $.contextMenu('destroy', '.dtcollapsible-header');
+                });
+
+                this.$treePane.resizable({
+                    containment: "parent",
+                    handles: "e"
                 });
             }
 
