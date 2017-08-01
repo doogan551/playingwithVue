@@ -3187,6 +3187,46 @@ const Point = class Point extends Common {
             cb(err, path);
         });
     }
+
+    buildSearchTerms(terms) {
+        return terms.map((term) => {
+            if (term.match(/"/)) {
+                return term.replace(/"/g, '');
+            }
+            return new RegExp(term, 'ig');
+        });
+    }
+
+    getFilteredPoints(data, cb) {
+        let terms = data.terms;
+        let pointTypes = data.pointTypes;
+
+        this.aggregate({
+            pipeline: [{
+                $match: {
+                    $and: [{
+                        path: {
+                            $all: this.buildSearchTerms(terms)
+                        }
+                    },
+                    {
+                        'Point Type.Value': {
+                            $in: pointTypes
+                        }
+                    }
+                    ]
+                }
+            }, {
+                $project: {
+                    _id: 1,
+                    'Point Type.Value': 1,
+                    path: 1,
+                    display: 1,
+                    parentNode: 1
+                }
+            }]
+        }, cb);
+    }
 };
 
 module.exports = Point;

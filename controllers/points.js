@@ -255,6 +255,22 @@ router.post('/addPointToHierarchy', function (req, res) {
     });
 });
 // POSTMAN
+router.post('/getFilteredPoints', function (req, res) {
+    const point = new Point();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    point.getFilteredPoints(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
+});
+// POSTMAN
 router.get('/:id', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body);

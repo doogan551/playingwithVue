@@ -66,21 +66,6 @@ router.post('/getDescendants', function (req, res) {
     });
 });
 
-router.post('/getFilteredPoints', function (req, res) {
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
-
-    Hierarchy.getFilteredPoints(data, function (err, results) {
-        if (err) {
-            return utils.sendResponse(res, {
-                err: err
-            });
-        }
-
-        return utils.sendResponse(res, results);
-    });
-});
-
 router.post('/getFullPath', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
