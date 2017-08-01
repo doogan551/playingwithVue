@@ -206,11 +206,39 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-footer
-                .modal-content
+            #pointSelectorModal.modal.modal-fixed-footer.blue-grey-form(data-bind="with: pointSelector")
+                .modal-content(data-bind="delegate: [{event: 'click', selector: '.pointRow .col', handler: handleRowClick}]")
                     h4 Select Point
 
 
+                    //- // ko if: results().length > 0
+                    .pointList(data-bind="visible: results().length > 0")
+                        .pointHeaders
+                            .col.s3 Display
+                            .col.s3 Type
+                            .col.s6 Path
+                        .pointResults(data-bind="foreach: results")
+                            .pointRow
+                                .col.s3(data-bind="text: display")
+                                .col.s3(data-bind="text: pointType")
+                                .col.s6(data-bind="text: path")
+                    //- table.pointList(data-bind="visible: results().length > 0")
+                        thead
+                            th Display
+                            th Type
+                            th Path
+                        tbody
+                            tr
+                                td Test
+                                td Test
+                                td Test
+                            // ko foreach: results
+                            tr
+                                td(data-bind="text: display")
+                                td(data-bind="text: pointType")
+                                td(data-bind="text: path")
+                            // /ko
+                    //- // /ko
 
                 .modal-footer
                     button.btn.blue-grey.waves-effect Select

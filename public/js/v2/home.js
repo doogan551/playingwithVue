@@ -194,6 +194,14 @@ var dti = {
             }
         }
     },
+    post(config) {
+        return $.ajax({
+            url: config.url,
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify(config.data)
+        });
+    },
     makeId: function() {
         dti.itemIdx++;
         return dti.settings.idxPrefix + dti.itemIdx;
@@ -1216,13 +1224,20 @@ var dti = {
             if (typeof url === 'object') {
                 config = url;
             } else {
-                config = {
-                    url: url,
-                    title: title,
-                    type: type,
-                    upi: upi,
-                    options: options
-                };
+                if (typeof url === 'number') {//upi only
+                    config = {
+                        upi: url,
+                        type: dti.utility.getPointTypeFromUPI(url)
+                    };
+                } else {
+                    config = {
+                        url: url,
+                        title: title,
+                        type: type,
+                        upi: upi,
+                        options: options
+                    };
+                }
             }
 
             config = dti.windows.processOpenWindowParameters(config);
@@ -1435,9 +1450,10 @@ var dti = {
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.bindings.showNavigator({
-                    pointType: obj.group
-                });
+                dti.pointSelector.show(obj.group);
+                // dti.bindings.showNavigator({
+                //     pointType: obj.group
+                // });
             } else {
                 if (obj.singleton) {
                     openWindows = dti.windows.getWindowsByType(obj.group);
@@ -3360,12 +3376,19 @@ var dti = {
                     getBranch(event) {
                         let obj = manager.getNodeByBindings(ko.dataFor(event.target));
 
-                        if (obj.bindings.fetched() === false) {
-                            obj.bindings.fetched(true);
-                            obj.bindings.expanded(true);
-                            manager.getBranch(obj, manager.bindings.addBranch);
+                        if (!(node instanceof dti.hierarchy.HierarchyNode)) {
+                            node = manager.getNodeByBindings(ko.dataFor(event.target));
+                        }
+
+                        if (node.bindings.fetched() === false) {
+                            node.bindings.fetched(true);
+                            node.bindings.expanded(true);
+                            manager.getBranch(node, callback);//manager.bindings.addBranch);
                         } else {
-                            obj.bindings.expanded(!obj.bindings.expanded());
+                            node.bindings.expanded(!node.bindings.expanded());
+                            if (cb) {
+                                cb.apply(null, arguments);
+                            }
                         }
                     },
 
@@ -3460,23 +3483,6 @@ var dti = {
                 manager.bindings.searchInput.subscribe((val) => {
                     manager.bindings.search(val);
                 });
-
-                ko.bindingHandlers.delegate = {
-                    init: (element, valueAccessor) => {
-                        var $element = $(element),
-                            delegations = ko.utils.unwrapObservable(valueAccessor()),
-                            makeHandler = (fn) => {
-                                return (e) => {
-                                    fn(e);
-                                    e.preventDefault();
-                                };
-                            };
-
-                        dti.forEachArray(delegations, (cfg) => {
-                            $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler));
-                        });
-                    }
-                };
 
                 ko.bindingHandlers.shouldFocus = {
                     init(element, valueAccessor) {
@@ -3796,9 +3802,11 @@ var dti = {
                             Materialize.toast('Error adding node: ' + result.err.errmsg, 3000);
                         }
                     } else {
-                        node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), result);
-                        node.bindings._id(result.newNode._id);
+                        manager.bindings.getBranch(parent, () => {
+                            manager.bindings.busy(false);
+                            node = manager.createNode(node, parent);
+                            manager.markNodeSaved(node, node.bindings._id(), result);
+                            node.bindings._id(result.newNode._id);
                         // Materialize.toast('Node added', 1000);
                     }
                 });
@@ -3815,10 +3823,12 @@ var dti = {
                     node = manager.createNode(node, parent);
                     let bindings = node.bindings || node;
 
-                    manager.bindings.busy(false);
-                    manager.markNodeSaved(node, bindings._id(), response[0]);
-                    dti.log(response);
-                    Materialize.toast('Point added', 3000);
+                        manager.bindings.busy(false);
+                        manager.markNodeSaved(node, bindings._id(), response[0]);
+
+                        dti.log(response);
+                        Materialize.toast('Point added', 3000);
+                    });
                 });
             }
 
@@ -5033,6 +5043,9 @@ var dti = {
     utility: {
         systemEnums: {},
         systemEnumObjects: {},
+        getPointTypeFromUPI(upi) {
+            return dti.utility.getConfig('Utility.pointTypes.getPointTypeNameFromEnum', upi >> 22);
+        },
         addEvent: function(element, event, fn) {
             if (element.addEventListener) {
                 element.addEventListener(event, fn, false);
@@ -5084,10 +5097,14 @@ var dti = {
         },
         getConfig: function(path, parameters) {
             var Config = dti.workspaceManager.config,
-                result = dti.utility.getPathFromObject(path, Config);
+                result = dti.utility.getPathFromObject(path, Config),
+                params = parameters;
 
-            if (parameters) {
-                result = result.apply(this, parameters);
+            if (params) {
+                if (!Array.isArray(params)) {
+                    params = [params];
+                }
+                result = result.apply(this, params);
             }
 
             return dti.utility.clone(result);
@@ -5319,7 +5336,8 @@ var dti = {
                     busy: false
                 });
 
-                this.bindings.handleChoosePoint = this.handleChoosePoint;
+                this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
+                this.bindings.handleRowClick = this.handleRowClick.bind(this);
 
                 this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
                     throttle: 1000
@@ -5332,21 +5350,52 @@ var dti = {
                 dti.bindings.pointSelector = this.bindings;
             }
 
-            search(terms) {
-                if (terms !== '') {
+            search(terms = '') {
+                // if (terms !== '') {
                     this.bindings.busy(true);
-                    this.ajax({
-                        url: '/api/hierarchy/search',
+                    dti.post({
+                        url: '/api/points/getFilteredPoints',
                         data: {
-                            terms: terms.split(',')
+                            terms: terms.split(','),
+                            pointTypes: this.pointTypes
                         }
                     }).done((results) => {
-                        this.rebuildTree(results);
-                        this.bindings.busy(false);
+                        this.handleSearchResults(results);
                     });
-                } else {
-                    this.getDefaultTree(null, true);
-                }
+                // } else {
+                //     this.bindings.results([]);
+                // }
+            }
+
+            normalizeSearchResults(results) {
+                let getPointName = (path) => {
+                    return dti.utility.getConfig('Utility.getPointName', [path]);
+                };
+
+                dti.forEachArray(results, (result) => {
+                    result.path = getPointName(result.path);
+                });
+            }
+
+            handleRowClick(e) {
+                let target = e.target;
+                let data = ko.dataFor(target);
+
+                this.$modal.closeModal();
+
+                dti.windows.openWindow(data._id);
+
+                // dti.log(arguments);
+            }
+
+            handleSearchResults(results) {
+                let ret = this.normalizeSearchResults(results);
+
+                results.sort((a, b) => {
+                    return a.path > b.path ? 1 : -1;
+                });
+
+                this.bindings.results(results);
             }
 
 
@@ -5361,10 +5410,13 @@ var dti = {
                 dti.log(config);
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
+                    this.pointTypes = config.pointTypes || [];
                 } else {
+                    this.pointTypes = [config];
                     //string
                 }
                 this.$modal.openModal();
+                this.search();
             }
         },
 
@@ -6192,6 +6244,23 @@ var dti = {
                     } else {
                         dti.animations.fadeOut($element);
                     }
+                }
+            };
+
+            ko.bindingHandlers.delegate = {
+                init: (element, valueAccessor) => {
+                    var $element = $(element),
+                        delegations = ko.utils.unwrapObservable(valueAccessor()),
+                        makeHandler = (fn) => {
+                            return (e) => {
+                                fn(e);
+                                e.preventDefault();
+                            };
+                        };
+
+                    dti.forEachArray(delegations, (cfg) => {
+                        $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler));
+                    });
                 }
             };
 

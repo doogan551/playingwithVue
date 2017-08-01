@@ -3348,7 +3348,7 @@ const Point = class Point extends Common {
             }, {
                 $project: {
                     _id: 1,
-                    'Point Type.Value': 1,
+                    pointType: '$Point Type.Value',
                     path: 1,
                     display: 1,
                     parentNode: 1

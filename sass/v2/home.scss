@@ -1728,6 +1728,53 @@ input:focus {
 }
 
 
+#pointSelectorModal {
+    .pointSearch {
+        input {
+            background-color: initial;
+            padding-left: 0;
+        }
+    }
+
+    .pointList {
+        height: 420px;
+        overflow-y: hidden;
+    }
+
+    .col {
+        display: inline-block;
+    }
+
+    .s3 {
+        width: 25%;
+    }
+
+    .s6 {
+        width: 50%;
+    }
+
+    .pointHeaders {
+        padding: 5px;
+        font-weight: bold;
+        background-color: $blue-grey-lighten-5;
+    }
+
+    .pointResults {
+        overflow-y: auto;
+        height: 100%;
+
+        .pointRow {
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .pointRow:hover {
+            background-color: $blue-grey;
+            color: white;
+            transition: background-color .1s ease, color .1s ease;
+        }
+    }
+}
 
 
 $treeTopHeight: 76px;
