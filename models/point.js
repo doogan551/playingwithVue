@@ -3222,11 +3222,14 @@ const Point = class Point extends Common {
     }
 
     addPointToHierarchy(data, cb) {
+        let addedPoints = [];
+        const typesNotInHierarchy = ['Schedule Entry'];
         let upi = this.getNumber(data.upi);
         let parentNode = this.getNumber(data.parentNode);
         let display = this.getDefault(data.display, '');
         let nodeType = this.getDefault(data.nodeType, '');
         let nodeSubType = this.getDefault(data.nodeSubType, '');
+        let _pStatus = (typesNotInHierarchy.includes(nodeSubType)) ? Config.Enums['Point Statuses'].NotInHierarchy.enum : Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
             this.findAndModify({
                 query: {
@@ -3239,10 +3242,61 @@ const Point = class Point extends Common {
                         nodeType,
                         nodeSubType,
                         path,
-                        _pStatus: 0
+                        _pStatus
                     }
+                },
+                options: {
+                    new: true
                 }
-            }, cb);
+            }, (err, result) => {
+                if (err) {
+                    return cb([{
+                        err: err,
+                        node: data
+                    }]);
+                }
+                addedPoints.push({
+                    newNode: result
+                });
+                if (nodeSubType === 'Sequence') {
+                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                        addedPoints.push(...addedNodes);
+                        return cb(null, addedPoints);
+                    });
+                } else {
+                    return cb(null, addedPoints);
+                }
+            });
+        });
+    }
+
+    setHierarchyParentUpi(upi, cb) {
+        let newPoints = [];
+        this.iterateCursor({
+            query: {
+                _parentUpi: upi
+            }
+        }, (err, block, nextBlock) => {
+            let data = {
+                upi: block._id,
+                parentNode: upi,
+                nodeType: 'Application',
+                nodeSubType: block['Point Type'].Value,
+                display: (block.name4 !== '') ? block.name4 : (block.name3 !== '') ? block.name3 : block.Name
+            };
+            this.addPointToHierarchy(data, (err, result) => {
+                if (!!err) {
+                    newPoints.push({
+                        err: err,
+                        node: data
+                    });
+                } else {
+                    newPoints.push(...result);
+                }
+                nextBlock(null);
+            });
+        }, (err) => {
+            cb(err, newPoints);
         });
     }
 
@@ -3261,6 +3315,46 @@ const Point = class Point extends Common {
             }
             cb(err, path);
         });
+    }
+
+    buildSearchTerms(terms) {
+        return terms.map((term) => {
+            if (term.match(/"/)) {
+                return term.replace(/"/g, '');
+            }
+            return new RegExp(term, 'ig');
+        });
+    }
+
+    getFilteredPoints(data, cb) {
+        let terms = data.terms;
+        let pointTypes = data.pointTypes;
+
+        this.aggregate({
+            pipeline: [{
+                $match: {
+                    $and: [{
+                        path: {
+                            $all: this.buildSearchTerms(terms)
+                        }
+                    },
+                    {
+                        'Point Type.Value': {
+                            $in: pointTypes
+                        }
+                    }
+                    ]
+                }
+            }, {
+                $project: {
+                    _id: 1,
+                    'Point Type.Value': 1,
+                    path: 1,
+                    display: 1,
+                    parentNode: 1
+                }
+            }]
+        }, cb);
     }
 };
 

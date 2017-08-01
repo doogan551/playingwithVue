@@ -70,7 +70,8 @@ const Hierarchy = class Hierarchy extends Common {
                 parentNode: 1,
                 nodeType: 1,
                 nodeSubType: 1,
-                locationType: 1
+                locationType: 1,
+                path: 1
             }
         }, cb);
     }
@@ -227,12 +228,7 @@ const Hierarchy = class Hierarchy extends Common {
         let terms = this.getDefault(data.terms, []);
         let pipeline = [];
 
-        terms = terms.map((term) => {
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
-            }
-            return new RegExp('[.]*' + term + '[.]*', 'i');
-        });
+        terms = this.buildSearchTerms(terms);
 
         pipeline.push(this.getPathLookup());
 
@@ -309,6 +305,15 @@ const Hierarchy = class Hierarchy extends Common {
             }, (err) => {
                 cb(err, descendants);
             });
+        });
+    }
+
+    buildSearchTerms(terms) {
+        return terms.map((term) => {
+            if (term.match(/"/)) {
+                return term.replace(/"/g, '');
+            }
+            return new RegExp('[.]*' + term + '[.]*', 'i');
         });
     }
 
@@ -652,24 +657,25 @@ const Hierarchy = class Hierarchy extends Common {
     checkAllNames(nodes, cb) {
         // if parentId is fake, ignore it
         // change node to normal structure before name check
-        let problems = [];
-        async.eachSeries(nodes, (node, callback) => {
-            if (this.isNumber(node.parentNode)) {
-                this.checkForExistingName(node, node.parentNode, (err, exists) => {
-                    if (!!exists) {
-                        problems.push({
-                            err: 'Name already exists under this parent location',
-                            node: node
-                        });
-                    }
-                    callback(err);
-                });
-            } else {
-                return callback();
-            }
-        }, (err) => {
-            return cb(err || problems);
-        });
+        return cb([]);
+        // let problems = [];
+        // async.eachSeries(nodes, (node, callback) => {
+        //     if (this.isNumber(node.parentNode)) {
+        //         this.checkForExistingName(node, node.parentNode, (err, exists) => {
+        //             if (!!exists) {
+        //                 problems.push({
+        //                     err: 'Name already exists under this parent location',
+        //                     node: node
+        //                 });
+        //             }
+        //             callback(err);
+        //         });
+        //     } else {
+        //         return callback();
+        //     }
+        // }, (err) => {
+        //     return cb(err || problems);
+        // });
     }
 
     checkForExistingName(node, parentNode, cb) {

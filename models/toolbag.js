@@ -84,12 +84,6 @@ const Toolbag = class Toolbag {
                 keyMap: {},
                 extraKeys: {}
             },
-            'Internal Properties': {
-                name: 'InternalProperty',
-                prepend: '',
-                keyMap: {},
-                extraKeys: {}
-            },
             'Point Statuses': {
                 name: 'PointStatus',
                 prepend: 'ps',
@@ -249,17 +243,6 @@ const Toolbag = class Toolbag {
                 prepend: 'cm',
                 keyMap: {},
                 extraKeys: {
-                    SignalHostTOD: 9,
-                    SignalExecTOD: 10,
-                    DeviceLoader: 11,
-                    StartServer: 12,
-                    StopServer: 13,
-                    DoBackup: 14,
-                    ReadDeviceNetInfo: 15,
-                    ReadSystemInfo: 16,
-                    SetCountInterval: 17,
-                    PrintRouterTable: 18,
-                    GetSystemStatus: 19
                 }
             },
             // Per LMH 11/16/2016 Remove Alarm Types

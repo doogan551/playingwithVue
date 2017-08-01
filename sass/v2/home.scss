@@ -1479,6 +1479,13 @@ $loaderSpeedScale: 1 / .75;
     background-color: $blue-grey;
     overflow-y: hidden;
 
+    .modal-header a {
+        position: absolute;
+        right: 5px;
+        top: 8px;
+        color: white;
+    }
+
     .navigatorLoading {
         position: absolute;
         z-index: 2;

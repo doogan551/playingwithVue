@@ -64,6 +64,54 @@ var dtiUtility = {
         dtiUtility.initEventListener();
     },
 
+    initKnockout: (() => {
+        var utils = {
+            formatInputField: (element, valueAccessor, allBindingsAccessor) => {
+                var fieldValue = ko.unwrap(valueAccessor()),
+                    allBindings = allBindingsAccessor(),
+                    stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
+                    stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
+                    $element = $(element);
+
+                if (stripSpaces && !!fieldValue) {
+                    fieldValue = fieldValue.trim();
+                }
+                if (stripDoubleSpace && !!fieldValue) {
+                    fieldValue = fieldValue.replace(/ {2,}/g, ' ');
+                }
+
+                $element.val(fieldValue);
+            }
+        };
+
+        ko.bindingHandlers.diPointName = {
+            init: function (element, valueAccessor) {
+                var pointPathArray = ko.unwrap(valueAccessor()),
+                    $element = $(element);
+
+                $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
+                // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+            },
+            update: function (element, valueAccessor) {
+                var pointPathArray = ko.unwrap(valueAccessor()),
+                    $element = $(element);
+
+                $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
+                // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+            }
+        };
+
+        ko.bindingHandlers.diTextInput = {
+            init: function (element, valueAccessor, allBindingsAccessor) {
+                utils.formatInputField(element, valueAccessor, allBindingsAccessor);
+            },
+            update: function (element, valueAccessor, allBindingsAccessor) {
+                utils.formatInputField(element, valueAccessor, allBindingsAccessor);
+            }
+        };
+
+    })(),
+
     defaultHandler: function (e) {
         console.log('Default handler:', e);
     },

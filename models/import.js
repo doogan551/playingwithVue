@@ -1126,6 +1126,15 @@ let Import = class Import extends Common {
     updateIndexes(callback) {
         var indexes = [{
             index: {
+                'path': 1,
+                'Point Type.Value': 1
+            },
+            options: {
+                name: 'hierarchyPathAndType'
+            },
+            collection: pointsCollection
+        }, {
+            index: {
                 name1: 1,
                 name2: 1,
                 name3: 1,
@@ -1150,9 +1159,7 @@ let Import = class Import extends Common {
             index: {
                 Name: 1
             },
-            options: {
-                unique: true
-            },
+            options: {},
             collection: pointsCollection
         }, {
             index: {
@@ -1254,9 +1261,7 @@ let Import = class Import extends Common {
             index: {
                 Name: 1
             },
-            options: {
-                unique: true
-            },
+            options: {},
             collection: 'new_points'
         }, {
             index: {
@@ -2051,9 +2056,57 @@ let Import = class Import extends Common {
                 } else {
                     cb();
                 }
-            };
+            },
+            cleanupBlockFields = () => {
+            let oldPrecision,
+                chars,
+                decimals,
+                block,
+                i;
+
+            for (i = 0; i < blocks.length; i++) {
+                block = blocks[i];
+
+                if (block.presentValueVisible !== undefined) { // convert to Bool
+                    block.presentValueVisible = (block.presentValueVisible === true || block.presentValueVisible === 1);
+                }
+
+                if (block.presentvalueVisible !== undefined) {
+                    block.presentValueVisible = (block.presentvalueVisible === true || block.presentvalueVisible === 1);
+                    delete block.presentvalueVisible;
+                }
+
+                if (block.labelVisible !== undefined) { // convert to Bool
+                    block.labelVisible = (block.labelVisible === true || block.labelVisible === 1);
+                }
+
+                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== 'object')) {
+                    oldPrecision = block.precision;
+                    chars = 3; // defaults
+                    decimals = 1; // defaults
+                    block.precision = {};
+
+                    if (!isNaN(oldPrecision)) {
+                        if (String(oldPrecision).indexOf('.') > -1) {
+                            if (!isNaN(String(oldPrecision).split('.')[0])) {
+                                chars = parseInt(String(oldPrecision).split('.')[0], 10);
+                            }
+                            if (!isNaN(String(oldPrecision).split('.')[1])) {
+                                decimals = parseInt(String(oldPrecision).split('.')[1], 10);
+                            }
+                        } else {
+                            chars = oldPrecision;
+                            decimals = 0;
+                        }
+                    }
+                    block.precision.characters = chars;
+                    block.precision.decimals = decimals;
+                }
+            }
+        };
 
         setGPLPointData();
+        cleanupBlockFields();
     }
     updateReferences(point, mainCallback) {
         var uniquePID = (pointRefs) => {
@@ -2907,7 +2960,7 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
-        const hierarchyCounters = ['location', 'equipment', 'category', 'reference'];
+        const hierarchyCounters = ['Location', 'Equipment', 'Category', 'Reference'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
@@ -2920,7 +2973,7 @@ let Import = class Import extends Common {
         }
         hierarchyCounters.forEach((counter) => {
             counters.push({
-                _id: counter,
+                _id: counter.toLowerCase(),
                 count: 0,
                 enum: Config.Enums['Hierarchy Types'][counter].enum
             });
