@@ -1776,12 +1776,11 @@ input:focus {
     }
 }
 
-
 $treeTopHeight: 76px;
 $treeBarHeight: 84px;
 $treeIconWidth: 22px;
 
-.locations {
+.hierarchy {
     height: 100%;
     // overflow: auto;
     padding-top: $treeTopHeight;
@@ -2230,7 +2229,7 @@ $treeIconWidth: 22px;
         background-color: $blue-grey-darken-2 !important;
     }
 
-    .locations {
+    .hierarchy {
 
         .locSearch input {
             color: white !important;
