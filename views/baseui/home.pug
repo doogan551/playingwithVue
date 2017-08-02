@@ -383,7 +383,7 @@ html
 
             .treeTrunk
                 //- // k0o if: children().length !== 0
-                #tree.pane.style3(data-bind="treeView: {}, diResizable: $root.treePane")
+                #tree.pane.style3(data-bind="treeView: {}, diResizable: true")
 
 
                     //- .treeBar
@@ -400,7 +400,6 @@ html
 
 
                 .treeOptions
-                    .test(data-bind="treeView: {}")
                     // ko if: currNodeDisplay() !== ''
                     .row
                         .col.s2 Display:

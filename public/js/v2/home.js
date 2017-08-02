@@ -3117,7 +3117,6 @@ var dti = {
         TreeViewer: class TreeViewer {
 
             constructor(config) {
-                this.$treePane = null;
                 let $container = config.$container;
                 let markup = dti.utility.getTemplate('#treeViewTemplate');
 
@@ -3491,8 +3490,6 @@ var dti = {
                 });
 
                 // manager.bindings._focusedNode = manager.bindings.getNode(manager.blankNode);
-
-                manager.bindings.treePane = ko.observable();
 
                 manager.bindings.searchInput = ko.computed(manager.bindings.searchString).extend({
                     throttle: 1000
