@@ -6348,7 +6348,6 @@ var dti = {
                     let options = ko.utils.unwrapObservable(valueAccessor());
                     options.$container = $(element);
 
-                    dti.log(options);
                     setTimeout(() => {
                         let treeView = new dti.hierarchy.TreeViewer({
                             $container: $(element)
