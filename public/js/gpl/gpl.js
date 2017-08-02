@@ -1275,7 +1275,6 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     },
 
     myBlock: function () {
-        'use strict';
         return gpl.blockManager.getBlock(this.gplId);
     },
 
@@ -1614,7 +1613,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 property,
                 args,
                 getRefPoint = function () {
-                    'use strict';
                     var answer;
                     if (!!otherBlock) {
                         if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point') ||

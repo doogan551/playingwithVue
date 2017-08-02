@@ -931,6 +931,8 @@ var dti = {
                         }
                     }
 
+                    this.contentWindow.getConfig = dti.utility.getConfig;
+
                     this.contentWindow.getWindowParameters = function() {
                         return $.extend(true, {}, config);
                     };

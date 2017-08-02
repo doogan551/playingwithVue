@@ -143,11 +143,9 @@ var dtiUtility = {
                 setPointNameField: (element, valueAccessor) => {
                     var pointPathArray = ko.unwrap(valueAccessor()),
                         $element = $(element),
-                        setField = (pointName) => {
-                            $element.text(pointName);
-                        };
+                        pointName = window.getConfig("Utility.getPointName", [pointPathArray]);
 
-                    dtiUtility.getConfig("Utility.getPointName", [pointPathArray], setField);
+                    $element.text(pointName);                    
                 }
             };
 
