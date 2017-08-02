@@ -3589,10 +3589,12 @@ var dti = {
                 let config = dti.hierarchy.manager._addNodeConfig;
                 let pointTypes = [];
 
-                if (config.nodeType === 'Application') {
-                    pointTypes = ['Sequence', 'Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer', 'Device', 'Remote Unit', 'Display', 'Program', 'Script', 'Report', 'Schedule', 'Sensor', 'Slide Show', 'Lift Station', 'Optimum Start', 'VAV'];
-                } else {
-                    pointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+                if (config.nodeType !== 'Reference') {
+                    if (config.nodeType === 'Application') {
+                        pointTypes = ['Sequence', 'Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer', 'Device', 'Remote Unit', 'Display', 'Program', 'Script', 'Report', 'Schedule', 'Sensor', 'Slide Show', 'Lift Station', 'Optimum Start', 'VAV'];
+                    } else {
+                        pointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+                    }
                 }
 
                 dti.navigator.showNavigator({
@@ -3875,6 +3877,18 @@ var dti = {
 
                         manager.bindings.busy(false);
                         manager.markNodeSaved(node, bindings._id(), response[0]);
+
+                        if (response.length > 0) {
+                            let children = response.slice(1);
+                            let readyChildren = [];
+
+                            dti.forEachArray(children, (child) => {
+                                readyChildren.push(child.newNode);
+                            });
+                            
+                            readyChildren = manager.normalize(readyChildren);
+                            manager.bindings.addBranch(readyChildren, node);
+                        }
 
                         dti.log(response);
                         Materialize.toast('Point added', 3000);
