@@ -6355,14 +6355,8 @@ var dti = {
                     options.$container = $(element);
 
                     setTimeout(() => {
-                        let treeView = new dti.hierarchy.TreeViewer({
-                            $container: $(element)
-                        });
+                        let treeView = new dti.hierarchy.TreeViewer(options);
                     }, 100);
-
-                    return {
-                        controlsDescendantBindings: true
-                    };
                 }
             };
 
