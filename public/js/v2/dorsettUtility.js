@@ -145,7 +145,7 @@ var dtiUtility = {
                         $element = $(element),
                         pointName = window.getConfig("Utility.getPointName", [pointPathArray]);
 
-                    $element.text(pointName);                    
+                    $element.text(pointName);
                 }
             };
 

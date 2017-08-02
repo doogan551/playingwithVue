@@ -3209,8 +3209,6 @@ var dti = {
                     };
                 };
 
-                this.$treePane = $('#tree');
-
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
                     items: {
@@ -3262,7 +3260,7 @@ var dti = {
                         },
                         open: {
                             name: 'Open',
-                            visible: makeHandler({    
+                            visible: makeHandler({
                                 cb: manager.isValidOpenAction
                             }),
                             callback: makeHandler({
@@ -3321,11 +3319,6 @@ var dti = {
                 // config.onClose(() => {
                 //     $.contextMenu('destroy', '.dtcollapsible-header');
                 // });
-
-                this.$treePane.resizable({
-                    containment: "parent",
-                    handles: "e"
-                });
             }
 
             initBindings() {
@@ -3380,7 +3373,6 @@ var dti = {
 
                     loadNode(event) {
                         let node = manager.getNodeByContext(ko.contextFor(event.target));
-                        let pointName = dti.utility.getConfig('Utility.getPointName', [node.bindings.path()]);
 
                         manager.bindings.currNodeDisplay(node.bindings.display());
                         manager.bindings.currNodeType(node.bindings.nodeType());
@@ -3499,6 +3491,8 @@ var dti = {
                 });
 
                 // manager.bindings._focusedNode = manager.bindings.getNode(manager.blankNode);
+
+                manager.bindings.treePane = ko.observable();
 
                 manager.bindings.searchInput = ko.computed(manager.bindings.searchString).extend({
                     throttle: 1000
@@ -3885,7 +3879,7 @@ var dti = {
                             dti.forEachArray(children, (child) => {
                                 readyChildren.push(child.newNode);
                             });
-                            
+
                             readyChildren = manager.normalize(readyChildren);
                             manager.bindings.addBranch(readyChildren, node);
                         }
@@ -6364,6 +6358,25 @@ var dti = {
                     return {
                         controlsDescendantBindings: true
                     };
+                }
+            };
+
+            ko.bindingHandlers.diResizable = {
+                init: function (element, valueAccessor, allBindings) {
+                    var $element = $(element);
+
+                    $element.resizable({
+                        containment: "parent",
+                        handles: "e",
+                        resize: function (event, ui) {
+                            // $element.height(ui.size.height);
+                            // $element.width(ui.size.width);
+                            // dti.log("width of pane = " + ui.size.width);
+                        }
+                    });
+                },
+                update: function (element, valueAccessor, allBindings) {
+
                 }
             };
 
