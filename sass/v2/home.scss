@@ -1729,6 +1729,10 @@ input:focus {
 
 
 #pointSelectorModal {
+    .modal-header {
+        background-color: $blue-grey-darken-2;
+    }
+    
     .pointSearch {
         input {
             background-color: initial;

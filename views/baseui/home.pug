@@ -206,9 +206,11 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-footer.blue-grey-form(data-bind="with: pointSelector")
+            #pointSelectorModal.modal.modal-fixed-footer.modal-optional-footer.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector")
+                .modal-header
+                    .modalTitle Select Point
                 .modal-content(data-bind="delegate: [{event: 'click', selector: '.pointRow .col', handler: handleRowClick}]")
-                    h4 Select Point
+                    //- h4 Select Point
 
                     .pointSearch.input-field
                         i.material-icons.prefix search

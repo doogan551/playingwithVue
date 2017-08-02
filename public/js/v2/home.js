@@ -854,7 +854,9 @@ var dti = {
             },
             getTitleForPoint = function(upi) {
                 var handlePointData = function(pt) {
-                    self.bindings.title(pt.Name);
+                    let pointName = dti.utility.getConfig('Utility.getPointName', [pt.path]);
+
+                    self.bindings.title(pointName);
                 };
 
                 $.getJSON('/api/points/' + upi).done(handlePointData);

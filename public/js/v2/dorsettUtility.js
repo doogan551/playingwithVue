@@ -28,7 +28,63 @@ var dtiUtility = {
     itemIdx: 0,
     lastIdNumber: 0,
     settings: {
-        idxPrefix: 'dti_'
+        idxPrefix: 'dti_',
+        logLinePrefix: true
+    },
+    formatDate: function(date, addSuffix) {
+        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+            lengths = [2, 2, 2, 3],
+            separators = [':', ':', ':', ''],
+            suffix = ' --',
+            fn,
+            out = '';
+
+        if (addSuffix) {
+            separators.push(suffix);
+        }
+
+        if (typeof date === 'number') {
+            date = new Date(date);
+        }
+
+        for (fn in functions) {
+            if (functions.hasOwnProperty(fn)) {
+                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+            }
+        }
+
+        return out;
+    },
+    log: function() {
+        var stack,
+            steps,
+            lineNumber,
+            err,
+            now = new Date(),
+            args = [].splice.call(arguments, 0),
+            pad = function(num) {
+                return ('    ' + num).slice(-4);
+            },
+            formattedtime = dtiUtility.formatDate(new Date(), true);
+
+        if (dtiUtility.settings.logLinePrefix === true) {
+            err = new Error();
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(err);
+
+                stack = err.stack.split('\n')[2];
+
+                steps = stack.split(':');
+
+                lineNumber = steps[2];
+
+                args.unshift('line:' + pad(lineNumber), formattedtime);
+            }
+        }
+        // args.unshift(formattedtime);
+        if (!dtiUtility.noLog) {
+            console.log.apply(console, args);
+        }
     },
     makeId: function () {
         dtiUtility.itemIdx++;
@@ -91,14 +147,14 @@ var dtiUtility = {
                         $element = $(element);
 
                     $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
-                    // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+                    // $element.text(dtiUtility.utility.getConfig("Utility.getPointName", [pointPathArray]));
                 },
                 update: function (element, valueAccessor) {
                     var pointPathArray = ko.unwrap(valueAccessor()),
                         $element = $(element);
 
                     $element.text(window.top.workspaceManager.config.Utility.getPointName(pointPathArray));  // TODO adjust as workspaceManager changes
-                    // $element.text(dti.utility.getConfig("Utility.getPointName", [pointPathArray]));
+                    // $element.text(dtiUtility.utility.getConfig("Utility.getPointName", [pointPathArray]));
                 }
             };
 
