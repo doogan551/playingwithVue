@@ -2015,7 +2015,7 @@ $treeIconWidth: 22px;
         border: none;
         box-shadow: none;
         overflow: auto;
-        max-height: calc(100% - #{$treeBarHeight});
+        max-height: 100%;
     }
 
     .dtcollapsible-header {
