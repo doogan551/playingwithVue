@@ -2213,7 +2213,7 @@ $treeIconWidth: 22px;
         background-color: $blue-grey !important;
     }
 
-    .card-toolbar {
+    .card-toolbar:not(.lighten-3) {
         background-color: $blue-grey-darken-2 !important;
     }
 

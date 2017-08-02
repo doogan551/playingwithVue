@@ -5408,7 +5408,7 @@ var dti = {
                     dti.post({
                         url: '/api/points/getFilteredPoints',
                         data: {
-                            terms: terms.split(','),
+                            terms: terms.split(' '),
                             pointTypes: this.pointTypes
                         }
                     }).done((results) => {
