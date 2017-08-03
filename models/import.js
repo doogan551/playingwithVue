@@ -308,7 +308,7 @@ let Import = class Import extends Common {
         }, callback);
     }
     createEmptyCollections(callback) {
-        var collections = ['Alarms', 'Activity Logs', 'NotifyPolicies', 'Schedules', 'hierarchy', 'Users', 'User Groups', 'historydata', 'versions', 'dev', 'oldhistorydata'];
+        var collections = ['Alarms', 'Activity Logs', 'NotifyPolicies', 'Schedules', 'Users', 'User Groups', 'historydata', 'versions', 'dev', 'oldhistorydata'];
         async.each(collections, (coll, cb) => {
             this.createCollection({
                 collection: coll
@@ -510,8 +510,8 @@ let Import = class Import extends Common {
                     }]
                 }
             }, (err, dep, cb2) => {
-                var refs = dep['Point Refs'];
-                for (var i = 0; i < refs.length; i++) {
+                let refs = dep['Point Refs'];
+                for (let i = 0; i < refs.length; i++) {
                     if (refs[i].Value === oldId) {
                         refs[i].Value = newId;
                     }
@@ -549,14 +549,14 @@ let Import = class Import extends Common {
         };
 
         let changeReferenceValues = (cb) => {
-            let getRef = (refProp, callback) => {
-                if (refProp === 0) {
+            let getRef = (refValue, callback) => {
+                if (refValue === 0) {
                     return callback(null, 0);
                 }
                 this.getOne({
                     collection: newPoints,
                     query: {
-                        _oldUpi: refProp
+                        _oldUpi: refValue
                     },
                     fields: {
                         _id: 1
@@ -569,49 +569,66 @@ let Import = class Import extends Common {
                 });
             };
 
+            let updatePointRefs = (pointRefs, callback) => {
+                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
+                    async.parallel([(parallelCallback) => {
+                        getRef(pointRef.Value, (err, newValue) => {
+                            pointRef.Value = newValue;
+                            parallelCallback(err);
+                        });
+                    }, (parallelCallback) => {
+                        getRef(pointRef.PointInst, (err, newValue) => {
+                            pointRef.PointInst = newValue;
+                            parallelCallback(err);
+                        });
+                    }, (parallelCallback) => {
+                        getRef(pointRef.DevInst, (err, newValue) => {
+                            pointRef.DevInst = newValue;
+                            parallelCallback(err);
+                        });
+                    }], (err) => {
+                        eachCallback(err);
+                    });
+                }, callback);
+            };
+
+            let updateScreenObjects = (screenObjects, callback) => {
+                if (!screenObjects) {
+                    return callback(null);
+                }
+                async.eachSeries(screenObjects, (screenObject, eachCallback) => {
+                    getRef(screenObject.upi, (err, newValue) => {
+                        screenObject.upi = newValue;
+                        eachCallback(err);
+                    });
+                }, callback);
+            };
+
             this.iterateCursor({
                 collection: newPoints,
                 options: {
                     timeout: false
                 }
             }, (err, doc, next) => {
-                let pointRefs = doc['Point Refs'];
-                async.eachSeries(pointRefs, (pointRef, eachCallback) => {
-                    async.parallel([(callback) => {
-                        getRef(pointRef.Value, (err, newValue) => {
-                            pointRef.Value = newValue;
-                            callback(err);
-                        });
-                    }, (callback) => {
-                        getRef(pointRef.PointInst, (err, newValue) => {
-                            pointRef.PointInst = newValue;
-                            callback(err);
-                        });
-                    }, (callback) => {
-                        getRef(pointRef.DevInst, (err, newValue) => {
-                            pointRef.DevInst = newValue;
-                            callback(err);
-                        });
-                    }], (err) => {
-                        eachCallback(err);
-                    });
-                }, (err) => {
-                    if (err) {
-                        console.log(11111, err);
-                    }
-                    getRef(doc._parentUpi, (err, newValue) => {
+                updatePointRefs(doc['Point Refs'], (err) => {
+                    updateScreenObjects(doc['Screen Objects'], (err) => {
                         if (err) {
-                            console.log(22222, err);
+                            console.log(11111, err);
                         }
-                        doc._parentUpi = newValue;
-                        this.update({
-                            collection: newPoints,
-                            query: {
-                                _id: doc._id
-                            },
-                            updateObj: doc
-                        }, (err, result) => {
-                            next(err);
+                        getRef(doc._parentUpi, (err, newValue) => {
+                            if (err) {
+                                console.log(22222, err);
+                            }
+                            doc._parentUpi = newValue;
+                            this.update({
+                                collection: newPoints,
+                                query: {
+                                    _id: doc._id
+                                },
+                                updateObj: doc
+                            }, (err, result) => {
+                                next(err);
+                            });
                         });
                     });
                 });
@@ -657,7 +674,6 @@ let Import = class Import extends Common {
                     });
                 });
             }, (err, count) => {
-                console.log('-------', err, count);
                 this.update({
                     collection: 'SystemInfo',
                     query: {
@@ -1234,6 +1250,13 @@ let Import = class Import extends Common {
             options: {
                 name: 'PT, _name1-4'
             },
+            collection: pointsCollection
+        }, {
+            index: {
+                'path': 1,
+                'Point Type.Value': 1
+            },
+            options: {},
             collection: pointsCollection
         }, {
             index: {
@@ -2058,52 +2081,52 @@ let Import = class Import extends Common {
                 }
             },
             cleanupBlockFields = () => {
-            let oldPrecision,
-                chars,
-                decimals,
-                block,
-                i;
+                let oldPrecision,
+                    chars,
+                    decimals,
+                    block,
+                    i;
 
-            for (i = 0; i < blocks.length; i++) {
-                block = blocks[i];
+                for (i = 0; i < blocks.length; i++) {
+                    block = blocks[i];
 
-                if (block.presentValueVisible !== undefined) { // convert to Bool
-                    block.presentValueVisible = (block.presentValueVisible === true || block.presentValueVisible === 1);
-                }
-
-                if (block.presentvalueVisible !== undefined) {
-                    block.presentValueVisible = (block.presentvalueVisible === true || block.presentvalueVisible === 1);
-                    delete block.presentvalueVisible;
-                }
-
-                if (block.labelVisible !== undefined) { // convert to Bool
-                    block.labelVisible = (block.labelVisible === true || block.labelVisible === 1);
-                }
-
-                if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== 'object')) {
-                    oldPrecision = block.precision;
-                    chars = 3; // defaults
-                    decimals = 1; // defaults
-                    block.precision = {};
-
-                    if (!isNaN(oldPrecision)) {
-                        if (String(oldPrecision).indexOf('.') > -1) {
-                            if (!isNaN(String(oldPrecision).split('.')[0])) {
-                                chars = parseInt(String(oldPrecision).split('.')[0], 10);
-                            }
-                            if (!isNaN(String(oldPrecision).split('.')[1])) {
-                                decimals = parseInt(String(oldPrecision).split('.')[1], 10);
-                            }
-                        } else {
-                            chars = oldPrecision;
-                            decimals = 0;
-                        }
+                    if (block.presentValueVisible !== undefined) { // convert to Bool
+                        block.presentValueVisible = (block.presentValueVisible === true || block.presentValueVisible === 1);
                     }
-                    block.precision.characters = chars;
-                    block.precision.decimals = decimals;
+
+                    if (block.presentvalueVisible !== undefined) {
+                        block.presentValueVisible = (block.presentvalueVisible === true || block.presentvalueVisible === 1);
+                        delete block.presentvalueVisible;
+                    }
+
+                    if (block.labelVisible !== undefined) { // convert to Bool
+                        block.labelVisible = (block.labelVisible === true || block.labelVisible === 1);
+                    }
+
+                    if (block.precision !== undefined && block.precision !== null && (typeof block.precision !== 'object')) {
+                        oldPrecision = block.precision;
+                        chars = 3; // defaults
+                        decimals = 1; // defaults
+                        block.precision = {};
+
+                        if (!isNaN(oldPrecision)) {
+                            if (String(oldPrecision).indexOf('.') > -1) {
+                                if (!isNaN(String(oldPrecision).split('.')[0])) {
+                                    chars = parseInt(String(oldPrecision).split('.')[0], 10);
+                                }
+                                if (!isNaN(String(oldPrecision).split('.')[1])) {
+                                    decimals = parseInt(String(oldPrecision).split('.')[1], 10);
+                                }
+                            } else {
+                                chars = oldPrecision;
+                                decimals = 0;
+                            }
+                        }
+                        block.precision.characters = chars;
+                        block.precision.decimals = decimals;
+                    }
                 }
-            }
-        };
+            };
 
         setGPLPointData();
         cleanupBlockFields();

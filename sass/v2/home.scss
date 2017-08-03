@@ -467,7 +467,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     display: block;
 }
 
-.ui-resizable-resizing .windowMask .iframeFull, 
+.ui-resizable-resizing .windowMask .iframeFull,
 .ui-draggable-dragging .windowMask .iframeFull,
 .interacting .windowMask .iframeFull {
     display: none;
@@ -729,7 +729,7 @@ $startmenuGutter: 15px;
             padding-left: 5px;
             padding-right: 10px;
         }
-        
+
         .autosuggestSelected {
             background-color: $blue-grey-lighten-1;
             color: #FFF;
@@ -1875,7 +1875,6 @@ $treeIconWidth: 22px;
 
     .treeOptions {
         padding: 10px;
-        width: 100%;
     }
 
     .hidden {
@@ -1897,7 +1896,7 @@ $treeIconWidth: 22px;
     .indeterminate {
         background-color: $blue-grey;
     }
-    
+
     .pane {
         position: relative;
         // overflow: auto;
@@ -2071,7 +2070,7 @@ $treeIconWidth: 22px;
         line-height: $treeHeight;
         // padding: 0 .6rem;
 
-      
+
 
         .nodeName {
             // position: relative;
@@ -2148,7 +2147,7 @@ $treeIconWidth: 22px;
         }
 
         & > li:first-child {
-            border-top: 1px solid rgba(96, 125, 139, 0.5);   
+            border-top: 1px solid rgba(96, 125, 139, 0.5);
         }
 
         & > li {
