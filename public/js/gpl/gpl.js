@@ -323,7 +323,7 @@ var gpl = {
                     gpl.log('AddReferencePoint error- upi:', upi, '--', data.message);
                 } else {
                     map = gpl.pointUpiMap[upi] = {
-                        Name: data.Name,
+                        Name: window.getConfig("Utility.getPointName", [data.path]),
                         pointType: data['Point Type'].Value,
                         valueType: (data.Value.ValueType === 5) ? 'enum' : 'float'
                     };
@@ -6846,7 +6846,7 @@ gpl.BlockManager = function (manager) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
                     gpl.pointUpiMap[upi] = {
-                        Name: results.newPoint.Name,
+                        Name: window.getConfig("Utility.getPointName", [results.newPoint.path]),
                         pointType: results.newPoint['Point Type'].Value,
                         valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
                     };
