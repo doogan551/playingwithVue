@@ -3050,7 +3050,7 @@ var dti = {
         }
     },
     hierarchy: {
-        TreeNode: class TreeNode {
+        HierarchyNode: class HierarchyNode {
             static getTemplate(config = {}) {
                 return {
                     _id: dti.makeId(),
@@ -3072,7 +3072,7 @@ var dti = {
             }
 
             constructor(config) {
-                this.defaultConfig = dti.hierarchy.TreeNode.getTemplate(config);
+                this.defaultConfig = dti.hierarchy.HierarchyNode.getTemplate(config);
 
                 this.manager = config.manager;
                 this.defaultConfig = $.extend(true, this.defaultConfig, config);
@@ -3119,15 +3119,15 @@ var dti = {
                 }
             }
         },
-        TreeViewer: class TreeViewer {
+        NodeManager: class NodeManager {
 
             constructor(config) {
                 let $container = config.$container;
-                let markup = dti.utility.getTemplate('#treeViewTemplate');
+                let markup = dti.utility.getTemplate('#hierarchyTemplate');
 
                 $container.append(markup);
 
-                this.$container = $container.find('.root');
+                this.$container = $container;
                 this.$addNodeModal = $('#addNodeModal');
 
                 this.nodeMatrix = {};
@@ -3143,7 +3143,7 @@ var dti = {
                 this.initDOM(config);
 
                 this.getDefaultTree(() => {
-                    // config.getWindow().bindings.loading(false);
+                    config.getWindow().bindings.loading(false);
                     // this.bindings.busy(false);
                 });
             }
@@ -3320,9 +3320,9 @@ var dti = {
 
                 this.$container.find('select').material_select();
 
-                // config.onClose(() => {
-                //     $.contextMenu('destroy', '.dtcollapsible-header');
-                // });
+                config.onClose(() => {
+                    $.contextMenu('destroy', '.dtcollapsible-header');
+                });
             }
 
             initBindings() {
@@ -3338,6 +3338,8 @@ var dti = {
                     currNodeType: '',
                     currNodeSubType: '',
                     currNodePath: '',
+                    treeStyle: 'style3',
+                    treeStyles: ['style1', 'style2', 'style3'],
                     startEntry: 1,
                     endEntry: 10,
                     entryFormat: '',
@@ -3395,7 +3397,7 @@ var dti = {
                             }
                         };
 
-                        if (!(node instanceof dti.hierarchy.TreeNode)) {
+                        if (!(node instanceof dti.hierarchy.HierarchyNode)) {
                             node = manager.getNodeByBindings(ko.dataFor(event.target));
                         }
 
@@ -3457,7 +3459,7 @@ var dti = {
                             cfg.id = dti.makeId();
                         }
 
-                        return $.extend(true, $.extend(true, {}, dti.hierarchy.TreeNode.getTemplate(cfg)), cfg || {});
+                        return $.extend(true, $.extend(true, {}, dti.hierarchy.HierarchyNode.getTemplate(cfg)), cfg || {});
                     },
 
                     expand(obj, event) {
@@ -3742,7 +3744,7 @@ var dti = {
                 }
 
                 if (!newNode) {
-                    newNode = new dti.hierarchy.TreeNode(node);
+                    newNode = new dti.hierarchy.HierarchyNode(node);
 
                     this.nodeMatrix[newNode.bindings._id()] = newNode;
 
@@ -3923,7 +3925,7 @@ var dti = {
             }
 
             normalize(arr, cfg) {
-                let template = dti.hierarchy.TreeNode.getTemplate();
+                let template = dti.hierarchy.HierarchyNode.getTemplate();
 
                 let _normalize = (item, idx) => {
                     // item._data = $.extend(true, {}, item);
@@ -4035,26 +4037,9 @@ var dti = {
                 });
             }
         },
-        initBindings: () => {
-            dti.hierarchy.bindings = ko.viewmodel.fromModel({
-                busy: false,
-                searchString: '',
-                currNodeDisplay: '',
-                currNodeType: '',
-                currNodeSubType: '',
-                currNodePath: ''
-            });
-        },
         initHierarchy: (config) => {
-            // dti.hierarchy.manager = new dti.hierarchy.TreeViewer(config);
-            // dti.bindings.hierarchy.manager = dti.hierarchy.manager;
-            let markup = dti.utility.getTemplate('#hierarchyTemplate');
-            config.$container.append(markup);
-
-            dti.hierarchy.initBindings();
-
-            ko.applyBindings(dti.hierarchy.bindings, config.$container[0]);
-            config.getWindow().bindings.loading(false);
+            dti.hierarchy.manager = new dti.hierarchy.NodeManager(config);
+            dti.bindings.hierarchy.manager = dti.hierarchy.manager;
         }
     },
     navigator: {

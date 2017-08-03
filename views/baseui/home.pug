@@ -388,9 +388,12 @@ html
             //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
 
-            .treeTrunk
+            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}]")
+
+
                 //- // k0o if: children().length !== 0
-                #tree.pane.style3(data-bind="treeView: {}, diResizable: true")
+                #tree.pane(data-bind="css: treeStyle")
+                    ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
 
 
                     //- .treeBar
@@ -422,21 +425,19 @@ html
                         .col.s10(data-bind="diPointName: currNodePath")
                     // /ko
 
-    script#treeViewTemplate(type='text/html')
-        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
 
-    script#node(type='text/html')
-        //- .node
-        //-     ul.collapsible
-        li.treeNode(data-bind="css: {active: expanded}")
-            .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
-                //- i.collapse.material-icons keyboard_arrow_down
-                i.expand.material-icons keyboard_arrow_right
+            script#node(type='text/html')
+                //- .node
+                //-     ul.collapsible
+                li.treeNode(data-bind="css: {active: expanded}")
+                    .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
+                        //- i.collapse.material-icons keyboard_arrow_down
+                        i.expand.material-icons keyboard_arrow_right
 
-            .dtcollapsible-header
-                .nodeName(data-bind="text: display")
-            .dtcollapsible-body
-                ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
+                    .dtcollapsible-header
+                        .nodeName(data-bind="text: display")
+                    .dtcollapsible-body
+                        ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
