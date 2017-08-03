@@ -2054,10 +2054,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             // if (this.setIconName) {
             //     this.setIconName();
             // }
-            this.setLabel(this._pointData.name4);
+            this.setLabel(this._pointData.path[this._pointData.path.length]);
         }
 
-        this.pointName = this._pointData.Name;
+        this.pointName = window.getConfig("Utility.getPointName", [this._pointData.path]);
 
         this.mapPointRefs();
     },
@@ -4208,7 +4208,7 @@ gpl.ActionButton = function (config) {
         _processPointData = function (response) {
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                _local.pointName = _local.pointData.Name;
+                _local.pointName = window.getConfig("Utility.getPointName", [_local.pointData.path]);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -6208,7 +6208,7 @@ gpl.BlockManager = function (manager) {
             gpl.openPointSelector(function (selectedPoint) {
                 var pRef,
                     upi = selectedPoint._id,
-                    name = selectedPoint.Name,
+                    name = window.getConfig("Utility.getPointName", [selectedPoint.path]),
                     pointType = selectedPoint["Point Type"].Value,
                     devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
 
@@ -6861,7 +6861,7 @@ gpl.BlockManager = function (manager) {
                 gpl.openWindow({
                     pointType: pointType,
                     upi: upi,
-                    title: (!!pointData && !!pointData.Name ? pointData.Name : undefined),
+                    title: (!!pointData && !!pointData.path ? window.getConfig("Utility.getPointName", [pointData.path]) : undefined),
                     options: {
                         isGplEdit: gpl.isEdit,
                         callback: saveCallback,
@@ -7503,7 +7503,7 @@ gpl.Manager = function () {
                     managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
-                document.title = gpl.point.Name;
+                document.title = window.getConfig("Utility.getPointName", [gpl.point.path]);
 
                 initPointNamePrefix();
 
@@ -8650,8 +8650,8 @@ gpl.Manager = function () {
                 gpl.blockManager.applyController(controllerName, controllerValue);
             },
 
-            sequenceName: gpl.point.Name,
-            deviceName: ko.observable(gpl.devicePoint.Name),
+            sequenceName: window.getConfig("Utility.getPointName", [gpl.point.path]),
+            deviceName: ko.observable(window.getConfig("Utility.getPointName", [gpl.devicePoint.path])),
             deviceUpi: ko.observable(gpl.devicePointRef.PointInst),
             deviceDescription: ko.observable(gpl.point.Description.Value),
 
