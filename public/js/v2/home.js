@@ -535,14 +535,19 @@ var dti = {
 
             // Setup listener for body clicks
             $('body').mousedown(function handleBodyMouseDown(event) {
+                let start = new Date();
                 dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
                     var $target = $(event.target);
 
                     handler(event, $target);
                 });
+                dti.events._bodyClickCount++;
+                dti.events._bodyClickTime += new Date() - start;
             });
         },
         _bodyClickHandlers: [],
+        _bodyClickCount: 0,
+        _bodyClickTime: 0,
         bodyClick: function(fn) {
             dti.events._bodyClickHandlers.push(fn);
         },
@@ -5399,6 +5404,7 @@ var dti = {
                     // };
                 });
 
+                this.pointTypeListClass = 'pointTypeList';
                 this.$modal = $('#pointSelectorModal');
                 this.callback = this.emptyFn;
 
@@ -5409,11 +5415,40 @@ var dti = {
                 this.bindings = ko.viewmodel.fromModel({
                     searchString: '',
                     results: [],
-                    busy: false
+                    busy: false,
+                    pointTypesShown: false,
+                    pointTypes: ['Sequence', 'Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer', 'Device', 'Remote Unit', 'Display', 'Program', 'Script', 'Report', 'Schedule', 'Sensor', 'Slide Show', 'Lift Station', 'Optimum Start', 'VAV']
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
                 this.bindings.handleRowClick = this.handleRowClick.bind(this);
+                this.bindings.togglePointTypeList = () => {
+                    this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
+                };
+
+                dti.events.bodyClick((event, $target) => {
+                    let cls = this.pointTypeListClass;
+                    let isInsidePointTypeList = function() {
+                        let el = $target[0];
+                        let matches = () => {
+                            return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
+                        };
+
+                        if (!matches()) {
+                            while ((el = el.parentElement) && !matches());
+                        }
+                        
+                        return el;
+                    };
+
+                    if (this.modalOpen) {
+                        if (this.bindings.pointTypesShown()) {
+                            if (!isInsidePointTypeList()) {
+                                this.bindings.togglePointTypeList();
+                            }
+                        }
+                    }
+                });
 
                 this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
                     throttle: 1000
@@ -5483,7 +5518,6 @@ var dti = {
             }
 
             show(config) {
-                dti.log(config);
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
                     this.pointTypes = config.pointTypes || [];
@@ -5491,7 +5525,16 @@ var dti = {
                     this.pointTypes = [config];
                     //string
                 }
-                this.$modal.openModal();
+
+                this.$modal.openModal({
+                    ready: () => {
+                        this.modalOpen = true;
+                    },
+                    complete: () => {
+                        this.modalOpen = false;
+                    }
+                });
+
                 this.search();
             }
         },
