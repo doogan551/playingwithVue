@@ -411,18 +411,18 @@ html
 
                 .treeOptions
                     // ko if: currNodeDisplay() !== ''
-                    .row
-                        .col.s2 Display:
-                        .col.s10(data-bind="text: currNodeDisplay")
-                    .row
-                        .col.s2 Type:
-                        .col.s10(data-bind="text: currNodeType")
-                    .row
-                        .col.s2 SubType:
-                        .col.s10(data-bind="text: currNodeSubType")
-                    .row
-                        .col.s2 Path:
-                        .col.s10(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Display:
+                        .val(data-bind="text: currNodeDisplay")
+                    .treeRow
+                        .cat Type:
+                        .val(data-bind="text: currNodeType")
+                    .treeRow
+                        .cat SubType:
+                        .val(data-bind="text: currNodeSubType")
+                    .treeRow
+                        .cat Path:
+                        .val(data-bind="diPointName: currNodePath")
                     // /ko
 
 

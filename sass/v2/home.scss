@@ -1885,6 +1885,24 @@ $treeIconWidth: 22px;
 
     .treeOptions {
         padding: 10px;
+        flex-grow: 1;
+    }
+
+    .treeRow {
+        padding: 5px;
+    }
+
+    .cat,
+    .val {
+        display: inline-block;
+    }
+
+    .cat {
+        width: 100px;
+    }
+
+    .val {
+        width: auto;
     }
 
     .hidden {
