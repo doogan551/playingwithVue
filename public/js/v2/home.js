@@ -5422,7 +5422,7 @@ var dti = {
                         if (!matches()) {
                             while ((el = el.parentElement) && !matches());
                         }
-                        
+
                         return el;
                     };
 
