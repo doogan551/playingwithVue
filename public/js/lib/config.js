@@ -931,11 +931,11 @@ var Config = (function (obj) {
         },
 
         getPointName: (pointPath) => {
-            "use strict";
-            let result = "";
+            'use strict';
+            let result = '';
 
             if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
-                result = pointPath.join(obj.Enums["Point Name Separator"].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+                result = pointPath.join(obj.Enums['Point Name Separator'].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
             }
 
             return result;
@@ -4938,7 +4938,7 @@ var Config = (function (obj) {
 
     obj.Templates = {
         getTemplate: function (pointType) {
-            var hierarchyTypes = ['Location', 'Category', 'Equipment'];
+            var hierarchyTypes = ['Location', 'Category', 'Equipment', 'Reference'];
             var template = {};
             var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
             if (hierarchyTypes.includes(pointType)) {
