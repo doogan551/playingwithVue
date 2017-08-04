@@ -6,6 +6,7 @@
     "mocha": true,
     "esversion": 6,
     "globals": {
+        "dti": true,
         "moment": true,
         "ko": true,
         "store": true,

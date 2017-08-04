@@ -5389,11 +5389,26 @@ var dti = {
                     // };
                 });
 
-                this.pointTypeListClass = 'pointTypeList';
                 this.$modal = $('#pointSelectorModal');
                 this.callback = this.emptyFn;
 
+                this.initPointTypes();
                 this.initBindings();
+            }
+
+            initPointTypes() {
+                let pointTypes = [];
+                dti.forEachArray(dti.utility.pointTypes, (type) => {
+                    pointTypes.push({
+                        name: type.key,
+                        enum: type.enum,
+                        selected: false,
+                        visible: false
+                    });
+                });
+
+                this.pointTypes = pointTypes;
+                this.pointTypeListClass = 'pointTypeList';
             }
 
             initBindings() {
@@ -5402,7 +5417,7 @@ var dti = {
                     results: [],
                     busy: false,
                     pointTypesShown: false,
-                    pointTypes: ['Sequence', 'Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer', 'Device', 'Remote Unit', 'Display', 'Program', 'Script', 'Report', 'Schedule', 'Sensor', 'Slide Show', 'Lift Station', 'Optimum Start', 'VAV']
+                    pointTypes: this.pointTypes
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
@@ -5411,29 +5426,19 @@ var dti = {
                     this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
                 };
 
-                dti.events.bodyClick((event, $target) => {
-                    let cls = this.pointTypeListClass;
-                    let isInsidePointTypeList = function() {
-                        let el = $target[0];
-                        let matches = () => {
-                            return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
-                        };
+                this.bindings.numberOfPointTypesSelected = ko.computed(() => {
+                    let count = 0;
 
-                        if (!matches()) {
-                            while ((el = el.parentElement) && !matches());
+                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
+                        if (type.selected()) {
+                            count++;
                         }
-                        
-                        return el;
-                    };
+                    });
 
-                    if (this.modalOpen) {
-                        if (this.bindings.pointTypesShown()) {
-                            if (!isInsidePointTypeList()) {
-                                this.bindings.togglePointTypeList();
-                            }
-                        }
-                    }
+                    return count;
                 });
+
+                dti.events.bodyClick(this.handleBodyClick.bind(this));
 
                 this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
                     throttle: 1000
@@ -5444,6 +5449,30 @@ var dti = {
                 });
 
                 dti.bindings.pointSelector = this.bindings;
+            }
+
+            handleBodyClick(event, $target) {
+                let cls = this.pointTypeListClass;
+                let isInsidePointTypeList = function() {
+                    let el = $target[0];
+                    let matches = () => {
+                        return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
+                    };
+
+                    if (!matches()) {
+                        while ((el = el.parentElement) && !matches());
+                    }
+                    
+                    return el;
+                };
+
+                if (this.modalOpen) {
+                    if (this.bindings.pointTypesShown()) {
+                        if (!isInsidePointTypeList()) {
+                            this.bindings.togglePointTypeList();
+                        }
+                    }
+                }
             }
 
             search(terms = '') {

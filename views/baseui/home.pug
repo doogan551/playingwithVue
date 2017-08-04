@@ -215,13 +215,13 @@ html
                             i.material-icons.prefix search
                             input#pointSearchInput(type='search', data-bind="textInput: searchString")
                         .pointTypeButton
-                            a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList")
+                            a.btn-flat.waves-effect.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList, css: { active: pointTypesShown}")
                                 span 1 Point Type
                                 i.material-icons.dropdownCaret arrow_drop_down
                         .pointTypeList.z-depth-1(data-bind="foreach: pointTypes, fadeVisible: pointTypesShown")
                             span
-                                input.filled-in(type='checkbox', data-bind="attr: {id: 'spt-' + $index() }")
-                                label.label-tight(data-bind="text: $data, attr: {for: 'spt-' + $index()}")
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
+                                label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
 
                     //- // ko if: results().length > 0
                     .pointList(data-bind="visible: results().length > 0")
