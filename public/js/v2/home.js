@@ -5426,7 +5426,7 @@ var dti = {
                     this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
                 };
 
-                this.bindings.numberOfPointTypesSelected = ko.computed(() => {
+                this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
                     let count = 0;
 
                     dti.forEachArray(this.bindings.pointTypes(), (type) => {
@@ -5438,15 +5438,24 @@ var dti = {
                     return count;
                 });
 
+                this.bindings.pointTypeText = ko.pureComputed(() => {
+                    let numTypes = this.bindings.numberOfPointTypesSelected();
+                    let ret = numTypes + ' Point Type';
+
+                    if (numTypes !== 1) {
+                        ret += 's';
+                    }
+
+                    return ret;
+                });
+
                 dti.events.bodyClick(this.handleBodyClick.bind(this));
 
                 this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
                     throttle: 1000
                 });
 
-                this.bindings.searchInput.subscribe((val) => {
-                    this.search(val);
-                });
+                this.bindings.searchInput.subscribe(this.search, this);
 
                 dti.bindings.pointSelector = this.bindings;
             }

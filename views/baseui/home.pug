@@ -216,7 +216,7 @@ html
                             input#pointSearchInput(type='search', data-bind="textInput: searchString")
                         .pointTypeButton
                             a.btn-flat.waves-effect.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList, css: { active: pointTypesShown}")
-                                span 1 Point Type
+                                span(data-bind="text: pointTypeText")
                                 i.material-icons.dropdownCaret arrow_drop_down
                         .pointTypeList.z-depth-1(data-bind="foreach: pointTypes, fadeVisible: pointTypesShown")
                             span
