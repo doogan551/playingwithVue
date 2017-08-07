@@ -2333,6 +2333,7 @@ $treeIconWidth: 22px;
 
 
         .dtcollapsible-header:hover,
+        .dtcollapsible-header.selected,
         .treeNode > .collapseToggle:hover {
             background-color: $blue-grey-lighten-2 !important;
         }

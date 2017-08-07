@@ -1240,7 +1240,7 @@
             }
         },
         "Point Name Separator": {
-            "Value": " ► "
+            "Value": " / "
         },
         "Point Statuses": {
             "Active": {
