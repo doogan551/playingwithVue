@@ -90,6 +90,11 @@ const Hierarchy = class Hierarchy extends Common {
         return template;
     }
 
+    fixPath(path, display, index) {
+        path[index] = display;
+        return path;
+    }
+
     add(data, cb) {
         const pointModel = new Point();
         let node = data;
@@ -509,19 +514,49 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentId = this.getNumber(data.parentId);
+        let oldDisplay;
+
         this.getNode({
             id: id
         }, (err, node) => {
-            this.checkForExistingName(node, parentId, (err, exists) => {
-                if (!!exists) {
-                    cb('Name already exists under this parent location');
-                } else {
-                    this.updateParent(parentId, {
+            this.getNode({
+                id: parentId
+            }, (err, parent) => {
+                oldDisplay = node.path[node.path - 2];
+                node.path = this.fixPath(node.path, parent.display, node.path - 2);
+                node.parentNode = parentId;
+                this.update({
+                    query: {
                         _id: id
-                    }, cb);
-                }
+                    },
+                    updateObj: node
+                }, (err) => {
+                    this.updateChildrenPath(oldDisplay, parent.display, cb);
+                });
             });
         });
+    }
+
+    updateChildrenPath(oldDisplay, newDisplay, cb) {
+        this.iterateCursor({
+            query: {
+                'path': oldDisplay
+            }
+        }, (err, child, nextChild) => {
+            child.path = child.path.map((path) => {
+                if (path === oldDisplay) {
+                    path = newDisplay;
+                }
+            });
+            this.update({
+                query: {
+                    _id: child._id
+                },
+                updateObj: child
+            }, (err, result) => {
+                nextChild(err);
+            });
+        }, cb);
     }
 
     updateParent(parentId, query, cb) {
@@ -544,6 +579,7 @@ const Hierarchy = class Hierarchy extends Common {
     editNode(data, cb) {
         let id = this.getNumber(data.id);
         let checkName = false;
+        let oldDisplay;
 
         // updateTags
         this.getOne({
@@ -553,13 +589,15 @@ const Hierarchy = class Hierarchy extends Common {
         }, (err, node) => {
             if (data.hasOwnProperty('display')) {
                 // updateRefs
+                oldDisplay = node.display;
                 node.display = data.display;
+                node.path = this.fixPath(node.path, data.display, node.path.length - 1);
                 checkName = true;
             }
 
-            if (data.hasOwnProperty('type')) {
+            if (data.hasOwnProperty('nodeSubType')) {
                 // updateRefs
-                node.type = data.type;
+                node.nodeSubType = data.nodeSubType;
             }
 
             if (data.hasOwnProperty('meta')) {
@@ -568,28 +606,16 @@ const Hierarchy = class Hierarchy extends Common {
                 }
             }
             this.recreateTags(node);
-            this.checkForExistingName(node, LOCATION, (err, exists) => {
-                if (!!checkName && !!exists) {
-                    cb('Name already exists under this parent location');
-                } else {
-                    this.update({
-                        query: {
-                            _id: id
-                        },
-                        updateObj: node
-                    }, (err) => {
-                        this.update({
-                            query: {
-                                'hierarchyRefs.value': id
-                            },
-                            updateObj: {
-                                $set: {
-                                    'hierarchyRefs.$': this.buildParent(node)
-                                }
-                            }
-                        }, cb);
-                    });
+            this.update({
+                query: {
+                    _id: id
+                },
+                updateObj: node
+            }, (err) => {
+                if (err) {
+                    return cb(err);
                 }
+                this.updateChildrenPath(oldDisplay, node.display, cb);
             });
         });
     }
@@ -676,20 +702,6 @@ const Hierarchy = class Hierarchy extends Common {
         // }, (err) => {
         //     return cb(err || problems);
         // });
-    }
-
-    checkForExistingName(node, parentNode, cb) {
-        this.count({
-            query: {
-                _id: {
-                    $ne: node._id
-                },
-                display: node.display,
-                parentNode: parentNode
-            }
-        }, (err, count) => {
-            return cb(err, (count > 0));
-        });
     }
 
 };
