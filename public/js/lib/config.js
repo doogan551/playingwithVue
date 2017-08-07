@@ -935,7 +935,7 @@ var Config = (function (obj) {
             let result = '';
 
             if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
-                result = pointPath.join(obj.Enums['Point Name Separator'].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+                result = pointPath.join(obj.Enums['Point Name Separator'].Value);
             }
 
             return result;
