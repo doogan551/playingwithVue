@@ -434,7 +434,7 @@ html
                         //- i.collapse.material-icons keyboard_arrow_down
                         i.expand.material-icons keyboard_arrow_right
 
-                    .dtcollapsible-header
+                    .dtcollapsible-header(data-bind="css: {selected: selected}")
                         .nodeName(data-bind="text: display")
                     .dtcollapsible-body
                         ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")

@@ -3066,6 +3066,7 @@ var dti = {
 
                     expanded: false,
                     fetched: false,
+                    selected: false,
 
                     hasChildren: false
                 };
@@ -3212,6 +3213,14 @@ var dti = {
                         }
                     };
                 };
+                let highlightNode = (options, show) => {
+                    let node = getNode(null, options);
+                    if (node) {
+                        node.bindings.selected(show);
+                    } else {
+                        dti.log('No node for highlightNode', options);
+                    }
+                };
 
                 $.contextMenu({
                     selector: '.dtcollapsible-header',
@@ -3315,6 +3324,14 @@ var dti = {
                         //     //     return node.bindings.nodeType() === 'Equipment';
                         //     }
                         // },
+                    },
+                    events: {
+                        show: (options) => {
+                            highlightNode(options, true);
+                        },
+                        hide: (options) => {
+                            highlightNode(options, false);
+                        }
                     }
                 });
 
