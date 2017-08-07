@@ -25,7 +25,7 @@ const Workspace = class Workspace {
     }
 
     resetPassword(data, cb) {
-        const user = new User();
+        const userModel = new User();
         let username = data.username;
         let oldPass = data.oldPass;
         let newPass = utils.encrypt(data.newPass);
@@ -38,7 +38,7 @@ const Workspace = class Workspace {
             }
         };
 
-        user.getOne(criteria, (err, user) => {
+        userModel.getOne(criteria, (err, user) => {
             if (!user) {
                 return cb('User not found');
             }
@@ -66,7 +66,7 @@ const Workspace = class Workspace {
                         }
                     }
                 };
-                user.update(criteria, cb);
+                userModel.update(criteria, cb);
             });
         });
     }
