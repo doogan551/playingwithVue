@@ -174,10 +174,7 @@ var AlarmManager = function (conf) {
         },
 
         nameFilterObj = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
+            terms: "",
             pointTypes: []
         },
         numberPointTypes,
@@ -253,47 +250,23 @@ var AlarmManager = function (conf) {
             $elDetail.tween(tweenParam);
             $.play();
         },
-        changeNameFilter = function (data, endSegment) {
-            var i,
-                j,
-                val,
-                name,
-                Name,
+        changeNameFilter = function (data) {
+            var val,
                 nameSegments = self.filters.nameSegment.options;
 
             self.nameFilterPaused(true);
+            val = (typeof data.Name === 'function') ? data.Name() : data.Name;
 
-            // If we received an endSegment, we filter from name1 to endSegment (1-4)
-            j = endSegment || 4;
+            nameSegments.terms = (val.length ? val : undefined);
+            nameFilterObj.terms = nameSegments.terms;
 
-            // Clear current filter criteria from 'endSegment' to name4
-            for (i = j + 1; i < 4; i++) {
-                nameSegments['name' + i].value('');
-            }
-
-            // Set our new filter criteria
-            for (j; j > 0; j--) {
-                name = 'name' + j;
-                Name = 'Name' + j;
-
-                // Support observables
-                val = (typeof data[Name] === 'function') ? data[Name]() : data[Name];
-
-                nameSegments[name].value(val.length ? val : undefined);
-                nameFilterObj[name] = nameSegments[name].value();
-            }
             self.nameFilterPaused(false);
             applyFilter(true);
         },
         //------ Point selector routines
         filterCallback = function(filterObj) {
-            var i,
-                key;
+            nameFilterObj.terms = filterObj.terms;
 
-            for (i = 1; i < 5; i++) {
-                key = "name" + i;
-                nameFilterObj[key] = filterObj.hasOwnProperty(key) ? filterObj[key] : undefined;
-            }
             if (filterObj.pointTypes.length === numberPointTypes) {
                 filterObj.pointTypes = [];
             }
@@ -701,14 +674,11 @@ var AlarmManager = function (conf) {
             return false;
         },
         initAlarm = function (alarm, skipSelected) {
-            var selected = false,
-                done = false,
-                name = alarm.Name1,
-                key,
-                i;
+            var selected = false;
 
-            if (!skipSelected)
+            if (!skipSelected) {
                 selected = isAlarmInSelectedRows(alarm);
+            }
 
             // Add & initialize the isSelected observable
             alarm.isSelected = ko.observable(selected);
@@ -735,22 +705,12 @@ var AlarmManager = function (conf) {
             }
 
             // Add the displayId key if it doesn't exist
-            if (!alarm.displayId)
+            if (!alarm.displayId) {
                 alarm.displayId = 0;
+            }
 
             // Build concatenated name string & attach to alarm
-            // TODO delete after 'path' is added to alarm entries
-            for (i = 2; i < 5; i++) {
-                key = 'Name' + i;
-                if (alarm[key] === '')
-                    break;
-                name += "_" + alarm[key];
-            }
-            alarm.Name = name;
-            // TODO uncomment after 'path' is added to alarm entries
-            // dtiUtility.getConfig('Utility.getPointName', [alarm.path], (pointName) => {
-            //     alarm.Name = pointName;
-            // });
+            alarm.Name = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [alarm.path]) : window.getConfig("Utility.getPointName", [alarm.path]));
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -1412,7 +1372,7 @@ var AlarmManager = function (conf) {
                         } else {
                             // TODO How to clear the datepicker??
                         }
-                    }  else if (category === 'nameSegment') {
+                    } else if (category === 'nameSegment') {
                         opt.value(viewOptions[opt.text]);
                     } else {
                         opt.active(viewOptions.indexOf(opt.text) > -1);
@@ -1672,20 +1632,8 @@ var AlarmManager = function (conf) {
                 }
             },
             nameSegment: {
-                name1: {
-                    text: 'name1',
-                    value: ''
-                },
-                name2: {
-                    text: 'name2',
-                    value: ''
-                },
-                name3: {
-                    text: 'name3',
-                    value: ''
-                },
-                name4: {
-                    text: 'name4',
+                terms: {
+                    text: 'terms',
                     value: ''
                 },
                 pointTypes: {
@@ -1733,7 +1681,7 @@ var AlarmManager = function (conf) {
                 reqID: 0,
                 view: '',
                 stickyScrollBar: false
-            },
+            }
         };
 
     self.filtersPlaceHolder = deepClone(filters);
@@ -1768,10 +1716,7 @@ var AlarmManager = function (conf) {
                 nameSegment: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -1806,10 +1751,7 @@ var AlarmManager = function (conf) {
                 nameSegment: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -1844,10 +1786,7 @@ var AlarmManager = function (conf) {
                 nameSegment: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -2396,10 +2335,7 @@ var AlarmManager = function (conf) {
 
     self.showPointFilter = function () {
         var parameters = {
-            name1: nameFilterObj.name1,
-            name2: nameFilterObj.name2,
-            name3: nameFilterObj.name3,
-            name4: nameFilterObj.name4,
+            terms: nameFilterObj.terms,
             pointTypes: nameFilterObj.pointTypes
         };
 
@@ -2440,10 +2376,7 @@ var AlarmManager = function (conf) {
         }
 
         nameFilterObj = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
+            terms: "",
             pointTypes: []
         };
 
@@ -2544,12 +2477,12 @@ var AlarmManager = function (conf) {
         self.nameFilterPaused(false);
 
         if (doApplyFilter) {
-            nsFilters.name1.value.valueHasMutated();
+            nsFilters.terms.value.valueHasMutated();
         }
     };
 
-    self.callChangeNameFilter = function (endSegment) {
-        changeNameFilter(self.alarmDetail.alarm(), endSegment);
+    self.callChangeNameFilter = () => {
+        changeNameFilter(self.alarmDetail.alarm());
     };
 
     self.closeAlarmDetail = function (alarm) {
@@ -2568,10 +2501,7 @@ var AlarmManager = function (conf) {
         reqID: 0,
         // Init the alarm observable with Names so the view binding doesn't complain
         alarm: ko.observable({
-            Name1: '',
-            Name2: '',
-            Name3: '',
-            Name4: ''
+            terms: ""
         }),
         gettingData: ko.observable(false).extend({throttle: 100}),
         error: ko.observable(false),
@@ -2681,10 +2611,7 @@ var AlarmManager = function (conf) {
                 data = {
                     newAlarm: {
                         BackColor: "0000FF",
-                        Name1: "DUMMY",
-                        Name2: "POINT",
-                        Name3: "",
-                        Name4: "",
+                        terms: "",
                         Security: [],
                         TextColor: "FFFFFF",
                         ackInfo: "",
@@ -2903,7 +2830,7 @@ var AlarmManager = function (conf) {
 
     // Pausing variable for the following computed name filter. If we didn't have this, when we changed views we'd
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
-    // applyView routine (called when views change) because it updates name1-name4 observables.
+    // applyView routine (called when views change)
     self.nameFilterPaused = ko.observable(true);
     self.nameFilter = ko.computed(function() {
         var paused = self.nameFilterPaused.peek(),
