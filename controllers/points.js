@@ -280,7 +280,7 @@ router.get('/:id', function (req, res) {
     let data = _.merge(req.params, req.body, req.query);
     data.user = req.user;
 
-    if (data.hasOwnProperty("resolvePointRefs") === false) {
+    if (data.hasOwnProperty('resolvePointRefs') === false) {
         data.resolvePointRefs = true;
     }
 

@@ -326,7 +326,7 @@ body {
     right: 120px;
     left: 0;
     vertical-align: middle;
-    padding: 0 10px;
+    padding: 10px 10px;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
@@ -334,10 +334,8 @@ body {
 }
 
 .titleBar .pointType {
-    display: inline-block;
-    vertical-align: top;
     width: 136px;
-    font-size: 11px;
+    font-size: 15px;
     text-transform: uppercase;
     margin-top: 4px;
 }

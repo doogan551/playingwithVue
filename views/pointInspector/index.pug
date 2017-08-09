@@ -41,17 +41,6 @@ html(lang="en")
                     //.btn.btn-xs.btn-default.pointRefresh(data-bind="click: function() { location.reload(true); document.title=point.data.Name(); }", title="Refresh Point")
                     //    i.fa.fa-refresh
                     // /ko
-                    // ko if: isInEditMode
-                    .nameForm
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name1, propertyName: 'name1'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name2, propertyName: 'name2'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name3, propertyName: 'name3'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name4, propertyName: 'name4'", type="text")
-                    // /ko
                     span.pointType(data-bind="text: point.data['Point Type'].Value")
                     span.pointUpi.text-right(data-bind="text: point.data._id")
                 .actions

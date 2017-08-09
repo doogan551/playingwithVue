@@ -41,38 +41,38 @@ const Point = class Point extends Common {
                 point: [{
                     // This is a dummy aggregate operation just to save our point in the output document
                     $sort: {
-                        "_id": 1
+                        '_id': 1
                     }
                 }],
                 // 2B - This gets all the points referenced in "Point Refs"
                 resolvedPoints: [{
                     // 2B.1 - Create a new document for each Point Refs array entry
-                    $unwind: "$Point Refs"
+                    $unwind: '$Point Refs'
                 }, {
                     // 2B.2 - Remove entries that don't have a point ref defined
                     $match: {
-                        "Point Refs.Value": {
+                        'Point Refs.Value': {
                             $ne: 0
                         }
                     }
                 }, {
                     // 2B.3 - Lookup each point ref from the points collection; adds a "Points" array containing all the referenced points
                     $lookup: {
-                        from: "points",
-                        localField: "Point Refs.Value",
-                        foreignField: "_id",
-                        as: "Points"
+                        from: 'points',
+                        localField: 'Point Refs.Value',
+                        foreignField: '_id',
+                        as: 'Points'
                     }
                 }, {
                     // 2B.4 - Create a new document for each resolved point reference
                     $unwind: {
-                        path: "$Points"
+                        path: '$Points'
                     }
                 }, {
                     // 2B.5 - Only keep the referenced point's _id and path fields
                     $project: {
-                        "Points._id": 1,
-                        "Points.path": 1
+                        'Points._id': 1,
+                        'Points.path': 1
                     }
                 }, {
                     // 2B.6 - Restructure the resultant array, i.e. from this:
@@ -94,7 +94,7 @@ const Point = class Point extends Common {
                     //     ...
                     // }]
                     $replaceRoot: {
-                        newRoot: "$Points"
+                        newRoot: '$Points'
                     }
                 }]
             }
@@ -107,7 +107,7 @@ const Point = class Point extends Common {
             //     resolvedPoints: [{...}, {...},]
             // }
             $unwind: {
-                path: "$point"
+                path: '$point'
             }
             // Our document leaves this stage looking like:
             // {
@@ -154,13 +154,13 @@ const Point = class Point extends Common {
                         });
 
                         // Add referenced point names to each "Point Refs" entry
-                        point["Point Refs"].forEach((pointRef) => {
+                        point['Point Refs'].forEach((pointRef) => {
                             let resolvedPoint = resolvedPointsMap[pointRef.Value];
                             if (resolvedPoint) {
                                 pointRef.PointName = Config.Utility.getPointName(resolvedPoint.path);
                             } else {
                                 // TODO - Should we put an error message instead of empty string? Not elegant but effective.
-                                pointRef.PointName = "";
+                                pointRef.PointName = '';
                             }
                         });
                     }
@@ -595,7 +595,7 @@ const Point = class Point extends Common {
                 return cb('Point not found.');
             }
 
-            returnObj.target.Name = targetPoint.Name;
+            returnObj.target.path = targetPoint.path;
             returnObj.target['Point Type'] = targetPoint['Point Type'].Value;
 
             async.eachSeries(targetPoint['Point Refs'], (pointRef, callback) => {
@@ -604,10 +604,10 @@ const Point = class Point extends Common {
                         _id: pointRef.Value,
                         Property: pointRef.PropertyName,
                         'Point Type': (ref !== null) ? ref['Point Type'].Value : null,
-                        Name: pointRef.PointName,
+                        path: (ref !== null) ? ref.path : [],
                         _pStatus: (ref !== null) ? ref._pStatus : null,
                         Device: (device !== null) ? {
-                            Name: device.Name,
+                            Name: device.path,
                             _id: device._id,
                             _pStatus: device._pStatus
                         } : null
@@ -722,7 +722,8 @@ const Point = class Point extends Common {
                     fields: {
                         _pStatus: 1,
                         'Point Refs': 1,
-                        'Point Type': 1
+                        'Point Type': 1,
+                        path: 1
                     }
                 };
                 this.getOne(criteria, (err, ref) => {
@@ -750,7 +751,7 @@ const Point = class Point extends Common {
                         _id: upi
                     },
                     fields: {
-                        Name: 1,
+                        path: 1,
                         _pStatus: 1
                     }
                 };
@@ -1967,8 +1968,8 @@ const Point = class Point extends Common {
                     }
 
                     // Removing "PointName" and "PointType" from "Point Refs" as part of effort: 'Remove PointName from Point Refs'
-                    if (updateObject["Point Refs"]) {
-                        updateObject["Point Refs"].forEach((ref) => {
+                    if (updateObject['Point Refs']) {
+                        updateObject['Point Refs'].forEach((ref) => {
                             delete ref.PointName;
                             delete ref.PointType;
                         });
@@ -3223,13 +3224,12 @@ const Point = class Point extends Common {
 
     addPointToHierarchy(data, cb) {
         let addedPoints = [];
-        const typesNotInHierarchy = ['Schedule Entry'];
         let upi = this.getNumber(data.upi);
         let parentNode = this.getNumber(data.parentNode);
         let display = this.getDefault(data.display, '');
         let nodeType = this.getDefault(data.nodeType, '');
         let nodeSubType = this.getDefault(data.nodeSubType, '');
-        let _pStatus = (typesNotInHierarchy.includes(nodeSubType)) ? Config.Enums['Point Statuses'].NotInHierarchy.enum : Config.Enums['Point Statuses'].Active.enum;
+        let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
             this.findAndModify({
                 query: {
@@ -3263,8 +3263,14 @@ const Point = class Point extends Common {
                         addedPoints.push(...addedNodes);
                         return cb(null, addedPoints);
                     });
+                } else if (nodeSubType === 'Schedule') {
+                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                        return cb(null, addedPoints);
+                    });
                 } else {
-                    return cb(null, addedPoints);
+                    this.setHierarchyScheduleReference(upi, (err, addedEntries) => {
+                        return cb(null, addedPoints);
+                    });
                 }
             });
         });
@@ -3294,6 +3300,37 @@ const Point = class Point extends Common {
                     newPoints.push(...result);
                 }
                 nextBlock(null);
+            });
+        }, (err) => {
+            cb(err, newPoints);
+        });
+    }
+
+    setHierarchyScheduleReference(upi, cb) {
+        let newPoints = [];
+        this.iterateCursor({
+            query: {
+                'Point Refs.Value': upi,
+                'Point Type.Value': 'Schedule Entry'
+            }
+        }, (err, scheduleEntry, nextScheduleEntry) => {
+            let data = {
+                upi: scheduleEntry._id,
+                parentNode: upi,
+                nodeType: 'Application',
+                nodeSubType: scheduleEntry['Point Type'].Value,
+                display: scheduleEntry.name2
+            };
+            this.addPointToHierarchy(data, (err, result) => {
+                if (!!err) {
+                    newPoints.push({
+                        err: err,
+                        node: data
+                    });
+                } else {
+                    newPoints.push(...result);
+                }
+                nextScheduleEntry(null);
             });
         }, (err) => {
             cb(err, newPoints);
