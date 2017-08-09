@@ -460,6 +460,12 @@ var Config = (function (obj) {
                             };
                     }
                 },
+                _getPointTypeEnumFromId = function (pointId) {
+                    return pointId >> 22;
+                },
+                _getPointTypeNameFromId = function (pointId) {
+                    return _getPointTypeNameFromEnum(_getPointTypeEnumFromId(pointId));
+                },
                 _getPointTypeNameFromEnum = function (enumeration) {
                     return obj.revEnums['Point Types'][enumeration];
                 },
@@ -568,6 +574,8 @@ var Config = (function (obj) {
                 };
 
             return {
+                getPointTypeEnumFromId: _getPointTypeEnumFromId,
+                getPointTypeNameFromId: _getPointTypeNameFromId,
                 getPointTypeNameFromEnum: _getPointTypeNameFromEnum,
                 getAllowedPointTypes: _getAllowedPointTypes,
                 getAllPointTypes: _getAllPointTypes,

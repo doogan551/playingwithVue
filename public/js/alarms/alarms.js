@@ -173,7 +173,8 @@ var AlarmManager = function (conf) {
             3: 'Maintenance'
         },
 
-        nameFilterObj = {
+        pointAttribsFilterObj = {
+            path: [],
             terms: "",
             pointTypes: []
         },
@@ -250,28 +251,39 @@ var AlarmManager = function (conf) {
             $elDetail.tween(tweenParam);
             $.play();
         },
-        changeNameFilter = function (data) {
+        changePointAttribsFilter = function (data) {
             var val,
-                nameSegments = self.filters.nameSegment.options;
+                upi = parseInt(data.upi, 10),
+                pointAttribs = self.filters.pointAttribs.options,
+                setFilter = (pointType) => {
+                    pointAttribsFilterObj.pointTypes = [pointType];
+
+                    self.nameFilterPaused(false);
+                    applyFilter(true);
+                };
 
             self.nameFilterPaused(true);
-            val = (typeof data.Name === 'function') ? data.Name() : data.Name;
 
-            nameSegments.terms = (val.length ? val : undefined);
-            nameFilterObj.terms = nameSegments.terms;
+            val = (typeof data.path === 'function') ? data.path() : data.path;
+            pointAttribs.path = (val.length ? val : []);
+            pointAttribsFilterObj.path = pointAttribs.path;
 
-            self.nameFilterPaused(false);
-            applyFilter(true);
+            // val = (typeof data.terms === 'function') ? data.terms() : data.terms;
+            // pointAttribs.terms = (val.length ? val : "");
+            // pointAttribsFilterObj.terms = pointAttribs.terms;
+
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
         filterCallback = function(filterObj) {
-            nameFilterObj.terms = filterObj.terms;
+            pointAttribsFilterObj.path = filterObj.path;
+            pointAttribsFilterObj.terms = filterObj.terms;
 
             if (filterObj.pointTypes.length === numberPointTypes) {
                 filterObj.pointTypes = [];
             }
 
-            nameFilterObj.pointTypes = filterObj.pointTypes;
+            pointAttribsFilterObj.pointTypes = filterObj.pointTypes;
             self.applyNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
@@ -673,6 +685,17 @@ var AlarmManager = function (conf) {
             }
             return false;
         },
+        utilGetConfig = (methodName, parms) => {
+            let result;
+
+            if (typeof dti !== 'undefined' && dti.utility !== undefined) {
+                result = dti.utility.getConfig(methodName, [parms]);
+            } else if (window.getConfig !== undefined) {
+                result = window.getConfig(methodName, [parms]);
+            }
+
+            return result;
+        },
         initAlarm = function (alarm, skipSelected) {
             var selected = false;
 
@@ -710,7 +733,9 @@ var AlarmManager = function (conf) {
             }
 
             // Build concatenated name string & attach to alarm
-            alarm.Name = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [alarm.path]) : window.getConfig("Utility.getPointName", [alarm.path]));
+            alarm.Name = utilGetConfig("Utility.getPointName", alarm.path);
+
+            alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -806,7 +831,7 @@ var AlarmManager = function (conf) {
         },
         // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
         buildAlarmRequestObject = function (alarmTable, reqObj) {
-            var nameSegments,
+            var pointAttribs,
                 dateTimeOptions,
                 alarmClassOptions,
                 alarmCatOptions,
@@ -828,21 +853,21 @@ var AlarmManager = function (conf) {
             reqObj.sort = sortAscending ? 'asc':'desc';
             reqObj.currentPage = view.gotoPageOne ?  1 : view.pageNumber.peek();
 
-            nameSegments = filters.nameSegment.options;
-            for (key in nameSegments) {
+            pointAttribs = filters.pointAttribs.options;
+            for (key in pointAttribs) {
                 if (key === 'pointTypes') {
                     // pointTypes array length of 0 indicates all point types should be included. The server will
                     // give us all point types if we do not send the 'pointTypes' key.
                     if (availablePointTypes) {
-                        if (nameSegments[key].length > 0) {
+                        if (pointAttribs[key].length > 0) {
                             reqObj[key] = [];
-                            for (pointType in nameSegments[key]) {
-                                reqObj[key].push(availablePointTypes[nameSegments[key][pointType]]);
+                            for (pointType in pointAttribs[key]) {
+                                reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
                             }
                         }
                     }
                 } else {
-                    val = nameSegments[key];
+                    val = pointAttribs[key];
                     // A value of undefined means we require that the name segment be empty
                     if (val === undefined) {
                         reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
@@ -943,7 +968,7 @@ var AlarmManager = function (conf) {
                     opt = cat.options[i];
                     viewOptions = viewCat.options;
 
-                    if (category === "dateTime" || category === "nameSegment") {
+                    if (category === "dateTime" || category === "pointAttribs") {
                         viewOptions[opt.text] = opt.value();
                     } else {
                         found = ((index = viewOptions.indexOf(opt.text)) > -1);
@@ -1043,7 +1068,7 @@ var AlarmManager = function (conf) {
             this.text = obj.text;
             this.id = obj.text;
 
-            if (cat === 'dateTime' || cat === 'nameSegment') {
+            if (cat === 'dateTime' || cat === 'pointAttribs') {
                 if (typeof obj.value === 'object') {
                     this.value = ko.observableArray(obj.value);
                 } else {
@@ -1241,7 +1266,7 @@ var AlarmManager = function (conf) {
                         } else {
                             // TODO How to clear the datepicker??
                         }
-                    } else if (category === 'nameSegment') {
+                    } else if (category === 'pointAttribs') {
                         opt.value(viewOptions[opt.text]);
                     } else {
                         opt.active(viewOptions.indexOf(opt.text) > -1);
@@ -1500,7 +1525,11 @@ var AlarmManager = function (conf) {
                     value: ''
                 }
             },
-            nameSegment: {
+            pointAttribs: {
+                path: {
+                    text: 'path',
+                    value: []
+                },
                 terms: {
                     text: 'terms',
                     value: ''
@@ -1571,7 +1600,7 @@ var AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: [],
+                    options: []
                 },
                 dateTime: {
                     visible: true,
@@ -1582,9 +1611,10 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
+                        path: [],
                         terms: "",
                         pointTypes: []
                     }
@@ -1606,7 +1636,7 @@ var AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: [],
+                    options: []
                 },
                 dateTime: {
                     visible: false,
@@ -1617,9 +1647,10 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
+                        path: [],
                         terms: "",
                         pointTypes: []
                     }
@@ -1652,9 +1683,10 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
+                        path: [],
                         terms: "",
                         pointTypes: []
                     }
@@ -1916,12 +1948,19 @@ var AlarmManager = function (conf) {
     };
 
     self.openDisplay = function (data) {
-        var upi = parseInt(data.upi, 10);
+        var upi = parseInt(data._id, 10),
+            alarmDetail = self.alarmDetail,
+            openTheWindow = (pointType) => {
+                dtiUtility.openWindow({
+                    upi: upi,
+                    pointType: pointType
+                });
+                alarmDetail.gettingData(false);
+            };
+
         if (upi > 0) {
-            dtiUtility.openWindow({
-                upi: upi,
-                pointType: data.PointType
-            });
+            alarmDetail.gettingData(true);
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
         }
     };
 
@@ -1949,7 +1988,7 @@ var AlarmManager = function (conf) {
                 showPointReview(data);
             } else {
                 // Right-click changes the name filter to match this point's name
-                changeNameFilter(data);
+                changePointAttribsFilter(data);
             }
             return;
         }
@@ -2204,8 +2243,9 @@ var AlarmManager = function (conf) {
 
     self.showPointFilter = function () {
         var parameters = {
-            terms: nameFilterObj.terms,
-            pointTypes: nameFilterObj.pointTypes
+            path: pointAttribsFilterObj.path,
+            terms: pointAttribsFilterObj.terms,
+            pointTypes: pointAttribsFilterObj.pointTypes
         };
 
         dtiUtility.showPointFilter(parameters);
@@ -2244,7 +2284,8 @@ var AlarmManager = function (conf) {
             return;
         }
 
-        nameFilterObj = {
+        pointAttribsFilterObj = {
+            path: [],
             terms: "",
             pointTypes: []
         };
@@ -2325,7 +2366,7 @@ var AlarmManager = function (conf) {
             curVal,
             newVal,
             i,
-            nsFilters = self.filters.nameSegment.options,
+            nsFilters = self.filters.pointAttribs.options,
             len = nsFilters.length,
             doApplyFilter = false;
 
@@ -2334,13 +2375,13 @@ var AlarmManager = function (conf) {
         for (i = 0; i < len; i++) {
             option = nsFilters[i];
             curVal = option.value();
-            newVal = nameFilterObj[option.text];
+            newVal = pointAttribsFilterObj[option.text];
 
             if (!doApplyFilter && valuesAreDifferent(curVal, newVal)) {
                 doApplyFilter = true;
             }
 
-            option.value(nameFilterObj[option.text]);
+            option.value(pointAttribsFilterObj[option.text]);
         }
 
         self.nameFilterPaused(false);
@@ -2351,7 +2392,7 @@ var AlarmManager = function (conf) {
     };
 
     self.callChangeNameFilter = () => {
-        changeNameFilter(self.alarmDetail.alarm());
+        changePointAttribsFilter(self.alarmDetail.alarm());
     };
 
     self.closeAlarmDetail = function (alarm) {
@@ -2480,6 +2521,7 @@ var AlarmManager = function (conf) {
                 data = {
                     newAlarm: {
                         BackColor: "0000FF",
+                        path: [],
                         terms: "",
                         Security: [],
                         TextColor: "FFFFFF",
@@ -2606,7 +2648,7 @@ var AlarmManager = function (conf) {
                 opt = cat.options[i];
                 viewOptions = viewCat.options;
 
-                if (category === 'dateTime' || category === 'nameSegment') {
+                if (category === 'dateTime' || category === 'pointAttribs') {
                     if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
                         return true;
                     }
@@ -2703,7 +2745,7 @@ var AlarmManager = function (conf) {
     self.nameFilterPaused = ko.observable(true);
     self.nameFilter = ko.computed(function() {
         var paused = self.nameFilterPaused.peek(),
-            options = self.filters.nameSegment.options,
+            options = self.filters.pointAttribs.options,
             len = options.length,
             active = false,
             $filterIcon = $('#nameFilters .filterIcon'),
@@ -2713,7 +2755,7 @@ var AlarmManager = function (conf) {
 
         for (i = 0; i < len; i++) {
             option = options[i];
-            val = option.value();
+            val = (typeof option.value === 'function' ? option.value() : option.value);
             if (typeof val === 'object') {
                 if (val.length) {
                     active = true;
