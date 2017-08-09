@@ -33,7 +33,8 @@ var ActivityLogsManager = function (conf) {
         listOfUsers = ko.observableArray([]),
         listOfFilteredUsers = ko.observableArray([]),
         gotoPageOne = true,
-        pointNameFilterObj = {
+        pointAttribsFilterObj = {
+            path: [],
             terms: "",
             pointTypes: []
         },
@@ -82,7 +83,7 @@ var ActivityLogsManager = function (conf) {
             reqObj.startDate = l_startDate;
             reqObj.endDate = l_endDate;
         },
-        pointNameFilterCallback = function (filter) {
+        pointAttribsFilterCallback = function (filter) {
             let arrayOfPointTypes = [],
                 pointType;
 
@@ -96,7 +97,7 @@ var ActivityLogsManager = function (conf) {
                 }
                 self.pointTypes(arrayOfPointTypes);
             }
-            self.applyPointNameFilter();
+            self.applyPointAttribsFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             let theDate = new Date(timestamp),
@@ -342,14 +343,17 @@ var ActivityLogsManager = function (conf) {
                 self.timeTo(data.timeTo);
                 self.dtFilterPlaceholder.timeTo = data.timeTo;
 
+                self.path(data.path);
+                pointAttribsFilterObj.path = data.path;
+
                 self.terms(data.terms);
-                pointNameFilterObj.terms = data.terms;
+                pointAttribsFilterObj.terms = data.terms;
 
                 for (i in data.pointTypes) {
                     self.pointTypes().push(data.pointTypes[i]);
                 }
 
-                pointNameFilterObj.pointTypes = self.pointTypes();
+                pointAttribsFilterObj.pointTypes = self.pointTypes();
                 gotoPageOne = data.gotoPageOne;
             }
         },
@@ -467,7 +471,7 @@ var ActivityLogsManager = function (conf) {
     };
     self.resetFilters = function () {
         self.clearUsernameFilter();
-        self.clearPointNameFilter();
+        self.clearPointAttribsFilter();
         self.clearDateTimeFilter(true);
     };
     self.clearUsernameFilter = function (refreshTheData) {
@@ -478,11 +482,13 @@ var ActivityLogsManager = function (conf) {
             self.refreshActivityLogsData();
         }
     };
-    self.clearPointNameFilter = function (refreshTheData) {
+    self.clearPointAttribsFilter = function (refreshTheData) {
+        self.path([]);
+        pointAttribsFilterObj.path = [];
         self.terms("");
-        pointNameFilterObj.terms = "";
+        pointAttribsFilterObj.terms = "";
         self.pointTypes([]);
-        pointNameFilterObj.pointTypes = [];
+        pointAttribsFilterObj.pointTypes = [];
 
         if (refreshTheData) {
             storeFilterData();
@@ -507,7 +513,7 @@ var ActivityLogsManager = function (conf) {
             self.refreshActivityLogsData();
         }
     };
-    self.applyPointNameFilter = function () {
+    self.applyPointAttribsFilter = function () {
         gotoPageOne = true;
         storeFilterData();
         self.refreshActivityLogsData();
@@ -534,7 +540,7 @@ var ActivityLogsManager = function (conf) {
         }
 
     };
-    self.cancelPointNameFilter = function () {
+    self.cancelPointAttribsFilter = function () {
         let i,
             data,
             storeData = getStoreData();
@@ -542,14 +548,17 @@ var ActivityLogsManager = function (conf) {
         if (storeData.hasOwnProperty(filterDataKey)) {
             data = storeData[filterDataKey];
 
+            self.path(data.path);
+            pointAttribsFilterObj.path = data.path;
+
             self.terms(data.terms);
-            pointNameFilterObj.terms = data.terms;
+            pointAttribsFilterObj.terms = data.terms;
 
             for (i in data.pointTypes) {
                 self.pointTypes().push(data.pointTypes[i]);
             }
 
-            pointNameFilterObj.pointTypes = self.pointTypes();
+            pointAttribsFilterObj.pointTypes = self.pointTypes();
         }
     };
     self.showPointFilter = function () {
@@ -569,7 +578,7 @@ var ActivityLogsManager = function (conf) {
         };
 
         dtiUtility.showPointFilter(parameters);
-        dtiUtility.onPointSelect(pointNameFilterCallback);
+        dtiUtility.onPointSelect(pointAttribsFilterCallback);
     };
     self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
@@ -651,6 +660,7 @@ var ActivityLogsManager = function (conf) {
     self.timeFrom = ko.observable();
     self.dateTo = ko.observable();
     self.timeTo = ko.observable();
+    self.path = ko.observableArray([]);
     self.terms = ko.observable("");
     self.dirtyUsernameFilter = ko.observable(false);
     self.pointTypes = ko.observableArray([]);
@@ -877,13 +887,22 @@ function initPage(manager) {
         context.$parent.showPointReview(this, context.$data);
     });
 
-    // $pointNameHeader.resizable({
-    //     containment: "parent",
-    //     handles: "e",
-    //     resize: function (event, ui) {
-    //         $pointNameColumn.width(ui.size.width);
-    //     }
-    // });
+    // for resizing the pointname column
+    // $pointNameHeader
+    //     .css({
+    //         position: "relative"
+    //     })
+    //     .prepend("<div class='resizer'></div>")
+    //     .resizable({
+    //         resizeHeight: false,
+    //         handleSelector: "",
+    //         onDragStart: function (e, $el, opt) {
+    //             return ($(e.target).hasClass("resizer")); // only drag resizer
+    //         },
+    //         resize: function (event, ui) {
+    //             $pointNameColumn.width(ui.size.width);
+    //         }
+    //     });
 }
 
 function applyBindings() {
