@@ -39,7 +39,7 @@ const models = {
         pointId: 0
     }
 };
-
+// test
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
