@@ -5396,7 +5396,6 @@ var dti = {
     pointSelector: {
         Selector: class PointSelector {
             constructor(config) {
-                this.emptyFn = () => {};
                 this.exposedMethods = ['handleChoosePoint', 'show'];
 
                 dti.forEachArray(this.exposedMethods, (method) => {
@@ -5407,10 +5406,13 @@ var dti = {
                 });
 
                 this.$modal = $('#pointSelectorModal');
-                this.callback = this.emptyFn;
 
                 this.initPointTypes();
                 this.initBindings();
+            }
+
+            defaultCallback(data) {
+                dti.windows.openWindow(data._id);
             }
 
             initPointTypes() {
@@ -5443,6 +5445,13 @@ var dti = {
                     this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
                 };
 
+                this.bindings.handleRightClick = (obj, event) => {
+                    let pointType = ko.dataFor(obj.target);
+                    let type = pointType.name();
+
+                    this.setPointTypes(type);
+                };
+
                 this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
                     let count = 0;
 
@@ -5453,6 +5462,18 @@ var dti = {
                     });
 
                     return count;
+                });
+
+                this.bindings.flatPointTypeList = ko.pureComputed(() => {
+                    let ret = [];
+
+                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
+                        if (type.selected() && type.visible()) {
+                            ret.push(type.name());
+                        }
+                    });
+
+                    return ret;
                 });
 
                 this.bindings.pointTypeText = ko.pureComputed(() => {
@@ -5496,26 +5517,31 @@ var dti = {
                     if (this.bindings.pointTypesShown()) {
                         if (!isInsidePointTypeList()) {
                             this.bindings.togglePointTypeList();
+                            this.search();
                         }
                     }
                 }
             }
 
-            search(terms = '') {
-                // if (terms !== '') {
-                    this.bindings.busy(true);
-                    dti.post({
-                        url: '/api/points/getFilteredPoints',
-                        data: {
-                            terms: terms.split(' '),
-                            pointTypes: this.pointTypes
-                        }
-                    }).done((results) => {
-                        this.handleSearchResults(results);
-                    });
-                // } else {
-                //     this.bindings.results([]);
-                // }
+            search(skipSearch = false) {
+                //allows a one-time skip if true is passed in
+                if (this._skipSearch) {
+                    this._skipSearch = false;
+                    return false;
+                }
+
+                this._skipSearch = skipSearch;
+
+                this.bindings.busy(true);
+                dti.post({
+                    url: '/api/points/getFilteredPoints',
+                    data: {
+                        terms: this.bindings.searchString().split(' '),
+                        pointTypes: this.bindings.flatPointTypeList()
+                    }
+                }).done((results) => {
+                    this.handleSearchResults(results);
+                });
             }
 
             normalizeSearchResults(results) {
@@ -5534,7 +5560,7 @@ var dti = {
 
                 this.$modal.closeModal();
 
-                dti.windows.openWindow(data._id);
+                this.callback(data);
 
                 // dti.log(arguments);
             }
@@ -5547,6 +5573,7 @@ var dti = {
                 });
 
                 this.bindings.results(results);
+                this.bindings.busy(false);
             }
 
 
@@ -5554,17 +5581,45 @@ var dti = {
             handleChoosePoint(data) {
                 dti.log(data);
                 this.callback(data);
-                this.callback = this.emptyFn;
+                this.callback = this.defaultCallback;
+            }
+
+            setPointTypes(config, save) {
+                //if not object, just point types
+                let pointTypes = config.pointTypes || config;
+                let showAll = config.restrictPointTypes === false;
+
+                if (save) {
+                    this.showAll = showAll;
+                } else {
+                    showAll = this.showAll;
+                }
+
+                dti.forEachArray(this.bindings.pointTypes(), (type) => {
+                    if (pointTypes.indexOf(type.name()) !== -1) {
+                        type.visible(true);
+                        type.selected(true);
+                    } else {
+                        type.visible(showAll);
+                        type.selected(false);
+                    }
+                });
             }
 
             show(config) {
                 if (typeof config === 'object') {
-                    this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
+                    this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
                     this.pointTypes = config.pointTypes || [];
+                    this.bindings.searchString(config.terms || '');
                 } else {
+                    this.callback = this.defaultCallback;
                     this.pointTypes = [config];
-                    //string
+                    this.bindings.searchString('');
                 }
+
+                this.setPointTypes(config, true);
+
+                this.search();
 
                 this.$modal.openModal({
                     ready: () => {
@@ -5574,8 +5629,6 @@ var dti = {
                         this.modalOpen = false;
                     }
                 });
-
-                this.search();
             }
         },
 

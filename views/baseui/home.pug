@@ -206,10 +206,13 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-footer.modal-optional-footer.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector")
+            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector")
                 .modal-header
                     .modalTitle Select Point
-                .modal-content(data-bind="delegate: [{event: 'click', selector: '.pointRow .col', handler: handleRowClick}]")
+                .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick}]")
+                    .fetching
+                        .progress
+                            .indeterminate                    
                     .content-header
                         .pointSearch.input-field
                             i.material-icons.prefix search
@@ -219,26 +222,33 @@ html
                                 span(data-bind="text: pointTypeText")
                                 i.material-icons.dropdownCaret arrow_drop_down
                         .pointTypeList.z-depth-1(data-bind="foreach: pointTypes, fadeVisible: pointTypesShown")
+                            // ko if: visible
                             span
                                 input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
                                 label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
+                            // /ko
 
                     //- // ko if: results().length > 0
-                    .pointList(data-bind="visible: results().length > 0")
-                        .pointHeaders
-                            .col.s3 Display
-                            .col.s3 Type
-                            .col.s6 Path
-                        .pointResults(data-bind="foreach: results")
-                            .pointRow
-                                .col.s3(data-bind="text: display")
-                                .col.s3(data-bind="text: pointType")
-                                .col.s6(data-bind="text: path")
+                    //- .pointList(data-bind="visible: results().length > 0")
+                        //- .pointHeaders
+                    table.pointList.striped.fixedHeader
+                        thead
+                            tr.white-text.blue-grey
+                                th Display
+                                th Type
+                                th Path
+                        tbody
+                            // ko foreach: results
+                            tr
+                                td(data-bind="text: display")
+                                td(data-bind="text: pointType")
+                                td(data-bind="text: path")
+                            // /ko
 
 
-                .modal-footer
-                    button.btn.blue-grey.waves-effect Select
-                    button.btn-flat.modal-action.modal-close.waves-effect Cancel
+                //- .modal-footer
+                //-     button.btn.blue-grey.waves-effect Select
+                //-     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
             #addNodeModal.modal
                 .modal-content
@@ -434,7 +444,7 @@ html
                         //- i.collapse.material-icons keyboard_arrow_down
                         i.expand.material-icons keyboard_arrow_right
 
-                    .dtcollapsible-header(data-bind="css: {selected: selected}")
+                    .dtcollapsible-header(data-bind="css: {selected: selected")
                         .nodeName(data-bind="text: display")
                     .dtcollapsible-body
                         ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
