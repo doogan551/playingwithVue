@@ -5059,6 +5059,22 @@ var dti = {
                 dti.bindings.pointSelector = this.bindings;
             }
 
+            getFlatPointTypes(list) {
+                let ret = [];
+
+                dti.forEachArray(list, (type) => {
+                    if (typeof type === 'object') {
+                        ret.push(type.key);
+                    } else if (typeof type === 'string') {
+                        ret.push(type);
+                    } else {
+                        dti.log('incorrect point type');
+                    }
+                });
+
+                return ret;
+            }
+
             handleBodyClick(event, $target) {
                 let cls = this.pointTypeListClass;
                 let isInsidePointTypeList = function() {
@@ -5170,7 +5186,7 @@ var dti = {
             show(config) {
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
-                    this.pointTypes = config.pointTypes || [];
+                    this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
                     this.bindings.searchString(config.terms || '');
                 } else {
                     this.callback = this.defaultCallback;
