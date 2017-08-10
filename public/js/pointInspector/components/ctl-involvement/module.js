@@ -1,7 +1,7 @@
 /*jslint white: true */
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'text!./view.html'], function (ko, view) {
     var apiEndpoint = '',
-        ASC  = 1,
+        ASC = 1,
         DESC = -1,
         $searchInput,
         $clearSearchIcon;
@@ -11,7 +11,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.id = params.id;
         this.upi = params.rootContext.id;
         apiEndpoint = params.rootContext.apiEndpoint;
-        this.searchTerm  = ko.observable('');
+        this.searchTerm = ko.observable('');
         this.gettingData = ko.observable(true);
         this.networkError = ko.observable(false);
         this.pointRefs = [];
@@ -20,21 +20,25 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.filteredDependencies = ko.observableArray([]);
         this.sortProperty = 'Name';
         this.sortDirection = ASC;
-        this.isTabLoaded = params.isTabLoaded.subscribe(function(val) {
+        this.isTabLoaded = params.isTabLoaded.subscribe(function (val) {
             this.render();
         }, this);
-        this.search = ko.computed(function() {
-            var searchTerm = this.searchTerm().toLowerCase(),   // Our only dependency
+        this.search = ko.computed(function () {
+            var searchTerm = this.searchTerm().toLowerCase(), // Our only dependency
                 filter = function (sourceArray) {
                     return ko.utils.arrayFilter(sourceArray, function (item) {
-                        if (item.Name.toLowerCase().indexOf(searchTerm) !== -1)
+                        if (item.Name.toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
-                        if (item.Property.toLowerCase().indexOf(searchTerm) !== -1)
+                        }
+                        if (item.Property.toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
-                        if (item['Point Type'].toLowerCase().indexOf(searchTerm) !== -1)
+                        }
+                        if (item['Point Type'].toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
-                        if (item['Device Name'].toLowerCase().indexOf(searchTerm) !== -1)
+                        }
+                        if (item['Device Name'].toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
+                        }
                         return false;
                     });
                 };
@@ -44,24 +48,27 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
             // This computed fires before the DOM is initialized so we need to make sure our jQuery selector is defined
             if ($clearSearchIcon) {
-                if (searchTerm.length) $clearSearchIcon.show();
-                else $clearSearchIcon.hide();
+                if (searchTerm.length) {
+                    $clearSearchIcon.show();
+                } else {
+                    $clearSearchIcon.hide();
+                }
             }
-        }, this).extend({ rateLimit: 200 });
+        }, this).extend({
+            rateLimit: 200
+        });
     }
 
     function getData(id) {
-        return $.ajax(
-            {
-                url        : apiEndpoint + 'points/searchdependencies/' + id,
-                contentType: 'application/json',
-                dataType   : 'json',
-                type       : 'get'
-            }
-        );
+        return $.ajax({
+            url: apiEndpoint + 'points/searchdependencies/' + id,
+            contentType: 'application/json',
+            dataType: 'json',
+            type: 'get'
+        });
     }
     // This routine must be called using .call so that 'this' is the array we want to sort on
-    function sortArray (prop, dir) {
+    function sortArray(prop, dir) {
         var opp = ~dir + 1; // Get opposite direction (-1 to 1 or 1 to -1)
         return this.sort(function (obj1, obj2) {
             return (obj1[prop] == obj2[prop]) ? 0 : (obj1[prop] < obj2[prop]) ? opp : dir;
@@ -69,12 +76,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.render = function() {
+    ViewModel.prototype.render = function () {
         var self = this,
+            workspace = window.top.workspaceManager,
             defaultWidth,
             initDOM = function () {
-                $searchInput = $('div.search input');       // This is a global var within this module)
-                $clearSearchIcon = $('.clearSearchIcon');   // This is a global var within this module)
+                $searchInput = $('div.search input'); // This is a global var within this module)
+                $clearSearchIcon = $('.clearSearchIcon'); // This is a global var within this module)
                 defaultWidth = $searchInput.css('width');
 
                 // Add click hander for search icon on input element
@@ -95,22 +103,26 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             };
 
         this.gettingData(true);
-        getData(self.id).done(function(data) {
+        getData(self.id).done(function (data) {
             let pointRefs = [],
                 dependencies = [],
                 cleanProperties = function (item) {
                     item['Device Name'] = item.Device ? item.Device.Name : '';
-                    item['Point Type']  = item['Point Type'] ? item['Point Type'] : '';
-                    item.Property       = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
-                    item.Name           = item.Name ? item.Name : '';
+                    item['Point Type'] = item['Point Type'] ? item['Point Type'] : '';
+                    item.Property = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
+                    item.Name = item.Name ? item.Name : '';
                 };
 
             if (data.err) {
-                if (data.err === "Point not found.") {
-                    console.log("  getData(" + (self.id || self.upi) + ") = " + data.err);
+                if (data.err === 'Point not found.') {
+                    console.log('  getData(' + (self.id || self.upi) + ') = ' + data.err);
                 }
             } else {
                 pointRefs = data.Involvement['Point Refs'];
+                pointRefs.forEach((pointRef) => {
+                    pointRef.pathString = workspace.config.Utility.getPointName(pointRef.path);
+                    console.log(pointRef);
+                });
                 dependencies = data.Involvement.Dependencies;
                 pointRefs.forEach(cleanProperties);
                 dependencies.forEach(cleanProperties);
@@ -128,7 +140,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         });
         initDOM();
     };
-    ViewModel.prototype.openPointReview = function(data, e) {
+    ViewModel.prototype.openPointReview = function (data, e) {
         var workspace = window.top.workspaceManager,
             endPoint, pointType,
             $e = $(e.currentTarget),
@@ -152,11 +164,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         if (this.sortProperty == property) {
             this.sortDirection = ~this.sortDirection + 1; // Change direction (-1 to 1 or 1 to -1)
         } else {
-            this.sortProperty  = property;
+            this.sortProperty = property;
             this.sortDirection = ASC;
         }
         sortArray.call(this.filteredDependencies, property, this.sortDirection);
-        sortArray.call(this.filteredPointRefs,    property, this.sortDirection);
+        sortArray.call(this.filteredPointRefs, property, this.sortDirection);
 
         $('table.involvement thead i.fa').removeClass('fa-chevron-down fa-chevron-up');
         $e.find('.fa').addClass(this.sortDirection == ASC ? 'fa-chevron-up' : 'fa-chevron-down');
@@ -169,10 +181,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
         this.isTabLoaded.dispose();
     };
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });

@@ -210,11 +210,18 @@ html
                 .modal-header
                     .modalTitle Select Point
                 .modal-content(data-bind="delegate: [{event: 'click', selector: '.pointRow .col', handler: handleRowClick}]")
-                    //- h4 Select Point
-
-                    .pointSearch.input-field
-                        i.material-icons.prefix search
-                        input#pointSearchInput(type='search', data-bind="textInput: searchString")
+                    .content-header
+                        .pointSearch.input-field
+                            i.material-icons.prefix search
+                            input#pointSearchInput(type='search', data-bind="textInput: searchString")
+                        .pointTypeButton
+                            a.btn-flat.waves-effect.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList, css: { active: pointTypesShown}")
+                                span(data-bind="text: pointTypeText")
+                                i.material-icons.dropdownCaret arrow_drop_down
+                        .pointTypeList.z-depth-1(data-bind="foreach: pointTypes, fadeVisible: pointTypesShown")
+                            span
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
+                                label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
 
                     //- // ko if: results().length > 0
                     .pointList(data-bind="visible: results().length > 0")
@@ -382,6 +389,8 @@ html
 
 
             .treeTrunk
+
+
                 //- // k0o if: children().length !== 0
                 #tree.pane.style3(data-bind="treeView: treeConfig, diResizable: true")
 
@@ -403,18 +412,18 @@ html
                     #tree.pane.style3(data-bind="treeView: {}")
                 .treeOptions
                     // ko if: currNodeDisplay() !== ''
-                    .row
-                        .col.s2 Display:
-                        .col.s10(data-bind="text: currNodeDisplay")
-                    .row
-                        .col.s2 Type:
-                        .col.s10(data-bind="text: currNodeType")
-                    .row
-                        .col.s2 SubType:
-                        .col.s10(data-bind="text: currNodeSubType")
-                    .row
-                        .col.s2 Path:
-                        .col.s10(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Display:
+                        .val(data-bind="text: currNodeDisplay")
+                    .treeRow
+                        .cat Type:
+                        .val(data-bind="text: currNodeType")
+                    .treeRow
+                        .cat SubType:
+                        .val(data-bind="text: currNodeSubType")
+                    .treeRow
+                        .cat Path:
+                        .val(data-bind="diPointName: currNodePath")
                     // /ko
 
     script#treeViewTemplate(type='text/html')
@@ -428,7 +437,7 @@ html
                 //- i.collapse.material-icons keyboard_arrow_down
                 i.expand.material-icons keyboard_arrow_right
 
-            .dtcollapsible-header
+            .dtcollapsible-header(data-bind="css: {selected: selected}")
                 .nodeName(data-bind="text: display")
             .dtcollapsible-body
                 ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")

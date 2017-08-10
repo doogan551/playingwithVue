@@ -535,14 +535,19 @@ var dti = {
 
             // Setup listener for body clicks
             $('body').mousedown(function handleBodyMouseDown(event) {
+                let start = new Date();
                 dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
                     var $target = $(event.target);
 
                     handler(event, $target);
                 });
+                dti.events._bodyClickCount++;
+                dti.events._bodyClickTime += new Date() - start;
             });
         },
         _bodyClickHandlers: [],
+        _bodyClickCount: 0,
+        _bodyClickTime: 0,
         bodyClick: function(fn) {
             dti.events._bodyClickHandlers.push(fn);
         },
@@ -4965,28 +4970,96 @@ var dti = {
                 this.$modal = $('#pointSelectorModal');
                 this.callback = this.emptyFn;
 
+                this.initPointTypes();
                 this.initBindings();
+            }
+
+            initPointTypes() {
+                let pointTypes = [];
+                dti.forEachArray(dti.utility.pointTypes, (type) => {
+                    pointTypes.push({
+                        name: type.key,
+                        enum: type.enum,
+                        selected: false,
+                        visible: false
+                    });
+                });
+
+                this.pointTypes = pointTypes;
+                this.pointTypeListClass = 'pointTypeList';
             }
 
             initBindings() {
                 this.bindings = ko.viewmodel.fromModel({
                     searchString: '',
                     results: [],
-                    busy: false
+                    busy: false,
+                    pointTypesShown: false,
+                    pointTypes: this.pointTypes
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
                 this.bindings.handleRowClick = this.handleRowClick.bind(this);
+                this.bindings.togglePointTypeList = () => {
+                    this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
+                };
+
+                this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
+                    let count = 0;
+
+                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
+                        if (type.selected()) {
+                            count++;
+                        }
+                    });
+
+                    return count;
+                });
+
+                this.bindings.pointTypeText = ko.pureComputed(() => {
+                    let numTypes = this.bindings.numberOfPointTypesSelected();
+                    let ret = numTypes + ' Point Type';
+
+                    if (numTypes !== 1) {
+                        ret += 's';
+                    }
+
+                    return ret;
+                });
+
+                dti.events.bodyClick(this.handleBodyClick.bind(this));
 
                 this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
                     throttle: 1000
                 });
 
-                this.bindings.searchInput.subscribe((val) => {
-                    this.search(val);
-                });
+                this.bindings.searchInput.subscribe(this.search, this);
 
                 dti.bindings.pointSelector = this.bindings;
+            }
+
+            handleBodyClick(event, $target) {
+                let cls = this.pointTypeListClass;
+                let isInsidePointTypeList = function() {
+                    let el = $target[0];
+                    let matches = () => {
+                        return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
+                    };
+
+                    if (!matches()) {
+                        while ((el = el.parentElement) && !matches());
+                    }
+                    
+                    return el;
+                };
+
+                if (this.modalOpen) {
+                    if (this.bindings.pointTypesShown()) {
+                        if (!isInsidePointTypeList()) {
+                            this.bindings.togglePointTypeList();
+                        }
+                    }
+                }
             }
 
             search(terms = '') {
@@ -5046,7 +5119,6 @@ var dti = {
             }
 
             show(config) {
-                dti.log(config);
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.emptyFn; //guard shouldn't be necessary
                     this.pointTypes = config.pointTypes || [];
@@ -5054,7 +5126,16 @@ var dti = {
                     this.pointTypes = [config];
                     //string
                 }
-                this.$modal.openModal();
+
+                this.$modal.openModal({
+                    ready: () => {
+                        this.modalOpen = true;
+                    },
+                    complete: () => {
+                        this.modalOpen = false;
+                    }
+                });
+
                 this.search();
             }
         },
@@ -6157,6 +6238,7 @@ var dti = {
 
                         expanded: false,
                         fetched: false,
+                        selected: false,
 
                         hasChildren: false
                     };
@@ -6250,7 +6332,6 @@ var dti = {
                 initDOM(config) {
                     // See constructor for config format
                     let manager = this;
-                    const properties = ['visible', 'callback'];
                     let getNode = (key, opt) => {
                         let $target = opt.$trigger;
                         if ($target) {
@@ -6264,6 +6345,14 @@ var dti = {
                         }
 
                         dti.log('no node found', key, opt);
+                    };
+                    let highlightNode = (options, show) => {
+                        let node = getNode(null, options);
+                        if (node) {
+                            node.bindings.selected(show);
+                        } else {
+                            dti.log('No node for highlightNode', options);
+                        }
                     };
                     let makeHandler = (config) => {
                         return (key, opt) => {
@@ -6281,6 +6370,8 @@ var dti = {
                         };
                     };
                     let transformProperties = (obj) => {
+                        let properties = ['visible', 'callback'];
+
                         Object.keys(obj).forEach((key) => {
                             let val = obj[key];
 
@@ -6294,7 +6385,20 @@ var dti = {
                         return obj;
                     };
 
-                    $.contextMenu(transformProperties(config.contextMenu));
+                    transformProperties(config.contextMenu);
+
+                    $.extend(config.contextMenu, {
+                        events: {
+                            show: (options) => {
+                                highlightNode(options, true);
+                            },
+                            hide: (options) => {
+                                highlightNode(options, false);
+                            }
+                        }
+                    });
+
+                    $.contextMenu(config.contextMenu);
 
                     // this.$container.find('select').material_select();
 

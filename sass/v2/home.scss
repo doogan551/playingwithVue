@@ -467,7 +467,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     display: block;
 }
 
-.ui-resizable-resizing .windowMask .iframeFull, 
+.ui-resizable-resizing .windowMask .iframeFull,
 .ui-draggable-dragging .windowMask .iframeFull,
 .interacting .windowMask .iframeFull {
     display: none;
@@ -729,7 +729,7 @@ $startmenuGutter: 15px;
             padding-left: 5px;
             padding-right: 10px;
         }
-        
+
         .autosuggestSelected {
             background-color: $blue-grey-lighten-1;
             color: #FFF;
@@ -1732,11 +1732,61 @@ input:focus {
     .modal-header {
         background-color: $blue-grey-darken-2;
     }
-    
+
+    .content-header {
+        position: relative;
+    }
+
     .pointSearch {
+        width: 80%;
+        display: inline-block;
         input {
             background-color: initial;
             padding-left: 0;
+        }
+    }
+
+    .pointTypeButton {
+        width: 20%;
+        display: inline-block;
+        position: absolute;
+        bottom: 1em;
+
+        .active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            display: flex;
+            padding: 0;
+        }
+
+        i {
+            position: absolute;
+            right: 10px;
+        }
+
+        span {
+            margin-left: 10px;
+        }
+    }
+
+    .pointTypeList {
+        position: absolute;
+        background-color: white;
+        // opacity: 0;
+        left: 0;
+        width: 100%;
+        top: 65px;
+
+        &.active {
+            width: 100%;
+        }
+
+        span {
+            padding: 5px;
+            width: 148px;
+            float: left;
         }
     }
 
@@ -1779,6 +1829,7 @@ input:focus {
         }
     }
 }
+
 
 $treeTopHeight: 76px;
 $treeBarHeight: 84px;
@@ -1834,7 +1885,24 @@ $treeIconWidth: 22px;
 
     .treeOptions {
         padding: 10px;
-        width: 100%;
+        flex-grow: 1;
+    }
+
+    .treeRow {
+        padding: 5px;
+    }
+
+    .cat,
+    .val {
+        display: inline-block;
+    }
+
+    .cat {
+        width: 100px;
+    }
+
+    .val {
+        width: auto;
     }
 
     .hidden {
@@ -1856,7 +1924,7 @@ $treeIconWidth: 22px;
     .indeterminate {
         background-color: $blue-grey;
     }
-    
+
     .pane {
         position: relative;
         // overflow: auto;
@@ -2030,7 +2098,7 @@ $treeIconWidth: 22px;
         line-height: $treeHeight;
         // padding: 0 .6rem;
 
-      
+
 
         .nodeName {
             // position: relative;
@@ -2107,7 +2175,7 @@ $treeIconWidth: 22px;
         }
 
         & > li:first-child {
-            border-top: 1px solid rgba(96, 125, 139, 0.5);   
+            border-top: 1px solid rgba(96, 125, 139, 0.5);
         }
 
         & > li {
@@ -2265,6 +2333,7 @@ $treeIconWidth: 22px;
 
 
         .dtcollapsible-header:hover,
+        .dtcollapsible-header.selected,
         .treeNode > .collapseToggle:hover {
             background-color: $blue-grey-lighten-2 !important;
         }

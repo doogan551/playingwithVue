@@ -460,6 +460,12 @@ var Config = (function (obj) {
                             };
                     }
                 },
+                _getPointTypeEnumFromId = function (pointId) {
+                    return pointId >> 22;
+                },
+                _getPointTypeNameFromId = function (pointId) {
+                    return _getPointTypeNameFromEnum(_getPointTypeEnumFromId(pointId));
+                },
                 _getPointTypeNameFromEnum = function (enumeration) {
                     return obj.revEnums['Point Types'][enumeration];
                 },
@@ -568,6 +574,8 @@ var Config = (function (obj) {
                 };
 
             return {
+                getPointTypeEnumFromId: _getPointTypeEnumFromId,
+                getPointTypeNameFromId: _getPointTypeNameFromId,
                 getPointTypeNameFromEnum: _getPointTypeNameFromEnum,
                 getAllowedPointTypes: _getAllowedPointTypes,
                 getAllPointTypes: _getAllPointTypes,
@@ -931,11 +939,11 @@ var Config = (function (obj) {
         },
 
         getPointName: (pointPath) => {
-            "use strict";
-            let result = "";
+            'use strict';
+            let result = '';
 
             if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
-                result = pointPath.join(obj.Enums["Point Name Separator"].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+                result = pointPath.join(obj.Enums['Point Name Separator'].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
             }
 
             return result;
@@ -4938,7 +4946,7 @@ var Config = (function (obj) {
 
     obj.Templates = {
         getTemplate: function (pointType) {
-            var hierarchyTypes = ['Location', 'Category', 'Equipment'];
+            var hierarchyTypes = ['Location', 'Category', 'Equipment', 'Reference'];
             var template = {};
             var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
             if (hierarchyTypes.includes(pointType)) {
