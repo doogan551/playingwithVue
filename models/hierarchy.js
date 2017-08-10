@@ -623,7 +623,7 @@ const Hierarchy = class Hierarchy extends Common {
             });
         });
     }
-    // testing something
+
     recreateTags(node) {
         const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId', '_pStatus'];
 
