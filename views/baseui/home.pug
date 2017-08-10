@@ -252,31 +252,31 @@ html
 
             #addNodeModal.modal
                 .modal-content
-                    h4(data-bind="text: 'Add ' + hierarchy.newNodeType()")
+                    h4(data-bind="text: 'Add ' + navigatorv2.addNodeModal.newNodeType()")
                     .row
                         .input-field.col.s6
-                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: hierarchy.modalOpen, value: hierarchy.newNodeDisplay")
+                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: navigatorv2.addNodeModal.modalOpen, value: navigatorv2.addNodeModal.newNodeDisplay")
                             label(for="newNodeDisplay") Display
-                    // ko if: hierarchy.newNodeType() === 'Location'
+                    // ko if: navigatorv2.addNodeModal.newNodeType() === 'Location'
                     .row
                         .input-field.col.s3
-                            select(data-bind="options: hierarchy.availableTypes, value: hierarchy.newNodeSubType")
+                            select(data-bind="options: navigatorv2.addNodeModal.availableTypes, value: navigatorv2.addNodeModal.newNodeSubType")
                             label Type
                     // /ko
 
-                    // ko if: hierarchy.needsPoint() === true
+                    // ko if: navigatorv2.addNodeModal.needsPoint() === true
                     .row
                         .col.s9.valign-wrapper
-                            button.btn.blue-grey(data-bind="click: hierarchy.chooseNodePoint") Choose Point
+                            button.btn.blue-grey(data-bind="click: navigatorv2.addNodeModal.chooseNodePoint") Choose Point
 
-                            .valign(data-bind="text: hierarchy.newNodePointName")
+                            .valign(data-bind="text: navigatorv2.addNodeModal.newNodePointName")
                     // /ko
 
                     .row
-                        .col.s12.error.red-text(data-bind='html: hierarchy.error')
+                        .col.s12.error.red-text(data-bind='html: navigatorv2.addNodeModal.error')
 
                 .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: hierarchy.addNode, attr: {disabled: hierarchy.allowAddNode}") Add
+                    button.btn.blue-grey.waves-effect(data-bind="click: navigatorv2.addNodeModal.addNode, attr: {disabled: navigatorv2.addNodeModal.allowAddNode}") Add
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
 
@@ -383,7 +383,7 @@ html
 
         iframe#thumbnailGen.hide
 
-    script#hierarchyTemplate(type='text/html')
+    script#navigatorv2Template(type='text/html')
         .hierarchy.blue-grey-form(data-bind="css: { busy: busy }")
             .treeTop
                 .fetching
@@ -398,12 +398,11 @@ html
             //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
 
 
-            .treeTrunk(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.loadNode, selector: '.dtcollapsible-header .nodeName'}]")
+            .treeTrunk
 
 
                 //- // k0o if: children().length !== 0
-                #tree.pane(data-bind="css: treeStyle, diResizable: $root.treePane")
-                    ul.dtcollapsible(data-bind="template: { name: 'node', foreach: children}")
+                #tree.pane.style3(data-bind="treeView: treeConfig, diResizable: true")
 
 
                     //- .treeBar
@@ -419,6 +418,8 @@ html
                 //- // /ko
 
 
+                //- .treeOptions
+                    #tree.pane.style3(data-bind="treeView: {}")
                 .treeOptions
                     // ko if: currNodeDisplay() !== ''
                     .treeRow
@@ -435,19 +436,21 @@ html
                         .val(data-bind="diPointName: currNodePath")
                     // /ko
 
+    script#treeViewTemplate(type='text/html')
+        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
 
-            script#node(type='text/html')
-                //- .node
-                //-     ul.collapsible
-                li.treeNode(data-bind="css: {active: expanded}")
-                    .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
-                        //- i.collapse.material-icons keyboard_arrow_down
-                        i.expand.material-icons keyboard_arrow_right
+    script#node(type='text/html')
+        //- .node
+        //-     ul.collapsible
+        li.treeNode(data-bind="css: {active: expanded}")
+            .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
+                //- i.collapse.material-icons keyboard_arrow_down
+                i.expand.material-icons keyboard_arrow_right
 
-                    .dtcollapsible-header(data-bind="css: {selected: selected")
-                        .nodeName(data-bind="text: display")
-                    .dtcollapsible-body
-                        ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
+            .dtcollapsible-header(data-bind="css: {selected: selected}")
+                .nodeName(data-bind="text: display")
+            .dtcollapsible-body
+                ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()

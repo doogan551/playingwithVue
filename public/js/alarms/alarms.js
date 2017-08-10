@@ -173,11 +173,9 @@ var AlarmManager = function (conf) {
             3: 'Maintenance'
         },
 
-        nameFilterObj = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
+        pointAttribsFilterObj = {
+            path: [],
+            terms: "",
             pointTypes: []
         },
         numberPointTypes,
@@ -253,52 +251,39 @@ var AlarmManager = function (conf) {
             $elDetail.tween(tweenParam);
             $.play();
         },
-        changeNameFilter = function (data, endSegment) {
-            var i,
-                j,
-                val,
-                name,
-                Name,
-                nameSegments = self.filters.nameSegment.options;
+        changePointAttribsFilter = function (data) {
+            var val,
+                upi = parseInt(data.upi, 10),
+                pointAttribs = self.filters.pointAttribs.options,
+                setFilter = (pointType) => {
+                    pointAttribsFilterObj.pointTypes = [pointType];
+
+                    self.nameFilterPaused(false);
+                    applyFilter(true);
+                };
 
             self.nameFilterPaused(true);
 
-            // If we received an endSegment, we filter from name1 to endSegment (1-4)
-            j = endSegment || 4;
+            val = (typeof data.path === 'function') ? data.path() : data.path;
+            pointAttribs.path = (val.length ? val : []);
+            pointAttribsFilterObj.path = pointAttribs.path;
 
-            // Clear current filter criteria from 'endSegment' to name4
-            for (i = j + 1; i < 4; i++) {
-                nameSegments['name' + i].value('');
-            }
+            // val = (typeof data.terms === 'function') ? data.terms() : data.terms;
+            // pointAttribs.terms = (val.length ? val : "");
+            // pointAttribsFilterObj.terms = pointAttribs.terms;
 
-            // Set our new filter criteria
-            for (j; j > 0; j--) {
-                name = 'name' + j;
-                Name = 'Name' + j;
-
-                // Support observables
-                val = (typeof data[Name] === 'function') ? data[Name]() : data[Name];
-
-                nameSegments[name].value(val.length ? val : undefined);
-                nameFilterObj[name] = nameSegments[name].value();
-            }
-            self.nameFilterPaused(false);
-            applyFilter(true);
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
         filterCallback = function(filterObj) {
-            var i,
-                key;
+            pointAttribsFilterObj.path = filterObj.path;
+            pointAttribsFilterObj.terms = filterObj.terms;
 
-            for (i = 1; i < 5; i++) {
-                key = "name" + i;
-                nameFilterObj[key] = filterObj.hasOwnProperty(key) ? filterObj[key] : undefined;
-            }
             if (filterObj.pointTypes.length === numberPointTypes) {
                 filterObj.pointTypes = [];
             }
 
-            nameFilterObj.pointTypes = filterObj.pointTypes;
+            pointAttribsFilterObj.pointTypes = filterObj.pointTypes;
             self.applyNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
@@ -700,15 +685,23 @@ var AlarmManager = function (conf) {
             }
             return false;
         },
-        initAlarm = function (alarm, skipSelected) {
-            var selected = false,
-                done = false,
-                name = alarm.Name1,
-                key,
-                i;
+        utilGetConfig = (methodName, parms) => {
+            let result;
 
-            if (!skipSelected)
+            if (typeof dti !== 'undefined' && dti.utility !== undefined) {
+                result = dti.utility.getConfig(methodName, [parms]);
+            } else if (window.getConfig !== undefined) {
+                result = window.getConfig(methodName, [parms]);
+            }
+
+            return result;
+        },
+        initAlarm = function (alarm, skipSelected) {
+            var selected = false;
+
+            if (!skipSelected) {
                 selected = isAlarmInSelectedRows(alarm);
+            }
 
             // Add & initialize the isSelected observable
             alarm.isSelected = ko.observable(selected);
@@ -735,22 +728,14 @@ var AlarmManager = function (conf) {
             }
 
             // Add the displayId key if it doesn't exist
-            if (!alarm.displayId)
+            if (!alarm.displayId) {
                 alarm.displayId = 0;
+            }
 
             // Build concatenated name string & attach to alarm
-            // TODO delete after 'path' is added to alarm entries
-            for (i = 2; i < 5; i++) {
-                key = 'Name' + i;
-                if (alarm[key] === '')
-                    break;
-                name += "_" + alarm[key];
-            }
-            alarm.Name = name;
-            // TODO uncomment after 'path' is added to alarm entries
-            // dtiUtility.getConfig('Utility.getPointName', [alarm.path], (pointName) => {
-            //     alarm.Name = pointName;
-            // });
+            alarm.Name = utilGetConfig("Utility.getPointName", alarm.path);
+
+            alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -844,140 +829,9 @@ var AlarmManager = function (conf) {
                 requestTimeout(alarmTable);
             }, GETTING_DATA_TIMEOUT);
         },
-        /*
-        // THESE WERE NEVER USED. SAVING IN CASE WE WANT TO TRY IT IN THE FUTURE
-        requestTinyAlarms = function (alarmTable) {
-            // If a tiny request is in progress or queued
-            if (alarmTable.tinyReqID || (alarmTable.tinyReqTimerID !== 0))
-                return;
-
-            var timeDelta = new Date().getTime() - alarmTable.tinyReqTime,
-                reqID = alarmTable.reqID,
-                name = alarmTable.name,
-                fn = function () {
-                    var len = alarmTable.list().length,
-                        date = new Date(),
-                        uniqueID = date.getTime(),
-                        reqObj = {},
-                        processTinyReqTimeout = function () {
-                            // We've been waiting on a response to our tiny request, but we haven't gotten it still. Let's invaliate this request
-                            // on our end:
-                            // Reset our request ID to free up future tiny requests and invalidate a possible future responses to this tiny request.
-                            // This is necessary because we'll probably issue another tiny request soon; it will have similar request criteria, and
-                            // would likely result in double adding the same alarms to our list if we didn't invalidate this request
-                            alarmTable.tinyReqID = 0;
-                        };
-
-                    // If a response from a previous request is pending
-                    if (alarmTable.tinyReqID !== 0) {
-                        // We can't issue another request while we have one pending. Check again in a few seconds
-                        alarmTable.tinyReqTimerID = window.setTimeout(fn, 3000);
-                        return;
-                    }
-
-                    alarmTable.tinyReqID = uniqueID;
-
-                    // If our alarm list grew and we now have at least a full page of alarms, or
-                    // the alarmTable reqID changed (indicates user changed filter criteria, and as a result, new alarms were requested)
-                    // then we don't need to do a partial get
-                    if ((len >= PAGE_SIZE) || (reqID !== alarmTable.reqID)) {
-                        // Reset the tinyReqID so we can request tiny alarms again in the future
-                        alarmTable.tinyReqID = 0;
-                        return;
-                    }
-
-                    // Update our last request time
-                    alarmTable.tinyReqTime = uniqueID;
-
-                    // Reset our timer id which allows another request to be queued behind this one after a response is received for this request
-                    alarmTable.tinyReqTimerID = 0;
-
-                    buildAlarmRequestObject(alarmTable, reqObj);
-                    reqObj.reqID = reqID;
-                    reqObj.tinyReqID = uniqueID;
-                    reqObj.itemsPerPage = len;
-                    reqObj.currentPage  = 2;
-                    // reqObj.numberItems  = PAGE_UPPER_THRESHOLD - len;
-
-                    _log('Requesting tiny list of ' + name + ' alarms from server.', reqObj, date);
-
-                    alarmTable.tinyReqTimeoutID = window.setTimeout(processTinyReqTimeout, GETTING_DATA_TIMEOUT);
-
-                    socketEmit(name, reqObj);
-                };
-
-            // Tiny requests are rate limited; if time limit has expired since last request, then
-            if (timeDelta > 10000)
-                fn();
-            else
-                alarmTable.tinyReqTimerID = window.setTimeout(fn, 10000 - timeDelta);
-        },
-        receiveTinyAlarms = function (data, alarmTable) {
-            var len = data.alarms ? data.alarms.length : 0,
-                i,
-                alarm,
-                alarms = alarmTable.list();
-
-            window.clearTimeout(alarmTable.tinyReqTimeoutID);
-
-            for (i = 0; i < len; i++) {
-                alarm = data.alarms[i];
-                initAlarm(alarm);
-                alarms.push(alarm);
-            }
-
-            // // If we added to the active alarm table, we also have to sort the array because received active updates
-            // // are not guaranteed to be in chronological order. This is done without notifying subscribers
-            // if (tableName === 'Active')
-            //     sortAlarmsByDate();
-
-            alarmTable.list.valueHasMutated();
-
-            // Reset our request ID to indicate we've finsihed processing the response to our request, & free up future tiny requests
-            // It's VERY important we do not do this until after we've processed the received alarms. Otherwise, another tiny request
-            // could be generated while we're processing this response, and ultimately lead to multiple copies of the same alarm being
-            // added to our list (bad bad bad)
-            alarmTable.tinyReqID = 0;
-        },
-        processReceivedAlarms = function (data, alarmTable) {
-            var date = new Date(),
-                alarmTableName = alarmTable.name;
-
-            // If the reqID key is present
-            if (data.hasOwnProperty('reqID')) {
-                // If the reqID doesn't match, we are receiving alarms that are no longer valid for the current filter criteria
-                if (data.reqID !== alarmTable.reqID) {
-                    _log('Throwing away ' + alarmTableName + ' alarms from server (reqID mismatch)', data, date);
-                    return;
-                }
-                // If the tinyReqID is non-zero and doesn't match, we are receiving a tiny update that is no longer valid
-                if ((data.tinyReqID !== 0) && (data.tinyReqID !== alarmTable.tinyReqID)) {
-                    _log('Throwing away tiny list of ' + alarmTableName + ' alarms from server (tinyReqID mismatch)', data, date);
-                    return;
-                }
-            }
-
-            // If the reqID key is not present, this is an unsolicited receive of alarms from the server, and we
-            // always update our contents with the data from the server
-            if (data.reqID === undefined) {
-                _log('Receivng non-requested ' + alarmTableName + ' alarms from server', data, date);
-                receiveAlarms(data, alarmTable);
-            }
-            // Else if tinyReqID is non-zero, this must be a tiny alarm update (our reqID's must match because we checked them above)
-            else if (data.tinyReqID !== 0) {
-                _log('Receivng tiny list of ' + alarmTableName + ' alarms from server', data, date);
-                receiveTinyAlarms(data, alarmTable);
-            }
-            // Else this must be a batch alarm update
-            else {
-                _log('Receivng ' + alarmTableName + ' alarms from server', data, date);
-                receiveAlarms(data, alarmTable);
-            }
-        },
-        */
         // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
         buildAlarmRequestObject = function (alarmTable, reqObj) {
-            var nameSegments,
+            var pointAttribs,
                 dateTimeOptions,
                 alarmClassOptions,
                 alarmCatOptions,
@@ -999,21 +853,21 @@ var AlarmManager = function (conf) {
             reqObj.sort = sortAscending ? 'asc':'desc';
             reqObj.currentPage = view.gotoPageOne ?  1 : view.pageNumber.peek();
 
-            nameSegments = filters.nameSegment.options;
-            for (key in nameSegments) {
+            pointAttribs = filters.pointAttribs.options;
+            for (key in pointAttribs) {
                 if (key === 'pointTypes') {
                     // pointTypes array length of 0 indicates all point types should be included. The server will
                     // give us all point types if we do not send the 'pointTypes' key.
                     if (availablePointTypes) {
-                        if (nameSegments[key].length > 0) {
+                        if (pointAttribs[key].length > 0) {
                             reqObj[key] = [];
-                            for (pointType in nameSegments[key]) {
-                                reqObj[key].push(availablePointTypes[nameSegments[key][pointType]]);
+                            for (pointType in pointAttribs[key]) {
+                                reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
                             }
                         }
                     }
                 } else {
-                    val = nameSegments[key];
+                    val = pointAttribs[key];
                     // A value of undefined means we require that the name segment be empty
                     if (val === undefined) {
                         reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
@@ -1114,7 +968,7 @@ var AlarmManager = function (conf) {
                     opt = cat.options[i];
                     viewOptions = viewCat.options;
 
-                    if (category === "dateTime" || category === "nameSegment") {
+                    if (category === "dateTime" || category === "pointAttribs") {
                         viewOptions[opt.text] = opt.value();
                     } else {
                         found = ((index = viewOptions.indexOf(opt.text)) > -1);
@@ -1214,7 +1068,7 @@ var AlarmManager = function (conf) {
             this.text = obj.text;
             this.id = obj.text;
 
-            if (cat === 'dateTime' || cat === 'nameSegment') {
+            if (cat === 'dateTime' || cat === 'pointAttribs') {
                 if (typeof obj.value === 'object') {
                     this.value = ko.observableArray(obj.value);
                 } else {
@@ -1412,7 +1266,7 @@ var AlarmManager = function (conf) {
                         } else {
                             // TODO How to clear the datepicker??
                         }
-                    }  else if (category === 'nameSegment') {
+                    } else if (category === 'pointAttribs') {
                         opt.value(viewOptions[opt.text]);
                     } else {
                         opt.active(viewOptions.indexOf(opt.text) > -1);
@@ -1671,21 +1525,13 @@ var AlarmManager = function (conf) {
                     value: ''
                 }
             },
-            nameSegment: {
-                name1: {
-                    text: 'name1',
-                    value: ''
+            pointAttribs: {
+                path: {
+                    text: 'path',
+                    value: []
                 },
-                name2: {
-                    text: 'name2',
-                    value: ''
-                },
-                name3: {
-                    text: 'name3',
-                    value: ''
-                },
-                name4: {
-                    text: 'name4',
+                terms: {
+                    text: 'terms',
                     value: ''
                 },
                 pointTypes: {
@@ -1733,7 +1579,7 @@ var AlarmManager = function (conf) {
                 reqID: 0,
                 view: '',
                 stickyScrollBar: false
-            },
+            }
         };
 
     self.filtersPlaceHolder = deepClone(filters);
@@ -1754,7 +1600,7 @@ var AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: [],
+                    options: []
                 },
                 dateTime: {
                     visible: true,
@@ -1765,13 +1611,11 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        path: [],
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -1792,7 +1636,7 @@ var AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: [],
+                    options: []
                 },
                 dateTime: {
                     visible: false,
@@ -1803,13 +1647,11 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        path: [],
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -1841,13 +1683,11 @@ var AlarmManager = function (conf) {
                         timeTo: ''
                     }
                 },
-                nameSegment: {
+                pointAttribs: {
                     visible: true,
                     options: {
-                        name1: '',
-                        name2: '',
-                        name3: '',
-                        name4: '',
+                        path: [],
+                        terms: "",
                         pointTypes: []
                     }
                 }
@@ -2108,12 +1948,19 @@ var AlarmManager = function (conf) {
     };
 
     self.openDisplay = function (data) {
-        var upi = parseInt(data.upi, 10);
+        var upi = parseInt(data._id, 10),
+            alarmDetail = self.alarmDetail,
+            openTheWindow = (pointType) => {
+                dtiUtility.openWindow({
+                    upi: upi,
+                    pointType: pointType
+                });
+                alarmDetail.gettingData(false);
+            };
+
         if (upi > 0) {
-            dtiUtility.openWindow({
-                upi: upi,
-                pointType: data.PointType
-            });
+            alarmDetail.gettingData(true);
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
         }
     };
 
@@ -2141,7 +1988,7 @@ var AlarmManager = function (conf) {
                 showPointReview(data);
             } else {
                 // Right-click changes the name filter to match this point's name
-                changeNameFilter(data);
+                changePointAttribsFilter(data);
             }
             return;
         }
@@ -2396,11 +2243,9 @@ var AlarmManager = function (conf) {
 
     self.showPointFilter = function () {
         var parameters = {
-            name1: nameFilterObj.name1,
-            name2: nameFilterObj.name2,
-            name3: nameFilterObj.name3,
-            name4: nameFilterObj.name4,
-            pointTypes: nameFilterObj.pointTypes
+            path: pointAttribsFilterObj.path,
+            terms: pointAttribsFilterObj.terms,
+            pointTypes: pointAttribsFilterObj.pointTypes
         };
 
         dtiUtility.showPointFilter(parameters);
@@ -2439,11 +2284,9 @@ var AlarmManager = function (conf) {
             return;
         }
 
-        nameFilterObj = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
+        pointAttribsFilterObj = {
+            path: [],
+            terms: "",
             pointTypes: []
         };
 
@@ -2523,7 +2366,7 @@ var AlarmManager = function (conf) {
             curVal,
             newVal,
             i,
-            nsFilters = self.filters.nameSegment.options,
+            nsFilters = self.filters.pointAttribs.options,
             len = nsFilters.length,
             doApplyFilter = false;
 
@@ -2532,24 +2375,24 @@ var AlarmManager = function (conf) {
         for (i = 0; i < len; i++) {
             option = nsFilters[i];
             curVal = option.value();
-            newVal = nameFilterObj[option.text];
+            newVal = pointAttribsFilterObj[option.text];
 
             if (!doApplyFilter && valuesAreDifferent(curVal, newVal)) {
                 doApplyFilter = true;
             }
 
-            option.value(nameFilterObj[option.text]);
+            option.value(pointAttribsFilterObj[option.text]);
         }
 
         self.nameFilterPaused(false);
 
         if (doApplyFilter) {
-            nsFilters.name1.value.valueHasMutated();
+            nsFilters.terms.value.valueHasMutated();
         }
     };
 
-    self.callChangeNameFilter = function (endSegment) {
-        changeNameFilter(self.alarmDetail.alarm(), endSegment);
+    self.callChangeNameFilter = () => {
+        changePointAttribsFilter(self.alarmDetail.alarm());
     };
 
     self.closeAlarmDetail = function (alarm) {
@@ -2568,10 +2411,7 @@ var AlarmManager = function (conf) {
         reqID: 0,
         // Init the alarm observable with Names so the view binding doesn't complain
         alarm: ko.observable({
-            Name1: '',
-            Name2: '',
-            Name3: '',
-            Name4: ''
+            terms: ""
         }),
         gettingData: ko.observable(false).extend({throttle: 100}),
         error: ko.observable(false),
@@ -2681,10 +2521,8 @@ var AlarmManager = function (conf) {
                 data = {
                     newAlarm: {
                         BackColor: "0000FF",
-                        Name1: "DUMMY",
-                        Name2: "POINT",
-                        Name3: "",
-                        Name4: "",
+                        path: [],
+                        terms: "",
                         Security: [],
                         TextColor: "FFFFFF",
                         ackInfo: "",
@@ -2810,7 +2648,7 @@ var AlarmManager = function (conf) {
                 opt = cat.options[i];
                 viewOptions = viewCat.options;
 
-                if (category === 'dateTime' || category === 'nameSegment') {
+                if (category === 'dateTime' || category === 'pointAttribs') {
                     if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
                         return true;
                     }
@@ -2903,11 +2741,11 @@ var AlarmManager = function (conf) {
 
     // Pausing variable for the following computed name filter. If we didn't have this, when we changed views we'd
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
-    // applyView routine (called when views change) because it updates name1-name4 observables.
+    // applyView routine (called when views change)
     self.nameFilterPaused = ko.observable(true);
     self.nameFilter = ko.computed(function() {
         var paused = self.nameFilterPaused.peek(),
-            options = self.filters.nameSegment.options,
+            options = self.filters.pointAttribs.options,
             len = options.length,
             active = false,
             $filterIcon = $('#nameFilters .filterIcon'),
@@ -2917,7 +2755,7 @@ var AlarmManager = function (conf) {
 
         for (i = 0; i < len; i++) {
             option = options[i];
-            val = option.value();
+            val = (typeof option.value === 'function' ? option.value() : option.value);
             if (typeof val === 'object') {
                 if (val.length) {
                     active = true;

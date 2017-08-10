@@ -947,6 +947,8 @@ let Import = class Import extends Common {
                     scheduleEntryTemplate._parentUpi = oldScheduleEntry._schedUpi;
                     scheduleEntryTemplate.name1 = 'Schedule Entry';
                     scheduleEntryTemplate.name2 = newUpi.toString();
+                    scheduleEntryTemplate.name3 = '';
+                    scheduleEntryTemplate.name4 = '';
                     scheduleEntryTemplate.Name = scheduleEntryTemplate.name1 + '_' + scheduleEntryTemplate.name2;
                     /*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
                     scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
@@ -1147,6 +1149,16 @@ let Import = class Import extends Common {
             },
             options: {
                 name: 'hierarchyPathAndType'
+            },
+            collection: pointsCollection
+        }, {
+            index: {
+                'parentNode': 1,
+                'display': 1
+            },
+            options: {
+                unique: true,
+                sparse: true
             },
             collection: pointsCollection
         }, {
@@ -3007,8 +3019,8 @@ let Import = class Import extends Common {
         }, cb);
     }
     addHierarchyProperties(point, cb) {
-        point.parentNode = 0;
-        point.display = '';
+        // point.parentNode = 0;
+        // point.display = '';
         point.tags = [];
         point.path = [];
         point.meta = {};
