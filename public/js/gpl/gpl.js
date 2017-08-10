@@ -198,11 +198,13 @@ var gpl = {
         $.unblockUI();
     },
     openPointSelector: function (callback, pointType, property, nameFilter) {
+        // TODO - terms
         var parameters = nameFilter ? {} : {
-                name1: gpl.point.name1,
-                name2: gpl.point.name2,
-                name3: gpl.point.name3,
-                name4: gpl.point.name4,
+                // name1: gpl.point.name1,
+                // name2: gpl.point.name2,
+                // name3: gpl.point.name3,
+                // name4: gpl.point.name4,
+                terms: gpl.point.terms,
                 pointType: pointType,
                 property: property
             },
@@ -4216,11 +4218,12 @@ gpl.ActionButton = function (config) {
                     point: {
                         _id: response._id,
                         Security: response.Security,
-                        Name: response.Name,
-                        name1: response.name1,
-                        name2: response.name2,
-                        name3: response.name3,
-                        name4: response.name4,
+                        Name: _local.pointName,
+                        path: _local.pointData.path,
+                        // name1: response.name1,
+                        // name2: response.name2,
+                        // name3: response.name3,
+                        // name4: response.name4,
                         "Point Type": {
                             eValue: response["Point Type"].eValue
                         }
@@ -7800,10 +7803,10 @@ gpl.Manager = function () {
             // pointType = window.encodeURI(block.pointType),
             names = (gpl.pointNamePrefix + block.label).split('_'),
             called = false,
-            name1 = names[0],
-            name2 = names[1],
-            name3 = names[2],
-            name4 = names[3] || '',
+            // name1 = names[0],
+            // name2 = names[1],
+            // name3 = names[2],
+            // name4 = names[3] || '',
             handler = function (obj) {
                 var calcType;
                 if (obj === false) {
@@ -7853,12 +7856,14 @@ gpl.Manager = function () {
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
             // gpl.blockUI();
-            parameters.name1 = name1;
-            parameters.name2 = name2;
-            parameters.name3 = name3;
-            parameters.name4 = name4;
+            // parameters.name1 = name1;
+            // parameters.name2 = name2;
+            // parameters.name3 = name3;
+            // parameters.name4 = name4;
+            parameters.path = gpl.point.path;
             parameters.pointType = block.pointType;
 
+            // TODO - point naming based on GPL's path/name
             dtiUtility.showCreatePoint(parameters);
             dtiUtility.onCreatePoint(handler);
         } else {
