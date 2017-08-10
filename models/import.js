@@ -772,8 +772,6 @@ let Import = class Import extends Common {
                             'isDisplayable': true,
                             'isReadOnly': false,
                             'Value': ref._id,
-                            'PointName': '',
-                            'PointType': 0,
                             'PointInst': 0,
                             'DevInst': 0
                         });
@@ -870,8 +868,6 @@ let Import = class Import extends Common {
                                 'isDisplayable': true,
                                 'isReadOnly': false,
                                 'Value': monitor['Monitor upi'],
-                                'PointName': '',
-                                'PointType': 0,
                                 'PointInst': 0,
                                 'DevInst': 0
                             });
@@ -1765,10 +1761,8 @@ let Import = class Import extends Common {
                         'AppIndex': pRefAppIndex++,
                         'isDisplayable': true,
                         'isReadOnly': false,
-                        'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
-                        'PointType': Config.Enums['Point Types'][pointType].enum || 0
+                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0
                     };
 
                 return baseRef;
@@ -1905,10 +1899,8 @@ let Import = class Import extends Common {
                         'AppIndex': pRefAppIndex++,
                         'isDisplayable': true,
                         'isReadOnly': false,
-                        'PointName': refPoint.Name,
                         'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
-                        'PointType': Config.Enums['Point Types'][pointType].enum || 0
+                        'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0
                     };
 
                 return baseRef;
@@ -2031,10 +2023,8 @@ let Import = class Import extends Common {
                     'AppIndex': pRefAppIndex++,
                     'isDisplayable': true,
                     'isReadOnly': true,
-                    'PointName': refPoint.Name,
                     'PointInst': (refPoint._pStatus !== 2) ? refPoint._id : 0,
-                    'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0,
-                    'PointType': Config.Enums['Point Types'][pointType].enum || 0
+                    'DevInst': (Config.Utility.getPropertyObject('Device Point', refPoint) !== null) ? Config.Utility.getPropertyObject('Device Point', refPoint).Value : 0
                 };
 
                 return baseRef;
@@ -2225,10 +2215,8 @@ let Import = class Import extends Common {
                                     AppIndex: appIndex,
                                     isDisplayable: point[prop].isDisplayable,
                                     isReadOnly: point[prop].isReadOnly,
-                                    PointName: point[prop].PointName,
                                     PointInst: point[prop].PointInst,
-                                    DevInst: point[prop].DevInst,
-                                    PointType: point[prop].PointType
+                                    DevInst: point[prop].DevInst
                                 };
 
                                 point['Point Refs'].push(pointRef);
@@ -2278,13 +2266,9 @@ let Import = class Import extends Common {
 
                                 if (registerPoint !== null) {
                                     pointRef.Value = registerPoint._id;
-                                    pointRef.PointName = registerPoint.Name;
-                                    pointRef.PointType = registerPoint['Point Type'].eValue;
                                     pointRef.PointInst = (registerPoint._pStatus !== 2) ? registerPoint._id : 0;
                                 } else {
                                     pointRef.Value = 0;
-                                    pointRef.PointName = '';
-                                    pointRef.PointType = 0;
                                     pointRef.PointInst = 0;
                                 }
                                 tempRefsArray.push(pointRef);
@@ -2333,10 +2317,8 @@ let Import = class Import extends Common {
                             AppIndex: appIndex,
                             isDisplayable: point[prop].isDisplayable,
                             isReadOnly: point[prop].isReadOnly,
-                            PointName: point[prop].PointName,
                             PointInst: point[prop].PointInst,
-                            DevInst: point[prop].DevInst,
-                            PointType: point[prop].PointType
+                            DevInst: point[prop].DevInst
                         };
 
                         point['Point Refs'].push(pointRef);
