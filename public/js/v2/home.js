@@ -5138,6 +5138,7 @@ var dti = {
                 this.$modal.closeModal();
 
                 this.callback(data);
+                this.callback = this.defaultCallback;
 
                 // dti.log(arguments);
             }
@@ -5204,6 +5205,7 @@ var dti = {
                     },
                     complete: () => {
                         this.modalOpen = false;
+                        this.callback = this.defaultCallback;
                     }
                 });
             }
