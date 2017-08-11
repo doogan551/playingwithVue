@@ -29,6 +29,7 @@ let Import = class Import extends Common {
             this.initImport((err) => {
                 this.updateIndexes((err) => {
                     this.convertHistoryReports((err) => {
+                        console.l;
                         this.convertTotalizerReports((err) => {
                             this.convertScheduleEntries((err) => {
                                 this.updateAllProgramPoints((err) => {
@@ -788,7 +789,9 @@ let Import = class Import extends Common {
                 this.insert({
                     collection: pointsCollection,
                     insertObj: report
-                }, next);
+                }, (err, result)=>{
+                    next(err);
+                });
             });
         }, callback);
     }
@@ -903,7 +906,9 @@ let Import = class Import extends Common {
                     this.insert({
                         collection: pointsCollection,
                         insertObj: report
-                    }, cb);
+                    }, (err, result)=>{
+                        cb(err);
+                    });
                 });
             });
         }, (err, count) => {
