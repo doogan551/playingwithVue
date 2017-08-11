@@ -4196,7 +4196,7 @@ var dti = {
                             name: 'Open',
                             visible: {
                                 cb: (cfg, treeCb) => {
-                                    dti.navigatorv2.tree.helper.isValidOpenAction(cfg, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidOpenAction(cfg, treeCb);
                                 }
                             },
                             callback: {
@@ -4222,7 +4222,7 @@ var dti = {
                             },
                             visible: {
                                 cb: (cfg, treeCb) => {
-                                    dti.navigatorv2.tree.helper.isValidPasteAction(cfg, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidPasteAction(cfg, treeCb);
                                 }
                             }
                         },
@@ -4255,14 +4255,25 @@ var dti = {
                 });
             },
             cutNode: (cfg) => {
-                // TODO
-                mbox.alert('Cut/Paste is under construction.');
                 dti.navigatorv2.tree._cutNode = cfg.parentNode;
             },
-            pasteNode: (cfg) => {
-                // TODO
-                mbox.alert('Cut/Paste is under construction.');
-                dti.navigatorv2.tree._cutNode = null;
+            pasteNode: (cfg, treeCb) => {
+                let self = dti.navigatorv2;
+                let data = {
+                    source: dti.navigatorv2.tree._cutNode,
+                    target: cfg.parentNode
+                };
+                let done = (err) => {
+                    if (!err) {
+                        treeCb('move', data);
+                        dti.navigatorv2.tree._cutNode = null;
+                        dti.toast('Success', 2000);
+                    }
+                    self.bindings.busy(false);
+                };
+                
+                self.bindings.busy(true);
+                self.tree.serverOps.moveNode(data, done);
             },
             addNode: () => {
                 let self = dti.navigatorv2;
@@ -4331,17 +4342,14 @@ var dti = {
 
                 // let self = dti.navigatorv2;
                 // let node = cfg.parentNode;
-                // let msg = 'Are you sure you want to delete ' + node.bindings.display() + '?';
+                // let msg = 'Are you sure you want to delete ' + node.bindings.display() + '? <br /><br />WARNING: This will also delete all children of this node.';
                 // let done = (err) => {
                 //     if (!err) {
                 //         treeCb('delete', cfg);
                 //         dti.toast('Success', 2000);
                 //     }
                 // };
-
-                // if (node.bindings.hasChildren()) {
-                //     msg += '<br /><br />WARNING: This node contains children that will also be deleted.';
-                // }
+                // 
                 // mbox.confirm(msg, (yes) => {
                 //     if (yes) {
                 //         self.tree.serverOps.deleteNode(node, done);
@@ -4395,8 +4403,9 @@ var dti = {
                 isValidPasteAction: (cfg) => {
                     let self = dti.navigatorv2;
                     let cutNode = self.tree.helper.getCutNode();
+                    let result = cutNode && cfg && (cfg.parentNode.bindings._id() !== cutNode.bindings._id());
 
-                    return cutNode && cfg && (cfg.parentNode !== cutNode);
+                    return result;
                 },
                 getCutNode: () => {
                     let self = dti.navigatorv2;
@@ -4566,29 +4575,40 @@ var dti = {
                 editNode() {
                     // TODO
                 },
-                moveNode() {
-                    // TODO
-                    // var data = ko.dataFor(from),
-                    //     parent = ko.contextFor(from).$parent,
-                    //     destData = ko.dataFor(to);
+                moveNode(data, cb) {
+                    // data: {
+                    //     source: source node
+                    //     target: target node to move the source node into
+                    // }
+                    let err = false;
 
-                    // manager.ajax({
-                    //     url: '/api/hierarchy/move',
-                    //     data: {
-                    //         id: data._id(),
-                    //         parentId: destData._id(),
-                    //         item: 'Location'
-                    //     }
-                    // }).done(function (response) {
-                    //     if (!response.err) {
-                    //         (parent.children || manager.bindings.data).remove(data);
+                    dti.post({
+                        url: '/api/hierarchy/move',
+                        data: {
+                            id: data.source.bindings._id(),
+                            parentNode: data.target.bindings._id()
+                        }
+                    }).done((response) => {
+                        // reponse: {
+                        //     err: 'error message here',
+                        //     // OR
+                        //     message: 'success' 
+                        // }
+                        dti.log(response);
 
-                    //         destData.children.push(data);
-                    //     } else {
-                    //         Materialize.toast('Error: ' + response.err, 3000);
-                    //     }
-                    //     dti.log(response);
-                    // });
+                        if (!response) {
+                            err = 'An unknown error occured';
+                        } else if (response.err) {
+                            err = 'Error moving node: ' + response.err;
+                        }
+                    }).fail(() => {
+                        err = 'A network error occurred';
+                    }).always(() => {
+                        if (err) {
+                            dti.toast(err, 5000, 'errorToast');
+                        }
+                        cb(!!err);
+                    });
                 },
                 deleteNode(node, cb) {
                     let self = dti.navigatorv2;
@@ -4609,7 +4629,7 @@ var dti = {
                         // }
                         dti.log(response);
 
-                        if (response.err) {
+                        if (!response) {
                             err = 'An unknown error occured';
                         } else if (response.err) {
                             err = 'Error deleting node: ' + response.err;
@@ -6585,7 +6605,7 @@ var dti = {
                     manager.rootNode = manager.createNode(rootNode, null, true);
                 }
 
-                addNode(data) {
+                addNode(data) { // Callback action
                     // This routine is called with 'this' set to the TreeViewer class instance.
                     // data: {
                     //     node: node,
@@ -6617,7 +6637,7 @@ var dti = {
                     });
                 }
 
-                deleteNode(cfg) {
+                deleteNode(cfg) { // Callback action
                     // This routine is called with 'this' set to the TreeViewer class instance.
                     let node = cfg.parentNode;
                     let parent = node.parentNode;
@@ -6629,16 +6649,38 @@ var dti = {
                     }
                 }
 
-                moveNode(from, to) {
+                moveNode(data) { // Callback action
                     // This routine is called with 'this' set to the TreeViewer class instance.
-                    // TODO
+                    // data: {
+                    //     source: source node,
+                    //     target: target node to move the source node into
+                    // }
+                    let manager = this;
+                    let source = data.source;
+                    let sourceParent = source.parentNode;
+                    let target = data.target;
+                    let targetChildren = target.bindings.children;
+                    let rebuildChildrenPaths = (parentPath, children) => {
+                        dti.forEachArray(children, (child) => {
+                            let newPath = parentPath.concat([child.display()]);
 
-                    // let parent = ko.contextFor(from).$parent,
-                    // let destData = ko.dataFor(to);
-                    // let manager = this;
+                            child.path(newPath);
 
-                    // (parent.children || manager.bindings.data).remove(data);
-                    // destData.children.push(data);
+                            if (child.children.length) {
+                                rebuildChildrenPaths(newPath, child.children());
+                            }
+                        });
+                    };
+
+                    sourceParent.deleteChild(source);
+                    target.addChild(source);
+
+                    source.parentNode = target;
+                    source.bindings.parentNode(target.bindings._id());
+
+                    // Update path for source and all source's children
+                    source.bindings.path(target.bindings.path().concat([source.bindings.display()]));
+                    rebuildChildrenPaths(source.bindings.path(), source.bindings.children());
                 }
 
                 addBranch(children, parent) {
@@ -6762,10 +6804,6 @@ var dti = {
                     return arr;
                 }
 
-                findNode(id) {
-                    return this.nodeMatrix[id] || null;
-                }
-
                 getNode(cfg) {
                     if (!cfg.id) {
                         cfg.id = dti.makeId();
@@ -6857,7 +6895,7 @@ var dti = {
 
                 //         target = item[key][0].value;
 
-                //         node = this.findNode(target);
+                //         node = this.getNodeById(target);
 
                 //         if (node) {
                 //             item.parentNode = node._id();
