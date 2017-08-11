@@ -19,6 +19,9 @@ var ActivityLogsManager = function (conf) {
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
+        $activitylogBody = $(".activitylogBody"),
+        $userFilterModal = $activitylogBody.find("#userFilterModal"),
+        $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
         PAGE_SIZE = 200,
         COMPUTED_DELAY = 10,
         computedThrottle = {
@@ -522,6 +525,7 @@ var ActivityLogsManager = function (conf) {
         gotoPageOne = true;
         listOfUsers(getJsUsers());
         storeFilterData();
+        $userFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelUserNameFilter = function () {
@@ -539,6 +543,7 @@ var ActivityLogsManager = function (conf) {
             }
         }
 
+        $userFilterModal.closeModal();
     };
     self.cancelPointAttribsFilter = function () {
         let i,
@@ -590,6 +595,7 @@ var ActivityLogsManager = function (conf) {
         self.timeTo(self.dtFilterPlaceholder.timeTo);
         gotoPageOne = true;
         storeFilterData();
+        $dateTimeFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelDateTimeFilter = function () {
@@ -601,6 +607,7 @@ var ActivityLogsManager = function (conf) {
         $dateTo.val(self.dtFilterPlaceholder.dateTo).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
         self.dtFilterPlaceholder.timeTo = self.timeTo();
         $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo);
+        $dateTimeFilterModal.closeModal();
     };
     self.toggleDateTimeSort = function () {
         let currentSort = self.sortAscending();
@@ -608,6 +615,14 @@ var ActivityLogsManager = function (conf) {
         storeFilterData();
         self.refreshActivityLogsData();
     };
+    self.editDateTimeFilter = () => {
+        $dateTimeFilterModal.openModal();
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
+    };
+
     self.changePage = function (modifier) {
         let activityLogs = self.activityLogs(),
             newPage;
@@ -650,6 +665,14 @@ var ActivityLogsManager = function (conf) {
         });
         $('.activityLogs').css('overflow', 'auto');
     };
+    self.editUserFilter = () => {
+        $userFilterModal.openModal();
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
+    };
+
 
     self.dtFilterPlaceholder = {
         dateFrom: '',
@@ -891,21 +914,21 @@ function initPage(manager) {
     });
 
     // for resizing the pointname column
-    // $pointNameHeader
-    //     .css({
-    //         position: "relative"
-    //     })
-    //     .prepend("<div class='resizer'></div>")
-    //     .resizable({
-    //         resizeHeight: false,
-    //         handleSelector: "",
-    //         onDragStart: function (e, $el, opt) {
-    //             return ($(e.target).hasClass("resizer")); // only drag resizer
-    //         },
-    //         resize: function (event, ui) {
-    //             $pointNameColumn.width(ui.size.width);
-    //         }
-    //     });
+    $pointNameHeader
+        .css({
+            position: "relative"
+        })
+        .prepend("<div class='resizer'></div>")
+        .resizable({
+            resizeHeight: false,
+            handleSelector: "",
+            onDragStart: function (e, $el, opt) {
+                return ($(e.target).hasClass("resizer")); // only drag resizer
+            },
+            resize: function (event, ui) {
+                $pointNameColumn.width(ui.size.width);
+            }
+        });
 }
 
 function applyBindings() {
