@@ -213,8 +213,8 @@ var gpl = {
                 path: gpl.point.path,
                 pointType: pointType,
                 restrictPointTypes: false,
-                property: property,
-                callback: pointSelectedCallback
+                // callback: pointSelectedCallback,
+                property: property
             };
 
         if (parameters.pointTypes === undefined) {
