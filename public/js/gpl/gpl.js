@@ -197,18 +197,9 @@ var gpl = {
         gpl.log('Unblocking UI');
         $.unblockUI();
     },
-    openPointSelector: function (callback, pointType, property, nameFilter) {
-        // TODO - terms
-        var parameters = nameFilter ? {} : {
-                // name1: gpl.point.name1,
-                // name2: gpl.point.name2,
-                // name3: gpl.point.name3,
-                // name4: gpl.point.name4,
-                terms: gpl.point.terms,
-                pointType: pointType,
-                property: property
-            },
-            pointSelectedCallback = function (pointInfo) {
+    openPointSelector: function (callback, pointType, property, pointAttribsFilter) {
+        // TODO cleanup pointAttribsFilter logic and add functionality around terms
+        var pointSelectedCallback = function (pointInfo) {
                 if (!!pointInfo) {
                     $.ajax({
                         url: gpl.pointApiPath + pointInfo._id
@@ -216,6 +207,14 @@ var gpl = {
                         callback(selectedPoint);
                     });
                 }
+            },
+            parameters = pointAttribsFilter ? pointAttribsFilter : {
+                terms: "",
+                path: gpl.point.path,
+                pointType: pointType,
+                restrictPointTypes: false,
+                property: property,
+                callback: pointSelectedCallback
             };
 
         if (parameters.pointTypes === undefined) {
@@ -223,7 +222,10 @@ var gpl = {
         }
 
         if (pointType) {
-            if (parameters.pointTypes.indexOf(pointType) === -1) {
+            if (property) {
+                parameters.pointTypes = gpl.getPointTypes(property, pointType);
+                parameters.restrictPointTypes = true;
+            } else if (parameters.pointTypes.indexOf(pointType) === -1) {
                 parameters.pointTypes.push(pointType);
             }
         }
@@ -6217,7 +6219,7 @@ gpl.BlockManager = function (manager) {
 
                 gpl.pointData[selectedPoint._id] = selectedPoint;
                 bmSelf.bindings.editPointName(name);
-                bmSelf.bindings.editPointLabel(name.split('_').pop());
+                bmSelf.bindings.editPointLabel(selectedPoint.path[selectedPoint.path.length-1]);
                 bmSelf.editBlockUpi = upi;
                 bmSelf.editBlockPointType = pointType;
                 pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
@@ -6846,10 +6848,14 @@ gpl.BlockManager = function (manager) {
             pointType,
             pointData,
             saveCallback = function (results) {
+                let adjustPointUpiMapPointName = (pointName) => {
+                    gpl.pointUpiMap[upi].Name = pointName;
+                };
+
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
+                    dtiUtility.getConfig("Utility.getPointName", [results.newPoint.path], adjustPointUpiMapPointName);
                     gpl.pointUpiMap[upi] = {
-                        Name: window.getConfig("Utility.getPointName", [results.newPoint.path]),
                         pointType: results.newPoint['Point Type'].Value,
                         valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
                     };
@@ -7191,7 +7197,10 @@ gpl.Manager = function () {
                     }
                 },
                 prop,
-                c;
+                c,
+                setDocumentTitle = (pointName) => {
+                    document.title = pointName;
+                };
 
             managerSelf.useEditVersion = function () {
                 let i,
@@ -7277,7 +7286,6 @@ gpl.Manager = function () {
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;
-
 
             if (!gpl.point.SequenceData) {
                 gpl.showMessage('Sequence data not found');
@@ -7506,7 +7514,7 @@ gpl.Manager = function () {
                     managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
-                document.title = window.getConfig("Utility.getPointName", [gpl.point.path]);
+                dtiUtility.getConfig("Utility.getPointName", [gpl.point.path], setDocumentTitle);
 
                 initPointNamePrefix();
 
@@ -8602,12 +8610,15 @@ gpl.Manager = function () {
             },
 
             selectActionButtonPoint: function () {
-                gpl.openPointSelector(function (upi, name, pointType) {
-                    managerSelf.bindings.actionButtonPointName(name);
+                gpl.openPointSelector(function (selectedPoint) {
+                    let upi = selectedPoint._id,
+                        pointName = window.getConfig("Utility.getPointName", [selectedPoint.path]),
+                        pointType = window.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi);
+                    managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
-                    gpl.makePointRef({upi: upi, name: name, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
-                }, null, null, true);
+                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
+                });
             },
 
             showBackgroundColorModal: function () {
@@ -8672,11 +8683,12 @@ gpl.Manager = function () {
             updateSequenceProperties: function () {
                 let props = ko.toJS(managerSelf.bindings),
                     setBlockDevicePointRef = function (block) {
-                        var idx = block._pointRefs["Control Point"],
-                            dataPoint = block.getPointData(),
+                        let idx,
+                            dataPoint = (!!block.getPointData ? block.getPointData() : null),
                             blockDeviceID;
 
                         if (!!dataPoint) {
+                            idx = block._pointRefs["Control Point"];
                             blockDeviceID = dataPoint["Point Refs"][0].Value;
                             if (blockDeviceID === 0) {
                                 dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
