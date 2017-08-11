@@ -573,6 +573,9 @@ var ActivityLogsManager = function (conf) {
         }
 
         let parameters = {
+            path: [],
+            restrictPointTypes: (self.pointTypes().length < availablePointTypes.length),
+            // callback: pointAttribsFilterCallback,
             terms: self.terms(),
             pointTypes: self.pointTypes()
         };
