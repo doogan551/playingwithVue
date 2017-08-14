@@ -1,0 +1,33 @@
+#dateTimeFilterModal.modal-userFilter.modal.fade(data-refresh='true')
+    form.userFilter
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    .btn.waves-effect.waves-light.right.blue-grey.closeIt.close(data-bind="click: cancelDateTimeFilter") ×
+                    h5.modal-title Date Time Filter
+                .modal-body
+                    .container
+                        div
+                            .dateTime
+                                span.startDatePicker
+                                    .input-field
+                                        label(data-bind="attr: { for: 'fromDate' }") From Date
+                                        input.datepicker(data-bind="attr: { 'id': 'fromDate' }, select: $root.dtFilterPlaceholder.dateFrom, dtiLogsMaterializePickadate", type="date")
+                                span.startTimePicker
+                                    .input-field
+                                        //label(data-bind="attr: { for: 'fromTime' }") From Time
+                                        //input.timepicker(data-bind="attr: { 'id': 'fromTime' }, value: dtFilterPlaceholder.timeFrom, dtiLogsMaterializePickatime", type='time')
+                                span.endDatePicker
+                                    .input-field
+                                        label(data-bind="attr: { for: 'toDate' }") To Date
+                                        input.datepicker(data-bind="attr: { 'id': 'toDate' }, select: $root.dtFilterPlaceholder.dateTo, dtiLogsMaterializePickadate", type="date")
+                                span.endTimePicker
+                                    .input-field
+                                        //label(data-bind="attr: { for: 'toTime' }") To Time
+                                        //input.timepicker(data-bind="attr: { 'id': 'toTime' }, value: dtFilterPlaceholder.timeTo, dtiLogsMaterializePickatime", type='time')
+                            br(clear="all")
+                        br(clear="all")
+                .modal-footer.okCancel.text-center
+                    button.btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: clearDateTimeFilter") Clear
+                    button.btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: applyDateTimeFilter") OK
+

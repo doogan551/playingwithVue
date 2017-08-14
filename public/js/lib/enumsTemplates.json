@@ -4162,14 +4162,8 @@
             "Min": {
                 "enum": 8
             },
-            "PointName": {
-                "enum": 9
-            },
             "PointInst": {
                 "enum": 10
-            },
-            "PointType": {
-                "enum": 11
             },
             "DevInst": {
                 "enum": 12
@@ -4226,8 +4220,6 @@
     "Templates": {
         "Hierarchy": {
             "_id": 0,
-            "parentNode": 0,
-            "display": "",
             "tags": [],
             "meta": {},
             "nodeType": "",

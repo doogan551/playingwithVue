@@ -9,9 +9,26 @@ var dti = {
     }
 };
 
+var initKnockout = function () {
+    ko.bindingHandlers.dtiLogsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dtiLogsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+};
+
 var ActivityLogsManager = function (conf) {
     let self = this,
-        myTitle = 'Activity Logs',
         sessionId = store.get('sessionId'),
         storeKey = 'activityLogs_',
         filterDataKey = "activityLogFilters" + window.location.search.slice(1),
@@ -19,6 +36,9 @@ var ActivityLogsManager = function (conf) {
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
+        $activitylogBody = $(".activitylogBody"),
+        $userFilterModal = $activitylogBody.find("#userFilterModal"),
+        $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
         PAGE_SIZE = 200,
         COMPUTED_DELAY = 10,
         computedThrottle = {
@@ -335,13 +355,13 @@ var ActivityLogsManager = function (conf) {
                 self.sortAscending(data.sortAscending);
                 self.pageNumber(data.pageNumber);
                 self.dateFrom(data.dateFrom);
-                self.dtFilterPlaceholder.dateFrom = data.dateFrom;
+                self.dtFilterPlaceholder.dateFrom(data.dateFrom);
                 self.timeFrom(data.timeFrom);
-                self.dtFilterPlaceholder.timeFrom = data.timeFrom;
+                self.dtFilterPlaceholder.timeFrom(data.timeFrom);
                 self.dateTo(data.dateTo);
-                self.dtFilterPlaceholder.dateTo = data.dateTo;
+                self.dtFilterPlaceholder.dateTo(data.dateTo);
                 self.timeTo(data.timeTo);
-                self.dtFilterPlaceholder.timeTo = data.timeTo;
+                self.dtFilterPlaceholder.timeTo(data.timeTo);
 
                 self.path(data.path);
                 pointAttribsFilterObj.path = data.path;
@@ -497,16 +517,16 @@ var ActivityLogsManager = function (conf) {
     };
     self.clearDateTimeFilter = function (refreshTheData) {
         self.dateFrom(null);
-        self.dtFilterPlaceholder.dateFrom = '';
+        self.dtFilterPlaceholder.dateFrom("");
         $dateFrom.val('').datepicker('update');
         self.timeFrom(null);
-        self.dtFilterPlaceholder.timeFrom = '';
+        self.dtFilterPlaceholder.timeFrom("");
         $timeFrom.val('').timepicker('setTime', null);
         self.dateTo(null);
-        self.dtFilterPlaceholder.dateTo = '';
+        self.dtFilterPlaceholder.dateTo("");
         $dateTo.val('').datepicker('update');
         self.timeTo(null);
-        self.dtFilterPlaceholder.timeTo = '';
+        self.dtFilterPlaceholder.timeTo("");
         $timeTo.val('').timepicker('setTime', null);
         if (refreshTheData) {
             storeFilterData();
@@ -522,6 +542,7 @@ var ActivityLogsManager = function (conf) {
         gotoPageOne = true;
         listOfUsers(getJsUsers());
         storeFilterData();
+        $userFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelUserNameFilter = function () {
@@ -539,6 +560,7 @@ var ActivityLogsManager = function (conf) {
             }
         }
 
+        $userFilterModal.closeModal();
     };
     self.cancelPointAttribsFilter = function () {
         let i,
@@ -584,23 +606,25 @@ var ActivityLogsManager = function (conf) {
         dtiUtility.onPointSelect(pointAttribsFilterCallback);
     };
     self.applyDateTimeFilter = function () {
-        self.dateFrom(self.dtFilterPlaceholder.dateFrom);
-        self.timeFrom(self.dtFilterPlaceholder.timeFrom);
-        self.dateTo(self.dtFilterPlaceholder.dateTo);
-        self.timeTo(self.dtFilterPlaceholder.timeTo);
+        self.dateFrom(self.dtFilterPlaceholder.dateFrom());
+        self.timeFrom(self.dtFilterPlaceholder.timeFrom());
+        self.dateTo(self.dtFilterPlaceholder.dateTo());
+        self.timeTo(self.dtFilterPlaceholder.timeTo());
         gotoPageOne = true;
         storeFilterData();
+        $dateTimeFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelDateTimeFilter = function () {
-        self.dtFilterPlaceholder.dateFrom = self.dateFrom();
-        $dateFrom.val(self.dtFilterPlaceholder.dateFrom).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
-        self.dtFilterPlaceholder.timeFrom = self.timeFrom();
-        $timeFrom.val(self.dtFilterPlaceholder.timeFrom).timepicker('setTime', self.dtFilterPlaceholder.timeFrom);
-        self.dtFilterPlaceholder.dateTo = self.dateTo();
-        $dateTo.val(self.dtFilterPlaceholder.dateTo).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
-        self.dtFilterPlaceholder.timeTo = self.timeTo();
-        $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo);
+        self.dtFilterPlaceholder.dateFrom(self.dateFrom());
+        $dateFrom.val(self.dtFilterPlaceholder.dateFrom()).datepicker('setDate', self.dtFilterPlaceholder.dateFrom());
+        self.dtFilterPlaceholder.timeFrom(self.timeFrom());
+        $timeFrom.val(self.dtFilterPlaceholder.timeFrom).timepicker('setTime', self.dtFilterPlaceholder.timeFrom());
+        self.dtFilterPlaceholder.dateTo(self.dateTo());
+        $dateTo.val(self.dtFilterPlaceholder.dateTo).datepicker('setDate', self.dtFilterPlaceholder.dateFrom());
+        self.dtFilterPlaceholder.timeTo(self.timeTo());
+        $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo());
+        $dateTimeFilterModal.closeModal();
     };
     self.toggleDateTimeSort = function () {
         let currentSort = self.sortAscending();
@@ -608,6 +632,14 @@ var ActivityLogsManager = function (conf) {
         storeFilterData();
         self.refreshActivityLogsData();
     };
+    self.editDateTimeFilter = () => {
+        $dateTimeFilterModal.openModal();
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
+    };
+
     self.changePage = function (modifier) {
         let activityLogs = self.activityLogs(),
             newPage;
@@ -650,12 +682,23 @@ var ActivityLogsManager = function (conf) {
         });
         $('.activityLogs').css('overflow', 'auto');
     };
+    self.editUserFilter = () => {
+        $userFilterModal.openModal();
+        setTimeout(function () {
+            Materialize.updateTextFields();
+        }, 200);
+        return true;
+    };
+    self.init = () => {
+        initKnockout();
+        initFilterValues();
+    };
 
     self.dtFilterPlaceholder = {
-        dateFrom: '',
-        timeFrom: '',
-        dateTo: '',
-        timeTo: ''
+        dateFrom: ko.observable(""),
+        timeFrom: ko.observable(""),
+        dateTo: ko.observable(""),
+        timeTo: ko.observable("")
     };
     self.sortAscending = ko.observable(false);
     self.pageNumber = ko.observable(1);
@@ -667,7 +710,6 @@ var ActivityLogsManager = function (conf) {
     self.terms = ko.observable("");
     self.dirtyUsernameFilter = ko.observable(false);
     self.pointTypes = ko.observableArray([]);
-    self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
 
     self.activityLogs = ko.computed(function () {
@@ -781,115 +823,10 @@ var ActivityLogsManager = function (conf) {
 
     dtiUtility.getUser(setCurrentUser);
     dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
-    initFilterValues();
+    self.init();
 };
 
 function initPage(manager) {
-    let dateId = '#timeDateFilters',
-        userFilterId = '#userFilters',
-        $dateFilterIcon = $(dateId + ' .filterIcon'),
-        $userFilterIcon = $(userFilterId + ' .filterIcon'),
-        $bodyMask = $('.bodyMask'),
-        $pointFilterModal = $('#pointFilterModal'),
-        $pointNameHeader = $(".header .colPointName"),
-        $pointNameColumn = $(".activityLogs .colPointName"),
-        toggleDropdown = function (id) {
-            let $dropDown = $(id + ' .dropdown-menu'),
-                $icon = $(id + ' .filterIcon'),
-                visible = $dropDown.is(':visible');
-
-            if (!visible) {
-                $icon.addClass('open');
-                $bodyMask.show();
-            } else {
-                $icon.removeClass('open');
-            }
-            $dropDown.toggle();
-        },
-        hideDropDowns = function () {
-            let $dateFilterDropDown = $(dateId + ' .dropdown-menu'),
-                $userFilterDropDown = $(userFilterId + ' .dropdown-menu'),
-                $userFilterIcon = $(userFilterId + ' .filterIcon');
-
-            $dateFilterDropDown.hide();
-            $userFilterDropDown.hide();
-            $dateFilterIcon.removeClass('open');
-            $userFilterIcon.removeClass('open');
-            $bodyMask.hide();
-        };
-
-    // Initialize time and datepickers
-    $('.time').timepicker({
-        'timeFormat': 'H:i:s',
-        'disableTimeRanges': [
-            ['24:00:00', '25:00:00']
-        ]
-    });
-    $('.date').datepicker({
-        'format': 'D, m/d/yyyy',
-        'todayHighlight': true,
-        'clearBtn': true,
-        'autoclose': true,
-        'appendTo': '#timeDateFilters .dropdown-menu'
-    });
-
-    // Initialize the table header select column. This way the user can select any
-    // part of this header cell to activate the dropdown.
-    $(".header > .colSelect").click(function (e) {
-        e.stopPropagation();
-        if (e.srcElement.tagName !== 'INPUT') {
-            $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
-        }
-    });
-
-    $dateFilterIcon.click(function (e) {
-        toggleDropdown(dateId);
-    });
-
-    $userFilterIcon.click(function (e) {
-        toggleDropdown(userFilterId);
-    });
-
-    // This targets the 'x', 'OK', and 'clear filter' buttons in the drop down, which also dismiss the dropdown
-    $('.dropdown-menu .closeIt').click(function () {
-        hideDropDowns();
-    });
-
-    // When either the name filter or date filter drop down is shown, this element is made visible. It sits
-    // behind the drop downs, but on top of everything else. We did this because the datepicker appends
-    // itself to the body. When a date was selected, jQuery detected the body click event, causing the
-    // dropdown to be hidden.  This allows the dropdown to persist by blocking the body click, but still
-    // allows us to click anywhere outside of the dropdown to dismiss the dropdown.
-    $('.bodyMask').click(function () {
-        hideDropDowns();
-    });
-
-    // Add click handlers to 'close' elements within the modal itself
-    $pointFilterModal.find('.closeIt').click(function () {
-        $pointFilterModal.modal('toggle');
-    });
-
-    // Add handler to notify when the modal is shown
-    $pointFilterModal.on('shown.bs.modal', function (e) {
-        $('#pointLookup')[0].contentWindow.$('#listSearch').find('input:first').focus();
-    });
-
-    // $('.filterContainer.userFilterDropdown').on('hidden.bs.dropdown', function (event) {
-    //     manager.cancelUserNameFilter();
-    // });
-
-    // If this is a pop-out window
-    if (window.top.location.href === window.location.href) {
-        $('.popOut').addClass('hidden');
-        $('.popIn').removeClass('hidden');
-    }
-
-    // attach event handler to Point Name click event.
-    $("#activityLogRows").on("click", "a", function () {
-        let context = ko.contextFor(this);
-        context.$parent.showPointReview(this, context.$data);
-    });
-
     // for resizing the pointname column
     // $pointNameHeader
     //     .css({
