@@ -2,25 +2,18 @@ doctype html
 html
     head
         title
-        //link(rel='stylesheet', href='/css/lib/bootstrap3.min.css')
-        link(rel='stylesheet', href='/css/lib/materialize.min.css')
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.css')
-        link(rel='stylesheet', href='/css/lib/bootstrap-datepicker.css')
         link(rel='stylesheet', href='/css/activityLogs/activityLogs.css')
-    body.activitylogBody.noSelect
-        .titleBar
-            .title
-                span(data-bind="text: pageTitle") &nbsp;&nbsp;
-            .filterIcon.resetFilter(data-bind="click: resetFilters, visible: filterIsSet", title="Reset All Filters")
-                .fa.fa-filter.fa-2x
-                .fa.fa-times-circle.x(data-bind="visible: filterIsSet")
-            .filterIcon.fa.fa-refresh(data-bind="click: refreshActivityLogsData, visible: !activityLogs().gettingData()", title="Refresh")
-            .filterIcon.fa.fa-refresh.fa-spin(data-bind="visible: activityLogs().gettingData()", title="Getting activities from server...")
+    body.activitylogBody
         .content
             // FILTERS
-            #filters
+            #filters.flex-container
                 // User FILTERS
                 .filterContainer.userFilterDropdown(id="userFilters", data-bind="click: function () { $root.editUserFilter() }, visible: true", title="Filter by user name")
                     .filterIcon.fa.fa-user(data-bind="css: { 'dropdown-toggle-filter-set' : usersFilterIsSet(), 'dropdown-toggle' : !usersFilterIsSet() }")
@@ -30,13 +23,19 @@ html
                 // TIME DATE FILTERS
                 .filterContainer(id="timeDateFilters", title="Filter by date and/or time", data-bind="click: function () { $root.editDateTimeFilter() }, visible: true")
                     .filterIcon.fa.fa-clock-o.fa(data-bind="css: { 'dropdown-toggle-filter-set' : datetimeFilterIsSet(), 'dropdown-toggle' : !datetimeFilterIsSet() }")
+
+                .filterInfo
+                    .filterIcon.resetFilter(data-bind="click: resetFilters, visible: filterIsSet", title="Reset All Filters")
+                        .fa.fa-filter.fa-2x
+                        .fa.fa-times-circle.x(data-bind="visible: filterIsSet")
+                    .filterIcon.fa.fa-refresh(data-bind="click: refreshActivityLogsData, visible: !activityLogs().gettingData()", title="Refresh")
+                    .filterIcon.fa.fa-refresh.fa-spin(data-bind="visible: activityLogs().gettingData()", title="Getting activities from server...")
+
                 // PRINT BUTTON
-                .btn.btn-default.right.btn-sm.btnPrint.waves-effect.waves-light.blue-grey(type="button" data-bind="click:printLogs") Print
+                .btn.right.waves-effect.waves-light.blue-grey(type="button" data-bind="click:printLogs") Print
 
             #activitylogContainer
                 .header
-                    //.colSelect
-                    //    input(type="checkbox" data-bind="checkedValue: $data, checked: checkAll")
                     .colTime(data-bind="click: toggleDateTimeSort")
                         | Timestamp
                         i.right.fa(data-bind="css: { 'fa-arrow-up' : sortAscending(), 'fa-arrow-down' : !sortAscending() }")
@@ -50,8 +49,6 @@ html
                         table
                             tbody(id="activityLogRows", data-bind="foreach: activityLogsForPageSize()")
                                 tr
-                                    //td.colSelect
-                                    //    input(type="checkbox", data-bind="checked: $data.isSelected")
                                     td.colTime
                                         span.selectable
                                             span(data-bind="text: prettyDate")
@@ -60,7 +57,7 @@ html
                                     td.colUserName
                                         span.selectable(data-bind="text: username")
                                     td.colPointName
-                                        a.span.selectable.colPointName(id="pointNameField", data-bind="text: Name, attr: { title: Name }")
+                                        a.span.selectable.colPointName(id="pointNameField", data-bind="click: function () { $root.showPointReview($element, $data) }, text: Name, attr: { title: Name }")
                                     td.colLog
                                         span.selectable(data-bind="text: log")
 
@@ -102,17 +99,14 @@ html
         include modals/userfilter
         include modals/timeDateFilters
 
-        .bodyMask
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/knockout-3.4.0.js')
-        //script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
         script(type='text/javascript', src='/js/lib/materialize.min.js')
         script(type='text/javascript', src="/js/lib/socket.io.js")
         script(type='text/javascript', src='/js/lib/store2.min.js')
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery.printarea.js')
-        script(type='text/javascript', src='/js/lib/bootstrap-datepicker.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/jquery-ui.js')
