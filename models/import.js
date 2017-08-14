@@ -29,7 +29,6 @@ let Import = class Import extends Common {
             this.initImport((err) => {
                 this.updateIndexes((err) => {
                     this.convertHistoryReports((err) => {
-                        console.l;
                         this.convertTotalizerReports((err) => {
                             this.convertScheduleEntries((err) => {
                                 this.updateAllProgramPoints((err) => {
@@ -724,7 +723,7 @@ let Import = class Import extends Common {
             var names = report.Name.split('_'),
                 index = 0;
 
-            for (var i = 1; i <= names.length; i++) {
+            for (var i = 1; i <= 4; i++) {
                 report['name' + i] = names[i - 1];
                 report['_name' + i] = names[i - 1].toLowerCase();
             }
@@ -818,7 +817,7 @@ let Import = class Import extends Common {
 
             var names = report.Name.split('_');
 
-            for (var i = 1; i <= names.length; i++) {
+            for (var i = 1; i <= 4; i++) {
                 report['name' + i] = names[i - 1];
                 report['_name' + i] = names[i - 1].toLowerCase();
             }
@@ -1151,7 +1150,7 @@ let Import = class Import extends Common {
             options: {
                 name: 'hierarchyPathAndType'
             },
-            collection: pointsCollection
+            collection: 'new_points'
         }, {
             index: {
                 'parentNode': 1,
@@ -1161,7 +1160,7 @@ let Import = class Import extends Common {
                 unique: true,
                 sparse: true
             },
-            collection: pointsCollection
+            collection: 'new_points'
         }, {
             index: {
                 name1: 1,

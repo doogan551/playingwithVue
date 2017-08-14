@@ -580,6 +580,7 @@ const Point = class Point extends Common {
         };
 
         let upi = parseInt(data.upi, 10);
+        let notInHierarchy = this.getDefault(data.notInHierarchy, false);
 
         let criteria = {
             query: {
@@ -599,9 +600,13 @@ const Point = class Point extends Common {
             returnObj.target['Point Type'] = targetPoint['Point Type'].Value;
 
             async.eachSeries(targetPoint['Point Refs'], (pointRef, callback) => {
-                buildPointRefs(pointRef.Value, (err, ref, device) => {
+                buildPointRefs(pointRef.Value, notInHierarchy, (err, ref, device) => {
+                    if (err || !ref) {
+                        return callback(err);
+                    }
                     let obj = {
                         _id: pointRef.Value,
+                        Name: pointRef.Name,
                         Property: pointRef.PropertyName,
                         'Point Type': (ref !== null) ? ref['Point Type'].Value : null,
                         path: (ref !== null) ? ref.path : [],
@@ -620,7 +625,9 @@ const Point = class Point extends Common {
                 let criteria = {
                     query: {
                         'Point Refs.PointInst': upi,
-                        _pStatus: 0
+                        _pStatus: (!!notInHierarchy) ? Config.Enums['Point Statuses'].NotInHierarchy.enum : {
+                            $ne: Config.Enums['Point Statuses'].NotInHierarchy.enum
+                        }
                     }
                 };
                 this.get(criteria, (err, dependencies) => {
@@ -651,7 +658,8 @@ const Point = class Point extends Common {
                                             _id: 0,
                                             Property: depPointRef.PropertyName,
                                             'Point Type': dependency['Point Type'].Value,
-                                            Name: null,
+                                            path: [],
+                                            Name: '',
                                             _pStatus: null,
                                             Device: null
                                         });
@@ -666,9 +674,10 @@ const Point = class Point extends Common {
                                         this.getOne(criteria, (err, schedule) => {
                                             returnObj.Dependencies.push({
                                                 _id: schedule._id,
+                                                Name: dependency.Name,
                                                 Property: depPointRef.PropertyName,
                                                 'Point Type': dependency['Point Type'].Value,
-                                                Name: schedule.Name,
+                                                path: dependency.path,
                                                 _pStatus: dependency._pStatus,
                                                 Device: null
                                             });
@@ -682,14 +691,16 @@ const Point = class Point extends Common {
                                         }
                                         let obj = {
                                             _id: dependency._id,
+                                            Name: dependency.Name,
                                             Property: depPointRef.PropertyName,
                                             'Point Type': dependency['Point Type'].Value,
-                                            Name: dependency.Name,
                                             _pStatus: dependency._pStatus,
+                                            path: dependency.path,
                                             Device: (device !== null) ? {
-                                                Name: device.Name,
                                                 _id: device._id,
-                                                _pStatus: device._pStatus
+                                                path: device.path,
+                                                _pStatus: device._pStatus,
+                                                Name: device.Name
                                             } : null
                                         };
                                         addAppIndex(obj, depPointRef);
@@ -712,22 +723,26 @@ const Point = class Point extends Common {
             });
         });
 
-        let buildPointRefs = (upi, callback) => {
+        let buildPointRefs = (upi, notInHierarchy, callback) => {
             let deviceUpi = 0;
             if (upi !== 0) {
                 let criteria = {
                     query: {
-                        _id: upi
+                        _id: upi,
+                        _pStatus: (!!notInHierarchy) ? Config.Enums['Point Statuses'].NotInHierarchy.enum : {
+                            $ne: Config.Enums['Point Statuses'].NotInHierarchy.enum
+                        }
                     },
                     fields: {
                         _pStatus: 1,
                         'Point Refs': 1,
                         'Point Type': 1,
+                        Name: 1,
                         path: 1
                     }
                 };
                 this.getOne(criteria, (err, ref) => {
-                    if (err) {
+                    if (err || !ref) {
                         return callback(err);
                     }
                     for (let m = 0; m < ref['Point Refs'].length; m++) {
@@ -752,6 +767,7 @@ const Point = class Point extends Common {
                     },
                     fields: {
                         path: 1,
+                        Name: 1,
                         _pStatus: 1
                     }
                 };
@@ -3372,13 +3388,13 @@ const Point = class Point extends Common {
                 $match: {
                     $and: [{
                         path: {
-                            $all: this.buildSearchTerms(terms)
-                        }
+                                $all: this.buildSearchTerms(terms)
+                            }
                     },
                     {
                         'Point Type.Value': {
-                            $in: pointTypes
-                        }
+                                $in: pointTypes
+                            }
                     }
                     ]
                 }

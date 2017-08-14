@@ -42,7 +42,10 @@ html(lang="en")
                     //    i.fa.fa-refresh
                     // /ko
                     span.pointType(data-bind="text: point.data['Point Type'].Value")
-                    span.pointUpi.text-right(data-bind="text: point.data._id")
+                    div.hiddenPointData.text-center
+                        span(data-bind="text: point.data._id")
+                        |  > 
+                        span(data-bind="text: point.data.Name")
                 .actions
                     // ko ifnot: isInEditMode
                     // ko if: authorize(point.data, permissionLevels.WRITE)
