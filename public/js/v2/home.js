@@ -4357,6 +4357,20 @@ var dti = {
                 // });
             },
             helper: {
+                blockUI () {
+                    dti.navigatorv2.tree.config.$container.block({
+                        message: null,
+                        css: {
+                            border: 'none'
+                        },
+                        overlayCSS:  {
+                            backgroundColor: 'transparent'
+                        }
+                    });
+                },
+                unblockUI () {
+                    dti.navigatorv2.tree.config.$container.unblock();
+                },
                 getSaveData(data, parent) {
                     let obj = ko.toJS(data.bindings || data); //takes node or node.bindings
 
@@ -4683,6 +4697,14 @@ var dti = {
 
             selfBindings.searchInput.subscribe((val) => {
                 dti.navigatorv2.search(val);
+            });
+
+            selfBindings.busy.subscribe((busy) => {
+                if (busy) {
+                    dti.navigatorv2.tree.helper.blockUI();
+                } else {
+                    dti.navigatorv2.tree.helper.unblockUI();
+                }
             });
         },
         initNavigator: (config) => {
