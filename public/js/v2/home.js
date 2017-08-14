@@ -5822,7 +5822,7 @@ var dti = {
             ko.virtualElements.allowedBindings.stopBindings = true;
 
             ko.bindingHandlers.foreachprop = {
-                transformObject: function(obj) {
+                transformObject: function(obj, sort) {
                     var properties = [];
                     ko.utils.objectForEach(obj, function(key, value) {
                         properties.push({
@@ -5830,12 +5830,20 @@ var dti = {
                             value: value
                         });
                     });
+
+                    if (sort) {
+                        properties.sort((a, b) => {
+                            return a.key > b.key ? 1 : -1;
+                        });
+                    }
+
                     return properties;
                 },
                 init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                     var properties = ko.pureComputed(function() {
-                        var obj = ko.utils.unwrapObservable(valueAccessor());
-                        return ko.bindingHandlers.foreachprop.transformObject(obj);
+                        var obj = ko.utils.unwrapObservable(valueAccessor()),
+                            sort = allBindingsAccessor().sort || false;
+                        return ko.bindingHandlers.foreachprop.transformObject(obj, sort);
                     });
                     ko.applyBindingsToNode(element, {
                         foreach: properties
