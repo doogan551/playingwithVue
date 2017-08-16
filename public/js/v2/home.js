@@ -1232,6 +1232,10 @@ var dti = {
 
             if (typeof url === 'object') {
                 config = url;
+
+                if (!!config.upi && !config.pointType) {
+                    config.pointType = dti.utility.getPointTypeFromUPI(config.upi);
+                }
             } else {
                 if (typeof url === 'number') {//upi only
                     config = {
