@@ -13,22 +13,8 @@ body {
 
 .canvas-container {
     position: absolute !important;
-    /*top: 0;*/
-    /*left: 0;*/
-    /*display: inline-block;*/
-    /*vertical-align: top;*/
 }
 
-/*#toolbarCanvas {*/
-    /*width: 100px;*/
-/*}*/
-
-/*#gplCanvas {*/
-    /*position: fixed;*/
-    /*left: 0;*/
-    /*top: 0;*/
-    /*width: 77px;*/
-/*}*/
 .datepicker {
     z-index: 3000 !important;
 }
@@ -85,8 +71,24 @@ body {
     margin-bottom: 0;
 }
 
+.blockLabel {
+    width: 200px;
+}
+
+#editInputOutput .row {
+    margin-bottom: 5px !important;
+}
+
 #gplSequenceProperties .row {
     margin-left: auto;
+}
+
+#gplSequenceProperties .controllerDropdown {
+    margin-top: -119px;
+}
+
+#gplSequenceProperties .gplUpdateInterval {
+    padding-top: 40px;
 }
 
 .spacedControls > .form-group {
@@ -109,6 +111,9 @@ body {
     margin-left: 10px !important;
 }
 
+.dropdown-content li > a, .dropdown-content li > span {
+    color: #455a64 !important;
+}
 .dataField > label {
     margin-top: 0;
     white-space: nowrap;
@@ -133,11 +138,6 @@ body {
     text-align: center;
 }
 
-.prettyInput {
-    width: 42px;
-    border-radius: 3px;
-}
-
 .mr5 {
     margin-right: 5px;
 }
@@ -147,41 +147,28 @@ body {
 }
 
 .zoomSection {
+    display: inline-flex;
     margin-right: 15px;
     margin-top: 4px;
 }
 
-.subtitle {
-    /*font-size: 1.1em;*/
-    /*font-weight: bold;*/
-    border: 1px solid #ccc;
-    margin: 10px auto;
-    padding: 0 10px;
-    border-radius: 3px;
+.zoomSection .percentSign {
+    color: white;
 }
 
-.subtitle .row,
-.subtitle .col {
-    margin-bottom: 0;
+.zoomSection.input-field label {
+    right: 60px !important;
+    top: 0px !important;
 }
 
-.subtitle div,
-.subtitle label {
-    font-weight: normal;
+.zoomSection.input-field input {
+    width: 42px !important;
+    height: 2rem !important;
 }
 
-.subtitle div {
-    font-size: 1em;
-    margin-bottom: 10px;
-}
-
-.subtitle label {
-    margin-bottom: 0;
-}
-
-.subtitle.editSection .input-row .checkbox input[type="checkbox"]  {
-    margin-left: 5px;
-    margin-right: 5px;
+.zoomSection.input-field label.active {
+    right: 60px !important;
+    top: 22px !important;
 }
 
 .devicePoint button,
@@ -197,15 +184,16 @@ body {
     position: absolute;
     width: 100%;
     bottom: 0;
-    height: 40px;
+    height: 47px;
     text-align: center;
     background-color: #333;
     padding-top: 5px;
     border-top: 1px solid #ccc;
 }
 
-.bottomBar button {
-    margin-left: 5px;
+.bottomBar .btn {
+    margin-left: 2px;
+    /*padding-right: 3px;*/
 }
 
 .bottomBar .pop {
@@ -317,6 +305,10 @@ body {
 .modal-header,
 .modal-footer {
     padding: 10px;
+}
+
+.modal-header {
+    background-color: #455a64;
 }
 
 .jqx-color-picker-preview {

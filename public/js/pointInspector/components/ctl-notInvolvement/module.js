@@ -20,9 +20,6 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         this.filteredDependencies = ko.observableArray([]);
         this.sortProperty = 'Name';
         this.sortDirection = ASC;
-        this.isTabLoaded = params.isTabLoaded.subscribe(function (val) {
-            this.render();
-        }, this);
         this.search = ko.computed(function () {
             var searchTerm = this.searchTerm().toLowerCase(), // Our only dependency
                 filter = function (sourceArray) {
@@ -57,11 +54,13 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         }, this).extend({
             rateLimit: 200
         });
+
+        this.render();
     }
 
     function getData(id) {
         return $.ajax({
-            url: apiEndpoint + 'points/searchdependencies/' + id,
+            url: apiEndpoint + 'points/searchdependencies/' + id + '?notInHierarchy=true',
             contentType: 'application/json',
             dataType: 'json',
             type: 'get'
@@ -119,15 +118,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                 }
             } else {
                 pointRefs = data.Involvement['Point Refs'];
-                pointRefs.forEach((pointRef) => {
-                    pointRef.pathString = workspace.config.Utility.getPointName(pointRef.path);
-                    console.log(pointRef);
-                });
                 dependencies = data.Involvement.Dependencies;
-                dependencies.forEach((dependency) => {
-                    dependency.pathString = workspace.config.Utility.getPointName(dependency.path);
-                    console.log(dependency);
-                });
                 pointRefs.forEach(cleanProperties);
                 dependencies.forEach(cleanProperties);
             }

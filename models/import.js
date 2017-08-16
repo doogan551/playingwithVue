@@ -29,7 +29,6 @@ let Import = class Import extends Common {
             this.initImport((err) => {
                 this.updateIndexes((err) => {
                     this.convertHistoryReports((err) => {
-                        console.l;
                         this.convertTotalizerReports((err) => {
                             this.convertScheduleEntries((err) => {
                                 this.updateAllProgramPoints((err) => {
@@ -724,9 +723,14 @@ let Import = class Import extends Common {
             var names = report.Name.split('_'),
                 index = 0;
 
-            for (var i = 1; i <= names.length; i++) {
-                report['name' + i] = names[i - 1];
-                report['_name' + i] = names[i - 1].toLowerCase();
+            for (var i = 1; i <= 4; i++) {
+                if (report.hasOwnProperty('_name' + i)) {
+                    report['name' + i] = names[i - 1];
+                    report['_name' + i] = names[i - 1].toLowerCase();
+                }else{
+                    report['name' + i] = '';
+                    report['_name' + i] = '';
+                }
             }
             report['Report Config'].reportTitle = report.Name;
 
@@ -789,7 +793,7 @@ let Import = class Import extends Common {
                 this.insert({
                     collection: pointsCollection,
                     insertObj: report
-                }, (err, result)=>{
+                }, (err, result) => {
                     next(err);
                 });
             });
@@ -818,9 +822,14 @@ let Import = class Import extends Common {
 
             var names = report.Name.split('_');
 
-            for (var i = 1; i <= names.length; i++) {
-                report['name' + i] = names[i - 1];
-                report['_name' + i] = names[i - 1].toLowerCase();
+            for (var i = 1; i <= 4; i++) {
+                if (report.hasOwnProperty('_name' + i)) {
+                    report['name' + i] = names[i - 1];
+                    report['_name' + i] = names[i - 1].toLowerCase();
+                }else{
+                    report['name' + i] = '';
+                    report['_name' + i] = '';
+                }
             }
             report['Report Config'].reportTitle = report.Name;
 
@@ -906,7 +915,7 @@ let Import = class Import extends Common {
                     this.insert({
                         collection: pointsCollection,
                         insertObj: report
-                    }, (err, result)=>{
+                    }, (err, result) => {
                         cb(err);
                     });
                 });
@@ -1151,7 +1160,7 @@ let Import = class Import extends Common {
             options: {
                 name: 'hierarchyPathAndType'
             },
-            collection: pointsCollection
+            collection: 'new_points'
         }, {
             index: {
                 'parentNode': 1,
@@ -1161,7 +1170,7 @@ let Import = class Import extends Common {
                 unique: true,
                 sparse: true
             },
-            collection: pointsCollection
+            collection: 'new_points'
         }, {
             index: {
                 name1: 1,
