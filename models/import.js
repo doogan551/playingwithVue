@@ -724,8 +724,13 @@ let Import = class Import extends Common {
                 index = 0;
 
             for (var i = 1; i <= 4; i++) {
-                report['name' + i] = names[i - 1];
-                report['_name' + i] = names[i - 1].toLowerCase();
+                if (report.hasOwnProperty('_name' + i)) {
+                    report['name' + i] = names[i - 1];
+                    report['_name' + i] = names[i - 1].toLowerCase();
+                }else{
+                    report['name' + i] = '';
+                    report['_name' + i] = '';
+                }
             }
             report['Report Config'].reportTitle = report.Name;
 
@@ -788,7 +793,7 @@ let Import = class Import extends Common {
                 this.insert({
                     collection: pointsCollection,
                     insertObj: report
-                }, (err, result)=>{
+                }, (err, result) => {
                     next(err);
                 });
             });
@@ -818,8 +823,13 @@ let Import = class Import extends Common {
             var names = report.Name.split('_');
 
             for (var i = 1; i <= 4; i++) {
-                report['name' + i] = names[i - 1];
-                report['_name' + i] = names[i - 1].toLowerCase();
+                if (report.hasOwnProperty('_name' + i)) {
+                    report['name' + i] = names[i - 1];
+                    report['_name' + i] = names[i - 1].toLowerCase();
+                }else{
+                    report['name' + i] = '';
+                    report['_name' + i] = '';
+                }
             }
             report['Report Config'].reportTitle = report.Name;
 
@@ -905,7 +915,7 @@ let Import = class Import extends Common {
                     this.insert({
                         collection: pointsCollection,
                         insertObj: report
-                    }, (err, result)=>{
+                    }, (err, result) => {
                         cb(err);
                     });
                 });
