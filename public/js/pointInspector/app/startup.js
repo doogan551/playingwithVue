@@ -20,6 +20,9 @@ require(['knockout'], function (ko) {
     ko.components.register('ctl-involvement', {
         require: 'components/ctl-involvement/module'
     });
+    ko.components.register('ctl-notInvolvement', {
+        require: 'components/ctl-notInvolvement/module'
+    });
     ko.components.register('ctl-ip', {
         require: 'components/ctl-ip/module'
     });

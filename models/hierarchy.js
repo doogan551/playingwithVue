@@ -379,10 +379,10 @@ const Hierarchy = class Hierarchy extends Common {
         });
         pipeline.push({
             '$graphLookup': {
-                'from': 'hierarchy',
+                'from': 'points',
                 'startWith': '$_id',
                 'connectFromField': '_id',
-                'connectToField': 'hierarchyRefs.value',
+                'connectToField': 'parentNode',
                 'as': 'children'
             }
         });
@@ -394,8 +394,11 @@ const Hierarchy = class Hierarchy extends Common {
         pipeline.push({
             $group: {
                 '_id': 'children',
-                ids: {
-                    $addToSet: '$children._id'
+                nodes: {
+                    $addToSet: {
+                        id: '$children._id',
+                        nodeType: '$children.nodeType'
+                    }
                 }
             }
         });
@@ -490,27 +493,70 @@ const Hierarchy = class Hierarchy extends Common {
 
     deleteNode(data, cb) {
         let id = this.getNumber(data.id);
-        let deleteChildren = this.getDefault(data.deleteChildren, false);
+        let nodeType = this.getDefault(data.nodeType, 'Location');
+        let points = [];
+        let hierarchies = [];
+
+        let deleteHierachyNodes = (ids, callback) => {
+            if (!ids.length) {
+                return callback();
+            }
+            this.remove({
+                query: {
+                    _id: {
+                        $in: ids
+                    }
+                }
+            }, callback);
+        };
+
+        let unsetPointNodes = (ids, callback) => {
+            if (!ids.length) {
+                return callback();
+            }
+            this.updateAll({
+                query: {
+                    _id: {
+                        $in: ids
+                    }
+                },
+                updateObj: {
+                    $set: {
+                        _pStatus: Config.Enums['Point Statuses'].NotInHierarchy.enum
+                    },
+                    $unset: {
+                        display: 1,
+                        parentNode: 1
+                    }
+                }
+            }, callback);
+        };
+
+        let sortId = (type, id) => {
+            if (['Point', 'Application'].includes(type)) {
+                points.push(id);
+            } else {
+                hierarchies.push(id);
+            }
+        };
 
         this.getDescendantIds({
             id: id
         }, (err, descendants) => {
-            let ids = [id];
-            if (!!descendants.length && !!descendants[0].ids.length) {
-                ids = ids.concat(descendants[0].ids);
+            let allIds = descendants[0];
+            if (!!allIds && !!allIds.nodes.length) {
+                allIds.nodes.forEach((descendant) => {
+                    sortId(descendant.nodeType, descendant.id);
+                });
             }
-            let query = {
-                _id: {
-                    $in: ids
-                }
-            };
-            if (!!deleteChildren) {
-                this.remove({
-                    query: query
-                }, cb);
-            } else {
-                this.updateParent(id, query, cb);
-            }
+
+            sortId(nodeType, id);
+
+            deleteHierachyNodes(hierarchies, (err, result) => {
+                unsetPointNodes(points, (err, result) => {
+                    return cb();
+                });
+            });
         });
     }
 

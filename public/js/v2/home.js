@@ -1232,6 +1232,10 @@ var dti = {
 
             if (typeof url === 'object') {
                 config = url;
+
+                if (!!config.upi && !config.pointType) {
+                    config.pointType = dti.utility.getPointTypeFromUPI(config.upi);
+                }
             } else {
                 if (typeof url === 'number') {//upi only
                     config = {
@@ -5196,6 +5200,7 @@ var dti = {
                 this.$modal.closeModal();
 
                 this.callback(data);
+                this.callback = this.defaultCallback;
 
                 // dti.log(arguments);
             }
@@ -5262,6 +5267,7 @@ var dti = {
                     },
                     complete: () => {
                         this.modalOpen = false;
+                        this.callback = this.defaultCallback;
                     }
                 });
             }
@@ -5836,7 +5842,7 @@ var dti = {
             ko.virtualElements.allowedBindings.stopBindings = true;
 
             ko.bindingHandlers.foreachprop = {
-                transformObject: function(obj) {
+                transformObject: function(obj, sort) {
                     var properties = [];
                     ko.utils.objectForEach(obj, function(key, value) {
                         properties.push({
@@ -5844,12 +5850,20 @@ var dti = {
                             value: value
                         });
                     });
+
+                    if (sort) {
+                        properties.sort((a, b) => {
+                            return a.key > b.key ? 1 : -1;
+                        });
+                    }
+
                     return properties;
                 },
                 init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                     var properties = ko.pureComputed(function() {
-                        var obj = ko.utils.unwrapObservable(valueAccessor());
-                        return ko.bindingHandlers.foreachprop.transformObject(obj);
+                        var obj = ko.utils.unwrapObservable(valueAccessor()),
+                            sort = allBindingsAccessor().sort || false;
+                        return ko.bindingHandlers.foreachprop.transformObject(obj, sort);
                     });
                     ko.applyBindingsToNode(element, {
                         foreach: properties

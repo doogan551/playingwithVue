@@ -1,36 +1,15 @@
-/* OVERRIDES */
-/* bootstrap-datepicker.css */
-.datepicker.dropdown-menu {
-    max-width: 275px;
+html {
+    overflow: hidden;
 }
 
-/* bootstrap modal*/
-#pointFilterModal .modal-dialog {
-    min-width: 1000px;
-}
-
-#userFilterModal .modal-body {
-    min-width: 600px;
-}
-
-#userFilterModal .modal-body .header .colUserName {
-    /*width: 332px*/
-}
 /* Global page styles */
 body {
     color: #333;
-    /*font-family: "Segoe UI", Segoe, Tahoma, Geneva, sans-serif;*/
-    /*font-size: 13px;*/
-    background-color: #ccc;
-    margin: 0;
-    height: 100%;
+    /*background-color: #ccc;*/
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
     table-layout: fixed;
-    line-height: 1.55;
 }
 
 tr {
@@ -39,8 +18,6 @@ tr {
 }
 
 td {
-    height: 28px;
-    padding-left: 5px;
     vertical-align: middle;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -62,34 +39,7 @@ a.span.selectable.colPointName:hover {
 /* General purpose syles */
 .scrollable {
     overflow-y: scroll;
-    overflow-x: hidden;
-}
-
-.noScroll {
-    overflow: hidden;
-}
-
-.clearBoth {
-    clear: both;
-}
-
-.cursorPointer {
-    cursor: pointer;
-}
-
-.cursorDefault {
-    cursor: default;
-}
-
-.noSelect {
-    -webkit-user-select: none; /* Chrome all / Safari all */
-    -moz-user-select: none; /* Firefox all */
-    -ms-user-select: none; /* IE 10+ */
-
-    -o-user-select: none;
-    user-select: none;
-
-    cursor: default;
+    overflow-x: scroll;
 }
 
 .selectable {
@@ -114,41 +64,40 @@ a.span.selectable.colPointName:hover {
     background-color: #CCC;
 }
 
-/* Title bar */
-.titleBar {
-    position: absolute;
-    top: 5px;
-    left: 20px;
+.filterInfo {
+    margin-left: 5%;
 }
 
-.titleBar .title {
-    display: inline-block;
-    margin-right: 40px;
-}
-
-.titleBar .title > span {
-    text-transform: uppercase;
+.filterInfo .filterIcon {
     color: #666;
-    font-size: 30px;
-}
-
-.titleBar .filterIcon {
-    color: #666;
-    position: relative;
     display: inline-block;
     font-size: 30px;
     margin-right: 15px;
 }
 
-.titleBar .resetFilter {
+#filters .resetFilter {
     margin-right: 20px;
     cursor: pointer;
     font-size: 15px;
 }
 
 #filters {
+    display: flex;
     color: #333;
-    min-width: 925px;
+    min-width: 400px;
+}
+
+[class*="flex-container"] {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+[class*="flex-container"] > div:nth-of-type(5) {
+    margin-left: auto;
 }
 
 .filterContainer {
@@ -170,9 +119,12 @@ a.span.selectable.colPointName:hover {
     cursor: pointer;
 }
 
+#dateTimeFilterModal {
+    min-height: 600px;
+}
+
 .filterContainer .filterIcon i {
     font-size: 18px;
-    position: relative;
     top: -7px;
 }
 
@@ -196,12 +148,6 @@ a.span.selectable.colPointName:hover {
     color: red;
 }
 
-.filterIcon.fa-pause {
-    font-size: 18px;
-    position: relative;
-    top: 7px;
-}
-
 .filled-in[type="checkbox"].filled-in:checked + label:after {
     border: 2px solid #607d8b;
     background-color: #607d8b;
@@ -209,15 +155,6 @@ a.span.selectable.colPointName:hover {
 
 input.date, input.time {
     margin: 10px 0;
-}
-
-#timeDateFilters .dropdown-menu {
-    margin-left: 105px;
-}
-
-#userFilters .dropdown-menu {
-    margin-left: 50px;
-    width: 300px;
 }
 
 .dropdown-toggle {
@@ -232,17 +169,11 @@ input.date, input.time {
     cursor: pointer;
 }
 
-/* activitylog Content */
 #activitylogContainer {
-    position: absolute;
-    top: 70px;
-    right: 20px;
-    bottom: 20px;
-    left: 20px;
+    margin-top: 15px;
 }
 
 #activitylogContainer .mask {
-    position: absolute;
     top: 20px;
     right: 0;
     left: 0;
@@ -253,9 +184,9 @@ input.date, input.time {
 }
 
 #activitylogContainer .pages {
-    position: absolute;
-    bottom: -13px;
-    width: 100%;
+    /*position: absolute;*/
+    /*bottom: -13px;*/
+    /*width: 100%;*/
 }
 
 .header > div {
@@ -269,7 +200,6 @@ input.date, input.time {
 
 .header .colSelect {
     cursor: pointer;
-    /*width: 32px;*/
 }
 
 .header .colSelect label {
@@ -286,7 +216,6 @@ input.date, input.time {
     width: 75px;
     min-width: 65px;
     padding-right: 5px;
-
 }
 
 .colPointName {
@@ -295,42 +224,14 @@ input.date, input.time {
     padding-right: 5px;
 }
 
-.colLog2 {
-    width: 150px;
-    min-width: 150px;
-    padding-right: 5px;
-}
-
-.colClass {
-    width: 95px;
-    min-width: 95px;
-}
-
 .colTime {
     width: 140px;
     min-width: 140px;
 }
 
 .colTime > i {
-    position: relative;
     top: 3px;
     right: 5px;
-}
-
-.colDisp {
-    width: 45px;
-    text-align: center;
-}
-
-.colDisp > i {
-    position: relative;
-    left: -2px;
-}
-
-td.colDisp > i {
-    color: #428bca;
-    top: 2px;
-    font-size: 16px;
 }
 
 .header .colTime {
@@ -356,12 +257,6 @@ td.colDisp > i {
 }
 
 .activityLogs {
-    position: absolute;
-    top: 20px;
-    right: 0;
-    left: 0;
-    bottom: 20px;
-    min-height: 27px;
     overflow: auto;
 }
 
@@ -370,19 +265,15 @@ td.colDisp > i {
 }
 
 .activitylogs::-webkit-scrollbar-track {
-    /*-webkit-box-shadow: inset 0 0 0px rgba(0,0,0,0.3); */
     background-color: #FFF;
-    /*width: 12px;*/
 }
 
 .activitylogs::-webkit-scrollbar-thumb {
     border-radius: 5px;
     background-color: #CCC;
-    /*-webkit-box-shadow: inset 0 0 6px rgba(204,204,204,1); */
 }
 
 .bodyMask {
-    position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
@@ -392,24 +283,17 @@ td.colDisp > i {
 }
 
 .content {
-    position: absolute;
-    top: 60px;
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    /*min-width: 400px;*/
     overflow: hidden;
     background-color: #FFF;
     padding: 20px;
-    border-radius: 3px;
+    height: calc(100% - 42px) !important;
 }
 
 .resizer {
-    position: absolute;
+    /*position: absolute;*/
     top: 0;
     right: -8px;
     bottom: 0;
-    /*left: auto;*/
     width: 16px;
     cursor: col-resize;
 }

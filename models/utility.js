@@ -90,9 +90,13 @@ const Utility = class Utility {
     }
 
     updateAll(criteria, cb) {
-        criteria.options = {
-            multi: true
-        };
+        if (criteria.hasOwnProperty('options')) {
+            criteria.options.multi = true;
+        } else {
+            criteria.options = {
+                multi: true
+            };
+        }
         this.update(criteria, cb);
     }
 
@@ -341,14 +345,12 @@ const Utility = class Utility {
                     this.count(criteria, (err, count) => {
                         cb(err, points, count);
                     });
+                } else if (criteria.count !== false) {
+                    this.count(criteria, (err, count) => {
+                        cb(err, points, count);
+                    });
                 } else {
-                    if (criteria.count !== false) {
-                        this.count(criteria, (err, count) => {
-                            cb(err, points, count);
-                        });
-                    } else {
-                        cb(err, points);
-                    }
+                    cb(err, points);
                 }
             });
         });

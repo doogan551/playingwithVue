@@ -170,7 +170,7 @@ html
 
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
-                    .tileList(data-bind="foreachprop: startMenuItems")
+                    .tileList(data-bind="foreachprop: startMenuItems, sort: true")
                         // ko if: $root.hasAccess($data)
                         // ko with: value
                         a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")

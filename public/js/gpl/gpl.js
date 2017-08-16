@@ -404,14 +404,14 @@ var gpl = {
         } else {
             gpl.$messageModalBody.html(message);
         }
-        gpl.$messageModal.modal('show');
+        gpl.$messageModal.openModal();
         if (gpl.socketWaitFn) {
             gpl.socketWaitFn();
             gpl.socketWaitFn = null;
         }
     },
     hideMessage: function () {
-        gpl.$messageModal.modal('hide');
+        gpl.$messageModal.closeModal();
     },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
@@ -4186,7 +4186,7 @@ gpl.ActionButton = function (config) {
         type = config.type || ((config.actionCode !== undefined) ? 'control' : 'link'),
 
         _addButton = function () {
-            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn btn-sm btn-default actionBtn">' + _local.text + '</button>')
+            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn waves-effect waves-light blue-grey actionBtn">' + _local.text + '</button>')
                 .data({
                     'origLeft': x,
                     'origTop': y
@@ -4266,7 +4266,7 @@ gpl.ActionButton = function (config) {
                     min: _local.pointData['Minimum Value'].Value,
                     max: _local.pointData['Maximum Value'].Value
                 });
-                gpl.$editActionButtonValueModal.modal('show');
+                gpl.$editActionButtonValueModal.openModal();
             } else {
                 _sendCommand();
             }
@@ -4300,7 +4300,7 @@ gpl.ActionButton = function (config) {
             } else {
                 if (_local.pointData && _local.pointData.message !== 'No Point Found') {
                     if (_local.type === 'report') {
-                        gpl.$actionButtonReportParameterModal.modal('show');
+                        gpl.$actionButtonReportParameterModal.openModal();
                     } else {
                         openWindow();
                     }
@@ -4347,7 +4347,7 @@ gpl.ActionButton = function (config) {
                 this.applyBindings(reportConfig);
             });
 
-            gpl.$actionButtonReportParameterModal.modal('hide');
+            gpl.$actionButtonReportParameterModal.closeModal();
         },
         setCommand = function (idx) {
             _local.code = codes[idx];
@@ -5902,7 +5902,7 @@ gpl.BlockManager = function (manager) {
 
                 bmSelf.renderAll();
 
-                gpl.$editTextModal.modal('hide');
+                gpl.$editTextModal.closeModal();
             },
             deleteBlock: function () {
                 if (manager.contextObject) {
@@ -6061,7 +6061,8 @@ gpl.BlockManager = function (manager) {
                     gpl.manager.bindings.hasEdits(true);
                 }
 
-                gpl.$editInputOutputModal.modal('hide');
+                gpl.unblockUI();
+                gpl.$editInputOutputModal.closeModal();
 
                 gpl.fire('editedblock', bmSelf.editBlock);
             }
@@ -6229,19 +6230,19 @@ gpl.BlockManager = function (manager) {
         },
 
         openPrecisionEditor: function (block) {
-            gpl.$editPrecisionModal.modal('show');
+            gpl.$editPrecisionModal.openModal();
         },
 
         closePrecisionEditor: function () {
-            gpl.$editPrecisionModal.modal('hide');
+            gpl.$editPrecisionModal.closeModal();
         },
 
         openLabelEditor: function (block) {
-            gpl.$editLabelModal.modal('show');
+            gpl.$editLabelModal.openModal();
         },
 
         closeLabelEditor: function () {
-            gpl.$editLabelModal.modal('hide');
+            gpl.$editLabelModal.closeModal();
         },
 
         openBlockEditor: function (block) {
@@ -6270,7 +6271,8 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
 
-            gpl.$editInputOutputModal.modal('show');
+            // gpl.blockUI();
+            gpl.$editInputOutputModal.openModal();
             // }
         },
 
@@ -6285,7 +6287,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editTextColor(newColor);
             // bmSelf.fontColorPicker.render();
             bmSelf.fontColorPicker.updateColor(newColor);
-            gpl.$editTextModal.modal('show');
+            gpl.$editTextModal.openModal();
         },
 
         convertBlock: function (block) {
@@ -7941,7 +7943,7 @@ gpl.Manager = function () {
             continueEditingCb = function () {
             gpl.hideMessage();
             gpl.unblockUI();
-            gpl.$saveForLaterConfirmModal.modal('show');
+            gpl.$saveForLaterConfirmModal.openModal();
         };
 
         gpl.blockUI();
@@ -8470,15 +8472,11 @@ gpl.Manager = function () {
     };
 
     managerSelf.showEditVersionModal = function () {
-        gpl.$editVersionModal.modal({
-            keyboard: false,
-            backdrop: 'static'
-        });
-        gpl.$editVersionModal.modal('show');
+        gpl.$editVersionModal.openModal();
     };
 
     managerSelf.hideEditVersionModal = function () {
-        gpl.$editVersionModal.modal('hide');
+        gpl.$editVersionModal.closeModal();
     };
 
     managerSelf.initBindings = function () {
@@ -8557,7 +8555,7 @@ gpl.Manager = function () {
                 managerSelf.bindings.actionButtonPointType(editBlock.pointType);
 
 
-                gpl.$editActionButtonModal.modal('show');
+                gpl.$editActionButtonModal.openModal();
             },
 
             sendActionButtonValue: function () {
@@ -8565,7 +8563,7 @@ gpl.Manager = function () {
 
                 managerSelf.editBlock.sendValue(value);
 
-                gpl.$editActionButtonValueModal.modal('hide');
+                gpl.$editActionButtonValueModal.closeModal();
             },
 
             openReport: function () {
@@ -8601,12 +8599,12 @@ gpl.Manager = function () {
                     type: type
                 });
 
-                gpl.$editActionButtonModal.modal('hide');
+                gpl.$editActionButtonModal.closeModal();
             },
 
             deleteActionButton: function () {
                 managerSelf.deleteButton(managerSelf.editBlock);
-                gpl.$editActionButtonModal.modal('hide');
+                gpl.$editActionButtonModal.closeModal();
             },
 
             selectActionButtonPoint: function () {
@@ -8621,14 +8619,15 @@ gpl.Manager = function () {
                 });
             },
 
-            showBackgroundColorModal: function () {
-                gpl.$colorpickerModal.modal('show');
-            },
-
-            hideBackgroundColorModal: function () {
-                managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
-                gpl.$colorpickerModal.modal('hide');
-            },
+            // TODO - doesn't look like this is used any longer
+            // showBackgroundColorModal: function () {
+            //     gpl.$colorpickerModal.openModal();
+            // },
+            //
+            // hideBackgroundColorModal: function () {
+            //     managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
+            //     gpl.$colorpickerModal.closeModal();
+            // },
 
             updateBackgroundColor: function () {
                 var val = managerSelf.bindings.deviceBackgroundColor();
@@ -8731,12 +8730,13 @@ gpl.Manager = function () {
                 delete gpl._newDevicePoint;
 
                 // console.log('update', props);
-                gpl.$sequencePropertiesModal.modal('hide');
+                gpl.$sequencePropertiesModal.closeModal();
             },
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
                     delete gpl._newDevicePoint;
-                    gpl.$sequencePropertiesModal.modal('show');
+                    gpl.$sequencePropertiesModal.openModal();
+                    gpl.$sequencePropertiesModal.find("select").material_select();
                 }
             },
             selectDevicePoint: function () {
@@ -8877,9 +8877,7 @@ gpl.Manager = function () {
             managerSelf.validate();
         });
 
-        gpl.$messageModal.modal({
-            show: false
-        });
+        gpl.$messageModal.closeModal();
 
         ko.bindingHandlers.colorpicker = {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {

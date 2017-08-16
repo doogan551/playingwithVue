@@ -273,6 +273,7 @@ $modalHeaderHeight: 42px;
 .modal-fixed-header .modal-content {
     height: calc(100% - 50px - #{$modalHeaderHeight}) !important;
     background-color: #fff;
+    position: relative;
 }
 
 .modal-fixed-header:not(.modal-fixed-footer) .modal-content {
