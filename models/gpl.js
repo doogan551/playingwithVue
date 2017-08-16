@@ -60,11 +60,11 @@ const GPL = class GPL {
                 let allBlocks = [];
 
                 if (!!activeBlocks) {
-                    allBlocks.concat(activeBlocks);
+                    allBlocks = allBlocks.concat(activeBlocks);
                 }
 
                 if (!!editVersion && !!editVersion.block) {
-                    allBlocks.concat(editVersion.block);
+                    allBlocks = allBlocks.concat(editVersion.block);
                 }
 
                 return allBlocks;

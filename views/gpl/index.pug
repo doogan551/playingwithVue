@@ -30,11 +30,11 @@ html
             //- span Grid Size
             //-     input(type="number", min="1", max="50", data-bind="value: gridSize")
             //- button.btn.btn-primary.btn-sm#validate(type="button", style="display:none", data-bind="visible: isEdit === true") Validate
-            .btn.waves-effect.waves-light.blue-grey#save(type="button", style="display:none", data-bind="visible: isEdit === true") Save
-            .btn.waves-effect.waves-light.blue-grey#cancel(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === false)") Cancel
-            .btn.waves-effect.waves-light.blue-grey#saveForLater(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === true)") Save For Later
-            .btn.waves-effect.waves-light.blue-grey#discardChanges(type="button", style="display:none", data-bind="visible: (hasEdits() === true || hasEditVersion() === true)") Discard Changes
-            .btn.waves-effect.waves-light.blue-grey#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
+            .btn.btn-small.waves-effect.waves-light.blue-grey#save(type="button", style="display:none", data-bind="visible: isEdit === true") Save
+            .btn.btn-small.waves-effect.waves-light.blue-grey#cancel(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === false)") Cancel
+            .btn.btn-small.waves-effect.waves-light.blue-grey#saveForLater(type="button", style="display:none", data-bind="visible: (isEdit === true && hasEdits() === true)") Save For Later
+            .btn.btn-small.waves-effect.waves-light.blue-grey#discardChanges(type="button", style="display:none", data-bind="visible: (hasEdits() === true || hasEditVersion() === true)") Discard Changes
+            .btn.btn-small.waves-effect.waves-light.blue-grey#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
             span.editVersionAvailable(data-bind="visible: editVersionAvailable") *Edit Version Available
             .zoomSection.right.input-field
                 label(data-bind="attr: { for: 'currentZoom' }")
@@ -43,14 +43,14 @@ html
                 input.blue-grey(type="number", min="25", max="400", data-bind="attr: { 'id': 'currentZoom' }, value: currentZoom")
                 .percentSign &nbsp;%
 
-        #gplSequenceProperties.modal.modal-fixed-header.blue-grey-form.fade
+        #gplSequenceProperties.modal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Sequence Properties
             .modal-content
                 .row.devicePoint.form-inline
                     .row
                         .col.s12
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: selectDevicePoint") Select Device
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: selectDevicePoint") Select Device
                             span(data-bind="text: deviceName")
                     .row
                         .col.s6
@@ -64,7 +64,7 @@ html
                         .col.s5.blue-grey-text.controllerDropdown
                             label(for="controllerDropdown") Controller
                             select#controllerDropdown(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
                     .row
                         .col.s4
                             span Update Interval
@@ -87,14 +87,14 @@ html
                                 label(for="checkboxShowLabel") Show Label
                     .row.applyButtons
                         .col.s4
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyUpdateInterval") Apply All
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyUpdateInterval") Apply All
                         .col.s4
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowValue") Apply All
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyShowValue") Apply All
                         .col.s4
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
 
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateSequenceProperties") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateSequenceProperties") Save
 
         // TODO - doesn't look like this is used any longer
         //#colorpickerModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
@@ -115,12 +115,12 @@ html
             .modal-content GPL Message
                 #gplMessageBody.panel-body
 
-        #safeForLaterConfirm.modal.modal-fixed-header.blue-grey-form.fade
+        #safeForLaterConfirm.modal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-content
                 .modal-body.clearfix
                     h4 Continue Editing?
                 .modal-footer
-                    .btn.waves-effect.waves-light.blue-grey(data-bind="click: doCancel") Return to View Mode
+                    .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: doCancel") Return to View Mode
 
         #editPrecisionModal.modal.modal-fixed-header.blue-grey-form.fade
             .modal-header
@@ -134,7 +134,7 @@ html
                         label(for="numberOfDecimalsPrecision") # of Decimals
                         input#numberOfDecimalsPrecision.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
             .modal-footer
-                    .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockPrecision") Save
+                    .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockPrecision") Save
         #editLabelModal.modal.modal-fixed-header.blue-grey-form.fade
             .modal-header
                 .modalTitle Edit Label
@@ -148,9 +148,9 @@ html
                         input#showTheLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
                         label(for="showTheLabel") Show Label
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockLabel") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockLabel") Save
 
-        #editTextModal.modal.modal-fixed-header.blue-grey-form.fade
+        #editTextModal.modal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Edit Text
             .modal-content
@@ -173,9 +173,9 @@ html
                         div#fontColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
 
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateText") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateText") Save
 
-        #editActionButtonModal.modal.modal-fixed-header.blue-grey-form.fade
+        #editActionButtonModal.modal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Edit Button
             .modal-content
@@ -188,7 +188,7 @@ html
 
                 .row
                     .col.s4
-                        .btn.waves-effect.waves-light.blue-grey(data-bind="click: selectActionButtonPoint") Select Point
+                        .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: selectActionButtonPoint") Select Point
                     .col.s10
                         span(data-bind="text: actionButtonPointName")
 
@@ -211,10 +211,10 @@ html
                         input#actionButtonParameter(data-bind="textInput: actionButtonParameter")
 
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateActionButton") Save
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: deleteActionButton") Delete
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateActionButton") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: deleteActionButton") Delete
 
-        #editActionButtonValueModal.modal.modal-fixed-header.blue-grey-form.fade
+        #editActionButtonValueModal.modal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Enter Value
             .modal-content
@@ -225,7 +225,7 @@ html
                         .col.s10
                             input#actionButtonValue.form-control.input-sm.input-xs(data-bind="numeric: actionButtonValue, value: actionButtonValue")
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: sendActionButtonValue") Send Command
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: sendActionButtonValue") Send Command
 
         #actionButtonReportParameterModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
@@ -283,7 +283,7 @@ html
                         //.row
                         //    .col.s4.subtitle Reference
                         .row.pointName
-                            .col.s3.btn.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
+                            .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
                             .col.s10
                                 span(data-bind="text: editPointName")
                     .row(data-bind="visible: editPointType() === 'ConstantBlock'")
@@ -324,7 +324,7 @@ html
                                 input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
                                 label(for="showPresentValue") Show Present Value
             .modal-footer
-                .btn.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
 
         #jqxMenu.contextMenu.hideLoading
             ul.editSection
