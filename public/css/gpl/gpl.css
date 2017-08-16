@@ -13,22 +13,8 @@ body {
 
 .canvas-container {
     position: absolute !important;
-    /*top: 0;*/
-    /*left: 0;*/
-    /*display: inline-block;*/
-    /*vertical-align: top;*/
 }
 
-/*#toolbarCanvas {*/
-    /*width: 100px;*/
-/*}*/
-
-/*#gplCanvas {*/
-    /*position: fixed;*/
-    /*left: 0;*/
-    /*top: 0;*/
-    /*width: 77px;*/
-/*}*/
 .datepicker {
     z-index: 3000 !important;
 }
@@ -92,8 +78,17 @@ body {
 #editInputOutput .row {
     margin-bottom: 5px !important;
 }
+
 #gplSequenceProperties .row {
     margin-left: auto;
+}
+
+#gplSequenceProperties .controllerDropdown {
+    margin-top: -119px;
+}
+
+#gplSequenceProperties .gplUpdateInterval {
+    padding-top: 40px;
 }
 
 .spacedControls > .form-group {
@@ -116,6 +111,9 @@ body {
     margin-left: 10px !important;
 }
 
+.dropdown-content li > a, .dropdown-content li > span {
+    color: #455a64 !important;
+}
 .dataField > label {
     margin-top: 0;
     white-space: nowrap;
@@ -172,39 +170,6 @@ body {
     right: 60px !important;
     top: 22px !important;
 }
-
-/*.subtitle {*/
-    /*!*font-size: 1.1em;*!*/
-    /*!*font-weight: bold;*!*/
-    /*border: 1px solid #ccc;*/
-    /*margin: 10px auto;*/
-    /*padding: 0 10px;*/
-    /*border-radius: 3px;*/
-/*}*/
-
-/*.subtitle .row,*/
-/*.subtitle .col {*/
-    /*margin-bottom: 0;*/
-/*}*/
-
-/*.subtitle div,*/
-/*.subtitle label {*/
-    /*font-weight: normal;*/
-/*}*/
-
-/*.subtitle div {*/
-    /*font-size: 1em;*/
-    /*margin-bottom: 10px;*/
-/*}*/
-
-/*.subtitle label {*/
-    /*margin-bottom: 0;*/
-/*}*/
-
-/*.subtitle.editSection .input-row .checkbox input[type="checkbox"]  {*/
-    /*margin-left: 5px;*/
-    /*margin-right: 5px;*/
-/*}*/
 
 .devicePoint button,
 .pointName button {
