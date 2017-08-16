@@ -256,18 +256,7 @@ html
                 .name
                     i.fa.fa-filter
                     .text
-                        a.cursorPointer(data-bind="text: alarmDetail.alarm().Name1, click: callChangeNameFilter.bind($data, 1)")
-                        span(data-bind="visible: alarmDetail.alarm().Name2.length")
-                            |  _
-                            a.cursorPointer(data-bind="text: alarmDetail.alarm().Name2, click: callChangeNameFilter.bind($data, 2)")
-
-                            span(data-bind="visible: alarmDetail.alarm().Name3.length")
-                                |  _
-                                a.cursorPointer(data-bind="text: alarmDetail.alarm().Name3, click: callChangeNameFilter.bind($data, 3)")
-
-                                span(data-bind="visible: alarmDetail.alarm().Name4.length")
-                                    |  _
-                                    a.cursorPointer(data-bind="text: alarmDetail.alarm().Name4, click: callChangeNameFilter.bind($data, 4)")
+                        a.cursorPointer(data-bind="text: alarmDetail.alarm().Name, click: callChangeNameFilter.bind($data)")
 
                 .notifications
                     // ko if: alarmDetail.gettingData() === true

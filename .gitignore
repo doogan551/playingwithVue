@@ -18,3 +18,6 @@ apps/backup.log
 !*.exe
 !*.dll
 debug.log
+*.bak
+
+format\.js

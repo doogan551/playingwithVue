@@ -24,14 +24,79 @@ dtiMessaging.openWindow(arguments);
 
 */
 
-var dtiUtility =  {
+var dtiUtility = {
     itemIdx: 0,
+    lastIdNumber: 0,
     settings: {
-        idxPrefix: 'dti_'
+        idxPrefix: 'dti_',
+        logLinePrefix: true
+    },
+    formatDate: function(date, addSuffix) {
+        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+            lengths = [2, 2, 2, 3],
+            separators = [':', ':', ':', ''],
+            suffix = ' --',
+            fn,
+            out = '';
+
+        if (addSuffix) {
+            separators.push(suffix);
+        }
+
+        if (typeof date === 'number') {
+            date = new Date(date);
+        }
+
+        for (fn in functions) {
+            if (functions.hasOwnProperty(fn)) {
+                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+            }
+        }
+
+        return out;
+    },
+    log: function() {
+        var stack,
+            steps,
+            lineNumber,
+            err,
+            now = new Date(),
+            args = [].splice.call(arguments, 0),
+            pad = function(num) {
+                return ('    ' + num).slice(-4);
+            },
+            formattedtime = dtiUtility.formatDate(new Date(), true);
+
+        if (dtiUtility.settings.logLinePrefix === true) {
+            err = new Error();
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(err);
+
+                stack = err.stack.split('\n')[2];
+
+                steps = stack.split(':');
+
+                lineNumber = steps[2];
+
+                args.unshift('line:' + pad(lineNumber), formattedtime);
+            }
+        }
+        // args.unshift(formattedtime);
+        if (!dtiUtility.noLog) {
+            console.log.apply(console, args);
+        }
     },
     makeId: function () {
         dtiUtility.itemIdx++;
         return dtiUtility.settings.idxPrefix + dtiUtility.itemIdx;
+    },
+    generateFauxPointID: function (preFix) {
+        let newId = dtiUtility.lastIdNumber;
+        while (dtiUtility.lastIdNumber === newId) {
+            newId = Date.now();
+        }
+        dtiUtility.lastIdNumber = newId;
+        return (!!preFix ? preFix : 'fauxID') + newId.toString();
     },
     store: window.store,
     getConfigCallbacks: {},
@@ -42,8 +107,8 @@ var dtiUtility =  {
 
     init: function () {
         if (dtiUtility.store === undefined) {
-            $.getScript('/js/lib/store2.min.js', function handleGetStore () {
-                var storeInterval = setInterval(function testStore () {
+            $.getScript('/js/lib/store2.min.js', function handleGetStore() {
+                var storeInterval = setInterval(function testStore() {
                     if (window.store) {
                         dtiUtility.store = window.store;
                         clearInterval(storeInterval);
@@ -52,7 +117,56 @@ var dtiUtility =  {
             });
         }
 
+        dtiUtility.initKnockout();
         dtiUtility.initEventListener();
+    },
+
+    initKnockout: () => {
+        if (window.ko) {
+            var utils = {
+                formatInputField: (element, valueAccessor, allBindingsAccessor) => {
+                    var fieldValue = ko.unwrap(valueAccessor()),
+                        allBindings = allBindingsAccessor(),
+                        stripSpaces = (allBindings.stripSpaces !== undefined ? allBindings.stripSpaces : true),
+                        stripDoubleSpace = (allBindings.stripDoubleSpace !== undefined ? allBindings.stripDoubleSpace : false),
+                        $element = $(element);
+
+                    if (stripSpaces && !!fieldValue) {
+                        fieldValue = fieldValue.trim();
+                    }
+                    if (stripDoubleSpace && !!fieldValue) {
+                        fieldValue = fieldValue.replace(/ {2,}/g, ' ');
+                    }
+
+                    $element.val(fieldValue);
+                },
+                setPointNameField: (element, valueAccessor) => {
+                    var pointPathArray = ko.unwrap(valueAccessor()),
+                        $element = $(element),
+                        pointName = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [pointPathArray]) : window.getConfig("Utility.getPointName", [pointPathArray]));
+
+                    $element.text(pointName);
+                }
+            };
+
+            ko.bindingHandlers.diPointName = {
+                init: function (element, valueAccessor) {
+                    utils.setPointNameField(element, valueAccessor);
+                },
+                update: function (element, valueAccessor) {
+                    utils.setPointNameField(element, valueAccessor);
+                }
+            };
+
+            ko.bindingHandlers.diTextInput = {
+                init: function (element, valueAccessor, allBindingsAccessor) {
+                    utils.formatInputField(element, valueAccessor, allBindingsAccessor);
+                },
+                update: function (element, valueAccessor, allBindingsAccessor) {
+                    utils.formatInputField(element, valueAccessor, allBindingsAccessor);
+                }
+            };
+        }
     },
 
     defaultHandler: function (e) {
@@ -152,7 +266,7 @@ var dtiUtility =  {
 
         params.mode = 'filter';
 
-        dtiUtility.sendMessage('showPointSelector', params);  
+        dtiUtility.sendMessage('showPointSelector', params);
     },
 
     showCreatePoint: function (parameters) {
@@ -179,7 +293,7 @@ var dtiUtility =  {
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
         data.messageID = data.messageID || dtiUtility.makeId();
-        
+
         store.set(target, data);
     },
 
@@ -220,6 +334,13 @@ var dtiUtility =  {
         });
     },
 
+    updateUPI: function (upi) {
+        dtiUtility.sendMessage('windowMessage', {
+            action: 'updateUPI',
+            parameters: upi
+        });
+    },
+
     closeWindow: function () {
         dtiUtility.sendMessage('closeWindow');
     },
@@ -235,7 +356,6 @@ var dtiUtility =  {
             parameters: parameters,
             _getCfgID: getCfgID
         });
-
     },
     getUser: function (cb) {
         dtiUtility._getUserCb = cb;
@@ -253,6 +373,6 @@ var dtiUtility =  {
 };
 
 // $(dtiUtility.init);
-document.addEventListener("DOMContentLoaded", function loaddtiUtility (event) {
-    setTimeout(dtiUtility.init, 1000); 
+document.addEventListener('DOMContentLoaded', function loaddtiUtility(event) {
+    setTimeout(dtiUtility.init, 1000);
 });

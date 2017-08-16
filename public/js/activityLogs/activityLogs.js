@@ -9,9 +9,26 @@ var dti = {
     }
 };
 
+var initKnockout = function () {
+    ko.bindingHandlers.dtiLogsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dtiLogsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+};
+
 var ActivityLogsManager = function (conf) {
-    var self = this,
-        myTitle = 'Activity Logs',
+    let self = this,
         sessionId = store.get('sessionId'),
         storeKey = 'activityLogs_',
         filterDataKey = "activityLogFilters" + window.location.search.slice(1),
@@ -19,6 +36,9 @@ var ActivityLogsManager = function (conf) {
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
+        $activitylogBody = $(".activitylogBody"),
+        $userFilterModal = $activitylogBody.find("#userFilterModal"),
+        $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
         PAGE_SIZE = 200,
         COMPUTED_DELAY = 10,
         computedThrottle = {
@@ -33,11 +53,9 @@ var ActivityLogsManager = function (conf) {
         listOfUsers = ko.observableArray([]),
         listOfFilteredUsers = ko.observableArray([]),
         gotoPageOne = true,
-        pointNameFilterObj = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
+        pointAttribsFilterObj = {
+            path: [],
+            terms: "",
             pointTypes: []
         },
         availablePointTypes = {},
@@ -49,7 +67,7 @@ var ActivityLogsManager = function (conf) {
             storeKey += currentUser;
         },
         buildActivityLogRequestObject = function (activityLog, reqObj) {
-            var l_startDate = 0,
+            let l_startDate = 0,
                 l_endDate = 0,
                 i,
                 nPages = activityLog.numberOfPages.peek();
@@ -60,18 +78,8 @@ var ActivityLogsManager = function (conf) {
             reqObj.currentPage = gotoPageOne ? 1 : self.pageNumber();
             reqObj.usernames = self.getFilteredUsers();
 
-            // Point type filtering
-            if (self.name1() === undefined) {
-                self.name1("");
-                self.name2("");
-                self.name3("");
-                self.name4("");
-            }
+            reqObj.terms = self.terms();
 
-            reqObj.name1 = self.name1();
-            reqObj.name2 = self.name2();
-            reqObj.name3 = self.name3();
-            reqObj.name4 = self.name4();
             if (availablePointTypes) {
                 if (self.pointTypes().length > 0 && self.pointTypes().length !== numberPointTypes.length) {
                     reqObj.pointTypes = [];
@@ -95,14 +103,11 @@ var ActivityLogsManager = function (conf) {
             reqObj.startDate = l_startDate;
             reqObj.endDate = l_endDate;
         },
-        pointNameFilterCallback = function (filter) {
-            var arrayOfPointTypes = [],
+        pointAttribsFilterCallback = function (filter) {
+            let arrayOfPointTypes = [],
                 pointType;
 
-            self.name1(filter.name1);
-            self.name2(filter.name2);
-            self.name3(filter.name3);
-            self.name4(filter.name4);
+            self.terms(filter.terms);
 
             if (!!filter.pointTypes && filter.pointTypes.length !== numberPointTypes) {
                 self.pointTypes(filter.pointTypes);
@@ -112,10 +117,10 @@ var ActivityLogsManager = function (conf) {
                 }
                 self.pointTypes(arrayOfPointTypes);
             }
-            self.applyPointNameFilter();
+            self.applyPointAttribsFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
-            var theDate = new Date(timestamp),
+            let theDate = new Date(timestamp),
                 theDateClone = theDate.clone().clearTime(),
                 today = Date.today(),
                 str = '';
@@ -132,18 +137,19 @@ var ActivityLogsManager = function (conf) {
             return str;
         },
         getPrettyTime = function (timestamp) {
-            var theDate = new Date(timestamp);
+            let theDate = new Date(timestamp);
             return theDate.toString('HH:mm:ss');
         },
         formatActivityLogEntry = function (activityLog) {
-            var selected = false;
+            let selected = false;
 
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
+            activityLog.Name = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [activityLog.path]) : window.getConfig("Utility.getPointName", [activityLog.path]));
         },
         updateNumberOfPages = function (count, activityLogTable) {
-            var sortAsc = self.sortAscending(),
+            let sortAsc = self.sortAscending(),
                 curPage = self.pageNumber(),
                 curNumberPages = activityLogTable.numberOfPages(),
                 newNumberPages = parseInt(count / PAGE_SIZE, 10);
@@ -158,7 +164,7 @@ var ActivityLogsManager = function (conf) {
             activityLogTable.numberOfPages(newNumberPages);
         },
         processActivityLogs = function (theLogData) {
-            var i, page;
+            let i, page;
 
             if (theLogData.logs !== undefined) {
                 //console.log('   activityLogs from server.  logs.length = ', theLogData.logs.length);
@@ -178,7 +184,7 @@ var ActivityLogsManager = function (conf) {
             self.activityLogs().gettingData(false);
         },
         setAvailablePointTypes = function (results) {
-            var i;
+            let i;
             if (results) {
                 for (i = 0; i < results.length; i++) {
                     availablePointTypes[results[i].key] = results[i].enum;
@@ -187,7 +193,7 @@ var ActivityLogsManager = function (conf) {
             numberPointTypes = results.length;
         },
         getStoreData = function () {
-            var storeData = store.get(storeKey) || {};
+            let storeData = store.get(storeKey) || {};
 
             if (storeData.hasOwnProperty('sessionId') && storeData.sessionId !== sessionId) {
                 store.remove(storeKey);
@@ -196,7 +202,7 @@ var ActivityLogsManager = function (conf) {
             return storeData;
         },
         getJsUsers = function () {
-            var i,
+            let i,
                 filteredUsers = self.filteredUsers(),
                 cleanedUsers = [];
 
@@ -207,7 +213,7 @@ var ActivityLogsManager = function (conf) {
             return cleanedUsers;
         },
         getStoredUsers = function () {
-            var i,
+            let i,
                 storeData = getStoreData(),
                 arrayOfStoredFilters,
                 usernamesToFilterOn = [];
@@ -225,7 +231,7 @@ var ActivityLogsManager = function (conf) {
             return usernamesToFilterOn;
         },
         parseListOfUsers = function (users) {
-            var i,
+            let i,
                 indexOfUser,
                 usernamesToFilterOn = getStoredUsers(),
                 clonedUsers = $.extend(true, [], users);
@@ -277,7 +283,7 @@ var ActivityLogsManager = function (conf) {
             ajaxPOST(undefined, '/api/security/users/getallusers', processUsers);
         },
         requestActivityLogs = function (activityLogTable) {
-            var name = activityLogTable.name,
+            let name = activityLogTable.name,
                 date = new Date(),
                 uniqueID = date.getTime(),
                 reqObj = {};
@@ -307,7 +313,7 @@ var ActivityLogsManager = function (conf) {
             });
         },
         storeFilterData = function () {
-            var filterValues,
+            let filterValues,
                 storeData = store.get(storeKey);
 
             if (!storeData) {
@@ -328,11 +334,10 @@ var ActivityLogsManager = function (conf) {
                 timeFrom: self.timeFrom(),
                 dateTo: self.dateTo(),
                 timeTo: self.timeTo(),
-                name1: self.name1(),
-                name2: self.name2(),
-                name3: self.name3(),
-                name4: self.name4(),
+
+                terms: self.terms(),
                 pointTypes: self.pointTypes(),
+
                 selectedUsers: self.getFilteredUsers(),
                 gotoPageOne: gotoPageOne
             };
@@ -341,7 +346,7 @@ var ActivityLogsManager = function (conf) {
             store.set(storeKey, storeData);
         },
         initFilterValues = function () {
-            var i,
+            let i,
                 data,
                 storeData = getStoreData();
 
@@ -350,27 +355,25 @@ var ActivityLogsManager = function (conf) {
                 self.sortAscending(data.sortAscending);
                 self.pageNumber(data.pageNumber);
                 self.dateFrom(data.dateFrom);
-                self.dtFilterPlaceholder.dateFrom = data.dateFrom;
+                self.dtFilterPlaceholder.dateFrom(data.dateFrom);
                 self.timeFrom(data.timeFrom);
-                self.dtFilterPlaceholder.timeFrom = data.timeFrom;
+                self.dtFilterPlaceholder.timeFrom(data.timeFrom);
                 self.dateTo(data.dateTo);
-                self.dtFilterPlaceholder.dateTo = data.dateTo;
+                self.dtFilterPlaceholder.dateTo(data.dateTo);
                 self.timeTo(data.timeTo);
-                self.dtFilterPlaceholder.timeTo = data.timeTo;
-                self.name1(data.name1);
-                pointNameFilterObj.name1 = data.name1;
-                self.name2(data.name2);
-                pointNameFilterObj.name2 = data.name2;
-                self.name3(data.name3);
-                pointNameFilterObj.name3 = data.name3;
-                self.name4(data.name4);
-                pointNameFilterObj.name4 = data.name4;
+                self.dtFilterPlaceholder.timeTo(data.timeTo);
+
+                self.path(data.path);
+                pointAttribsFilterObj.path = data.path;
+
+                self.terms(data.terms);
+                pointAttribsFilterObj.terms = data.terms;
 
                 for (i in data.pointTypes) {
                     self.pointTypes().push(data.pointTypes[i]);
                 }
 
-                pointNameFilterObj.pointTypes = self.pointTypes();
+                pointAttribsFilterObj.pointTypes = self.pointTypes();
                 gotoPageOne = data.gotoPageOne;
             }
         },
@@ -390,7 +393,7 @@ var ActivityLogsManager = function (conf) {
 
     self.refreshActivityLogsData = function () {
         // _log('self.refreshActivityLogsData() called........');
-        var localActivityLogTable = self.activityLogs();
+        let localActivityLogTable = self.activityLogs();
         requestActivityLogs(localActivityLogTable);
     };
     self.refreshUsersData = function () {
@@ -398,7 +401,7 @@ var ActivityLogsManager = function (conf) {
         requestUsers();
     };
     self.showPointReview = function (element, theData) {
-        var upi = parseInt(theData.upi, 10),
+        let upi = parseInt(theData.upi, 10),
             originalElementText;
         if (upi > 0) {
             dtiUtility.openWindow({
@@ -420,7 +423,7 @@ var ActivityLogsManager = function (conf) {
         }
     };
     self.selectAll = function () {
-        var localActivityLogs = self.activityLogs().list(),
+        let localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > 200) ? 200 : n,
             localActivityLog,
@@ -437,7 +440,7 @@ var ActivityLogsManager = function (conf) {
         return true;
     };
     self.selectAllNames = function () {
-        var filterUsers = self.filteredUsers(),
+        let filterUsers = self.filteredUsers(),
             len = filterUsers.length,
             localFilterUsers,
             i;
@@ -452,7 +455,7 @@ var ActivityLogsManager = function (conf) {
         return true;
     };
     self.deselectAll = function () {
-        var localActivityLogs = self.activityLogs().list(),
+        let localActivityLogs = self.activityLogs().list(),
             len = localActivityLogs.length,
             i;
 
@@ -463,7 +466,7 @@ var ActivityLogsManager = function (conf) {
         nSelectedRowsOnPage = 0;
     };
     self.deselectAllNames = function () {
-        var filterUsers = self.filteredUsers(),
+        let filterUsers = self.filteredUsers(),
             len = filterUsers.length,
             i;
 
@@ -473,7 +476,7 @@ var ActivityLogsManager = function (conf) {
         self.dirtyUsernameFilter(true);
     };
     self.selectNone = function () {
-        var localActivityLogs = self.activityLogs().list(),
+        let localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
             localActivityLog,
@@ -488,7 +491,7 @@ var ActivityLogsManager = function (conf) {
     };
     self.resetFilters = function () {
         self.clearUsernameFilter();
-        self.clearPointNameFilter();
+        self.clearPointAttribsFilter();
         self.clearDateTimeFilter(true);
     };
     self.clearUsernameFilter = function (refreshTheData) {
@@ -499,17 +502,13 @@ var ActivityLogsManager = function (conf) {
             self.refreshActivityLogsData();
         }
     };
-    self.clearPointNameFilter = function (refreshTheData) {
-        self.name1("");
-        pointNameFilterObj.name1 = "";
-        self.name2("");
-        pointNameFilterObj.name2 = "";
-        self.name3("");
-        pointNameFilterObj.name3 = "";
-        self.name4("");
-        pointNameFilterObj.name4 = "";
+    self.clearPointAttribsFilter = function (refreshTheData) {
+        self.path([]);
+        pointAttribsFilterObj.path = [];
+        self.terms("");
+        pointAttribsFilterObj.terms = "";
         self.pointTypes([]);
-        pointNameFilterObj.pointTypes = [];
+        pointAttribsFilterObj.pointTypes = [];
 
         if (refreshTheData) {
             storeFilterData();
@@ -518,23 +517,23 @@ var ActivityLogsManager = function (conf) {
     };
     self.clearDateTimeFilter = function (refreshTheData) {
         self.dateFrom(null);
-        self.dtFilterPlaceholder.dateFrom = '';
+        self.dtFilterPlaceholder.dateFrom("");
         $dateFrom.val('').datepicker('update');
         self.timeFrom(null);
-        self.dtFilterPlaceholder.timeFrom = '';
+        self.dtFilterPlaceholder.timeFrom("");
         $timeFrom.val('').timepicker('setTime', null);
         self.dateTo(null);
-        self.dtFilterPlaceholder.dateTo = '';
+        self.dtFilterPlaceholder.dateTo("");
         $dateTo.val('').datepicker('update');
         self.timeTo(null);
-        self.dtFilterPlaceholder.timeTo = '';
+        self.dtFilterPlaceholder.timeTo("");
         $timeTo.val('').timepicker('setTime', null);
         if (refreshTheData) {
             storeFilterData();
             self.refreshActivityLogsData();
         }
     };
-    self.applyPointNameFilter = function () {
+    self.applyPointAttribsFilter = function () {
         gotoPageOne = true;
         storeFilterData();
         self.refreshActivityLogsData();
@@ -543,10 +542,11 @@ var ActivityLogsManager = function (conf) {
         gotoPageOne = true;
         listOfUsers(getJsUsers());
         storeFilterData();
+        $userFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelUserNameFilter = function () {
-        var i,
+        let i,
             filteredUsers = self.filteredUsers(),
             indexOfUser,
             usernamesToFilterOn = getStoredUsers();
@@ -560,79 +560,88 @@ var ActivityLogsManager = function (conf) {
             }
         }
 
+        $userFilterModal.closeModal();
     };
-    self.cancelPointNameFilter = function () {
-        var i,
+    self.cancelPointAttribsFilter = function () {
+        let i,
             data,
             storeData = getStoreData();
 
         if (storeData.hasOwnProperty(filterDataKey)) {
             data = storeData[filterDataKey];
-            self.name1(data.name1);
-            pointNameFilterObj.name1 = data.name1;
-            self.name2(data.name2);
-            pointNameFilterObj.name2 = data.name2;
-            self.name3(data.name3);
-            pointNameFilterObj.name3 = data.name3;
-            self.name4(data.name4);
-            pointNameFilterObj.name4 = data.name4;
+
+            self.path(data.path);
+            pointAttribsFilterObj.path = data.path;
+
+            self.terms(data.terms);
+            pointAttribsFilterObj.terms = data.terms;
 
             for (i in data.pointTypes) {
                 self.pointTypes().push(data.pointTypes[i]);
             }
 
-            pointNameFilterObj.pointTypes = self.pointTypes();
+            pointAttribsFilterObj.pointTypes = self.pointTypes();
         }
     };
     self.showPointFilter = function () {
-        var arrayOfPointTypes = [],
+        let arrayOfPointTypes = [],
             pointType;
 
         if (self.pointTypes().length === 0) {
             for (pointType in availablePointTypes) {
                 arrayOfPointTypes.push(pointType);
             }
-
             self.pointTypes(arrayOfPointTypes);
         }
-        var parameters = {
-            name1: self.name1(),
-            name2: self.name2(),
-            name3: self.name3(),
-            name4: self.name4(),
+
+        let parameters = {
+            path: [],
+            restrictPointTypes: (self.pointTypes().length < availablePointTypes.length),
+            // callback: pointAttribsFilterCallback,
+            terms: self.terms(),
             pointTypes: self.pointTypes()
         };
 
         dtiUtility.showPointFilter(parameters);
-        dtiUtility.onPointSelect(pointNameFilterCallback);
+        dtiUtility.onPointSelect(pointAttribsFilterCallback);
     };
     self.applyDateTimeFilter = function () {
-        self.dateFrom(self.dtFilterPlaceholder.dateFrom);
-        self.timeFrom(self.dtFilterPlaceholder.timeFrom);
-        self.dateTo(self.dtFilterPlaceholder.dateTo);
-        self.timeTo(self.dtFilterPlaceholder.timeTo);
+        self.dateFrom(self.dtFilterPlaceholder.dateFrom());
+        self.timeFrom(self.dtFilterPlaceholder.timeFrom());
+        self.dateTo(self.dtFilterPlaceholder.dateTo());
+        self.timeTo(self.dtFilterPlaceholder.timeTo());
         gotoPageOne = true;
         storeFilterData();
+        $dateTimeFilterModal.closeModal();
         self.refreshActivityLogsData();
     };
     self.cancelDateTimeFilter = function () {
-        self.dtFilterPlaceholder.dateFrom = self.dateFrom();
-        $dateFrom.val(self.dtFilterPlaceholder.dateFrom).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
-        self.dtFilterPlaceholder.timeFrom = self.timeFrom();
-        $timeFrom.val(self.dtFilterPlaceholder.timeFrom).timepicker('setTime', self.dtFilterPlaceholder.timeFrom);
-        self.dtFilterPlaceholder.dateTo = self.dateTo();
-        $dateTo.val(self.dtFilterPlaceholder.dateTo).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
-        self.dtFilterPlaceholder.timeTo = self.timeTo();
-        $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo);
+        self.dtFilterPlaceholder.dateFrom(self.dateFrom());
+        $dateFrom.val(self.dtFilterPlaceholder.dateFrom()).datepicker('setDate', self.dtFilterPlaceholder.dateFrom());
+        self.dtFilterPlaceholder.timeFrom(self.timeFrom());
+        $timeFrom.val(self.dtFilterPlaceholder.timeFrom).timepicker('setTime', self.dtFilterPlaceholder.timeFrom());
+        self.dtFilterPlaceholder.dateTo(self.dateTo());
+        $dateTo.val(self.dtFilterPlaceholder.dateTo).datepicker('setDate', self.dtFilterPlaceholder.dateFrom());
+        self.dtFilterPlaceholder.timeTo(self.timeTo());
+        $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo());
+        $dateTimeFilterModal.closeModal();
     };
     self.toggleDateTimeSort = function () {
-        var currentSort = self.sortAscending();
+        let currentSort = self.sortAscending();
         self.sortAscending(!currentSort);
         storeFilterData();
         self.refreshActivityLogsData();
     };
+    self.editDateTimeFilter = () => {
+        $dateTimeFilterModal.openModal();
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
+    };
+
     self.changePage = function (modifier) {
-        var activityLogs = self.activityLogs(),
+        let activityLogs = self.activityLogs(),
             newPage;
 
         if (modifier === 'begin') {
@@ -649,7 +658,7 @@ var ActivityLogsManager = function (conf) {
         self.refreshActivityLogsData();
     };
     self.getFilteredUsers = function () {
-        var i,
+        let i,
             users = self.users(),
             usernamesToFilterOn = [];
 
@@ -673,12 +682,23 @@ var ActivityLogsManager = function (conf) {
         });
         $('.activityLogs').css('overflow', 'auto');
     };
+    self.editUserFilter = () => {
+        $userFilterModal.openModal();
+        setTimeout(function () {
+            Materialize.updateTextFields();
+        }, 200);
+        return true;
+    };
+    self.init = () => {
+        initKnockout();
+        initFilterValues();
+    };
 
     self.dtFilterPlaceholder = {
-        dateFrom: '',
-        timeFrom: '',
-        dateTo: '',
-        timeTo: ''
+        dateFrom: ko.observable(""),
+        timeFrom: ko.observable(""),
+        dateTo: ko.observable(""),
+        timeTo: ko.observable("")
     };
     self.sortAscending = ko.observable(false);
     self.pageNumber = ko.observable(1);
@@ -686,13 +706,10 @@ var ActivityLogsManager = function (conf) {
     self.timeFrom = ko.observable();
     self.dateTo = ko.observable();
     self.timeTo = ko.observable();
-    self.name1 = ko.observable();
-    self.name2 = ko.observable();
-    self.name3 = ko.observable();
-    self.name4 = ko.observable();
+    self.path = ko.observableArray([]);
+    self.terms = ko.observable("");
     self.dirtyUsernameFilter = ko.observable(false);
     self.pointTypes = ko.observableArray([]);
-    self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
 
     self.activityLogs = ko.computed(function () {
@@ -708,7 +725,7 @@ var ActivityLogsManager = function (conf) {
         return listOfFilteredUsers();
     }, self);
     self.allSelected = ko.computed(function () {
-        var i,
+        let i,
             activityLogs = self.activityLogs().list(),
             n = activityLogs.length,
             len = (n > 200) ? 200 : n;
@@ -726,7 +743,7 @@ var ActivityLogsManager = function (conf) {
         return true;
     }, self).extend(computedThrottle);
     self.allSelectedNames = ko.computed(function () {
-        var i,
+        let i,
             filterUsers = self.filteredUsers(),
             len = filterUsers.length;
 
@@ -759,9 +776,9 @@ var ActivityLogsManager = function (conf) {
         }
     });
     self.pointTypeNameFilterIsSet = ko.computed(function () {
-        var localPointTypes = self.pointTypes();
+        let localPointTypes = self.pointTypes();
 
-        if (self.name1() !== "" || self.name2() !== "" || self.name3() !== "" || self.name4() !== "") {
+        if (self.terms() !== "") {
             return true;
         }
 
@@ -775,7 +792,7 @@ var ActivityLogsManager = function (conf) {
         return (self.dateFrom() || self.timeFrom() || self.dateTo() || self.timeTo());
     });
     self.usersFilterIsSet = ko.computed(function () {
-        var i,
+        let i,
             filterUsers = self.users();
 
         for (i = 0; i < filterUsers.length; i++) {
@@ -787,7 +804,7 @@ var ActivityLogsManager = function (conf) {
         return false;
     });
     self.filterIsSet = ko.computed(function () {
-        var aFilterIsSet = false;
+        let aFilterIsSet = false;
 
         if (!aFilterIsSet) {
             aFilterIsSet = self.usersFilterIsSet();
@@ -806,112 +823,26 @@ var ActivityLogsManager = function (conf) {
 
     dtiUtility.getUser(setCurrentUser);
     dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
-    initFilterValues();
+    self.init();
 };
 
 function initPage(manager) {
-    var dateId = '#timeDateFilters',
-        userFilterId = '#userFilters',
-        $dateFilterIcon = $(dateId + ' .filterIcon'),
-        $userFilterIcon = $(userFilterId + ' .filterIcon'),
-        $bodyMask = $('.bodyMask'),
-        $pointFilterModal = $('#pointFilterModal'),
-        toggleDropdown = function (id) {
-            var $dropDown = $(id + ' .dropdown-menu'),
-                $icon = $(id + ' .filterIcon'),
-                visible = $dropDown.is(':visible');
-
-            if (!visible) {
-                $icon.addClass('open');
-                $bodyMask.show();
-            } else {
-                $icon.removeClass('open');
-            }
-            $dropDown.toggle();
-        },
-        hideDropDowns = function () {
-            var $dateFilterDropDown = $(dateId + ' .dropdown-menu'),
-                $userFilterDropDown = $(userFilterId + ' .dropdown-menu'),
-                $userFilterIcon = $(userFilterId + ' .filterIcon');
-
-            $dateFilterDropDown.hide();
-            $userFilterDropDown.hide();
-            $dateFilterIcon.removeClass('open');
-            $userFilterIcon.removeClass('open');
-            $bodyMask.hide();
-        };
-
-    // Initialize time and datepickers
-    $('.time').timepicker({
-        'timeFormat': 'H:i:s',
-        'disableTimeRanges': [
-            ['24:00:00', '25:00:00']
-        ]
-    });
-    $('.date').datepicker({
-        'format': 'D, m/d/yyyy',
-        'todayHighlight': true,
-        'clearBtn': true,
-        'autoclose': true,
-        'appendTo': '#timeDateFilters .dropdown-menu'
-    });
-
-    // Initialize the table header select column. This way the user can select any
-    // part of this header cell to activate the dropdown.
-    $(".header > .colSelect").click(function (e) {
-        e.stopPropagation();
-        if (e.srcElement.tagName !== 'INPUT') {
-            $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
-        }
-    });
-
-    $dateFilterIcon.click(function (e) {
-        toggleDropdown(dateId);
-    });
-
-    $userFilterIcon.click(function (e) {
-        toggleDropdown(userFilterId);
-    });
-
-    // This targets the 'x', 'OK', and 'clear filter' buttons in the drop down, which also dismiss the dropdown
-    $('.dropdown-menu .closeIt').click(function () {
-        hideDropDowns();
-    });
-
-    // When either the name filter or date filter drop down is shown, this element is made visible. It sits
-    // behind the drop downs, but on top of everything else. We did this because the datepicker appends
-    // itself to the body. When a date was selected, jQuery detected the body click event, causing the
-    // dropdown to be hidden.  This allows the dropdown to persist by blocking the body click, but still
-    // allows us to click anywhere outside of the dropdown to dismiss the dropdown.
-    $('.bodyMask').click(function () {
-        hideDropDowns();
-    });
-
-    // Add click handlers to 'close' elements within the modal itself
-    $pointFilterModal.find('.closeIt').click(function () {
-        $pointFilterModal.modal('toggle');
-    });
-
-    // Add handler to notify when the modal is shown
-    $pointFilterModal.on('shown.bs.modal', function (e) {
-        $('#pointLookup')[0].contentWindow.$('#listSearch').find('input:first').focus();
-    });
-
-    // $('.filterContainer.userFilterDropdown').on('hidden.bs.dropdown', function (event) {
-    //     manager.cancelUserNameFilter();
-    // });
-
-    // If this is a pop-out window
-    if (window.top.location.href === window.location.href) {
-        $('.popOut').addClass('hidden');
-        $('.popIn').removeClass('hidden');
-    }
-
-    // attach event handler to Point Name click event.
-    $("#activityLogRows").on("click", "a", function () {
-        var context = ko.contextFor(this);
-        context.$parent.showPointReview(this, context.$data);
-    });
+    // for resizing the pointname column
+    // $pointNameHeader
+    //     .css({
+    //         position: "relative"
+    //     })
+    //     .prepend("<div class='resizer'></div>")
+    //     .resizable({
+    //         resizeHeight: false,
+    //         handleSelector: "",
+    //         onDragStart: function (e, $el, opt) {
+    //             return ($(e.target).hasClass("resizer")); // only drag resizer
+    //         },
+    //         resize: function (event, ui) {
+    //             $pointNameColumn.width(ui.size.width);
+    //         }
+    //     });
 }
 
 function applyBindings() {

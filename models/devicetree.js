@@ -243,6 +243,9 @@ const DeviceTree = class DeviceTree {
     }
 
     getTree(cb) {
+        this.tree = [];
+        this.badNumbers = [];
+        this.networkNumbers = [];
         this.getDevices((err) => {
             this.sortTree((err) => {
                 this.findNumbers();
