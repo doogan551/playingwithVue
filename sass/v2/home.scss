@@ -2391,5 +2391,9 @@ $treeIconWidth: 22px;
         .treeNode > .collapseToggle:hover {
             background-color: $blue-grey-lighten-2 !important;
         }
+
+        .dtcollapsible-header.isCut {
+            font-style: italic;
+        }
     }
 }
