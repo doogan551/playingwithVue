@@ -2,12 +2,15 @@
 // if you do not wish to update the version in the DB, pass -n from command prompt
 process.setMaxListeners(0);
 let async = require('async');
+let moment = require('moment');
 let Utility = new(require('../models/Utility'))();
 let db = require('../helpers/db');
 let utils = require('../helpers/utils');
 let config = require('config');
 let Config = require('../public/js/lib/config.js');
 let logger = require('../helpers/logger')(module);
+let Point = require('../models/point');
+let Import = require('../models/import');
 
 let pjson = require('../package.json');
 let compareVersions = require('compare-versions');
@@ -22,15 +25,15 @@ let cli = commandLineArgs([{
 let options = cli.parse();
 
 let curVersion = pjson.version;
-let prevVersion = 0;
+let prevVersion = '0';
 
 let dbConfig = config.get('Infoscan.dbConfig');
 let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
 let checkVersions = function (version) {
-    // console.log(version, prevVersion, curVersion);
-    // console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
-    if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
+    console.log(version, prevVersion, curVersion);
+    console.log(compareVersions(version, prevVersion), compareVersions(curVersion, version));
+    if (prevVersion === '0' || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }
 
@@ -42,7 +45,7 @@ let scripts = {
     updateCommittedBills: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateCommittedBills',
                 errors: null,
                 results: null
@@ -177,7 +180,7 @@ let scripts = {
     updateGPLBlockPointRefEnum: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLBlockPointRefEnum',
                 errors: null,
                 results: null
@@ -224,7 +227,7 @@ let scripts = {
     updateGenerateGPLPointRefs: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGenerateGPLPointRefs',
                 errors: null,
                 results: null
@@ -461,7 +464,7 @@ let scripts = {
     updateGenerateDisplayPointRefs: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGenerateDisplayPointRefs',
                 errors: null,
                 results: null
@@ -699,10 +702,10 @@ let scripts = {
             } else {
                 cb();
             }
-        }, function(err) {
-            logger.info("Finished with updateGenerateDisplayPointRefs");
+        }, function (err) {
+            logger.info('Finished with updateGenerateDisplayPointRefs');
             callback(null, {
-                fn: "updateGenerateDisplayPointRefs",
+                fn: 'updateGenerateDisplayPointRefs',
                 errors: err
             });
         });
@@ -711,7 +714,7 @@ let scripts = {
     updateGPLBlockPrecision: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLBlockPrecision',
                 errors: null,
                 results: null
@@ -808,10 +811,10 @@ let scripts = {
         });
     },
     // 0.5.1 - GPL X-Or moving to XOr...
-    updateGPLDigitalLogicXORBlock: function(callback) {
+    updateGPLDigitalLogicXORBlock: function (callback) {
         var afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGPLDigitalLogicXORBlock',
                 errors: null,
                 results: null
@@ -827,19 +830,19 @@ let scripts = {
                 }]
             }
         }, function processSequence(err, doc, cb) {
-            var calcType = doc["Calculation Type"],
+            var calcType = doc['Calculation Type'],
                 updateMe = false;
 
             if (!!calcType) {
                 // logger.info("working on " + doc.Name );
                 updateMe = true;
 
-                if (calcType.Value === "X-Or") {
-                    calcType.Value = "XOr";
+                if (calcType.Value === 'X-Or') {
+                    calcType.Value = 'XOr';
                 }
 
-                if (!!calcType.ValueOptions && !!calcType.ValueOptions["X-Or"]) {
-                    delete calcType.ValueOptions["X-Or"];
+                if (!!calcType.ValueOptions && !!calcType.ValueOptions['X-Or']) {
+                    delete calcType.ValueOptions['X-Or'];
                 } else {
                     // logger.info("calcType.ValueOptions = " + JSON.stringify(calcType.ValueOptions));
                 }
@@ -864,11 +867,11 @@ let scripts = {
                         cb(null);
                     });
                 } else {
-                    logger.info("nothing change for " + doc.Name );
+                    logger.info('nothing change for ' + doc.Name);
                     cb(null);
                 }
             } else {
-                logger.info("no SequenceData for " + doc.Name );
+                logger.info('no SequenceData for ' + doc.Name);
                 cb(null);
             }
         }, function finishUpdatingSequences(err) {
@@ -881,10 +884,10 @@ let scripts = {
     },
 
     // 0.4.2 - Report schema change   Property Reports do NOT need duration or interval
-    updateReportsDurationInterval: function(callback) {
+    updateReportsDurationInterval: function (callback) {
         var afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateReportsDurationInterval',
                 errors: null,
                 results: null
@@ -894,7 +897,9 @@ let scripts = {
         let collectionName = 'points',
             query = {
                 'Point Type.Value': 'Report',
-                'Report Type.Value': {$ne: 'Property'}
+                'Report Type.Value': {
+                    $ne: 'Property'
+                }
             },
             reportUpdateCounter = 0,
             processDoc = function (reportDoc, cb) {
@@ -965,7 +970,7 @@ let scripts = {
     updateExistingReports: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateExistingReports',
                 errors: null,
                 results: null
@@ -1124,7 +1129,7 @@ let scripts = {
     updateDevices: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateDevices',
                 errors: null,
                 results: null
@@ -1173,7 +1178,7 @@ let scripts = {
     removePointInstance: function (callback) {
         let afterVersion = '0.3.10';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'removePointInstance',
                 errors: null,
                 results: null
@@ -1204,7 +1209,7 @@ let scripts = {
     updateGatewayReadOnlyRouterAddress: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateGatewayReadOnlyRouterAddress',
                 errors: null,
                 results: null
@@ -1282,7 +1287,7 @@ let scripts = {
     updateNetworkProps: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateNetworkProps',
                 errors: null,
                 results: null
@@ -1341,7 +1346,7 @@ let scripts = {
     fixDorsDB: function (callback) {
         let afterVersion = '0.0.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'fixDorsDB',
                 errors: null,
                 results: null
@@ -1451,7 +1456,7 @@ let scripts = {
     fixSequenceDevicePropertyName: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'fixSequenceDevicePropertyName',
                 errors: null,
                 results: null
@@ -1499,7 +1504,7 @@ let scripts = {
     addDownlinkProtocol: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addDownlinkProtocol',
                 errors: null,
                 results: null
@@ -1542,7 +1547,7 @@ let scripts = {
     switchModbusOrder: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'switchModbusOrder',
                 errors: null,
                 results: null
@@ -1630,7 +1635,7 @@ let scripts = {
     updateSecurity: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'updateSecurity',
                 errors: null,
                 results: null
@@ -1667,7 +1672,7 @@ let scripts = {
     addMissingProperties: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addMissingProperties',
                 errors: null,
                 results: null
@@ -1709,7 +1714,7 @@ let scripts = {
     removeProperties: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'removeProperties',
                 errors: null,
                 results: null
@@ -1762,7 +1767,7 @@ let scripts = {
     applyDevModel: function (callback) {
         let afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'applyDevModel',
                 errors: null,
                 results: null
@@ -1801,7 +1806,7 @@ let scripts = {
     addFeedbackInstance: function (callback) {
         let afterVersion = '0.5.1';
         if (!checkVersions(afterVersion)) {
-            callback(null, {
+            return callback(null, {
                 fn: 'addFeedbackInstance',
                 errors: null,
                 results: null
@@ -1834,6 +1839,158 @@ let scripts = {
                 errors: err
             });
         });
+    },
+    convertSQLiteDB: function (callback) {
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'convertSQLiteDB',
+                errors: null,
+                results: null
+            });
+        }
+        let startYear = 2012;
+        let maxYear = 2020;
+        const ArchiveUtility = require('../models/archiveutility');
+        let History = require('../models/history');
+        let historyModel = new History();
+        async.whilst(() => {
+            return startYear <= maxYear;
+        }, (cb) => {
+            let oldLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
+            let oldArchive = new ArchiveUtility(oldLocation, 'History_' + startYear);
+            let month = 1;
+            async.whilst(() => {
+                return month <= 12;
+            }, (cb2) => {
+                let oldHistory = oldArchive.define('History_' + startYear + '' + ((month < 10) ? '0' + month : month), {
+                    upi: {
+                        type: ArchiveUtility.INTEGER,
+                        primaryKey: true
+                    },
+                    timestamp: {
+                        type: ArchiveUtility.INTEGER,
+                        primaryKey: true
+                    },
+                    value: {
+                        type: ArchiveUtility.REAL
+                    },
+                    valueType: {
+                        type: ArchiveUtility.INTEGER
+                    },
+                    statusFlags: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
+                    },
+                    userEdited: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
+                    },
+                    oldUpi: {
+                        type: ArchiveUtility.INTEGER,
+                        defaultValue: 0
+                    }
+                });
+                month++;
+                return historyModel.HistoryRecord.sync().then(() => {
+                    return oldHistory.sync();
+                }).then(() => {
+                    return oldHistory.findAll({
+                        attributes: [
+                            ['upi', 'upi'],
+                            ['timestamp', 'timestamp'],
+                            ['value', 'value'],
+                            ['valueType', 'valueType'],
+                            ['statusFlags', 'statusFlags'],
+                            ['userEdited', 'userEdited']
+                        ],
+                        raw: true
+                    });
+                }).then((points) => {
+                    points.forEach((point) => {
+                        point.oldUpi = point.upi;
+                    });
+                    let count = 0;
+                    async.whilst(() => {
+                        return count < points.length;
+                    }, (whilstCallback) => {
+                        let buffer = 1000;
+                        historyModel.addToSQLite(points.slice(count, count + buffer), (err) => {
+                            count += buffer;
+                            whilstCallback(err);
+                        });
+                    }, cb2);
+                }).catch(cb2);
+            }, function (err) {
+                startYear++;
+                cb(err);
+            });
+        }, (err) => {
+            logger.info('Finished with convertSQLiteDB');
+            callback(null, {
+                fn: 'convertSQLiteDB',
+                errors: err
+            });
+        });
+    },
+    convertUpis: function (callback) {
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'convertUpis',
+                errors: null,
+                results: null
+            });
+        }
+
+        let importApp = new Import();
+
+        importApp.changeUpis((err) => {
+            importApp.updateHistory((err) => {
+                importApp.fixToUUtil((err) => {
+                    importApp.cleanupDB((err) => {
+                        logger.info('Finished with convertUpis');
+                        callback(null, {
+                            fn: 'convertUpis',
+                            errors: null
+                        });
+                    });
+                });
+            });
+        });
+    },
+    fixHierarchyModel: function (callback) {
+        let afterVersion = '0.6.0';
+        if (!checkVersions(afterVersion)) {
+            return callback(null, {
+                fn: 'fixHierarchyModel',
+                errors: null,
+                results: null
+            });
+        }
+
+        let importApp = new Import();
+        Utility.iterateCursor({
+            collection: 'points'
+        }, function (err, doc, cb) {
+            importApp.addHierarchyProperties(doc, (err) => {
+                Utility.update({
+                    collection: 'points',
+                    query: {
+                        _id: doc._id
+                    },
+                    updateObj: doc
+                }, (err, result) => {
+                    cb(err);
+                });
+            });
+        }, function (err, count) {
+            logger.info('Finished with fixHierarchyModel');
+            callback(null, {
+                fn: 'fixHierarchyModel',
+                errors: null
+            });
+        });
     }
 };
 
@@ -1848,7 +2005,7 @@ db.connect(connectionString, function (err) {
         tasks.push(scripts[task]);
     }
 
-    // tasks = [scripts.updateGPLBlockPrecision];
+    tasks = [scripts.fixHierarchyModel];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1872,7 +2029,7 @@ db.connect(connectionString, function (err) {
             'InfoscanJS Version': 1
         }
     }, function (err, prefVersion) {
-        prevVersion = prefVersion['InfoscanJS Version'] || 0;
+        prevVersion = prefVersion['InfoscanJS Version'] || '0';
         async.series(tasks, function done(err, results) {
             if (err) {
                 logger.info('Error: ', err);

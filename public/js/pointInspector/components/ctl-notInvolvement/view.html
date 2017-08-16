@@ -1,0 +1,74 @@
+<div data-bind="visible: gettingData" class="gettingData">
+    <i class="fa fa-spinner fa-spin"></i>
+</div>
+
+<div data-bind="visible: networkError" class="bigMessage">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>
+        <h3>Network Error</h3>
+        <p>
+            A network error ocurred.
+            Click <a href="javascript: void;" data-bind="click: render">here</a> to try again.
+        </p>
+    </div>
+</div>
+
+<div id="tabToolbar">
+    <div class="search">
+        <input type="text" data-bind="textInput: searchTerm">
+        <i class="fa fa-search searchIcon"></i>
+        <i class="fa fa-times-circle clearSearchIcon" data-bind="click: clearSearch"></i>
+    </div>
+    <div class="btn btn-default btn-xs" data-bind="click:render"><i class="fa fa-refresh"></i> Refresh Data</div>
+</div>
+
+<div class="table-responsive" data-bind="visible: !networkError()">
+    <table class="grid table table-condensed involvement">
+        <thead>
+        <tr>
+            <th class="cursorPointer" data-bind="click: sortTable.bind($data, 'Name')"><div>Point Name<i class="fa fa-chevron-up"></i></div></th>
+            <th class="cursorPointer" data-bind="click: sortTable.bind($data, 'Property')"><div>Reference<i class="fa"></i></div></th>
+            <th class="cursorPointer" data-bind="click: sortTable.bind($data, 'Point Type')"><div>Point Type<i class="fa"></i></div></th>
+            <th class="cursorPointer" data-bind="click: sortTable.bind($data, 'Device Name')"><div>On Device<i class="fa"></i></div></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="header" colspan="4">External References</td>
+        </tr>
+        </tbody>
+        <!-- External References -->
+        <tbody data-bind="visible: filteredPointRefs().length == 0">
+        <tr>
+            <td colspan="4">None</td>
+        </tr>
+        </tbody>
+        <tbody data-bind="foreach: filteredPointRefs">
+        <tr>
+            <td><a href="javascript://" data-bind="text: $data.Name, click: $parent.openPointReview"></a></td>
+            <td data-bind="text: Property"></td>
+            <td data-bind="text: $data['Point Type']"></td>
+            <td data-bind="text: $data['Device Name']"></td>
+        </tr>
+        </tbody>
+        <!-- Dependencies -->
+        <tbody>
+        <tr>
+            <td class="header" colspan="4">Dependencies</td>
+        </tr>
+        </tbody>
+        <tbody data-bind="visible: filteredDependencies().length == 0">
+        <tr>
+            <td colspan="4">None</td>
+        </tr>
+        </tbody>
+        <tbody id="dependencies" data-bind="foreach: filteredDependencies">
+        <tr>
+            <td><a href="javascript://" data-bind="text: $data.Name, click: $parent.openPointReview"></a></td>
+            <td data-bind="text: Property"></td>
+            <td data-bind="text: $data['Point Type']"></td>
+            <td><a href="javascript://" data-bind="text: $data['Device Name'], click: $parent.openPointReview" data-col="Device"></a></td>
+        </tr>
+        </tbody>
+    </table>
+</div>

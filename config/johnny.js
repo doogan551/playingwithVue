@@ -1,18 +1,11 @@
 var driveLetter = 'C';
-var host = 'info-int';
+var host = 'localhost';
 
 var johnny = {
     'Infoscan': {
         'dbConfig': {
             'host': host,
             'dbName': 'infoscan'
-        },
-        'zmqConfig': {
-            'server': 'info-int'
-        },
-        'processes': {
-            'zmqProcess': driveLetter + ':/InfoScan/Server/zmqServer.exe',
-            'smProcess': driveLetter + ':/InfoScan/Server/ServerMonitor.exe'
         },
         'redisConfig': {
             'host': host

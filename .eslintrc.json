@@ -162,9 +162,10 @@
         "no-undef": 2, // disallow use of undeclared variables unless mentioned in a /*global */ block
         "no-undef-init": 2, // disallow use of undefined when initializing variables
         "no-undefined": 0, // disallow use of undefined variable (off by default)
-        "no-unused-vars": ["error", {
-            "args": "none"
-        }], // disallow declaration of variables that are not used in the code
+        // "no-unused-vars": ["error", {
+        //     "args": "none"
+        // }], // disallow declaration of variables that are not used in the code
+        "no-unused-vars": 0,
         "no-use-before-define": 0, // disallow use of variables before they are defined
 
         //
@@ -180,7 +181,7 @@
             "after": true
         }], // enforce spacing before and after comma
         "comma-style": [1, "last"], // enforce one true comma style (off by default)
-        "consistent-this": [1, "_this"], // enforces consistent naming when capturing the current execution context (off by default)
+        "consistent-this": [1, "self"], // enforces consistent naming when capturing the current execution context (off by default)
         "eol-last": 1, // enforce newline at the end of file, with no multiple empty lines
         "func-names": 0, // require function expressions to have a name (off by default)
         "func-style": 0, // enforces use of function declarations or expressions (off by default)

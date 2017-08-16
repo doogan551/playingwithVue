@@ -10,7 +10,7 @@ router.get('/get', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    Policies.get(data, function (err, points) {
+    Policies.getPolicies(data, function (err, points) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

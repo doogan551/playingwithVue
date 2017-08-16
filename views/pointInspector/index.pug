@@ -13,9 +13,10 @@ html(lang="en")
         link(href="/css/lib/codeMirror/dialog.css", rel="stylesheet")
         link(href="/css/lib/bootstrap-datetimepicker.min.css", rel="stylesheet")
 
+        script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
         script(src='/js/lib/store2.min.js')
         script(src='/js/v2/dorsettUtility.js')
-            
+
         script(src="/js/pointInspector/app/require.config.js")
         script(data-main="app/startup", src="/js/lib/require.min.js")
 
@@ -40,19 +41,11 @@ html(lang="en")
                     //.btn.btn-xs.btn-default.pointRefresh(data-bind="click: function() { location.reload(true); document.title=point.data.Name(); }", title="Refresh Point")
                     //    i.fa.fa-refresh
                     // /ko
-                    // ko if: isInEditMode
-                    .nameForm
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name1, propertyName: 'name1'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name2, propertyName: 'name2'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name3, propertyName: 'name3'", type="text")
-                        .nameForm-group
-                            input.form-control.input-xs(data-bind="protectedText: point.data.name4, propertyName: 'name4'", type="text")
-                    // /ko
                     span.pointType(data-bind="text: point.data['Point Type'].Value")
-                    span.pointUpi.text-right(data-bind="text: point.data._id")
+                    div.hiddenPointData.text-center
+                        span(data-bind="text: point.data._id")
+                        |  > 
+                        span(data-bind="text: point.data.Name")
                 .actions
                     // ko ifnot: isInEditMode
                     // ko if: authorize(point.data, permissionLevels.WRITE)

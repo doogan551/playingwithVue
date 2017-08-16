@@ -331,6 +331,11 @@ $modalHeaderHeight: 42px;
         }
     }
 
+    .switch label input[type=checkbox]:checked + .lever,
+    .switch label input[type=checkbox]:checked + .lever:after {
+        background-color: $blue-grey !important;
+    }
+
     [type="radio"]:not(:checked) + label::before,
     [type="radio"]:not(:checked) + label::after {
         border-color: $blue-grey !important;
@@ -462,7 +467,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     display: block;
 }
 
-.ui-resizable-resizing .windowMask .iframeFull, 
+.ui-resizable-resizing .windowMask .iframeFull,
 .ui-draggable-dragging .windowMask .iframeFull,
 .interacting .windowMask .iframeFull {
     display: none;
@@ -724,7 +729,7 @@ $startmenuGutter: 15px;
             padding-left: 5px;
             padding-right: 10px;
         }
-        
+
         .autosuggestSelected {
             background-color: $blue-grey-lighten-1;
             color: #FFF;
@@ -1474,6 +1479,13 @@ $loaderSpeedScale: 1 / .75;
     background-color: $blue-grey;
     overflow-y: hidden;
 
+    .modal-header a {
+        position: absolute;
+        right: 5px;
+        top: 8px;
+        color: white;
+    }
+
     .navigatorLoading {
         position: absolute;
         z-index: 2;
@@ -1523,6 +1535,29 @@ $loaderSpeedScale: 1 / .75;
     }
 }
 
+.busy .fetching {
+    visibility: visible;
+}
+
+.fetching {
+    position: absolute;
+    visibility: hidden;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    min-height: 4px !important;
+
+    .progress {
+        margin: 0;
+        background-color: #fff;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey;
+    }
+}
+
 .navigatorBody {
     flex-grow: 1;
     position: relative;
@@ -1530,24 +1565,6 @@ $loaderSpeedScale: 1 / .75;
     .btn {
         height: 32px;
         line-height: 32px;
-    }
-
-    .fetching {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-
-        min-height: 4px !important;
-
-        .progress {
-            margin: 0;
-            background-color: #fff;
-        }
-
-        .indeterminate {
-            background-color: $blue-grey;
-        }
     }
 
     .selectorHeader {
@@ -1713,4 +1730,666 @@ input:focus {
     background-color: transparent;
     box-shadow: none;
     color: transparent;
+}
+
+
+#pointSelectorModal {
+    .modal-header {
+        background-color: $blue-grey-darken-2;
+    }
+
+    .content-header {
+        position: relative;
+    }
+
+    .pointSearch {
+        width: 80%;
+        display: inline-block;
+        input {
+            background-color: initial;
+            padding-left: 0;
+        }
+    }
+
+    .pointTypeButton {
+        width: 20%;
+        display: inline-block;
+        position: absolute;
+        bottom: 1em;
+
+        .active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            display: flex;
+            padding: 0;
+        }
+
+        i {
+            position: absolute;
+            right: 10px;
+        }
+
+        span {
+            margin-left: 10px;
+        }
+    }
+
+    .pointTypeList {
+        position: absolute;
+        background-color: white;
+        // opacity: 0;
+        right: 0;
+        max-width: 100%;
+        top: 65px;
+
+        &.active {
+            width: 100%;
+        }
+
+        span {
+            padding: 5px;
+            width: 148px;
+            float: left;
+        }
+    }
+
+    .pointList {
+        // height: 420px;
+        // overflow-y: hidden;
+        height: 470px;
+
+        thead {
+            th:last-child {
+                flex-grow: 3;
+            }
+        }
+
+        tbody {
+            td:last-child {
+                flex-grow: 3;
+            }
+        }
+    }
+
+    .pointHeaders {
+        padding: 5px;
+        font-weight: bold;
+        background-color: $blue-grey-lighten-5;
+    }
+
+    .pointResults {
+        overflow-y: auto;
+        // height: 100%;
+
+        .pointRow {
+            cursor: pointer;
+
+            td {
+                padding: 5px;
+                border-radius: 0;
+            }
+        }
+
+        .pointRow:hover {
+            background-color: $blue-grey;
+            color: white;
+            transition: background-color .1s ease, color .1s ease;
+        }
+    }
+}
+
+.fixedHeader {
+    // height: 420px;
+    // overflow-y: hidden;
+    display: flex;
+    flex-flow: column;
+
+    th,
+    td {
+        padding: 5px;
+    }
+
+    thead {
+        display: block;
+        border-bottom: none;
+        tr {
+            display: flex;
+        }
+
+        th {
+            flex: 1;
+        }
+    }
+
+    tbody {
+        overflow-y: auto;
+        width: 100%;
+        display: block;
+        tr {
+            display: flex;
+            transition: background-color .1s ease, color .1s ease;
+            cursor: pointer;
+            align-items: center;
+        }
+
+        tr:hover {
+            background-color: $blue-grey !important;
+            color: white !important;
+        }
+
+        td {
+            flex: 1;
+        }
+    }
+}
+
+$treeTopHeight: 76px;
+$treeBarHeight: 84px;
+$treeIconWidth: 22px;
+
+.hierarchy {
+    height: 100%;
+    // overflow: auto;
+    padding-top: $treeTopHeight;
+
+    $treeHeight: 2.2rem; //original 3rem
+
+    .collapseToggle {
+        cursor: pointer;
+    }
+
+    i {
+        width: $treeIconWidth;
+        line-height: $treeHeight;
+        font-size: 1.2em;
+        float: left;
+        padding-left: calc(#{$treeIconWidth} / 10);
+        // margin-right: 2px;
+
+        &:hover {
+
+        }
+    }
+
+    .treeTop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .treeTrunk {
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        // overflow: auto;
+    }
+
+    .treeBar {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+        .card {
+            margin: 0;
+        }
+    }
+
+    .treeOptions {
+        padding: 10px;
+        flex-grow: 1;
+    }
+
+    .treeRow {
+        padding: 5px;
+    }
+
+    .cat,
+    .val {
+        display: inline-block;
+    }
+
+    .cat {
+        width: 100px;
+    }
+
+    .val {
+        width: auto;
+    }
+
+    .hidden {
+        visibility: hidden;
+    }
+
+    .fetching {
+        visibility: hidden;
+    }
+
+    &.busy .fetching {
+        visibility: visible;
+    }
+
+    .progress {
+        background-color: #fff;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey;
+    }
+
+    .pane {
+        position: relative;
+        // overflow: auto;
+        // flex-grow: 1;
+        /*display: inline-block;*/
+        // padding-left: 15px;
+        padding-right: 0;
+        // margin-left: 15px;
+        width: 420px;
+        border-right: 1px solid rgba(96, 125, 139, 0.5);
+    }
+
+    .expandcollapse {
+        // &:before {
+        //     content: "";
+        //     position: absolute;
+        //     left: -10px;
+        //     display: block;
+        //     width: 10px;
+        //     height: 20px;
+        //     top: -10px;
+        //     border-bottom: 1px dashed rgba(12, 12, 12, 0.3);
+        // }
+
+        color: black;
+    }
+
+    .expanded .collapse,
+    .collapsed .expand {
+        display: none;
+    }
+
+    .childless > i {
+        visibility: hidden;
+    }
+
+    .children {
+        // padding-left: 20px;
+        position: relative;
+
+        // &:before {
+        //     content: "";
+        //     position: absolute;
+        //     left: 0;
+        //     display: block;
+        //     top: -9px;
+        //     left: 7px;
+        //     width: 1px;
+        //     height: calc(100% - 1px);
+        //     border-left: 1px dashed rgba(12, 12, 12, 0.3);
+        // }
+    }
+
+    .node {
+        position: relative;
+        margin: 1px 0;
+    }
+
+    .node .displayInfo input {
+        display: none;
+        height: 22px !important;
+        margin: 0 !important;
+    }
+
+    .node.focused > .displayInfo input {
+        display: inline;
+        width: initial;
+
+        /*background-color: #dedede;*/
+    }
+
+    .node.focused > .displayInfo .name {
+        display: none;
+    }
+
+    .nodeHover .name {
+        background-color: #43a047;
+    }
+
+    .name {
+        position: relative;
+        display: inline;
+        cursor: pointer;
+        width: initial;
+    }
+
+    .node i:not(.mdi) {
+        top: 2px;
+    }
+
+    .node i,
+    .node .mdi {
+        width: 14px;
+        height: 14px;
+        font-size: 14px !important;
+        display: inline;
+        /*position: absolute;
+        left: -15px;*/
+    }
+
+    .node .mdi.blank {
+        visibility: hidden;
+    }
+
+    .bulkAdd {
+        display: inline-block;
+        margin-left: 5px;
+        width: 14px;
+    }
+
+    .bulkAdd i {
+        position: absolute;
+        top: 5px;
+    }
+
+    .error {
+        position: absolute;
+        width: auto !important;
+    }
+
+    .nodeTooltip {
+        // position: absolute;
+        // right: -40px;
+    }
+
+    .tooltipped {
+        visibility: hidden;
+    }
+
+    .displayInfo:hover .tooltipped {
+        visibility: visible;
+    }
+
+    .locSearch {
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 10px 15px 10px;
+        // margin-left: 15px !important;
+
+        i {
+            margin-right: 10px;
+        }
+
+        input {
+            width: auto;
+            flex-grow: 1;
+            margin-bottom: 10px;
+        }
+    }
+
+
+
+    li {
+        border-left: 1px solid $blue-grey;
+    }
+
+    .dtcollapsible {
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        overflow: auto;
+        max-height: 100%;
+    }
+
+    .dtcollapsible-header {
+        cursor: pointer;
+        background-color: initial;
+        border-bottom: none;
+        min-height: $treeHeight;
+        line-height: $treeHeight;
+        // padding: 0 .6rem;
+
+
+
+        .nodeName {
+            // position: relative;
+            // top: 50%;
+            // transform: translateY(-50%);
+            // display: inline-block;
+            // vertical-align: middle;
+        }
+
+        // &:before {
+        //     content: '';
+        //     display: inline-block;
+        //     vertical-align: middle;
+        //     height: 100%;
+        // }
+    }
+
+    // .collapsible-body {
+    //     box-shadow: inset 0 0 10px rgba(0, 0, 0, .4);
+    // }
+
+    .dtcollapsible-body {
+        border-bottom: none;
+        padding-left: calc(#{$treeIconWidth} + 2px);
+        display: none;
+    }
+
+    .expand {
+        transition: transform .2s ease;
+    }
+
+    .active > .collapseToggle .expand {
+        transform: rotate(90deg);
+        // display: none;
+    }
+
+    .active > .dtcollapsible-body {
+        display: block;
+    }
+
+    // .treeNode:not(.active)  > .collapse {
+    //     display: none;
+    // }
+
+    .treeOptions label {
+        margin-right: 20px;
+        // margin-right: 10px;
+    }
+
+    .treeStyles {
+        text-align: center;
+        height: 36px;
+        padding-top: 5px;
+    }
+
+}
+
+// #tree > .collapsible {
+//     border-right: 1px solid rgba(96, 125, 139, 0.5);
+// }
+
+#tree.style1 {
+    .collapsible {
+        // three sided border, transparent background
+
+        li {
+            border-left: 1px solid rgba(96, 125, 139, 0.5);
+            background-color: rgba(96, 125, 139, 0.07);
+            color: black;
+        }
+
+        & > li:last-child:not(:first-child) {
+            border-bottom: 1px solid rgba(96, 125, 139, 0.5);
+        }
+
+        & > li:first-child {
+            border-top: 1px solid rgba(96, 125, 139, 0.5);
+        }
+
+        & > li {
+            border-left: 1px solid rgba(96, 125, 139, 0.5);
+        }
+    }
+
+    & > .collapsible > li {
+        border-left: none;
+    }
+
+    .collapsible-header {
+        transition: background-color .2s ease;
+
+        &:hover {
+            background-color: #fff;
+        }
+    }
+}
+
+#tree.style2 {
+    .collapsible {
+        // three sided border, transparent background
+
+        li {
+            border-left: 2px solid rgba(96, 125, 139, 0.5);
+            // background-color: rgba(96, 125, 139, 0.07);
+            color: black;
+        }
+    }
+
+    & > .collapsible > li {
+        border-left: none;
+    }
+
+    .collapsible-header {
+        transition: background-color .2s ease;
+
+        &:hover {
+            background-color: $blue-grey-lighten-5;
+        }
+    }
+}
+
+#tree.style3 {
+    .dtcollapsible {
+        // three sided border, transparent background
+
+        li {
+            position: relative;
+            // border-left: 2px solid rgba(96, 125, 139, 0.5);
+            border-left: none;
+            // box-shadow: -3px 0px 3px -2px rgba(96, 125, 139, 0.35);
+            // background-color: rgba(96, 125, 139, 0.07);
+            color: black;
+        }
+    }
+
+    & > .dtcollapsible > li {
+        border-left: none;
+    }
+
+    .treeNode > .collapseToggle {
+        position: absolute;
+        height: 100%;
+    }
+
+    .dtcollapsible-header {
+        padding-left: calc(#{$treeIconWidth} + 2px);
+    }
+
+    .dtcollapsible-header,
+    .treeNode > .collapseToggle {
+        transition: background-color .2s ease;
+     }
+
+    .dtcollapsible-header:hover,
+    .treeNode > .collapseToggle:hover  {
+        background-color: $blue-grey-lighten-5;
+    }
+
+    .dtcollapsible-header i {
+        visibility: hidden;
+    }
+
+    .dtcollapsible-header:hover i {
+        visibility: visible;
+    }
+}
+
+.tooltipster-base {
+    height: 400px !important;
+}
+
+
+.darkMode {
+
+    .cssload-whirlpool,
+    .cssload-whirlpool::before,
+    .cssload-whirlpool::after {
+        border-color: $blue-grey-lighten-1;
+        border-left-color: #fff;
+    }
+
+    &.loading .windowMask,
+    &.loading .iframeFull {
+        background-color: $blue-grey !important;
+    }
+
+    .card-toolbar:not(.lighten-3) {
+        background-color: $blue-grey-darken-2 !important;
+    }
+
+    .card-body {
+        background-color: $blue-grey !important;
+    }
+
+    .progress {
+        background-color: $blue-grey !important;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey-darken-2 !important;
+    }
+
+    .hierarchy {
+
+        .locSearch input {
+            color: white !important;
+        }
+
+        .locSearch input:focus {
+            border-bottom-color: #e0e0e0 !important;
+            // border-bottom-color: $blue-grey-darken-2 !important;
+        }
+
+        .pane {
+            border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .treeOptions {
+            color: white;
+        }
+
+        i,
+        .nodeName {
+            color: white !important;
+        }
+
+        .dtcollapsible li {
+            // border-left: 1px solid rgba(255, 255, 255, .6) !important;
+            // box-shadow: none !important;
+            // box-shadow: -3px 0px 3px -2px rgba(255, 255, 255, 0.35) !important;
+        }
+
+
+        .dtcollapsible-header:hover,
+        .dtcollapsible-header.selected,
+        .treeNode > .collapseToggle:hover {
+            background-color: $blue-grey-lighten-2 !important;
+        }
+    }
 }

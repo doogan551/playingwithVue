@@ -56,6 +56,19 @@ const GPL = class GPL {
             dynamic,
             pointref,
             upis = [],
+            getBlocksArray = (activeBlocks, editVersion) => {
+                let allBlocks = [];
+
+                if (!!activeBlocks) {
+                    allBlocks.concat(activeBlocks);
+                }
+
+                if (!!editVersion && !!editVersion.block) {
+                    allBlocks.concat(editVersion.block);
+                }
+
+                return allBlocks;
+            },
             getPointRef = (pointRefIndex, referenceType) => {
                 let answer;
                 if (pointRefIndex > -1) {
@@ -67,7 +80,7 @@ const GPL = class GPL {
             };
 
         if (list && list.sequence) {
-            blocks = list.sequence.block || [];
+            blocks = getBlocksArray(list.sequence.block, list.sequence.editVersion);
             len = blocks.length;
             for (c = 0; c < len; c++) {
                 block = blocks[c];

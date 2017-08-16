@@ -52,7 +52,7 @@ const Utility = class Utility {
     }
 
     aggregate(criteria, cb) {
-        let query = (!!criteria.query) ? criteria.query : {};
+        let pipeline = (!!criteria.pipeline) ? criteria.pipeline : [];
         let coll = criteria.collection || this.collection;
         let collection;
 
@@ -64,7 +64,7 @@ const Utility = class Utility {
 
         collection = db.get().collection(coll);
 
-        collection.aggregate(query, cb);
+        collection.aggregate(pipeline, cb);
     }
 
     update(criteria, cb) {
@@ -90,9 +90,13 @@ const Utility = class Utility {
     }
 
     updateAll(criteria, cb) {
-        criteria.options = {
-            multi: true
-        };
+        if (criteria.hasOwnProperty('options')) {
+            criteria.options.multi = true;
+        } else {
+            criteria.options = {
+                multi: true
+            };
+        }
         this.update(criteria, cb);
     }
 
@@ -236,6 +240,7 @@ const Utility = class Utility {
         let fields = (!!criteria.fields) ? criteria.fields : {};
         let sort = (!!criteria.sort) ? criteria.sort : {};
         let skip = (!!criteria.skip) ? criteria.skip : 0;
+        let timeout = (!!criteria.timeout) ? criteria.timeout : true;
         let collection;
 
         if (!coll) {
@@ -247,7 +252,10 @@ const Utility = class Utility {
         // console.log(query, coll);
         collection = db.get().collection(coll);
 
-        let cursor = collection.find(query, fields).limit(limit).sort(sort).skip(skip);
+        let cursor = collection.find(query, {
+            fields,
+            timeout
+        }).limit(limit).sort(sort).skip(skip);
         cb(cursor);
     }
 
@@ -337,10 +345,12 @@ const Utility = class Utility {
                     this.count(criteria, (err, count) => {
                         cb(err, points, count);
                     });
-                } else {
+                } else if (criteria.count !== false) {
                     this.count(criteria, (err, count) => {
                         cb(err, points, count);
                     });
+                } else {
+                    cb(err, points);
                 }
             });
         });

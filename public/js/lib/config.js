@@ -460,6 +460,12 @@ var Config = (function (obj) {
                             };
                     }
                 },
+                _getPointTypeEnumFromId = function (pointId) {
+                    return pointId >> 22;
+                },
+                _getPointTypeNameFromId = function (pointId) {
+                    return _getPointTypeNameFromEnum(_getPointTypeEnumFromId(pointId));
+                },
                 _getPointTypeNameFromEnum = function (enumeration) {
                     return obj.revEnums['Point Types'][enumeration];
                 },
@@ -568,6 +574,8 @@ var Config = (function (obj) {
                 };
 
             return {
+                getPointTypeEnumFromId: _getPointTypeEnumFromId,
+                getPointTypeNameFromId: _getPointTypeNameFromId,
                 getPointTypeNameFromEnum: _getPointTypeNameFromEnum,
                 getAllowedPointTypes: _getAllowedPointTypes,
                 getAllPointTypes: _getAllPointTypes,
@@ -928,6 +936,17 @@ var Config = (function (obj) {
                 }
             }
             return enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum;
+        },
+
+        getPointName: (pointPath) => {
+            'use strict';
+            let result = '';
+
+            if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
+                result = pointPath.join(obj.Enums['Point Name Separator'].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+            }
+
+            return result;
         },
 
         getRmuValueOptions: function (devModel) {
@@ -3123,8 +3142,6 @@ var Config = (function (obj) {
 
             // Adding a reference point
             if (!!refPoint && (propertyObject.Value !== 0)) {
-                propertyObject.PointName = refPoint.Name;
-                propertyObject.PointType = refPoint['Point Type'].eValue;
                 propertyObject.PointInst = refPoint._id;
 
                 if (refPoint['Point Type'].Value === 'Device') {
@@ -3136,10 +3153,6 @@ var Config = (function (obj) {
                 }
                 // Removing a reference point
             } else {
-                if (propertyObject.Value === 0) {
-                    propertyObject.PointName = '';
-                }
-
                 propertyObject.DevInst = 0;
                 propertyObject.PointInst = 0;
             }
@@ -4933,23 +4946,30 @@ var Config = (function (obj) {
 
     obj.Templates = {
         getTemplate: function (pointType) {
-            var template = {},
-                common = enumsTemplatesJson.Templates._common, // Common point property attributes
-                unique = enumsTemplatesJson.Templates.Points[pointType], // Unique point property attributes
-                templateClone = function (o) {
-                    // Return the value if it's not an object; shallow copy mongo ObjectID objects
-                    if ((o === null) || (typeof (o) !== 'object')) {
-                        return o;
-                    }
+            var hierarchyTypes = ['Location', 'Category', 'Equipment', 'Reference'];
+            var template = {};
+            var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
+            if (hierarchyTypes.includes(pointType)) {
+                template = templateClone(hierarchy);
+                hierarchy.nodeType = pointType;
+                return hierarchy;
+            }
+            var common = enumsTemplatesJson.Templates._common; // Common point property attributes
+            var unique = enumsTemplatesJson.Templates.Points[pointType]; // Unique point property attributes
+            var templateClone = function (o) {
+                // Return the value if it's not an object; shallow copy mongo ObjectID objects
+                if ((o === null) || (typeof (o) !== 'object')) {
+                    return o;
+                }
 
-                    var temp = o.constructor();
+                var temp = o.constructor();
 
-                    for (var key in o) {
-                        temp[key] = templateClone(o[key]);
-                    }
-                    return temp;
-                };
-            _.extend(template, common, unique); // Combine common and unique attributes & stuff into template object var
+                for (var key in o) {
+                    temp[key] = templateClone(o[key]);
+                }
+                return temp;
+            };
+            _.extend(template, common, unique, hierarchy); // Combine common and unique attributes & stuff into template object var
             template['Point Type'].Value = pointType;
             template['Point Type'].eValue = enumsTemplatesJson.Enums['Point Types'][pointType].enum;
             return templateClone(template);
