@@ -4186,7 +4186,7 @@ gpl.ActionButton = function (config) {
         type = config.type || ((config.actionCode !== undefined) ? 'control' : 'link'),
 
         _addButton = function () {
-            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn btn-sm btn-default actionBtn">' + _local.text + '</button>')
+            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn waves-effect waves-light blue-grey actionBtn">' + _local.text + '</button>')
                 .data({
                     'origLeft': x,
                     'origTop': y
@@ -8619,14 +8619,15 @@ gpl.Manager = function () {
                 });
             },
 
-            showBackgroundColorModal: function () {
-                gpl.$colorpickerModal.openModal();
-            },
-
-            hideBackgroundColorModal: function () {
-                managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
-                gpl.$colorpickerModal.closeModal();
-            },
+            // TODO - doesn't look like this is used any longer
+            // showBackgroundColorModal: function () {
+            //     gpl.$colorpickerModal.openModal();
+            // },
+            //
+            // hideBackgroundColorModal: function () {
+            //     managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
+            //     gpl.$colorpickerModal.closeModal();
+            // },
 
             updateBackgroundColor: function () {
                 var val = managerSelf.bindings.deviceBackgroundColor();

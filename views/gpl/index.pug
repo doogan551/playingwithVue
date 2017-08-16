@@ -53,80 +53,74 @@ html
                             .btn.waves-effect.waves-light.blue-grey(data-bind="click: selectDevicePoint") Select Device
                             span(data-bind="text: deviceName")
                     .row
-                        .col.s5
-                            label Description
-                            input.form-control.input-sm(type="text", data-bind="textInput: deviceDescription", placeholder="Sequence Description")
-                        .col.s5.blue-grey-text
-                            select.blue-grey-text(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
-                            label Controller
-                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
-                    .row
-                        .col.s8
+                        .col.s6
+                            .input-field
+                                label(for="gplDescription") Sequence Description
+                                input#gplDescription(type="text", data-bind="textInput: deviceDescription")
+                        .col.s6.colorPicker
                             div Background Color
                             div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
                     .row
+                        .col.s5.blue-grey-text.controllerDropdown
+                            label(for="controllerDropdown") Controller
+                            select#controllerDropdown(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
+                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
+                    .row
                         .col.s4
-                            .form-group.dataField
-                                label Update Interval
-                                input.short-input.form-control.input-sm(type="number", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
-                                | :
-                                input.short-input.form-control.input-sm(type="number", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
-                                .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyUpdateInterval") Apply All
-                        .col-sm-4
-                            .form-group.dataField
-                                label Show Value
-                                input.form-control.input-sm(type="checkbox", data-bind="checked: deviceShowValue")
-                                .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowValue") Apply All
-                        .col-sm-4
-                            .form-group.dataField
-                                label Show Label
-                                input.form-control.input-sm(type="checkbox", data-bind="checked: deviceShowLabel")
-                                .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
+                            span Update Interval
+                    .row
+                        .col.s2.gplUpdateIntervalMins
+                            .input-field
+                                label(for="deviceUpdateIntMins") Mins
+                                input#deviceUpdateIntMins(type="number", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
+                        .col.s2.gplUpdateIntervalSecs
+                            .input-field
+                                label(for="deviceUpdateIntSecs") Secs
+                                input#deviceUpdateIntSecs(type="number", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
+                        .col.s4
+                            .input-field
+                                input#checkboxShowValue.medium.filled-in(type="checkbox", data-bind="checked: deviceShowValue")
+                                label(for="checkboxShowValue") Show Value
+                        .col.s4
+                            .input-field
+                                input#checkboxShowLabel.medium.filled-in(type="checkbox", data-bind="checked: deviceShowLabel")
+                                label(for="checkboxShowLabel") Show Label
+                    .row.applyButtons
+                        .col.s4
+                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyUpdateInterval") Apply All
+                        .col.s4
+                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowValue") Apply All
+                        .col.s4
+                            .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
+
             .modal-footer
                 .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateSequenceProperties") Save
 
-        #colorpickerModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog.modal-sm
-                .modal-content
-                    .modal-body
-                        .row
-                            .col-sm-12.center-block
-                                div.colorpicker
-                                    div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
-                    .modal-footer
-                        button.btn.btn-default.btn-sm(data-bind="click: hideBackgroundColorModal", data-dismiss="modal") Close
-                        button.btn.btn-primary.btn-sm(data-bind="click: updateBackgroundColor") Save
+        // TODO - doesn't look like this is used any longer
+        //#colorpickerModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+        //    .modal-dialog.modal-sm
+        //        .modal-content
+        //            .modal-body
+        //                .row
+        //                    .col-sm-12.center-block
+        //                        div.colorpicker
+        //                            div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
+        //            .modal-footer
+        //                button.btn.btn-default.btn-sm(data-bind="click: hideBackgroundColorModal", data-dismiss="modal") Close
+        //                button.btn.btn-primary.btn-sm(data-bind="click: updateBackgroundColor") Save
 
-        #gplMessage.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog
-                .modal-content
-                    .modal-header
-                        h3.panel-title GPL Message
-                    .modal-body.modal-body-no-padding
-                        #gplMessageBody.panel-body
+        #gplMessage.modal.modal-fixed-header.blue-grey-form.fade
+            .modal-header
+                .modalTitle Edit Precision
+            .modal-content GPL Message
+                #gplMessageBody.panel-body
 
-        #safeForLaterConfirm.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog
-                .modal-content
-                    //- .modal-header
-                    //-     h3.panel-title Continue Editing
-                    .modal-body.clearfix
-                        h4 Continue Editing?
-
-                    .modal-footer
-                        button.btn.btn-default.btn-sm(data-dismiss="modal") Continue Editing
-                        button.btn.btn-primary.btn-sm(data-bind="click: doCancel") Return to View Mode
-
-        #editVersionModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog
-                .modal-content
-                    .modal-header
-                        h3.panel-title Edit Version
-                    .modal-body
-                        .row.text-center This sequence has an edit version.  Do you wish to load that version?
-                    .modal-footer
-                        button#useEditVersion.btn.btn-success.btn-sm(type="button") Use Edit Version
-                        button#discardEditVersion.btn.btn-danger.btn-sm(type="button") Discard
+        #safeForLaterConfirm.modal.modal-fixed-header.blue-grey-form.fade
+            .modal-content
+                .modal-body.clearfix
+                    h4 Continue Editing?
+                .modal-footer
+                    .btn.waves-effect.waves-light.blue-grey(data-bind="click: doCancel") Return to View Mode
 
         #editPrecisionModal.modal.modal-fixed-header.blue-grey-form.fade
             .modal-header
@@ -220,22 +214,18 @@ html
                 .btn.waves-effect.waves-light.blue-grey(data-bind="click: updateActionButton") Save
                 .btn.waves-effect.waves-light.blue-grey(data-bind="click: deleteActionButton") Delete
 
-        #editActionButtonValueModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog
-                .modal-content
-                    .modal-header
-                        h3.panel-title Enter Value
-                    .modal-body.clearfix
-                        .row.bm10px
-                            .form-group
-                                .col-sm-1.noBoldControls
-                                    label(for="actionButtonValue") Value:
-                                .col-sm-11
-                                    input#actionButtonValue.form-control.input-sm.input-xs(data-bind="numeric: actionButtonValue, value: actionButtonValue")
-
-                    .modal-footer
-                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
-                        button.btn.btn-primary.btn-sm(data-bind="click: sendActionButtonValue") Send Command
+        #editActionButtonValueModal.modal.modal-fixed-header.blue-grey-form.fade
+            .modal-header
+                .modalTitle Enter Value
+            .modal-content
+                .row.bm10px
+                    .form-group
+                        .col.s2.noBoldControls
+                            label(for="actionButtonValue") Value:
+                        .col.s10
+                            input#actionButtonValue.form-control.input-sm.input-xs(data-bind="numeric: actionButtonValue, value: actionButtonValue")
+            .modal-footer
+                .btn.waves-effect.waves-light.blue-grey(data-bind="click: sendActionButtonValue") Send Command
 
         #actionButtonReportParameterModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
