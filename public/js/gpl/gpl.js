@@ -4229,9 +4229,13 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
+            let setLocalPointName = (pointName) => {
+                _local.pointName = pointName;
+            };
+
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                _local.pointName = window.getConfig("Utility.getPointName", [_local.pointData.path]);
+                dtiUtility.getConfig("Utility.getPointName", [_local.pointData.path], setLocalPointName);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -4241,10 +4245,6 @@ gpl.ActionButton = function (config) {
                         Security: response.Security,
                         Name: _local.pointName,
                         path: _local.pointData.path,
-                        // name1: response.name1,
-                        // name2: response.name2,
-                        // name3: response.name3,
-                        // name4: response.name4,
                         "Point Type": {
                             eValue: response["Point Type"].eValue
                         }
@@ -4440,7 +4440,6 @@ gpl.ActionButton = function (config) {
         destroy = function () {
             gpl.destroyObject(_local);
         },
-
 
         setUPI = function (upi) {
             _local.upi = config.upi;
