@@ -724,10 +724,10 @@ let Import = class Import extends Common {
                 index = 0;
 
             for (var i = 1; i <= 4; i++) {
-                if (report.hasOwnProperty('_name' + i)) {
+                if (i <= names.length) {
                     report['name' + i] = names[i - 1];
                     report['_name' + i] = names[i - 1].toLowerCase();
-                }else{
+                } else {
                     report['name' + i] = '';
                     report['_name' + i] = '';
                 }
@@ -823,10 +823,10 @@ let Import = class Import extends Common {
             var names = report.Name.split('_');
 
             for (var i = 1; i <= 4; i++) {
-                if (report.hasOwnProperty('_name' + i)) {
+                if (i <= names.length) {
                     report['name' + i] = names[i - 1];
                     report['_name' + i] = names[i - 1].toLowerCase();
-                }else{
+                } else {
                     report['name' + i] = '';
                     report['_name' + i] = '';
                 }
