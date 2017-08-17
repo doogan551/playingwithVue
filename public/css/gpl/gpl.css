@@ -319,10 +319,21 @@ body {
     font-size: 19px;
 }
 
-/*  possibly global CSS settings */
+/*      possibly global CSS settings     */
+/*  ***********************************  */
 
 .btn-small {
     height: 24px;
     line-height: 24px;
     padding: 0 0.5rem;
+}
+
+.modal .row input:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+
+.modal .row .filled-in[type="checkbox"].filled-in:checked + label:after {
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
 }

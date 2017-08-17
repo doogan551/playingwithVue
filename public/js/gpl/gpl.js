@@ -1,5 +1,5 @@
 /* eslint-disable linebreak-style */
-'use strict';
+"use strict";
 var gpl = {
     texts: {},
     blocks: {},
