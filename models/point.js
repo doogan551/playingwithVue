@@ -3382,31 +3382,44 @@ const Point = class Point extends Common {
     getFilteredPoints(data, cb) {
         let terms = data.terms;
         let pointTypes = data.pointTypes;
+        let pipeline = [];
+        let match = {
+            $and: []
+        };
+
+        if (!!terms && terms.length) {
+            match.$and.push({
+                path: {
+                    $all: this.buildSearchTerms(terms)
+                }
+            });
+        }
+
+        match.$and.push({
+            'Point Type.Value': {
+                $in: pointTypes
+            }
+        });
+
+        pipeline.push({$match: match});
+        pipeline.push({
+            $limit: 200
+        });
+        pipeline.push({
+            $limit: 200
+        });
+        pipeline.push({
+            $project: {
+                _id: 1,
+                pointType: '$Point Type.Value',
+                path: 1,
+                display: 1,
+                parentNode: 1
+            }
+        });
 
         this.aggregate({
-            pipeline: [{
-                $match: {
-                    $and: [{
-                        path: {
-                                $all: this.buildSearchTerms(terms)
-                            }
-                    },
-                    {
-                        'Point Type.Value': {
-                                $in: pointTypes
-                            }
-                    }
-                    ]
-                }
-            }, {
-                $project: {
-                    _id: 1,
-                    pointType: '$Point Type.Value',
-                    path: 1,
-                    display: 1,
-                    parentNode: 1
-                }
-            }]
+            pipeline: pipeline
         }, cb);
     }
 };
