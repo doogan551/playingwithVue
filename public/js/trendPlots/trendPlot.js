@@ -306,6 +306,7 @@ var trendPlots = {
                     return ret;
                 }
             },
+            "scatter": {},
             "heatmap": {},
             "pie": {},
             "solidgauge": {
@@ -547,32 +548,36 @@ var trendPlots = {
                     return pt;
                 };
 
-            for(c=0; c<len; c++) {
-                row = rawData[c];
-                x = row[xProp];
-                if(xValueFormatter) {
-                    x = xValueFormatter(x);
+            if (cfg.type === "pie" || (!!cfg.chart && cfg.chart.type === "pie")) {
+                data = rawData;
+            } else {
+                for (c = 0; c < len; c++) {
+                    row = rawData[c];
+                    x = row[xProp];
+                    if (xValueFormatter) {
+                        x = xValueFormatter(x);
+                    }
+                    y = row[yProp];
+                    if (y > maxY) {
+                        maxY = y;
+                        maxIdx = c;
+                    }
+                    if (x !== undefined) {
+                        // data.push([x, y]);
+                        data.push({
+                            rawX: row[cfg.rawX],
+                            enumText: row[cfg.enumText],
+                            x: x,
+                            y: y
+                        });
+                    } else {
+                        data.push(y);
+                    }
                 }
-                y = row[yProp];
-                if(y > maxY) {
-                    maxY = y;
-                    maxIdx = c;
-                }
-                if(x !== undefined) {
-                    // data.push([x, y]);
-                    data.push({
-                        rawX: row[cfg.rawX],
-                        enumText: row[cfg.enumText],
-                        x: x,
-                        y: y
-                    });
-                } else {
-                    data.push(y);
-                }
-            }
 
-            if(cfg.highlightMax) {
-                data[maxIdx] = highlight(data[maxIdx]);
+                if(cfg.highlightMax) {
+                    data[maxIdx] = highlight(data[maxIdx]);
+                }
             }
 
             return data;
@@ -589,7 +594,8 @@ var trendPlots = {
                 ret = {
                     chart: {
                         renderTo: $renderTo[0],
-                        alignTicks: false
+                        alignTicks: false,
+                        events: (cfg.events || null)
                     },
                     xAxis: {
                         type: 'datetime',
@@ -599,6 +605,12 @@ var trendPlots = {
                     },
                     legend: {
                         enabled: false
+                    },
+                    subtitle: {
+                        text: (cfg.subtitle || ' ')
+                    },
+                    navigator: {
+                        enabled: (!!cfg.navigator ? cfg.navigator.enabled: false)
                     },
                     series: []
                 },
@@ -636,6 +648,10 @@ var trendPlots = {
                 cfg.units = cfg.yAxisTitle;
             }
 
+            if (!!cfg.xAxis && !!cfg.xAxis.events) {
+                ret.xAxis.events = cfg.xAxis.events;
+            }
+
             if(cfg.hideLegendXLabel) {
                 ret.tooltip = (!!tooltip ? tooltip : {
                     formatter: function () {
@@ -671,44 +687,30 @@ var trendPlots = {
             if(!cfg.sameAxis) {
                 tmpAxis = $.extend(true, {}, ret.yAxis);
                 ret.yAxis = [];
-                ret.chart = $.extend(true, ret.chart, {
-                    events: {
-                        load: function (event) {
-                            var me = this;
-                            trendPlots.forEachArray(me.series, function (series, idx) {
-                                series.yAxis.update({
-                                    lineColor: series.color,
-                                    labels: {
-                                        style: {
-                                            color: (!!yAxis && !!yAxis.labels && yAxis.labels.style.color ? yAxis.labels.style.color : series.color)
+                if (ret.chart.type !== "pie") {
+                    ret.chart = $.extend(true, ret.chart, {
+                        events: {
+                            load: function (event) {
+                                var me = this;
+                                trendPlots.forEachArray(me.series, function (series, idx) {
+                                    series.yAxis.update({
+                                        lineColor: series.color,
+                                        labels: {
+                                            style: {
+                                                color: (!!yAxis && !!yAxis.labels && yAxis.labels.style.color ? yAxis.labels.style.color : series.color)
+                                            }
+                                        },
+                                        title: {
+                                            style: {
+                                                color: (!!yAxis &&  !!yAxis.title && yAxis.title.style.color ? yAxis.title.style.color : series.color)
+                                            }
                                         }
-                                    },
-                                    title: {
-                                        style: {
-                                            color: (!!yAxis &&  !!yAxis.title && yAxis.title.style.color ? yAxis.title.style.color : series.color)
-                                        }
-                                    }
+                                    });
                                 });
-                            });
-
-                            // trendPlots.forEachArray(me.yAxis, function (axis, idx) {
-                            //     axis.update({
-                            //         lineColor: me.series[idx].color,
-                            //         labels: {
-                            //             style: {
-                            //                 color: me.series[idx].color
-                            //             }
-                            //         },
-                            //         title: {
-                            //             style: {
-                            //                 color: me.series[idx].color
-                            //             }
-                            //         }
-                            //     });
-                            // });
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             trendPlots.forEachArray(cfg.data, function (series) {
@@ -766,6 +768,7 @@ var trendPlots = {
             // }
 
             instance = new Highcharts.Chart(highChartConfig);
+            // instance = new Highcharts.StockChart(highChartConfig);
         };
 
         trendPlots.onReady(function () {

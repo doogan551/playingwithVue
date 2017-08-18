@@ -12,6 +12,7 @@ html
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
         link(rel='stylesheet', href='/css/lib/bootstrap-slider.css')
         link(rel='stylesheet', href='/css/lib/jquery.jscrollpane.css')
+        link(rel='stylesheet', href='/css/trendPlots/highcharts.css')
         link(rel='stylesheet', href='/css/dashboard/dashboard.css')
     body.loading
         .bgImage.bgRepeat(data-bind="visible: showMainBackground, style: { backgroundImage: 'url(' + backgroundImage() + ')' }")
@@ -103,7 +104,8 @@ html
     script(src='/js/lib/jqwidgets/jqxdropdownbutton.js')
     script(src='/js/util/components/colorpicker/diColorPicker.js')
     script(src='/js/lib/bootstrap-slider.js')
-    script(src='/js/lib/highcharts.src.js')
+    script(type="text/javascript" src='/js/lib/highstock.src.js')
+    //script(src='/js/lib/highcharts.src.js')
     script(src='/js/lib/jspdf.debug.js')
     script(src='/js/lib/html2canvas.js')
     script(src='/js/lib/canvg.js')

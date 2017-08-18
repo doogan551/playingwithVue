@@ -5,11 +5,13 @@ html.direports
         link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.semanticui.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.semanticui.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/FixedColumns/css/fixedColumns.semanticui.min.css')
         link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/css/lib/materialize.icons.css')
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        link(rel='stylesheet', href='/css/trendPlots/highcharts.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
     body.blue-grey.lighten-5
         block content
@@ -39,7 +41,7 @@ html.direports
                                         .circle
                             .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
                                 i.material-icons.center thumb_up
-            #page-content-wrapper.rightPanel
+            .rightPanel
                 .container-fluid
                     .runReportSpinner.blue-grey-text(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
                         div.preloader-wrapper.small.active
@@ -79,7 +81,7 @@ html.direports
                                         a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
                                     li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
-                                    //- li.tab.col.s1.columns2(role="presentation")
+                                    //li.tab.col.s1.columns2(role="presentation")
                                         a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType() === 'Property')
                                     li.tab.col.s4.filterByPoint(role="presentation")
@@ -115,7 +117,18 @@ html.direports
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
                                             label.tiny Report Type
-                                            span.reporttype(data-bind="text: reportType")
+                                            span(data-bind="text: reportType")
+                                            // ko if: false
+                                            .col.s1.reportTypes
+                                                .availableReportTypes.disabled
+                                                    // ko if: ($root.listOfReportTypes().length > 1)
+                                                    ul.disabled#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectSelectReportType($element, $data.text) }, text: $data.text")
+                                                    // /ko
+                                                    a.disabled.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
+                                                        span(data-bind="text: reportType")
+                                            // /ko
                                     .form-group.clearfix(style="display: inline-flex")
                                         .numberOfEnteriesPerPage
                                             label # of entries per Page
@@ -143,7 +156,16 @@ html.direports
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
                                                         span(data-bind="text: selectedChartType()")
                                         // /ko
-                                .tab-pane#reportColumns
+                                        .footerSettings Footer Settings
+                                            .displayColumnFilters
+                                                input.form-control.filled-in(data-bind="checked: $root.displayGridFilters, enable: $root.canEdit(), attr: {id : 'displayColumnFilters' }", type="checkbox")
+                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnFilters' }") Display Filters
+                                            // ko if: (reportType() !== 'Property')
+                                            .displayColumnCalculations
+                                                input.form-control.filled-in(data-bind="checked: $root.displayGridCalculations, enable: $root.canEdit(), attr: {id : 'displayColumnCalculations' }", type="checkbox")
+                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnCalculations' }") Display Calculations
+                                            // /ko
+                                div.tab-pane#reportColumns
                                     h6.strong.panel-title
                                     table.columnsGrid.small.grid.table
                                         thead
@@ -244,10 +266,8 @@ html.direports
                                                 td.totalizerOperator
                                                     .availableTotalizerOperatorsContainer
                                                         // ko if: (valueList.length > 1)
-                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
+                                                        select.totalizerOperatorSelect(data-bind="event: {change: function () { $root.selectTotalizerOperator($element, $index(), $data) } }, options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect: operator")
                                                         label
-                                                        //select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
-                                                        //    option(data-bind="attr: { selected: ($parent.operator === $data) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data, text: $data")
                                                         // /ko
                                                         // ko if: (valueList.length === 1)
                                                         span(data-bind="text: operator")
@@ -302,10 +322,10 @@ html.direports
                                                             .card.columnNames
                                                                 .card-content(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseenter: function () { $root.showColumnSettings($element, $data) },  mouseleave: function() { $root.hideColumnSettings($element) } }")
                                                                     // ko if: ($parent.reportType() === 'Totalizer')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : (colDisplayName.length < 30 ? colDisplayName : (colDisplayName.substring(0, 35) + '...')) + ' - ' + operator)", style="margin-right: 2px;")
                                                                     // /ko
                                                                     // ko if: ($parent.reportType() === 'History')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
+                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : (colDisplayName.length < 30 ? colDisplayName : (colDisplayName.substring(0, 35) + '...')))", style="margin-right: 2px;")
                                                                     // /ko
                                                                 .card-reveal(style="display: none; transform: translateY(0px)")
                                                                     .row
@@ -489,9 +509,9 @@ html.direports
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko
                                     // ko if: (reportType() !== 'Property')
-                                    .reportRangePicker
-                                        label(data-bind="attr: { for: 'reportRangePicker'}") Date Range
-                                        select(data-bind="attr: { 'id': 'reportRangePicker'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
+                                    .reportRangeDropdown
+                                        label(data-bind="attr: { for: 'reportRangeDropdown'}") Date Range
+                                        select(data-bind="attr: { 'id': 'reportRangeDropdown'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
                                     .reportDatePickers
                                         span.reportStartDatePicker
                                             .input-field
@@ -521,6 +541,8 @@ html.direports
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.intervalPeriod, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
+                                        .queryResultSize
+                                            span
                                     // /ko
                                 div#schedule.tab-pane
                                     .row
@@ -570,6 +592,18 @@ html.direports
                                     tfoot.tableFooter
                                         tr(data-bind="foreach: listOfColumns()")
                                             td.strong(data-bind="attr: { colindex:  $index() }")
+                                                // ko if: ($index() === 0)
+                                                i.blue-grey-text.material-icons.center.clearAllSearchFilters clear_all
+                                                //i.blue-grey-text.material-icons.center(data-bind="click: function () { $root.clearSearchFilters() }") clear_all
+                                                // /ko
+                                                // ko if: ($index() !== 0)
+                                                span.searchFilter
+                                                // /ko
+                                                // ko if: ($root.reportType() !== 'Property')
+                                                span.calculations
+                                                // /ko
+                                .columnCardPanel.card-panel.blue-grey(data-bind="click: function(){ $root.setColumnFilter() }", style="display: none;", tabindex="9999")
+                                    .verbiage.white-text
                             div.chartData#chartData.tab-pane
                                 .chartButtons
                                     .availableChartTypes.chartTab(tabindex="990")
@@ -582,6 +616,7 @@ html.direports
                                         i.material-icons print
                                         span.printButton Print
                                 .reportChartDiv
+
     include footer
     include popoverColumnSettings
     include modals/dialogScreens
@@ -602,7 +637,7 @@ html.direports
                             input#timepicker2.timepicker(type='time', data-bind='value: selectedTime')
                         .flex.flex-center.flex-start(data-bind='visible: selectedInterval() !== "Advanced"')
                             .input-field.center(data-bind='visible: selectedInterval() !== "Daily"')
-                                span On 
+                                span On
                                 span(data-bind='visible: selectedInterval() === "Monthly"') The
                             .input-field(data-bind='visible: selectedInterval() === "Weekly"')
                                 select(data-bind='options: availableDaysOfWeek, optionsText: "text", optionsValue: "value", value: selectedDayOfWeek')
@@ -689,11 +724,13 @@ html.direports
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.material.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/ColReorder/js/dataTables.colReorder.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/FixedColumns/js/dataTables.fixedColumns.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/dataTables.buttons.min.js')
     script(type="text/javascript" src='/js/lib/jszip.min.js')
     script(type="text/javascript" src='/js/lib/pdfmake.min.js')
     script(type="text/javascript" src='/js/lib/vfs_fonts.js')
-    script(type="text/javascript" src='/js/lib/highcharts.src.js')
+    script(type="text/javascript" src='/js/lib/highstock.src.js')
+    //script(type="text/javascript" src='/js/lib/modules/boost.js')
     script(type="text/javascript" src='/js/trendPlots/trendplot.js')
     script(type="text/javascript" src='/js/lib/jquery.printarea.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
