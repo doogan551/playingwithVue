@@ -170,7 +170,7 @@ html
 
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
-                    .tileList(data-bind="foreachprop: startMenuItems")
+                    .tileList(data-bind="foreachprop: startMenuItems, sort: true")
                         // ko if: $root.hasAccess($data)
                         // ko with: value
                         a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
@@ -447,7 +447,7 @@ html
                 //- i.collapse.material-icons keyboard_arrow_down
                 i.expand.material-icons keyboard_arrow_right
 
-            .dtcollapsible-header(data-bind="css: {selected: selected}")
+            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut}")
                 .nodeName(data-bind="text: display")
             .dtcollapsible-body
                 ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")

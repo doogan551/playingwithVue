@@ -273,6 +273,7 @@ $modalHeaderHeight: 42px;
 .modal-fixed-header .modal-content {
     height: calc(100% - 50px - #{$modalHeaderHeight}) !important;
     background-color: #fff;
+    position: relative;
 }
 
 .modal-fixed-header:not(.modal-fixed-footer) .modal-content {
@@ -2390,6 +2391,10 @@ $treeIconWidth: 22px;
         .dtcollapsible-header.selected,
         .treeNode > .collapseToggle:hover {
             background-color: $blue-grey-lighten-2 !important;
+        }
+
+        .dtcollapsible-header.isCut {
+            font-style: italic;
         }
     }
 }
