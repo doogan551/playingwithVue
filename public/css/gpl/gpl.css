@@ -1,3 +1,10 @@
+
+/* Globals */
+:root {
+    --dtiBaseBlueGrey: #607d8b;
+    --dtiHeaderBlueGrey: #455a64;
+}
+
 body {
     overflow: hidden;
 }
@@ -87,8 +94,12 @@ body {
     margin-top: -119px;
 }
 
-#gplSequenceProperties .gplUpdateInterval {
-    padding-top: 40px;
+#gplSequenceProperties .gplUpdateIntervalMins {
+    width: 10%;
+}
+
+#gplSequenceProperties .gplUpdateIntervalSecs {
+    width: 10%;
 }
 
 .spacedControls > .form-group {
@@ -112,20 +123,17 @@ body {
 }
 
 .dropdown-content li > a, .dropdown-content li > span {
-    color: #455a64 !important;
+    color:var(--dtiBaseBlueGrey) !important;
 }
 .dataField > label {
     margin-top: 0;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    /*text-transform: uppercase;*/
     font-size: 14px;
     font-weight: normal;
-    /*color: #e4e4e4;*/
     display: block;
     margin-bottom: 4px;
-    /*border-bottom: 1px solid #CECECE;*/
 }
 
 .dataField > input[type="checkbox"] {
@@ -149,7 +157,7 @@ body {
 .zoomSection {
     display: inline-flex;
     margin-right: 15px;
-    margin-top: 4px;
+    margin-top: -2px;
 }
 
 .zoomSection .percentSign {
@@ -184,7 +192,7 @@ body {
     position: absolute;
     width: 100%;
     bottom: 0;
-    height: 47px;
+    height: 36px;
     text-align: center;
     background-color: #333;
     padding-top: 5px;
@@ -302,14 +310,10 @@ body {
     padding-right: 0;
 }
 
-.modal-header,
-.modal-footer {
-    padding: 10px;
-}
-
-.modal-header {
-    background-color: #455a64;
-}
+/*.modal-header,*/
+/*.modal-footer {*/
+    /*padding: 10px;*/
+/*}*/
 
 .jqx-color-picker-preview {
     margin-left: 10px;
@@ -317,4 +321,50 @@ body {
 
 .blockMsg {
     font-size: 19px;
+}
+
+/*  ***********************************  */
+/*      possibly global CSS settings     */
+/*  ***********************************  */
+
+.btn-small {
+    height: 24px;
+    line-height: 24px;
+    padding: 0 0.5rem;
+}
+
+.dtiModal {
+    line-height: 1.0;
+}
+
+.dtiModal span.pointName {
+    padding-left: 10px;
+}
+
+.dtiModal .modal-header {
+    background-color: var(--dtiHeaderBlueGrey);
+    height: 30px;
+}
+
+.dtiModal .modal-header .modalTitle {
+    padding-top: 7px;
+    padding-left: 15px;
+}
+
+.dtiModal .row input:focus {
+    border-bottom: 1px solid var(--dtiBaseBlueGrey);
+    box-shadow: 0 1px 0 0 var(--dtiBaseBlueGrey);
+}
+
+.filled-in[type="checkbox"].filled-in:checked + label:after {
+    border: 2px solid var(--dtiBaseBlueGrey);
+    background-color: var(--dtiBaseBlueGrey);
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:after {
+    background-color: var(--dtiBaseBlueGrey) !important;
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
+    border: 2px solid var(--dtiBaseBlueGrey) !important;
 }

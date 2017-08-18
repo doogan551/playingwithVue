@@ -1214,6 +1214,9 @@ var dti = {
             }
 
             if (typeof config.url !== 'string' && !config.initFn) {
+                if (config.type === undefined) {  // revisit
+                    config.type = dti.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromId(config.upi);
+                }
                 config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
             }
 
@@ -4282,7 +4285,7 @@ var dti = {
                     }
                     self.bindings.busy(false);
                 };
-                
+
                 self.bindings.busy(true);
                 self.tree.serverOps.moveNode(reqData, done);
             },
@@ -4369,7 +4372,7 @@ var dti = {
                 //         dti.toast('Success', 2000);
                 //     }
                 // };
-                // 
+                //
                 // mbox.confirm(msg, (yes) => {
                 //     if (yes) {
                 //         self.tree.serverOps.deleteNode(node, done);
@@ -4626,7 +4629,7 @@ var dti = {
                         // reponse: {
                         //     err: 'error message here',
                         //     // OR
-                        //     message: 'success' 
+                        //     message: 'success'
                         // }
                         dti.log(response);
 
@@ -4659,7 +4662,7 @@ var dti = {
                         // reponse: {
                         //     err: 'error message here',
                         //     // OR
-                        //     message: 'success' 
+                        //     message: 'success'
                         // }
                         dti.log(response);
 
@@ -5148,7 +5151,7 @@ var dti = {
                     if (!matches()) {
                         while ((el = el.parentElement) && !matches());
                     }
-                    
+
                     return el;
                 };
 
@@ -6735,7 +6738,7 @@ var dti = {
                     manager.bindings.getBranch(parent, () => {
                         node = manager.createNode(node, parent);
                         manager.markNodeSaved(node, node.bindings._id(), data.newNode);
-                        
+
                         if (children) {
                             let readyChildren = [];
 

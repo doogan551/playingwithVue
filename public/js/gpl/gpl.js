@@ -1,5 +1,5 @@
 /* eslint-disable linebreak-style */
-'use strict';
+"use strict";
 var gpl = {
     texts: {},
     blocks: {},
@@ -58,6 +58,7 @@ var gpl = {
     references: window.gplData.references,
     upi: window.gplData.upi,
     currentUser: "",
+    modalIsOpen: false,
     DELETEKEY: 46,
     ESCAPEKEY: 27,
     ARROWKEYS: {
@@ -196,6 +197,21 @@ var gpl = {
     unblockUI: function () {
         gpl.log('Unblocking UI');
         $.unblockUI();
+    },
+    openModal: (modalElement) => {
+        gpl.Manager.modalOpen = true;
+        modalElement.openModal({
+            ready: () => {
+                gpl.modalIsOpen = true;
+            },
+            complete: () => {
+                gpl.modalIsOpen = false;
+            }
+        });
+    },
+    closeModal: (modalElement) => {
+        gpl.Manager.modalOpen = false;
+        modalElement.closeModal();
     },
     openPointSelector: function (callback, pointType, property, pointAttribsFilter) {
         // TODO cleanup pointAttribsFilter logic and add functionality around terms
@@ -404,14 +420,14 @@ var gpl = {
         } else {
             gpl.$messageModalBody.html(message);
         }
-        gpl.$messageModal.openModal();
+        gpl.openModal(gpl.$messageModal);
         if (gpl.socketWaitFn) {
             gpl.socketWaitFn();
             gpl.socketWaitFn = null;
         }
     },
     hideMessage: function () {
-        gpl.$messageModal.closeModal();
+        gpl.closeModal(gpl.$messageModal);
     },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
@@ -2040,7 +2056,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setPointData: function (point, processChanges) {
         var newPoint = point.newPoint || point,
-            oldPoint = point.oldPoint || point;
+            oldPoint = point.oldPoint || point,
+            setBlockPointName = (pointName) => {
+                this.pointName = pointName;
+            };
 
         if (!this._origPointData) {
             this._origPointData = $.extend(true, {}, oldPoint);
@@ -2061,7 +2080,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             this.setLabel(this._pointData.path[this._pointData.path.length]);
         }
 
-        this.pointName = window.getConfig("Utility.getPointName", [this._pointData.path]);
+        dtiUtility.getConfig("Utility.getPointName", [this._pointData.path], setBlockPointName);
 
         this.mapPointRefs();
     },
@@ -4186,7 +4205,7 @@ gpl.ActionButton = function (config) {
         type = config.type || ((config.actionCode !== undefined) ? 'control' : 'link'),
 
         _addButton = function () {
-            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn waves-effect waves-light blue-grey actionBtn">' + _local.text + '</button>')
+            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn btn-small waves-effect waves-light blue-grey actionBtn">' + _local.text + '</button>')
                 .data({
                     'origLeft': x,
                     'origTop': y
@@ -4210,9 +4229,13 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
+            let setLocalPointName = (pointName) => {
+                _local.pointName = pointName;
+            };
+
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                _local.pointName = window.getConfig("Utility.getPointName", [_local.pointData.path]);
+                dtiUtility.getConfig("Utility.getPointName", [_local.pointData.path], setLocalPointName);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -4222,10 +4245,6 @@ gpl.ActionButton = function (config) {
                         Security: response.Security,
                         Name: _local.pointName,
                         path: _local.pointData.path,
-                        // name1: response.name1,
-                        // name2: response.name2,
-                        // name3: response.name3,
-                        // name4: response.name4,
                         "Point Type": {
                             eValue: response["Point Type"].eValue
                         }
@@ -4266,7 +4285,7 @@ gpl.ActionButton = function (config) {
                     min: _local.pointData['Minimum Value'].Value,
                     max: _local.pointData['Maximum Value'].Value
                 });
-                gpl.$editActionButtonValueModal.openModal();
+                gpl.openModal(gpl.$editActionButtonValueModal);
             } else {
                 _sendCommand();
             }
@@ -4300,7 +4319,7 @@ gpl.ActionButton = function (config) {
             } else {
                 if (_local.pointData && _local.pointData.message !== 'No Point Found') {
                     if (_local.type === 'report') {
-                        gpl.$actionButtonReportParameterModal.openModal();
+                        gpl.openModal(gpl.$actionButtonReportParameterModal);
                     } else {
                         openWindow();
                     }
@@ -4347,7 +4366,7 @@ gpl.ActionButton = function (config) {
                 this.applyBindings(reportConfig);
             });
 
-            gpl.$actionButtonReportParameterModal.closeModal();
+            gpl.closeModal(gpl.$actionButtonReportParameterModal);
         },
         setCommand = function (idx) {
             _local.code = codes[idx];
@@ -4421,7 +4440,6 @@ gpl.ActionButton = function (config) {
         destroy = function () {
             gpl.destroyObject(_local);
         },
-
 
         setUPI = function (upi) {
             _local.upi = config.upi;
@@ -5902,7 +5920,7 @@ gpl.BlockManager = function (manager) {
 
                 bmSelf.renderAll();
 
-                gpl.$editTextModal.closeModal();
+                gpl.closeModal(gpl.$editTextModal);
             },
             deleteBlock: function () {
                 if (manager.contextObject) {
@@ -6062,7 +6080,7 @@ gpl.BlockManager = function (manager) {
                 }
 
                 gpl.unblockUI();
-                gpl.$editInputOutputModal.closeModal();
+                gpl.closeModal(gpl.$editInputOutputModal);
 
                 gpl.fire('editedblock', bmSelf.editBlock);
             }
@@ -6230,19 +6248,19 @@ gpl.BlockManager = function (manager) {
         },
 
         openPrecisionEditor: function (block) {
-            gpl.$editPrecisionModal.openModal();
+            gpl.openModal(gpl.$editPrecisionModal);
         },
 
         closePrecisionEditor: function () {
-            gpl.$editPrecisionModal.closeModal();
+            gpl.closeModal(gpl.$editPrecisionModal);
         },
 
         openLabelEditor: function (block) {
-            gpl.$editLabelModal.openModal();
+            gpl.openModal(gpl.$editLabelModal);
         },
 
         closeLabelEditor: function () {
-            gpl.$editLabelModal.closeModal();
+            gpl.closeModal(gpl.$editLabelModal);
         },
 
         openBlockEditor: function (block) {
@@ -6272,7 +6290,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
 
             // gpl.blockUI();
-            gpl.$editInputOutputModal.openModal();
+            gpl.openModal(gpl.$editInputOutputModal);
             // }
         },
 
@@ -6287,7 +6305,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editTextColor(newColor);
             // bmSelf.fontColorPicker.render();
             bmSelf.fontColorPicker.updateColor(newColor);
-            gpl.$editTextModal.openModal();
+            gpl.openModal(gpl.$editTextModal);
         },
 
         convertBlock: function (block) {
@@ -7943,7 +7961,7 @@ gpl.Manager = function () {
             continueEditingCb = function () {
             gpl.hideMessage();
             gpl.unblockUI();
-            gpl.$saveForLaterConfirmModal.openModal();
+            gpl.openModal(gpl.$saveForLaterConfirmModal);
         };
 
         gpl.blockUI();
@@ -8357,7 +8375,7 @@ gpl.Manager = function () {
             getter,
             gplObj;
 
-        if (gpl.isEdit && managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
+        if (gpl.isEdit && managerSelf.state !== 'DrawingLine' && !gpl.modalIsOpen && !managerSelf.hasPanned) {
             managerSelf.$contextMenuList.removeClass('block line default nonPoint text');
 
             if (obj) {
@@ -8432,7 +8450,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.updateTooltip = function (text, x, y) {
-        if (!managerSelf.modalOpen && text !== undefined) {
+        if (!gpl.modalIsOpen && text !== undefined) {
             gpl.$tooltip.html(text);
 
             gpl.$tooltip.css({
@@ -8472,11 +8490,11 @@ gpl.Manager = function () {
     };
 
     managerSelf.showEditVersionModal = function () {
-        gpl.$editVersionModal.openModal();
+        gpl.openModal(gpl.$editVersionModal);
     };
 
     managerSelf.hideEditVersionModal = function () {
-        gpl.$editVersionModal.closeModal();
+        gpl.closeModal(gpl.$editVersionModal);
     };
 
     managerSelf.initBindings = function () {
@@ -8502,6 +8520,10 @@ gpl.Manager = function () {
                 let val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
 
                 formatSequencePoint('Update Interval', val);
+            },
+            setNames = () => {
+                dtiUtility.getConfig("Utility.getPointName", [gpl.point.path], managerSelf.bindings.sequenceName);
+                dtiUtility.getConfig("Utility.getPointName", [gpl.devicePoint.path], managerSelf.bindings.deviceName);
             },
             handlers = {
                 deviceDescription: function (val) {
@@ -8555,7 +8577,7 @@ gpl.Manager = function () {
                 managerSelf.bindings.actionButtonPointType(editBlock.pointType);
 
 
-                gpl.$editActionButtonModal.openModal();
+                gpl.openModal(gpl.$editActionButtonModal);
             },
 
             sendActionButtonValue: function () {
@@ -8563,7 +8585,7 @@ gpl.Manager = function () {
 
                 managerSelf.editBlock.sendValue(value);
 
-                gpl.$editActionButtonValueModal.closeModal();
+                gpl.closeModal(gpl.$editActionButtonValueModal);
             },
 
             openReport: function () {
@@ -8599,12 +8621,12 @@ gpl.Manager = function () {
                     type: type
                 });
 
-                gpl.$editActionButtonModal.closeModal();
+                gpl.closeModal(gpl.$editActionButtonModal);
             },
 
             deleteActionButton: function () {
                 managerSelf.deleteButton(managerSelf.editBlock);
-                gpl.$editActionButtonModal.closeModal();
+                gpl.closeModal(gpl.$editActionButtonModal);
             },
 
             selectActionButtonPoint: function () {
@@ -8621,12 +8643,12 @@ gpl.Manager = function () {
 
             // TODO - doesn't look like this is used any longer
             // showBackgroundColorModal: function () {
-            //     gpl.$colorpickerModal.openModal();
+            //     gpl.openModal(gpl.$colorpickerModal);
             // },
             //
             // hideBackgroundColorModal: function () {
             //     managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
-            //     gpl.$colorpickerModal.closeModal();
+            //     gpl.closeModal(gpl.$colorpickerModal);
             // },
 
             updateBackgroundColor: function () {
@@ -8665,8 +8687,8 @@ gpl.Manager = function () {
                 gpl.blockManager.applyController(controllerName, controllerValue);
             },
 
-            sequenceName: window.getConfig("Utility.getPointName", [gpl.point.path]),
-            deviceName: ko.observable(window.getConfig("Utility.getPointName", [gpl.devicePoint.path])),
+            sequenceName: ko.observable(),
+            deviceName: ko.observable(),
             deviceUpi: ko.observable(gpl.devicePointRef.PointInst),
             deviceDescription: ko.observable(gpl.point.Description.Value),
 
@@ -8730,12 +8752,12 @@ gpl.Manager = function () {
                 delete gpl._newDevicePoint;
 
                 // console.log('update', props);
-                gpl.$sequencePropertiesModal.closeModal();
+                gpl.closeModal(gpl.$sequencePropertiesModal);
             },
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
                     delete gpl._newDevicePoint;
-                    gpl.$sequencePropertiesModal.openModal();
+                    gpl.openModal(gpl.$sequencePropertiesModal);
                     gpl.$sequencePropertiesModal.find("select").material_select();
                 }
             },
@@ -8756,7 +8778,7 @@ gpl.Manager = function () {
                         gpl.log('Error setting device point:', tmpData.err);
                         gpl.showMessage('Error setting device point: ' + tmpData.err);
                     } else {
-                        managerSelf.bindings.deviceName(name);
+                        dtiUtility.getConfig("Utility.getPointName", [selectedPoint.path], managerSelf.bindings.deviceName);
                         managerSelf.bindings.deviceUpi(upi);
 
                         gpl.log('Set device point Successfully');
@@ -8877,7 +8899,7 @@ gpl.Manager = function () {
             managerSelf.validate();
         });
 
-        gpl.$messageModal.closeModal();
+        gpl.closeModal(gpl.$messageModal);
 
         ko.bindingHandlers.colorpicker = {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
@@ -8976,6 +8998,8 @@ gpl.Manager = function () {
                 }
             }
         };
+
+        setNames();
     };
 
     managerSelf.initCanvas = function () {
@@ -9635,7 +9659,7 @@ gpl.Manager = function () {
                     evt;
 
                 if (gpl.isEdit) {
-                    if (event.which === gpl.DELETEKEY && !managerSelf.modalOpen) {
+                    if (event.which === gpl.DELETEKEY && !gpl.modalIsOpen) {
                         objects = managerSelf.canvas.getActiveGroup();
                         object = managerSelf.canvas.getActiveObject();
 
@@ -9684,14 +9708,6 @@ gpl.Manager = function () {
             },
             type: 'DOM'
         }]);
-
-        $('body').on('hide.bs.modal', '.modal', function () {
-            managerSelf.modalOpen = false;
-        });
-
-        $('body').on('show.bs.modal', '.modal', function () {
-            managerSelf.modalOpen = true;
-        });
 
         gpl.on('newblock', function (block) {
             managerSelf.addToBoundingRect(block);
