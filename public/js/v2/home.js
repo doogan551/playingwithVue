@@ -6436,12 +6436,13 @@ var dti = {
             },
             TreeViewer: class TreeViewer {
 
-                constructor(config) {
-                    // config: {
+                constructor(defaultConfig) {
+                    // defaultConfig: {
                     //     $container: DOM element,
                     //     contextMenu: object,
                     //     nodeClickHandler: function
                     // }
+                    let config = $.extend(true, {}, defaultConfig);
                     let $container = config.$container;
                     let markup = dti.utility.getTemplate('#treeViewTemplate');
 
@@ -6529,7 +6530,11 @@ var dti = {
                                 runCb = !!!(node.bindings._isRoot && node.bindings._isRoot());
                             } else { // configKey = 'callback'
                                 // User clicked the 'cut' option
-                                manager._cutNode = node;
+                                // If we already have a cut node
+                                if (manager._cutNode) {
+                                    manager._cutNode.bindings.isCut(false); // Clear cut indication
+                                }
+                                manager._cutNode = node; // Update cut node
                                 node.bindings.isCut(true);
                             }
                         } else if (config.action === 'paste') {
