@@ -1,40 +1,24 @@
-#userFilterModal.modal-userFilter.modal.fade(data-refresh='true')
-    form.userFilter
-        .modal-dialog
-            .modal-content
-                .modal-header
-                    .btn.waves-effect.waves-light.right.blue-grey.closeIt.close(data-bind="click: cancelUserNameFilter") ×
-                    h5.modal-title Filter by User
-                .modal-body
-                    .container
-                        //.title
-                        //    span Filter by User
-                        //        i.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelUserNameFilter")
-                        //    div
-                        //    br(clear="all")
-                        .header(style="display: inline-block;")
-                            .colSelect.col.s1
-                                input(type="checkbox" data-bind="checkedValue: $data, checked: checkAllNames")
-                                input.medium.filled-in(data-bind="checkedValue: $data, checked: checkAllNames, attr: { id: 'checkForAllNames' }", type="checkbox")
-                                label.blue-grey-text(data-bind="attr: { for: 'checkForAllNames' }")
-                            .colPhoto.col.s4
-                                | Photo
-                            .colUserName.col.s6
-                                | User
-                        .usernamesFilter.thinScroll(style="height:250px;overflow-y:auto;")
-                            table
-                                tbody(data-bind="foreach: filteredUsers()")
-                                    tr(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
-                                        td.colSelect.col.s1
-                                            input.medium.filled-in(data-bind="click: function () { return $root.userFilterClick($element, $index()) }, checked: $data.isSelected, attr: { id: 'userSelected_' + $index()}", type="checkbox")
-                                            label.blue-grey-text(data-bind="attr: { for: 'userSelected_' + $index()}")
-                                        td.colPhoto.col.s4
-                                            //span.selectable(data-bind="text: Photo.Value")
-                                            img(data-bind='attr: { src: "/img/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
-                                        td.colUserName.col.s6
-                                            span.selectable(data-bind="text: username")
-                            br(clear="all")
-                .modal-footer.okCancel.text-center.userNameFilterFooter
-                    button.btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: clearUsernameFilter") Clear
-                    button.btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: applyUserNameFilter, css: { disabled : !dirtyUsernameFilter() }") OK
-
+#userFilterModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade(data-refresh='true')
+    .modal-header
+        .modalTitle Filter by User
+    .modal-content
+        .row.tableHeader
+            .col.s1.checkName
+                input.medium.filled-in(data-bind="checkedValue: $data, checked: checkAllNames, attr: { id: 'checkForAllNames' }", type="checkbox")
+                label.blue-grey-text(data-bind="attr: { for: 'checkForAllNames' }")
+            .col.s1.photo
+                div Photo
+            .col.s10.user
+                div User
+        .tablebody.thinScroll(data-bind="foreach: filteredUsers()")
+            .row(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
+                .col.s1.checkName
+                    input.medium.filled-in(data-bind="click: function () { return $root.userFilterClick($element, $index()) }, checked: $data.isSelected, attr: { id: 'userSelected_' + $index()}", type="checkbox")
+                    label.blue-grey-text(data-bind="attr: { for: 'userSelected_' + $index()}")
+                .col.s1.photo
+                    img(data-bind='attr: { src: "/img/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
+                .col.s10.user
+                    span.selectable(data-bind="text: username")
+    .modal-footer
+        .btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: clearUsernameFilter") Clear
+        .btn.waves-effect.waves-light.blue-grey.closeIt(data-bind="click: applyUserNameFilter, css: { disabled : !dirtyUsernameFilter() }") OK

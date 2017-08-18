@@ -31,12 +31,15 @@ var ActivityLogsManager = function (conf) {
     let self = this,
         sessionId = store.get('sessionId'),
         storeKey = 'activityLogs_',
+        resizeTimer = 100,
+        lastResize = null,
         filterDataKey = "activityLogFilters" + window.location.search.slice(1),
         $dateFrom = $("#dateFrom"),
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
         $activitylogBody = $(".activitylogBody"),
+        $activityLogs = $activitylogBody.find(".activityLogs"),
         $userFilterModal = $activitylogBody.find("#userFilterModal"),
         $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
         PAGE_SIZE = 200,
@@ -377,6 +380,18 @@ var ActivityLogsManager = function (conf) {
                 gotoPageOne = data.gotoPageOne;
             }
         },
+        adjustActivityLogTableSize = function () {
+            $activityLogs.css("width", (window.innerWidth - 40));
+            $activityLogs.css("height", (window.innerHeight - 135));
+        },
+        handleResize = function () {
+            lastResize = new Date();
+            setTimeout(function () {
+                if (new Date() - lastResize >= resizeTimer) {
+                    adjustActivityLogTableSize();
+                }
+            }, resizeTimer);
+        },
         activityLogTables = {
             name: 'All',
             list: ko.observableArray([]),
@@ -676,11 +691,11 @@ var ActivityLogsManager = function (conf) {
         return true;
     };
     self.printLogs = function () {
-        $('.activityLogs').css('overflow', 'visible');
-        $('.activityLogs').printArea({
+        $activityLogs.css('overflow', 'visible');
+        $activityLogs.printArea({
             mode: 'iframe'
         });
-        $('.activityLogs').css('overflow', 'auto');
+        $activityLogs.css('overflow', 'auto');
     };
     self.editUserFilter = () => {
         $userFilterModal.openModal();
@@ -692,6 +707,10 @@ var ActivityLogsManager = function (conf) {
     self.init = () => {
         initKnockout();
         initFilterValues();
+        adjustActivityLogTableSize();
+        $(window).resize(function () {
+            handleResize();
+        });
     };
 
     self.dtFilterPlaceholder = {

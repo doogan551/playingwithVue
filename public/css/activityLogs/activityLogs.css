@@ -1,3 +1,9 @@
+/* Globals */
+:root {
+    --dtiBaseBlueGrey: #607d8b;
+    --dtiHeaderBlueGrey: #455a64;
+}
+
 html {
     overflow: hidden;
 }
@@ -117,10 +123,6 @@ a.span.selectable.colPointName:hover {
 
 .fa-refresh {
     cursor: pointer;
-}
-
-#dateTimeFilterModal {
-    min-height: 600px;
 }
 
 .filterContainer .filterIcon i {
@@ -296,4 +298,83 @@ input.date, input.time {
     bottom: 0;
     width: 16px;
     cursor: col-resize;
+}
+
+/*  ***********************************  */
+/*      possibly global CSS settings     */
+/*  ***********************************  */
+
+.btn-small {
+    height: 24px;
+    line-height: 24px;
+    padding: 0 0.5rem;
+}
+
+.dtiModal {
+    line-height: 1.0;
+}
+
+.dtiModal span.pointName {
+    padding-left: 10px;
+}
+
+.dtiModal .modal-header {
+    color: whitesmoke;
+    background-color: var(--dtiHeaderBlueGrey);
+    height: 30px;
+}
+
+.dtiModal .modal-header .modalTitle {
+    padding-top: 7px;
+    padding-left: 15px;
+}
+
+.dtiModal input:focus {
+    border-bottom: 1px solid var(--dtiBaseBlueGrey);
+    box-shadow: 0 1px 0 0 var(--dtiBaseBlueGrey);
+}
+
+.filled-in[type="checkbox"].filled-in:checked + label:after {
+    border: 2px solid var(--dtiBaseBlueGrey);
+    background-color: var(--dtiBaseBlueGrey);
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:after {
+    background-color: var(--dtiBaseBlueGrey) !important;
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
+    border: 2px solid var(--dtiBaseBlueGrey) !important;
+}
+
+.dtiModal .modal-content {
+    overflow: hidden !important;
+}
+
+.dtiModal .modal-content .row .fromLabel,
+.dtiModal .modal-content .row .toLabel{
+    padding-top: 30px;
+}
+
+.dtiModal .row {
+    margin-bottom: 10px !important;
+}
+.dtiModal .row.tableHeader > .col {
+    float: left;
+    background-color: #eee;
+    color: #999;
+    border: 1px solid #ccc;
+    padding-top: 7px;
+    padding-left: 5px;
+    height: 30px;
+}
+
+.dtiModal .row.tableHeader > .checkName {
+    padding-top: 4px;
+    padding-left: 10px
+}
+
+.dtiModal .tablebody {
+    height: 80%;
+    overflow-y: auto;
 }
