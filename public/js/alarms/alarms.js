@@ -59,32 +59,50 @@ var dti = {
         we wouldn't have to maintain updates (ack status, selected status, etc.) across multiple lists.
 *****************************************************************************/
 
-ko.bindingHandlers.dataSrc = {
-    update: function(element, valueAccessor) {
-        var upi         = valueAccessor(),
-            $element    = $(element),
-            $bg         = $element.parent();
+var initKnockout = function () {
+    ko.bindingHandlers.dtiLogsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
 
-        $.ajax({
-            url     : '/img/thumbs/' + upi + '.txt',
-            dataType: 'text',
-            type    : 'get'
-        })
-        .done(
-            function(file) {
-                var data    = file.split('||'),
-                    bgColor = data[0],
-                    image   = data[1];
-                $element.attr('src', image);
-                if (bgColor != 'undefined') $bg.css('background-color', bgColor);
-            }
-        )
-        .fail(
-            function() {
-                $element.hide();
-            }
-        );
-    }
+    ko.bindingHandlers.dtiLogsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dataSrc = {
+        update: function(element, valueAccessor) {
+            var upi         = valueAccessor(),
+                $element    = $(element),
+                $bg         = $element.parent();
+
+            $.ajax({
+                url     : '/img/thumbs/' + upi + '.txt',
+                dataType: 'text',
+                type    : 'get'
+            })
+                .done(
+                    function(file) {
+                        var data    = file.split('||'),
+                            bgColor = data[0],
+                            image   = data[1];
+                        $element.attr('src', image);
+                        if (bgColor != 'undefined') $bg.css('background-color', bgColor);
+                    }
+                )
+                .fail(
+                    function() {
+                        $element.hide();
+                    }
+                );
+        }
+    };
 };
 
 var AlarmManager = function (conf) {
@@ -102,10 +120,12 @@ var AlarmManager = function (conf) {
 
         $elContent = $('.content'),
         $elDetail = $('.detailContainer'),
+        $alarmsBody = $("body"),
         $dateFrom = $("#dateFrom"),
         $timeFrom = $("#timeFrom"),
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
+        $dateTimeFilterModal = $alarmsBody.find("#dateTimeFilterModal"),
         detailWidth = $elDetail.outerWidth(),
 
         horizontalMenu = {
@@ -2395,6 +2415,14 @@ var AlarmManager = function (conf) {
         changePointAttribsFilter(self.alarmDetail.alarm());
     };
 
+    self.editDateTimeFilter = () => {
+        $dateTimeFilterModal.openModal();
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
+    };
+
     self.closeAlarmDetail = function (alarm) {
         var contentStop = 20,
             detailStop = -(detailWidth + 2);
@@ -2492,6 +2520,27 @@ var AlarmManager = function (conf) {
         }
     };
 
+    self.init = () => {
+        initKnockout();
+        // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
+        initViewGroup('defaultViews');
+
+        // This routine creates & initializes filter observables displayed to the user
+        initFilterOptions();
+
+        initAlarmTables();
+
+        // Setup midnight notification
+        setupMidnightNotify();
+
+        // Apply the view
+        applyView(self.currentView());
+
+        // adjustActivityLogTableSize();
+        // $(window).resize(function () {
+        //     handleResize();
+        // });
+    };
 
    //------ Debugging Helpers -------------------------------
     // TODO Remove for production
@@ -2611,11 +2660,6 @@ var AlarmManager = function (conf) {
     dtiUtility.getUser(setCurrentUser);
     dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
 
-    // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
-    initViewGroup('defaultViews');
-
-    // This routine creates & initializes filter observables displayed to the user
-    initFilterOptions();
 
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
@@ -2639,27 +2683,30 @@ var AlarmManager = function (conf) {
             i,
             len;
 
-        for (category in filters) {
-            cat = self.filters[category];
-            viewCat = self.currentView().defaultFilters[category];
+        if (self.filters) {
+            for (category in filters) {
+                cat = self.filters[category];
+                viewCat = self.currentView().defaultFilters[category];
 
-            len = cat.options.length;
-            for (i = 0; i < len; i++) {
-                opt = cat.options[i];
-                viewOptions = viewCat.options;
+                len = cat.options.length;
+                for (i = 0; i < len; i++) {
+                    opt = cat.options[i];
+                    viewOptions = viewCat.options;
 
-                if (category === 'dateTime' || category === 'pointAttribs') {
-                    if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
-                        return true;
-                    }
-                } else {
-                    found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
-                    if (opt.isActive() ^ found) {
-                        return true;
+                    if (category === 'dateTime' || category === 'pointAttribs') {
+                        if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
+                            return true;
+                        }
+                    } else {
+                        found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
+                        if (opt.isActive() ^ found) {
+                            return true;
+                        }
                     }
                 }
             }
         }
+
         return false;
     }, self).extend(computedThrottle);
 
@@ -2745,7 +2792,7 @@ var AlarmManager = function (conf) {
     self.nameFilterPaused = ko.observable(true);
     self.nameFilter = ko.computed(function() {
         var paused = self.nameFilterPaused.peek(),
-            options = self.filters.pointAttribs.options,
+            options = (self.filters ? self.filters.pointAttribs.options : []),
             len = options.length,
             active = false,
             $filterIcon = $('#nameFilters .filterIcon'),
@@ -2781,7 +2828,7 @@ var AlarmManager = function (conf) {
     self.dateTimeFilterPaused = ko.observable(true);
     self.dateFilter = ko.computed(function() {
         var paused = self.dateTimeFilterPaused.peek(),
-            options = self.filters.dateTime.options,
+            options = (self.filters ? self.filters.dateTime.options : []),
             len = options.length,
             dateTime = {},
             active = false,
@@ -2880,17 +2927,9 @@ var AlarmManager = function (conf) {
         $('.alarms').css('overflow', 'auto');
     };
 
-    //------ Final Inits -------------------------------
-    // This routine just initializes shortcuts to the views that each alarm table initially references, & sets the refresh flag if needed
-    setTimeout(function () {
-        initAlarmTables();
-
-        // Setup midnight notification
-        setupMidnightNotify();
-
-        // Apply the view
-        applyView(self.currentView());
-    }, 10);
+    // setTimeout(function () {
+        self.init();
+    // }, 10);
 };
 
 function initPage (manager) {
@@ -2924,19 +2963,6 @@ function initPage (manager) {
 
             $bodyMask.hide();
         };
-
-    // Initialize time and datepickers
-    $('.time').timepicker({
-        'timeFormat': 'H:i:s',
-        'disableTimeRanges': [['24:00:00', '25:00:00']]
-    });
-    $('.date').datepicker({
-        'format': 'D, m/d/yyyy',
-        'todayHighlight': true,
-        'clearBtn': true,
-        'autoclose': true,
-        'appendTo': '#timeDateFilters .dropdown-menu'
-    });
 
     // Initialize the table header select column. This way the user can select any
     // part of this header cell to activate the dropdown.

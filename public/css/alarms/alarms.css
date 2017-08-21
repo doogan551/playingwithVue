@@ -1,13 +1,13 @@
 /* OVERRIDES */
-    /* bootstrap-datepicker.css */
-    .datepicker.dropdown-menu {
-        max-width: 275px;
-    }
+    /*!* bootstrap-datepicker.css *!*/
+    /*.datepicker.dropdown-menu {*/
+        /*max-width: 275px;*/
+    /*}*/
 
-    /* bootstrap modal*/
-    #pointFilterModal .modal-dialog {
-        min-width: 1000px;
-    }
+    /*!* bootstrap modal*!*/
+    /*#pointFilterModal .modal-dialog {*/
+        /*min-width: 1000px;*/
+    /*}*/
 
 /* Global page styles */
     body {
@@ -117,7 +117,7 @@
         position: relative;
         display: inline-block;
         font-size: 30px;
-        margin-right: 15px;    
+        margin-right: 15px;
     }
     .titleBar .ack {
         position: relative;
@@ -190,7 +190,7 @@
         margin-bottom: 5px;
     }
     .filterContainer:not(:last-child) {
-        margin-right: 20px;    
+        margin-right: 20px;
     }
     .filterContainer.withBorder {
         line-height: 28px;
@@ -315,7 +315,7 @@
     input.date, input.time {
         margin: 10px 0;
     }
-    
+
     #timeDateFilters .dropdown-menu {
         margin-left: 105px;
     }
