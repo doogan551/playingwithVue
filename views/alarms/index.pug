@@ -8,21 +8,22 @@ html
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
+        link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/alarms/alarms.css')
 
     body.noSelect
         .titleBar
             .title.cursorPointer
                 .col.s6.alarmsViews
-                        // ko if: ($root.defaultViews.length > 1)
-                        ul#alarmViewsDropdown.dropdown-content
-                            // ko foreach: $root.defaultViews
-                            li
-                                a(data-bind="text: title, click: $root.changeView, css: { active: $root.isCurrentView($data) }")
-                            // /ko
+                    // ko if: ($root.defaultViews.length > 1)
+                    ul#alarmViewsDropdown.dropdown-content
+                        // ko foreach: $root.defaultViews
+                        li
+                            a(data-bind="text: title, click: $root.changeView, css: { active: $root.isCurrentView($data) }")
                         // /ko
-                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="alarmViewsDropdown")
-                            span(data-bind="text: viewTitle() + ' ALARMS'")
+                    // /ko
+                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="alarmViewsDropdown")
+                        span(data-bind="text: viewTitle() + ' ALARMS'")
             .filterIcon.resetFilter(data-bind="click: resetFilters, visible: dirty", title="Reset Filter")
                 .fa.fa-filter.fa-2x
                 .fa.fa-times-circle.x(data-bind="visible: dirty")
@@ -96,10 +97,8 @@ html
             #alarmContainer
                 .header
                     .colSelect
-                        //input.medium.filled-in(data-bind="checkedValue: $data, checked: checkAllNames, attr: { id: 'checkForAllNames' }", type="checkbox")
-                        //label.blue-grey-text(data-bind="attr: { for: 'checkForAllNames' }")
-
-                        input(type="checkbox" data-bind="click: selectAll, checked: allSelected")
+                        input.medium.filled-in(data-bind="click: selectAll, checkedValue: $data, checked: allSelected, attr: { id: 'checkForAllNames' }", type="checkbox")
+                        label.blue-grey-text(data-bind="attr: { for: 'checkForAllNames' }")
                         i.fa.fa-sort-down.dropdown-toggle(data-toggle="dropdown")
                         ul.dropdown-menu
                             li
@@ -109,9 +108,9 @@ html
                             li.divider
                             li
                                 a(data-bind="click: deselectAll") Deselect All Alarms
-                                    |(
+                                    | (
                                     span(data-bind="text: selectedRows().length")
-                                    |)
+                                    | )
                     .colAck Ack
                     .colClass Class
                     .colTime(data-bind="click: toggleViewSort")
