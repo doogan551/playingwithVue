@@ -22,7 +22,7 @@ html
                             a(data-bind="text: title, click: $root.changeView, css: { active: $root.isCurrentView($data) }")
                         // /ko
                     // /ko
-                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="alarmViewsDropdown")
+                    .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmViewsDropdown")
                         span(data-bind="text: viewTitle() + ' ALARMS'")
             .filterIcon.resetFilter(data-bind="click: resetFilters, visible: dirty", title="Reset Filter")
                 .fa.fa-filter.fa-2x
@@ -42,7 +42,6 @@ html
             #filters
                 .filterContainer
                     .filterIcon.fa(id="pausePlay", data-bind="click: toggleViewPaused, css: { 'fa-pause': !$root.currentView().paused(), 'fa-play-circle filterActive': $root.currentView().paused() }, attr: {title: $root.currentView().paused() ? 'Resume alarm updates':'Pause alarm updates'} ")
-
                 // Point Attributes FILTER
                 .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
                     .filterIcon.fa.fa-font.fa(data-bind="css: { 'dropdown-toggle-filter-set' : nameFilter(), 'dropdown-toggle' : !nameFilter() }, click: showPointFilter")
@@ -59,16 +58,17 @@ html
                             span.filterText(data-bind="text: text")
                 .filterContainer.verticalMenu.alarmClass(data-bind="visible: filters.alarmClass.visible")
                     .dropdown.filterSet
-                        button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown")
+                        .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmClassDropdown")
                             span.title Class
                             span &nbsp;&nbsp;
                             span.caret
-                        ul.dropdown-menu(data-bind="foreach: filters.alarmClass.options")
+                        ul#alarmClassDropdown.dropdown-content
+                            // ko foreach: filters.alarmClass.options
                             li
                                 a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }, attr: { id: id }")
                                     span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
                                     span.filterText(data-bind="text: text")
-
+                            // /ko
 
                 // ALARM CATEGORY FILTERS
                 .filterContainer.withBorder.horizontalMenu.alarmCategory(data-bind="visible: filters.alarmCategory.visible")
@@ -79,38 +79,41 @@ html
                             span.filterText(data-bind="text: text")
                 .filterContainer.verticalMenu.alarmCategory(data-bind="visible: filters.alarmCategory.visible")
                     .dropdown.filterSet
-                        button.btn.btn-default.dropdown-toggle(type="button", id="filterCategories", data-toggle="dropdown")
+                        .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmCategoryDropdown")
                             span.title Category
                             span &nbsp;&nbsp;
                             span.caret
-                        ul.dropdown-menu(data-bind="foreach: filters.alarmCategory.options")
+                        ul#alarmCategoryDropdown.dropdown-content
+                            // ko foreach: filters.alarmCategory.options
                             li
                                 a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }")
                                     span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
                                     span &nbsp;
                                     span.filterText(data-bind="text: text")
+                            // /ko
 
                 // PRINT BUTTON
-                .btn.right.waves-effect.waves-light.blue-grey(type="button" data-bind="click:printAlarms") Print
+                .btn.btn-small.right.waves-effect.waves-light.blue-grey(data-bind="click:printAlarms") Print
 
             // ALARMS
             #alarmContainer
                 .header
-                    .colSelect
-                        input.medium.filled-in(data-bind="click: selectAll, checkedValue: $data, checked: allSelected, attr: { id: 'checkForAllNames' }", type="checkbox")
-                        label.blue-grey-text(data-bind="attr: { for: 'checkForAllNames' }")
-                        i.fa.fa-sort-down.dropdown-toggle(data-toggle="dropdown")
-                        ul.dropdown-menu
-                            li
-                                a(data-bind="click: selectUnacknowledged") Unacknowledged
-                            li
-                                a(data-bind="click: selectNone") None
-                            li.divider
-                            li
-                                a(data-bind="click: deselectAll") Deselect All Alarms
-                                    | (
-                                    span(data-bind="text: selectedRows().length")
-                                    | )
+                    .colSelect.selectAll
+                        input#checkBoxForAllSelected.medium.filled-in(data-bind="click: selectAll, checkedValue: $data, checked: allSelected", type="checkbox")
+                        label.blue-grey-text(for="checkBoxForAllSelected")
+                        .selectAlarmTypesDropdown
+                            ul#selectAlarmTypesDropdown.dropdown-content
+                                li
+                                    a(data-bind="click: selectUnacknowledged") Unacknowledged
+                                li
+                                    a(data-bind="click: selectNone") None
+                                li.divider
+                                li
+                                    a(data-bind="click: deselectAll") Deselect All Alarms
+                                        | (
+                                        span(data-bind="text: selectedRows().length")
+                                        | )
+                            .btn.dropdown-button(data-activates="selectAlarmTypesDropdown")
                     .colAck Ack
                     .colClass Class
                     .colTime(data-bind="click: toggleViewSort")
@@ -123,7 +126,8 @@ html
                         tbody(data-bind="foreach: alarms200")
                             tr(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
                                 td.colSelect
-                                    input(type="checkbox", data-bind="checked: $data.isSelected")
+                                    input.medium.filled-in(data-bind="checked: $data.isSelected, attr: { id: 'checkBoxForRow' + $index() }", type="checkbox")
+                                    label.blue-grey-text(data-bind="attr: { for: 'checkBoxForRow' + $index() }")
                                 td.colAck
                                     // If alarm has been acknowledged
                                     // ko if: $data.ackStatus() === 2

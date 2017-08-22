@@ -1990,34 +1990,30 @@ var AlarmManager = function (conf) {
 
     //------ Alarm row select handlers ---------------------------
     self.selectRow = function (data, event) {
-        var srcClass = event.srcElement.classList,
+        var srcClass = event.target.classList,
             ackStatus = data.ackStatus(),
+            $target = $(event.target),
+            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ""),
+            $targetsCheckBoxField = (idForCheckBox !== "" ? $target.parent().find("#" + idForCheckBox) : null),
+            isCheckBox = $target.is(":checkbox") || ($targetsCheckBoxField ? $targetsCheckBoxField.is(":checkbox") : false);
 
-            // For some reason, the event.srcElement.classList array doesn't
-            // have the indexOf function so we're rolling our own
-            elHasClass = function(className) {
-                for (var i = 0, len = srcClass.length; i < len; i++) {
-                    if (srcClass[i] === className) {
-                        return true;
-                    }
-                } return false;
-            };
-
-        if (elHasClass("msgText")) {
-            if (event.type === "click") {
-                showPointReview(data);
-            } else {
-                // Right-click changes the name filter to match this point's name
-                changePointAttribsFilter(data);
+        if (srcClass && srcClass.length) {
+            if (srcClass.contains("msgText")) {
+                if (event.type === "click") {
+                    showPointReview(data);
+                } else {
+                    // Right-click changes the name filter to match this point's name
+                    changePointAttribsFilter(data);
+                }
+                return;
             }
-            return;
-        }
-        if (elHasClass("fa-sitemap")) {
-            self.openDisplay(data);
-            return;
-        }
-        if (elHasClass("tableButton")) {
-            return;
+            if (srcClass.contains("fa-sitemap")) {
+                self.openDisplay(data);
+                return;
+            }
+            if (srcClass.contains("tableButton")) {
+                return;
+            }
         }
 
         var i,
@@ -2079,7 +2075,7 @@ var AlarmManager = function (conf) {
         // For the checkbox, the click binding happens after the value binding. So when we arrive
         // our observable has already been updated. Hence, the selected state prior to arriving here
         // is opposite the current state.
-        if (event.srcElement.tagName === 'INPUT') {
+        if (isCheckBox) {
             selected = !data.isSelected();
             if (!event.shiftKey) {
                 event.ctrlKey = true;
@@ -2089,7 +2085,7 @@ var AlarmManager = function (conf) {
         }
 
         if (!event.shiftKey || clicks.lastClickId === null) {
-            if (!event.ctrlKey) {
+            if (!event.ctrlKey && !isCheckBox) {
                 self.selectNone();
             }
 
@@ -2152,7 +2148,7 @@ var AlarmManager = function (conf) {
         if (self.allSelected() === true) {
             // This routine may be triggered by clicking an input checkbox, or a 'select all' link
             // We only want to deselect all rows if the input was clicked
-            if (event.srcElement.tagName === 'INPUT') {
+            if (event.target.tagName === 'INPUT') {
                 self.selectNone();
             }
         } else {
@@ -2968,7 +2964,7 @@ function initPage (manager) {
     // part of this header cell to activate the dropdown.
     $(".header > .colSelect").click(function(e){
         e.stopPropagation();
-        if (e.srcElement.tagName !== 'INPUT') {
+        if (e.target.tagName !== 'INPUT') {
             $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
         }
     });

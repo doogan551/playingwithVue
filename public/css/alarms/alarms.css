@@ -23,7 +23,7 @@ tr {
 
 td {
     height: 28px;
-    padding-left: 5px;
+    padding: 0px 2px 0px 2px;
     vertical-align: middle;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -104,6 +104,7 @@ td {
 /* Title bar */
 .titleBar {
     position: absolute;
+    display: flex;
     top: 5px;
     left: 20px;
 }
@@ -111,6 +112,10 @@ td {
 .titleBar .title {
     display: inline-block;
     margin-right: 40px;
+}
+
+.titleBar .title .dropdown-content{
+    width: 150px !important;
 }
 
 .titleBar .title > span {
@@ -123,7 +128,7 @@ td {
     color: #666;
     position: relative;
     display: inline-block;
-    font-size: 30px;
+    font-size: 25px;
     margin-right: 15px;
 }
 
@@ -222,6 +227,11 @@ td {
 
 .filterContainer.verticalMenu {
     display: none;
+}
+
+.filterContainer.verticalMenu .dropdown-content {
+    width: 145px !important;
+    padding-top: 10px;
 }
 
 .filterContainer .dropdown .title {
@@ -478,38 +488,81 @@ input.date, input.time {
     opacity: 0.75;
 }
 
+#alarmContainer .selectAlarmTypesDropdown ul {
+    width: auto !important;
+}
+
+#alarmContainer .selectAlarmTypesDropdown .dropdown-button {
+    background-color: transparent;
+    color: #999;
+    box-shadow: none;
+    height: 20px;
+    margin-top: -14px;
+    margin-left: -4px;
+    padding: 0px;
+    width: 15px;
+    min-width: 0px;
+}
+
+#alarmContainer .selectAlarmTypesDropdown .dropdown-button::before {
+    content: "▼";
+}
+
 .header > div {
     float: left;
     background-color: #eee;
     color: #999;
     border: 1px solid #ccc;
     padding-left: 5px;
-    height: 20px;
+    height: 30px;
 }
 
 .header .colSelect {
     cursor: pointer;
 }
 
+.header .colSelect.selectAll {
+    display: inline-flex;
+}
+
+.header .colSelect [type="checkbox"].filled-in + label {
+    margin-top: 4px;
+    margin-left: 0px !important;
+    padding-left: 20px;
+}
+
 .colSelect {
-    min-width: 45px;
-    width: 45px;
+    min-width: 35px;
+    width: 38px;
     text-align: left;
 }
 
-.colSelect input {
-    position: relative;
+.colSelect [type="checkbox"].filled-in + label {
+    vertical-align: -webkit-baseline-middle;
+    margin-left: 4px;
+}
+
+.colSelect [type="checkbox"].filled-in:checked + label:before {
     top: -1px;
+    left: 0px;
+    width: 7px;
+    height: 12px;
 }
 
-.colSelect > i {
-    position: relative;
-    left: 5px;
-    top: -6px;
+.colSelect [type="checkbox"].filled-in:checked + label:after {
+    top: 0px;
+    left: 0px;
+    width: 15px;
+    height: 15px;
 }
 
-.colSelect .dropdown-menu {
-    top: auto;
+.colSelect [type="checkbox"].filled-in:not(:checked) + label:after {
+    height: 15px;
+    width: 15px;
+    background-color: transparent;
+    border: 1px solid #ccc;
+    top: 0px;
+    z-index: 0;
 }
 
 .colAck {
@@ -569,7 +622,7 @@ td.colDisp > i {
 
 .alarms {
     position: absolute;
-    top: 20px;
+    top: 30px;
     right: 0;
     left: 0;
     bottom: 20px;
@@ -731,7 +784,7 @@ td.colDisp > i {
 
 .content {
     position: absolute;
-    top: 60px;
+    top: 36px;
     bottom: 20px;
     right: 20px;
     left: 20px;
