@@ -6440,7 +6440,7 @@ gpl.BlockManager = function (manager) {
                 cleanup = function (ref, idx) {
                     pointData[ref._id] = ref;
                     return {
-                        Name: ref.Name,
+                        Name: window.getConfig("Utility.getPointName", [ref.path]),
                         pointType: ref['Point Type'].Value,
                         valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
