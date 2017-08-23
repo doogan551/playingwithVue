@@ -7,7 +7,7 @@ html
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
-        link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
+        //link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
         link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/alarms/alarms.css')
 
@@ -15,6 +15,8 @@ html
         .titleBar
             .title.cursorPointer
                 .col.s6.alarmsViews
+                    .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmViewsDropdown")
+                        span(data-bind="text: viewTitle() + ' ALARMS'")
                     // ko if: ($root.defaultViews.length > 1)
                     ul#alarmViewsDropdown.dropdown-content
                         // ko foreach: $root.defaultViews
@@ -22,8 +24,6 @@ html
                             a(data-bind="text: title, click: $root.changeView, css: { active: $root.isCurrentView($data) }")
                         // /ko
                     // /ko
-                    .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmViewsDropdown")
-                        span(data-bind="text: viewTitle() + ' ALARMS'")
             .filterIcon.resetFilter(data-bind="click: resetFilters, visible: dirty", title="Reset Filter")
                 .fa.fa-filter.fa-2x
                 .fa.fa-times-circle.x(data-bind="visible: dirty")
@@ -60,8 +60,6 @@ html
                     .dropdown.filterSet
                         .btn.btn-small.waves-effect.waves-light.blue-grey.dropdown-button(data-activates="alarmClassDropdown")
                             span.title Class
-                            span &nbsp;&nbsp;
-                            span.caret
                         ul#alarmClassDropdown.dropdown-content
                             // ko foreach: filters.alarmClass.options
                             li
@@ -102,6 +100,7 @@ html
                         input#checkBoxForAllSelected.medium.filled-in(data-bind="click: selectAll, checkedValue: $data, checked: allSelected", type="checkbox")
                         label.blue-grey-text(for="checkBoxForAllSelected")
                         .selectAlarmTypesDropdown
+                            .btn.dropdown-button(data-activates="selectAlarmTypesDropdown")
                             ul#selectAlarmTypesDropdown.dropdown-content
                                 li
                                     a(data-bind="click: selectUnacknowledged") Unacknowledged
@@ -113,7 +112,6 @@ html
                                         | (
                                         span(data-bind="text: selectedRows().length")
                                         | )
-                            .btn.dropdown-button(data-activates="selectAlarmTypesDropdown")
                     .colAck Ack
                     .colClass Class
                     .colTime(data-bind="click: toggleViewSort")
@@ -219,6 +217,7 @@ html
                         span(data-bind="text: alarms().count()")
                         |  Alarms
 
+        // (data-bind="css: {displayDiv: alarmDetailVisible(), hideDiv: !alarmDetailVisible()} ")
         .detailContainer
             .subTitle ALARM DETAIL
             .fa.fa-2x.fa-times(data-bind="click: closeAlarmDetail.bind($data, null)")
@@ -254,13 +253,11 @@ html
 
         script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
         script(type='text/javascript', src='/js/lib/knockout-3.1.0.js')
-        script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
         script(type='text/javascript', src='/js/lib/materialize.min.js')
         script(type='text/javascript', src='/js/lib/materialize.clockpicker.js')
         script(type='text/javascript', src="/js/lib/socket.io.js")
         script(type='text/javascript', src='/js/lib/store2.min.js')
         script(type='text/javascript', src='/js/lib/date.js')
-        script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
         script(type='text/javascript', src='/js/lib/jquery.printarea.js')
         script(type='text/javascript', src='/js/v2/dorsettUtility.js')

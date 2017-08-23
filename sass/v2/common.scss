@@ -1,5 +1,7 @@
 $dtiBaseBlueGrey: #607d8b;
 $dtiHeaderBlueGrey: #455a64;
+$dtiGreyBackground: #e3e4e4;
+$dtiSelectedGreyBackground: #607d8b;
 
 .btn-small {
   height: 24px;
@@ -80,4 +82,26 @@ $dtiHeaderBlueGrey: #455a64;
     height: 80%;
     overflow-y: auto;
   }
+}
+
+.picker__date-display {
+  background-color: $dtiBaseBlueGrey;
+}
+
+.picker__weekday-display {
+  background-color: $dtiBaseBlueGrey;
+}
+
+.picker__close, .picker__today {
+  color: $dtiBaseBlueGrey;
+}
+
+.picker__day.picker__day--today {
+  color: $dtiBaseBlueGrey;
+  background-color: $dtiGreyBackground;
+}
+
+.picker__day--selected, .picker__day--selected:hover, .picker--focused .picker__day--selected {
+  background-color: $dtiSelectedGreyBackground;
+  color: #ffffff;
 }

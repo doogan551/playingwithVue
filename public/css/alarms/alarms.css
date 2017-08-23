@@ -52,6 +52,14 @@ td {
     cursor: default;
 }
 
+.displayDiv {
+    display: inline-block;
+}
+
+.hideDiv {
+    display: none !important;
+}
+
 .noSelect {
     -webkit-user-select: none; /* Chrome all / Safari all */
     -moz-user-select: none; /* Firefox all */
@@ -229,19 +237,19 @@ td {
     display: none;
 }
 
+.filterContainer.verticalMenu .dropdown-button span {
+    color: #fff;
+    font-weight: normal;
+}
+
 .filterContainer.verticalMenu .dropdown-content {
-    width: 145px !important;
-    padding-top: 10px;
+    width: 175px !important;
 }
 
 .filterContainer .dropdown .title {
     font-weight: bold;
     color: #333;
     font-size: 13px;
-}
-
-.filterContainer .dropdown a {
-    padding: 0;
 }
 
 .filterContainer .dropdown button {
@@ -383,7 +391,7 @@ input.date, input.time {
 /* Alarm Details Panel */
 .detailContainer {
     position: absolute;
-    top: 60px;
+    top: 36px;
     right: -292px;
     bottom: 20px;
     width: 290px;
@@ -514,7 +522,7 @@ input.date, input.time {
     color: #999;
     border: 1px solid #ccc;
     padding-left: 5px;
-    height: 30px;
+    height: 25px;
 }
 
 .header .colSelect {
@@ -560,6 +568,7 @@ input.date, input.time {
     height: 15px;
     width: 15px;
     background-color: transparent;
+    /*background-color: #eeeeee !important;*/
     border: 1px solid #ccc;
     top: 0px;
     z-index: 0;
