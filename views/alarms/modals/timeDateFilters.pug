@@ -1,0 +1,35 @@
+#dateTimeFilterModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade(data-refresh='true')
+    .modal-header
+        .modalTitle Date Time Filter
+    .modal-content
+        .row
+            .col.s2.fromLabel
+                span From:
+            .col.s4
+                span.startDatePicker
+                    .input-field
+                        label(for="dateFrom") Date
+                        input#dateFrom.datepicker(data-bind="select: $root.filtersPlaceHolder.dateFrom, dtiAlarmsMaterializePickadate", type="date")
+            .col.s1.blankSpace
+            .col.s4
+                span.startTimePicker
+                    .input-field
+                        label(for="timeFrom") Time
+                        input#timeFrom.timepicker(data-bind="value: filtersPlaceHolder.timeFrom, dtiAlarmsMaterializePickatime", type='time')
+        .row
+            .col.s2.toLabel
+                span To:
+            .col.s4
+                span.endDatePicker
+                    .input-field
+                        label(for="dateTo") Date
+                        input#dateTo.datepicker(data-bind="select: $root.filtersPlaceHolder.dateTo, dtiAlarmsMaterializePickadate", type="date")
+            .col.s1.blankSpace
+            .col.s4
+                span.endTimePicker
+                    .input-field
+                        label(for="timeTo") Time
+                        input#timeTo.timepicker(data-bind="value: filtersPlaceHolder.timeTo, dtiAlarmsMaterializePickatime", type='time')
+    .modal-footer
+        .btn.waves-effect.waves-light.blue-grey(data-bind="click: clearDateTimeFilter") Clear
+        .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyDateTimeFilter") OK
