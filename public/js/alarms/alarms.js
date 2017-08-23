@@ -59,36 +59,78 @@ var dti = {
         we wouldn't have to maintain updates (ack status, selected status, etc.) across multiple lists.
 *****************************************************************************/
 
-ko.bindingHandlers.dataSrc = {
-    update: function(element, valueAccessor) {
-        var upi         = valueAccessor(),
-            $element    = $(element),
-            $bg         = $element.parent();
+var initKnockout = function () {
+    var datePickerDefaultOptions = {
+            default: '',           // default time, 'now' or '13:14' e.g.
+            fromnow: 0,            // set default time to * milliseconds from now
+            donetext: 'Done',      // done button text
+            autoclose: true,       // auto close when minute is selected
+            ampmclickable: false,  // set am/pm button on itself
+            darktheme: true,       // set to dark theme
+            twelvehour: false,     // 12 hour AM/PM clock or 24 hour;
+            vibrate: true,         // vibrate the device when dragging clock hand
+            container: ''          // default will append clock next to input
+        },
+        timePickerDefaultOptions = {
+            default: 'now',         // Set default time: 'now', '1:30AM', '16:30'
+            fromnow: 0,             // set default time to * milliseconds from now (using with default = 'now')
+            twelvehour: true,       // Use AM/PM or 24-hour format
+            donetext: 'OK',         // text for done-button
+            cleartext: 'Clear',     // text for clear-button
+            canceltext: 'Cancel',   // Text for cancel-button
+            autoclose: false,       // automatic close timepicker
+            ampmclickable: false,   // make AM PM clickable
+            aftershow: function () {
+            } // Function for after opening timepicker
+        };
 
-        $.ajax({
-            url     : '/img/thumbs/' + upi + '.txt',
-            dataType: 'text',
-            type    : 'get'
-        })
-        .done(
-            function(file) {
-                var data    = file.split('||'),
-                    bgColor = data[0],
-                    image   = data[1];
-                $element.attr('src', image);
-                if (bgColor != 'undefined') $bg.css('background-color', bgColor);
-            }
-        )
-        .fail(
-            function() {
-                $element.hide();
-            }
-        );
-    }
+    ko.bindingHandlers.dtiAlarmsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate(datePickerDefaultOptions);
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dtiAlarmsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime(timePickerDefaultOptions);
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dataSrc = {
+        update: function (element, valueAccessor) {
+            var upi = valueAccessor(),
+                $element = $(element),
+                $bg = $element.parent();
+
+            $.ajax({
+                url: '/img/thumbs/' + upi + '.txt',
+                dataType: 'text',
+                type: 'get'
+            })
+                .done(
+                    function (file) {
+                        var data = file.split('||'),
+                            bgColor = data[0],
+                            image = data[1];
+                        $element.attr('src', image);
+                        if (bgColor != 'undefined') $bg.css('background-color', bgColor);
+                    }
+                )
+                .fail(
+                    function () {
+                        $element.hide();
+                    }
+                );
+        }
+    };
 };
 
 var AlarmManager = function (conf) {
-    var self = this,
+    let self = this,
         socket = io.connect(window.location.origin),
         sessionId = store.get('sessionId'),
         storeKey = 'alarms_',
@@ -101,12 +143,14 @@ var AlarmManager = function (conf) {
         rowHeight = 28,
 
         $elContent = $('.content'),
-        $elDetail = $('.detailContainer'),
-        $dateFrom = $("#dateFrom"),
+        $elDetailContainer = $('.detailContainer'),
+        $alarmsBody = $("body"),
+        $dateTimeFilterModal = $alarmsBody.find('#dateTimeFilterModal'),
+        $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
         $timeFrom = $("#timeFrom"),
-        $dateTo = $("#dateTo"),
+        $dateTo = $dateTimeFilterModal.find("#dateTo"),
         $timeTo = $("#timeTo"),
-        detailWidth = $elDetail.outerWidth(),
+        detailWidth = $elDetailContainer.outerWidth(),
 
         horizontalMenu = {
             $elAlarmClass: $('#filters .horizontalMenu.alarmClass'),
@@ -208,6 +252,14 @@ var AlarmManager = function (conf) {
             }
             return temp;
         },
+        openModal = (modalElement) => {
+            // modalElement.modal("open");
+            modalElement.openModal();
+        },
+        closeModal = (modalElement) => {
+            // modalElement.modal("close");
+            modalElement.closeModal();
+        },
         userHasPermission = function (alarm, requestedAccessLevel) {
             return !!(alarm._pAccess & requestedAccessLevel);
         },
@@ -248,9 +300,12 @@ var AlarmManager = function (conf) {
 
             $elContent.tween(tweenParam);
             tweenParam.right.stop = detailStop;
-            $elDetail.tween(tweenParam);
+            $elDetailContainer.tween(tweenParam);
             $.play();
         },
+        // toggleAlarmDetailFUTURE = () => {
+        //     self.alarmDetailVisible(!self.alarmDetailVisible());
+        // },
         changePointAttribsFilter = function (data) {
             var val,
                 upi = parseInt(data.upi, 10),
@@ -1714,6 +1769,7 @@ var AlarmManager = function (conf) {
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
     self.currentPage = ko.observable(1);
+    self.alarmDetailVisible = ko.observable(false);
 
     //------ Alarm socket handlers
     socket.on('acknowledgeResponse', function (data) {
@@ -1970,34 +2026,30 @@ var AlarmManager = function (conf) {
 
     //------ Alarm row select handlers ---------------------------
     self.selectRow = function (data, event) {
-        var srcClass = event.srcElement.classList,
+        var srcClass = event.target.classList,
             ackStatus = data.ackStatus(),
+            $target = $(event.target),
+            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ""),
+            $targetsCheckBoxField = (idForCheckBox !== "" ? $target.parent().find("#" + idForCheckBox) : null),
+            isCheckBox = $target.is(":checkbox") || ($targetsCheckBoxField ? $targetsCheckBoxField.is(":checkbox") : false);
 
-            // For some reason, the event.srcElement.classList array doesn't
-            // have the indexOf function so we're rolling our own
-            elHasClass = function(className) {
-                for (var i = 0, len = srcClass.length; i < len; i++) {
-                    if (srcClass[i] === className) {
-                        return true;
-                    }
-                } return false;
-            };
-
-        if (elHasClass("msgText")) {
-            if (event.type === "click") {
-                showPointReview(data);
-            } else {
-                // Right-click changes the name filter to match this point's name
-                changePointAttribsFilter(data);
+        if (srcClass && srcClass.length) {
+            if (srcClass.contains("msgText")) {
+                if (event.type === "click") {
+                    showPointReview(data);
+                } else {
+                    // Right-click changes the name filter to match this point's name
+                    changePointAttribsFilter(data);
+                }
+                return;
             }
-            return;
-        }
-        if (elHasClass("fa-sitemap")) {
-            self.openDisplay(data);
-            return;
-        }
-        if (elHasClass("tableButton")) {
-            return;
+            if (srcClass.contains("fa-sitemap")) {
+                self.openDisplay(data);
+                return;
+            }
+            if (srcClass.contains("tableButton")) {
+                return;
+            }
         }
 
         var i,
@@ -2059,7 +2111,7 @@ var AlarmManager = function (conf) {
         // For the checkbox, the click binding happens after the value binding. So when we arrive
         // our observable has already been updated. Hence, the selected state prior to arriving here
         // is opposite the current state.
-        if (event.srcElement.tagName === 'INPUT') {
+        if (isCheckBox) {
             selected = !data.isSelected();
             if (!event.shiftKey) {
                 event.ctrlKey = true;
@@ -2069,7 +2121,7 @@ var AlarmManager = function (conf) {
         }
 
         if (!event.shiftKey || clicks.lastClickId === null) {
-            if (!event.ctrlKey) {
+            if (!event.ctrlKey && !isCheckBox) {
                 self.selectNone();
             }
 
@@ -2132,7 +2184,7 @@ var AlarmManager = function (conf) {
         if (self.allSelected() === true) {
             // This routine may be triggered by clicking an input checkbox, or a 'select all' link
             // We only want to deselect all rows if the input was clicked
-            if (event.srcElement.tagName === 'INPUT') {
+            if (event.target.tagName === 'INPUT') {
                 self.selectNone();
             }
         } else {
@@ -2335,30 +2387,40 @@ var AlarmManager = function (conf) {
     };
 
     self.clearDateTimeUIFields = function () {
-        var placeholderDateFilters = self.filtersPlaceHolder.dateTime;
+        let placeholderDateFilters = self.filtersPlaceHolder.dateTime,
+            $fromDatePicker = $dateFrom.pickadate('picker'),
+            $fromTimePicker = $timeFrom.pickatime('picker'),
+            $toDatePicker = $dateTo.pickadate('picker'),
+            $toTimePicker = $timeTo.pickatime('picker');
 
         placeholderDateFilters.dateFrom.value = '';
-        $dateFrom.val(placeholderDateFilters.dateFrom).datepicker('setDate', placeholderDateFilters.dateFrom.value);
+        $fromDatePicker.set({select: null});
         placeholderDateFilters.timeFrom.value = '';
-        $timeFrom.val(placeholderDateFilters.timeFrom).timepicker('setTime', placeholderDateFilters.timeFrom.value);
+        $fromTimePicker[0].value = "";  // revisit once materialize get updated
+        // $fromTimePicker.clear();
         placeholderDateFilters.dateTo.value = '';
-        $dateTo.val(placeholderDateFilters.dateTo).datepicker('setDate', placeholderDateFilters.dateTo.value);
+        $toDatePicker.set({select: null});
         placeholderDateFilters.timeTo.value = '';
-        $timeTo.val(placeholderDateFilters.timeTo).timepicker('setTime', placeholderDateFilters.timeTo.value);
+        $toTimePicker[0].value = "";  // revisit once materialize get updated
+        // $toTimePicker.clear();
     };
 
     self.cancelDateTimeFilter = function () {
-        var options = self.filters.dateTime.options,
-            placeholderDateFilters = self.filtersPlaceHolder.dateTime;
+        let options = self.filters.dateTime.options,
+            placeholderDateFilters = self.filtersPlaceHolder.dateTime,
+            $fromDatePicker = $dateFrom.pickadate('picker'),
+            $fromTimePicker = $timeFrom.pickatime('picker'),
+            $toDatePicker = $dateTo.pickadate('picker'),
+            $toTimePicker = $timeTo.pickatime('picker');
 
         placeholderDateFilters.dateFrom.value = options.dateFrom.value();
-        $dateFrom.val(placeholderDateFilters.dateFrom).datepicker('setDate', placeholderDateFilters.dateFrom.value);
+        $fromDatePicker.set({select: placeholderDateFilters.dateFrom.value});
         placeholderDateFilters.timeFrom.value = options.timeFrom.value();
-        $timeFrom.val(placeholderDateFilters.timeFrom).timepicker('setTime', placeholderDateFilters.timeFrom.value);
+        $fromTimePicker[0].value = placeholderDateFilters.timeFrom.value;  // revisit once materialize get updated
         placeholderDateFilters.dateTo.value = options.dateTo.value();
-        $dateTo.val(placeholderDateFilters.dateTo).datepicker('setDate', placeholderDateFilters.dateTo.value);
+        $toDatePicker.set({select: placeholderDateFilters.dateTo.value});
         placeholderDateFilters.timeTo.value = options.timeTo.value();
-        $timeTo.val(placeholderDateFilters.timeTo).timepicker('setTime', placeholderDateFilters.timeTo.value);
+        $toTimePicker[0].value = placeholderDateFilters.timeTo.value;   // revisit once materialize get updated
     };
 
     self.applyNameFilter = function () {
@@ -2393,6 +2455,14 @@ var AlarmManager = function (conf) {
 
     self.callChangeNameFilter = () => {
         changePointAttribsFilter(self.alarmDetail.alarm());
+    };
+
+    self.editDateTimeFilter = () => {
+        openModal($dateTimeFilterModal);
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 200);
+        return true;
     };
 
     self.closeAlarmDetail = function (alarm) {
@@ -2471,6 +2541,8 @@ var AlarmManager = function (conf) {
     self.handleResize = function (targetWidth) {
         var contentWidth = targetWidth || $elContent.outerWidth();
 
+        // $alarmsBody.find(".dropdown-button").dropdown('close');
+
         if (contentWidth < 725) {
             horizontalMenu.$elAlarmClass.hide();
             verticalMenu.$elAlarmClass.show();
@@ -2492,6 +2564,24 @@ var AlarmManager = function (conf) {
         }
     };
 
+    self.init = () => {
+        initKnockout();
+        // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
+        initViewGroup('defaultViews');
+
+        // This routine creates & initializes filter observables displayed to the user
+        initFilterOptions();
+
+        initAlarmTables();
+
+        // Setup midnight notification
+        setupMidnightNotify();
+
+        // Apply the view
+        applyView(self.currentView());
+
+        // $dateTimeFilterModal.modal();
+    };
 
    //------ Debugging Helpers -------------------------------
     // TODO Remove for production
@@ -2611,11 +2701,6 @@ var AlarmManager = function (conf) {
     dtiUtility.getUser(setCurrentUser);
     dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
 
-    // Initialize our default views. Custom views are load asyncronously after page load; we'll init them @ that time
-    initViewGroup('defaultViews');
-
-    // This routine creates & initializes filter observables displayed to the user
-    initFilterOptions();
 
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
@@ -2639,27 +2724,30 @@ var AlarmManager = function (conf) {
             i,
             len;
 
-        for (category in filters) {
-            cat = self.filters[category];
-            viewCat = self.currentView().defaultFilters[category];
+        if (self.filters) {
+            for (category in filters) {
+                cat = self.filters[category];
+                viewCat = self.currentView().defaultFilters[category];
 
-            len = cat.options.length;
-            for (i = 0; i < len; i++) {
-                opt = cat.options[i];
-                viewOptions = viewCat.options;
+                len = cat.options.length;
+                for (i = 0; i < len; i++) {
+                    opt = cat.options[i];
+                    viewOptions = viewCat.options;
 
-                if (category === 'dateTime' || category === 'pointAttribs') {
-                    if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
-                        return true;
-                    }
-                } else {
-                    found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
-                    if (opt.isActive() ^ found) {
-                        return true;
+                    if (category === 'dateTime' || category === 'pointAttribs') {
+                        if (valuesAreDifferent(opt.value(), viewOptions[opt.text])) {
+                            return true;
+                        }
+                    } else {
+                        found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
+                        if (opt.isActive() ^ found) {
+                            return true;
+                        }
                     }
                 }
             }
         }
+
         return false;
     }, self).extend(computedThrottle);
 
@@ -2745,7 +2833,7 @@ var AlarmManager = function (conf) {
     self.nameFilterPaused = ko.observable(true);
     self.nameFilter = ko.computed(function() {
         var paused = self.nameFilterPaused.peek(),
-            options = self.filters.pointAttribs.options,
+            options = (self.filters ? self.filters.pointAttribs.options : []),
             len = options.length,
             active = false,
             $filterIcon = $('#nameFilters .filterIcon'),
@@ -2781,7 +2869,7 @@ var AlarmManager = function (conf) {
     self.dateTimeFilterPaused = ko.observable(true);
     self.dateFilter = ko.computed(function() {
         var paused = self.dateTimeFilterPaused.peek(),
-            options = self.filters.dateTime.options,
+            options = (self.filters ? self.filters.dateTime.options : []),
             len = options.length,
             dateTime = {},
             active = false,
@@ -2827,7 +2915,7 @@ var AlarmManager = function (conf) {
         //    applyFilter(withoutDelay);
         //}
     });
-    self.applyDateTimeFilter = function () {
+    self.applyDateTimeFilter = () => {
         var options = self.filters.dateTime.options,
             placeholderDateFilters = self.filtersPlaceHolder.dateTime,
             withoutDelay = true,
@@ -2838,12 +2926,13 @@ var AlarmManager = function (conf) {
 
         _log('applyDateTimeFilter() called.....', new Date());
 
-        for (i=0; i<len; i++) {
+        for (i = 0; i < len; i++) {
             localFilter = options[i];
             optionId = localFilter.id;
             localFilter.value(placeholderDateFilters[optionId].value);
         }
 
+        closeModal($dateTimeFilterModal);
         applyFilter(withoutDelay);  // should save current filter as well
     };
 
@@ -2880,24 +2969,22 @@ var AlarmManager = function (conf) {
         $('.alarms').css('overflow', 'auto');
     };
 
-    //------ Final Inits -------------------------------
-    // This routine just initializes shortcuts to the views that each alarm table initially references, & sets the refresh flag if needed
-    setTimeout(function () {
-        initAlarmTables();
-
-        // Setup midnight notification
-        setupMidnightNotify();
-
-        // Apply the view
-        applyView(self.currentView());
-    }, 10);
+    // setTimeout(function () {
+        self.init();
+    // }, 10);
 };
 
 function initPage (manager) {
-    var dateId = '#timeDateFilters',
+    let dateId = '#timeDateFilters',
+        $pointFilterModal = $('#pointFilterModal'),
+        $dateTimeFilterModal = $('#dateTimeFilterModal'),
+        $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
+        // $timeFrom = $dateTimeFilterModal.find("#timeFrom").pickatime('picker'),
+        $dateTo = $dateTimeFilterModal.find("#dateTo"),
+        // $timeTo = $dateTimeFilterModal.find("#timeTo").pickatime('picker'),
         $dateFilterIcon = $(dateId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
-        $pointFilterModal = $('#pointFilterModal'),
+
         $alarms = $('.alarms'),
         $newAlarmTop = $('.newAlarmTop'),
         $newAlarmBottom = $('.newAlarmBottom'),
@@ -2925,24 +3012,11 @@ function initPage (manager) {
             $bodyMask.hide();
         };
 
-    // Initialize time and datepickers
-    $('.time').timepicker({
-        'timeFormat': 'H:i:s',
-        'disableTimeRanges': [['24:00:00', '25:00:00']]
-    });
-    $('.date').datepicker({
-        'format': 'D, m/d/yyyy',
-        'todayHighlight': true,
-        'clearBtn': true,
-        'autoclose': true,
-        'appendTo': '#timeDateFilters .dropdown-menu'
-    });
-
     // Initialize the table header select column. This way the user can select any
     // part of this header cell to activate the dropdown.
     $(".header > .colSelect").click(function(e){
         e.stopPropagation();
-        if (e.srcElement.tagName !== 'INPUT') {
+        if (e.target.tagName !== 'INPUT') {
             $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
         }
     });
@@ -2964,6 +3038,22 @@ function initPage (manager) {
     // allows us to click anywhere outside of the dropdown to dismiss the dropdown.
     $('.bodyMask').click(function () {
         hideDropDowns();
+    });
+
+    $dateFrom.pickadate('picker').on({
+        set: function (thingToSet) {
+            if (!!thingToSet.select) {
+                $dateTo.pickadate('picker').set({min: new Date(this.get('select').pick)});
+            }
+        }
+    });
+
+    $dateTo.pickadate('picker').on({
+        set: function (thingToSet) {
+            if (!!thingToSet.select) {
+                $dateFrom.pickadate('picker').set({max: new Date(this.get('select').pick)});
+            }
+        }
     });
 
     // Add click handlers to 'close' elements within the modal itself
