@@ -1236,7 +1236,7 @@ var dti = {
             if (typeof url === 'object') {
                 config = url;
 
-                if (!!config.upi && !config.pointType) {
+                if (!!config.upi && (config.pointType === undefined || config.pointType === null)) {
                     config.pointType = dti.utility.getPointTypeFromUPI(config.upi);
                 }
             } else {
@@ -4767,7 +4767,7 @@ var dti = {
         systemEnums: {},
         systemEnumObjects: {},
         getPointTypeFromUPI(upi) {
-            return dti.utility.getConfig('Utility.pointTypes.getPointTypeNameFromEnum', upi >> 22);
+            return dti.utility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi);
         },
         addEvent: function(element, event, fn) {
             if (element.addEventListener) {
