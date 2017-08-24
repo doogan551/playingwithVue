@@ -142,7 +142,7 @@ td {
 
 .titleBar .ack {
     position: relative;
-    top: -4px;
+    top: 0px;
     padding: 0 5px;
 
     border: 2px solid #666;

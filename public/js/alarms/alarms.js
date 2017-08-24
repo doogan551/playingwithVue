@@ -61,20 +61,17 @@ var dti = {
 
 var initKnockout = function () {
     var datePickerDefaultOptions = {
-            default: '',           // default time, 'now' or '13:14' e.g.
-            fromnow: 0,            // set default time to * milliseconds from now
-            donetext: 'Done',      // done button text
-            autoclose: true,       // auto close when minute is selected
-            ampmclickable: false,  // set am/pm button on itself
-            darktheme: true,       // set to dark theme
-            twelvehour: false,     // 12 hour AM/PM clock or 24 hour;
-            vibrate: true,         // vibrate the device when dragging clock hand
-            container: ''          // default will append clock next to input
+            selectMonths: true,     // Creates a dropdown to control month
+            selectYears: 15,        // Creates a dropdown of 15 years to control year,
+            today: 'Today',
+            clear: 'Clear',
+            close: 'Ok',
+            closeOnSelect: false    // Close upon selecting a date,
         },
         timePickerDefaultOptions = {
             default: 'now',         // Set default time: 'now', '1:30AM', '16:30'
             fromnow: 0,             // set default time to * milliseconds from now (using with default = 'now')
-            twelvehour: true,       // Use AM/PM or 24-hour format
+            twelvehour: false,      // Use AM/PM or 24-hour format
             donetext: 'OK',         // text for done-button
             cleartext: 'Clear',     // text for clear-button
             canceltext: 'Cancel',   // Text for cancel-button
@@ -86,7 +83,21 @@ var initKnockout = function () {
 
     ko.bindingHandlers.dtiAlarmsMaterializePickadate = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickadate(datePickerDefaultOptions);
+            var $element = $(element);
+
+            $element.pickadate(datePickerDefaultOptions);
+
+            $element.pickadate('picker').on({
+                set: function (thingToSet) {
+                    if (this.get('select')) {
+                        viewModel.value = moment(this.get('select').pick).format("MM/DD/YYYY");
+                    }
+                }
+            });
+
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+                $(element).pickadate("destroy");
+            });
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -95,6 +106,10 @@ var initKnockout = function () {
     ko.bindingHandlers.dtiAlarmsMaterializePickatime = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             $(element).pickatime(timePickerDefaultOptions);
+
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+                $(element).pickatime("destroy");
+            });
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -792,6 +807,87 @@ var AlarmManager = function (conf) {
 
             alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
         },
+        // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
+        buildAlarmRequestObject = function (alarmTable, reqObj) {
+            var pointAttribs,
+                dateTimeOptions,
+                alarmClassOptions,
+                alarmCatOptions,
+                i,
+                len,
+                key,
+                pointType,
+                val,
+                l_startDate = 0,
+                l_endDate = 0,
+                view = alarmTable.view,
+                filters = view.filters,
+                sortAscending = view.sortAscending.peek(),
+                nPages = alarmTable.numberOfPages.peek();
+
+            reqObj.itemsPerPage = PAGE_SIZE;
+            reqObj.numberItems = BUFFER_SIZE;
+
+            reqObj.sort = sortAscending ? 'asc' : 'desc';
+            reqObj.currentPage = view.gotoPageOne ? 1 : view.pageNumber.peek();
+
+            pointAttribs = filters.pointAttribs.options;
+            for (key in pointAttribs) {
+                if (key === 'pointTypes') {
+                    // pointTypes array length of 0 indicates all point types should be included. The server will
+                    // give us all point types if we do not send the 'pointTypes' key.
+                    if (availablePointTypes) {
+                        if (pointAttribs[key].length > 0) {
+                            reqObj[key] = [];
+                            for (pointType in pointAttribs[key]) {
+                                reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
+                            }
+                        }
+                    }
+                } else {
+                    val = pointAttribs[key];
+                    // A value of undefined means we require that the name segment be empty
+                    if (val === undefined) {
+                        reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
+                    }
+                    // If our value is not blank, add it to our filters
+                    else if (val !== "") {
+                        reqObj[key] = val;
+                    }
+                    // Do not add name segment to our request object if it is empty string
+                }
+            }
+
+            alarmClassOptions = filters.alarmClass.options;
+            len = alarmClassOptions.length;
+            // If all options are enabled, do not add to request object (server assumes all if we send none)
+            if (len < 4) {
+                reqObj.almClass = [];
+                for (i = 0, len = alarmClassOptions.length; i < len; i++) {
+                    reqObj.almClass.push(alarmClassEnums[alarmClassOptions[i]]);
+                }
+            }
+            alarmCatOptions = filters.alarmCategory.options;
+            len = alarmCatOptions.length;
+            // If all options are enabled, do not add to request object (server assumes all if we send none)
+            if (len < 4) {
+                reqObj.msgCat = [];
+                for (i = 0; i < len; i++) {
+                    reqObj.msgCat.push(alarmCategoryEnums[alarmCatOptions[i]]);
+                }
+            }
+
+            dateTimeOptions = filters.dateTime.options;
+            if (!dateErrors) {
+                l_startDate = Date.parse(dateTimeOptions.dateFrom + ' ' + dateTimeOptions.timeFrom);
+                l_startDate = (l_startDate === null) ? 0 : Math.floor(l_startDate / 1000);
+
+                l_endDate = Date.parse(dateTimeOptions.dateTo + ' ' + dateTimeOptions.timeTo);
+                l_endDate = (l_endDate === null) ? 0 : Math.floor(l_endDate / 1000);
+            }
+            reqObj.startDate = l_startDate;
+            reqObj.endDate = l_endDate;
+        },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
             // alarms from the server and we always update with our list with the received results
@@ -883,87 +979,6 @@ var AlarmManager = function (conf) {
             alarmTable.timeoutID = window.setTimeout(function () {
                 requestTimeout(alarmTable);
             }, GETTING_DATA_TIMEOUT);
-        },
-        // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
-        buildAlarmRequestObject = function (alarmTable, reqObj) {
-            var pointAttribs,
-                dateTimeOptions,
-                alarmClassOptions,
-                alarmCatOptions,
-                i,
-                len,
-                key,
-                pointType,
-                val,
-                l_startDate = 0,
-                l_endDate = 0,
-                view = alarmTable.view,
-                filters = view.filters,
-                sortAscending = view.sortAscending.peek(),
-                nPages = alarmTable.numberOfPages.peek();
-
-            reqObj.itemsPerPage = PAGE_SIZE;
-            reqObj.numberItems  = BUFFER_SIZE;
-
-            reqObj.sort = sortAscending ? 'asc':'desc';
-            reqObj.currentPage = view.gotoPageOne ?  1 : view.pageNumber.peek();
-
-            pointAttribs = filters.pointAttribs.options;
-            for (key in pointAttribs) {
-                if (key === 'pointTypes') {
-                    // pointTypes array length of 0 indicates all point types should be included. The server will
-                    // give us all point types if we do not send the 'pointTypes' key.
-                    if (availablePointTypes) {
-                        if (pointAttribs[key].length > 0) {
-                            reqObj[key] = [];
-                            for (pointType in pointAttribs[key]) {
-                                reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
-                            }
-                        }
-                    }
-                } else {
-                    val = pointAttribs[key];
-                    // A value of undefined means we require that the name segment be empty
-                    if (val === undefined) {
-                        reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
-                    }
-                    // If our value is not blank, add it to our filters
-                    else if (val !== "") {
-                        reqObj[key] = val;
-                    }
-                    // Do not add name segment to our request object if it is empty string
-                }
-            }
-
-            alarmClassOptions = filters.alarmClass.options;
-            len = alarmClassOptions.length;
-            // If all options are enabled, do not add to request object (server assumes all if we send none)
-            if (len < 4) {
-                reqObj.almClass = [];
-                for (i=0, len = alarmClassOptions.length; i < len; i++) {
-                    reqObj.almClass.push(alarmClassEnums[alarmClassOptions[i]]);
-                }
-            }
-            alarmCatOptions = filters.alarmCategory.options;
-            len = alarmCatOptions.length;
-            // If all options are enabled, do not add to request object (server assumes all if we send none)
-            if (len < 4) {
-                reqObj.msgCat = [];
-                for (i=0; i < len; i++) {
-                    reqObj.msgCat.push(alarmCategoryEnums[alarmCatOptions[i]]);
-                }
-            }
-
-            dateTimeOptions = filters.dateTime.options;
-            if (!dateErrors) {
-                l_startDate = Date.parse(dateTimeOptions.dateFrom + ' ' + dateTimeOptions.timeFrom);
-                l_startDate = (l_startDate === null) ? 0 : Math.floor(l_startDate / 1000);
-
-                l_endDate = Date.parse(dateTimeOptions.dateTo + ' ' + dateTimeOptions.timeTo);
-                l_endDate = (l_endDate === null) ? 0 : Math.floor(l_endDate / 1000);
-            }
-            reqObj.startDate = l_startDate;
-            reqObj.endDate = l_endDate;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
