@@ -4718,17 +4718,34 @@ var dti = {
                 throttle: 1000
             });
 
-            selfBindings.searchInput.subscribe((val) => {
-                dti.navigatorv2.search(val);
-            });
+            selfBindings.subscriptions = [
+                selfBindings.searchInput.subscribe((val) => {
+                    dti.navigatorv2.search(val);
+                }),
+                selfBindings.busy.subscribe((busy) => {
+                    if (busy) {
+                        dti.navigatorv2.tree.helper.blockUI();
+                    } else {
+                        dti.navigatorv2.tree.helper.unblockUI();
+                    }
+                })
+            ];
+        },
+        destroy(config) {
+            let self = dti.navigatorv2;
 
-            selfBindings.busy.subscribe((busy) => {
-                if (busy) {
-                    dti.navigatorv2.tree.helper.blockUI();
-                } else {
-                    dti.navigatorv2.tree.helper.unblockUI();
-                }
+            ko.cleanNode(config.$container[0]);
+            config.$container.html('');
+
+            self.bindings.searchInput.dispose();
+            dti.forEachArray(self.bindings.subscriptions, (sub) => {
+                sub.dispose();
             });
+            self.bindings.subscriptions = [];
+
+            self.onCloseFn();
+
+            dti.destroyObject(self.bindings);
         },
         initNavigator: (config) => {
             let markup = dti.utility.getTemplate('#navigatorv2Template');
@@ -4742,7 +4759,7 @@ var dti = {
             config.getWindow().bindings.loading(false);
 
             config.onClose(() => {
-                dti.navigatorv2.onCloseFn();
+                dti.navigatorv2.destroy(config);                
             });
         }
     },
@@ -5115,11 +5132,13 @@ var dti = {
 
                 dti.events.bodyClick(this.handleBodyClick.bind(this));
 
-                this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
-                    throttle: 1000
+                this.bindings.searchInput = ko.pureComputed(this.bindings.searchString).extend({
+                    throttle: 400
                 });
 
-                this.bindings.searchInput.subscribe(this.search, this);
+                this.bindings.searchInput.subscribe((val) => {
+                    this.search();
+                }, this);
 
                 dti.bindings.pointSelector = this.bindings;
             }
@@ -6124,6 +6143,12 @@ var dti = {
                     dti.forEachArray(delegations, (cfg) => {
                         $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler));
                     });
+
+                    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                        dti.forEachArray(delegations, (cfg) => {
+                            $element.off(cfg.event, cfg.selector, makeHandler(cfg.handler));
+                        });
+                    });
                 }
             };
 
@@ -6153,6 +6178,10 @@ var dti = {
                             // dti.log("width of pane = " + ui.size.width);
                         }
                     });
+
+                    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                        $element.resizable('destroy');
+                    });                    
                 },
                 update: function (element, valueAccessor, allBindings) {
 
@@ -6394,6 +6423,8 @@ var dti = {
 
                     this.manager = config.manager;
                     this.defaultConfig = $.extend(true, this.defaultConfig, config);
+                    delete this.defaultConfig.manager;
+
                     this.bindings = ko.viewmodel.fromModel(this.defaultConfig);
 
                     this.bindings.hasChildren = ko.pureComputed(() => {
@@ -6404,11 +6435,25 @@ var dti = {
                         return (this.bindings._id() === 0);
                     });
 
-                    this.bindings.expanded.subscribe((expanded) => {
+                    this.expandedSubscription = this.bindings.expanded.subscribe((expanded) => {
                         if (!!expanded) {
                             this.manager.sortNodes(this.bindings.children);
                         }
                     });
+                }
+
+                destroy() {
+                    this.expandedSubscription.dispose();
+                    this.bindings.hasChildren.dispose();
+                    this.bindings.isNew.dispose();
+
+                    this.bindings.children([]);
+
+                    dti.destroyObject(this.bindings);
+
+                    delete this.expandedSubscription;
+                    delete this.defaultConfig;
+                    delete this.manager;
                 }
 
                 getConfig() {
@@ -6457,6 +6502,7 @@ var dti = {
 
                     this.collator = new Intl.Collator(undefined, {
                         numeric: true,
+
                         sensitivity: 'base'
                     });
 
@@ -6610,7 +6656,31 @@ var dti = {
 
                     if (config.onClose) {
                         config.onClose(() => {
+                            let destroyTree = function (root) {
+                                dti.forEachArray(root.children(), (child) => {
+                                    destroyTree(child);
+                                });
+                                root.children([]);
+                                delete root.children;
+                            };
+
                             $.contextMenu('destroy', '.dtcollapsible-header');
+
+                            ko.cleanNode(this.$container[0]);
+
+                            this.$container.html('');
+                            this.$container.remove();
+
+                            dti.forEach(this.nodeMatrix, (node, id) => {
+                                node.destroy();
+                                delete this.nodeMatrix[id];
+                            });
+
+                            // destroyTree(this.bindings);
+
+                            dti.destroyObject(this.bindings);
+                            this.tree = [];
+                            dti.destroyObject(this);
                         });
                     }
                 }
@@ -6820,10 +6890,18 @@ var dti = {
                     manager.sortNodes(parent.bindings.children);
                 }
 
+                sortRawNodes(list) {
+                    list.sort((a, b) => {
+                        var res = this.collator.compare(a.display.toLowerCase(), b.display.toLowerCase());
+
+                        return res;
+                    });
+                }
+
                 sortNodes(nodeList) {
                     let jsNodeList = nodeList();
                     jsNodeList.sort((a, b) => {
-                        var res = this.collator.compare(a.display(), b.display());
+                        var res = this.collator.compare(a.display().toLowerCase(), b.display().toLowerCase());
 
                         return res;
                     });
@@ -6958,6 +7036,8 @@ var dti = {
                         this.tree = this.normalize(results, {
                             expanded: false
                         });
+
+                        this.sortRawNodes(this.tree);
 
                         dti.forEachArray(this.tree, (branch) => {
                             this.createNode(branch, null, true);
