@@ -5115,11 +5115,13 @@ var dti = {
 
                 dti.events.bodyClick(this.handleBodyClick.bind(this));
 
-                this.bindings.searchInput = ko.computed(this.bindings.searchString).extend({
-                    throttle: 1000
+                this.bindings.searchInput = ko.pureComputed(this.bindings.searchString).extend({
+                    throttle: 400
                 });
 
-                this.bindings.searchInput.subscribe(this.search, this);
+                this.bindings.searchInput.subscribe((val) => {
+                    this.search();
+                }, this);
 
                 dti.bindings.pointSelector = this.bindings;
             }
