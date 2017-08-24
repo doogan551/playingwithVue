@@ -1047,10 +1047,10 @@ const Point = class Point extends Common {
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};
         let filterProps = {
-            Name: 1,
             Value: 1,
             'Point Type': 1,
-            'Point Refs': 1
+            'Point Refs': 1,
+            path: 1
         };
 
         let upi = data.upi;
@@ -1085,10 +1085,10 @@ const Point = class Point extends Common {
                 return cb(null, null, result);
             }
             let filterProps = {
-                Name: 1,
                 Value: 1,
                 'Point Type': 1,
-                'Point Refs': 1
+                'Point Refs': 1,
+                path: 1
             };
             let criteria = {
                 query: {

@@ -1,9 +1,9 @@
 /*jslint white: true*/
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'text!./view.html'], function (ko, view) {
     var ASC = -1,
         DESC = 1;
 
-    var createInherit = function(superClass, subClass) {
+    var createInherit = function (superClass, subClass) {
         subClass.prototype = Object.create(superClass.prototype);
         subClass.prototype.constructor = subClass;
     };
@@ -14,8 +14,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var $modalError;
         var $modalValue;
 
-        var init = function() {
-
+        var init = function () {
             // Save references to our modal
             $modal = $('.modal.networkInfo');
             $modalWait = $('.modalScene.modalWait');
@@ -48,13 +47,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
         self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
 
-        self.getData = function() {
+        self.getData = function () {
             self.currentTab.hide();
             $modalWait.show();
             if (!!self.isInitialized()) {
                 self.point.issueCommand('Network Info', {
                     upi: self.data._id()
-                }, function(result) {
+                }, function (result) {
                     $modalWait.hide();
                     $modalError.hide();
                     $modalValue.hide();
@@ -72,7 +71,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             }
         };
 
-        self.getPointRef = function(upi, cb) {
+        self.getPointRef = function (upi, cb) {
             /*Display the instance number. If found then also display a link with the point name. If not found then try to
             find a Remote Unit point with the Instance property set for this. If found then display a link with the Remote Unit point name.*/
             $.ajax({
@@ -80,7 +79,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 contentType: 'application/json',
                 dataType: 'json',
                 type: 'get'
-            }).done(function(data) {
+            }).done(function (data) {
                 if (!!data.err) {
                     cb(data.err);
                 } else {
@@ -89,34 +88,40 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             });
         };
 
-        self.openPointRef = function(property) {
+        self.openPointRef = function (property) {
             var address = this[property].pointRef.Address();
             if (address !== '') {
                 dtiUtility.openWindow(address, this[property].pointRef.Value(), this[property].pointRef.PointType(), '', this[property].pointRef.upi());
             }
         };
 
-        self.compare = function(a, b) {
+        self.getNameFromPath = function (path) {
+            return window.top.workspaceManager.config.Utility.getPointName(path);
+        };
+
+        self.compare = function (a, b) {
             var prop = this.sortProperty();
 
-            if (a[prop].Value() < b[prop].Value())
+            if (a[prop].Value() < b[prop].Value()) {
                 return -1 * this.sortOrder();
-            if (a[prop].Value() > b[prop].Value())
+            }
+            if (a[prop].Value() > b[prop].Value()) {
                 return 1 * this.sortOrder();
+            }
             return 0;
         };
 
         function NetworkInfo() {
-            var pointRef = function(_this) {
+            var pointRef = function (_this) {
                 this.Value = ko.observable(0);
                 this.upi = ko.observable(_this.val());
                 this.Address = ko.observable('');
                 this.PointType = ko.observable('');
-                this.set = function() {
+                this.set = function () {
                     var that = this;
-                    self.getPointRef(_this.val(), function(err, data) {
-                        if (!!data.Name) {
-                            that.Value(data.Name);
+                    self.getPointRef(_this.val(), function (err, data) {
+                        if (!!data.path) {
+                            that.Value(self.getNameFromPath(data.path));
                             that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, data._id).review.url);
                             that.PointType(data['Point Type'].Value);
                         } else {
@@ -129,9 +134,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             this.sortOrder = ko.observable();
             this.sortProperty = ko.observable();
             this.entries = ko.observableArray([]);
-            this['Point Type'] = function() {
+            this['Point Type'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     for (var prop in self.config.Enums['Point Types']) {
                         var pT = self.config.Enums['Point Types'][prop];
@@ -143,97 +148,97 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     return val;
                 };
             };
-            this['Point Instance'] = function() {
+            this['Point Instance'] = function () {
                 this.val = ko.observable(0);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
                 this.pointRef = new pointRef(this);
-                this.style = ko.computed(function() {
+                this.style = ko.computed(function () {
                     return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
                 }, this);
             };
-            this['Network Number'] = function() {
+            this['Network Number'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return val;
                 };
             };
-            this['Vendor ID'] = function() {
+            this['Vendor ID'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return val;
                 };
             };
-            this['Max APDU Length'] = function() {
+            this['Max APDU Length'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return val;
                 };
             };
-            this['Change Count'] = function() {
+            this['Change Count'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return val;
                 };
             };
-            this.Gateway = function() {
+            this.Gateway = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return (!!val) ? 'Yes' : 'No';
                 };
             };
-            this['Read Property Only'] = function() {
+            this['Read Property Only'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return (!!val) ? 'Yes' : 'No';
                 };
             };
-            this['No Priority Array'] = function() {
+            this['No Priority Array'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return (!!val) ? 'Yes' : 'No';
                 };
             };
-            this['MAC Address'] = function() {
+            this['MAC Address'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
 
                     return val;
                 };
             };
-            this['Device Instance'] = function() {
+            this['Device Instance'] = function () {
                 this.val = ko.observable(0);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
                 this.pointRef = new pointRef(this);
-                this.style = ko.computed(function() {
+                this.style = ko.computed(function () {
                     return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
                 }, this);
             };
-            this['Poll Period'] = function() {
+            this['Poll Period'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     return val;
                 };
             };
-            this['Port Number'] = function() {
+            this['Port Number'] = function () {
                 this.val = ko.observable(-1);
-                this.Value = function() {
+                this.Value = function () {
                     var val = this.val();
                     switch (val) {
                         case 0:
@@ -256,7 +261,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     return val;
                 };
             };
-            this.buildArray = function(data) {
+            this.buildArray = function (data) {
                 var returnArray = [];
                 for (var i = 0; i < data.length; i++) {
                     var point = {};
@@ -296,7 +301,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.NetworkPoints = new NetworkPoints();
         self.RouterTable = new RouterTable();
 
-        self.sortDevices = function(model, e) {
+        self.sortDevices = function (model, e) {
             var self = this;
             var column = $(e.target);
             var property = column.text();
@@ -321,7 +326,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             self.NetworkDevices.entries(self.NetworkDevices.entries().sort(self.compare.bind(self.NetworkDevices)));
         };
 
-        self.sortPoints = function(model, e) {
+        self.sortPoints = function (model, e) {
             var self = this;
             var column = $(e.target);
             var property = column.text();
@@ -345,7 +350,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
             self.NetworkPoints.entries(self.NetworkPoints.entries().sort(self.compare.bind(self.NetworkPoints)));
         };
-        self.sortRouter = function(model, e) {
+        self.sortRouter = function (model, e) {
             var self = this;
             var column = $(e.target);
             var property = column.text();
@@ -370,10 +375,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         };
 
         init();
-
     }
 
-    ViewModel.prototype.switchTab = function(model, e) {
+    ViewModel.prototype.switchTab = function (model, e) {
         var self = this;
         var btnTxt = $(e.target).text();
         var $deviceTable = $('.devicesTable');
@@ -415,19 +419,19 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         // }
     };*/
 
-    ViewModel.prototype.toggleNetworkInfo = function() {
+    ViewModel.prototype.toggleNetworkInfo = function () {
         this.showModal(true);
         this.getData();
         /*if (this.readOnOpen)
             this.getUpload();*/
     };
 
-    ViewModel.prototype.printInfo = function() {
+    ViewModel.prototype.printInfo = function () {
         var $modal = $('.modal.networkInfo'),
             $modalValue = $modal.find('.modalValue');
-            $devicesTable = $modal.find('.devicesTable');
-            $pointsTable = $modal.find('.pointsTable');
-            $routerTable = $modal.find('.routerTable');
+        $devicesTable = $modal.find('.devicesTable');
+        $pointsTable = $modal.find('.pointsTable');
+        $routerTable = $modal.find('.routerTable');
         // requires jquery-migrate to function properly
         //$modalValue.printElement();
         /*$modalTime.hide('fast', function() {
@@ -435,10 +439,10 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         });*/
 
         var w = window.open();
-        var html = '<label>' + this.point.data.Name() + '</label>';
-        html += '<p>'+$devicesTable.html()+'</p>';
-        html += '<p>'+$pointsTable.html()+'</p>';
-        html += '<p>'+$routerTable.html()+'</p>';
+        var html = '<label>' + this.getNameFromPath(this.point.data.path()) + '</label>';
+        html += '<p>' + $devicesTable.html() + '</p>';
+        html += '<p>' + $pointsTable.html() + '</p>';
+        html += '<p>' + $routerTable.html() + '</p>';
 
         $(w.document.body).html(html);
         w.print();
@@ -448,8 +452,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
-    };
+    ViewModel.prototype.dispose = function () {};
 
     // Return component definition
     return {
