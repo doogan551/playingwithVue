@@ -11,53 +11,53 @@ var dti = {
 };
 
 /*********************************** NOTES **********************************
- Application Overview
- --------------------
- First, a few definitions for the purpose of discussing the application:
- a)  Alarm list - This is a list of alarms received from the server. There are three alarm lists: Recent, Active, and Unacknowledged
- b)  View - The view is just a container that defines the alarm list used and specifies the filters for the alarm list.
- c)  Custom View - These are saved views with filters defined by the user. At the time of this writing, custom views are planned, but
- not fully implemented.
+    Application Overview
+    --------------------
+    First, a few definitions for the purpose of discussing the application:
+    a)  Alarm list - This is a list of alarms received from the server. There are three alarm lists: Recent, Active, and Unacknowledged
+    b)  View - The view is just a container that defines the alarm list used and specifies the filters for the alarm list.
+    c)  Custom View - These are saved views with filters defined by the user. At the time of this writing, custom views are planned, but
+        not fully implemented.
 
- Here's how we display the alarms:
- 1)  We maintain an observable, self.currentView(), which always points to the current view. This observable is updated when a different
- view is requested.
- 2)  Each view contains a pointer to the alarm table that the view uses.
- 3)  We have a computed observable, self.alarms(), which has dependencies on self.currentView() and self.currentView().alarmTableName()
- 4)  self.alarms() is used to display the alarms on the screen.  This way, anytime the currentView changes, or if the target alarm list
- changes, the alarms shown are automatically updated.
+    Here's how we display the alarms:
+    1)  We maintain an observable, self.currentView(), which always points to the current view. This observable is updated when a different
+        view is requested.
+    2)  Each view contains a pointer to the alarm table that the view uses.
+    3)  We have a computed observable, self.alarms(), which has dependencies on self.currentView() and self.currentView().alarmTableName()
+    4)  self.alarms() is used to display the alarms on the screen.  This way, anytime the currentView changes, or if the target alarm list
+        changes, the alarms shown are automatically updated.
 
- Here's how the filters work:
- 1)  We have a private filters object, which is a template for self.filters, which we create when the application is initialized.
- We add keys and functionality to self.filters, which is not included in the private filters object.
- 2)  Every view also has a defaultFilters object that defines the default filter values for the view.  It is formatted differently
- still, from the private filters object and the self.filters object. **See Room For Improvements, Note 1.
- 3)  All views are initialized when the application starts. Part of that initialization is to copy the defaultFilters object
- to a filters object, also in the view.  This allows us to make changes to the filters, but not forego the ability to revert
- back to the original filter state.
- 3)  When another view is requested, self.filters are saved onto the view (using the view's format), before loading the requested
- view's filters into self.filters.
- 4)  self.filters contains observables so the filters the user sees are automatically updated when changing views.
+    Here's how the filters work:
+    1)  We have a private filters object, which is a template for self.filters, which we create when the application is initialized.
+        We add keys and functionality to self.filters, which is not included in the private filters object.
+    2)  Every view also has a defaultFilters object that defines the default filter values for the view.  It is formatted differently
+        still, from the private filters object and the self.filters object. **See Room For Improvements, Note 1.
+    3)  All views are initialized when the application starts. Part of that initialization is to copy the defaultFilters object
+        to a filters object, also in the view.  This allows us to make changes to the filters, but not forego the ability to revert
+        back to the original filter state.
+    3)  When another view is requested, self.filters are saved onto the view (using the view's format), before loading the requested
+        view's filters into self.filters.
+    4)  self.filters contains observables so the filters the user sees are automatically updated when changing views.
 
- Here's how alarms are updated:
- 1)  When the application first loads, up to PAGE_SIZE alarms for each alarm list are requested from the server via socket.
- 2)  This also establishes a socekt connection for each alarm list that the server uses to send alarm updates through. Alarm updates
- include adding new recent, active, and unacknowledged alarms, and removing active and unacknowledged alarms.
- 3)  The server remembers the filter criteria used for each alarm list, so updates received from the server are applicable to
- the current view.  There are two exceptions to this:
- a) Paging is ingored so even if we're several pages in, we'll still get new alarms matching our filter criteria.
- b) 'Remove unacknowledged alarm' updates (the alarm was acknowledged by someone) are always broadcast, regardless of the
- filter criteria.
- 4)  When the user changes views, if the target view uses the same alarm list as the current view, we have to re-get PAGE_SIZE
- alarms from the server. This is because the filter set for the two views is likely different.
+    Here's how alarms are updated:
+    1)  When the application first loads, up to PAGE_SIZE alarms for each alarm list are requested from the server via socket.
+    2)  This also establishes a socekt connection for each alarm list that the server uses to send alarm updates through. Alarm updates
+        include adding new recent, active, and unacknowledged alarms, and removing active and unacknowledged alarms.
+    3)  The server remembers the filter criteria used for each alarm list, so updates received from the server are applicable to
+        the current view.  There are two exceptions to this:
+            a) Paging is ingored so even if we're several pages in, we'll still get new alarms matching our filter criteria.
+            b) 'Remove unacknowledged alarm' updates (the alarm was acknowledged by someone) are always broadcast, regardless of the
+                filter criteria.
+    4)  When the user changes views, if the target view uses the same alarm list as the current view, we have to re-get PAGE_SIZE
+        alarms from the server. This is because the filter set for the two views is likely different.
 
- Room For Improvements
- ---------------------
- 1)  Use a common filter structure for the views and screen filters, the only difference being that the screen filters are made
- observable.
- 2)  One alarm list with tags indicating to what alarm list(s) the alarm belongs. This way, when an alarm was acknowledged or selected,
- we wouldn't have to maintain updates (ack status, selected status, etc.) across multiple lists.
- *****************************************************************************/
+    Room For Improvements
+    ---------------------
+    1)  Use a common filter structure for the views and screen filters, the only difference being that the screen filters are made
+        observable.
+    2)  One alarm list with tags indicating to what alarm list(s) the alarm belongs. This way, when an alarm was acknowledged or selected,
+        we wouldn't have to maintain updates (ack status, selected status, etc.) across multiple lists.
+*****************************************************************************/
 
 var initKnockout = function () {
     var datePickerDefaultOptions = {
@@ -126,27 +126,25 @@ var initKnockout = function () {
                 dataType: 'text',
                 type: 'get'
             })
-            .done(
-                function (file) {
-                    var data = file.split('||'),
-                        bgColor = data[0],
-                        image = data[1];
-                    $element.attr('src', image);
-                    if (bgColor !== undefined && bgColor !== 'undefined') {
-                        $bg.css('background-color', bgColor);
+                .done(
+                    function (file) {
+                        var data = file.split('||'),
+                            bgColor = data[0],
+                            image = data[1];
+                        $element.attr('src', image);
+                        if (bgColor != 'undefined') $bg.css('background-color', bgColor);
                     }
-                }
-            )
-            .fail(
-                function () {
-                    $element.hide();
-                }
-            );
+                )
+                .fail(
+                    function () {
+                        $element.hide();
+                    }
+                );
         }
     };
 };
 
-let AlarmManager = function (conf) {
+var AlarmManager = function (conf) {
     let self = this,
         socket = io.connect(window.location.origin),
         sessionId = store.get('sessionId'),
@@ -259,13 +257,12 @@ let AlarmManager = function (conf) {
         },
         deepClone = function (o) {
             // Return the value if it's not an object
-            if ((o === null) || (typeof (o) !== 'object')) {
+            if ((o === null) || (typeof(o) !== 'object'))
                 return o;
-            }
 
-            let temp = o.constructor();
+            var temp = o.constructor();
 
-            for (let key in o) {
+            for (var key in o) {
                 temp[key] = deepClone(o[key]);
             }
             return temp;
@@ -283,65 +280,49 @@ let AlarmManager = function (conf) {
         },
         // Simple routine to compare two values. Values are assumed to be numbers, strings, or flat arrays of numbers or strings.
         valuesAreDifferent = function (v1, v2) {
-            let j,
+            var j,
                 v1len,
                 v2len;
 
-            if (typeof v1 !== typeof v2) {
+            if (typeof v1 !== typeof v2)
                 return true;
-            }
             if (typeof v1 === 'object' && v1 !== null) {
                 v1len = v1.length;
                 v2len = v2.length;
 
-                if (v1len !== v2len) {
+                if (v1len !== v2len)
                     return true;
-                }
                 for (j = 0; j < v1len; j++) {
-                    if (v1[j] !== v2[j]) {
+                    if (v1[j] !== v2[j])
                         return true;
-                    }
                 }
-            } else {
+            }
+            else {
                 return v1 !== v2;
             }
             return false;
         },
         toggleAlarmDetail = function (contentStop, detailStop) {
-            let tweenParam = {
-                right: {
-                    stop: contentStop,
-                    time: 0,
-                    duration: 0.2,
-                    units: 'px',
-                    effect: 'circIn'
-                }
-            };
+            var tweenParam = {
+                    right: {
+                        stop: contentStop,
+                        time: 0,
+                        duration: 0.2,
+                        units: 'px',
+                        effect: 'circIn'
+                    }
+                };
 
             $elContent.tween(tweenParam);
             tweenParam.right.stop = detailStop;
             $elDetailContainer.tween(tweenParam);
             $.play();
         },
-        utilGetConfig = (methodName, parms, cb) => {
-            let sendResult = (answer) => {
-                if (typeof cb === 'function') {
-                    cb(answer);
-                } else {
-                    return answer;
-                }
-            };
-
-            if (typeof dti !== 'undefined' && dti.utility !== undefined) {
-                return sendResult(dti.utility.getConfig(methodName, [parms]));
-            } else if (window.getConfig !== undefined) {
-                return sendResult(window.getConfig(methodName, [parms]));
-            } else if (dtiUtility) {  // lastly try async call
-                dtiUtility.getConfig(methodName, parms, sendResult());
-            }
-        },
+        // toggleAlarmDetailFUTURE = () => {
+        //     self.alarmDetailVisible(!self.alarmDetailVisible());
+        // },
         changePointAttribsFilter = function (data) {
-            let val,
+            var val,
                 upi = parseInt(data.upi, 10),
                 pointAttribs = self.filters.pointAttribs.options,
                 setFilter = (pointType) => {
@@ -361,7 +342,7 @@ let AlarmManager = function (conf) {
             // pointAttribs.terms = (val.length ? val : "");
             // pointAttribsFilterObj.terms = pointAttribs.terms;
 
-            utilGetConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
         filterCallback = function(filterObj) {
@@ -376,7 +357,7 @@ let AlarmManager = function (conf) {
             self.applyNameFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
-            let alm = new Date(timestamp * 1000),
+            var alm = new Date(timestamp * 1000),
                 almClone = alm.clone().clearTime(),
                 today = Date.today(),
                 str = '';
@@ -394,11 +375,11 @@ let AlarmManager = function (conf) {
             return str;
         },
         getPrettyTime = function (timestamp) {
-            let alm = new Date(timestamp * 1000);
+            var alm = new Date(timestamp * 1000);
             return alm.toString('HH:mm:ss');
         },
         setAvailablePointTypes = function (results) {
-            let i;
+            var i;
             if (results) {
                 for (i = 0; i < results.length; i++) {
                     availablePointTypes[results[i].key] = results[i].enum;
@@ -408,10 +389,10 @@ let AlarmManager = function (conf) {
             numberPointTypes = results.length;
         },
         sendAcknowledge = function (idList) {
-            let request,
+            var request,
                 reqID = new Date().getTime(),
                 ackTimeout = function (req) {
-                    let ids = req.ids,
+                    var ids = req.ids,
                         len = ids.length,
                         i;
 
@@ -439,7 +420,7 @@ let AlarmManager = function (conf) {
             }, ACK_TIMEOUT);
         },
         socketEmit = function (name, reqObj) {
-            let emitString = {
+            var emitString = {
                 Recent: 'getRecentAlarms',
                 Active: 'getActiveAlarms',
                 Unacknowledged: 'getUnacknowledged'
@@ -456,16 +437,15 @@ let AlarmManager = function (conf) {
             socket.emit(emitString[name], JSON.stringify(reqObj));
         },
         getAckInfoString = function (alarm) {
-            let prettyDate = getPrettyDate(alarm.ackTime),
+            var prettyDate = getPrettyDate(alarm.ackTime),
                 prettyTime = getPrettyTime(alarm.ackTime),
 
-                // Our string will read 'UserA acknowledged this alarm on 8/8/8888 at 12:12:12' or
-                // 'UserA acknowledged this alarm today/yesterday at 12:12:12'
+            // Our string will read 'UserA acknowledged this alarm on 8/8/8888 at 12:12:12' or
+            // 'UserA acknowledged this alarm today/yesterday at 12:12:12'
 
-                str = alarm.ackUser() + ' acknowledged this alarm ';
-            if (!isNaN(parseInt(prettyDate[0], 10))) {
+            str  = alarm.ackUser() + ' acknowledged this alarm ';
+            if (!isNaN(parseInt(prettyDate[0], 10)))
                 str += 'on ';
-            }
             str += prettyDate + ' at ' + prettyTime;
 
             return str;
@@ -479,9 +459,7 @@ let AlarmManager = function (conf) {
             self.selectedRows.push(alarm);
         },
         deSelectAlarm = function (alarm) {
-            if (--nSelectedAlarmsOnPage < 0) {
-                nSelectedAlarmsOnPage = 0;
-            }
+            if (--nSelectedAlarmsOnPage < 0) nSelectedAlarmsOnPage = 0;
 
             alarm.isSelected(false);
             self.selectedRows.remove(function (row) {
@@ -495,7 +473,7 @@ let AlarmManager = function (conf) {
             }
         },
         updateAckStatus = function (data, skipAlarmTableName) {
-            let alarm,
+            var alarm,
                 alarmTable,
                 alarmList,
                 key,
@@ -567,7 +545,7 @@ let AlarmManager = function (conf) {
             // descending: [4, 3, 2, 1, 0]
             // Add, Ascending -> add alarm to beginning of array
             // Add, Descending -> add alarm to end of array
-            let removedItem,
+            var removedItem,
                 len,
                 key,
                 scrolledTop,
@@ -586,7 +564,7 @@ let AlarmManager = function (conf) {
                 sortAsc = view.sortAscending(),
                 alarmTableInView = (view.id === self.currentView().id),
                 findAlarm = function (key, keyValue) {
-                    for (let j = 0, jlen = alarms.length; j < jlen; j++) {
+                    for (var j = 0, jlen = alarms.length; j < jlen; j++) {
                         if (alarms[j][key] === keyValue) {
                             return {
                                 index: j,
@@ -631,9 +609,7 @@ let AlarmManager = function (conf) {
                     }
                 },
                 sortAlarmsByDate = function () {
-                    return alarms.sort(function (a, b) {
-                        return sortAsc ? (b.msgTime - a.msgTime) : (a.msgTime - b.msgTime);
-                    });
+                    return alarms.sort(function (a, b) {return sortAsc ? (b.msgTime - a.msgTime) : (a.msgTime - b.msgTime);});
                 };
 
             _log('Received ' + tableName + ' alarms ' + action + ' update', ko.toJS(data), new Date());
@@ -748,7 +724,7 @@ let AlarmManager = function (conf) {
             return removedItem;
         },
         updateNumberOfPages = function (count, alarmTable) {
-            let view = alarmTable.view,
+            var view = alarmTable.view,
                 sortAsc = view.sortAscending(),
                 curPage = view.pageNumber(),
                 curNumberPages = alarmTable.numberOfPages(),
@@ -770,19 +746,29 @@ let AlarmManager = function (conf) {
             }
         },
         isAlarmInSelectedRows = function (alarm) {
-            let j,
+            var j,
                 selectedRows = self.selectedRows(),
                 jlen = selectedRows.length;
 
             for (j = 0; j < jlen; j++) {
-                if (selectedRows[j]._id === alarm._id) {
+                if (selectedRows[j]._id === alarm._id)
                     return true;
-                }
             }
             return false;
         },
+        utilGetConfig = (methodName, parms) => {
+            let result;
+
+            if (typeof dti !== 'undefined' && dti.utility !== undefined) {
+                result = dti.utility.getConfig(methodName, [parms]);
+            } else if (window.getConfig !== undefined) {
+                result = window.getConfig(methodName, [parms]);
+            }
+
+            return result;
+        },
         initAlarm = function (alarm, skipSelected) {
-            let selected = false;
+            var selected = false;
 
             if (!skipSelected) {
                 selected = isAlarmInSelectedRows(alarm);
@@ -792,7 +778,7 @@ let AlarmManager = function (conf) {
             alarm.isSelected = ko.observable(selected);
 
             // Make ackStatus observable
-            alarm.ackStatus = ko.observable(alarm.ackStatus).extend({rateLimit: 100});
+            alarm.ackStatus = ko.observable(alarm.ackStatus).extend({ rateLimit: 100 });
 
             // Make ackUser observable
             alarm.ackUser = ko.observable(alarm.ackUser);
@@ -824,7 +810,7 @@ let AlarmManager = function (conf) {
         },
         // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
         buildAlarmRequestObject = function (alarmTable, reqObj) {
-            let pointAttribs,
+            var pointAttribs,
                 dateTimeOptions,
                 alarmClassOptions,
                 alarmCatOptions,
@@ -912,7 +898,7 @@ let AlarmManager = function (conf) {
                 return;
             }
 
-            let len = data.alarms ? data.alarms.length : 0,
+            var len = data.alarms ? data.alarms.length : 0,
                 view = alarmTable.view,
                 sortAscending = view.sortAscending(),
                 queue = alarmUpdateQueue[alarmTable.name],
@@ -968,7 +954,7 @@ let AlarmManager = function (conf) {
         },
         // This routine is directly called from a computed. All ko observables should be accessed with .peek()
         requestAlarms = function (alarmTable) {
-            let name = alarmTable.name,
+            var name = alarmTable.name,
                 date = new Date(),
                 uniqueID = date.getTime(),
                 reqObj = {},
@@ -996,7 +982,7 @@ let AlarmManager = function (conf) {
             }, GETTING_DATA_TIMEOUT);
         },
         getStoreData = function () {
-            let storeData = store.get(storeKey) || {};
+            var storeData = store.get(storeKey) || {};
 
             if (storeData.hasOwnProperty('sessionId') && storeData.sessionId !== sessionId) {
                 store.remove(storeKey);
@@ -1005,7 +991,7 @@ let AlarmManager = function (conf) {
             return storeData;
         },
         storeViewFilters = function (view) {
-            let storeData = store.get(storeKey),
+            var storeData = store.get(storeKey),
                 viewData = ko.toJS(view);
 
             if (!storeData) {
@@ -1029,7 +1015,7 @@ let AlarmManager = function (conf) {
             store.set(storeKey, storeData);
         },
         saveViewFilters = function (view) {
-            let category,
+            var category,
                 cat,
                 viewCat,
                 opt,
@@ -1072,7 +1058,7 @@ let AlarmManager = function (conf) {
             view.filters = deepClone(view.defaultFilters);
         },
         initViewGroup = function (group) {
-            let viewGroup = self[group],
+            var viewGroup = self[group],
                 childView,
                 view,
                 i,
@@ -1088,7 +1074,7 @@ let AlarmManager = function (conf) {
                     view.alarmTable = alarmTables[view.alarmTableName()];
 
                     if (storeData.hasOwnProperty(windowUpi) && storeData[windowUpi].hasOwnProperty(view.id)) {
-                        let data = storeData[windowUpi][view.id];
+                        var data = storeData[windowUpi][view.id];
 
                         // Add a sort key (presently, sort is applied to the message time field)
                         view.sortAscending = ko.observable(data.sortAscending);
@@ -1148,7 +1134,7 @@ let AlarmManager = function (conf) {
             }
         },
         Filter = function (cat, obj) {
-            let testFn;
+            var testFn;
 
             this.text = obj.text;
             this.id = obj.text;
@@ -1167,11 +1153,11 @@ let AlarmManager = function (conf) {
                 this.category = cat;
 
                 // This function uses peek because it is indirectly called from a computed
-                this.buildOption = function (almClasses, msgCats) {
-                    if (this.active.peek()) {
-                        if (obj.almClass !== undefined) {
+                this.buildOption = function(almClasses, msgCats) {
+                    if(this.active.peek()) {
+                        if(obj.almClass !== undefined) {
                             almClasses.push(obj.almClass);
-                        } else if (obj.msgCat !== undefined) {
+                        } else if(obj.msgCat !== undefined) {
                             msgCats.push(obj.msgCat);
                         }
                     }
@@ -1199,7 +1185,7 @@ let AlarmManager = function (conf) {
             return this;
         },
         initFilterOptions = function () {
-            let category,
+            var category,
                 cat,
                 option,
                 selfCat,
@@ -1236,7 +1222,7 @@ let AlarmManager = function (conf) {
             }
         },
         validateViewPageNumber = function (view, alarmTable) {
-            let numberOfPages = alarmTable.numberOfPages();
+            var numberOfPages = alarmTable.numberOfPages();
 
             // If we only receive the view argument, get a reference to the alarm table used by this view
             alarmTable = alarmTable || alarmTables[view.alarmTableName()];
@@ -1247,7 +1233,7 @@ let AlarmManager = function (conf) {
             }
         },
         applyFilter = function (filterWithoutDelay) {
-            let alarmTable = self.alarms.peek(),
+            var alarmTable = self.alarms.peek(),
                 view = alarmTable.view,
                 checkFilterGap = function (view) {
                     saveViewFilters(view);
@@ -1274,7 +1260,7 @@ let AlarmManager = function (conf) {
             self.fireDateTimeFilterChange(true);
         },
         applyView = function (targetView) {
-            let curView = self.currentView(),
+            var curView = self.currentView(),
                 curGroup = curView.group,
                 curTableName = curView.alarmTableName(),
                 targetGroup = targetView.group,
@@ -1294,7 +1280,7 @@ let AlarmManager = function (conf) {
                 alarms,
                 alarm,
                 forceChildrenRefresh = function (daddy, exception) {
-                    let i,
+                    var i,
                         child,
                         children = daddy.children,
                         len = children.length;
@@ -1333,7 +1319,7 @@ let AlarmManager = function (conf) {
                     viewOptions = viewCat.options;
 
                     if (category === 'dateTime') {
-                        let fn,
+                        var fn,
                             method,
                             $el = $('#' + opt.id),
                             d = Date.parse(viewOptions[opt.text].value);
@@ -1417,7 +1403,7 @@ let AlarmManager = function (conf) {
             self.dateTimeFilterPaused(false);
         },
         initAlarmTables = function () {
-            let table,
+            var table,
                 alarmTable;
             alarmTables.Recent.view = self.defaultViews[0];
             alarmTables.Active.view = self.defaultViews[1];
@@ -1431,12 +1417,12 @@ let AlarmManager = function (conf) {
             }
         },
         refreshAlarmLists = function () {
-            for (let key in alarmTables) {
+            for (var key in alarmTables) {
                 alarmTables[key].refresh(true);
             }
         },
         reformatPrintedDates = function () {
-            let i,
+            var i,
                 len,
                 alarmTable,
                 alarm,
@@ -1456,13 +1442,13 @@ let AlarmManager = function (conf) {
             setupMidnightNotify();
         },
         setupMidnightNotify = function () {
-            let now = new Date(),
+            var now = new Date(),
                 tom = Date.today().addDays(1);
 
             window.setTimeout(reformatPrintedDates, tom - now);
         },
         showPointReview = function (data) {
-            let upi = parseInt(data.upi, 10);
+            var upi = parseInt(data.upi, 10);
             if (upi > 0) {
                 dtiUtility.openWindow({
                     upi: upi,
@@ -1471,7 +1457,7 @@ let AlarmManager = function (conf) {
             }
         },
         findView = function (key, keyValue) {
-            let i,
+            var i,
                 len,
                 j,
                 jlen,
@@ -1479,11 +1465,11 @@ let AlarmManager = function (conf) {
 
             len = viewGroups.length;
             for (i = 0; i < len; i++) {
-                let viewGroup = viewGroups[i];
+                var viewGroup = viewGroups[i];
 
                 jlen = viewGroup.length;
                 for (j = 0; j < jlen; j++) {
-                    let view = viewGroup[j];
+                    var view = viewGroup[j];
 
                     if (view.hasOwnProperty(key)) {
                         if (view[key] === keyValue) {
@@ -1495,7 +1481,7 @@ let AlarmManager = function (conf) {
             return null;
         },
         updateViewPaused = function () {
-            let view = self.currentView(),
+            var view = self.currentView(),
                 sortAsc = view.sortAscending(),
                 curPage = view.pageNumber(),
                 numPages = self.alarms().numberOfPages(),
@@ -1507,8 +1493,10 @@ let AlarmManager = function (conf) {
                 if (sortAsc) {
                     paused = true;
                 }
-            } else if (!sortAsc) {
-                paused = true;
+            } else {
+                if (!sortAsc) {
+                    paused = true;
+                }
             }
             view.paused(paused);
             storeViewFilters(view);
@@ -1784,7 +1772,7 @@ let AlarmManager = function (conf) {
 
     // Dummy conditional for temporary variable creation
     if (true) {
-        let view = null, // Very important we init to null in case findView isn't called
+        var view = null, // Very important we init to null in case findView isn't called
             storeData = getStoreData();
         if (storeData.hasOwnProperty(windowUpi)) {
             view = findView('id', storeData[windowUpi].currentViewId);
@@ -1803,7 +1791,7 @@ let AlarmManager = function (conf) {
 
     //------ Alarm socket handlers
     socket.on('acknowledgeResponse', function (data) {
-        let i,
+        var i,
             _id,
             ids,
             len,
@@ -1896,7 +1884,7 @@ let AlarmManager = function (conf) {
     });
 
     socket.on('reconnecting', function () {
-        let retries = 0,
+        var retries = 0,
             reconnect = function () {
                 $.ajax({
                     url: '/home'
@@ -1926,7 +1914,7 @@ let AlarmManager = function (conf) {
     };
 
     self.toggleOption = function (data, event) {
-        let onCount = 0,
+        var onCount = 0,
             options,
             option,
             curVal,
@@ -1960,7 +1948,8 @@ let AlarmManager = function (conf) {
             // If our option is inactive, we will always disable all the others
             if (!curVal) {
                 active = false;
-            } else {
+            }
+            else {
                 // If the other alarm options are a mixture of enabled and disabled, we always disable them
                 // If the other alarm options are all off, we enable all of them
 
@@ -1990,7 +1979,7 @@ let AlarmManager = function (conf) {
     };
 
     self.userHasPermissionToAck = function (alarm) {
-        let hasAckPermission = userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
+        var hasAckPermission = userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
         return hasAckPermission;
     };
 
@@ -2003,11 +1992,11 @@ let AlarmManager = function (conf) {
     };
 
     self.ackAlarms = function () {
-        let i,
+        var i,
             alarm,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
+            len = (n > 200) ? 200:n,
             ackList = [];
 
         for (i = 0; i < len; i++) {
@@ -2028,12 +2017,12 @@ let AlarmManager = function (conf) {
     };
 
     self.ackRequired = function (alarm) {
-        let ackStatus = alarm.ackStatus();
+        var ackStatus = alarm.ackStatus();
         return (ackStatus && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK));
     };
 
     self.openDisplay = function (data) {
-        let upi = parseInt(data._id, 10),
+        var upi = parseInt(data._id, 10),
             alarmDetail = self.alarmDetail,
             openTheWindow = (pointType) => {
                 dtiUtility.openWindow({
@@ -2045,7 +2034,7 @@ let AlarmManager = function (conf) {
 
         if (upi > 0) {
             alarmDetail.gettingData(true);
-            utilGetConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
+            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
         }
     };
 
@@ -2055,7 +2044,7 @@ let AlarmManager = function (conf) {
 
     //------ Alarm row select handlers ---------------------------
     self.selectRow = function (data, event) {
-        let srcClass = event.target.classList,
+        var srcClass = event.target.classList,
             ackStatus = data.ackStatus(),
             $target = $(event.target),
             idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ""),
@@ -2081,7 +2070,7 @@ let AlarmManager = function (conf) {
             }
         }
 
-        let i,
+        var i,
             alarmTable = self.alarms(),
             alarmTableName = alarmTable.name,
             alarms = alarmTable.list(),
@@ -2105,7 +2094,7 @@ let AlarmManager = function (conf) {
                 return null;
             },
             updateSelection = function (select, ndx1, ndx2) {
-                let i,
+                var i,
                     start,
                     stop;
 
@@ -2118,7 +2107,7 @@ let AlarmManager = function (conf) {
                 }
 
                 for (i = start; i <= stop; i++) {
-                    let alarm = alarms[i],
+                    var alarm = alarms[i],
                         isSelected = alarm.isSelected();
 
                     if (select && !isSelected) {
@@ -2130,7 +2119,7 @@ let AlarmManager = function (conf) {
             };
 
         if (!clickHistory.hasOwnProperty(alarmTableName)) {
-            let p = clickHistory[alarmTableName] = {};
+            var p = clickHistory[alarmTableName] = {};
             p.lastClickId = null;
             p.lastShiftClickId = null;
             p.shiftRelease = true;
@@ -2163,7 +2152,7 @@ let AlarmManager = function (conf) {
             clicks.shiftRelease = true;
         } else {
             if (clicks.lastClickId !== null) {
-                let c = getIndexOf(clicks.lastClickId),
+                var c = getIndexOf(clicks.lastClickId),
                     sc = alarms.indexOf(data),
                     prev_sc = getIndexOf(clicks.lastShiftClickId);
 
@@ -2189,7 +2178,8 @@ let AlarmManager = function (conf) {
                             updateSelection(!alarms[c].isSelected(), c, prev_sc);
                             // Add the alarms on the boundary side we're going to
                             updateSelection(!selected, c, sc);
-                        } else {
+                        }
+                        else {
                             updateSelection(!selected, sc, prev_sc);
                         }
                     }
@@ -2202,9 +2192,9 @@ let AlarmManager = function (conf) {
     };
 
     self.selectAll = function (data, event) {
-        let alarms = self.alarms().list(),
+        var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
+            len = (n > 200) ? 200:n,
             alarm,
             i;
 
@@ -2230,9 +2220,9 @@ let AlarmManager = function (conf) {
     };
 
     self.selectNone = function () {
-        let alarms = self.alarms().list(),
+        var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
+            len = (n > 200) ? 200:n,
             alarm,
             i;
 
@@ -2247,9 +2237,9 @@ let AlarmManager = function (conf) {
     };
 
     self.selectUnacknowledged = function () {
-        let alarms = self.alarms().list(),
+        var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
+            len = (n > 200) ? 200:n,
             alarm,
             i;
 
@@ -2262,7 +2252,7 @@ let AlarmManager = function (conf) {
     };
 
     self.deselectAll = function () {
-        let alarms = self.alarms().list(),
+        var alarms = self.alarms().list(),
             len = alarms.length,
             i;
 
@@ -2283,7 +2273,7 @@ let AlarmManager = function (conf) {
 
     //------ View / Filter functions -----------------------------
     self.changeView = function (view) {
-        let currentView = self.currentView();
+        var currentView = self.currentView();
         // If the requested view is the current view, we have nothing to do
         if (view.id === currentView.id) {
             return;
@@ -2303,7 +2293,7 @@ let AlarmManager = function (conf) {
     };
 
     self.toggleViewPaused = function () {
-        let view = self.currentView(),
+        var view = self.currentView(),
             paused = view.paused(),
             sortAscending = view.sortAscending();
 
@@ -2315,14 +2305,14 @@ let AlarmManager = function (conf) {
     };
 
     self.toggleViewSort = function () {
-        let sort = self.currentView().sortAscending,
+        var sort = self.currentView().sortAscending,
             withoutDelay = true;
         sort(!sort());
         applyFilter(withoutDelay);
     };
 
     self.showPointFilter = function () {
-        let parameters = {
+        var parameters = {
             path: pointAttribsFilterObj.path,
             terms: pointAttribsFilterObj.terms,
             pointTypes: pointAttribsFilterObj.pointTypes
@@ -2330,7 +2320,7 @@ let AlarmManager = function (conf) {
 
         dtiUtility.showPointFilter(parameters);
         // dtiUtility.onPointFilterSelect(filterCallback);
-        dtiUtility.onPointFilterSelect(function handlePointFilterSelect(cfg) {
+        dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
             filterCallback(cfg);
             self.applyNameFilter();
         });
@@ -2338,7 +2328,7 @@ let AlarmManager = function (conf) {
 
 
     self.changePage = function (modifier) {
-        let alarms = self.alarms(),
+        var alarms = self.alarms(),
             view = self.currentView(),
             page = view.pageNumber,
             nPages = self.alarms().numberOfPages(),
@@ -2370,7 +2360,7 @@ let AlarmManager = function (conf) {
             pointTypes: []
         };
 
-        let view = self.currentView();
+        var view = self.currentView();
 
         self.clearDateTimeUIFields();
 
@@ -2382,7 +2372,7 @@ let AlarmManager = function (conf) {
     };
 
     self.clearDateTimeFilter = function () {
-        let options = self.filters.dateTime.options,
+        var options = self.filters.dateTime.options,
             placeholderDateFilters = self.filtersPlaceHolder.dateTime,
             len = options.length,
             dirty = false,
@@ -2452,7 +2442,7 @@ let AlarmManager = function (conf) {
     };
 
     self.applyNameFilter = function () {
-        let option,
+        var option,
             curVal,
             newVal,
             i,
@@ -2494,7 +2484,7 @@ let AlarmManager = function (conf) {
     };
 
     self.closeAlarmDetail = function (alarm) {
-        let contentStop = 20,
+        var contentStop = 20,
             detailStop = -(detailWidth + 2);
 
         if (alarm) {
@@ -2518,7 +2508,7 @@ let AlarmManager = function (conf) {
     };
 
     self.openAlarmDetail = function (alarm) {
-        let contentStop = detailWidth + 40,
+        var contentStop = detailWidth + 40,
             detailStop = 20,
             alarmDetail = self.alarmDetail,
             upi = alarmDetail.alarm ? alarmDetail.alarm().upi : null,
@@ -2531,10 +2521,7 @@ let AlarmManager = function (conf) {
             alarmDetail.error(false);
             alarmDetail.gettingData(true);
 
-            reqData = {
-                reqID: alarmDetail.reqID,
-                upi: alarm.upi
-            };
+            reqData = {reqID: alarmDetail.reqID, upi: alarm.upi};
 
             _log('Requesting display dependencies', reqData, new Date());
 
@@ -2570,7 +2557,7 @@ let AlarmManager = function (conf) {
     };
 
     self.handleResize = function (targetWidth) {
-        let contentWidth = targetWidth || $elContent.outerWidth();
+        var contentWidth = targetWidth || $elContent.outerWidth();
 
         // $alarmsBody.find(".dropdown-button").dropdown('close');
 
@@ -2614,7 +2601,7 @@ let AlarmManager = function (conf) {
         // $dateTimeFilterModal.modal();
     };
 
-    //------ Debugging Helpers -------------------------------
+   //------ Debugging Helpers -------------------------------
     // TODO Remove for production
     self.debug = {
         printAlarmUpdateQueue: function () {
@@ -2624,7 +2611,7 @@ let AlarmManager = function (conf) {
             _log(alarmTables.Recent.reqID, alarmTables.Unacknowledged.reqID, alarmTables.Active.reqID);
         },
         simulateReceiveAlarms: function () {
-            let alarmTable = self.alarms(),
+            var alarmTable = self.alarms(),
                 data = {
                     alarms: ko.toJS(alarmTable.list()),
                     count: alarmTable.count()
@@ -2638,7 +2625,7 @@ let AlarmManager = function (conf) {
                 return;
             }
 
-            let alarmTable = alarmTables[alarmTableName],
+            var alarmTable = alarmTables[alarmTableName],
                 data = {
                     newAlarm: {
                         BackColor: "0000FF",
@@ -2662,7 +2649,7 @@ let AlarmManager = function (conf) {
             n = n || 1;
             timeStampAdjust = timeStampAdjust || 0;
 
-            for (let i = 0; i < n; i++) {
+            for (var i = 0; i < n; i++) {
                 data.newAlarm._id = Math.random().toString(36).slice(2);
                 data.newAlarm.upi = parseInt(Math.random().toString().slice(2), 10);
                 data.newAlarm.msgText = "Dummy Alarm Message " + i;
@@ -2676,8 +2663,8 @@ let AlarmManager = function (conf) {
                 return;
             }
 
-            let alarmTable = alarmTables[alarmTableName],
-                alarmList = alarmTable.list(),
+            var alarmTable = alarmTables[alarmTableName],
+                alarmList  = alarmTable.list(),
                 data = {
                     reqID: alarmTable.reqID
                 };
@@ -2687,8 +2674,8 @@ let AlarmManager = function (conf) {
                 deleteFromTop = true;
             }
 
-            for (let i = 0; i < n; i++) {
-                let len = alarmList.length,
+            for (var i = 0; i < n; i++) {
+                var len = alarmList.length,
                     alarm;
 
                 if (len) {
@@ -2718,7 +2705,7 @@ let AlarmManager = function (conf) {
 
     //------ Pre-Inits -------------------------------------
     $(window).on('hashchange', function () {
-        let filterName = location.hash.substring(1),
+        var filterName = location.hash.substring(1),
             view;
 
         view = findView('title', filterName);
@@ -2730,7 +2717,7 @@ let AlarmManager = function (conf) {
     });
 
     dtiUtility.getUser(setCurrentUser);
-    utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
 
 
     //------ Computeds ------------------------------------
@@ -2741,11 +2728,11 @@ let AlarmManager = function (conf) {
     }, self);
 
     self.alarms200 = ko.computed(function () {
-        return self.alarms().list.slice(0, PAGE_SIZE);
+        return self.alarms().list.slice(0, 200);
     }, self);
 
-    self.dirty = ko.computed(function () {
-        let category,
+    self.dirty = ko.computed(function() {
+        var category,
             cat,
             viewCat,
             option,
@@ -2786,11 +2773,11 @@ let AlarmManager = function (conf) {
         return false;
     }, self).extend(computedThrottle);
 
-    self.allSelected = ko.computed(function () {
-        let i,
+    self.allSelected = ko.computed(function() {
+        var i,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n;
+            len = (n > 200) ? 200:n;
 
         if (len === 0) {
             return false;
@@ -2805,7 +2792,7 @@ let AlarmManager = function (conf) {
     }, self).extend(computedThrottle);
     /*
     self.allUnackSelected = ko.computed(function() {
-        let i,
+        var i,
             alarm,
             alarms = self.alarms().list(),
             len = alarms.length,
@@ -2826,13 +2813,13 @@ let AlarmManager = function (conf) {
         return listHasAckRequired;
     }, self).extend(computedThrottle);
     */
-    self.anyAckSelected = ko.computed(function () {
-        let i,
+    self.anyAckSelected = ko.computed(function() {
+        var i,
             alarm,
             ackStatus,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n;
+            len = (n > 200) ? 200:n;
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
@@ -2845,12 +2832,12 @@ let AlarmManager = function (conf) {
         return false;
     }, self).extend(computedThrottle);
 
-    self.ackInProgress = ko.computed(function () {
-        let i,
+    self.ackInProgress = ko.computed(function() {
+        var i,
             alarm,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > PAGE_SIZE) ? PAGE_SIZE : n;
+            len = (n > 200) ? 200:n;
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
@@ -2866,8 +2853,8 @@ let AlarmManager = function (conf) {
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
     // applyView routine (called when views change)
     self.nameFilterPaused = ko.observable(true);
-    self.nameFilter = ko.computed(function () {
-        let paused = self.nameFilterPaused.peek(),
+    self.nameFilter = ko.computed(function() {
+        var paused = self.nameFilterPaused.peek(),
             options = (self.filters ? self.filters.pointAttribs.options : []),
             len = options.length,
             active = false,
@@ -2955,7 +2942,7 @@ let AlarmManager = function (conf) {
         //}
     });
     self.applyDateTimeFilter = () => {
-        let options = self.filters.dateTime.options,
+        var options = self.filters.dateTime.options,
             placeholderDateFilters = self.filtersPlaceHolder.dateTime,
             withoutDelay = true,
             len = options.length,
@@ -2975,8 +2962,8 @@ let AlarmManager = function (conf) {
         applyFilter(withoutDelay);  // should save current filter as well
     };
 
-    self.getRecentAlarms = ko.computed(function () {
-        let alarmTable = alarmTables.Recent,
+    self.getRecentAlarms = ko.computed(function() {
+        var alarmTable = alarmTables.Recent,
             refresh = alarmTable.refresh();
 
         if (refresh) {
@@ -2984,8 +2971,8 @@ let AlarmManager = function (conf) {
         }
     }, self);
 
-    self.getActiveAlarms = ko.computed(function () {
-        let alarmTable = alarmTables.Active,
+    self.getActiveAlarms = ko.computed(function() {
+        var alarmTable = alarmTables.Active,
             refresh = alarmTable.refresh();
 
         if (refresh) {
@@ -2993,8 +2980,8 @@ let AlarmManager = function (conf) {
         }
     }, self);
 
-    self.getUnacknowledgedAlarms = ko.computed(function () {
-        let alarmTable = alarmTables.Unacknowledged,
+    self.getUnacknowledgedAlarms = ko.computed(function() {
+        var alarmTable = alarmTables.Unacknowledged,
             refresh = alarmTable.refresh();
 
         if (refresh) {
@@ -3002,11 +2989,10 @@ let AlarmManager = function (conf) {
         }
     }, self);
 
-    self.printAlarms = function () {
-        let $alarm = $('.alarms');
-        $alarm.css('overflow', 'visible');
-        $alarm.printArea({mode: 'iframe'});
-        $alarm.css('overflow', 'auto');
+    self.printAlarms = function() {
+        $('.alarms').css('overflow', 'visible');
+        $('.alarms').printArea({mode:'iframe'});
+        $('.alarms').css('overflow', 'auto');
     };
 
     // setTimeout(function () {
@@ -3019,9 +3005,9 @@ function initPage (manager) {
         $pointFilterModal = $('#pointFilterModal'),
         $dateTimeFilterModal = $('#dateTimeFilterModal'),
         $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
-        // $timeFrom = $dateTimeFilterModal.find("#timeFrom"),
+        // $timeFrom = $dateTimeFilterModal.find("#timeFrom").pickatime('picker'),
         $dateTo = $dateTimeFilterModal.find("#dateTo"),
-        // $timeTo = $dateTimeFilterModal.find("#timeTo"),
+        // $timeTo = $dateTimeFilterModal.find("#timeTo").pickatime('picker'),
         $dateFilterIcon = $(dateId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
 
@@ -3030,7 +3016,7 @@ function initPage (manager) {
         $newAlarmBottom = $('.newAlarmBottom'),
         timeoutId,
         toggleDropdown = function (id) {
-            let $container = $(id),
+            var $container = $(id),
                 $dropDown = $(id + ' .dropdown-menu'),
                 $icon = $(id + ' .filterIcon'),
                 visible = $dropDown.is(':visible');
@@ -3044,7 +3030,7 @@ function initPage (manager) {
             $dropDown.toggle();
         },
         hideDropDowns = function () {
-            let $dateFilterDropDown = $(dateId + ' .dropdown-menu');
+            var $dateFilterDropDown = $(dateId + ' .dropdown-menu');
 
             $dateFilterDropDown.hide();
             $dateFilterIcon.removeClass('open');
