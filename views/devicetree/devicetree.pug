@@ -87,8 +87,8 @@ html
         // ko if: ($parent.networkSegment && $parent.networkSegment() == networkSegment()) || ($data.networkSegment && $data.networkSegment() == $parent)
         li
           i.fa.fa-building.noselect(data-bind="style:{color:$root.statusColor($data)}") &nbsp;
-          span.hoverCursor.noselect(data-bind=" click:$root.openDevice, event:{mouseover:$root.showDevice, mouseout:$root.hideDevice}, attr:{'id':$data.text().split(' ').join('_')}")
-            span.searchable(data-bind="text:$data.text()")
+          span.hoverCursor.noselect(data-bind=" click:$root.openDevice, event:{mouseover:$root.showDevice, mouseout:$root.hideDevice}, attr:{'id':$root.buildNameFromPath($data.path())}")
+            span.searchable(data-bind="text:$root.buildNameFromPath($data.path())")
             | 
             span.inlineDevAddr(data-bind="text:$root.devAddress($data)")
           //ko if:networks().length >0
