@@ -1092,7 +1092,7 @@ const Point = class Point extends Common {
             };
             let criteria = {
                 query: {
-                    'Instance.Value': this.getInstance(data.upi),
+                    'Instance.Value': Config.Utility.getInstanceFromId(data.upi),
                     'Point Type.Value': 'Remote Unit',
                     'Point Refs': {
                         $elemMatch: {

@@ -111,14 +111,6 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             return 0;
         };
 
-        self.getTypeFromUpi = function (upi) {
-            return upi >> 22;
-        };
-
-        self.getInstanceFromUpi = function (upi) {
-            return Math.pow(2, 22) - 1 & upi;
-        };
-
         function NetworkInfo() {
             var PointRef = function (_this) {
                 this.Value = ko.observable(0);
@@ -134,7 +126,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                             that.PointType(data['Point Type'].Value);
                         } else {
                             let poi;
-                            that.Value('(' + self.getTypeFromUpi(_this.val()) + ', ' + self.getInstanceFromUpi(_this.val()) + ')');
+                            that.Value('(' + self.config.Utility.getPointTypeEnumFromId(_this.val()) + ', ' + self.config.Utility.getInstanceFromId(_this.val()) + ')');
                         }
                     });
                 };
