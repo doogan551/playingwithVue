@@ -46,8 +46,8 @@ html
                 .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
                     .filterIcon.fa.fa-font.fa(data-bind="css: { 'dropdown-toggle-filter-set' : nameFilter(), 'dropdown-toggle' : !nameFilter() }, click: showPointFilter")
                 // TIME DATE FILTERS
-                .filterContainer(id="timeDateFilters", title="Filter by date and/or time", data-bind="click: function () { $root.editDateTimeFilter() }, visible: true")
-                    .filterIcon.fa.fa-clock-o.fa(data-bind="css: { 'dropdown-toggle-filter-set' : dateFilter(), 'dropdown-toggle' : !dateFilter() }")
+                .filterContainer(id="timeDateFilters", title="Filter by date and/or time", data-bind="click: function () { $root.editDateTimeFilter() }, visible: filters.dateTime.visible")
+                    .filterIcon.fa.fa-clock-o.fa
 
                 // ALARM CLASS FILTERS
                 .filterContainer.withBorder.horizontalMenu.alarmClass(data-bind="visible: filters.alarmClass.visible")
@@ -234,7 +234,7 @@ html
 
                     // ko if: alarmDetail.error() === true
                     .errorTxt An unexpected error occurred.
-                    button.btn.btn-danger(type="button", data-bind="click: openAlarmDetail.bind($data, alarmDetail.alarm())") Reload Content
+                    .btn.btn-small.right.waves-effect.waves-light.blue-grey(data-bind="click: openAlarmDetail.bind($data, alarmDetail.alarm())") Reload Content
                     // /ko
 
                 .displays.scrollable.thinScroll(data-bind="visible: !alarmDetail.gettingData() && !alarmDetail.error()")

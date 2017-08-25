@@ -28,9 +28,9 @@ var dti = {
         changes, the alarms shown are automatically updated.
 
     Here's how the filters work:
-    1)  We have a private filters object, which is a template for self.filters, which we create when the application is intialized.
+    1)  We have a private filters object, which is a template for self.filters, which we create when the application is initialized.
         We add keys and functionality to self.filters, which is not included in the private filters object.
-    2)  Every view also has a defaultFilters object that defines the default filter values for the view.  It is formatted differntly
+    2)  Every view also has a defaultFilters object that defines the default filter values for the view.  It is formatted differently
         still, from the private filters object and the self.filters object. **See Room For Improvements, Note 1.
     3)  All views are initialized when the application starts. Part of that initialization is to copy the defaultFilters object
         to a filters object, also in the view.  This allows us to make changes to the filters, but not forego the ability to revert
@@ -162,9 +162,9 @@ var AlarmManager = function (conf) {
         $alarmsBody = $("body"),
         $dateTimeFilterModal = $alarmsBody.find('#dateTimeFilterModal'),
         $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
-        $timeFrom = $("#timeFrom"),
+        $timeFrom = $dateTimeFilterModal.find("#timeFrom"),
         $dateTo = $dateTimeFilterModal.find("#dateTo"),
-        $timeTo = $("#timeTo"),
+        $timeTo = $dateTimeFilterModal.find("#timeTo"),
         detailWidth = $elDetailContainer.outerWidth(),
 
         horizontalMenu = {
@@ -383,6 +383,7 @@ var AlarmManager = function (conf) {
             if (results) {
                 for (i = 0; i < results.length; i++) {
                     availablePointTypes[results[i].key] = results[i].enum;
+                    pointAttribsFilterObj.pointTypes.push(results[i].key);
                 }
             }
             numberPointTypes = results.length;
@@ -1256,6 +1257,7 @@ var AlarmManager = function (conf) {
                     checkFilterGap(view);
                 }, FILTER_CHANGE_DELAY);
             }
+            self.fireDateTimeFilterChange(true);
         },
         applyView = function (targetView) {
             var curView = self.currentView(),
@@ -1781,6 +1783,7 @@ var AlarmManager = function (conf) {
         self.currentView = ko.observable(view);
     }
 
+    self.fireDateTimeFilterChange = ko.observable(false); // crutch for dateFilter not firing correctly
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
     self.currentPage = ko.observable(1);
@@ -2316,13 +2319,13 @@ var AlarmManager = function (conf) {
         };
 
         dtiUtility.showPointFilter(parameters);
-        dtiUtility.onPointSelect(filterCallback);
+        // dtiUtility.onPointFilterSelect(filterCallback);
+        dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
+            filterCallback(cfg);
+            self.applyNameFilter();
+        });
     };
 
-    dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
-        filterCallback(cfg);
-        self.applyNameFilter();
-    });
 
     self.changePage = function (modifier) {
         var alarms = self.alarms(),
@@ -2739,6 +2742,10 @@ var AlarmManager = function (conf) {
             i,
             len;
 
+        if (self.fireDateTimeFilterChange()) {
+            self.fireDateTimeFilterChange(false);
+        }
+
         if (self.filters) {
             for (category in filters) {
                 cat = self.filters[category];
@@ -2754,7 +2761,7 @@ var AlarmManager = function (conf) {
                             return true;
                         }
                     } else {
-                        found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
+                        found = (viewOptions.indexOf(opt.text) > -1);
                         if (opt.isActive() ^ found) {
                             return true;
                         }
@@ -2882,8 +2889,8 @@ var AlarmManager = function (conf) {
     }, self);
 
     self.dateTimeFilterPaused = ko.observable(true);
-    self.dateFilter = ko.computed(function() {
-        var paused = self.dateTimeFilterPaused.peek(),
+    self.dateFilter = ko.computed(() => {
+        let paused = self.dateTimeFilterPaused.peek(),
             options = (self.filters ? self.filters.dateTime.options : []),
             len = options.length,
             dateTime = {},
@@ -2896,6 +2903,10 @@ var AlarmManager = function (conf) {
             $filterIcon = $('#timeDateFilters .filterIcon');
 
         dateErrors = false;
+
+        if (self.fireDateTimeFilterChange()) {
+            self.fireDateTimeFilterChange(false);
+        }
 
         for (i = 0; i < len; i++) {
             option = options[i];
