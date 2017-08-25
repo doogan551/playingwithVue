@@ -74,7 +74,8 @@ const Hierarchy = class Hierarchy extends Common {
                 nodeType: 1,
                 nodeSubType: 1,
                 locationType: 1,
-                path: 1
+                path: 1,
+                Name: 1
             }
         }, cb);
     }
