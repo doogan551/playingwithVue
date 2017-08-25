@@ -244,6 +244,13 @@ const Common = class Common extends Utility {
             callback(null, 'success');
         }
     }
+
+    getInstance(upi, pointType) {
+        if (!!pointType) {
+            return upi - (8 << 22);
+        }
+        return Math.pow(2, 22) - 1 & upi;
+    }
 };
 
 module.exports = Common;

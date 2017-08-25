@@ -1092,7 +1092,7 @@ const Point = class Point extends Common {
             };
             let criteria = {
                 query: {
-                    'Instance.Value': parseInt(data.upi, 10),
+                    'Instance.Value': this.getInstance(data.upi),
                     'Point Type.Value': 'Remote Unit',
                     'Point Refs': {
                         $elemMatch: {

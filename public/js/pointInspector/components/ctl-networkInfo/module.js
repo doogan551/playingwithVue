@@ -16,7 +16,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
 
         var init = function () {
             // Save references to our modal
-            $modal = $('.modal.networkInfo');
+            var $modal = $('.modal.networkInfo');
             $modalWait = $('.modalScene.modalWait');
             $modalError = $('.modalScene.modalError');
             $modalValue = $('.modalScene.modalValue');
@@ -43,9 +43,9 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         self.errorText = ko.observable('');
         self.isInitialized = ko.observable(false);
 
-        self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Gateway', 'Read Property Only', 'No Priority Array', 'MAC Address']);
-        self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
-        self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
+        // self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Gateway', 'Read Property Only', 'No Priority Array', 'MAC Address']);
+        // self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
+        // self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
 
         self.getData = function () {
             self.currentTab.hide();
@@ -111,8 +111,16 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             return 0;
         };
 
+        self.getTypeFromUpi = function (upi) {
+            return upi >> 22;
+        };
+
+        self.getInstanceFromUpi = function (upi) {
+            return Math.pow(2, 22) - 1 & upi;
+        };
+
         function NetworkInfo() {
-            var pointRef = function (_this) {
+            var PointRef = function (_this) {
                 this.Value = ko.observable(0);
                 this.upi = ko.observable(_this.val());
                 this.Address = ko.observable('');
@@ -125,7 +133,8 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                             that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, data._id).review.url);
                             that.PointType(data['Point Type'].Value);
                         } else {
-                            that.Value(_this.val().toString());
+                            let poi;
+                            that.Value('(' + self.getTypeFromUpi(_this.val()) + ', ' + self.getInstanceFromUpi(_this.val()) + ')');
                         }
                     });
                 };
@@ -148,14 +157,26 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                     return val;
                 };
             };
-            this['Point Instance'] = function () {
+            this.Device = function () {
                 this.val = ko.observable(0);
                 this.Value = function () {
                     var val = this.val();
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
-                this.pointRef = new pointRef(this);
+                this.pointRef = new PointRef(this);
+                this.style = ko.computed(function () {
+                    return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
+                }, this);
+            };
+            this.Point = function () {
+                this.val = ko.observable(0);
+                this.Value = function () {
+                    var val = this.val();
+                    this.pointRef.set();
+                    return this.pointRef.Value();
+                };
+                this.pointRef = new PointRef(this);
                 this.style = ko.computed(function () {
                     return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
                 }, this);
@@ -224,7 +245,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
-                this.pointRef = new pointRef(this);
+                this.pointRef = new PointRef(this);
                 this.style = ko.computed(function () {
                     return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
                 }, this);
@@ -276,19 +297,16 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         }
 
         function NetworkDevices() {
-            var _this = this;
             NetworkInfo.call(this);
             // var props = ['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'MAC Address'];
         }
 
         function NetworkPoints() {
-            var _this = this;
             NetworkInfo.call(this);
             // var props = ['Point Type', 'Point Instance', 'Device Instance', 'Poll Period'];
         }
 
         function RouterTable() {
-            var _this = this;
             NetworkInfo.call(this);
             // var props = ['Network Number', 'Port Number', 'Change Count', 'MAC Address'];
         }
@@ -427,11 +445,11 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
     };
 
     ViewModel.prototype.printInfo = function () {
-        var $modal = $('.modal.networkInfo'),
-            $modalValue = $modal.find('.modalValue');
-        $devicesTable = $modal.find('.devicesTable');
-        $pointsTable = $modal.find('.pointsTable');
-        $routerTable = $modal.find('.routerTable');
+        var $modal = $('.modal.networkInfo');
+        var $modalValue = $modal.find('.modalValue');
+        var $devicesTable = $modal.find('.devicesTable');
+        var $pointsTable = $modal.find('.pointsTable');
+        var $routerTable = $modal.find('.routerTable');
         // requires jquery-migrate to function properly
         //$modalValue.printElement();
         /*$modalTime.hide('fast', function() {
