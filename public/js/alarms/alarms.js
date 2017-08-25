@@ -1,5 +1,5 @@
 /*jslint white: true */
-"use strict";
+'use strict';
 var dti = {
     $: function (fn) {
         $(function delayFn() {
@@ -117,7 +117,7 @@ var initKnockout = function () {
                             bgColor = data[0],
                             image = data[1];
                         $element.attr('src', image);
-                        if (bgColor != 'undefined') $bg.css('background-color', bgColor);
+                        if (bgColor != 'undefined') {$bg.css('background-color', bgColor);}
                     }
                 )
                 .fail(
@@ -135,7 +135,7 @@ var AlarmManager = function (conf) {
         sessionId = store.get('sessionId'),
         storeKey = 'alarms_',
         currentUser,
-        windowUpi = "alarm" + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
+        windowUpi = 'alarm' + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
 
         $elAlarms = $('.alarms'),
         $elnewAlarmTop = $('.newAlarmTop'),
@@ -144,12 +144,12 @@ var AlarmManager = function (conf) {
 
         $elContent = $('.content'),
         $elDetailContainer = $('.detailContainer'),
-        $alarmsBody = $("body"),
+        $alarmsBody = $('body'),
         $dateTimeFilterModal = $alarmsBody.find('#dateTimeFilterModal'),
-        $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
-        $timeFrom = $("#timeFrom"),
-        $dateTo = $dateTimeFilterModal.find("#dateTo"),
-        $timeTo = $("#timeTo"),
+        $dateFrom = $dateTimeFilterModal.find('#dateFrom'),
+        $timeFrom = $('#timeFrom'),
+        $dateTo = $dateTimeFilterModal.find('#dateTo'),
+        $timeTo = $('#timeTo'),
         detailWidth = $elDetailContainer.outerWidth(),
 
         horizontalMenu = {
@@ -179,7 +179,7 @@ var AlarmManager = function (conf) {
         computedThrottle = {
             rateLimit: {
                 timeout: COMPUTED_DELAY,
-                method: "notifyWhenChangesStop"
+                method: 'notifyWhenChangesStop'
             }
         },
         isReconnecting = false,
@@ -219,7 +219,7 @@ var AlarmManager = function (conf) {
 
         pointAttribsFilterObj = {
             path: [],
-            terms: "",
+            terms: '',
             pointTypes: []
         },
         numberPointTypes,
@@ -227,9 +227,9 @@ var AlarmManager = function (conf) {
         nSelectedAlarmsOnPage = 0,
 
         permissionLevels = {
-            CONTROL     : 2,
-            ACKNOWLEDGE : 4,
-            WRITE       : 8
+            CONTROL: 2,
+            ACKNOWLEDGE: 4,
+            WRITE: 8
         },
 
         _log = function () {
@@ -242,8 +242,8 @@ var AlarmManager = function (conf) {
         },
         deepClone = function (o) {
             // Return the value if it's not an object
-            if ((o === null) || (typeof(o) !== 'object'))
-                return o;
+            if ((o === null) || (typeof (o) !== 'object'))
+                {return o;}
 
             var temp = o.constructor();
 
@@ -270,33 +270,32 @@ var AlarmManager = function (conf) {
                 v2len;
 
             if (typeof v1 !== typeof v2)
-                return true;
+                {return true;}
             if (typeof v1 === 'object' && v1 !== null) {
                 v1len = v1.length;
                 v2len = v2.length;
 
                 if (v1len !== v2len)
-                    return true;
+                    {return true;}
                 for (j = 0; j < v1len; j++) {
                     if (v1[j] !== v2[j])
-                        return true;
+                        {return true;}
                 }
-            }
-            else {
+            }            else {
                 return v1 !== v2;
             }
             return false;
         },
         toggleAlarmDetail = function (contentStop, detailStop) {
             var tweenParam = {
-                    right: {
+                right: {
                         stop: contentStop,
                         time: 0,
                         duration: 0.2,
                         units: 'px',
                         effect: 'circIn'
                     }
-                };
+            };
 
             $elContent.tween(tweenParam);
             tweenParam.right.stop = detailStop;
@@ -327,10 +326,10 @@ var AlarmManager = function (conf) {
             // pointAttribs.terms = (val.length ? val : "");
             // pointAttribsFilterObj.terms = pointAttribs.terms;
 
-            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
+            dtiUtility.getConfig('Utility.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
-        filterCallback = function(filterObj) {
+        filterCallback = function (filterObj) {
             pointAttribsFilterObj.path = filterObj.path;
             pointAttribsFilterObj.terms = filterObj.terms;
 
@@ -427,9 +426,9 @@ var AlarmManager = function (conf) {
             // Our string will read 'UserA acknowledged this alarm on 8/8/8888 at 12:12:12' or
             // 'UserA acknowledged this alarm today/yesterday at 12:12:12'
 
-            str  = alarm.ackUser() + ' acknowledged this alarm ';
+                str = alarm.ackUser() + ' acknowledged this alarm ';
             if (!isNaN(parseInt(prettyDate[0], 10)))
-                str += 'on ';
+                {str += 'on ';}
             str += prettyDate + ' at ' + prettyTime;
 
             return str;
@@ -443,7 +442,7 @@ var AlarmManager = function (conf) {
             self.selectedRows.push(alarm);
         },
         deSelectAlarm = function (alarm) {
-            if (--nSelectedAlarmsOnPage < 0) nSelectedAlarmsOnPage = 0;
+            if (--nSelectedAlarmsOnPage < 0) {nSelectedAlarmsOnPage = 0;}
 
             alarm.isSelected(false);
             self.selectedRows.remove(function (row) {
@@ -593,7 +592,9 @@ var AlarmManager = function (conf) {
                     }
                 },
                 sortAlarmsByDate = function () {
-                    return alarms.sort(function (a, b) {return sortAsc ? (b.msgTime - a.msgTime) : (a.msgTime - b.msgTime);});
+                    return alarms.sort(function (a, b) {
+return sortAsc ? (b.msgTime - a.msgTime) : (a.msgTime - b.msgTime);
+});
                 };
 
             _log('Received ' + tableName + ' alarms ' + action + ' update', ko.toJS(data), new Date());
@@ -647,7 +648,7 @@ var AlarmManager = function (conf) {
                             }
                         } else {
                             // len is 1-based but the array is 0-based
-                            if (alarms[len-1].msgTime < alarms[len-2].msgTime) {
+                            if (alarms[len - 1].msgTime < alarms[len - 2].msgTime) {
                                 sortAlarms = true;
                             }
                         }
@@ -673,7 +674,7 @@ var AlarmManager = function (conf) {
                 // We're removing an unacknowledged alarm or an active alarm. The unacknowledged alarm is matched using
                 // the '_id' key, where an active alarm is matched using the 'upi' key (the server doesn't know the _id
                 // key when an active alarm returns to normal; it only knows the upi)
-                key = data._id ? '_id':'upi';
+                key = data._id ? '_id' : 'upi';
 
                 removedItem = alarmTable.list.remove(function (alarm) {
                     return alarm[key] === data[key];
@@ -684,7 +685,7 @@ var AlarmManager = function (conf) {
                 }
 
                 // If we're removing an unacknowledged alarm, we also have to update the ackStatus across all our alarm lists
-                if (tableName === "Unacknowledged") {
+                if (tableName === 'Unacknowledged') {
                     updateAckStatus(data, alarmTable.name);
                 }
             }
@@ -695,7 +696,7 @@ var AlarmManager = function (conf) {
                 updateNumberOfPages(alarmTable.count(), alarmTable);
 
                 // If we removed an alarm, see if we've emptied our buffer. If so and we have more alarms from the server
-                if ((modifier === -1) && (alarms.length < PAGE_SIZE) && (alarmTable.count() - ((view.pageNumber()-1)*PAGE_SIZE) >= PAGE_SIZE)) {
+                if ((modifier === -1) && (alarms.length < PAGE_SIZE) && (alarmTable.count() - ((view.pageNumber() - 1) * PAGE_SIZE) >= PAGE_SIZE)) {
                     // We don't want the scroll bar to move for this request (keep the user's view from shifting)
                     if (alarmTableInView) {
                         alarmTable.stickyScrollBar = true;
@@ -736,7 +737,7 @@ var AlarmManager = function (conf) {
 
             for (j = 0; j < jlen; j++) {
                 if (selectedRows[j]._id === alarm._id)
-                    return true;
+                    {return true;}
             }
             return false;
         },
@@ -788,9 +789,9 @@ var AlarmManager = function (conf) {
             }
 
             // Build concatenated name string & attach to alarm
-            alarm.Name = utilGetConfig("Utility.getPointName", alarm.path);
+            alarm.Name = utilGetConfig('Utility.getPointName', alarm.path);
 
-            alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
+            alarm.msgText = alarm.msgText.replace('%NAME', alarm.Name);  // server level sets %NAME place holder
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -903,10 +904,10 @@ var AlarmManager = function (conf) {
                 nPages = alarmTable.numberOfPages.peek();
 
             reqObj.itemsPerPage = PAGE_SIZE;
-            reqObj.numberItems  = BUFFER_SIZE;
+            reqObj.numberItems = BUFFER_SIZE;
 
-            reqObj.sort = sortAscending ? 'asc':'desc';
-            reqObj.currentPage = view.gotoPageOne ?  1 : view.pageNumber.peek();
+            reqObj.sort = sortAscending ? 'asc' : 'desc';
+            reqObj.currentPage = view.gotoPageOne ? 1 : view.pageNumber.peek();
 
             pointAttribs = filters.pointAttribs.options;
             for (key in pointAttribs) {
@@ -928,7 +929,7 @@ var AlarmManager = function (conf) {
                         reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
                     }
                     // If our value is not blank, add it to our filters
-                    else if (val !== "") {
+                    else if (val !== '') {
                         reqObj[key] = val;
                     }
                     // Do not add name segment to our request object if it is empty string
@@ -940,7 +941,7 @@ var AlarmManager = function (conf) {
             // If all options are enabled, do not add to request object (server assumes all if we send none)
             if (len < 4) {
                 reqObj.almClass = [];
-                for (i=0, len = alarmClassOptions.length; i < len; i++) {
+                for (i = 0, len = alarmClassOptions.length; i < len; i++) {
                     reqObj.almClass.push(alarmClassEnums[alarmClassOptions[i]]);
                 }
             }
@@ -949,7 +950,7 @@ var AlarmManager = function (conf) {
             // If all options are enabled, do not add to request object (server assumes all if we send none)
             if (len < 4) {
                 reqObj.msgCat = [];
-                for (i=0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     reqObj.msgCat.push(alarmCategoryEnums[alarmCatOptions[i]]);
                 }
             }
@@ -1023,7 +1024,7 @@ var AlarmManager = function (conf) {
                     opt = cat.options[i];
                     viewOptions = viewCat.options;
 
-                    if (category === "dateTime" || category === "pointAttribs") {
+                    if (category === 'dateTime' || category === 'pointAttribs') {
                         viewOptions[opt.text] = opt.value();
                     } else {
                         found = ((index = viewOptions.indexOf(opt.text)) > -1);
@@ -1137,7 +1138,7 @@ var AlarmManager = function (conf) {
                 this.category = cat;
 
                 // This function uses peek because it is indirectly called from a computed
-                this.buildOption = function(almClasses, msgCats) {
+                this.buildOption = function (almClasses, msgCats) {
                     if(this.active.peek()) {
                         if(obj.almClass !== undefined) {
                             almClasses.push(obj.almClass);
@@ -1309,7 +1310,7 @@ var AlarmManager = function (conf) {
 
                         opt.value(viewOptions[opt.text]);
 
-                        if (opt.text === "dateFrom" || opt.text === "dateTo") {
+                        if (opt.text === 'dateFrom' || opt.text === 'dateTo') {
                             fn = 'datepicker';
                             method = 'setDate';
                         } else {
@@ -1476,11 +1477,9 @@ var AlarmManager = function (conf) {
                 if (sortAsc) {
                     paused = true;
                 }
-            } else {
-                if (!sortAsc) {
+            } else if (!sortAsc) {
                     paused = true;
                 }
-            }
             view.paused(paused);
             storeViewFilters(view);
         },
@@ -1670,7 +1669,7 @@ var AlarmManager = function (conf) {
                     visible: true,
                     options: {
                         path: [],
-                        terms: "",
+                        terms: '',
                         pointTypes: []
                     }
                 }
@@ -1706,7 +1705,7 @@ var AlarmManager = function (conf) {
                     visible: true,
                     options: {
                         path: [],
-                        terms: "",
+                        terms: '',
                         pointTypes: []
                     }
                 }
@@ -1727,7 +1726,7 @@ var AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: [],
+                    options: []
                 },
                 dateTime: {
                     visible: false,
@@ -1742,7 +1741,7 @@ var AlarmManager = function (conf) {
                     visible: true,
                     options: {
                         path: [],
-                        terms: "",
+                        terms: '',
                         pointTypes: []
                     }
                 }
@@ -1891,7 +1890,7 @@ var AlarmManager = function (conf) {
     });
 
     //------ Misc. interactivity functions-------------------------
-    self.toHexColor = function(color) {
+    self.toHexColor = function (color) {
         return '#' + color;
     };
 
@@ -1909,7 +1908,7 @@ var AlarmManager = function (conf) {
 
         // Event type is either left-click ('click') or right-click ('contextmenu')
         // For a left-click, we simple toggle the option clicked
-        if (event.type === "click") {
+        if (event.type === 'click') {
             data.toggle();
         }
         // For a right-click, we toggle all the OTHER options
@@ -1930,8 +1929,7 @@ var AlarmManager = function (conf) {
             // If our option is inactive, we will always disable all the others
             if (!curVal) {
                 active = false;
-            }
-            else {
+            }            else {
                 // If the other alarm options are a mixture of enabled and disabled, we always disable them
                 // If the other alarm options are all off, we enable all of them
 
@@ -1978,7 +1976,7 @@ var AlarmManager = function (conf) {
             alarm,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n,
+            len = (n > 200) ? 200 : n,
             ackList = [];
 
         for (i = 0; i < len; i++) {
@@ -2016,7 +2014,7 @@ var AlarmManager = function (conf) {
 
         if (upi > 0) {
             alarmDetail.gettingData(true);
-            dtiUtility.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
+            dtiUtility.getConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
         }
     };
 
@@ -2029,13 +2027,13 @@ var AlarmManager = function (conf) {
         var srcClass = event.target.classList,
             ackStatus = data.ackStatus(),
             $target = $(event.target),
-            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ""),
-            $targetsCheckBoxField = (idForCheckBox !== "" ? $target.parent().find("#" + idForCheckBox) : null),
-            isCheckBox = $target.is(":checkbox") || ($targetsCheckBoxField ? $targetsCheckBoxField.is(":checkbox") : false);
+            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ''),
+            $targetsCheckBoxField = (idForCheckBox !== '' ? $target.parent().find('#' + idForCheckBox) : null),
+            isCheckBox = $target.is(':checkbox') || ($targetsCheckBoxField ? $targetsCheckBoxField.is(':checkbox') : false);
 
         if (srcClass && srcClass.length) {
-            if (srcClass.contains("msgText")) {
-                if (event.type === "click") {
+            if (srcClass.contains('msgText')) {
+                if (event.type === 'click') {
                     showPointReview(data);
                 } else {
                     // Right-click changes the name filter to match this point's name
@@ -2043,11 +2041,11 @@ var AlarmManager = function (conf) {
                 }
                 return;
             }
-            if (srcClass.contains("fa-sitemap")) {
+            if (srcClass.contains('fa-sitemap')) {
                 self.openDisplay(data);
                 return;
             }
-            if (srcClass.contains("tableButton")) {
+            if (srcClass.contains('tableButton')) {
                 return;
             }
         }
@@ -2063,9 +2061,9 @@ var AlarmManager = function (conf) {
             isBetween = function (val, end1, end2) {
                 if (end1 > end2) {
                     return (val < end1) && (val > end2);
-                } else {
+                } 
                     return (val < end2) && (val > end1);
-                }
+                
             },
             getIndexOf = function (_id) {
                 for (i = 0; i < len; i++) {
@@ -2160,8 +2158,7 @@ var AlarmManager = function (conf) {
                             updateSelection(!alarms[c].isSelected(), c, prev_sc);
                             // Add the alarms on the boundary side we're going to
                             updateSelection(!selected, c, sc);
-                        }
-                        else {
+                        }                        else {
                             updateSelection(!selected, sc, prev_sc);
                         }
                     }
@@ -2176,7 +2173,7 @@ var AlarmManager = function (conf) {
     self.selectAll = function (data, event) {
         var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n,
+            len = (n > 200) ? 200 : n,
             alarm,
             i;
 
@@ -2204,7 +2201,7 @@ var AlarmManager = function (conf) {
     self.selectNone = function () {
         var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n,
+            len = (n > 200) ? 200 : n,
             alarm,
             i;
 
@@ -2221,7 +2218,7 @@ var AlarmManager = function (conf) {
     self.selectUnacknowledged = function () {
         var alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n,
+            len = (n > 200) ? 200 : n,
             alarm,
             i;
 
@@ -2261,7 +2258,7 @@ var AlarmManager = function (conf) {
             return;
         }
 
-        dtiUtility.updateWindow('updateTitle', view.title + " Alarms");
+        dtiUtility.updateWindow('updateTitle', view.title + ' Alarms');
 
         // Update local storage with the name of the new view we're looking at
         storeViewFilters(view);
@@ -2304,7 +2301,7 @@ var AlarmManager = function (conf) {
         dtiUtility.onPointSelect(filterCallback);
     };
 
-    dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
+    dtiUtility.onPointFilterSelect(function handlePointFilterSelect(cfg) {
         filterCallback(cfg);
         self.applyNameFilter();
     });
@@ -2331,14 +2328,14 @@ var AlarmManager = function (conf) {
         alarms.refresh(true);
     };
 
-    self.resetFilters = function() {
+    self.resetFilters = function () {
         if (!self.dirty()) {
             return;
         }
 
         pointAttribsFilterObj = {
             path: [],
-            terms: "",
+            terms: '',
             pointTypes: []
         };
 
@@ -2396,12 +2393,12 @@ var AlarmManager = function (conf) {
         placeholderDateFilters.dateFrom.value = '';
         $fromDatePicker.set({select: null});
         placeholderDateFilters.timeFrom.value = '';
-        $fromTimePicker[0].value = "";  // revisit once materialize get updated
+        $fromTimePicker[0].value = '';  // revisit once materialize get updated
         // $fromTimePicker.clear();
         placeholderDateFilters.dateTo.value = '';
         $toDatePicker.set({select: null});
         placeholderDateFilters.timeTo.value = '';
-        $toTimePicker[0].value = "";  // revisit once materialize get updated
+        $toTimePicker[0].value = '';  // revisit once materialize get updated
         // $toTimePicker.clear();
     };
 
@@ -2481,7 +2478,7 @@ var AlarmManager = function (conf) {
         reqID: 0,
         // Init the alarm observable with Names so the view binding doesn't complain
         alarm: ko.observable({
-            terms: ""
+            terms: ''
         }),
         gettingData: ko.observable(false).extend({throttle: 100}),
         error: ko.observable(false),
@@ -2508,8 +2505,8 @@ var AlarmManager = function (conf) {
             _log('Requesting display dependencies', reqData, new Date());
 
             $.ajax({
-                type: "POST",
-                url: "/api/points/findAlarmDisplays/",
+                type: 'POST',
+                url: '/api/points/findAlarmDisplays/',
                 data: reqData
             })
             .done(function (rxData) {
@@ -2603,27 +2600,27 @@ var AlarmManager = function (conf) {
         },
         addAlarm: function (alarmTableName, n, timeStampAdjust) {
             if (alarmTables[alarmTableName] === undefined) {
-                _log("Alarms, " + alarmTableName + ", is undefined. Use 'Recent', 'Active', or 'Unacknowledged'.");
+                _log('Alarms, ' + alarmTableName + ', is undefined. Use \'Recent\', \'Active\', or \'Unacknowledged\'.');
                 return;
             }
 
             var alarmTable = alarmTables[alarmTableName],
                 data = {
                     newAlarm: {
-                        BackColor: "0000FF",
+                        BackColor: '0000FF',
                         path: [],
-                        terms: "",
+                        terms: '',
                         Security: [],
-                        TextColor: "FFFFFF",
-                        ackInfo: "",
+                        TextColor: 'FFFFFF',
+                        ackInfo: '',
                         ackStatus: ACK_NONE,
                         ackTime: 0,
                         ackUser: 0,
                         displayId: 0,
-                        alarmClass: "Urgent",
+                        alarmClass: 'Urgent',
                         almClass: 3,
                         msgCat: 0,
-                        msgTime: Math.floor((new Date().getTime()) / 1000) - (timeStampAdjust ? timeStampAdjust:0),
+                        msgTime: Math.floor((new Date().getTime()) / 1000) - (timeStampAdjust ? timeStampAdjust : 0),
                         msgType: 18
                     },
                     reqID: alarmTable.reqID
@@ -2634,19 +2631,19 @@ var AlarmManager = function (conf) {
             for (var i = 0; i < n; i++) {
                 data.newAlarm._id = Math.random().toString(36).slice(2);
                 data.newAlarm.upi = parseInt(Math.random().toString().slice(2), 10);
-                data.newAlarm.msgText = "Dummy Alarm Message " + i;
+                data.newAlarm.msgText = 'Dummy Alarm Message ' + i;
 
                 receiveAlarmUpdate(JSON.parse(JSON.stringify(data)), 'ADD', alarmTable);
             }
         },
         deleteAlarm: function (alarmTableName, n, deleteFromTop) {
             if (alarmTables[alarmTableName] === undefined) {
-                _log("Alarms, " + alarmTableName + ", is undefined. Use 'Recent', 'Active', or 'Unacknowledged'.");
+                _log('Alarms, ' + alarmTableName + ', is undefined. Use \'Recent\', \'Active\', or \'Unacknowledged\'.');
                 return;
             }
 
             var alarmTable = alarmTables[alarmTableName],
-                alarmList  = alarmTable.list(),
+                alarmList = alarmTable.list(),
                 data = {
                     reqID: alarmTable.reqID
                 };
@@ -2666,7 +2663,7 @@ var AlarmManager = function (conf) {
                     } else if (len > PAGE_SIZE) {
                         alarm = alarmList[PAGE_SIZE - 1];
                     } else {
-                        alarm = alarmList[len-1];
+                        alarm = alarmList[len - 1];
                     }
 
                     if (alarmTableName === 'Active') {
@@ -2674,7 +2671,7 @@ var AlarmManager = function (conf) {
                     } else {
                         data._id = alarm._id;
                         data.ackStatus = 2;
-                        data.ackUser = "NO_USER";
+                        data.ackUser = 'NO_USER';
                         data.ackTime = Math.floor(new Date().getTime() / 1000);
                     }
 
@@ -2699,13 +2696,13 @@ var AlarmManager = function (conf) {
     });
 
     dtiUtility.getUser(setCurrentUser);
-    dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    dtiUtility.getConfig('Utility.pointTypes.getAllowedPointTypes', [], setAvailablePointTypes);
 
 
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
     // depends on the rest of the viewmodel to be setup correctly before they are executed.
-    self.alarms = ko.computed(function() {
+    self.alarms = ko.computed(function () {
         return alarmTables[self.currentView().alarmTableName()];
     }, self);
 
@@ -2713,7 +2710,7 @@ var AlarmManager = function (conf) {
         return self.alarms().list.slice(0, 200);
     }, self);
 
-    self.dirty = ko.computed(function() {
+    self.dirty = ko.computed(function () {
         var category,
             cat,
             viewCat,
@@ -2739,7 +2736,7 @@ var AlarmManager = function (conf) {
                             return true;
                         }
                     } else {
-                        found = (viewOptions.indexOf(opt.text) > -1) ? true:false;
+                        found = (viewOptions.indexOf(opt.text) > -1) ? true : false;
                         if (opt.isActive() ^ found) {
                             return true;
                         }
@@ -2751,11 +2748,11 @@ var AlarmManager = function (conf) {
         return false;
     }, self).extend(computedThrottle);
 
-    self.allSelected = ko.computed(function() {
+    self.allSelected = ko.computed(function () {
         var i,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n;
+            len = (n > 200) ? 200 : n;
 
         if (len === 0) {
             return false;
@@ -2791,13 +2788,13 @@ var AlarmManager = function (conf) {
         return listHasAckRequired;
     }, self).extend(computedThrottle);
     */
-    self.anyAckSelected = ko.computed(function() {
+    self.anyAckSelected = ko.computed(function () {
         var i,
             alarm,
             ackStatus,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n;
+            len = (n > 200) ? 200 : n;
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
@@ -2810,12 +2807,12 @@ var AlarmManager = function (conf) {
         return false;
     }, self).extend(computedThrottle);
 
-    self.ackInProgress = ko.computed(function() {
+    self.ackInProgress = ko.computed(function () {
         var i,
             alarm,
             alarms = self.alarms().list(),
             n = alarms.length,
-            len = (n > 200) ? 200:n;
+            len = (n > 200) ? 200 : n;
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
@@ -2831,7 +2828,7 @@ var AlarmManager = function (conf) {
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
     // applyView routine (called when views change)
     self.nameFilterPaused = ko.observable(true);
-    self.nameFilter = ko.computed(function() {
+    self.nameFilter = ko.computed(function () {
         var paused = self.nameFilterPaused.peek(),
             options = (self.filters ? self.filters.pointAttribs.options : []),
             len = options.length,
@@ -2867,7 +2864,7 @@ var AlarmManager = function (conf) {
     }, self);
 
     self.dateTimeFilterPaused = ko.observable(true);
-    self.dateFilter = ko.computed(function() {
+    self.dateFilter = ko.computed(function () {
         var paused = self.dateTimeFilterPaused.peek(),
             options = (self.filters ? self.filters.dateTime.options : []),
             len = options.length,
@@ -2936,7 +2933,7 @@ var AlarmManager = function (conf) {
         applyFilter(withoutDelay);  // should save current filter as well
     };
 
-    self.getRecentAlarms = ko.computed(function() {
+    self.getRecentAlarms = ko.computed(function () {
         var alarmTable = alarmTables.Recent,
             refresh = alarmTable.refresh();
 
@@ -2945,7 +2942,7 @@ var AlarmManager = function (conf) {
         }
     }, self);
 
-    self.getActiveAlarms = ko.computed(function() {
+    self.getActiveAlarms = ko.computed(function () {
         var alarmTable = alarmTables.Active,
             refresh = alarmTable.refresh();
 
@@ -2954,7 +2951,7 @@ var AlarmManager = function (conf) {
         }
     }, self);
 
-    self.getUnacknowledgedAlarms = ko.computed(function() {
+    self.getUnacknowledgedAlarms = ko.computed(function () {
         var alarmTable = alarmTables.Unacknowledged,
             refresh = alarmTable.refresh();
 
@@ -2963,24 +2960,24 @@ var AlarmManager = function (conf) {
         }
     }, self);
 
-    self.printAlarms = function() {
+    self.printAlarms = function () {
         $('.alarms').css('overflow', 'visible');
-        $('.alarms').printArea({mode:'iframe'});
+        $('.alarms').printArea({mode: 'iframe'});
         $('.alarms').css('overflow', 'auto');
     };
 
     // setTimeout(function () {
-        self.init();
+    self.init();
     // }, 10);
 };
 
-function initPage (manager) {
+function initPage(manager) {
     let dateId = '#timeDateFilters',
         $pointFilterModal = $('#pointFilterModal'),
         $dateTimeFilterModal = $('#dateTimeFilterModal'),
-        $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
+        $dateFrom = $dateTimeFilterModal.find('#dateFrom'),
         // $timeFrom = $dateTimeFilterModal.find("#timeFrom").pickatime('picker'),
-        $dateTo = $dateTimeFilterModal.find("#dateTo"),
+        $dateTo = $dateTimeFilterModal.find('#dateTo'),
         // $timeTo = $dateTimeFilterModal.find("#timeTo").pickatime('picker'),
         $dateFilterIcon = $(dateId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
@@ -3014,10 +3011,10 @@ function initPage (manager) {
 
     // Initialize the table header select column. This way the user can select any
     // part of this header cell to activate the dropdown.
-    $(".header > .colSelect").click(function(e){
+    $('.header > .colSelect').click(function (e) {
         e.stopPropagation();
         if (e.target.tagName !== 'INPUT') {
-            $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
+            $('.header > .colSelect .dropdown-toggle').dropdown('toggle');
         }
     });
 
@@ -3114,7 +3111,7 @@ function initPage (manager) {
     });
 }
 
-function applyBindings () {
+function applyBindings() {
     // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). AlarmManager requires this opener method to be established
     // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
     if (window.top === undefined) {

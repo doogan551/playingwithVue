@@ -43,7 +43,7 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function (ko, bannerJS, vie
         this.allowRemove = (params.hasOwnProperty('allowRemove')) ? params.allowRemove : true;
         this.getPointTypeName = function (pointType) {
             if (typeof pointType === 'number') {
-                return this.utility.config.Utility.pointTypes.getPointTypeNameFromEnum(pointType);
+                return this.utility.config.Utility.getPointTypeNameFromEnum(pointType);
             }
             return pointType;
         };
@@ -190,7 +190,6 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function (ko, bannerJS, vie
                             self.refPointType = self.getPointTypeName(parseInt(self.refPoint.PointType(), 10));
                             point.PointName(name);
                             point.Value(id);
-                            self.refPointType = pointType;
                             self.url(endPoint.review.url);
                             self.target(endPoint.review.target);
 

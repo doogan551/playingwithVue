@@ -234,13 +234,11 @@ html
                     table.pointList.striped.fixedHeader
                         thead
                             tr.white-text.blue-grey
-                                th Display
-                                th Type
-                                th Path
+                                th Point Type
+                                th Name
                         tbody
                             // ko foreach: results
                             tr
-                                td(data-bind="text: display")
                                 td(data-bind="text: pointType")
                                 td(data-bind="text: path")
                             // /ko
@@ -434,6 +432,9 @@ html
                     .treeRow
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Old Name:
+                        .val(data-bind="text: currNodeName")
                     // /ko
 
     script#treeViewTemplate(type='text/html')
