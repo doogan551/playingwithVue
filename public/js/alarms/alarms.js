@@ -1,5 +1,5 @@
 /*jslint white: true */
-'use strict';
+"use strict";
 var dti = {
     $: function (fn) {
         $(function delayFn() {
@@ -244,9 +244,9 @@ let AlarmManager = function (conf) {
         nSelectedAlarmsOnPage = 0,
 
         permissionLevels = {
-            CONTROL: 2,
-            ACKNOWLEDGE: 4,
-            WRITE: 8
+            CONTROL     : 2,
+            ACKNOWLEDGE : 4,
+            WRITE       : 8
         },
 
         _log = function () {
@@ -364,7 +364,7 @@ let AlarmManager = function (conf) {
             utilGetConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
-        filterCallback = function (filterObj) {
+        filterCallback = function(filterObj) {
             pointAttribsFilterObj.path = filterObj.path;
             pointAttribsFilterObj.terms = filterObj.terms;
 
@@ -687,7 +687,7 @@ let AlarmManager = function (conf) {
                             }
                         } else {
                             // len is 1-based but the array is 0-based
-                            if (alarms[len - 1].msgTime < alarms[len - 2].msgTime) {
+                            if (alarms[len-1].msgTime < alarms[len-2].msgTime) {
                                 sortAlarms = true;
                             }
                         }
@@ -713,7 +713,7 @@ let AlarmManager = function (conf) {
                 // We're removing an unacknowledged alarm or an active alarm. The unacknowledged alarm is matched using
                 // the '_id' key, where an active alarm is matched using the 'upi' key (the server doesn't know the _id
                 // key when an active alarm returns to normal; it only knows the upi)
-                key = data._id ? '_id' : 'upi';
+                key = data._id ? '_id':'upi';
 
                 removedItem = alarmTable.list.remove(function (alarm) {
                     return alarm[key] === data[key];
@@ -735,7 +735,7 @@ let AlarmManager = function (conf) {
                 updateNumberOfPages(alarmTable.count(), alarmTable);
 
                 // If we removed an alarm, see if we've emptied our buffer. If so and we have more alarms from the server
-                if ((modifier === -1) && (alarms.length < PAGE_SIZE) && (alarmTable.count() - ((view.pageNumber() - 1) * PAGE_SIZE) >= PAGE_SIZE)) {
+                if ((modifier === -1) && (alarms.length < PAGE_SIZE) && (alarmTable.count() - ((view.pageNumber()-1)*PAGE_SIZE) >= PAGE_SIZE)) {
                     // We don't want the scroll bar to move for this request (keep the user's view from shifting)
                     if (alarmTableInView) {
                         alarmTable.stickyScrollBar = true;
@@ -1756,7 +1756,7 @@ let AlarmManager = function (conf) {
                 },
                 other: {
                     visible: false,
-                    options: []
+                    options: [],
                 },
                 dateTime: {
                     visible: false,
@@ -1921,7 +1921,7 @@ let AlarmManager = function (conf) {
     });
 
     //------ Misc. interactivity functions-------------------------
-    self.toHexColor = function (color) {
+    self.toHexColor = function(color) {
         return '#' + color;
     };
 
@@ -2058,13 +2058,13 @@ let AlarmManager = function (conf) {
         let srcClass = event.target.classList,
             ackStatus = data.ackStatus(),
             $target = $(event.target),
-            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ''),
-            $targetsCheckBoxField = (idForCheckBox !== '' ? $target.parent().find('#' + idForCheckBox) : null),
-            isCheckBox = $target.is(':checkbox') || ($targetsCheckBoxField ? $targetsCheckBoxField.is(':checkbox') : false);
+            idForCheckBox = ($target[0].attributes.for ? $target[0].attributes.for.nodeValue : ""),
+            $targetsCheckBoxField = (idForCheckBox !== "" ? $target.parent().find("#" + idForCheckBox) : null),
+            isCheckBox = $target.is(":checkbox") || ($targetsCheckBoxField ? $targetsCheckBoxField.is(":checkbox") : false);
 
         if (srcClass && srcClass.length) {
-            if (srcClass.contains('msgText')) {
-                if (event.type === 'click') {
+            if (srcClass.contains("msgText")) {
+                if (event.type === "click") {
                     showPointReview(data);
                 } else {
                     // Right-click changes the name filter to match this point's name
@@ -2072,11 +2072,11 @@ let AlarmManager = function (conf) {
                 }
                 return;
             }
-            if (srcClass.contains('fa-sitemap')) {
+            if (srcClass.contains("fa-sitemap")) {
                 self.openDisplay(data);
                 return;
             }
-            if (srcClass.contains('tableButton')) {
+            if (srcClass.contains("tableButton")) {
                 return;
             }
         }
@@ -2289,7 +2289,7 @@ let AlarmManager = function (conf) {
             return;
         }
 
-        dtiUtility.updateWindow('updateTitle', view.title + ' Alarms');
+        dtiUtility.updateWindow('updateTitle', view.title + " Alarms");
 
         // Update local storage with the name of the new view we're looking at
         storeViewFilters(view);
@@ -2359,7 +2359,7 @@ let AlarmManager = function (conf) {
         alarms.refresh(true);
     };
 
-    self.resetFilters = function () {
+    self.resetFilters = function() {
         if (!self.dirty()) {
             return;
         }
@@ -2424,12 +2424,12 @@ let AlarmManager = function (conf) {
         placeholderDateFilters.dateFrom.value = '';
         $fromDatePicker.set({select: null});
         placeholderDateFilters.timeFrom.value = '';
-        $fromTimePicker[0].value = '';  // revisit once materialize get updated
+        $fromTimePicker[0].value = "";  // revisit once materialize get updated
         // $fromTimePicker.clear();
         placeholderDateFilters.dateTo.value = '';
         $toDatePicker.set({select: null});
         placeholderDateFilters.timeTo.value = '';
-        $toTimePicker[0].value = '';  // revisit once materialize get updated
+        $toTimePicker[0].value = "";  // revisit once materialize get updated
         // $toTimePicker.clear();
     };
 
@@ -2654,7 +2654,7 @@ let AlarmManager = function (conf) {
                         alarmClass: "Urgent",
                         almClass: 3,
                         msgCat: 0,
-                        msgTime: Math.floor((new Date().getTime()) / 1000) - (timeStampAdjust ? timeStampAdjust : 0),
+                        msgTime: Math.floor((new Date().getTime()) / 1000) - (timeStampAdjust ? timeStampAdjust:0),
                         msgType: 18
                     },
                     reqID: alarmTable.reqID
@@ -2697,7 +2697,7 @@ let AlarmManager = function (conf) {
                     } else if (len > PAGE_SIZE) {
                         alarm = alarmList[PAGE_SIZE - 1];
                     } else {
-                        alarm = alarmList[len - 1];
+                        alarm = alarmList[len-1];
                     }
 
                     if (alarmTableName === 'Active') {
@@ -2736,7 +2736,7 @@ let AlarmManager = function (conf) {
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
     // depends on the rest of the viewmodel to be setup correctly before they are executed.
-    self.alarms = ko.computed(function () {
+    self.alarms = ko.computed(function() {
         return alarmTables[self.currentView().alarmTableName()];
     }, self);
 
@@ -3010,11 +3010,11 @@ let AlarmManager = function (conf) {
     };
 
     // setTimeout(function () {
-    self.init();
+        self.init();
     // }, 10);
 };
 
-function initPage(manager) {
+function initPage (manager) {
     let dateId = '#timeDateFilters',
         $pointFilterModal = $('#pointFilterModal'),
         $dateTimeFilterModal = $('#dateTimeFilterModal'),
