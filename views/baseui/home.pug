@@ -432,6 +432,9 @@ html
                     .treeRow
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Old Name:
+                        .val(data-bind="text: currNodeName")
                     // /ko
 
     script#treeViewTemplate(type='text/html')

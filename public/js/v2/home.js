@@ -4254,6 +4254,7 @@ var dti = {
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
                 selfBindings.currNodePath(node.bindings.path());
+                selfBindings.currNodeName(node.bindings.Name());
             },
             openNode: (data) => {
                 // data = {
@@ -4707,7 +4708,8 @@ var dti = {
                 currNodeDisplay: '',
                 currNodeType: '',
                 currNodeSubType: '',
-                currNodePath: ''
+                currNodePath: '',
+                currNodeName: ''
             }), {
                 treeConfig: dti.navigatorv2.tree.config
             });
@@ -6403,6 +6405,7 @@ var dti = {
                         nodeType: '',
                         nodeSubType: '',
                         path: [],
+                        Name: '',
                         refNode: 0,
 
                         children: [],
