@@ -14,7 +14,7 @@ var Config = (function (obj) {
     } else if (typeof $ === 'function') {
         $.ajax({
             url: '/js/lib/enumsTemplates.json',
-            async: false,   //  http://stackoverflow.com/questions/27736186/jquery-has-deprecated-synchronous-xmlhttprequest
+            async: false, //  http://stackoverflow.com/questions/27736186/jquery-has-deprecated-synchronous-xmlhttprequest
             success: function (data) {
                 enumsTemplatesJson = data;
             }
@@ -460,12 +460,6 @@ var Config = (function (obj) {
                             };
                     }
                 },
-                _getPointTypeEnumFromId = function (pointId) {
-                    return pointId >> 22;
-                },
-                _getPointTypeNameFromId = function (pointId) {
-                    return _getPointTypeNameFromEnum(_getPointTypeEnumFromId(pointId));
-                },
                 _getPointTypeNameFromEnum = function (enumeration) {
                     return obj.revEnums['Point Types'][enumeration];
                 },
@@ -574,8 +568,6 @@ var Config = (function (obj) {
                 };
 
             return {
-                getPointTypeEnumFromId: _getPointTypeEnumFromId,
-                getPointTypeNameFromId: _getPointTypeNameFromId,
                 getPointTypeNameFromEnum: _getPointTypeNameFromEnum,
                 getAllowedPointTypes: _getAllowedPointTypes,
                 getAllPointTypes: _getAllPointTypes,
@@ -943,7 +935,7 @@ var Config = (function (obj) {
             let result = '';
 
             if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
-                result = pointPath.join(obj.Enums['Point Name Separator'].Value);      // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+                result = pointPath.join(obj.Enums['Point Name Separator'].Value); // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
             }
 
             return result;
@@ -1040,6 +1032,21 @@ var Config = (function (obj) {
                 data.point._cfgRequired = true;
                 obj.EditChanges[fxName](data);
             }
+        },
+
+        getPointTypeEnumFromId: function (pointId) {
+            return pointId >> 22;
+        },
+
+        getPointTypeNameFromId: function (pointId) {
+            return obj.Utility.pointTypes.getPointTypeNameFromEnum(obj.Utility.getPointTypeEnumFromId(pointId));
+        },
+
+        getInstanceFromId: function (pointId, pointType) {
+            if (!!pointType) {
+                return pointId - (8 << 22);
+            }
+            return Math.pow(2, 22) - 1 & pointId;
         }
     };
 
