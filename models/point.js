@@ -1047,10 +1047,10 @@ const Point = class Point extends Common {
     getPointRefsSmall(data, cb) {
         let searchCriteria = {};
         let filterProps = {
-            Name: 1,
             Value: 1,
             'Point Type': 1,
-            'Point Refs': 1
+            'Point Refs': 1,
+            path: 1
         };
 
         let upi = data.upi;
@@ -1085,14 +1085,14 @@ const Point = class Point extends Common {
                 return cb(null, null, result);
             }
             let filterProps = {
-                Name: 1,
                 Value: 1,
                 'Point Type': 1,
-                'Point Refs': 1
+                'Point Refs': 1,
+                path: 1
             };
             let criteria = {
                 query: {
-                    'Instance.Value': parseInt(data.upi, 10),
+                    'Instance.Value': Config.Utility.getInstanceFromId(data.upi),
                     'Point Type.Value': 'Remote Unit',
                     'Point Refs': {
                         $elemMatch: {
@@ -1120,53 +1120,21 @@ const Point = class Point extends Common {
     findAlarmDisplays(data, cb) {
         const security = new Security();
         let criteria = {};
-        let alarmDisplayPointCriteria = {};
         let firstSearch = {};
         let thirdSearch = {};
         let displays = [];
+
         let upi = parseInt(data.upi, 10);
+
+        firstSearch._id = upi;
         let secondSearch = {
             'Point Type.Value': 'Display'
         };
-        let doSecondSearch = (targetPoint, callback) => {
-            secondSearch['Point Refs.Value'] = targetPoint._id;
-            criteria = {
-                query: secondSearch,
-                fields: {
-                    Name: 1,
-                    path: 1
-                },
-                data: data
-            };
-            this.getWithSecurity(criteria, (err, references) => {
-                async.eachSeries(references, (ref, acb) => {
-                    ref.Name = Config.Utility.getPointName(ref.path);
-                    displays.push(ref);
-                    acb(null);
-                }, callback);
-            });
-        };
-        let getAlarmDisplayPoint = (alarmDisplayPointCriteria) => {
-
-            this.getOne(alarmDisplayPointCriteria, (err, alarmDisplayPoint) => {
-                if (err) {
-                    cb(err);
-                } else {
-                    displays.push({
-                        _id: alarmDisplayPoint._id,
-                        Name: Config.Utility.getPointName(alarmDisplayPoint.path)
-                    });
-                }
-            });
-        };
-
-        firstSearch._id = upi;
 
         criteria = {
             query: firstSearch,
             fields: {
                 Name: 1,
-                path: 1,
                 'Point Refs': 1
             }
         };
@@ -1180,23 +1148,14 @@ const Point = class Point extends Common {
                 for (let i = 0; i < targetPoint['Point Refs'].length; i++) {
                     if (targetPoint['Point Refs'][i].PropertyName === 'Alarm Display Point') {
                         if (targetPoint['Point Refs'][i].Value !== 0) {
-                            alarmDisplayPointCriteria.query = {
+                            displays.push({
                                 _id: targetPoint['Point Refs'][i].Value,
-                                'Point Type.Value': 'Display'
-                            };
-
-                            alarmDisplayPointCriteria.fields = {
-                                Name: 1,
-                                path: 1,
-                                _id: 1
-                            };
-
-                            getAlarmDisplayPoint(alarmDisplayPointCriteria);
+                                Name: targetPoint['Point Refs'][i].PointName
+                            });
                         }
                         break;
                     }
                 }
-
                 thirdSearch._id = (displays.length > 0) ? displays[0]._id : 0;
                 if (thirdSearch._id !== 0) {
                     criteria = {
@@ -1228,6 +1187,23 @@ const Point = class Point extends Common {
                 return cb('Point not found.');
             }
         });
+
+        let doSecondSearch = (targetPoint, callback) => {
+            secondSearch['Point Refs.Value'] = targetPoint._id;
+            criteria = {
+                query: secondSearch,
+                fields: {
+                    Name: 1
+                },
+                data: data
+            };
+            this.getWithSecurity(criteria, (err, references) => {
+                async.eachSeries(references, (ref, acb) => {
+                    displays.push(ref);
+                    acb(null);
+                }, callback);
+            });
+        };
     }
 
     getControls(data, cb) {

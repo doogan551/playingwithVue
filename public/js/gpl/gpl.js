@@ -1,5 +1,5 @@
 /* eslint-disable linebreak-style */
-"use strict";
+'use strict';
 var gpl = {
     texts: {},
     blocks: {},
@@ -57,7 +57,7 @@ var gpl = {
     point: window.gplData.point,
     references: window.gplData.references,
     upi: window.gplData.upi,
-    currentUser: "",
+    currentUser: '',
     modalIsOpen: false,
     DELETEKEY: 46,
     ESCAPEKEY: 27,
@@ -155,8 +155,7 @@ var gpl = {
                     ret = false;
                 } else if (prop.toLowerCase() === 'true') {
                     ret = true;
-                } else {
-                    if (!onlyTrueFalse) {
+                } else if (!onlyTrueFalse) {
                         if (prop.indexOf('.') > -1) {
                             tmp = parseFloat(prop);
                             if (!isNaN(tmp)) {
@@ -169,7 +168,6 @@ var gpl = {
                             }
                         }
                     }
-                }
                 if (ret !== null) {
                     obj[keys[c]] = ret;
                 }
@@ -225,7 +223,7 @@ var gpl = {
                 }
             },
             parameters = pointAttribsFilter ? pointAttribsFilter : {
-                terms: "",
+                terms: '',
                 path: gpl.point.path,
                 pointType: pointType,
                 restrictPointTypes: false,
@@ -338,8 +336,7 @@ var gpl = {
             var map;
             if (data.err) {
                 gpl.showMessage('error getting point data');
-            } else {
-                if (data.message) {
+            } else if (data.message) {
                     gpl.log('AddReferencePoint error- upi:', upi, '--', data.message);
                 } else {
                     map = gpl.pointUpiMap[upi] = {
@@ -350,7 +347,6 @@ var gpl = {
                     gpl.pointData[upi] = data;
                     callback(map, data);
                 }
-            }
         });
     },
     onRender: function (fn) {
@@ -404,11 +400,9 @@ var gpl = {
                     idx++;
                     if (idx < list.length) {
                         doNext();
-                    } else {
-                        if (cb) {
+                    } else if (cb) {
                             cb();
                         }
-                    }
                 }, delay);
             };
 
@@ -472,12 +466,12 @@ var gpl = {
 
                 return answer;
             };
-        for (i = 1; i < gpl.point["Point Refs"].length; i++) {
-            pointRef = gpl.point["Point Refs"][i];
+        for (i = 1; i < gpl.point['Point Refs'].length; i++) {
+            pointRef = gpl.point['Point Refs'][i];
             if (!!pointRef) {
-                if (!pointRefUsed(pointRef, "GPLBlock")) {
-                    console.log("remove item at index = " + i + "  pointRef.PointName = " + pointRef.PointName);
-                    gpl.point["Point Refs"].splice(i--, 1);
+                if (!pointRefUsed(pointRef, 'GPLBlock')) {
+                    console.log('remove item at index = ' + i + '  pointRef.PointName = ' + pointRef.PointName);
+                    gpl.point['Point Refs'].splice(i--, 1);
                 }
             }
         }
@@ -485,7 +479,7 @@ var gpl = {
     getPointRefByAppindex: function (pointRefIndex, referenceType) {
         var answer;
         if (pointRefIndex > -1) {
-            answer = gpl.point["Point Refs"].filter(function (pointRef) {
+            answer = gpl.point['Point Refs'].filter(function (pointRef) {
                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
             });
 
@@ -496,7 +490,7 @@ var gpl = {
     getPointRefByUpi: function (upi, referenceType) {
         var answer;
         if (!!upi && !isNaN(upi)) {
-            answer = gpl.point["Point Refs"].filter(function (pointRef) {
+            answer = gpl.point['Point Refs'].filter(function (pointRef) {
                 return pointRef.Value === upi && pointRef.PropertyName === referenceType;
             });
             answer = (!!answer && answer.length > 0 ? answer[0] : null);
@@ -514,7 +508,7 @@ var gpl = {
         }
     },
     getDynamicPointRef: function (dynamic) {
-        return gpl.getPointRef(dynamic, "GPLDynamic", 440);
+        return gpl.getPointRef(dynamic, 'GPLDynamic', 440);
     },
     setBlockPointRef: function (block) {
         var pRef = gpl.getBlockPointRef(block);
@@ -531,7 +525,7 @@ var gpl = {
         }
     },
     getBlockPointRef: function (block) {
-        return gpl.getPointRef(block, "GPLBlock", 439);
+        return gpl.getPointRef(block, 'GPLBlock', 439);
     },
     getPointRef: function (gplObject, referenceType, referenceEnum) {
         var getPointReference = function (gplobject, refType) {
@@ -587,16 +581,16 @@ var gpl = {
     },
     makePointRef: function (referencedPoint, devInst, referenceType, referenceEnum) {
         var pointRef = {
-            "PropertyName": referenceType,
-            "PropertyEnum": referenceEnum,
-            "Value": referencedPoint.upi,
-            "AppIndex": gpl.getNextAppIndex(),
-            "isDisplayable": true,
-            "isReadOnly": true,
-            "PointName": referencedPoint.name,
-            "PointInst": referencedPoint.upi,
-            "DevInst": devInst,   // TODO   what about external references?
-            "PointType": gpl.pointTypes[referencedPoint.pointType].enum
+            'PropertyName': referenceType,
+            'PropertyEnum': referenceEnum,
+            'Value': referencedPoint.upi,
+            'AppIndex': gpl.getNextAppIndex(),
+            'isDisplayable': true,
+            'isReadOnly': true,
+            'PointName': referencedPoint.name,
+            'PointInst': referencedPoint.upi,
+            'DevInst': devInst,   // TODO   what about external references?
+            'PointType': gpl.pointTypes[referencedPoint.pointType].enum
         };
 
         gpl.point['Point Refs'].push(pointRef);
@@ -824,11 +818,9 @@ var gpl = {
                             if (!skipErrorPrint) {
                                 gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
                             }
-                        } else {
-                            if (isPointValid(pointType1, allowedPoints2)) {
+                        } else if (isPointValid(pointType1, allowedPoints2)) {
                                 isValid = true;
                             }
-                        }
                     }
                 }
             }
@@ -1120,7 +1112,6 @@ fabric.ConstantPointShape.fromObject = function (object) {
 };
 
 
-
 /* ------------ Blocks ------------------------ */
 
 gpl.Anchor = fabric.util.createClass(fabric.Circle, {
@@ -1286,11 +1277,9 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                 if (gpl.isEdit) {
                     gpl.fire('editedblock', otherBlock);
                 }
-            } else {
-                if (!otherBlockFound && adjustPointRefs) {
+            } else if (!otherBlockFound && adjustPointRefs) {
                     attachedBlock.setPointRef(self.anchorType, attachedBlock.upi, attachedBlock.pointName);
                 }
-            }
         }
     },
 
@@ -1337,7 +1326,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.attachFn(this, line);
 
         // if (gpl.rendered === true) {
-            this.adjustRelatedBlocks();
+        this.adjustRelatedBlocks();
         // }
     },
 
@@ -1569,7 +1558,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         name = otherBlock.name;
                     }
 
-                    if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output' )) {
+                    if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output')) {
                         self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
                     }
                     if (otherBlock.blockType === 'Constant') {
@@ -1699,8 +1688,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         if (!upi) {
                             gpl.emptyFn();
                             // gpl.log('no upi');
-                        } else {
-                            if (block.upi === anchor.myBlock().upi && block.valueType === anchor.inputType) {
+                        } else if (block.upi === anchor.myBlock().upi && block.valueType === anchor.inputType) {
                                 console.log(' - - - - - anchor.inputType = ' + anchor.inputType + "  anchor.myBlock().upi = " + anchor.myBlock().upi);
                             } else if (gpl.pointData[upi]) {
                                 // if(newData && data) {
@@ -1730,7 +1718,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             } else {
                                 gpl.log('no upi data found for', upi, block);
                             }
-                        }
                         // } else {
                         //     gpl.log(self.gplId, self.type, 'data vars error:', newData, data);
                         // }
@@ -1978,7 +1965,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             if (!!valueOption) {
                 this._pointData[anchor.constantProp].eValue = val;
                 this._pointData[anchor.constantProp].Value = valueOption;
-
             } else {
                 this._pointData[anchor.constantProp].Value = val;
             }
@@ -2080,7 +2066,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             this.setLabel(this._pointData.path[this._pointData.path.length]);
         }
 
-        dtiUtility.getConfig("Utility.getPointName", [this._pointData.path], setBlockPointName);
+        dtiUtility.getConfig('Utility.getPointName', [this._pointData.path], setBlockPointName);
 
         this.mapPointRefs();
     },
@@ -2189,13 +2175,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             ret = false;
                         }
                     }
-                } else {
-                    if (anchor.required === true) {
+                } else if (anchor.required === true) {
                         ret = false;
                         gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
                         gpl.log('no lines associated', anchor.anchorType, 'on', self.label + ' ' + self.type);
                     }
-                }
 
                 valid = ret;
             };
@@ -2696,7 +2680,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             currIconName = self.icon.split('.')[0],
             key,
-            answer = "";
+            answer = '';
 
         if (self.iconMatrix) {
             for (key in self.iconMatrix) {
@@ -2724,8 +2708,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.setIconName) {
             self.setIconName();
-        } else {
-            if (calculationType) {
+        } else if (calculationType) {
                 self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
 
                 if (self.iconPrefix) {
@@ -2735,7 +2718,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 self.icon = self.config.iconType + self.iconExtension;
                 self.iconType = self.config.iconType;
             }
-        }
 
         self.setIcon();
 
@@ -3316,17 +3298,17 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
         anchorType: 'Input Point 1',
         required: true,
         takesConstant: false
-    },{
+    }, {
         anchorType: 'Input Point 2',
         required: true,
         takesConstant: false
-    },{
+    }, {
         anchorType: 'Input Point 3',
         takesConstant: false
-    },{
+    }, {
         anchorType: 'Input Point 4',
         takesConstant: false
-    },{
+    }, {
         anchorType: 'Input Point 5',
         takesConstant: false
     }],
@@ -3870,13 +3852,11 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
             cfg.fontSize = parseInt(fontConfig.size, 10) || this.defaultFontSize;
             cfg.textDecoration = fontConfig.underline ? 'underline' : '';
             cfg.fontFamily = fontConfig.name || 'Arial';
-        } else {
-            if (config._v2 !== true) {
+        } else if (config._v2 !== true) {
                 cfg.fontWeight = this.defaultWeight;
                 cfg.fill = this.defaultFill;
                 cfg.fontSize = this.defaultFontSize;
             }
-        }
 
         // cfg.lockUniScaling = true;
         cfg.originX = 'left';
@@ -3935,7 +3915,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
         var maxWidth = this.width,
             words = text.split(' '),
             lines = [],
-            line = "",
+            line = '',
             tmp;
 
         if (ctx.measureText(text).width < maxWidth) {
@@ -3965,10 +3945,10 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
                 }
 
                 if (Math.ceil(ctx.measureText(line + words[0]).width) < maxWidth) {
-                    line += words.shift() + " ";
+                    line += words.shift() + ' ';
                 } else {
                     lines.push(line);
-                    line = "";
+                    line = '';
                 }
                 if (words.length === 0) {
                     lines.push(line.substring(0, line.length - 1));
@@ -4060,7 +4040,6 @@ fabric.Textbox.__setObjectScaleOverridden = fabric.Canvas.prototype._setObjectSc
  * a Textbox doesn't scale text, it only changes width and makes text wrap automatically.
  */
 fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip) {
-
     var t = transform.target,
         setObjectScaleOverridden = fabric.Textbox.__setObjectScaleOverridden,
         w;
@@ -4235,7 +4214,7 @@ gpl.ActionButton = function (config) {
 
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                dtiUtility.getConfig("Utility.getPointName", [_local.pointData.path], setLocalPointName);
+                dtiUtility.getConfig('Utility.getPointName', [_local.pointData.path], setLocalPointName);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -4245,8 +4224,8 @@ gpl.ActionButton = function (config) {
                         Security: response.Security,
                         Name: _local.pointName,
                         path: _local.pointData.path,
-                        "Point Type": {
-                            eValue: response["Point Type"].eValue
+                        'Point Type': {
+                            eValue: response['Point Type'].eValue
                         }
                     },
                     newValue: {
@@ -4316,15 +4295,13 @@ gpl.ActionButton = function (config) {
         click = function () {
             if (_local.type === 'control') {
                 sendCommand();
-            } else {
-                if (_local.pointData && _local.pointData.message !== 'No Point Found') {
+            } else if (_local.pointData && _local.pointData.message !== 'No Point Found') {
                     if (_local.type === 'report') {
                         gpl.openModal(gpl.$actionButtonReportParameterModal);
                     } else {
                         openWindow();
                     }
                 }
-            }
         },
         openReport = function (config) {  // TODO openwindow() URL needs addressing
             var reportType = config.reportType,
@@ -4380,7 +4357,7 @@ gpl.ActionButton = function (config) {
         },
         getExportData = function () {
             var pointRef,
-                offset = gpl.isEdit?gpl.editModeOffset:0,
+                offset = gpl.isEdit ? gpl.editModeOffset:0,
                 ret = {
                     left: _local.left - offset,
                     top: _local.top,
@@ -4700,13 +4677,11 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
                 gpl.manager.bringToFront(slSelf.moveTarget);
                 gpl.manager.bringToFront(slSelf.startAnchor);
                 target = slSelf.moveTarget;
-            } else {
-                if (target) {
+            } else if (target) {
                     target.clearHover();
                     slSelf.startAnchor.clearHover();
                     slSelf.setColor();
                 }
-            }
 
             if (horiz) {
                 solidLine.set({
@@ -4982,8 +4957,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p1.y - bufferWidth
                         };
                     }
-                } else {
-                    if (dx > 0) { //next point is to the right
+                } else if (dx > 0) { //next point is to the right
                         tmpPoint = {
                             x: p1.x + bufferWidth,
                             y: p1.y
@@ -4994,7 +4968,6 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p1.y
                         };
                     }
-                }
                 newPoints.push(tmpPoint);
 
                 if (eVert) {
@@ -5009,8 +4982,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p2.y + bufferWidth
                         };
                     }
-                } else {
-                    if (dx > 0) { //prev point was to the left
+                } else if (dx > 0) { //prev point was to the left
                         tmpPoint = {
                             x: p2.x - bufferWidth,
                             y: p2.y
@@ -5021,7 +4993,6 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p2.y
                         };
                     }
-                }
                 newPoints.push(tmpPoint);
 
                 calcDifferences(newPoints[0], newPoints[1]);
@@ -5492,9 +5463,9 @@ gpl.Toolbar = function (manager) {
                 newConfig.targetCanvas = 'main';
                 newConfig.bypassSave = false;
                 newConfig.left = newShape.left - gpl.manager.panLeft;
-                newConfig.left = newConfig.left / gpl.scaleValue;
+                newConfig.left /= gpl.scaleValue;
                 newConfig.top = newShape.top - gpl.manager.panTop;
-                newConfig.top = newConfig.top / gpl.scaleValue;
+                newConfig.top /= gpl.scaleValue;
                 newConfig.calcType = newShape.calcType;
                 newConfig.labelVisible = gpl.json.Show_Label;
                 delete newConfig.inactive;
@@ -5701,11 +5672,11 @@ gpl.Toolbar = function (manager) {
         canvas: canvas,
         event: 'object:selected',
         handler: function (event) {
-                var tgt = event.target;
-                if (tgt.isToolbarProxy) { // if(tgt.master !== true && tgt.isClone !== true) {
+            var tgt = event.target;
+            if (tgt.isToolbarProxy) { // if(tgt.master !== true && tgt.isClone !== true) {
                     handleClick(tgt);
                 }
-            }
+        }
             // }, {
             //     event: 'mouse:up',
             //     handler: function(event) {
@@ -6087,7 +6058,7 @@ gpl.BlockManager = function (manager) {
         },
 
         forEachBlock: function (cb) {
-            gpl.forEach(bmSelf.blocks, function eachBlockFn (block) {
+            gpl.forEach(bmSelf.blocks, function eachBlockFn(block) {
                 cb(block);
             });
         },
@@ -6118,7 +6089,7 @@ gpl.BlockManager = function (manager) {
                 };
 
             for (i = 0; i < pointRefs.length; i++) {  // index 0 hold ref to "Device Point"
-                if (!!pointRefs[i] && pointRefs[i].PropertyName === "GPLBlock") {
+                if (!!pointRefs[i] && pointRefs[i].PropertyName === 'GPLBlock') {
                     if (!pointRefUsed(pointRefs[i])) {
                         pointRefs.splice(i--, 1);
                     }
@@ -6141,10 +6112,10 @@ gpl.BlockManager = function (manager) {
 
         getSaveObject: function (isCancel) {
             var saveObj = {
-                    adds: [],
-                    updates: [],
-                    deletes: []
-                };
+                adds: [],
+                updates: [],
+                deletes: []
+            };
 
             gpl.forEach(bmSelf.newBlocks, function (block) {
                 var data;
@@ -6232,19 +6203,19 @@ gpl.BlockManager = function (manager) {
             gpl.openPointSelector(function (selectedPoint) {
                 var pRef,
                     upi = selectedPoint._id,
-                    name = window.getConfig("Utility.getPointName", [selectedPoint.path]),
-                    pointType = selectedPoint["Point Type"].Value,
-                    devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
+                    name = window.getConfig('Utility.getPointName', [selectedPoint.path]),
+                    pointType = selectedPoint['Point Type'].Value,
+                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.deviceId);
 
                 gpl.pointData[selectedPoint._id] = selectedPoint;
                 bmSelf.bindings.editPointName(name);
-                bmSelf.bindings.editPointLabel(selectedPoint.path[selectedPoint.path.length-1]);
+                bmSelf.bindings.editPointLabel(selectedPoint.path[selectedPoint.path.length - 1]);
                 bmSelf.editBlockUpi = upi;
                 bmSelf.editBlockPointType = pointType;
-                pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
+                pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, 'GPLBlock', 439);
                 bmSelf.editBlock.pointRefIndex = pRef.AppIndex;
                 gpl.log(upi, name);
-            }, "Sequence", property);
+            }, 'Sequence', property);
         },
 
         openPrecisionEditor: function (block) {
@@ -6440,7 +6411,7 @@ gpl.BlockManager = function (manager) {
                 cleanup = function (ref, idx) {
                     pointData[ref._id] = ref;
                     return {
-                        Name: window.getConfig("Utility.getPointName", [ref.path]),
+                        Name: window.getConfig('Utility.getPointName', [ref.path]),
                         pointType: ref['Point Type'].Value,
                         valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
@@ -6793,20 +6764,20 @@ gpl.BlockManager = function (manager) {
                 item.canvas.remove(item);
             }
             // if (!item.canvas) { //double adds nonpoint shapes
-                canvas.add(item);
-                item.on('moving', handleBlockMove);
+            canvas.add(item);
+            item.on('moving', handleBlockMove);
             // }
         }
 
         if (!block.isToolbar) {
             bmSelf.updateBlockReferences(block);
             if (block.upi && isNaN(block.upi) && !!gpl.pointChanges) { // a point that was not persisted
-                unpersistedPoint = gpl.pointChanges.updates.filter( function (updatedPoint) {
+                unpersistedPoint = gpl.pointChanges.updates.filter(function (updatedPoint) {
                     return updatedPoint.newPoint.id === block.upi;
                 });
 
                 if (unpersistedPoint.length > 0) {
-                    console.log("    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - " + block.upi);
+                    console.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
                     block.setPointData(unpersistedPoint[0], true);
                 }
             } else if (block.upi && !isNaN(block.upi)) {
@@ -6874,7 +6845,7 @@ gpl.BlockManager = function (manager) {
 
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
-                    dtiUtility.getConfig("Utility.getPointName", [results.newPoint.path], adjustPointUpiMapPointName);
+                    dtiUtility.getConfig('Utility.getPointName', [results.newPoint.path], adjustPointUpiMapPointName);
                     gpl.pointUpiMap[upi] = {
                         pointType: results.newPoint['Point Type'].Value,
                         valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
@@ -6890,7 +6861,7 @@ gpl.BlockManager = function (manager) {
                 gpl.openWindow({
                     pointType: pointType,
                     upi: upi,
-                    title: (!!pointData && !!pointData.path ? window.getConfig("Utility.getPointName", [pointData.path]) : undefined),
+                    title: (!!pointData && !!pointData.path ? window.getConfig('Utility.getPointName', [pointData.path]) : undefined),
                     options: {
                         isGplEdit: gpl.isEdit,
                         callback: saveCallback,
@@ -7147,7 +7118,6 @@ gpl.Manager = function () {
                 for (ccc = 0; ccc < handles.length; ccc++) {
                     handles[ccc].x = +handles[ccc].x + offset;
                 }
-
             }
         },
         offsetBlockPositions = function (reset, seq) {
@@ -7534,7 +7504,7 @@ gpl.Manager = function () {
                     managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
-                dtiUtility.getConfig("Utility.getPointName", [gpl.point.path], setDocumentTitle);
+                dtiUtility.getConfig('Utility.getPointName', [gpl.point.path], setDocumentTitle);
 
                 initPointNamePrefix();
 
@@ -7595,7 +7565,6 @@ gpl.Manager = function () {
         //         sequence: gpl.json
         //     }
         // });
-
     };
 
     managerSelf.addToBindings = function (props) {
@@ -7823,7 +7792,6 @@ gpl.Manager = function () {
             left: managerSelf.panLeft,
             top: managerSelf.panTop
         });
-
     };
 
     managerSelf.addNewPoint = function (block) {
@@ -7950,7 +7918,6 @@ gpl.Manager = function () {
                 gpl.showMessage(gpl.validationMessage);
                 managerSelf.resumeRender();
             }
-
         } else {
             gpl.showMessage(gpl.validationMessage);
         }
@@ -7959,10 +7926,10 @@ gpl.Manager = function () {
     managerSelf.doSaveForLater = function () {
         var currentChanges,
             continueEditingCb = function () {
-            gpl.hideMessage();
-            gpl.unblockUI();
-            gpl.openModal(gpl.$saveForLaterConfirmModal);
-        };
+                gpl.hideMessage();
+                gpl.unblockUI();
+                gpl.openModal(gpl.$saveForLaterConfirmModal);
+            };
 
         gpl.blockUI();
         gpl.waitForSocketMessage(continueEditingCb);
@@ -8080,14 +8047,12 @@ gpl.Manager = function () {
                             found = true;
                         }
                     }
-                } else {
-                    if (left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft <= (obj.left + obj.width) && top - managerSelf.panTop >= obj.top && top - managerSelf.panTop <= (obj.top + obj.height)) {
+                } else if (left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft <= (obj.left + obj.width) && top - managerSelf.panTop >= obj.top && top - managerSelf.panTop <= (obj.top + obj.height)) {
                         ret.push(obj);
                         if (!multiple) {
                             found = true;
                         }
                     }
-                }
             }
         }
 
@@ -8146,7 +8111,7 @@ gpl.Manager = function () {
 
     managerSelf.renderAll = function () {
         var renderTime = new Date().getTime(),
-            doRender = function() {
+            doRender = function () {
                 managerSelf.queuingRender = false;
                 managerSelf.lastRender = new Date().getTime();
                 gpl.renderCount = gpl.renderCount || 0;
@@ -8163,8 +8128,7 @@ gpl.Manager = function () {
             if (renderTime - managerSelf.lastRender >= managerSelf.renderStep) {
                 // gpl.log('render immediate');
                 doRender();
-            } else {
-                if (!managerSelf.queuingRender) {
+            } else if (!managerSelf.queuingRender) {
                     // gpl.log('queueing render');
                     managerSelf.queuingRender = true;
                     setTimeout(function() {
@@ -8173,7 +8137,6 @@ gpl.Manager = function () {
                 // } else {
                 //     gpl.log('render already queued');
                 }
-            }
         }
         // var now = new Date().getTime();
 
@@ -8323,7 +8286,7 @@ gpl.Manager = function () {
     // };
 
     managerSelf.doAddNewButton = function (config) {
-        var offset = gpl.isEdit?gpl.editModeOffset:0,
+        var offset = gpl.isEdit ? gpl.editModeOffset:0,
             actionButton;
 
         if (config.caption !== undefined) {
@@ -8522,8 +8485,8 @@ gpl.Manager = function () {
                 formatSequencePoint('Update Interval', val);
             },
             setNames = () => {
-                dtiUtility.getConfig("Utility.getPointName", [gpl.point.path], managerSelf.bindings.sequenceName);
-                dtiUtility.getConfig("Utility.getPointName", [gpl.devicePoint.path], managerSelf.bindings.deviceName);
+                dtiUtility.getConfig('Utility.getPointName', [gpl.point.path], managerSelf.bindings.sequenceName);
+                dtiUtility.getConfig('Utility.getPointName', [gpl.devicePoint.path], managerSelf.bindings.deviceName);
             },
             handlers = {
                 deviceDescription: function (val) {
@@ -8542,7 +8505,7 @@ gpl.Manager = function () {
         managerSelf.addToBindings({
             isEdit: gpl.isEdit,
             hasEdits: ko.observable(false),
-            hasEditVersion:  ko.observable(false),
+            hasEditVersion: ko.observable(false),
             loaded: managerSelf.sequenceLoaded,
             editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
 
@@ -8632,12 +8595,12 @@ gpl.Manager = function () {
             selectActionButtonPoint: function () {
                 gpl.openPointSelector(function (selectedPoint) {
                     let upi = selectedPoint._id,
-                        pointName = window.getConfig("Utility.getPointName", [selectedPoint.path]),
-                        pointType = window.getConfig('Utility.pointTypes.getPointTypeNameFromId', upi);
+                        pointName = window.getConfig('Utility.getPointName', [selectedPoint.path]),
+                        pointType = window.getConfig('Utility.getPointTypeNameFromId', upi);
                     managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
-                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
+                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.deviceId, 'GPLDynamic', 440);
                 });
             },
 
@@ -8709,14 +8672,14 @@ gpl.Manager = function () {
                             blockDeviceID;
 
                         if (!!dataPoint) {
-                            idx = block._pointRefs["Control Point"];
-                            blockDeviceID = dataPoint["Point Refs"][0].Value;
+                            idx = block._pointRefs['Control Point'];
+                            blockDeviceID = dataPoint['Point Refs'][0].Value;
                             if (blockDeviceID === 0) {
-                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                                dataPoint['Point Refs'][0] = gpl.point['Point Refs'][0];
                             }
 
-                            if (idx !== undefined && dataPoint["Point Refs"][idx].DevInst === 0) {
-                                dataPoint["Point Refs"][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
+                            if (idx !== undefined && dataPoint['Point Refs'][idx].DevInst === 0) {
+                                dataPoint['Point Refs'][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
                             }
                         }
                     };
@@ -8758,7 +8721,7 @@ gpl.Manager = function () {
                 if (gpl.isEdit) {
                     delete gpl._newDevicePoint;
                     gpl.openModal(gpl.$sequencePropertiesModal);
-                    gpl.$sequencePropertiesModal.find("select").material_select();
+                    gpl.$sequencePropertiesModal.find('select').material_select();
                 }
             },
             selectDevicePoint: function () {
@@ -8778,7 +8741,7 @@ gpl.Manager = function () {
                         gpl.log('Error setting device point:', tmpData.err);
                         gpl.showMessage('Error setting device point: ' + tmpData.err);
                     } else {
-                        dtiUtility.getConfig("Utility.getPointName", [selectedPoint.path], managerSelf.bindings.deviceName);
+                        dtiUtility.getConfig('Utility.getPointName', [selectedPoint.path], managerSelf.bindings.deviceName);
                         managerSelf.bindings.deviceUpi(upi);
 
                         gpl.log('Set device point Successfully');
@@ -8789,9 +8752,9 @@ gpl.Manager = function () {
 
             addNewButton: function () {
                 let config = {
-                        left: managerSelf.contextX,
-                        top: managerSelf.contextY
-                    };
+                    left: managerSelf.contextX,
+                    top: managerSelf.contextY
+                };
 
                 managerSelf.doAddNewButton(config);
             },
@@ -8961,7 +8924,7 @@ gpl.Manager = function () {
             },
             update: function (element, valueAccessor) {
                 var value = ko.utils.unwrapObservable(valueAccessor());
-                $(element).datepicker("setDate", value);
+                $(element).datepicker('setDate', value);
             }
         };
 
@@ -9461,8 +9424,7 @@ gpl.Manager = function () {
                         } else {
                             managerSelf.clearTooltip();
                         }
-                    } else {
-                        if (gpl.isEdit) {
+                    } else if (gpl.isEdit) {
                             obj = managerSelf.toolbarCanvas.findTarget(event);
                             gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
                             if (gplObj) {
@@ -9474,7 +9436,6 @@ gpl.Manager = function () {
                         } else {
                             managerSelf.clearTooltip();
                         }
-                    }
                 }
             }
         // }, {
@@ -9519,11 +9480,9 @@ gpl.Manager = function () {
                         if (button) {
                             managerSelf.bindings.editActionButton();
                         }
-                    } else {
-                        if (button) {
+                    } else if (button) {
                             button.click();
                         }
-                    }
                 }
             }
         }, {
@@ -9645,7 +9604,7 @@ gpl.Manager = function () {
             event: 'resize',
             type: 'DOM',
             window: true,
-            handler: function() {
+            handler: function () {
                 managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
             }
         }, {
@@ -9724,7 +9683,6 @@ gpl.Manager = function () {
 
         managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, managerSelf.backgroundColor);
         managerSelf.bgColorPicker.render();
-
     };
 
     init();
