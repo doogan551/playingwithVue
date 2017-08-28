@@ -1462,12 +1462,16 @@ let AlarmManager = function (conf) {
             window.setTimeout(reformatPrintedDates, tom - now);
         },
         showPointReview = function (data) {
-            let upi = parseInt(data.upi, 10);
+            let upi = parseInt(data.upi, 10),
+                openTheWindow = (pointType) => {
+                    dtiUtility.openWindow({
+                        upi: upi,
+                        pointType: pointType
+                    });
+                };
+
             if (upi > 0) {
-                dtiUtility.openWindow({
-                    upi: upi,
-                    pointType: data.PointType
-                });
+                utilGetConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
             }
         },
         findView = function (key, keyValue) {
