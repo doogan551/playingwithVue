@@ -5063,6 +5063,7 @@ var dti = {
                     searchString: '',
                     results: [],
                     busy: false,
+                    focus: false,
                     pointTypesShown: false,
                     pointTypes: this.pointTypes
                 });
@@ -5131,15 +5132,19 @@ var dti = {
             getFlatPointTypes(list) {
                 let ret = [];
 
-                dti.forEachArray(list, (type) => {
-                    if (typeof type === 'object') {
-                        ret.push(type.key);
-                    } else if (typeof type === 'string') {
-                        ret.push(type);
-                    } else {
-                        dti.log('incorrect point type');
-                    }
-                });
+                if (list) {
+                    dti.forEachArray(list, (type) => {
+                        if (typeof type === 'object') {
+                            ret.push(type.key);
+                        } else if (typeof type === 'string') {
+                            ret.push(type);
+                        } else {
+                            dti.log('incorrect point type');
+                        }
+                    });
+                } else {
+
+                }
 
                 return ret;
             }
@@ -5234,9 +5239,13 @@ var dti = {
             }
 
             setPointTypes(config, save) {
+                let pointTypes = null;
+                let showAll = true;
                 //if not object, just point types
-                let pointTypes = config.pointTypes || config;
-                let showAll = config.restrictPointTypes === false;
+                if (config) {
+                    pointTypes = config.pointTypes || config;
+                    showAll = config.restrictPointTypes === false;
+                }
 
                 if (save) {
                     this.showAll = showAll;
@@ -5245,7 +5254,7 @@ var dti = {
                 }
 
                 dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                    if (pointTypes.indexOf(type.name()) !== -1) {
+                    if (!pointTypes || pointTypes.indexOf(type.name()) !== -1) {
                         type.visible(true);
                         type.selected(true);
                     } else {
@@ -5256,26 +5265,38 @@ var dti = {
             }
 
             show(config) {
+                let pointTypes = this.getFlatPointTypes([]);
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
                     this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
                     this.bindings.searchString(config.terms || '');
+
+                    this.setPointTypes(config, true);
                 } else {
                     this.callback = this.defaultCallback;
-                    this.pointTypes = [config];
                     this.bindings.searchString('');
+
+                    if (config && typeof config === 'string') {
+                        this.pointTypes = [config];
+                    } else {
+                        this.pointTypes = null;
+                    }
+
+                    this.setPointTypes(this.pointTypes, true);
                 }
 
-                this.setPointTypes(config, true);
+                
 
                 this.search();
 
                 this.$modal.openModal({
                     ready: () => {
                         this.modalOpen = true;
+                        this.bindings.focus(true);
                     },
                     complete: () => {
                         this.modalOpen = false;
+                        this.bindings.focus(false);
                         this.callback = this.defaultCallback;
                     }
                 });
@@ -5638,6 +5659,9 @@ var dti = {
             var cfg = ko.toJS(obj.value);
 
             return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
+        },
+        showPointSelector: () => {
+            dti.pointSelector.show();
         },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();

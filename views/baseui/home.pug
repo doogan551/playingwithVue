@@ -35,6 +35,10 @@ html
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
                                     i.material-icons filter_none
 
+                            li.taskbarItem
+                                a#showPointSelector.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', data-position='bottom', data-tooltip='Point Selector', data-delay='10', data-bind="click: showPointSelector")
+                                    i.material-icons list
+
                             // ko foreach: windowGroups
                             span(data-bind="template: { name: 'taskbarButtonTemplate', data: $data }")
                             // /ko
@@ -216,7 +220,7 @@ html
                     .content-header
                         .pointSearch.input-field
                             i.material-icons.prefix search
-                            input#pointSearchInput(type='search', data-bind="textInput: searchString")
+                            input#pointSearchInput(type='search', data-bind="textInput: searchString, hasFocus: focus ")
                         .pointTypeButton
                             a.btn-flat.waves-effect.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList, css: { active: pointTypesShown}")
                                 span(data-bind="text: pointTypeText")
