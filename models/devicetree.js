@@ -34,7 +34,7 @@ const DeviceTree = class DeviceTree {
                 'Point Type.Value': 'Device'
             },
             fields: {
-                Name: 1,
+                path: 1,
                 'Model Type.eValue': 1,
                 'Device Status.Value': 1,
                 'Uplink Port.eValue': 1,
@@ -161,7 +161,7 @@ const DeviceTree = class DeviceTree {
         let isAdded = false;
         let deviceBranch = {
             upi: device._id,
-            text: device.Name,
+            path: device.path,
             status: device['Device Status'].Value,
             protocol: device['Uplink Port'].eValue,
             networkSegment: device['Network Segment'].Value,
