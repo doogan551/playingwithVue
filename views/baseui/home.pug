@@ -216,7 +216,7 @@ html
                 .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick}]")
                     .fetching
                         .progress
-                            .indeterminate                    
+                            .indeterminate
                     .content-header
                         .pointSearch.input-field
                             i.material-icons.prefix search
@@ -640,7 +640,7 @@ html
             .actionList
                 .blue-grey-text Actions
                 // ko if: standalone() === false
-                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
                     i.material-icons folder_open
                     span Open
                 a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
