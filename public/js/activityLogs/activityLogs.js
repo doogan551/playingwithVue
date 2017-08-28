@@ -39,6 +39,7 @@ var ActivityLogsManager = function (conf) {
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
         $activitylogBody = $(".activitylogBody"),
+        $activitylogContainer = $activitylogBody.find("#activitylogContainer"),
         $activityLogs = $activitylogBody.find(".activityLogs"),
         $userFilterModal = $activitylogBody.find("#userFilterModal"),
         $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
@@ -691,10 +692,22 @@ var ActivityLogsManager = function (conf) {
         return true;
     };
     self.printLogs = function () {
+        let hostAndProtocol = window.location.protocol + "//" + window.location.host,
+            $pages,
+            pagesDisplayCss;
+
+        $activitylogContainer.prepend('<link rel="stylesheet" href="' + hostAndProtocol + '/css/activityLogs/printActivityLogs.css" type="text/css" />');
         $activityLogs.css('overflow', 'visible');
-        $activityLogs.printArea({
+        $pages = $activitylogContainer.find(".pages");
+        pagesDisplayCss = $pages.css('display');
+        $pages.css('display', 'none');
+
+        $activitylogContainer.printArea({
             mode: 'iframe'
         });
+
+        $activitylogContainer.find("link[rel=stylesheet]").remove();
+        $pages.css('display', pagesDisplayCss);
         $activityLogs.css('overflow', 'auto');
     };
     self.editUserFilter = () => {

@@ -227,13 +227,8 @@ input.date, input.time {
 }
 
 .colTime {
-    width: 140px;
-    min-width: 140px;
-}
-
-.colTime > i {
-    top: 3px;
-    right: 5px;
+    width: 150px;
+    min-width: 150px;
 }
 
 .header .colTime {
@@ -275,6 +270,10 @@ input.date, input.time {
     background-color: #CCC;
 }
 
+.activityLogs tbody td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
 .bodyMask {
     top: 0;
     bottom: 0;
