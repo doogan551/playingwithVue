@@ -88,9 +88,11 @@ let initKnockout = function () {
             $element.pickadate(datePickerDefaultOptions);
 
             $element.pickadate('picker').on({
-                set: function (thingToSet) {
+                set: function (datePicker) {
                     if (this.get('select')) {
-                        viewModel.value = moment(this.get('select').pick).format("MM/DD/YYYY");
+                        let dateInTextFormat = moment(datePicker.select).format("MM/DD/YYYY");
+                        valueAccessor(dateInTextFormat);
+                        viewModel.value = dateInTextFormat;
                     }
                 }
             });
@@ -2428,12 +2430,12 @@ let AlarmManager = function (conf) {
         placeholderDateFilters.dateFrom.value = '';
         $fromDatePicker.set({select: null});
         placeholderDateFilters.timeFrom.value = '';
-        $fromTimePicker[0].value = '';  // revisit once materialize get updated
+        $fromTimePicker[0].value = '';  // TODO   revisit once materialize get updated
         // $fromTimePicker.clear();
         placeholderDateFilters.dateTo.value = '';
         $toDatePicker.set({select: null});
         placeholderDateFilters.timeTo.value = '';
-        $toTimePicker[0].value = '';  // revisit once materialize get updated
+        $toTimePicker[0].value = '';  // TODO   revisit once materialize get updated
         // $toTimePicker.clear();
     };
 
@@ -2958,6 +2960,7 @@ let AlarmManager = function (conf) {
         //    applyFilter(withoutDelay);
         //}
     });
+
     self.applyDateTimeFilter = () => {
         let options = self.filters.dateTime.options,
             placeholderDateFilters = self.filtersPlaceHolder.dateTime,

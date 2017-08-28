@@ -7,8 +7,9 @@ html
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
-        link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
+        //link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.css')
+        link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/activityLogs/activityLogs.css')
     body.activitylogBody
         .content
@@ -32,7 +33,7 @@ html
                     .filterIcon.fa.fa-refresh.fa-spin(data-bind="visible: activityLogs().gettingData()", title="Getting activities from server...")
 
                 // PRINT BUTTON
-                .btn.right.waves-effect.waves-light.blue-grey(type="button" data-bind="click:printLogs") Print
+                .btn.btn-small.right.waves-effect.waves-light.blue-grey(type="button" data-bind="click:printLogs") Print
 
             #activitylogContainer
                 .header
@@ -106,7 +107,7 @@ html
         script(type='text/javascript', src="/js/lib/socket.io.js")
         script(type='text/javascript', src='/js/lib/store2.min.js')
         script(type='text/javascript', src='/js/lib/date.js')
-        script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
+        //script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery.printarea.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
         script(type='text/javascript', src='/js/lib/moment.js')

@@ -9,13 +9,13 @@
                 span.startDatePicker
                     .input-field(data-bind="with: dateFrom")
                         label(for="dateFrom") Date
-                        input#dateFrom.datepicker(data-bind="select: value, dtiAlarmsMaterializePickadate", type="text")
+                        input#dateFrom.datepicker(data-bind="dtiAlarmsMaterializePickadate: value", type="text")
             .col.s1.blankSpace
             .col.s4
                 span.startTimePicker
                     .input-field(data-bind="with: timeFrom")
                         label(for="timeFrom") Time
-                        input#timeFrom.timepicker(data-bind="value: value, dtiAlarmsMaterializePickatime", type='text')
+                        input#timeFrom.timepicker(data-bind="dtiAlarmsMaterializePickatime: value", type='text')
         .row
             .col.s2.toLabel
                 span To:
@@ -23,13 +23,13 @@
                 span.endDatePicker
                     .input-field(data-bind="with: dateTo")
                         label(for="dateTo") Date
-                        input#dateTo.datepicker(data-bind="select: value, dtiAlarmsMaterializePickadate", type="text")
+                        input#dateTo.datepicker(data-bind="dtiAlarmsMaterializePickadate: value", type="text")
             .col.s1.blankSpace
             .col.s4
                 span.endTimePicker
                     .input-field(data-bind="with: timeTo")
                         label(for="timeTo") Time
-                        input#timeTo.timepicker(data-bind="value: value, dtiAlarmsMaterializePickatime", type='text')
+                        input#timeTo.timepicker(data-bind="dtiAlarmsMaterializePickatime: value", type='text')
     .modal-footer
         .btn.waves-effect.waves-light.blue-grey(data-bind="click: $root.clearDateTimeFilter") Clear
         .btn.waves-effect.waves-light.blue-grey(data-bind="click: $root.applyDateTimeFilter") OK
