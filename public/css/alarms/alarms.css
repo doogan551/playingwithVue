@@ -1,7 +1,7 @@
 /* Global page styles */
 body {
     color: #333;
-    font-family: "Segoe UI", Segoe, Tahoma, Geneva, sans-serif;
+    font-family: "Roboto", sans-serif;
     font-size: 13px;
     background-color: #ccc;
     margin: 0;
@@ -142,7 +142,7 @@ td {
 
 .titleBar .ack {
     position: relative;
-    top: -4px;
+    top: 0px;
     padding: 0 5px;
 
     border: 2px solid #666;
@@ -224,7 +224,7 @@ td {
 }
 
 .filterContainer:not(:last-child) {
-    margin-right: 20px;
+    margin-right: 15px;
 }
 
 .filterContainer.withBorder {
