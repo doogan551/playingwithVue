@@ -361,7 +361,7 @@ let AlarmManager = function (conf) {
             // pointAttribs.terms = (val.length ? val : "");
             // pointAttribsFilterObj.terms = pointAttribs.terms;
 
-            utilGetConfig('Utility.pointTypes.getPointTypeNameFromId', upi, setFilter);
+            utilGetConfig('Utility.getPointTypeNameFromId', upi, setFilter);
         },
         //------ Point selector routines
         filterCallback = function (filterObj) {
@@ -2045,7 +2045,7 @@ let AlarmManager = function (conf) {
 
         if (upi > 0) {
             alarmDetail.gettingData(true);
-            utilGetConfig('Utility.pointTypes.getPointTypeNameFromId', upi, openTheWindow);
+            utilGetConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
         }
     };
 
