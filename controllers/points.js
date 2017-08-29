@@ -240,21 +240,6 @@ router.post('/getcontrols', function (req, res) {
     });
 });
 // POSTMAN
-router.post('/addPointToHierarchy', function (req, res) {
-    const point = new Point();
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
-
-    point.addPointToHierarchy(data, function (err, point) {
-        if (err) {
-            return utils.sendResponse(res, {
-                err: err
-            });
-        }
-        return utils.sendResponse(res, point);
-    });
-});
-// POSTMAN
 router.post('/getFilteredPoints', function (req, res) {
     const point = new Point();
     let data = _.merge(req.params, req.body);
