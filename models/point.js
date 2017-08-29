@@ -614,7 +614,8 @@ const Point = class Point extends Common {
                         Device: (device !== null) ? {
                             Name: device.path,
                             _id: device._id,
-                            _pStatus: device._pStatus
+                            _pStatus: device._pStatus,
+                            path: device.path
                         } : null
                     };
                     addAppIndex(obj, pointRef);
@@ -674,11 +675,11 @@ const Point = class Point extends Common {
                                         this.getOne(criteria, (err, schedule) => {
                                             returnObj.Dependencies.push({
                                                 _id: schedule._id,
-                                                Name: dependency.Name,
+                                                Name: schedule.Name,
                                                 Property: depPointRef.PropertyName,
-                                                'Point Type': dependency['Point Type'].Value,
-                                                path: dependency.path,
-                                                _pStatus: dependency._pStatus,
+                                                'Point Type': schedule['Point Type'].Value,
+                                                path: schedule.path,
+                                                _pStatus: schedule._pStatus,
                                                 Device: null
                                             });
                                             depPRCB(null);
