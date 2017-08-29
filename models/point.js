@@ -19,23 +19,8 @@ const Point = class Point extends Common {
         super('points');
     }
 
-    getPointById(data, cb) {
-        const security = new Security();
-        let criteria = {
-            pipeline: []
-        };
-        let upi = parseInt(data.id, 10);
-        let point = null;
-        let resolvedPointsMap = {};
-        let pointRef;
-
-        // Pipeline stages
-        let stage1 = {
-            $match: {
-                _id: upi
-            }
-        };
-        let stage2 = {
+    buildReolvePointRefs() {
+        let facetStage = {
             $facet: {
                 // 2A - This saves our point in the output document
                 point: [{
@@ -99,7 +84,7 @@ const Point = class Point extends Common {
                 }]
             }
         };
-        let stage3 = {
+        let unwindStage = {
             // Stage 3 - Convert point from array to object
             // The document entering this stage looks like:
             // {
@@ -116,10 +101,30 @@ const Point = class Point extends Common {
             // }
         };
 
-        criteria.pipeline.push(stage1);
+        return [facetStage, unwindStage];
+    }
+
+    getPointById(data, cb) {
+        const security = new Security();
+        let criteria = {
+            pipeline: []
+        };
+        let upi = parseInt(data.id, 10);
+        let point = null;
+        let resolvedPointsMap = {};
+        let pointRef;
+
+        // Pipeline stages
+        let matchStage = {
+            $match: {
+                _id: upi
+            }
+        };
+
+        criteria.pipeline.push(matchStage);
+
         if (data.resolvePointRefs) {
-            criteria.pipeline.push(stage2);
-            criteria.pipeline.push(stage3);
+            criteria.pipeline.push(...this.buildReolvePointRefs());
         }
 
         security.getPermissions(data.user, (err, permissions) => {
@@ -1147,7 +1152,6 @@ const Point = class Point extends Common {
             });
         };
         let getAlarmDisplayPoint = (alarmDisplayPointCriteria) => {
-
             this.getOne(alarmDisplayPointCriteria, (err, alarmDisplayPoint) => {
                 if (err) {
                     cb(err);
@@ -3425,7 +3429,9 @@ const Point = class Point extends Common {
             }
         });
 
-        pipeline.push({$match: match});
+        pipeline.push({
+            $match: match
+        });
         pipeline.push({
             $limit: 200
         });

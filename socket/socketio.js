@@ -933,14 +933,19 @@ function getScheduleEntries(data, callback) {
         upi = data.upi;
 
     if (isSchedule) {
-        point.getAll({
-            query: {
-                'Point Type.Value': 'Schedule Entry'
+        let matchStage = {
+            $match: {
+                'Point Type.Value': 'Schedule Entry',
+                _parentUpi: upi
             }
+        };
+        let pipeline = [matchStage, ...point.buildReolvePointRefs()];
+        point.aggregate({
+            pipeline
         }, callback);
     } else {
-        point.getAll({
-            query: {
+        let matchStage = {
+            $match: {
                 'Point Type.Value': 'Schedule Entry',
                 'Point Refs': {
                     $elemMatch: {
@@ -949,6 +954,10 @@ function getScheduleEntries(data, callback) {
                     }
                 }
             }
+        };
+        let pipeline = [matchStage, ...point.buildReolvePointRefs()];
+        point.aggregate({
+            pipeline
         }, callback);
     }
 }

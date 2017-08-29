@@ -226,11 +226,20 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                     return ko.utils.arrayFilter(sourceArray, function (item) {
                         if (self.pointType !== 'Schedule' && item.scheduleName().toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
-                        } else if (item.refPoint === null || item.refPoint.Name.toLowerCase().indexOf(searchTerm) !== -1) {
+                        } else if (item.refPoint === null || checkTermInArray(item.refPoint.path, searchTerm)) {
                             return true;
                         }
                         return false;
                     });
+                },
+                checkTermInArray = function (testArray, searchTerm) {
+                    var doesMatch = false;
+                    testArray.forEach(function (elem) {
+                        if(elem.match(searchTerm)) {
+                            doesMatch = true;
+                        }
+                    });
+                    return doesMatch;
                 },
                 oldEntries = this.filteredEntries(),
                 newIds = [],
@@ -637,10 +646,10 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 } else if (prop === 'Friday') {
                     self.FridayActive('');
                 } else if (prop === 'Saturday') {
-    self.SaturdayActive('');
-} else if (prop === 'Holiday') {
-    self.HolidayActive('');
-}
+                    self.SaturdayActive('');
+                } else if (prop === 'Holiday') {
+                    self.HolidayActive('');
+                }
             }
         });
 
@@ -767,7 +776,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
 
                 } else {
                     var endPoint = config.Utility.pointTypes.getUIEndpoint(self.pointType, indiv._parentUpi());
-                    item.scheduleName(data.Name);
+                    item.scheduleName(config.Utility.getPointName(data.path));
                     item.url(endPoint.review.url);
                 }
             });
@@ -937,10 +946,10 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                     } else if (prop === 'Friday') {
                         item.FridayActive('activeday');
                     } else if (prop === 'Saturday') {
-    item.SaturdayActive('activeday');
-} else if (prop === 'Holiday') {
-    item.HolidayActive('activeday');
-}
+                        item.SaturdayActive('activeday');
+                    } else if (prop === 'Holiday') {
+                        item.HolidayActive('activeday');
+                    }
                 } else if (prop === 'Sunday') {
                     item.SundayActive('');
                 } else if (prop === 'Monday') {
@@ -952,10 +961,10 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 } else if (prop === 'Thursday') {
                     item.ThursdayActive('');
                 } else if (prop === 'Friday') {
-    item.FridayActive('');
-} else if (prop === 'Saturday') {
-    item.SaturdayActive('');
-} else if (prop === 'Holiday') {
+                    item.FridayActive('');
+                } else if (prop === 'Saturday') {
+                    item.SaturdayActive('');
+                } else if (prop === 'Holiday') {
                     item.HolidayActive('');
                 }
             }
@@ -1029,7 +1038,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 return 'deleted';
             } else if (item.isNew()) {
                 return 'new';
-            } return (index() % 2 === 0) ? 'even' : 'odd';
+            }
+            return (index() % 2 === 0) ? 'even' : 'odd';
         };
 
         indiv['Begin Month'].Value.valueHasMutated();
@@ -1045,6 +1055,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
     function sortArray(prop, dir) {
         var opp = ~dir + 1; // Get opposite direction (-1 to 1 or 1 to -1)
         return this.sort(function (obj1, obj2) {
+            console.log(prop, obj1, obj1[prop]);
             if (prop === 'scheduleName') {
                 return (obj1[prop]() === obj2[prop]()) ? 0 : (obj1[prop]() < obj2[prop]()) ? opp : dir;
             } else if (prop === 'refPoint') {
