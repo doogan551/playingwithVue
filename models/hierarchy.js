@@ -511,23 +511,16 @@ const Hierarchy = class Hierarchy extends Common {
             }, callback);
         };
 
-        let unsetPointNodes = (ids, callback) => {
+        let removePointNodes = (ids, callback) => {
             if (!ids.length) {
                 return callback();
             }
-            this.updateAll({
+            // could potentially call point.deletePoint() but needs to be run through
+            // to make sure it doesn't do something we don't want, like delete children
+            this.remove({
                 query: {
                     _id: {
                         $in: ids
-                    }
-                },
-                updateObj: {
-                    $set: {
-                        _pStatus: Config.Enums['Point Statuses'].NotInHierarchy.enum
-                    },
-                    $unset: {
-                        display: 1,
-                        parentNode: 1
                     }
                 }
             }, callback);
@@ -554,7 +547,7 @@ const Hierarchy = class Hierarchy extends Common {
             sortId(nodeType, id);
 
             deleteHierachyNodes(hierarchies, (err, result) => {
-                unsetPointNodes(points, (err, result) => {
+                removePointNodes(points, (err, result) => {
                     return cb();
                 });
             });
