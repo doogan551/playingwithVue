@@ -27,7 +27,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             var searchTerm = this.searchTerm().toLowerCase(), // Our only dependency
                 filter = function (sourceArray) {
                     return ko.utils.arrayFilter(sourceArray, function (item) {
-                        if (item.Name.toLowerCase().indexOf(searchTerm) !== -1) {
+                        if (item.pathString.toLowerCase().indexOf(searchTerm) !== -1) {
                             return true;
                         }
                         if (item.Property.toLowerCase().indexOf(searchTerm) !== -1) {
@@ -104,14 +104,18 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
 
         this.gettingData(true);
         getData(self.id).done(function (data) {
-            let pointRefs = [],
+            var pointRefs = [],
                 dependencies = [],
                 cleanProperties = function (item) {
-                    item['Device Name'] = item.Device ? item.Device.Name : '';
+                    item['Device Name'] = item.Device ? item.Device.pathString : '';
                     item['Point Type'] = item['Point Type'] ? item['Point Type'] : '';
                     item.Property = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
-                    item.Name = item.Name ? item.Name : '';
+                    item.pathString = item.pathString ? item.pathString : '';
                 };
+
+            var buildPathString = function (path) {
+                return workspace.config.Utility.getPointName(path);
+            };
 
             if (data.err) {
                 if (data.err === 'Point not found.') {
@@ -120,12 +124,18 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             } else {
                 pointRefs = data.Involvement['Point Refs'];
                 pointRefs.forEach((pointRef) => {
-                    pointRef.pathString = workspace.config.Utility.getPointName(pointRef.path);
+                    pointRef.pathString = buildPathString(pointRef.path);
+                    if(!!pointRef.Device) {
+                        pointRef.Device.pathString = buildPathString(pointRef.Device.path);
+                    }
                     console.log(pointRef);
                 });
                 dependencies = data.Involvement.Dependencies;
                 dependencies.forEach((dependency) => {
-                    dependency.pathString = workspace.config.Utility.getPointName(dependency.path);
+                    dependency.pathString = buildPathString(dependency.path);
+                    if(!!dependency.Device) {
+                        dependency.Device.pathString = buildPathString(dependency.Device.path);
+                    }
                     console.log(dependency);
                 });
                 pointRefs.forEach(cleanProperties);
@@ -159,7 +169,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             pointType = 'Schedule';
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);
-        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id);
+        dtiUtility.openWindow(endPoint.review.url, data.pathString, pointType, '', data._id);
     };
 
     ViewModel.prototype.sortTable = function (property, viewModel, e) {
