@@ -10,9 +10,45 @@ var dti = {
 };
 
 var initKnockout = function () {
+    let datePickerDefaultOptions = {
+            selectMonths: true,     // Creates a dropdown to control month
+            selectYears: 15,        // Creates a dropdown of 15 years to control year,
+            today: 'Today',
+            clear: 'Clear',
+            close: 'Ok',
+            closeOnSelect: false    // Close upon selecting a date,
+        },
+        timePickerDefaultOptions = {
+            default: 'now',         // Set default time: 'now', '1:30AM', '16:30'
+            fromnow: 0,             // set default time to * milliseconds from now (using with default = 'now')
+            twelvehour: false,      // Use AM/PM or 24-hour format
+            donetext: 'OK',         // text for done-button
+            cleartext: 'Clear',     // text for clear-button
+            canceltext: 'Cancel',   // Text for cancel-button
+            autoclose: false,       // automatic close timepicker
+            ampmclickable: false,   // make AM PM clickable
+            aftershow: function () {
+            } // Function for after opening timepicker
+        };
+
     ko.bindingHandlers.dtiLogsMaterializePickadate = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickadate();
+            let $element = $(element);
+
+            $element.pickadate(datePickerDefaultOptions);
+
+            $element.pickadate('picker').on({
+                set: function (datePicker) {
+                    if (datePicker.select) {
+                        let dateInTextFormat = moment(datePicker.select).format("MM/DD/YYYY");
+                        valueAccessor()(moment(dateInTextFormat));
+                    }
+                }
+            });
+
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+                $(element).pickadate("destroy");
+            });
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -20,7 +56,19 @@ var initKnockout = function () {
 
     ko.bindingHandlers.dtiLogsMaterializePickatime = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickatime();
+            let $element = $(element),
+                timePickerCallback = () => {
+                    valueAccessor()($element.val());
+                    Materialize.updateTextFields();
+                };
+
+            timePickerDefaultOptions.afterDone = timePickerCallback;
+
+            $element.pickatime(timePickerDefaultOptions);
+
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+                $element.pickatime("destroy");
+            });
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -39,6 +87,7 @@ var ActivityLogsManager = function (conf) {
         $dateTo = $("#dateTo"),
         $timeTo = $("#timeTo"),
         $activitylogBody = $(".activitylogBody"),
+        $activitylogContainer = $activitylogBody.find("#activitylogContainer"),
         $activityLogs = $activitylogBody.find(".activityLogs"),
         $userFilterModal = $activitylogBody.find("#userFilterModal"),
         $dateTimeFilterModal = $activitylogBody.find("#dateTimeFilterModal"),
@@ -68,6 +117,23 @@ var ActivityLogsManager = function (conf) {
         setCurrentUser = function (results) {
             currentUser = results;
             storeKey += currentUser;
+        },
+        utilGetConfig = (methodName, parms, cb) => {
+            let sendResult = (answer) => {
+                if (typeof cb === 'function') {
+                    cb(answer);
+                } else {
+                    return answer;
+                }
+            };
+
+            if (typeof dti !== 'undefined' && dti.utility !== undefined) {
+                return sendResult(dti.utility.getConfig(methodName, [parms]));
+            } else if (window.getConfig !== undefined) {
+                return sendResult(window.getConfig(methodName, [parms]));
+            } else if (dtiUtility) {  // lastly try async call
+                dtiUtility.getConfig(methodName, parms, sendResult());
+            }
         },
         buildActivityLogRequestObject = function (activityLog, reqObj) {
             let l_startDate = 0,
@@ -149,7 +215,7 @@ var ActivityLogsManager = function (conf) {
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
-            activityLog.Name = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [activityLog.path]) : window.getConfig("Utility.getPointName", [activityLog.path]));
+            activityLog.Name = utilGetConfig("Utility.getPointName", activityLog.path);
         },
         updateNumberOfPages = function (count, activityLogTable) {
             let sortAsc = self.sortAscending(),
@@ -417,12 +483,16 @@ var ActivityLogsManager = function (conf) {
     };
     self.showPointReview = function (element, theData) {
         let upi = parseInt(theData.upi, 10),
-            originalElementText;
+            originalElementText,
+            openTheWindow = (pointType) => {
+                dtiUtility.openWindow({
+                    upi: upi,
+                    pointType: pointType
+                });
+            };
+
         if (upi > 0) {
-            dtiUtility.openWindow({
-                upi: upi,
-                pointType: theData.pointType
-            });
+            utilGetConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
         } else {
             originalElementText = element.text;
             $(element).stop().fadeOut("4000", function () {
@@ -531,18 +601,25 @@ var ActivityLogsManager = function (conf) {
         }
     };
     self.clearDateTimeFilter = function (refreshTheData) {
+        let $fromDatePicker = $dateFrom.pickadate('picker'),
+            $fromTimePicker = $timeFrom.pickatime('picker'),
+            $toDatePicker = $dateTo.pickadate('picker'),
+            $toTimePicker = $timeTo.pickatime('picker');
+
         self.dateFrom(null);
         self.dtFilterPlaceholder.dateFrom("");
-        $dateFrom.val('').datepicker('update');
+        $fromDatePicker.set({select: null});
         self.timeFrom(null);
         self.dtFilterPlaceholder.timeFrom("");
-        $timeFrom.val('').timepicker('setTime', null);
+        $fromTimePicker[0].value = '';  // TODO  revisit once materialize get updated
+        // $fromTimePicker.clear();
         self.dateTo(null);
         self.dtFilterPlaceholder.dateTo("");
-        $dateTo.val('').datepicker('update');
+        $toDatePicker.set({select: null});
         self.timeTo(null);
         self.dtFilterPlaceholder.timeTo("");
-        $timeTo.val('').timepicker('setTime', null);
+        $toTimePicker[0].value = '';   // TODO revisit once materialize get updated
+        // $toTimePicker.clear();
         if (refreshTheData) {
             storeFilterData();
             self.refreshActivityLogsData();
@@ -651,7 +728,7 @@ var ActivityLogsManager = function (conf) {
         $dateTimeFilterModal.openModal();
         // setTimeout(function () {
         //     Materialize.updateTextFields();
-        // }, 200);
+        // }, 100);
         return true;
     };
 
@@ -691,17 +768,29 @@ var ActivityLogsManager = function (conf) {
         return true;
     };
     self.printLogs = function () {
+        let hostAndProtocol = window.location.protocol + "//" + window.location.host,
+            $pages,
+            pagesDisplayCss;
+
+        $activitylogContainer.prepend('<link rel="stylesheet" href="' + hostAndProtocol + '/css/activityLogs/printActivityLogs.css" type="text/css" />');
         $activityLogs.css('overflow', 'visible');
-        $activityLogs.printArea({
+        $pages = $activitylogContainer.find(".pages");
+        pagesDisplayCss = $pages.css('display');
+        $pages.css('display', 'none');
+
+        $activitylogContainer.printArea({
             mode: 'iframe'
         });
+
+        $activitylogContainer.find("link[rel=stylesheet]").remove();
+        $pages.css('display', pagesDisplayCss);
         $activityLogs.css('overflow', 'auto');
     };
     self.editUserFilter = () => {
         $userFilterModal.openModal();
-        setTimeout(function () {
-            Materialize.updateTextFields();
-        }, 200);
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 100);
         return true;
     };
     self.init = () => {
@@ -841,27 +930,30 @@ var ActivityLogsManager = function (conf) {
     }, self).extend(computedThrottle);
 
     dtiUtility.getUser(setCurrentUser);
-    dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
     self.init();
 };
 
 function initPage(manager) {
-    // for resizing the pointname column
-    // $pointNameHeader
-    //     .css({
-    //         position: "relative"
-    //     })
-    //     .prepend("<div class='resizer'></div>")
-    //     .resizable({
-    //         resizeHeight: false,
-    //         handleSelector: "",
-    //         onDragStart: function (e, $el, opt) {
-    //             return ($(e.target).hasClass("resizer")); // only drag resizer
-    //         },
-    //         resize: function (event, ui) {
-    //             $pointNameColumn.width(ui.size.width);
-    //         }
-    //     });
+    let $dateTimeFilterModal = $("#dateTimeFilterModal"),
+        $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
+        $dateTo = $dateTimeFilterModal.find("#dateTo");
+
+    $dateFrom.pickadate('picker').on({
+        set: function (thingToSet) {
+            if (!!thingToSet.select) {
+                $dateTo.pickadate('picker').set({min: new Date(this.get('select').pick)});
+            }
+        }
+    });
+
+    $dateTo.pickadate('picker').on({
+        set: function (thingToSet) {
+            if (!!thingToSet.select) {
+                $dateFrom.pickadate('picker').set({max: new Date(this.get('select').pick)});
+            }
+        }
+    });
 }
 
 function applyBindings() {

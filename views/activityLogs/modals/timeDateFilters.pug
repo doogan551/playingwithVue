@@ -1,4 +1,4 @@
-#dateTimeFilterModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade(data-refresh='true')
+#dateTimeFilterModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade(data-bind="with: $root.dtFilterPlaceholder")
     .modal-header
         .modalTitle Date Time Filter
     .modal-content
@@ -8,28 +8,28 @@
             .col.s4
                 span.startDatePicker
                     .input-field
-                        label(data-bind="attr: { for: 'fromDate' }") Date
-                        input.datepicker(data-bind="attr: { 'id': 'fromDate' }, select: $root.dtFilterPlaceholder.dateFrom, dtiLogsMaterializePickadate", type="date")
+                        label(data-bind="attr: { for: 'dateFrom' }") Date
+                        input#dateFrom.datepicker(data-bind="dtiLogsMaterializePickadate: dateFrom", type="text")
             .col.s1.blankSpace
             .col.s4
                 span.startTimePicker
                     .input-field
-                        label(data-bind="attr: { for: 'fromTime' }") Time
-                        input.timepicker(data-bind="attr: { 'id': 'fromTime' }, value: dtFilterPlaceholder.timeFrom, dtiLogsMaterializePickatime", type='time')
+                        label(data-bind="attr: { for: 'TimeFrom' }") Time
+                        input#timeFrom.timepicker(data-bind="dtiLogsMaterializePickatime: timeFrom", type='text')
         .row
             .col.s2.toLabel
                 span To:
             .col.s4
                 span.endDatePicker
                     .input-field
-                        label(data-bind="attr: { for: 'toDate' }") Date
-                        input.datepicker(data-bind="attr: { 'id': 'toDate' }, select: $root.dtFilterPlaceholder.dateTo, dtiLogsMaterializePickadate", type="date")
+                        label(data-bind="attr: { for: 'dateTo' }") Date
+                        input#dateTo.datepicker(data-bind="dtiLogsMaterializePickadate: dateTo", type="text")
             .col.s1.blankSpace
             .col.s4
                 span.endTimePicker
                     .input-field
-                        label(data-bind="attr: { for: 'toTime' }") Time
-                        input.timepicker(data-bind="attr: { 'id': 'toTime' }, value: dtFilterPlaceholder.timeTo, dtiLogsMaterializePickatime", type='time')
+                        label(data-bind="attr: { for: 'timeTo' }") Time
+                        input#timeTo.timepicker(data-bind="dtiLogsMaterializePickatime: timeTo", type='text')
     .modal-footer
-        .btn.waves-effect.waves-light.blue-grey(data-bind="click: clearDateTimeFilter") Clear
-        .btn.waves-effect.waves-light.blue-grey(data-bind="click: applyDateTimeFilter") OK
+        .btn.waves-effect.waves-light.blue-grey(data-bind="click: $root.clearDateTimeFilter") Clear
+        .btn.waves-effect.waves-light.blue-grey(data-bind="click: $root.applyDateTimeFilter") OK
