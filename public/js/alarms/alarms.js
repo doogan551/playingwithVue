@@ -89,7 +89,7 @@ let initKnockout = function () {
 
             $element.pickadate('picker').on({
                 set: function (datePicker) {
-                    if (this.get('select')) {
+                    if (datePicker.select) {
                         let dateInTextFormat = moment(datePicker.select).format("MM/DD/YYYY");
                         valueAccessor(dateInTextFormat);
                         viewModel.value = dateInTextFormat;
@@ -107,10 +107,19 @@ let initKnockout = function () {
 
     ko.bindingHandlers.dtiAlarmsMaterializePickatime = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickatime(timePickerDefaultOptions);
+            let $element = $(element),
+                timePickerCallback = () => {
+                    valueAccessor($element.val());
+                    viewModel.value = $element.val();
+                    Materialize.updateTextFields();
+                };
+
+            timePickerDefaultOptions.afterDone = timePickerCallback;
+
+            $element.pickatime(timePickerDefaultOptions);
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
-                $(element).pickatime("destroy");
+                $element.pickatime("destroy");
             });
         },
         update: function (element, valueAccessor, allBindings) {

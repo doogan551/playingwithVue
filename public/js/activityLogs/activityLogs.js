@@ -38,9 +38,10 @@ var initKnockout = function () {
             $element.pickadate(datePickerDefaultOptions);
 
             $element.pickadate('picker').on({
-                set: function (thingToSet) {
-                    if (this.get('select')) {
-                        valueAccessor()(moment(this.get('select').pick).format("MM/DD/YYYY"));
+                set: function (datePicker) {
+                    if (datePicker.select) {
+                        let dateInTextFormat = moment(datePicker.select).format("MM/DD/YYYY");
+                        valueAccessor()(moment(dateInTextFormat));
                     }
                 }
             });
@@ -55,10 +56,18 @@ var initKnockout = function () {
 
     ko.bindingHandlers.dtiLogsMaterializePickatime = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            $(element).pickatime(timePickerDefaultOptions);
+            let $element = $(element),
+                timePickerCallback = () => {
+                    valueAccessor()($element.val());
+                    Materialize.updateTextFields();
+                };
+
+            timePickerDefaultOptions.afterDone = timePickerCallback;
+
+            $element.pickatime(timePickerDefaultOptions);
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
-                $(element).pickatime("destroy");
+                $element.pickatime("destroy");
             });
         },
         update: function (element, valueAccessor, allBindings) {
@@ -717,9 +726,9 @@ var ActivityLogsManager = function (conf) {
     };
     self.editDateTimeFilter = () => {
         $dateTimeFilterModal.openModal();
-        setTimeout(function () {
-            Materialize.updateTextFields();
-        }, 200);
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 100);
         return true;
     };
 
@@ -779,9 +788,9 @@ var ActivityLogsManager = function (conf) {
     };
     self.editUserFilter = () => {
         $userFilterModal.openModal();
-        setTimeout(function () {
-            Materialize.updateTextFields();
-        }, 200);
+        // setTimeout(function () {
+        //     Materialize.updateTextFields();
+        // }, 100);
         return true;
     };
     self.init = () => {
