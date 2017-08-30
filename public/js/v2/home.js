@@ -5241,15 +5241,18 @@ var dti = {
             }
 
             handleRowClick(e) {
-                let target = e.target;
-                let data = ko.dataFor(target);
+                let mode = this.bindings.mode();
+                if (mode !== this.modes.FILTER) {
+                    let target = e.target;
+                    let data = ko.dataFor(target);
 
-                this.$modal.closeModal();
+                    this.$modal.closeModal();
 
-                this.callback(data);
-                this.callback = this.defaultCallback;
+                    this.callback(data);
+                    this.callback = this.defaultCallback;
 
-                // dti.log(arguments);
+                    // dti.log(arguments);
+                }
             }
 
             handleAcceptFilterClick(e) {
@@ -5333,6 +5336,7 @@ var dti = {
                 } else {
                     this.callback = this.defaultCallback;
                     this.bindings.searchString('');
+                    this.bindings.mode(this.modes.DEFAULT);
 
                     if (config && typeof config === 'string') {
                         this.pointTypes = [config];

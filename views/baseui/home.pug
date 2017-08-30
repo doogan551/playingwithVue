@@ -210,7 +210,7 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector, css: { 'modal-fixed-footer' : (pointSelector.mode() === 'filter') }")
+            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector, css: { 'modal-fixed-footer' : (pointSelector.mode() === 'filter'), 'filterMode' : (pointSelector.mode() === 'filter') }")
                 .modal-header
                     .modalTitle(data-bind="text: modalText")
                 .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick}]")
@@ -258,7 +258,7 @@ html
                     .row
                         .input-field.col.s6
                             input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: navigatorv2.addNodeModal.modalOpen, value: navigatorv2.addNodeModal.newNodeDisplay")
-                            label(for="newNodeDisplay") Display
+                            label(for="nodeDisplay") Display
                     // ko if: navigatorv2.addNodeModal.newNodeType() === 'Location'
                     .row
                         .input-field.col.s3
