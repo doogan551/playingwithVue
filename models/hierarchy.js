@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const async = require('async');
+var logger = require('../helpers/logger')(module);
 
 const Common = require('./common');
 const Config = require('../public/js/lib/config.js');
@@ -748,6 +749,375 @@ const Hierarchy = class Hierarchy extends Common {
         // });
     }
 
+    import(masterCb) {
+        let locCount;
+        let locPrefix;
+        let importNodeName = 'IS2k';
+
+        let doLog = true;
+        let self = this;
+
+        let SEGMENT1 = 1;
+        let SEGMENT2 = 2;
+        let SEGMENT3 = 3;
+        let SEGMENT4 = 4;
+
+        let nodeLookup = {};
+
+        let ioPointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+
+        let getNodeType = (pointType) => {
+            let nodeType;
+
+            if (!!~ioPointTypes.indexOf(pointType)) {
+                nodeType = 'Point';
+            } else {
+                nodeType = 'Application';
+            }
+            return nodeType;
+        };
+        let makeId = () => {
+            return locPrefix + locCount++;
+        };
+        let getInsertCriteria = (parentNode, path) => {
+            return {
+                insertObj: {
+                    _id: makeId(),
+                    _pStatus: 0,
+                    parentNode: parentNode,
+                    libraryId: 0,
+                    refNode: 0,
+                    nodeType: "Location",
+                    nodeSubType: "Area",
+                    path: path,
+                    display: path[path.length - 1]
+                }
+            };
+        };
+        let importPoint = (point, cb) => {
+            let i = 2;
+            let name = point.name1;
+            let path = [];
+            let pointType = point['Point Type'].Value;
+            let uid;
+            let parentNode;
+            let criteria;
+
+            while (!!name) {
+                path.push(name);
+                name = point['name' + i++];
+            }
+
+            uid = path.join('%');
+            nodeLookup[uid] = point._id;
+
+            parentNode = nodeLookup[path.slice(0, path.length - 1).join('%')] || nodeLookup[importNodeName];
+
+            criteria = {
+                query: {
+                    _id: point._id
+                },
+                updateObj: {
+                    $set: {
+                        _pStatus: 0,
+                        parentNode: parentNode,
+                        nodeType: getNodeType(pointType),
+                        nodeSubType: pointType,
+                        path: path,
+                        display: path[path.length - 1]
+                    }
+                }
+            };
+
+            this.update(criteria, cb);
+        };
+        let importPoints = (criteria, cb) => {
+            this.iterateCursor(criteria, (err, point, callback) => {
+                if (err) {
+                    return callback(err);
+                }
+                importPoint(point, (err) => {
+                    callback(err);
+                });
+            }, function done(err) {
+                cb(err);
+            });
+        };
+        let createFolder = (point, segment, cb) => {
+            let path = [];
+            let uid;
+            let parentNode;
+            let criteria;
+
+            while (segment > 0) {
+                path.push(point['name' + segment]);
+                segment--;
+            }
+            path.reverse();
+            uid = path.join('%');
+
+            if (!nodeLookup[uid]) {
+                parentNode = nodeLookup[path.slice(0, path.length - 1).join('%')] || nodeLookup[importNodeName];
+
+                criteria = getInsertCriteria(parentNode, path);
+
+                nodeLookup[uid] = criteria.insertObj._id;
+
+                this.insert(criteria, cb);
+            } else {
+                cb();
+            }
+        };
+        let createFolders = (criteria, segment, cb) => {
+            this.iterateCursor(criteria, (err, point, callback) => {
+                if (err) {
+                    return callback(err);
+                }
+                createFolder(point, segment, (err) => {
+                    // Our call stack was overflowing so we have to process on each event loop to limit call stack
+                    process.nextTick(() => {
+                        callback(err);
+                    });
+                });
+            }, function done(err) {
+                cb(err);
+            });
+        };
+        let log = (msg) => {
+            if (doLog) {
+                logger.info(msg);
+            }
+        };
+
+        log('Running hierarchy import');
+
+        async.waterfall([
+            function getLocationCounter(cb) {
+                let criteria = {
+                    collection: 'counters',
+                    query: {
+                        _id: 'location'
+                    }
+                };
+
+                log('Working on getLocationCounter');
+
+                self.getOne(criteria, (err, location) => {
+                    if (err) return cb(err);
+
+                    locCount = location.count;
+                    locPrefix = location.enum << 22;
+                    cb(null);
+                });
+            },
+            function shelveScheduleEntries(cb) {
+                let criteria = {
+                    query: {
+                        'Point Type.Value': 'Schedule Entry'
+                    },
+                    updateObj: {
+                        $set: {
+                            _pStatus: 4
+                        }
+                    },
+                    options: {
+                        multi: true
+                    }
+                };
+
+                log('Working on shelveScheduleEntries');
+
+                self.update(criteria, (err, results) => {
+                    cb(err);
+                });
+            },
+            function createMasterImportNode(cb) {
+                // All imported nodes go into this node we're creating now
+                let criteria = getInsertCriteria(0, [importNodeName]);
+
+                nodeLookup[importNodeName] = criteria.insertObj._id;
+
+                log('Working on createMasterImportNode');
+
+                self.insert(criteria, (err, results) => {
+                    cb(err);
+                });
+            },
+            function segment1_Points(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3,
+                        name2: ''
+                    }
+                };
+
+                log('Working on segment1_Points');
+
+                importPoints(criteria, cb);
+            },
+            function segment1_Folders(cb) {
+                let criteria = {
+                    field: 'name1',
+                    query: {
+                        _pStatus: 3
+                    }
+                };
+
+                log('Working on segment1_Folders');
+
+                self.distinct(criteria, (err, distinctName1s) => {
+                    if (err) return cb(err);
+
+                    async.each(distinctName1s, (name1, myCb) => {
+                        createFolder({
+                            name1: name1
+                        }, SEGMENT1, myCb);
+                    }, function done(err) {
+                        cb(err);
+                    });
+                });
+            },
+            function segment2_Points(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3,
+                        name3: ''
+                    }
+                };
+
+                log('Working on segment2_Points');
+
+                importPoints(criteria, cb);
+            },
+            function segment2_Folders(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3,
+                        name3: {
+                            $ne: ''
+                        }
+                    }
+                };
+
+                log('Working on segment2_Folders');
+
+                createFolders(criteria, SEGMENT2, cb);
+            },
+            function segment3_Points(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3,
+                        name4: ''
+                    }
+                };
+
+                log('Working on segment3_Points');
+
+                importPoints(criteria, cb);
+            },
+            function segment3_Folders(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3,
+                        name4: {
+                            $ne: ''
+                        }
+                    }
+                };
+
+                log('Working on segment3_Folders');
+
+                createFolders(criteria, SEGMENT3, cb);
+            },
+            function segment4_Points(cb) {
+                let criteria = {
+                    query: {
+                        _pStatus: 3
+                    }
+                };
+
+                log('Working on segment4_Points');
+
+                importPoints(criteria, cb);
+            },
+            function unshelveScheduleEntries(cb) {
+                let processSchedule = (schedule, myCb) => {
+                    let $set = {};
+                    let criteria = {
+                        query: {
+                            _id: schedule._id
+                        },
+                        updateObj: {
+                            $set: $set
+                        }
+                    };
+
+                    if (schedule._parentUpi) {
+                        $set.parentNode = schedule._parentUpi;
+                    } else {
+                        $set.parentNode = schedule['Point Refs'][0].Value;
+                    }
+                    $set.display = schedule.Name;
+                    $set._pStatus = 0;
+
+                    self.update(criteria, myCb);
+                };
+
+                log('Working on unshelveScheduleEntries');
+
+                self.iterateCursor({
+                    query: {
+                        _pStatus: 4
+                    }
+                }, (err, schedule, callback) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    processSchedule(schedule, (err) => {
+                        callback(err);
+                    });
+                }, function done(err) {
+                    cb(err);
+                });
+
+
+                // self.get({
+                //     _pStatus: 4
+                // }, (err, scheduleEntries) => {
+                //     if (err) return cb(err);
+
+                //     async.each(scheduleEntries, processSchedule, cb);
+                // });
+            },
+            function updateLocationCounter(cb) {
+                let criteria = {
+                    collection: 'counters',
+                    query: {
+                        _id: 'location'
+                    },
+                    updateObj: {
+                        $set: {
+                            count: locCount
+                        }
+                    }
+                };
+
+                log('Working on updateLocationCounter');
+
+                self.update(criteria, (err, results) => {
+                    cb(err);
+                });
+            }
+        ], function done(err) {
+            if (!!err) {
+                log('Error');
+                log(JSON.stringify(err));
+            } else {
+                log('All done!');
+            }
+            masterCb(err);
+        });
+    }
 };
 
 module.exports = Hierarchy;
