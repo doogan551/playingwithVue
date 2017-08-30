@@ -210,9 +210,9 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector")
+            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector, css: { 'modal-fixed-footer' : (pointSelector.mode() === 'filter') }")
                 .modal-header
-                    .modalTitle Select Point
+                    .modalTitle(data-bind="text: modalText")
                 .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick}]")
                     .fetching
                         .progress
@@ -246,11 +246,11 @@ html
                                 td(data-bind="text: pointType")
                                 td(data-bind="text: path")
                             // /ko
-
-
-                //- .modal-footer
-                //-     button.btn.blue-grey.waves-effect Select
-                //-     button.btn-flat.modal-action.modal-close.waves-effect Cancel
+                // ko if: mode() === 'filter'
+                .modal-footer
+                    .btn.blue-grey.waves-effect.filterModeAccept(data-bind="delegate: [{event: 'click', handler: handleAcceptFilterClick}]") Accept
+                    .btn-flat.modal-action.modal-close.waves-effect.filterModeCancel Cancel
+                // /ko
 
             #addNodeModal.modal
                 .modal-content
