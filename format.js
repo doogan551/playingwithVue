@@ -1,45 +1,25 @@
-{"nodes":[
-{"id":"a", "parent":"", "display":"Marshall Space Flight Center", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Site" },
-{"id":"b", "parent":"a", "display":"4250", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Building" },
-{"id":"c", "parent":"b", "display":"Room 58", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Room" },
-{"id":"d", "parent":"c", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 1, "pointId": 948, "isReference": true },
-{"id":"e", "parent":"b", "display":"Room 59", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Room" },
-{"id":"f", "parent":"e", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 1, "pointId": 948, "isReference": true },
-{"id":"g", "parent":"b", "display":"Room 59A", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Room" },
-{"id":"h", "parent":"g", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 1, "pointId": 948, "isReference": true },
-{"id":"i", "parent":"b", "display":"Room 73", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Room" },
-{"id":"j", "parent":"i", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 1, "pointId": 949, "isReference": true },
-{"id":"k", "parent":"b", "display":"Room 75", "tags":[], "meta":{}, "nodeType":"Location", "locationType": "Room" },
-{"id":"l", "parent":"k", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 1, "pointId": 949, "isReference": true },
-{"id":"m", "parent":"b", "display":"Air Handler Unit 2", "tags":[], "meta":{}, "nodeType":"Equipment", "libraryId": 0},
-{"id":"n", "parent":"m", "display":"Mixed Air", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"o", "parent":"n", "display":"Filter", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 15183, "isReference": false },
-{"id":"p", "parent":"n", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 953, "isReference": false },
-{"id":"q", "parent":"m", "display":"Outside Air", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"r", "parent":"q", "display":"Damper", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4194371, "isReference": false },
-{"id":"s", "parent":"m", "display":"Return Air", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"t", "parent":"s", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 951, "isReference": false },
-{"id":"u", "parent":"m", "display":"Supply Air", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"v", "parent":"u", "display":"Fan", "tags":[], "meta":{}, "nodeType":"Equipment", "libraryId": 0 },
-{"id":"w", "parent":"v", "display":"Control", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 16777616, "isReference": false },
-{"id":"x", "parent":"y", "display":"Speed", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4200554, "isReference": false },
-{"id":"y", "parent":"u", "display":"Cold Deck", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"z", "parent":"y", "display":"Chilled Water Valve", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4194364, "isReference": false },
-{"id":"aa", "parent":"y", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 952, "isReference": false },
-{"id":"bb", "parent":"u", "display":"Hot Deck", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"cc", "parent":"bb", "display":"Steam Valve", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4194363, "isReference": false },
-{"id":"dd", "parent":"bb", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 950, "isReference": false },
-{"id":"ee", "parent":"u", "display":"Zone 1", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"ff", "parent":"ee", "display":"Damper", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4194374, "isReference": false },
-{"id":"gg", "parent":"ee", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 948, "isReference": false },
-{"id":"hh", "parent":"gg", "display":"Setpoint", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 8388777, "isReference": false },
-{"id":"ii", "parent":"u", "display":"Zone 2", "tags":[], "meta":{}, "nodeType":"Category", "libraryId": 0},
-{"id":"jj", "parent":"ii", "display":"Damper", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 4194375, "isReference": false },
-{"id":"kk", "parent":"ii", "display":"Temperature", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 949, "isReference": false },
-{"id":"ll", "parent":"kk", "display":"Setpoint", "tags":[], "meta":{}, "nodeType":"Point", "libraryId": 0, "pointId": 8388778, "isReference": false },
-{"id":"mm", "parent":"a", "display":"Master Menu Display", "tags":[], "meta":{}, "nodeType":"Application", "applicationType": "Display", "pointId": 0 },
-{"id":"nn", "parent":"b", "display":"Floor Plan Display", "tags":[], "meta":{}, "nodeType":"Application", "applicationType": "Display", "pointId": 0 },
-{"id":"oo", "parent":"m", "display":"Display", "tags":[], "meta":{}, "nodeType":"Application", "applicationType": "Display", "pointId": 0 },
-{"id":"pp", "parent":"m", "display":"Zones Display", "tags":[], "meta":{}, "nodeType":"Application", "applicationType": "Display", "pointId": 0 },
-{"id":"qq", "parent":"m", "display":"Sequence", "tags":[], "meta":{}, "nodeType":"Application", "applicationType": "Sequence", "pointId": 0 }
-]}
+[{
+    '$match': {
+        '$and': [{
+            'path': {
+                '$all': [{}]
+            }
+        }, {
+            'Point Type.Value': {
+                '$in': ['Accumulator', 'Alarm Status', 'Analog Input', 'Analog Output', 'Analog Selector', 'Analog Value', 'Average', 'Binary Input', 'Binary Output', 'Binary Selector', 'Binary Value', 'Comparator', 'Delay', 'Device', 'Digital Logic', 'Display', 'Economizer', 'Enthalpy', 'Lift Station', 'Logic', 'Math', 'Multiplexer', 'MultiState Value', 'Optimum Start', 'Program', 'Proportional', 'Ramp', 'Remote Unit', 'Report', 'Schedule', 'Script', 'Select Value', 'Sensor', 'Sequence', 'Setpoint Adjust', 'Slide Show', 'Totalizer', 'VAV']
+            }
+        }]
+    }
+}, {
+    '$limit': 200
+}, {
+    '$limit': 200
+}, {
+    '$project': {
+        '_id': 1,
+        'pointType': '$Point Type.Value',
+        'path': 1,
+        'display': 1,
+        'parentNode': 1
+    }
+}];
