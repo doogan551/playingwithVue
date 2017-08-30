@@ -10,12 +10,14 @@ var Config = require('../public/js/lib/config');
 var utils = require('../helpers/utils');
 var Common = require('../models/common');
 var importconfig = require('../apps/importconfig');
+var Hierarchy = require('../models/hierarchy');
 
 var localTZ = config.get('Infoscan.location').timezone;
 var ObjectID = mongo.ObjectID;
 var pointsCollection = 'points';
 var systemInfoCollection = 'SystemInfo';
 var xmlPath = importconfig.xmlPath;
+var hierarchy = new Hierarchy();
 
 let Import = class Import extends Common {
     constructor() {
@@ -74,12 +76,14 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                this.fixToUUtil((err) => {
-                                    if (err) {
-                                        logger.info('updateGPLReferences err:', err);
-                                    }
-                                    logger.info('done', err, new Date());
-                                    process.exit(0);
+                                hierarchy.import((err) => {
+                                    this.fixToUUtil((err) => {
+                                        if (err) {
+                                            logger.info('updateGPLReferences err:', err);
+                                        }
+                                        logger.info('done', err, new Date());
+                                        process.exit(0);
+                                    });
                                 });
                             });
                         });
