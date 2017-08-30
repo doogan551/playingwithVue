@@ -797,7 +797,7 @@ const Hierarchy = class Hierarchy extends Common {
         let importPoint = (point, cb) => {
             let i = 2;
             let name = point.name1;
-            let path = [];
+            let path = [importNodeName];
             let pointType = point['Point Type'].Value;
             let uid;
             let parentNode;
@@ -853,6 +853,7 @@ const Hierarchy = class Hierarchy extends Common {
                 path.push(point['name' + segment]);
                 segment--;
             }
+            path.push(importNodeName);
             path.reverse();
             uid = path.join('%');
 
