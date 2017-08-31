@@ -135,7 +135,7 @@ const Common = class Common extends Utility {
         if (!!data.terms) {
             if (data.terms.length) {
                 if (typeof data.terms === 'string') {
-                    data.terms = data.terms.split(" ");
+                    data.terms = data.terms.split(' ');
                 }
 
                 query.path = {
@@ -251,6 +251,15 @@ const Common = class Common extends Utility {
         } else {
             callback(null, 'success');
         }
+    }
+
+    buildSearchTerms(terms) {
+        return terms.map((term) => {
+            if (term.match(/"/)) {
+                return term.replace(/"/g, '');
+            }
+            return new RegExp(term, 'ig');
+        });
     }
 };
 

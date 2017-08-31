@@ -20,7 +20,6 @@ const ActivityLog = class ActivityLog extends Common {
     }
 
     getLogs(data, cb) {
-        let pointModel = new Point();
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);
@@ -48,11 +47,11 @@ const ActivityLog = class ActivityLog extends Common {
         if (!!data.terms) {
             if (data.terms.length) {
                 if (typeof data.terms === 'string') {
-                    data.terms = data.terms.split(" ");
+                    data.terms = data.terms.split(' ');
                 }
 
                 query.path = {
-                    $all: pointModel.buildSearchTerms(data.terms)
+                    $all: this.buildSearchTerms(data.terms)
                 };
             }
         }
@@ -150,4 +149,3 @@ const ActivityLog = class ActivityLog extends Common {
 };
 
 module.exports = ActivityLog;
-const Point = require('./point');
