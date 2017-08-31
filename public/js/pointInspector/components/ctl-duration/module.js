@@ -1,7 +1,6 @@
-define(['knockout', 'text!./view.html'], function(ko, view) {
-
+define(['knockout', 'text!./view.html'], function (ko, view) {
     ko.bindingHandlers.duration = {
-        init: function(element, valueAccessor, allBindingsAccessor) {
+        init: function (element, valueAccessor, allBindingsAccessor) {
             var $element = $(element),
                 $hr = $element.find('.hr'),
                 $min = $element.find('.min'),
@@ -9,22 +8,22 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 context = ko.contextFor(element),
                 value = valueAccessor(),
                 bindingType = context.$data.data.ValueType(),
-                nextHr = function() {
+                nextHr = function () {
                     value(value() + (60 * 60));
                 },
-                previousHr = function() {
+                previousHr = function () {
                     value(value() - (60 * 60));
                 },
-                nextMin = function() {
+                nextMin = function () {
                     value(value() + 60);
                 },
-                previousMin = function() {
+                previousMin = function () {
                     value(value() - 60);
                 },
-                nextSec = function() {
+                nextSec = function () {
                     value(value() + 1);
                 },
-                previousSec = function() {
+                previousSec = function () {
                     value(value() - 1);
                 },
                 maxValue = ko.unwrap(allBindingsAccessor().max),
@@ -48,11 +47,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 currentCfg = 0,
                 fieldCycle = [],
                 _currentCfgIndex = -1,
-                currentField = function(fieldIndexOrObj) {
+                currentField = function (fieldIndexOrObj) {
                     var thisCfg = parseInt(_currentCfgIndex, 10);
-                    if (typeof fieldIndexOrObj == 'undefined') {
+                    if (typeof fieldIndexOrObj === 'undefined') {
                         return thisCfg;
-                    } else if (typeof fieldIndexOrObj != 'number') {
+                    } else if (typeof fieldIndexOrObj !== 'number') {
                         for (var cfg in fieldCycle) {
                             if (fieldCycle[cfg].$field.is(fieldIndexOrObj)) {
                                 thisCfg = cfg;
@@ -91,9 +90,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     break;
             }
 
-            if (!$element.is('.durationCtrl')) return;
+            if (!$element.is('.durationCtrl')) {
+                return;
+            }
             $element
-                .on('keydown', function(e) {
+                .on('keydown', function (e) {
                     var $element,
                         endpoint,
                         selectionStart = 0,
@@ -117,9 +118,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
                         if (currentField() === endpoint) {
                             return; // Do not process tab key here (use native tab function)
-                        } else {
-                            e.preventDefault(); // Process tab key here and stop native tab function
                         }
+                        e.preventDefault(); // Process tab key here and stop native tab function
                     }
 
                     switch (e.keyCode) {
@@ -141,7 +141,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                             //arrow up
                             currentCfg = fieldCycle[currentField()];
                             currentCfg.next();
-                            if (value() > maxValue) value(maxValue);
+                            if (value() > maxValue) {
+                                value(maxValue);
+                            }
                             $element = currentCfg.$field;
                             selectionEnd = $element.val().length;
                             createSelection($element[0], selectionStart, selectionEnd);
@@ -158,7 +160,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                             //arrow down
                             currentCfg = fieldCycle[currentField()];
                             currentCfg.prev();
-                            if (value() < minValue) value(minValue);
+                            if (value() < minValue) {
+                                value(minValue);
+                            }
                             $element = currentCfg.$field;
                             selectionEnd = $element.val().length;
                             createSelection($element[0], selectionStart, selectionEnd);
@@ -167,35 +171,42 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                             currentCfg = fieldCycle[currentField()];
                     }
                 })
-                .on('mousewheel', function(event, trigger) {
+                .on('mousewheel', function (event, trigger) {
                     var $element,
                         delta,
                         direction,
                         selectionStart = 0,
                         selectionEnd;
-                    if (typeof trigger.deltaY == 'number') {
+                    if (typeof trigger.deltaY === 'number') {
                         event = trigger;
                     }
                     delta = event.deltaY;
                     direction = delta > 0 ? 'Up' : 'Down';
+                    if(currentField() < 0) {
+                        return;
+                    }
                     currentCfg = fieldCycle[currentField()];
                     $element = currentCfg.$field;
                     selectionEnd = $element.val().length;
                     if (!$element.is(':focus')) {
                         return;
-                    } else {
-                        event.preventDefault();
                     }
+                    event.preventDefault();
+
                     if (direction == 'Up') {
                         currentCfg.next();
-                        if (value() > maxValue) value(maxValue);
+                        if (value() > maxValue) {
+                            value(maxValue);
+                        }
                     } else {
                         currentCfg.prev();
-                        if (value() < minValue) value(minValue);
+                        if (value() < minValue) {
+                            value(minValue);
+                        }
                     }
                     createSelection($element[0], selectionStart, selectionEnd);
                 })
-                .on('click', function(event) {
+                .on('click', function (event) {
                     var $element,
                         selectionStart = 0,
                         selectionEnd,
@@ -216,10 +227,10 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     $element.focus();
                     createSelection($element[0], selectionStart, selectionEnd);
                 })
-                .on('focusin', function() {
+                .on('focusin', function () {
                     $(this).addClass('focused');
                 })
-                .on('focusout', function() {
+                .on('focusout', function () {
                     var hr = parseInt($hr.val(), 10),
                         min = parseInt($min.val(), 10),
                         sec = parseInt($sec.val(), 10),
@@ -234,7 +245,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         value(time);
                     }
                     value.valueHasMutated();
-                    if (!!noConfigValidation) return;
+                    if (!!noConfigValidation) {
+                        return;
+                    }
                     $(document).triggerHandler({
                         type: 'viewmodelChange',
                         targetElement: $element,
@@ -243,7 +256,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     });
                 });
         },
-        update: function(element, valueAccessor) {
+        update: function (element, valueAccessor) {
             var $element = $(element),
                 $hr = $element.find('.hr'),
                 $min = $element.find('.min'),
@@ -253,9 +266,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 minutes = ~~((value % 3600) / 60),
                 seconds = value % 60;
 
-            hours = hours > 9 ? hours : "0" + hours;
-            minutes = minutes > 9 ? minutes : "0" + minutes;
-            seconds = seconds > 9 ? seconds : "0" + seconds;
+            hours = hours > 9 ? hours : '0' + hours;
+            minutes = minutes > 9 ? minutes : '0' + minutes;
+            seconds = seconds > 9 ? seconds : '0' + seconds;
 
             $hr.is('input') ? $hr.val(hours) : $hr.html(hours + ' <span class="timeSeg">hr</span>');
             $min.is('input') ? $min.val(minutes) : $min.html(minutes + ' <span class="timeSeg">min</span>');
@@ -281,33 +294,35 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     }
 
     function getSelectionStart(input) {
-        if (typeof input.selectionStart == 'number') {
-            return input.selectionStart
+        if (typeof input.selectionStart === 'number') {
+            return input.selectionStart;
         } else if (input.createTextRange) {
             var range;
             input.focus();
             range = document.selection.createRange().duplicate();
             range.moveEnd('character', input.value.length);
-            if (range.text == '') return input.value.length;
+            if (range.text == '') {
+                return input.value.length;
+            }
             return input.value.lastIndexOf(range.text);
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     function getSelectionEnd(input) {
-        if (typeof input.selectionEnd == 'number') {
-            return input.selectionEnd
+        if (typeof input.selectionEnd === 'number') {
+            return input.selectionEnd;
         } else if (input.createTextRange) {
             var range;
             input.focus();
             range = document.selection.createRange().duplicate();
             range.moveStart('character', -input.value.length);
-            if (range.text == '') return input.value.length;
+            if (range.text == '') {
+                return input.value.length;
+            }
             return input.value.lastIndexOf(range.text);
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     function ViewModel(params) {
@@ -315,7 +330,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.showLabel = (params.hasOwnProperty('showLabel')) ? params.showLabel : true;
         this.naked = params.naked;
         this.columnClasses = params.columnClasses;
-        this.readOnlyText = (!!params.readOnlyText) ? params.readOnlyText : "lh30";
+        this.readOnlyText = (!!params.readOnlyText) ? params.readOnlyText : 'lh30';
         this.propertyName = params.propertyName;
         this.data = params.data[this.propertyName];
         this.min = params.min;
@@ -324,24 +339,24 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.isInEditMode = params.rootContext.isInEditMode;
         this.forceEdit = params.forceEdit || false;
 
-        if (typeof this.min != 'undefined') {
+        if (typeof this.min !== 'undefined') {
             segments = this.min.split(':');
             this.min = (segments[0] * 60 * 60) + (segments[1] * 60) + parseInt(segments[2], 10);
         }
-        if (typeof this.max != 'undefined') {
+        if (typeof this.max !== 'undefined') {
             segments = this.max.split(':');
             this.max = (segments[0] * 60 * 60) + (segments[1] * 60) + parseInt(segments[2], 10);
         }
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.doSomething = function() {
+    ViewModel.prototype.doSomething = function () {
 
     };
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
 
     };
 
