@@ -5035,9 +5035,16 @@ var dti = {
 
                 this.$modal = $('#pointSelectorModal');
 
+                this.modes = {
+                    CREATE: 'create',
+                    FILTER: 'filter',
+                    DEFAULT: 'default'
+                };
+
                 this.initPointTypes();
                 this.initBindings();
             }
+
 
             defaultCallback(data) {
                 dti.windows.openWindow(data._id);
@@ -5059,17 +5066,20 @@ var dti = {
             }
 
             initBindings() {
+                let self = this;
                 this.bindings = ko.viewmodel.fromModel({
                     searchString: '',
                     results: [],
                     busy: false,
                     focus: false,
+                    mode: this.modes.DEFAULT,
                     pointTypesShown: false,
                     pointTypes: this.pointTypes
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
                 this.bindings.handleRowClick = this.handleRowClick.bind(this);
+                this.bindings.handleAcceptFilterClick = this.handleAcceptFilterClick.bind(this);
                 this.bindings.togglePointTypeList = () => {
                     this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
                 };
@@ -5080,6 +5090,25 @@ var dti = {
 
                     this.setPointTypes(type);
                 };
+
+                this.bindings.modalText = ko.pureComputed(function getModalText() {
+                    var mode = self.bindings.mode(),
+                        ret;
+
+                    switch (mode) {
+                        case self.modes.CREATE:
+                            ret = 'Create Point';
+                            break;
+                        case self.modes.FILTER:
+                            ret = 'Choose Filter';
+                            break;
+                        case self.modes.DEFAULT:
+                            ret = 'Choose Point';
+                            break;
+                    }
+
+                    return ret;
+                });
 
                 this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
                     let count = 0;
@@ -5132,7 +5161,7 @@ var dti = {
             getFlatPointTypes(list) {
                 let ret = [];
 
-                if (list) {
+                if (list && list.length > 0) {
                     dti.forEachArray(list, (type) => {
                         if (typeof type === 'object') {
                             ret.push(type.key);
@@ -5143,7 +5172,11 @@ var dti = {
                         }
                     });
                 } else {
+                    let defaultPointTypeList = this.bindings.pointTypes();
 
+                    dti.forEachArray(defaultPointTypeList, (pointType) => {
+                        ret.push(pointType.name());
+                    });
                 }
 
                 return ret;
@@ -5208,15 +5241,31 @@ var dti = {
             }
 
             handleRowClick(e) {
+                let mode = this.bindings.mode();
+                if (mode !== this.modes.FILTER) {
+                    let target = e.target;
+                    let data = ko.dataFor(target);
+
+                    this.$modal.closeModal();
+
+                    this.callback(data);
+                    this.callback = this.defaultCallback;
+
+                    // dti.log(arguments);
+                }
+            }
+
+            handleAcceptFilterClick(e) {
                 let target = e.target;
                 let data = ko.dataFor(target);
 
                 this.$modal.closeModal();
 
-                this.callback(data);
+                this.callback({
+                    terms: data.searchString(),
+                    pointTypes: this.selectedPointTypes()
+                });
                 this.callback = this.defaultCallback;
-
-                // dti.log(arguments);
             }
 
             handleSearchResults(results) {
@@ -5229,7 +5278,6 @@ var dti = {
                 this.bindings.results(results);
                 this.bindings.busy(false);
             }
-
 
             //exposed methods
             handleChoosePoint(data) {
@@ -5264,17 +5312,31 @@ var dti = {
                 });
             }
 
+            selectedPointTypes() {
+                let answer = [];
+
+                dti.forEachArray(this.bindings.pointTypes(), (type) => {
+                    if (type.selected()) {
+                        answer.push(type.name());
+                    }
+                });
+
+                return answer;
+            }
+
             show(config) {
                 let pointTypes = this.getFlatPointTypes([]);
                 if (typeof config === 'object') {
                     this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
                     this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
                     this.bindings.searchString(config.terms || '');
+                    this.bindings.mode(config.mode ? config.mode : this.modes.DEFAULT);
 
                     this.setPointTypes(config, true);
                 } else {
                     this.callback = this.defaultCallback;
                     this.bindings.searchString('');
+                    this.bindings.mode(this.modes.DEFAULT);
 
                     if (config && typeof config === 'string') {
                         this.pointTypes = [config];
@@ -5285,7 +5347,7 @@ var dti = {
                     this.setPointTypes(this.pointTypes, true);
                 }
 
-                
+
 
                 this.search();
 
@@ -5382,6 +5444,21 @@ var dti = {
                                     value: {
                                         point: data
                                     }
+                                });
+                            };
+
+                        config.callback = callback;
+
+                        dti.pointSelector.show(config);
+                    },
+                    showPointSelectorFilter: function () {
+                        var sourceWindowId = config._windowId,
+                            callback = function (data) {
+                                dti.messaging.sendMessage({
+                                    messageID: messageID,
+                                    key: sourceWindowId,
+                                    message: 'pointFilterSelected',
+                                    value: data
                                 });
                             };
 

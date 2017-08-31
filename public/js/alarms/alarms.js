@@ -165,28 +165,30 @@ let AlarmManager = function (conf) {
         currentUser,
         windowUpi = "alarm" + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
 
-        $elAlarms = $('.alarms'),
         $elnewAlarmTop = $('.newAlarmTop'),
         $elnewAlarmBot = $('.newAlarmBottom'),
         rowHeight = 28,
 
-        $elContent = $('.content'),
-        $elDetailContainer = $('.detailContainer'),
-        $alarmsBody = $("body"),
+        $alarmsBody = $(".alarmsBody"),
+        $elAlarms = $alarmsBody.find('.alarms'),
+        $elContent = $alarmsBody.find('.content'),
+        $alarmContainer = $alarmsBody.find("#alarmContainer"),
+        $elDetailContainer = $alarmsBody.find('.detailContainer'),
         $dateTimeFilterModal = $alarmsBody.find('#dateTimeFilterModal'),
         $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
         $timeFrom = $dateTimeFilterModal.find("#timeFrom"),
         $dateTo = $dateTimeFilterModal.find("#dateTo"),
         $timeTo = $dateTimeFilterModal.find("#timeTo"),
+        $filters = $alarmsBody.find('#filters'),
         detailWidth = $elDetailContainer.outerWidth(),
 
         horizontalMenu = {
-            $elAlarmClass: $('#filters .horizontalMenu.alarmClass'),
-            $elAlarmCategory: $('#filters .horizontalMenu.alarmCategory')
+            $elAlarmClass: $filters.find('.horizontalMenu.alarmClass'),
+            $elAlarmCategory: $filters.find('.horizontalMenu.alarmCategory')
         },
         verticalMenu = {
-            $elAlarmClass: $('#filters .verticalMenu.alarmClass'),
-            $elAlarmCategory: $('#filters .verticalMenu.alarmCategory')
+            $elAlarmClass: $filters.find('.verticalMenu.alarmClass'),
+            $elAlarmCategory: $filters.find('.verticalMenu.alarmCategory')
         },
 
         //------ Constants definitions
@@ -344,39 +346,127 @@ let AlarmManager = function (conf) {
             };
 
             if (typeof dti !== 'undefined' && dti.utility !== undefined) {
-                return sendResult(dti.utility.getConfig(methodName, [parms]));
+                return sendResult(dti.utility.getConfig(methodName, parms));
             } else if (window.getConfig !== undefined) {
-                return sendResult(window.getConfig(methodName, [parms]));
+                return sendResult(window.getConfig(methodName, parms));
             } else if (dtiUtility) {  // lastly try async call
                 dtiUtility.getConfig(methodName, parms, sendResult());
             }
         },
+        storeViewFilters = (view) => {
+            let storeData = store.get(storeKey),
+                viewData = ko.toJS(view);
+
+            if (!storeData) {
+                storeData = {};
+                storeData.sessionId = sessionId;
+            }
+            if (storeData[windowUpi] === undefined) {
+                storeData[windowUpi] = {};
+            }
+
+            // Strip off the keys that we do not need
+            delete viewData.alarmTable;
+            delete viewData.alarmTableName;
+            delete viewData.children;
+            delete viewData.defaultFilters;
+            delete viewData.group;
+
+            storeData[windowUpi].currentViewId = view.id;
+            storeData[windowUpi][view.id] = viewData;
+
+            store.set(storeKey, storeData);
+        },
+        saveViewFilters = (view) => {
+            let category,
+                cat,
+                viewCat,
+                opt,
+                viewOptions,
+                found,
+                index,
+                i,
+                len;
+
+            for (category in self.filters) {
+                // Category shortcuts
+                cat = self.filters[category];
+                viewCat = view.filters[category];
+
+                // Get and set the visibility of this filter category set
+                cat.visible(viewCat.visible);
+
+                // Loop through all possible filter options, enabling the ones the view requires
+                len = cat.options.length;
+                for (i = 0; i < len; i++) {
+                    opt = cat.options[i];
+                    viewOptions = viewCat.options;
+
+                    if (category === "dateTime" || category === "pointAttribs") {
+                        viewOptions[opt.text] = opt.value();
+                    } else {
+                        found = ((index = viewOptions.indexOf(opt.text)) > -1);
+
+                        if (opt.isActive() && !found) {
+                            viewOptions.push(opt.text);
+                        } else if (!opt.isActive() && found) {
+                            viewOptions.splice(index, 1);
+                        }
+                    }
+                }
+            }
+            storeViewFilters(view);
+        },
+        resetViewFilters = (view) => {
+            view.filters = deepClone(view.defaultFilters);
+        },
+        applyFilter = (filterWithoutDelay) => {
+            let alarmTable = self.alarms.peek(),
+                view = alarmTable.view,
+                checkFilterGap = function (view) {
+                    saveViewFilters(view);
+                    filterChange = new Date().getTime();
+                    self.alarms().refresh(true);
+                };
+
+            _log('applyFilter() Received filter request', new Date());
+
+            // Normally we would let the alarm getter set this flag, but the delay between changing a filter and the UI
+            // indicating we're getting data looks funny.  So we set this flag here to immediately indicate we're
+            // getting data (even though we actually wait a moment to make sure there are no other changes coming).
+            // In this case, gettingData gets set twice.  Once here, and again in the getter computed (getRecentAlarms for ex.)
+            alarmTable.gettingData(true);
+            view.gotoPageOne = true;
+
+            if (filterWithoutDelay) {
+                checkFilterGap(view);
+            } else {
+                setTimeout(function () {
+                    checkFilterGap(view);
+                }, FILTER_CHANGE_DELAY);
+            }
+            // self.fireDateTimeFilterChange(true);
+            // self.firePointAttribFilterChange(true);
+        },
         changePointAttribsFilter = function (data) {
             let val,
                 upi = parseInt(data.upi, 10),
-                pointAttribs = self.filters.pointAttribs.options,
                 setFilter = (pointType) => {
                     pointAttribsFilterObj.pointTypes = [pointType];
 
-                    self.nameFilterPaused(false);
-                    applyFilter(true);
+                    self.pointAttribsFilterPaused(false);
+                    self.applyPointAttribsFilter();
                 };
 
-            self.nameFilterPaused(true);
+            self.pointAttribsFilterPaused(true);
 
-            val = (typeof data.path === 'function') ? data.path() : data.path;
-            pointAttribs.path = (val.length ? val : []);
-            pointAttribsFilterObj.path = pointAttribs.path;
-
-            // val = (typeof data.terms === 'function') ? data.terms() : data.terms;
-            // pointAttribs.terms = (val.length ? val : "");
-            // pointAttribsFilterObj.terms = pointAttribs.terms;
+            val = (typeof data.path === 'function') ? data.path() : data.path; // using path of clicked point as search terms for backend filtering
+            pointAttribsFilterObj.terms = (val.length ? val.join(" ") : "");
 
             utilGetConfig('Utility.getPointTypeNameFromId', upi, setFilter);
         },
-        //------ Point selector routines
-        filterCallback = function (filterObj) {
-            pointAttribsFilterObj.path = filterObj.path;
+        pointAttribsCallback = function (filterObj) {
+            pointAttribsFilterObj.path = (filterObj.path ? filterObj.path : []);
             pointAttribsFilterObj.terms = filterObj.terms;
 
             if (filterObj.pointTypes.length === numberPointTypes) {
@@ -384,7 +474,7 @@ let AlarmManager = function (conf) {
             }
 
             pointAttribsFilterObj.pointTypes = filterObj.pointTypes;
-            self.applyNameFilter();
+            self.applyPointAttribsFilter();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             let alm = new Date(timestamp * 1000),
@@ -829,7 +919,7 @@ let AlarmManager = function (conf) {
             }
 
             // Build concatenated name string & attach to alarm
-            alarm.Name = utilGetConfig("Utility.getPointName", alarm.path);
+            alarm.Name = utilGetConfig("Utility.getPointName", [alarm.path]);
 
             alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
         },
@@ -844,8 +934,8 @@ let AlarmManager = function (conf) {
                 key,
                 pointType,
                 val,
-                l_startDate = 0,
-                l_endDate = 0,
+                lStartDate = 0,
+                lEndDate = 0,
                 view = alarmTable.view,
                 filters = view.filters,
                 sortAscending = view.sortAscending.peek(),
@@ -859,28 +949,33 @@ let AlarmManager = function (conf) {
 
             pointAttribs = filters.pointAttribs.options;
             for (key in pointAttribs) {
-                if (key === 'pointTypes') {
-                    // pointTypes array length of 0 indicates all point types should be included. The server will
-                    // give us all point types if we do not send the 'pointTypes' key.
-                    if (availablePointTypes) {
-                        if (pointAttribs[key].length > 0) {
-                            reqObj[key] = [];
-                            for (pointType in pointAttribs[key]) {
-                                reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
+                switch (key) {
+                    case "pointTypes":
+                        // pointTypes array length of 0 indicates all point types should be included. The server will
+                        // give us all point types if we do not send the 'pointTypes' key.
+                        if (availablePointTypes) {
+                            if (pointAttribs[key].length > 0) {
+                                reqObj[key] = [];
+                                for (pointType in pointAttribs[key]) {
+                                    reqObj[key].push(availablePointTypes[pointAttribs[key][pointType]]);
+                                }
                             }
                         }
-                    }
-                } else {
-                    val = pointAttribs[key];
-                    // A value of undefined means we require that the name segment be empty
-                    if (val === undefined) {
-                        reqObj[key] = null; // We can't send undefined (stringify strips it out); server looks for null
-                    }
-                    // If our value is not blank, add it to our filters
-                    else if (val !== "") {
-                        reqObj[key] = val;
-                    }
-                    // Do not add name segment to our request object if it is empty string
+                        break;
+                    case "terms":
+                        val = pointAttribs[key];
+
+                        if (val === undefined) {
+                            reqObj[key] = null;
+                        } else if (val !== "") {
+                            reqObj[key] = val.split(" ");
+                        }
+                        break;
+                    case "path":
+                        // no logic for path yet
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -905,14 +1000,14 @@ let AlarmManager = function (conf) {
 
             dateTimeOptions = filters.dateTime.options;
             if (!dateErrors) {
-                l_startDate = Date.parse(dateTimeOptions.dateFrom + ' ' + dateTimeOptions.timeFrom);
-                l_startDate = (l_startDate === null) ? 0 : Math.floor(l_startDate / 1000);
+                lStartDate = Date.parse(dateTimeOptions.dateFrom + ' ' + dateTimeOptions.timeFrom);
+                lStartDate = (lStartDate === null) ? 0 : Math.floor(lStartDate / 1000);
 
-                l_endDate = Date.parse(dateTimeOptions.dateTo + ' ' + dateTimeOptions.timeTo);
-                l_endDate = (l_endDate === null) ? 0 : Math.floor(l_endDate / 1000);
+                lEndDate = Date.parse(dateTimeOptions.dateTo + ' ' + dateTimeOptions.timeTo);
+                lEndDate = (lEndDate === null) ? 0 : Math.floor(lEndDate / 1000);
             }
-            reqObj.startDate = l_startDate;
-            reqObj.endDate = l_endDate;
+            reqObj.startDate = lStartDate;
+            reqObj.endDate = lEndDate;
         },
         receiveAlarms = function (data, alarmTable) {
             // Throw alarms away if reqID defined and we have a mismatch. **If reqID is undefined we've received unsolicited
@@ -1014,73 +1109,6 @@ let AlarmManager = function (conf) {
                 storeData = {};
             }
             return storeData;
-        },
-        storeViewFilters = function (view) {
-            let storeData = store.get(storeKey),
-                viewData = ko.toJS(view);
-
-            if (!storeData) {
-                storeData = {};
-                storeData.sessionId = sessionId;
-            }
-            if (storeData[windowUpi] === undefined) {
-                storeData[windowUpi] = {};
-            }
-
-            // Strip off the keys that we do not need
-            delete viewData.alarmTable;
-            delete viewData.alarmTableName;
-            delete viewData.children;
-            delete viewData.defaultFilters;
-            delete viewData.group;
-
-            storeData[windowUpi].currentViewId = view.id;
-            storeData[windowUpi][view.id] = viewData;
-
-            store.set(storeKey, storeData);
-        },
-        saveViewFilters = function (view) {
-            let category,
-                cat,
-                viewCat,
-                opt,
-                viewOptions,
-                found,
-                index,
-                i,
-                len;
-
-            for (category in self.filters) {
-                // Category shortcuts
-                cat = self.filters[category];
-                viewCat = view.filters[category];
-
-                // Get and set the visibility of this filter category set
-                cat.visible(viewCat.visible);
-
-                // Loop through all possible filter options, enabling the ones the view requires
-                len = cat.options.length;
-                for (i = 0; i < len; i++) {
-                    opt = cat.options[i];
-                    viewOptions = viewCat.options;
-
-                    if (category === "dateTime" || category === "pointAttribs") {
-                        viewOptions[opt.text] = opt.value();
-                    } else {
-                        found = ((index = viewOptions.indexOf(opt.text)) > -1);
-
-                        if (opt.isActive() && !found) {
-                            viewOptions.push(opt.text);
-                        } else if (!opt.isActive() && found) {
-                            viewOptions.splice(index, 1);
-                        }
-                    }
-                }
-            }
-            storeViewFilters(view);
-        },
-        resetViewFilters = function (view) {
-            view.filters = deepClone(view.defaultFilters);
         },
         initViewGroup = function (group) {
             let viewGroup = self[group],
@@ -1257,33 +1285,6 @@ let AlarmManager = function (conf) {
                 view.pageNumber(numberOfPages);
             }
         },
-        applyFilter = function (filterWithoutDelay) {
-            let alarmTable = self.alarms.peek(),
-                view = alarmTable.view,
-                checkFilterGap = function (view) {
-                    saveViewFilters(view);
-                    filterChange = new Date().getTime();
-                    self.alarms().refresh(true);
-                };
-
-            _log('applyFilter() Received filter request', new Date());
-
-            // Normally we would let the alarm getter set this flag, but the delay between changing a filter and the UI
-            // indicating we're getting data looks funny.  So we set this flag here to immediately indicate we're
-            // getting data (even though we actually wait a moment to make sure there are no other changes coming).
-            // In this case, gettingData gets set twice.  Once here, and again in the getter computed (getRecentAlarms for ex.)
-            alarmTable.gettingData(true);
-            view.gotoPageOne = true;
-
-            if (filterWithoutDelay) {
-                checkFilterGap(view);
-            } else {
-                setTimeout(function () {
-                    checkFilterGap(view);
-                }, FILTER_CHANGE_DELAY);
-            }
-            self.fireDateTimeFilterChange(true);
-        },
         applyView = function (targetView) {
             let curView = self.currentView(),
                 curGroup = curView.group,
@@ -1325,7 +1326,7 @@ let AlarmManager = function (conf) {
             // We have to pause the computeds while we update some of our filters, otherwise the computed
             // would fire off an alarms request to the server prematurely. This routine will call the alarms request
             // via the refresh observable (we have computeds that monitor the refresh flags)
-            self.nameFilterPaused(true);
+            self.pointAttribsFilterPaused(true);
             self.dateTimeFilterPaused(true);
 
             // Get new filters from the selected view
@@ -1424,7 +1425,7 @@ let AlarmManager = function (conf) {
             }
 
             // Release the computed pause
-            self.nameFilterPaused(false);
+            self.pointAttribsFilterPaused(false);
             self.dateTimeFilterPaused(false);
         },
         initAlarmTables = function () {
@@ -1810,6 +1811,7 @@ let AlarmManager = function (conf) {
         self.currentView = ko.observable(view);
     }
 
+    self.firePointAttribFilterChange = ko.observable(false); // crutch for pointAttribFilter not firing correctly
     self.fireDateTimeFilterChange = ko.observable(false); // crutch for dateFilter not firing correctly
     self.viewTitle = ko.observable();
     self.selectedRows = ko.observableArray([]);
@@ -1915,10 +1917,10 @@ let AlarmManager = function (conf) {
             reconnect = function () {
                 $.ajax({
                     url: '/home'
-                }).done(function (data) {
+                }).done((data) => {
                     isReconnecting = false;
                     _log('reconnected', new Date());
-                }).fail(function (data) {
+                }).fail((data) => {
                     retries++;
                     if (retries < 2) {
                         _log('retrying reconnect');
@@ -2105,11 +2107,14 @@ let AlarmManager = function (conf) {
             selectedRows = self.selectedRows,
             clicks,
             isBetween = function (val, end1, end2) {
+                let answer = false;
                 if (end1 > end2) {
-                    return (val < end1) && (val > end2);
+                    answer = (val < end1) && (val > end2);
                 } else {
-                    return (val < end2) && (val > end1);
+                    answer = (val < end2) && (val > end1);
                 }
+
+                return answer;
             },
             getIndexOf = function (_id) {
                 for (i = 0; i < len; i++) {
@@ -2338,17 +2343,14 @@ let AlarmManager = function (conf) {
 
     self.showPointFilter = function () {
         let parameters = {
-            path: pointAttribsFilterObj.path,
+            path: pointAttribsFilterObj.path,  // not used yet
             terms: pointAttribsFilterObj.terms,
+            restrictPointTypes: false,
             pointTypes: pointAttribsFilterObj.pointTypes
         };
 
         dtiUtility.showPointFilter(parameters);
-        // dtiUtility.onPointFilterSelect(filterCallback);
-        dtiUtility.onPointFilterSelect(function handlePointFilterSelect(cfg) {
-            filterCallback(cfg);
-            self.applyNameFilter();
-        });
+        dtiUtility.onPointFilterSelect(pointAttribsCallback);
     };
 
 
@@ -2466,19 +2468,19 @@ let AlarmManager = function (conf) {
         $toTimePicker[0].value = placeholderDateFilters.timeTo.value;   // revisit once materialize get updated
     };
 
-    self.applyNameFilter = function () {
+    self.applyPointAttribsFilter = function () {
         let option,
             curVal,
             newVal,
             i,
-            nsFilters = self.filters.pointAttribs.options,
-            len = nsFilters.length,
+            pntFilters = self.filters.pointAttribs.options,
+            len = pntFilters.length,
             doApplyFilter = false;
 
-        self.nameFilterPaused(true);
+        self.pointAttribsFilterPaused(true);
 
         for (i = 0; i < len; i++) {
-            option = nsFilters[i];
+            option = pntFilters[i];
             curVal = option.value();
             newVal = pointAttribsFilterObj[option.text];
 
@@ -2489,14 +2491,15 @@ let AlarmManager = function (conf) {
             option.value(pointAttribsFilterObj[option.text]);
         }
 
-        self.nameFilterPaused(false);
+        self.pointAttribsFilterPaused(false);
 
         if (doApplyFilter) {
-            nsFilters.terms.value.valueHasMutated();
+            pntFilters.terms.value.valueHasMutated();
+            self.firePointAttribFilterChange(true);
         }
     };
 
-    self.callChangeNameFilter = () => {
+    self.callChangePointAttribsFilter = () => {
         changePointAttribsFilter(self.alarmDetail.alarm());
     };
 
@@ -2747,7 +2750,6 @@ let AlarmManager = function (conf) {
     dtiUtility.getUser(setCurrentUser);
     utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
 
-
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
     // depends on the rest of the viewmodel to be setup correctly before they are executed.
@@ -2755,7 +2757,7 @@ let AlarmManager = function (conf) {
         return alarmTables[self.currentView().alarmTableName()];
     }, self);
 
-    self.alarms200 = ko.computed(function () {
+    self.alarmsPAGESIZE = ko.computed(function () {
         return self.alarms().list.slice(0, PAGE_SIZE);
     }, self);
 
@@ -2772,6 +2774,10 @@ let AlarmManager = function (conf) {
 
         if (self.fireDateTimeFilterChange()) {
             self.fireDateTimeFilterChange(false);
+        }
+
+        if (self.firePointAttribFilterChange()) {
+            self.firePointAttribFilterChange(false);
         }
 
         if (self.filters) {
@@ -2880,16 +2886,20 @@ let AlarmManager = function (conf) {
     // Pausing variable for the following computed name filter. If we didn't have this, when we changed views we'd
     // inadvertently get alarms from the server twice: once here because of the applyFilter call, and again by the
     // applyView routine (called when views change)
-    self.nameFilterPaused = ko.observable(true);
-    self.nameFilter = ko.computed(function () {
-        let paused = self.nameFilterPaused.peek(),
+    self.pointAttribsFilterPaused = ko.observable(true);
+    self.pointAttribsFilter = ko.computed(function () {
+        let paused = self.pointAttribsFilterPaused.peek(),
             options = (self.filters ? self.filters.pointAttribs.options : []),
             len = options.length,
             active = false,
-            $filterIcon = $('#nameFilters .filterIcon'),
+            $filterIcon = $filters.find('#pointAttribsFilters .filterIcon'),
             option,
             val,
             i;
+
+        if (self.firePointAttribFilterChange()) {
+            self.firePointAttribFilterChange(false);
+        }
 
         for (i = 0; i < len; i++) {
             option = options[i];
@@ -2902,7 +2912,7 @@ let AlarmManager = function (conf) {
                 active = true;
             }
             // You would think we could break the loop once we know we have an active filter, but we need to
-            // continue so that this computed maintains a dependency with all name segments.
+            // continue so that this computed maintains a dependency with all point attribs
         }
 
         if (active) {
@@ -2928,7 +2938,7 @@ let AlarmManager = function (conf) {
             val,
             option,
             $el,
-            $filterIcon = $('#timeDateFilters .filterIcon');
+            $filterIcon = $filters.find('#timeDateFilters .filterIcon');
 
         dateErrors = false;
 
@@ -2988,6 +2998,7 @@ let AlarmManager = function (conf) {
         }
 
         closeModal($dateTimeFilterModal);
+        self.fireDateTimeFilterChange(true);
         applyFilter(withoutDelay);  // should save current filter as well
     };
 
@@ -3019,52 +3030,40 @@ let AlarmManager = function (conf) {
     }, self);
 
     self.printAlarms = function () {
-        let $alarm = $('.alarms');
-        $alarm.css('overflow', 'visible');
-        $alarm.printArea({mode: 'iframe'});
-        $alarm.css('overflow', 'auto');
+        let hostAndProtocol = window.location.protocol + "//" + window.location.host,
+            $pages,
+            pagesDisplayCss;
+
+        $alarmContainer.prepend('<link rel="stylesheet" href="' + hostAndProtocol + '/css/alarms/printAlarms.css" type="text/css" />');
+        $elAlarms.css('overflow', 'visible');
+        $pages = $alarmContainer.find(".pages");
+        pagesDisplayCss = $pages.css('display');
+        $pages.css('display', 'none');
+
+        $alarmContainer.printArea({
+            mode: 'iframe'
+        });
+
+        $alarmContainer.find("link[rel=stylesheet]").remove();
+        $pages.css('display', pagesDisplayCss);
+        $elAlarms.css('overflow', 'auto');
     };
 
-    // setTimeout(function () {
     self.init();
-    // }, 10);
 };
 
 function initPage(manager) {
-    let dateId = '#timeDateFilters',
-        $pointFilterModal = $('#pointFilterModal'),
-        $dateTimeFilterModal = $('#dateTimeFilterModal'),
+    let $dateTimeFilterModal = $('#dateTimeFilterModal'),
         $dateFrom = $dateTimeFilterModal.find("#dateFrom"),
         // $timeFrom = $dateTimeFilterModal.find("#timeFrom"),
         $dateTo = $dateTimeFilterModal.find("#dateTo"),
         // $timeTo = $dateTimeFilterModal.find("#timeTo"),
-        $dateFilterIcon = $(dateId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
-
         $alarms = $('.alarms'),
         $newAlarmTop = $('.newAlarmTop'),
         $newAlarmBottom = $('.newAlarmBottom'),
         timeoutId,
-        toggleDropdown = function (id) {
-            let $container = $(id),
-                $dropDown = $(id + ' .dropdown-menu'),
-                $icon = $(id + ' .filterIcon'),
-                visible = $dropDown.is(':visible');
-
-            if (!visible) {
-                $icon.addClass('open');
-                $bodyMask.show();
-            } else {
-                $icon.removeClass('open');
-            }
-            $dropDown.toggle();
-        },
         hideDropDowns = function () {
-            let $dateFilterDropDown = $(dateId + ' .dropdown-menu');
-
-            $dateFilterDropDown.hide();
-            $dateFilterIcon.removeClass('open');
-
             $bodyMask.hide();
         };
 
@@ -3075,16 +3074,6 @@ function initPage(manager) {
         if (e.target.tagName !== 'INPUT') {
             $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
         }
-    });
-
-    // When the date filter icon is clicked, we reveal a drop down containing the time date filters
-    $dateFilterIcon.click(function (e) {
-        toggleDropdown(dateId);
-    });
-
-    // This targets the 'x', 'OK', and 'clear filter' buttons in the drop down, which also dismiss the dropdown
-    $('.dropdown-menu .closeIt').click(function () {
-        hideDropDowns();
     });
 
     // When either the name filter or date filter drop down is shown, this element is made visible. It sits
@@ -3110,21 +3099,6 @@ function initPage(manager) {
                 $dateFrom.pickadate('picker').set({max: new Date(this.get('select').pick)});
             }
         }
-    });
-
-    // Add click handlers to 'close' elements within the modal itself
-    $pointFilterModal.find('.closeIt').click(function () {
-        $pointFilterModal.modal('toggle');
-    });
-
-    // Add handler to notify when the modal is dismissed
-    $pointFilterModal.on('hide.bs.modal', function (e) {
-        manager.applyNameFilter();
-    });
-
-    // Add handler to notify when the modal is shown
-    $pointFilterModal.on('shown.bs.modal', function (e) {
-        $('#pointLookup')[0].contentWindow.$('#listSearch').find('input:first').focus();
     });
 
     // Add mouseover handlers to new alarm notifications (shown when the incoming alarms aren't in view)
@@ -3157,12 +3131,6 @@ function initPage(manager) {
         $alarms.scrollTop(99999);
         $newAlarmBottom.fadeOut(0);
     });
-
-    // If this is a pop-out window
-    if (window.top.location.href === window.location.href) {
-        $('.popOut').addClass('hidden');
-        $('.popIn').removeClass('hidden');
-    }
 
     $(window).resize(function () {
         window.clearTimeout(timeoutId);

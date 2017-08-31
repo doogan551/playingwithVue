@@ -104,6 +104,7 @@ const Common = class Common extends Utility {
     }
 
     buildAlarmQuery(data, view) {
+        let pointModel = new Point();
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);
@@ -131,10 +132,17 @@ const Common = class Common extends Utility {
             }];
         }
 
-        this.addNamesToQuery(data, query, 'name1', 'Name1');
-        this.addNamesToQuery(data, query, 'name2', 'Name2');
-        this.addNamesToQuery(data, query, 'name3', 'Name3');
-        this.addNamesToQuery(data, query, 'name4', 'Name4');
+        if (!!data.terms) {
+            if (data.terms.length) {
+                if (typeof data.terms === 'string') {
+                    data.terms = data.terms.split(" ");
+                }
+
+                query.path = {
+                    $all: pointModel.buildSearchTerms(data.terms)
+                };
+            }
+        }
 
         if (data.msgCat) {
             query.msgCat = {
@@ -247,3 +255,5 @@ const Common = class Common extends Utility {
 };
 
 module.exports = Common;
+const Point = require('./point');
+
