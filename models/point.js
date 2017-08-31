@@ -194,6 +194,7 @@ const Point = class Point extends Common {
                     fixPoint(permissions, points, cb);
                 });
             } else {
+                criteria.pipeline.push(matchStage);
                 this.aggregate(criteria, (err, points) => {
                     if (err) {
                         return cb(err, null, null);
