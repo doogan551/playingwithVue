@@ -104,7 +104,6 @@ const Common = class Common extends Utility {
     }
 
     buildAlarmQuery(data, view) {
-        let pointModel = new Point();
         let currentPage = this.getDefault(data.currentPage, 1);
         let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
         let startDate = this.getDefault(data.startDate, 0);
@@ -139,7 +138,7 @@ const Common = class Common extends Utility {
                 }
 
                 query.path = {
-                    $all: pointModel.buildSearchTerms(data.terms)
+                    $all: this.buildSearchTerms(data.terms)
                 };
             }
         }
@@ -264,5 +263,3 @@ const Common = class Common extends Utility {
 };
 
 module.exports = Common;
-const Point = require('./point');
-
