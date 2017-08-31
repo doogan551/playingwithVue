@@ -118,7 +118,15 @@ const Point = class Point extends Common {
         {
             '$addFields': {
                 'Point.Point Refs': {
-                    '$concatArrays': ['$refs.Point Refs', '$Points.Point Refs']
+                    '$concatArrays': [{
+                        '$cond': {
+                            'if': {
+                                '$ne': ['$refs', null]
+                            },
+                            'then': '$refs.Point Refs',
+                            'else': []
+                        }
+                    }, '$Points.Point Refs']
                 }
             }
         }, {
@@ -136,13 +144,9 @@ const Point = class Point extends Common {
                 return cb(err);
             }
             points.forEach((point) => {
-                if (!point['Point Refs']) {
-                    point['Point Refs'] = [];
-                }else{
-                    point['Point Refs'].forEach((pointRef) => {
-                        pointRef.PointName = Config.Utility.getPointName(pointRef.PointPath);
-                    });
-                }
+                point['Point Refs'].forEach((pointRef) => {
+                    pointRef.PointName = Config.Utility.getPointName(pointRef.PointPath);
+                });
             });
             return cb(null, points);
         });
@@ -3464,7 +3468,9 @@ const Point = class Point extends Common {
             $limit: 200
         });
         pipeline.push({
-            $sort: {'path': 1}
+            $sort: {
+                'path': 1
+            }
         });
         pipeline.push({
             $project: {
