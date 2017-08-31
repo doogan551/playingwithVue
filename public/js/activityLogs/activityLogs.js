@@ -41,7 +41,7 @@ var initKnockout = function () {
                 set: function (datePicker) {
                     if (datePicker.select) {
                         let dateInTextFormat = moment(datePicker.select).format("MM/DD/YYYY");
-                        valueAccessor()(moment(dateInTextFormat));
+                        valueAccessor()(dateInTextFormat);
                     }
                 }
             });
@@ -128,9 +128,9 @@ var ActivityLogsManager = function (conf) {
             };
 
             if (typeof dti !== 'undefined' && dti.utility !== undefined) {
-                return sendResult(dti.utility.getConfig(methodName, [parms]));
+                return sendResult(dti.utility.getConfig(methodName, parms));
             } else if (window.getConfig !== undefined) {
-                return sendResult(window.getConfig(methodName, [parms]));
+                return sendResult(window.getConfig(methodName, parms));
             } else if (dtiUtility) {  // lastly try async call
                 dtiUtility.getConfig(methodName, parms, sendResult());
             }
@@ -172,7 +172,7 @@ var ActivityLogsManager = function (conf) {
             reqObj.startDate = l_startDate;
             reqObj.endDate = l_endDate;
         },
-        pointAttribsFilterCallback = function (filter) {
+        setPointAttribsFilter = function (filter) {
             let arrayOfPointTypes = [],
                 pointType;
 
@@ -215,7 +215,7 @@ var ActivityLogsManager = function (conf) {
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
-            activityLog.Name = utilGetConfig("Utility.getPointName", activityLog.path);
+            activityLog.Name = utilGetConfig("Utility.getPointName", [activityLog.path]);
         },
         updateNumberOfPages = function (count, activityLogTable) {
             let sortAsc = self.sortAscending(),
@@ -481,9 +481,17 @@ var ActivityLogsManager = function (conf) {
         //_log('self.refreshUsersData() called........');
         requestUsers();
     };
-    self.showPointReview = function (element, theData) {
-        let upi = parseInt(theData.upi, 10),
+    self.handlePointObjectClick = (data, event) => {
+        let upi = parseInt(data.upi, 10),
+            $element = $(event.target),
             originalElementText,
+            path = data.path.join(" "),
+            setAttribsFilter = (pointType) => {
+                setPointAttribsFilter({
+                    terms: path,
+                    pointTypes: [pointType]
+                });
+            },
             openTheWindow = (pointType) => {
                 dtiUtility.openWindow({
                     upi: upi,
@@ -492,17 +500,22 @@ var ActivityLogsManager = function (conf) {
             };
 
         if (upi > 0) {
-            utilGetConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
+            if (event.type === 'click') {
+                utilGetConfig('Utility.getPointTypeNameFromId', upi, openTheWindow);
+            } else {
+                // Right-click changes the name filter to match this point's name
+                utilGetConfig('Utility.getPointTypeNameFromId', upi, setAttribsFilter);
+            }
         } else {
-            originalElementText = element.text;
-            $(element).stop().fadeOut("4000", function () {
-                element.text = " * Point not found *";
-                $(element).css("background", "#F26060").fadeIn(500);
+            originalElementText = $element.text;
+            $element.stop().fadeOut("4000", function () {
+                $element.text = " * Point not found *";
+                $element.css("background", "#F26060").fadeIn(500);
             });
             setTimeout(function () {
-                $(element).stop().fadeOut("500", function () {
-                    $(element).css("background", "#FFFFFF").fadeIn(500);
-                    element.text = originalElementText;
+                $element.stop().fadeOut("500", function () {
+                    $element.css("background", "#FFFFFF").fadeIn(500);
+                    $element.text = originalElementText;
                 });
             }, 3000);
         }
@@ -687,15 +700,14 @@ var ActivityLogsManager = function (conf) {
         }
 
         let parameters = {
-            path: [],
-            restrictPointTypes: (self.pointTypes().length < availablePointTypes.length),
-            // callback: pointAttribsFilterCallback,
+            path: [],  // not used yet
             terms: self.terms(),
+            restrictPointTypes: false,
             pointTypes: self.pointTypes()
         };
 
         dtiUtility.showPointFilter(parameters);
-        dtiUtility.onPointSelect(pointAttribsFilterCallback);
+        dtiUtility.onPointFilterSelect(setPointAttribsFilter);
     };
     self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom());

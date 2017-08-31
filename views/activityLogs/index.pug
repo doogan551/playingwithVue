@@ -58,7 +58,7 @@ html
                                     td.colUserName
                                         span.selectable(data-bind="text: username")
                                     td.colPointName
-                                        a.span.selectable.colPointName(id="pointNameField", data-bind="click: function () { $root.showPointReview($element, $data) }, text: Name, attr: { title: Name }")
+                                        a.span.selectable.colPointName(id="pointNameField", data-bind="click: $root.handlePointObjectClick, event: { contextmenu: $root.handlePointObjectClick }, text: Name, attr: { title: Name }")
                                     td.colLog
                                         span.selectable(data-bind="text: log")
 

@@ -266,7 +266,7 @@ var dtiUtility = {
 
         params.mode = 'filter';
 
-        dtiUtility.sendMessage('showPointSelector', params);
+        dtiUtility.sendMessage('showPointSelectorFilter', params);
     },
 
     showCreatePoint: function (parameters) {

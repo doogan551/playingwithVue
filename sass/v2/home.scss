@@ -1841,6 +1841,16 @@ input:focus {
     }
 }
 
+.filterMode {
+    .fixedHeader {
+        tbody {
+            tr {
+                cursor: default !important;
+            }
+        }
+    }
+}
+
 .fixedHeader {
     // height: 420px;
     // overflow-y: hidden;

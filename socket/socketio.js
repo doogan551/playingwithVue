@@ -929,18 +929,21 @@ function updateSchedules(data, callback) {
 
 function getScheduleEntries(data, callback) {
     const point = new Point();
-    let isSchedule = data.isSchedule,
-        upi = data.upi;
+    let isSchedule = data.isSchedule;
+    let upi = data.upi;
+    let matchStage;
 
     if (isSchedule) {
-        point.getAll({
-            query: {
-                'Point Type.Value': 'Schedule Entry'
+        matchStage = {
+            $match: {
+                'Point Type.Value': 'Schedule Entry',
+                _parentUpi: upi
             }
-        }, callback);
+        };
+        point.resolvePointRefs(matchStage, callback);
     } else {
-        point.getAll({
-            query: {
+        matchStage = {
+            $match: {
                 'Point Type.Value': 'Schedule Entry',
                 'Point Refs': {
                     $elemMatch: {
@@ -949,7 +952,8 @@ function getScheduleEntries(data, callback) {
                     }
                 }
             }
-        }, callback);
+        };
+        point.resolvePointRefs(matchStage, callback);
     }
 }
 

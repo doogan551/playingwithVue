@@ -10,7 +10,7 @@ html
         link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/alarms/alarms.css')
 
-    body.noSelect
+    body.alarmsBody.noSelect
         .titleBar
             .title.cursorPointer
                 .col.s6.alarmsViews
@@ -42,11 +42,11 @@ html
                 .filterContainer
                     .filterIcon.fa(id="pausePlay", data-bind="click: toggleViewPaused, css: { 'fa-pause': !$root.currentView().paused(), 'fa-play-circle filterActive': $root.currentView().paused() }, attr: {title: $root.currentView().paused() ? 'Resume alarm updates':'Pause alarm updates'} ")
                 // Point Attributes FILTER
-                .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
-                    .filterIcon.fa.fa-font.fa(data-bind="css: { 'dropdown-toggle-filter-set' : nameFilter(), 'dropdown-toggle' : !nameFilter() }, click: showPointFilter")
+                .filterContainer#pointAttribsFilters(title="Filter by point name and/or point type" )
+                    .filterIcon.fa.fa-font.fa(data-bind="click: showPointFilter")
                 // TIME DATE FILTERS
-                .filterContainer(id="timeDateFilters", title="Filter by date and/or time", data-bind="click: function () { $root.editDateTimeFilter() }, visible: filters.dateTime.visible")
-                    .filterIcon.fa.fa-clock-o.fa
+                .filterContainer#timeDateFilters(title="Filter by date and/or time")
+                    .filterIcon.fa.fa-clock-o.fa(data-bind="click: function () { $root.editDateTimeFilter() }, visible: filters.dateTime.visible")
 
                 // ALARM CLASS FILTERS
                 .filterContainer.withBorder.horizontalMenu.alarmClass(data-bind="visible: filters.alarmClass.visible")
@@ -120,7 +120,7 @@ html
 
                 .alarms(data-bind="visible: !alarms().timeout()")
                     table
-                        tbody(data-bind="foreach: alarms200")
+                        tbody(data-bind="foreach: alarmsPAGESIZE")
                             tr(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
                                 td.colSelect
                                     input.medium.filled-in(data-bind="checked: $data.isSelected, attr: { id: 'checkBoxForRow' + $index() }", type="checkbox")
@@ -224,7 +224,7 @@ html
                 .name
                     i.fa.fa-filter
                     .text
-                        a.cursorPointer(data-bind="text: alarmDetail.alarm().Name, click: callChangeNameFilter.bind($data)")
+                        a.cursorPointer(data-bind="text: alarmDetail.alarm().Name, click: callChangePointAttribsFilter.bind($data)")
 
                 .notifications
                     // ko if: alarmDetail.gettingData() === true
