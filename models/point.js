@@ -3431,15 +3431,6 @@ const Point = class Point extends Common {
         });
     }
 
-    buildSearchTerms(terms) {
-        return terms.map((term) => {
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
-            }
-            return new RegExp(term, 'ig');
-        });
-    }
-
     getFilteredPoints(data, cb) {
         let terms = data.terms;
         let pointTypes = data.pointTypes;
