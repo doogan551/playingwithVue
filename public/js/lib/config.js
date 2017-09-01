@@ -4984,26 +4984,27 @@ var Config = (function (obj) {
         },
         commonProperties: enumsTemplatesJson.Templates._common,
         checkAgainstTemplate: function (node) {
-            const ignoredProps = ['parentNode', 'display'];
             // need to add ignoredProperties to templates if we aren't doing notinhierarchy anymore
 
             let template;
-            if(enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
+            if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
                 template = obj.Templates.getTemplate(node.nodeType);
-            }else if (node.hasOwnProperty['Point Type']) {
+            } else if (node.hasOwnProperty['Point Type']) {
                 template = obj.Templates.getTemplate(node['Point Type']);
-            }else{
+            } else {
                 throw new Error('Wrong nodeType or missing Point Type');
             }
 
-            for(var prop in template) {
-                if(!node.hasOwnProperty(prop) || ignoredProps.includes(prop)) {
+            for (var prop in template) {
+                if (!node.hasOwnProperty(prop)) {
                     throw new Error('Missing property on template > ' + prop);
+                } else if (node[prop] === undefined) {
+                    throw new Error('Property is undefined > ' + prop);
                 }
             }
 
-            for(var prop2 in node) {
-                if(!template.hasOwnProperty(prop2) && !ignoredProps.includes(prop)) {
+            for (var prop2 in node) {
+                if (!template.hasOwnProperty(prop2)) {
                     throw new Error('Has extra property > ' + prop2);
                 }
             }

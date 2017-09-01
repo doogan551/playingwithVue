@@ -17,14 +17,42 @@ describe('Config Templates', () => {
             'libraryId': 0
         };
     });
-    it('check for missing properties.', () => {
-        let results;
-
-        try{
-            results = Config.Templates.checkAgainstTemplate(data);
-        }catch(e) {
+    it('should accept normal hierarchy model.', () => {
+        try {
+            let results = Config.Templates.checkAgainstTemplate(data);
+            expect(results).to.equal(true);
+        } catch (e) {
             expect(e).to.equal(undefined);
         }
-        expect(results).to.equal(true);
+    });
+
+    it('should catch missing properties.', () => {
+        delete data.display;
+        try {
+            let results = Config.Templates.checkAgainstTemplate(data);
+            expect(results).to.equal(true);
+        } catch (e) {
+            expect(e.message).to.equal('Missing property on template > display');
+        }
+    });
+
+    it('should catch undefined properties.', () => {
+        data.display = undefined;
+        try {
+            let results = Config.Templates.checkAgainstTemplate(data);
+            expect(results).to.equal(true);
+        } catch (e) {
+            expect(e.message).to.equal('Property is undefined > display');
+        }
+    });
+
+    it('should catch extra properties.', () => {
+        data.extra = '123';
+        try {
+            let results = Config.Templates.checkAgainstTemplate(data);
+            expect(results).to.equal(true);
+        } catch (e) {
+            expect(e.message).to.equal('Has extra property > extra');
+        }
     });
 });
