@@ -4984,8 +4984,6 @@ var Config = (function (obj) {
         },
         commonProperties: enumsTemplatesJson.Templates._common,
         checkAgainstTemplate: function (node) {
-            // need to add ignoredProperties to templates if we aren't doing notinhierarchy anymore
-
             let template;
             if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
                 template = obj.Templates.getTemplate(node.nodeType);
