@@ -5087,8 +5087,18 @@ var dti = {
                 this.bindings.handleRightClick = (obj, event) => {
                     let pointType = ko.dataFor(obj.target);
                     let type = pointType.name();
+                    let selected = pointType.selected();
+                    let numSelected = this.bindings.numberOfPointTypesSelected();
 
-                    this.setPointTypes(type);
+                    if (!selected) {
+                        this.setPointTypes(type);
+                    } else {
+                        if (numSelected === 1) {//only this one selected, select all
+                            this.setPointTypes(null);
+                        } else {
+                            this.setPointTypes(type);
+                        }
+                    }
                 };
 
                 this.bindings.modalText = ko.pureComputed(function getModalText() {
@@ -5299,6 +5309,10 @@ var dti = {
                     this.showAll = showAll;
                 } else {
                     showAll = this.showAll;
+                }
+
+                if (pointTypes && !Array.isArray(pointTypes)) {
+                    pointTypes = [pointTypes];
                 }
 
                 dti.forEachArray(this.bindings.pointTypes(), (type) => {
