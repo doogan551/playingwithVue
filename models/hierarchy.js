@@ -594,6 +594,38 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    copyNode(data, cb) {
+        let id = this.getNumber(data.id);
+        let parentNode = this.getNumber(data.parentNode);
+        let oldDisplay;
+
+        this.getNode({
+            id: id
+        }, (err, node) => {
+            this.getNode({
+                id: parentNode
+            }, (err, parent) => {
+                oldDisplay = node.path[node.path - 2];
+                node.parentNode = parentNode;
+
+                if (parentNode === 0) {
+                    node.path = [node.display];
+                } else {
+                    node.path = [...parent.path, node.display];
+                }
+
+                this.update({
+                    query: {
+                        _id: id
+                    },
+                    updateObj: node
+                }, (err) => {
+
+                });
+            });
+        });
+    }
+
     updateChildrenPath(oldDisplay, newPath, cb) {
         this.iterateCursor({
             query: {
