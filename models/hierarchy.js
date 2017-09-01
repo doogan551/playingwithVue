@@ -118,9 +118,16 @@ const Hierarchy = class Hierarchy extends Common {
             },
             tz: ''
         });
+
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
             this.recreateTags(node);
+            try{
+                let result = Config.Templates.checkAgainstTemplate(node);
+            } catch(e) {
+                logger.error(e);
+                return cb(e.message || e);
+            }
             this.insert({
                 insertObj: node
             }, (err, result) => {
@@ -787,8 +794,8 @@ const Hierarchy = class Hierarchy extends Common {
                     parentNode: parentNode,
                     libraryId: 0,
                     refNode: 0,
-                    nodeType: "Location",
-                    nodeSubType: "Area",
+                    nodeType: 'Location',
+                    nodeSubType: 'Area',
                     path: path,
                     display: path[path.length - 1]
                 }
@@ -904,7 +911,9 @@ const Hierarchy = class Hierarchy extends Common {
                 log('Working on getLocationCounter');
 
                 self.getOne(criteria, (err, location) => {
-                    if (err) return cb(err);
+                    if (err) {
+                        return cb(err);
+                    }
 
                     locCount = location.count;
                     locPrefix = location.enum << 22;
@@ -967,7 +976,9 @@ const Hierarchy = class Hierarchy extends Common {
                 log('Working on segment1_Folders');
 
                 self.distinct(criteria, (err, distinctName1s) => {
-                    if (err) return cb(err);
+                    if (err) {
+                        return cb(err);
+                    }
 
                     async.each(distinctName1s, (name1, myCb) => {
                         createFolder({
