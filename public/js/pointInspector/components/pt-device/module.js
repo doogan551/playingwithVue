@@ -1,5 +1,4 @@
-define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS) {
-
+define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJS) {
     function ViewModel(params) {
         var self = this;
         this.root = params;
@@ -12,10 +11,10 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
         this.isInEditMode = params.isInEditMode;
         this.systemEnumObject = params.utility.workspace.systemEnumObjects;
 
-        var devMTEnumSet = this.Enums["Device Model Types"]
-        if([devMTEnumSet["MicroScan 5 UNV"].enum, devMTEnumSet["MicroScan 5 xTalk"].enum, devMTEnumSet["SCADA Vio"].enum].indexOf(this.data['Model Type'].eValue()) < 0){
-            for(var prop in this.Enums['Time Zones']){
-                if(this.Enums['Time Zones'][prop].enum === this.systemEnumObject.telemetry['Time Zone']){
+        var devMTEnumSet = this.Enums['Device Model Types'];
+        if([devMTEnumSet['MicroScan 5 UNV'].enum, devMTEnumSet['MicroScan 5 xTalk'].enum, devMTEnumSet['SCADA Vio'].enum].indexOf(this.data['Model Type'].eValue()) < 0) {
+            for(var prop in this.Enums['Time Zones']) {
+                if(this.Enums['Time Zones'][prop].enum === this.systemEnumObject.telemetry['Time Zone']) {
                     this.data['Time Zone'].eValue(this.systemEnumObject.telemetry['Time Zone']);
                     this.data['Time Zone'].Value(prop);
                 }
@@ -39,7 +38,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.initialize = function(state) {
+    ViewModel.prototype.initialize = function (state) {
         var self = this,
             $btn = $(event.target),
             $btnIcon = $btn.find('i.fa'),
@@ -62,22 +61,20 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
                     point: {
                         _id: self.data._id(),
                         Security: self.data.Security(),
-                        Name: self.data.Name(),
-                        name1: self.data.name1(),
-                        name2: self.data.name2(),
-                        name3: self.data.name3(),
-                        name4: self.data.name4(),
-                        "Point Type": {
-                            eValue: self.data["Point Type"].eValue()
+                        path: self.data.path(),
+                        'Point Type': {
+                            eValue: self.data['Point Type'].eValue()
                         }
                     }
                 }
             };
 
-        if (!self.root.authorize(self.data, self.root.permissionLevels.CONTROL)) return;
+        if (!self.root.authorize(self.data, self.root.permissionLevels.CONTROL)) {
+return;
+}
 
         //Default to warm restart
-        state = (typeof state != 'number') ? 1 : state;
+        state = (typeof state !== 'number') ? 1 : state;
         commandObject.state = state;
 
         function callback(commandRX) {
@@ -97,7 +94,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
         self.point.issueCommand('Device Initialize', commandObject, callback);
     };
 
-    ViewModel.prototype.getDeviceTime = function() {
+    ViewModel.prototype.getDeviceTime = function () {
         var self = this;
 
         function callback(commandRX) {
@@ -115,7 +112,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
 
     };
 
