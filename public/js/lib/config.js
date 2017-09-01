@@ -4953,14 +4953,8 @@ var Config = (function (obj) {
 
     obj.Templates = {
         getTemplate: function (pointType) {
-            var hierarchyTypes = ['Location', 'Category', 'Equipment', 'Reference'];
             var template = {};
             var hierarchy = enumsTemplatesJson.Templates.Hierarchy; // common properties for points in hierarchy model
-            if (hierarchyTypes.includes(pointType)) {
-                template = templateClone(hierarchy);
-                hierarchy.nodeType = pointType;
-                return hierarchy;
-            }
             var common = enumsTemplatesJson.Templates._common; // Common point property attributes
             var unique = enumsTemplatesJson.Templates.Points[pointType]; // Unique point property attributes
             var templateClone = function (o) {
@@ -4976,12 +4970,44 @@ var Config = (function (obj) {
                 }
                 return temp;
             };
+
+            if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(pointType)) {
+                template = templateClone(hierarchy);
+                hierarchy.nodeType = pointType;
+                return hierarchy;
+            }
+
             _.extend(template, common, unique, hierarchy); // Combine common and unique attributes & stuff into template object var
             template['Point Type'].Value = pointType;
             template['Point Type'].eValue = enumsTemplatesJson.Enums['Point Types'][pointType].enum;
             return templateClone(template);
         },
-        commonProperties: enumsTemplatesJson.Templates._common
+        commonProperties: enumsTemplatesJson.Templates._common,
+        checkAgainstTemplate: function (node) {
+            let template;
+            if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
+                template = obj.Templates.getTemplate(node.nodeType);
+            } else if (node.hasOwnProperty['Point Type']) {
+                template = obj.Templates.getTemplate(node['Point Type']);
+            } else {
+                throw new Error('Wrong nodeType or missing Point Type');
+            }
+
+            for (var prop in template) {
+                if (!node.hasOwnProperty(prop)) {
+                    throw new Error('Missing property on template > ' + prop);
+                } else if (node[prop] === undefined) {
+                    throw new Error('Property is undefined > ' + prop);
+                }
+            }
+
+            for (var prop2 in node) {
+                if (!template.hasOwnProperty(prop2)) {
+                    throw new Error('Has extra property > ' + prop2);
+                }
+            }
+            return true;
+        }
     };
 
     // Application-specific configuration
