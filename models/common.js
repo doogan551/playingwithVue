@@ -257,7 +257,7 @@ const Common = class Common extends Utility {
             if (term.match(/"/)) {
                 return term.replace(/"/g, '');
             }
-            return new RegExp(term, 'ig');
+            return new RegExp('^' + term, 'ig');
         });
     }
 };
