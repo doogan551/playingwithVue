@@ -6868,9 +6868,15 @@ gpl.BlockManager = function (manager) {
                 }
             },
             doOpenWindow = function () {
+                let overrideIsEdit = false;
+
                 // TFS #550; in view mode, always get fresh data when opening a point
-                if (!gpl.isEdit) {
+                // TFS #573; do the same thing in edit mode if the block is a monitor or control block
+                if (!gpl.isEdit || (gpl.isEdit && block.isNonPoint)) {
                     pointData = null;
+                    // TFS #573; set this to force the point editor to save changes to the db (changes activated immediately, as 
+                    // opposed to being activated when the sequence is activated)
+                    overrideIsEdit = true;
                 } else { // in edit mode
                     // TFS #528 - The block's Device Point name is not shown in point inspector when launched from GPL edit mode
                     // This is because we are not storing the Device Point name in the point refs anymore, and the API only does a 
@@ -6891,7 +6897,7 @@ gpl.BlockManager = function (manager) {
                     upi: upi,
                     title: (!!pointData && !!pointData.path ? window.getConfig('Utility.getPointName', [pointData.path]) : undefined),
                     options: {
-                        isGplEdit: gpl.isEdit,
+                        isGplEdit: gpl.isEdit && !overrideIsEdit,
                         callback: saveCallback,
                         pointData: pointData || null
                     }
