@@ -26,6 +26,7 @@ dtiMessaging.openWindow(arguments);
 
 var dtiUtility = {
     itemIdx: 0,
+    logMessages: false,
     lastIdNumber: 0,
     settings: {
         idxPrefix: 'dti_',
@@ -234,11 +235,17 @@ var dtiUtility = {
     handleMessage: function (e) {
         var config;
         if (e.key.split(';')[0] === window.windowId) {
+            
             config = e.newValue;
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
+
             if (config) {
+                if (dtiUtility.logMessages) {
+                    dtiUtility.log('utility handleMessage', e.key, 'config:', config);
+                }
+                
                 dtiUtility.processMessage(config);
             }
         }
@@ -293,6 +300,10 @@ var dtiUtility = {
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
         data.messageID = data.messageID || dtiUtility.makeId();
+
+        if (dtiUtility.logMessages) {
+            dtiUtility.log('utility sendMessage,', 'target is:', target, ',data is:', data);
+        }
 
         store.set(target, data);
     },

@@ -1245,7 +1245,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                 otherBlockFound = true;
                 if (anchorType) {
                     if (adjustPointRefs) {
-                        otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.pointName, attachedBlock.pointType);
+                        // TFS #569 - send path instead of name
+                        otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.path, attachedBlock.pointType);
                     }
                     // console.log('  adjustRelatedBlocks() line  = [' + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
                     if (otherBlock.type === 'Comparator' && otherAnchor.anchorType !== 'Control Point') {
@@ -1278,8 +1279,9 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                     gpl.fire('editedblock', otherBlock);
                 }
             } else if (!otherBlockFound && adjustPointRefs) {
-                    attachedBlock.setPointRef(self.anchorType, attachedBlock.upi, attachedBlock.pointName);
-                }
+                // TFS #569 - send path instead of name
+                attachedBlock.setPointRef(self.anchorType, attachedBlock.upi, attachedBlock.path);
+            }
         }
     },
 
@@ -1536,7 +1538,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
-            name,
+            path,
             upi,
             idx;
 
@@ -1550,16 +1552,19 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 });
                 idx = self._pointRefs[anchor.anchorType];
                 if (idx) {
-                    name = '';
+                    path = [];
                     if (upi) {
-                        name = gpl.pointData[upi];
-                        name = name && name.Name;
+                        // TFS #569 - get path instead of name
+                        path = gpl.pointData[upi];
+                        path = path && path.path;
                     } else {
-                        name = otherBlock.name;
+                        // TFS #569 - get path instead of name
+                        path = otherBlock.path;
                     }
 
                     if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output')) {
-                        self.setPointRef(anchor.anchorType, upi, name, otherBlock.pointType);
+                        // TFS #569 - send path instead of name
+                        self.setPointRef(anchor.anchorType, upi, path, otherBlock.pointType);
                     }
                     if (otherBlock.blockType === 'Constant') {
                         self.syncAnchorValue(anchor, otherBlock.value);
@@ -1573,7 +1578,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             }
 
             if (idx) {
-                if (name && gpl.rendered) {
+                // TFS #569 - check path instead of name
+                if (path && path.length && gpl.rendered) {
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1581,7 +1587,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     handleAnchorDetach: function (anchor, line) {
-        this.setPointRef(anchor.anchorType, 0, '');
+        // TFS #569 - send path instead of name
+        this.setPointRef(anchor.anchorType, 0, []);
 
         if (this.targetCanvas !== 'toolbar' && this.blockType.toLowerCase() !== 'input') {
             this.formatPoint(anchor, line);
@@ -1753,7 +1760,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     }
                 } else {
                     //detached
-                    self.setPointRef(anchor.anchorType, 0, '');
+                    // TFS #569 - send path instead of name
+                    self.setPointRef(anchor.anchorType, 0, []);
                     // gpl.log('no lines attached, blanking out', anchor.anchorType);
                     setDataVars();
                 }
@@ -2063,7 +2071,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             // if (this.setIconName) {
             //     this.setIconName();
             // }
-            this.setLabel(this._pointData.path[this._pointData.path.length]);
+            // TFS #549 (added "- 1")
+            this.setLabel(this._pointData.path[this._pointData.path.length - 1]);
         }
 
         dtiUtility.getConfig('Utility.getPointName', [this._pointData.path], setBlockPointName);
@@ -2087,7 +2096,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this._pointRefs = obj;
     },
 
-    setPointRef: function (prop, upi, name, refPointType) {
+    // TFS #569 - accept 'path' argument instead of 'name' argument, and build PointName from given path
+    setPointRef: function (prop, upi, path, refPointType) {
         var data = this._pointData,
             refs,
             ref,
@@ -2100,10 +2110,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref = refs[idx];
                 ref.PointInst = upi;
                 ref.Value = upi;
-                ref.PointName = name;
+                ref.PointName = window.getConfig('Utility.getPointName', [path]);
 
                 // console.log("  this.type = " + this.type);
-                // console.log("      prop = " + prop + "    idx = " + idx + "    name = " + name);
+                // console.log("      prop = " + prop + "    idx = " + idx + "    name = " + PointName);
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
@@ -6858,6 +6868,24 @@ gpl.BlockManager = function (manager) {
                 }
             },
             doOpenWindow = function () {
+                // TFS #550; in view mode, always get fresh data when opening a point
+                if (!gpl.isEdit) {
+                    pointData = null;
+                } else { // in edit mode
+                    // TFS #528 - The block's Device Point name is not shown in point inspector when launched from GPL edit mode
+                    // This is because we are not storing the Device Point name in the point refs anymore, and the API only does a 
+                    // 1st order resolution of point refs when a point is requested (i.e. we resolve point refs of the gpl point, 
+                    // but not the point refs of points on the gpl point). All blocks are required to reside on the same device, 
+                    // so i think we can safely add the GPL's device point name to the block's Point Refs before calling the point
+                    // inspector
+                    if (gpl.devicePoint) { // Just CYB
+                        let blockDevicePoint = pointData['Point Refs'][0]; // Device point always at array index 0
+                        if (blockDevicePoint.PropertyName === 'Device Point') { // CYB
+                            blockDevicePoint.PointName = window.getConfig('Utility.getPointName', [gpl.devicePoint.path]);
+                        }
+                    }
+                }
+                
                 gpl.openWindow({
                     pointType: pointType,
                     upi: upi,
