@@ -862,8 +862,7 @@ const Point = class Point extends Common {
         const counterModel = new Counter();
         let criteria = {};
 
-        let Name;
-        let _Name;
+        let path = data.path;
         let subType = {};
 
         let pointType = data.pointType;
@@ -873,7 +872,7 @@ const Point = class Point extends Common {
         let doInitPoint = (pointType, targetUpi, subType, callback) => {
             criteria = {
                 query: {
-                    _Name: _Name
+                    path: path
                 }
             };
 
@@ -980,11 +979,7 @@ const Point = class Point extends Common {
         let fixPoint = (template, isClone, sysInfo, callback) => {
             template.id = null;
             template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
-            template.Name = Name;
-            template._Name = _Name;
-
             template._actvAlmId = ObjectID('000000000000000000000000');
-
             template._cfgRequired = true;
 
             if (template['Point Type'].Value === 'Display') { // default background color for new Displays
@@ -1041,22 +1036,44 @@ const Point = class Point extends Common {
                     });
                 });
             } else {
-                if (template['Point Type'].Value === 'Sequence') {
-                    cloneGPLSequence(template, () => {
-                        addTemplateToDB(template, callback);
-                    });
-                } else {
-                    if (template['Point Type'].Value !== 'Schedule Entry' && template._parentUpi !== 0) {
-                        template._parentUpi = 0;
-                        for (let i = 0; i < template['Point Refs'].length; i++) {
-                            template['Point Refs'][i].isReadOnly = false;
-                        }
+                // if cloned from "old" point schema
+                let finishCloningPoint = (err, newUpi) => {
+                    template._id = newUpi;
+                    template.path = data.path;
+                    template.display = data.display;
+
+                    template.Name = "";
+                    template._Name = "";
+                    if (!!template.name1) {
+                        delete template.name1;
+                        delete template.name2;
+                        delete template.name3;
+                        delete template.name4;
+                        delete template._name1;
+                        delete template._name2;
+                        delete template._name3;
+                        delete template._name4;
                     }
-                    addTemplateToDB(template, callback);
-                }
-                if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
-                    template['Control Array'] = [];
-                }
+
+                    if (template['Point Type'].Value === 'Sequence') {
+                        cloneGPLSequence(template, () => {
+                            addTemplateToDB(template, callback);
+                        });
+                    } else {
+                        if (template['Point Type'].Value !== 'Schedule Entry' && template._parentUpi !== 0) {
+                            template._parentUpi = 0;
+                            for (let i = 0; i < template['Point Refs'].length; i++) {
+                                template['Point Refs'][i].isReadOnly = false;
+                            }
+                        }
+                        addTemplateToDB(template, callback);
+                    }
+                    if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
+                        template['Control Array'] = [];
+                    }
+                };
+
+                counterModel.getUpiForPointType(template['Point Type'].eValue, finishCloningPoint);
             }
         };
 
@@ -2975,6 +2992,38 @@ const Point = class Point extends Common {
         });
     }
 
+    copyPoint(data, cb) {
+        const hierarchyModel = new Hierarchy();
+        let newPoint = data,
+            id = this.getNumber(newPoint.id),
+            parentNodeId = this.getNumber(newPoint.parentNodeId),
+            insertNewPoint = (err, clonedPoint) => {
+                this.addPoint({newPoint: clonedPoint}, data.user, {}, (err, point) => {
+                    if (!!err && !err.hasOwnProperty('msg')) {
+                        return cb(err);
+                    }
+                    return cb(null, point);
+                });
+            };
+
+        hierarchyModel.getNode({
+            id: parentNodeId
+        }, (err, parentNode) => {
+            newPoint.parentNode = parentNode;
+            newPoint.id = "newPoint";
+            newPoint.targetUpi = id;
+            newPoint.display += this.getCopyPostFix();
+
+            if (data.parentNode === 0) {
+                newPoint.path = [newPoint.display];
+            } else {
+                newPoint.path = [...parentNode.path, newPoint.display];
+            }
+
+            this.initPoint(newPoint, insertNewPoint);
+        });
+    }
+
     bulkAdd(points, user, options, cb) {
         let updatedPoints = [];
         this.changeNewIds(points, (err, points) => {
@@ -3081,7 +3130,6 @@ const Point = class Point extends Common {
 
         this.getAll(criteria, cb);
     }
-
 
     addGroups(data, cb) {
         let newGroups = (data.Groups) ? data.Groups : [];
@@ -3488,3 +3536,4 @@ const Schedule = require('./schedule');
 const Security = require('./security');
 const Script = require('./scripts');
 const Counter = require('./counter');
+const Hierarchy = require('./hierarchy');

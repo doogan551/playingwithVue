@@ -4987,8 +4987,8 @@ var Config = (function (obj) {
             let template;
             if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
                 template = obj.Templates.getTemplate(node.nodeType);
-            } else if (node.hasOwnProperty['Point Type']) {
-                template = obj.Templates.getTemplate(node['Point Type']);
+            } else if (node.hasOwnProperty('Point Type')) {
+                template = obj.Templates.getTemplate(node['Point Type'].Value);
             } else {
                 throw new Error('Wrong nodeType or missing Point Type');
             }

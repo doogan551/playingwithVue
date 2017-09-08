@@ -4209,7 +4209,10 @@ var dti = {
                                 action: 'cut'
                             },
                             callback: {
-                                action: 'cut'
+                                action: 'cut',
+                                cb: (data, treeCb) => {
+                                    dti.navigatorv2.tree.cutNode(data, treeCb);
+                                }
                             }
                         },
                         copy: {
@@ -4271,26 +4274,21 @@ var dti = {
                 });
             },
             pasteNode: (data, treeCb) => {
-                // data = {
-                //     node: node,
-                //     sourceNode: sourceNode
-                //     config: config,
-                //     configKey: configKey
-                // }
-                let self = dti.navigatorv2;
-                let reqData = {
-                    source: data.sourceNode,
-                    target: data.node
-                };
-                let validPaste = false;
+                let self = dti.navigatorv2,
+                    reqData = {
+                        source: data.sourceNode,
+                        target: data.node
+                    },
+                    validPaste = false;
 
-                let done = (err) => {
+                let done = (err, newNode) => {
                     if (!err) {
                         if (!!dti.navigatorv2.tree._cutNode) {
                             treeCb('move', reqData);
                             dti.navigatorv2.tree._cutNode = null;
                             validPaste = true;
                         } else if (!!dti.navigatorv2.tree._copyNode) {
+                            $.extend(reqData, newNode);  // if pasting a copied node
                             treeCb('copy', reqData);
                             dti.navigatorv2.tree._copyNode = null;
                             validPaste = true;
@@ -4309,6 +4307,26 @@ var dti = {
                 } else if (!!dti.navigatorv2.tree._copyNode) {
                     self.tree.serverOps.copyNode(reqData, done);
                 }
+            },
+            cutNode: (data) => {
+                let self = dti.navigatorv2,
+                    node = data.node;
+
+                if (!!node) {
+                    self.tree._cutNode = node;
+                    self.tree._copyNode = null;
+                }
+                self.bindings.busy(false);
+            },
+            copyNode: (data) => {
+                let self = dti.navigatorv2,
+                    node = data.node;
+
+                if (!!node) {
+                    self.tree._cutNode = null;
+                    self.tree._copyNode = node;
+                }
+                self.bindings.busy(false);
             },
             addNode: () => {
                 let self = dti.navigatorv2;
@@ -4597,7 +4615,7 @@ var dti = {
                         let result = response[0];
 
                         if (!result) {
-                            err = 'An unknown error occured';
+                            err = 'An unknown error occurred';
                         } else if (result.err) {
                             err = 'Error adding node: ' + result.err.errmsg || result.err;
                         } else {
@@ -4651,30 +4669,31 @@ var dti = {
                     });
                 },
                 copyNode(data, cb) {
-                    // data: {
-                    //     source: source node
-                    //     target: target node to copy the source node into
-                    // }
-                    let err = false;
+                    let err = false,
+                        cbData = {},
+                        hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
+                        rawPoint = hierarchyNodeTypes[data.source.bindings.nodeType()] === undefined,
+                        url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy';
 
                     dti.post({
-                        url: '/api/hierarchy/copy',
+                        url: url,
                         data: {
                             id: data.source.bindings._id(),
-                            parentNode: data.target.bindings._id()
+                            parentNodeId: data.target.bindings._id(),
+                            display: data.source.bindings.display(),
+                            pointType: data.source.bindings.nodeSubType()
                         }
                     }).done((response) => {
-                        // reponse: {
-                        //     err: 'error message here',
-                        //     // OR
-                        //     message: 'success'
-                        // }
                         dti.log(response);
 
-                        if (!response) {
+                        let result = response;
+
+                        if (!result) {
                             err = 'An unknown error occurred';
-                        } else if (response.err) {
-                            err = 'Error copying node: ' + response.err;
+                        } else if (result.err) {
+                            err = 'Error copying node: ' + result.err.errmsg || result.err;
+                        } else {
+                            cbData.newNode = (!!result.newPoint ? result.newPoint : result.newNode);
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -4682,7 +4701,7 @@ var dti = {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
                         }
-                        cb(!!err);
+                        cb(!!err, cbData);
                     });
                 },
                 deleteNode(node, cb) {
@@ -5100,7 +5119,6 @@ var dti = {
                 this.initPointTypes();
                 this.initBindings();
             }
-
 
             defaultCallback(data) {
                 dti.windows.openWindow(data._id);
@@ -6762,6 +6780,8 @@ var dti = {
                                             manager._copyNode.bindings.isCopy(false); // Clear copy indication
                                         }
                                         manager._copyNode = node; // Update copy node
+                                        dti.navigatorv2.tree._copyNode = manager._copyNode;
+                                        // data.copyNode = manager._copyNode;
                                         node.bindings.isCopy(true);
                                     }
                                     break;
@@ -6776,6 +6796,8 @@ var dti = {
                                             manager._cutNode.bindings.isCut(false); // Clear cut indication
                                         }
                                         manager._cutNode = node; // Update cut node
+                                        dti.navigatorv2.tree._cutNode = manager._cutNode;
+                                        // data.cutNode = manager._cutNode;
                                         node.bindings.isCut(true);
                                     }
                                     break;
@@ -7022,7 +7044,7 @@ var dti = {
 
                     manager.bindings.getBranch(parent, () => {
                         node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), data.newNode);
+                        manager.markNodeSaved(node, node.bindings._id(), newNode);
 
                         if (children) {
                             let readyChildren = [];
@@ -7091,25 +7113,16 @@ var dti = {
                     rebuildChildrenPaths(source.bindings.path(), source.bindings.children());
                 }
 
-                copyNode(data) { // Callback action
-                    // This routine is called with 'this' set to the TreeViewer class instance.
-                    // data: {
-                    //     source: source node,
-                    //     target: target node to copy the source node into
-                    // }
-                    let manager = this;
-                    let source = data.source;
-                    let sourceParent = source.parentNode;
-                    let target = data.target;
+                copyNode(data) {
+                    let manager = this,
+                        source = data.source;
+
+                    data.node = data.newNode;
+                    data.parent = data.target;
+                    this.addNode(data);
 
                     source.bindings.isCopy(false);
                     manager._copyNode = null;
-
-                    sourceParent.deleteChild(source);
-                    target.addChild(source);
-
-                    source.parentNode = target;
-                    source.bindings.parentNode(target.bindings._id());
                 }
 
                 addBranch(children, parent) {

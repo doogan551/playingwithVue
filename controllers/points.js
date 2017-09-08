@@ -3,6 +3,7 @@ let router = express.Router();
 let _ = require('lodash');
 let Point = require('../models/point');
 let utils = require('../helpers/utils.js');
+let pointModel = new(require('../models/point'))();
 
 // POSTMAN - broken?
 router.post('/globalSearch', function (req, res) {
@@ -281,6 +282,21 @@ router.get('/:id', function (req, res) {
             });
         }
         return utils.sendResponse(res, point);
+    });
+});
+
+router.post('/copy', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.copyPoint(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {newPoint: results});
     });
 });
 

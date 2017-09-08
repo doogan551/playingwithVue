@@ -260,6 +260,10 @@ const Common = class Common extends Utility {
             return new RegExp(term, 'ig');
         });
     }
+
+    getCopyPostFix() {
+        return " - Copy";
+    }
 };
 
 module.exports = Common;

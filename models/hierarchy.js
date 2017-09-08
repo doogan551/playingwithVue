@@ -170,7 +170,7 @@ const Hierarchy = class Hierarchy extends Common {
                                 newNode: result
                             });
                         }
-                        callback();
+                        callback(err, results);
                     });
                 }, (err) => {
                     cb(err, results);
@@ -180,33 +180,39 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     sortNodes(nodes) {
-        let sorted = [];
-        let getParent = (node, path) => {
-            nodes.forEach((_node) => {
-                if (_node._id === node.parentLocId) {
-                    addToPath(_node, path);
-                    getParent(_node, path);
+        let sorted = [],
+            getParent = (node, path) => {
+                nodes.forEach((_node) => {
+                    if (_node._id === node.parentLocId) {
+                        addToPath(_node, path);
+                        getParent(_node, path);
+                    }
+                });
+            },
+            addToPath = (node, path) => {
+                if (!~sorted.indexOf(node._id) && !~path.indexOf(node._id)) {
+                    path.unshift(node._id);
                 }
-            });
-        };
-        let addToPath = (node, path) => {
-            if (!~sorted.indexOf(node._id) && !~path.indexOf(node._id)) {
-                path.unshift(node._id);
-            }
-        };
-        nodes.forEach((node) => {
-            let path = [];
-            addToPath(node, path);
-            getParent(node, path);
-            sorted.push(...path);
-        });
-        sorted.forEach((id, index) => {
+            };
+
+        if (nodes.length > 1) {
             nodes.forEach((node) => {
-                if (id === node._id) {
-                    sorted[index] = node;
-                }
+                let path = [];
+                addToPath(node, path);
+                getParent(node, path);
+                sorted.push(...path);
             });
-        });
+            sorted.forEach((id, index) => {
+                nodes.forEach((node) => {
+                    if (id === node._id) {
+                        sorted[index] = node;
+                    }
+                });
+            });
+        } else {
+            sorted = nodes;
+        }
+
         return sorted;
     }
 
@@ -595,9 +601,8 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     copyNode(data, cb) {
-        let id = this.getNumber(data.id);
-        let parentNode = this.getNumber(data.parentNode);
-        let oldDisplay;
+        let id = this.getNumber(data.id),
+            parentNode = this.getNumber(data.parentNode);
 
         this.getNode({
             id: id
@@ -605,7 +610,6 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                oldDisplay = node.path[node.path - 2];
                 node.parentNode = parentNode;
 
                 if (parentNode === 0) {
@@ -614,14 +618,7 @@ const Hierarchy = class Hierarchy extends Common {
                     node.path = [...parent.path, node.display];
                 }
 
-                this.update({
-                    query: {
-                        _id: id
-                    },
-                    updateObj: node
-                }, (err) => {
-
-                });
+                this.addAll({nodes: [node]}, cb);
             });
         });
     }
@@ -767,7 +764,7 @@ const Hierarchy = class Hierarchy extends Common {
     checkAllNames(nodes, cb) {
         // if parentId is fake, ignore it
         // change node to normal structure before name check
-        return cb([]);
+        cb([]);
         // let problems = [];
         // async.eachSeries(nodes, (node, callback) => {
         //     if (this.isNumber(node.parentNode)) {

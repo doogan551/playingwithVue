@@ -448,11 +448,11 @@ html
         //- .node
         //-     ul.collapsible
         li.treeNode(data-bind="css: {active: expanded}")
-            .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
+            .collapseToggle(data-bind="css: {childless: hasChildren() === false}")
                 //- i.collapse.material-icons keyboard_arrow_down
                 i.expand.material-icons keyboard_arrow_right
 
-            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut}")
+            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut, isCopy: isCopy}")
                 .nodeName(data-bind="text: display")
             .dtcollapsible-body
                 ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
