@@ -259,7 +259,7 @@ var ActivityLogsManager = function (conf) {
                     availablePointTypes[results[i].key] = results[i].enum;
                 }
             }
-            numberPointTypes = results.length;
+            numberPointTypes = (!!results && results.length ? results.length : 0);
         },
         getStoreData = function () {
             let storeData = store.get(storeKey) || {};
@@ -942,7 +942,9 @@ var ActivityLogsManager = function (conf) {
     }, self).extend(computedThrottle);
 
     dtiUtility.getUser(setCurrentUser);
-    utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    setTimeout(function runInit() {
+        utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    }, 30);
     self.init();
 };
 
