@@ -2137,15 +2137,28 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             bindings = ko.toJS(gpl.manager.bindings),
             calcType = point['Calculation Type'] || {},
-            reverseAction = point['Reverse Action'] || {};
+            reverseAction = point['Reverse Action'] || {},
+            ptUpdateInterval = point['Update Interval'],
+            ptShowLabel = point['Show Label'],
+            ptShowValue = point['Show Value'],
+            ptController = point.Controller;
 
         self.setIconType(calcType, reverseAction);
 
-        point['Update Interval'].Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
-        point['Show Label'].Value = bindings.deviceShowLabel;
-        point['Show Value'].Value = bindings.deviceShowValue;
-        point.Controller.Value = bindings.deviceControllerName;
-        point.Controller.eValue = bindings.deviceControllerValue;
+        // TFS #587 Check existance of props before updating values
+        if (ptUpdateInterval) {
+            ptUpdateInterval.Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
+        }
+        if (ptShowLabel) {
+            ptShowLabel.Value = bindings.deviceShowLabel;
+        }
+        if (ptShowValue) {
+            ptShowValue.Value = bindings.deviceShowValue;
+        }
+        if (ptController) {
+            ptController.Value = bindings.deviceControllerName;
+            ptController.eValue = bindings.deviceControllerValue;
+        }
         point._parentUpi = gpl.point._id;
     },
 
