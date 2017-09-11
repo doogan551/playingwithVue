@@ -116,6 +116,15 @@ var dtiUtility = {
                 }, 100);
             });
         }
+        // If dtiCommon.js isn't already included, get it
+        if (window.dtiCommon === undefined) {
+            $.getScript('/js/v2/dtiCommon.js', function handleGetFile() {
+                // When dtiCommon is included by the view, it inits itself by listening 
+                // to the DOM load event, but that event has already come and gone so we 
+                // manually call init
+                window.dtiCommon.init.clientSide();
+            });
+        }
 
         dtiUtility.initKnockout();
         dtiUtility.initEventListener();

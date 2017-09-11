@@ -3,6 +3,7 @@ const moment = require('moment');
 const TrendData = class TrendData {
 
     viewTrend(data, cb) {
+        const historyModel = new History();
         let startTime = (!!data.startTime) ? parseInt(data.startTime, 10) : Math.floor(Date.now() / 1000);
         let limit = (!!data.limit) ? parseInt(data.limit, 10) : 200;
         let direction = (!!data.direction) ? parseInt(data.direction, 10) : 1;
@@ -51,7 +52,7 @@ const TrendData = class TrendData {
         };
 
         let limitSql = (options, callback) => {
-            History.findHistory({
+            historyModel.findHistory({
                 upis: [upi],
                 range: range,
                 fx: 'history'
@@ -81,7 +82,7 @@ const TrendData = class TrendData {
             return results;
         };
 
-        History.getAll(criteria, (err, mongoResults) => {
+        historyModel.getAll(criteria, (err, mongoResults) => {
             let stopAt = 0;
             mongoResults.sort(compareTS);
             if (direction > 1) {
