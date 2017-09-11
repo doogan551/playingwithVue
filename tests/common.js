@@ -255,4 +255,39 @@ describe('Common', function () {
 
         expect(common.setQualityLabel(point)['Quality Label']).to.be.equal('none');
     });
+
+    it('should compare terms array to path array', () => {
+        let terms;
+        let path = [];
+
+        let result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(true);
+
+        path = ['1'];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(true);
+
+        terms = ['a'];
+        path = [];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(false);
+
+        path = ['a'];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(true);
+
+        path = ['A'];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(true);
+
+        path = ['ABC', 'def'];
+        terms = ['ABCDEF'];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(false);
+
+        path = ['4200', 'UNV01'];
+        terms = ['4200', '01'];
+        result = common.compareTermsToPath(terms, path);
+        expect(result).to.be.equal(false);
+    });
 });

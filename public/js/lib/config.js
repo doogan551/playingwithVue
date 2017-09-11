@@ -1,5 +1,6 @@
 /*jshint -W069 */ // JSLint directive - Do not warn about dot notation
 /* jslint white: true */
+var dtiCommon;
 var Config = (function (obj) {
     var fs;
     var enumsTemplatesFile;
@@ -8,17 +9,23 @@ var Config = (function (obj) {
     if (typeof window === 'undefined') {
         // This will happen on the server side, in NodeJS
         fs = require('fs');
+        // dtiCommon has some functions that Config needs
+        dtiCommon = require('../v2/dtiCommon');
         enumsTemplatesFile = __dirname + '/enumsTemplates.json';
         enumsTemplatesJson = JSON.parse(fs.readFileSync(enumsTemplatesFile));
         lodash = require('lodash');
-    } else if (typeof $ === 'function') {
-        $.ajax({
-            url: '/js/lib/enumsTemplates.json',
-            async: false, //  http://stackoverflow.com/questions/27736186/jquery-has-deprecated-synchronous-xmlhttprequest
-            success: function (data) {
-                enumsTemplatesJson = data;
-            }
-        });
+    } else {
+        dtiCommon = window.dtiCommon; // You might think this isn't necessary but it is
+
+        if (typeof $ === 'function') {
+            $.ajax({
+                url: '/js/lib/enumsTemplates.json',
+                async: false, //  http://stackoverflow.com/questions/27736186/jquery-has-deprecated-synchronous-xmlhttprequest
+                success: function (data) {
+                    enumsTemplatesJson = data;
+                }
+            });
+        }
     }
     if (lodash) {
         _ = lodash;
@@ -931,14 +938,7 @@ var Config = (function (obj) {
         },
 
         getPointName: (pointPath) => {
-            'use strict';
-            let result = '';
-
-            if (!!pointPath && Array.isArray(pointPath) && pointPath.length > 0) {
-                result = pointPath.join(obj.Enums['Point Name Separator'].Value); // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
-            }
-
-            return result;
+            return dtiCommon.getPointName(pointPath);
         },
 
         getRmuValueOptions: function (devModel) {

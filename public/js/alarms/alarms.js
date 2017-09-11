@@ -506,7 +506,7 @@ let AlarmManager = function (conf) {
                     pointAttribsFilterObj.pointTypes.push(results[i].key);
                 }
             }
-            numberPointTypes = results.length;
+            numberPointTypes = (!!results && results.length ? results.length : 0);
         },
         sendAcknowledge = function (idList) {
             let request,
@@ -2748,7 +2748,9 @@ let AlarmManager = function (conf) {
     });
 
     dtiUtility.getUser(setCurrentUser);
-    utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    setTimeout(function runInit() {
+        utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    }, 30);
 
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them

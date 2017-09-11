@@ -1319,7 +1319,7 @@ define([
         pointInspector.baseComponent = ['pt-', data['Point Type'].Value.toLowerCase().replace(' ', '')].join('');
         // Start the application
         ko.applyBindings(pointInspector);
-        window.document.title = pointInspector.point.data.Name();
+        window.document.title = pointInspector.point.data.path();
     }
 
     /*
@@ -1614,7 +1614,8 @@ define([
                     }
                     if (!$element.is(':focus')) {
                         return;
-                    }!!event.preventDefault && event.preventDefault();
+                    }
+                    !!event.preventDefault && event.preventDefault();
 
                     // if value type is float, we will check the position of the decimal and
                     // increment/decrement accordingly
