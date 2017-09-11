@@ -257,8 +257,29 @@ const Common = class Common extends Utility {
             if (term.match(/"/)) {
                 return term.replace(/"/g, '');
             }
-            return new RegExp(term, 'ig');
+            return new RegExp('^' + term, 'ig');
         });
+    }
+
+    compareTermsToPath(queryTerms, alarmPath) {
+        if (!queryTerms) {
+            return true;
+        }
+
+        let termsMatch = this.buildSearchTerms(queryTerms);
+        let queryTermsLengh = queryTerms.length;
+        let matchingTerms = 0;
+
+        termsMatch.forEach((term) => {
+            for (var a = 0; a < alarmPath.length; a++) {
+                if (alarmPath[a].match(term)) {
+                    matchingTerms++;
+                    break;
+                }
+            }
+        });
+
+        return matchingTerms === queryTermsLengh;
     }
 };
 
