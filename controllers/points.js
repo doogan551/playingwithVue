@@ -300,4 +300,13 @@ router.post('/copy', function (req, res) {
     });
 });
 
+router.post('/delete', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.deletePoint(data.id, data.user, null, function (returnInfo) {
+        return utils.sendResponse(res, returnInfo);
+    });
+});
+
 module.exports = router;

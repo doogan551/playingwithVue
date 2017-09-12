@@ -982,8 +982,22 @@ const Point = class Point extends Common {
             template._actvAlmId = ObjectID('000000000000000000000000');
             template._cfgRequired = true;
 
-            if (template['Point Type'].Value === 'Display') { // default background color for new Displays
-                template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
+
+            switch (pointType) {
+                case "Report":
+                    subType.Value = template["Report Type"].Value;
+                    subType.eValue = template["Report Type"].eValue;
+                    break;
+                case "Sensor":
+                    subType.Value = template["Sensor Type"].Value;
+                    subType.eValue = template["Sensor Type"].eValue;
+                    break;
+                case "Display":  // default background color for new Displays
+                    template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
+                    break;
+                default:
+                    subType.eValue = 0; // TODO
+                break;
             }
 
             utils.setupNonFieldPoints(template);
@@ -1044,16 +1058,17 @@ const Point = class Point extends Common {
 
                     template.Name = "";
                     template._Name = "";
-                    if (!!template.name1) {
-                        delete template.name1;
-                        delete template.name2;
-                        delete template.name3;
-                        delete template.name4;
-                        delete template._name1;
-                        delete template._name2;
-                        delete template._name3;
-                        delete template._name4;
-                    }
+                    // once we decide what to do about those name segments
+                    // if (!!template.name1) {
+                    //     delete template.name1;
+                    //     delete template.name2;
+                    //     delete template.name3;
+                    //     delete template.name4;
+                    //     delete template._name1;
+                    //     delete template._name2;
+                    //     delete template._name3;
+                    //     delete template._name4;
+                    // }
 
                     if (template['Point Type'].Value === 'Sequence') {
                         cloneGPLSequence(template, () => {
@@ -1085,16 +1100,6 @@ const Point = class Point extends Common {
             return callback(null, template);
             // });
         };
-
-        if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
-            return cb('No type defined');
-        }
-        subType.Value = data.subType;
-        if (pointType === 'Report') {
-            subType.eValue = Config.Enums['Report Types'][data.subType].enum;
-        } else {
-            subType.eValue = 0; // TODO
-        }
 
         doInitPoint(pointType, targetUpi, subType, cb);
     }
@@ -2633,7 +2638,7 @@ const Point = class Point extends Common {
     }
 
     //updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
-    deletePoint(upi, method, user, options, callback) {
+    deletePoint(upi, user, options, callback) {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
@@ -2645,6 +2650,7 @@ const Point = class Point extends Common {
                 user: user,
                 timestamp: Date.now()
             },
+            _method = 'soft',
             _warning = '',
             _buildWarning = (msg) => {
                 if (_warning.length) {
@@ -2666,6 +2672,10 @@ const Point = class Point extends Common {
                     if (!err && !point) {
                         err = 'Point not found';
                     }
+
+                    if (_point._pStatus === 2) {  //status already equals "Deleted"
+                        _method = 'hard'
+                    }
                     cb(err);
                 });
             },
@@ -2683,7 +2693,7 @@ const Point = class Point extends Common {
                         new: true
                     };
 
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     this.remove({
                         query: query
                     }, (err, result) => {
@@ -2709,7 +2719,7 @@ const Point = class Point extends Common {
             },
             _updateUpis = (cb) => {
                 // We only update the upis collection if the point is hard deleted (destroyed)
-                if (method === 'soft') {
+                if (_method === 'soft') {
                     return cb(null);
                 }
 
@@ -2717,7 +2727,7 @@ const Point = class Point extends Common {
             },
             _deleteHistory = (cb) => {
                 // We only remove entries from the history collection if the point is hard deleted (destroyed)
-                if (method === 'soft') {
+                if (_method === 'soft') {
                     return cb(null);
                 }
                 history.remove({
@@ -2741,7 +2751,7 @@ const Point = class Point extends Common {
                 if (_point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                     return cb(null);
                 }
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     _logData.activity = 'Point Hard Delete';
                     _logData.log = 'Point destroyed';
                 } else {
@@ -2757,7 +2767,7 @@ const Point = class Point extends Common {
                 });
             },
             _deleteChildren = (cb) => {
-                this.deleteChildren(method, _point['Point Type'].Value, _point._id, null, (err) => {
+                this.deleteChildren(_method, _point['Point Type'].Value, _point._id, null, (err) => {
                     if (err) {
                         _buildWarning('could not delete all schedule entries associated with this point');
                     }
@@ -2777,7 +2787,7 @@ const Point = class Point extends Common {
                         _id: _upi
                     },
                     flags = {
-                        method: method
+                        method: _method
                     };
                 this.updateDependencies(refPoint, flags, user, (err) => {
                     if (err) {
@@ -2787,7 +2797,7 @@ const Point = class Point extends Common {
                 });
             },
             _updateRelatedSchedule = (cb) => {
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     schedule.remove(upi, cb);
                 } else {
                     schedule.disable(upi, cb);
@@ -2998,6 +3008,9 @@ const Point = class Point extends Common {
             id = this.getNumber(newPoint.id),
             parentNodeId = this.getNumber(newPoint.parentNodeId),
             insertNewPoint = (err, clonedPoint) => {
+                if (!!err && !err.hasOwnProperty('msg')) {
+                    return cb(err);
+                }
                 this.addPoint({newPoint: clonedPoint}, data.user, {}, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
                         return cb(err);

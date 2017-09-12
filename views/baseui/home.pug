@@ -442,7 +442,7 @@ html
                     // /ko
 
     script#treeViewTemplate(type='text/html')
-        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
+        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'dblclick', handler: $root.openNode, selector: '.dtcollapsible-header .nodeName'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
 
     script#node(type='text/html')
         //- .node

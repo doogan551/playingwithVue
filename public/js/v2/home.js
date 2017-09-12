@@ -7217,8 +7217,8 @@ var dti = {
                     node.bindings._id(newId);
                     node.bindings.path(newNode.path);
 
-                    this.nodeMatrix[newId] = node;
                     delete this.nodeMatrix[oldId];
+                    this.nodeMatrix[newId] = node;
                 }
 
                 normalize(arr, cfg) {
