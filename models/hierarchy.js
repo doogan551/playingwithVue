@@ -122,9 +122,9 @@ const Hierarchy = class Hierarchy extends Common {
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
             this.recreateTags(node);
-            try{
+            try {
                 let result = Config.Templates.checkAgainstTemplate(node);
-            } catch(e) {
+            } catch (e) {
                 logger.error(e);
                 return cb(e.message || e);
             }
@@ -328,15 +328,6 @@ const Hierarchy = class Hierarchy extends Common {
             }, (err) => {
                 cb(err, descendants);
             });
-        });
-    }
-
-    buildSearchTerms(terms) {
-        return terms.map((term) => {
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
-            }
-            return new RegExp('[.]*' + term + '[.]*', 'i');
         });
     }
 
