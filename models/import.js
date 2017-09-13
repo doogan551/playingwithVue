@@ -713,7 +713,8 @@ let Import = class Import extends Common {
         }, (err, point, next) => {
             var guide = importconfig.reportGuide,
                 template = Config.Templates.getTemplate('Report'),
-                report = lodash.merge(template, guide);
+                report = lodash.merge(template, guide),
+                index = 0;
 
             report['Report Type'].Value = 'History';
             report['Report Type'].eValue = Config.Enums['Report Types'].History.enum;
@@ -817,10 +818,10 @@ let Import = class Import extends Common {
             //report._Name = point.Name.toLowerCase();
             delete report._Name;
 
-            report.name1 = point.name1;
-            report.name2 = point.name2;
-            report.name3 = point.name3;
-            report.name4 = point.name4;
+            report.name1 = doc.name1;
+            report.name2 = doc.name2;
+            report.name3 = doc.name3;
+            report.name4 = doc.name4;
             report['Report Config'].reportTitle = report.Name;
 
             switch (doc['Reset Interval']) {
