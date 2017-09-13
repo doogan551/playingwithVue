@@ -400,9 +400,9 @@ let Import = class Import extends Common {
             query: {}
         }, (err, meter, cb) => {
             var names = {
-                name1: splitName(meter)[0],
-                name2: splitName(meter)[1],
-                name4: splitName(meter)[3]
+                name1: meter.name1,
+                name2: meter.name2,
+                name4: meter.name4
             };
             async.waterfall([(wfCb) => {
                 this.getOne({
@@ -724,18 +724,11 @@ let Import = class Import extends Common {
             //report._Name = point.Name.toLowerCase();
             delete report._Name;
 
-            var names = report.Name.split('_'),
-                index = 0;
+            report.name1 = point.name1;
+            report.name2 = point.name2;
+            report.name3 = point.name3;
+            report.name4 = point.name4;
 
-            for (var i = 1; i <= 4; i++) {
-                if (i <= names.length) {
-                    report['name' + i] = names[i - 1];
-                    report['_name' + i] = names[i - 1].toLowerCase();
-                } else {
-                    report['name' + i] = '';
-                    report['_name' + i] = '';
-                }
-            }
             report['Report Config'].reportTitle = report.Name;
 
             report['Report Config'].interval.period = 'Minute';
@@ -824,17 +817,10 @@ let Import = class Import extends Common {
             //report._Name = point.Name.toLowerCase();
             delete report._Name;
 
-            var names = report.Name.split('_');
-
-            for (var i = 1; i <= 4; i++) {
-                if (i <= names.length) {
-                    report['name' + i] = names[i - 1];
-                    report['_name' + i] = names[i - 1].toLowerCase();
-                } else {
-                    report['name' + i] = '';
-                    report['_name' + i] = '';
-                }
-            }
+            report.name1 = point.name1;
+            report.name2 = point.name2;
+            report.name3 = point.name3;
+            report.name4 = point.name4;
             report['Report Config'].reportTitle = report.Name;
 
             switch (doc['Reset Interval']) {
@@ -964,9 +950,6 @@ let Import = class Import extends Common {
                     scheduleEntryTemplate.name3 = '';
                     scheduleEntryTemplate.name4 = '';
                     scheduleEntryTemplate.Name = scheduleEntryTemplate.name1 + '_' + scheduleEntryTemplate.name2;
-                    /*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
-                    scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
-                    scheduleEntryTemplate._Name = scheduleEntryTemplate.Name.toLowerCase();*/
 
                     scheduleEntryTemplate['Control Point'] = oldScheduleEntry['Control Point'];
                     scheduleEntryTemplate['Host Schedule'].Value = oldScheduleEntry.hostEntry;
