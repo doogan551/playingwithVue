@@ -2,6 +2,7 @@ const ObjectID = require('mongodb').ObjectID;
 
 const Common = require('./common');
 const utils = require('../helpers/utils');
+const Config = require('../public/js/lib/config');
 
 const alarmsCollection = utils.CONSTANTS('alarmsCollection');
 
@@ -110,6 +111,42 @@ const Alarm = class Alarm extends Common {
                 }
             });
         });
+    }
+
+    acknowledgePointAlarms(alarm) {
+        if (alarm.ackStatus === Config.Enums['Acknowledge Statuses']['Auto Acknowledge'].enum) {
+            let now = Math.floor(Date.now() / 1000);
+            let upi = alarm.upi;
+            let criteria = {
+                collection: 'Alarms',
+                query: {
+                    upi: upi,
+                    ackStatus: Config.Enums['Acknowledge Statuses']['Not Acknowledged'].enum
+                },
+                updateObj: {
+                    $set: {
+                        ackUser: 'System',
+                        ackTime: now,
+                        ackStatus: Config.Enums['Acknowledge Statuses'].Acknowledged.enum
+                    }
+                },
+                options: {
+                    multi: true
+                }
+            };
+            this.update(criteria, (err, result) => {
+                if (err) {
+                    // logger.error(err);
+                } else {
+                    criteria.collection = 'ActiveAlarms';
+                    this.update(criteria, (err, result) => {
+                        if (err) {
+                            // logger.error(err);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     autoAcknowledgeAlarms(callback) {

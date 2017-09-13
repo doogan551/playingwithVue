@@ -89,7 +89,7 @@ module.exports = model = function (_common) {
                 }
             }
 
-            alarm.acknowledgeAlarm(doc.o);
+            alarm.acknowledgePointAlarms(doc.o);
             Notifications.processIncomingAlarm(doc.o);
         } else if (doc.ns === dbName + '.ActiveAlarms') {
             let activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
