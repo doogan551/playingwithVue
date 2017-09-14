@@ -4,7 +4,7 @@
     1. Included by the view (i.e. a typical script include)
     2. Included through the inclusion of dorsettUtility.js (i.e. dorsettUtility.js includes dtiCommon.js if it is not already included)
 
-    Config.js functions can be moved to this file, however, they should still be accessible as Confg.whatever
+    Config.js functions can be moved to this file, however, they should still be accessible as Config.whatever
     Search config.js for "getPointName" to see a very simple implementation example.
 */
 var dtiCommon = {
@@ -24,6 +24,99 @@ var dtiCommon = {
         }
 
         return result;
+    },
+
+    isValidObjectAction: (action, actionObject) => {
+        let answer = true,
+            hierarchyNode = actionObject.hierarchyNode,
+            validTypesToOpen = ['Reference', 'Point', 'Application'],
+            validTypesToCopy = ['Reference', 'Point', 'Application'],
+            validTypesToDelete = ['Reference', 'Point', 'Application'],
+            isValidPasteAction = () => {
+                let cutNode = hierarchyNode.manager._cutNode,
+                    cutNodeId = cutNode && cutNode.bindings._id(),
+                    isValidPasteMode = !!hierarchyNode.manager._cutNode || !!hierarchyNode.manager._copyNode,
+                    copyNode = hierarchyNode.manager._copyNode,
+                    copyNodeId = copyNode && copyNode.bindings._id();
+
+                // Make sure we don't show paste if right-clicking the cut hierarchyNode or inside the cut hierarchyNode
+                while (isValidPasteMode && hierarchyNode) {
+                    if (hierarchyNode.bindings._id() === cutNodeId) {
+                        isValidPasteMode = false;
+                    } else {
+                        hierarchyNode = hierarchyNode.parentNode;    //  TODO: hmmmm  will this work in pointselector?
+                    }
+                }
+
+                return isValidPasteMode;
+            },
+            isValidAddAction = () => {
+                return (actionObject.nodeSubType !== "Sequence" && !actionObject.parentUpiSet);
+            },
+            isValidCopyAction = () => {
+                let inCopyCollection = (validTypesToCopy.indexOf(actionObject.nodeType) !== -1);
+
+                return (inCopyCollection && !actionObject.rootNode && !actionObject.parentUpiSet);
+            },
+            isValidCloneAction = () => {
+                return isValidCopyAction();
+            },
+            isValidCutAction = () => {
+                return (!actionObject.rootNode && !actionObject.parentUpiSet);
+            },
+            isValidEditAction = () => {
+                return (actionObject.nodeType !== "Point" && !actionObject.parentUpiSet && !actionObject.rootNode);
+            },
+            isValidOpenAction = () => {
+                let inOpenCollection = (validTypesToOpen.indexOf(actionObject.nodeType) !== -1);
+
+                return inOpenCollection;
+            },
+            isValidDeleteAction = () => {
+                let inDeleteCollection = (validTypesToDelete.indexOf(actionObject.nodeType) !== -1);
+
+                return (inDeleteCollection && !actionObject.parentUpiSet);
+            };
+
+        if (!!hierarchyNode && !!hierarchyNode.bindings) {
+
+            switch (action) {
+                case "add":
+                case "addApplication":
+                case "addCategory":
+                case "addEquipment":
+                case "addLocation":
+                case "addPoint":
+                case "addReference":
+                    answer = isValidAddAction();
+                    break;
+                case "clone":
+                    answer = isValidCloneAction();
+                    break;
+                case "copy":
+                    answer = isValidCopyAction();
+                    break;
+                case "cut":
+                    answer = isValidCutAction();
+                    break;
+                case "delete":
+                    answer = isValidDeleteAction();
+                    break;
+                case "edit":
+                    answer = isValidEditAction();
+                    break;
+                case "open":
+                    answer = isValidOpenAction();
+                    break;
+                case "paste":
+                    answer = isValidPasteAction();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return answer;
     },
 
     // init fns should only be run once after dtiCommon is loaded, and is normally self-handled (see end of this script)

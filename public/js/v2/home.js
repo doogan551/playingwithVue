@@ -4100,11 +4100,16 @@ var dti = {
     },
     navigatorv2: {
         $addNodeModal: $('#addNodeModal'),
+        $editNodeModal: $('#editNodeModal'),
         tree: {
-            _addNodeData: null,         // state variable
-            _addNodePoint: null,        // state variable
-            _addNodeFilter: null,       // state variable
-            _addNodeTreeCallback: null, // state variable
+            _addNodeData: null,          // state variable
+            _addNodePoint: null,         // state variable
+            _addNodeFilter: null,        // state variable
+            _addNodeTreeCallback: null,  // state variable
+            _editNodeData: null,         // state variable
+            _editNodePoint: null,        // state variable
+            _editNodeFilter: null,       // state variable
+            _editNodeTreeCallback: null, // state variable
             config: {
                 $container: null, // This is set by the "treeView" knockout binding when the tree is instantiated
                 nodeClickHandler: function (event, node) {
@@ -4117,13 +4122,25 @@ var dti = {
                     items: {
                         add: {
                             name: 'Add',
+                            action: 'add',
+                            // TODO  hide Add in certain situations
+                            // visible: {
+                            //     cb: (data, treeCb) => {
+                            //         alert("'Add' added");
+                            //         return dtiCommon.isValidObjectAction('add', data.node, treeCb);
+                            //     }
+                            // },
                             items: {
                                 location: {
                                     name: 'Location',
                                     visible: {
-                                        action: 'location'
+                                        action: 'addLocation',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addLocation', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addLocation',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4133,9 +4150,13 @@ var dti = {
                                 equipment: {
                                     name: 'Equipment',
                                     visible: {
-                                        action: 'equipment'
+                                        action: 'addEquipment',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addEquipment', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addEquipment',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4145,9 +4166,13 @@ var dti = {
                                 category: {
                                     name: 'Category',
                                     visible: {
-                                        action: 'category'
+                                        action: 'addCategory',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addCategory', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addCategory',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4157,9 +4182,13 @@ var dti = {
                                 reference: {
                                     name: 'Reference',
                                     visible: {
-                                        action: 'reference'
+                                        action: 'addReference',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addReference', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addReference',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4169,9 +4198,13 @@ var dti = {
                                 point: {
                                     name: 'Point',
                                     visible: {
-                                        action: 'point'
+                                        action: 'addPoint',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addPoint', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addPoint',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4181,9 +4214,13 @@ var dti = {
                                 application: {
                                     name: 'Application',
                                     visible: {
-                                        action: 'application'
+                                        action: 'addApplication',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addApplication', data.node, treeCb);
+                                        }
                                     },
                                     callback: {
+                                        action: 'addApplication',
                                         cb: (data, treeCb) => {
                                             dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
                                         },
@@ -4195,18 +4232,40 @@ var dti = {
                         open: {
                             name: 'Open',
                             visible: {
-                                action: 'open'
+                                action: 'open',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('open', data.node, treeCb);
+                                }
                             },
                             callback: {
+                                action: 'open',
                                 cb: (data, treeCb) => {
                                     dti.navigatorv2.tree.openNode(data, treeCb);
+                                }
+                            }
+                        },
+                        edit: {
+                            name: 'Edit',
+                            visible: {
+                                action: 'edit',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('edit', data.node, treeCb);
+                                }
+                            },
+                            callback: {
+                                action: 'edit',
+                                cb: (data, treeCb) => {
+                                    dti.navigatorv2.tree.helper.showEditNodeModal(data, treeCb);
                                 }
                             }
                         },
                         cut: {
                             name: 'Cut',
                             visible: {
-                                action: 'cut'
+                                action: 'cut',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('cut', data.node, treeCb);
+                                }
                             },
                             callback: {
                                 action: 'cut',
@@ -4218,7 +4277,10 @@ var dti = {
                         copy: {
                             name: 'Copy',
                             visible: {
-                                action: 'copy'
+                                action: 'copy',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('copy', data.node, treeCb);
+                                }
                             },
                             callback: {
                                 action: 'copy'
@@ -4227,7 +4289,10 @@ var dti = {
                         paste: {
                             name: 'Paste',
                             visible: {
-                                action: 'paste'
+                                action: 'paste',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('paste', data.node, treeCb);
+                                }
                             },
                             callback: {
                                 action: 'paste',
@@ -4239,9 +4304,13 @@ var dti = {
                         delete: {
                             name: 'Delete',
                             visible: {
-                                action: 'delete'
+                                action: 'delete',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('delete', data.node, treeCb);
+                                }
                             },
                             callback: {
+                                action: 'delete',
                                 cb: (data, treeCb) => {
                                     dti.navigatorv2.tree.deleteNode(data, treeCb);
                                 }
@@ -4262,6 +4331,7 @@ var dti = {
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
+                selfBindings.currRefNode(node.bindings.refNode());
             },
             openNode: (data) => {
                 // data = {
@@ -4269,8 +4339,16 @@ var dti = {
                 //     config: config,
                 //     configKey: configKey
                 // }
+                let id;
+
+                if (data.node.bindings.nodeType() === "Reference") {
+                    id = data.node.bindings.refNode();
+                } else {
+                    id = data.node.bindings._id();
+                }
+
                 dti.windows.openWindow({
-                    upi: data.node.bindings._id()
+                    upi: id
                 });
             },
             pasteNode: (data, treeCb) => {
@@ -4283,14 +4361,14 @@ var dti = {
 
                 let done = (err, newNode) => {
                     if (!err) {
-                        if (!!dti.navigatorv2.tree._cutNode) {
+                        if (data.sourceNode.bindings.isCut()) {
                             treeCb('move', reqData);
-                            dti.navigatorv2.tree._cutNode = null;
+                            data.sourceNode.bindings.isCut(false);
                             validPaste = true;
-                        } else if (!!dti.navigatorv2.tree._copyNode) {
+                        } else if (data.sourceNode.bindings.isCopy()) {
                             $.extend(reqData, newNode);  // if pasting a copied node
                             treeCb('copy', reqData);
-                            dti.navigatorv2.tree._copyNode = null;
+                            data.sourceNode.bindings.isCopy(false);
                             validPaste = true;
                         }
 
@@ -4302,9 +4380,9 @@ var dti = {
                 };
 
                 self.bindings.busy(true);
-                if (!!dti.navigatorv2.tree._cutNode) {
+                if (data.sourceNode.bindings.isCut()) {
                     self.tree.serverOps.moveNode(reqData, done);
-                } else if (!!dti.navigatorv2.tree._copyNode) {
+                } else if (data.sourceNode.bindings.isCopy()) {
                     self.tree.serverOps.copyNode(reqData, done);
                 }
             },
@@ -4363,7 +4441,7 @@ var dti = {
                         modalBindings.error('');
                     }, 2000);
                 } else {
-                    newNode = self.tree.helper.buildNodeFromModalOptions();
+                    newNode = self.tree.helper.buildNodeFromAddModalOptions();
                     selfBindings.busy(true);
 
                     if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
@@ -4392,6 +4470,7 @@ var dti = {
                 //         Materialize.toast('Node edited', 1000);
                 //     }
                 // });
+                dti.navigatorv2.$editNodeModal.closeModal();
             },
             deleteNode: (data, treeCb) => {
                 // data = {
@@ -4402,21 +4481,21 @@ var dti = {
                 mbox.alert('Delete server-side is not ready for prime time.');
                 // The below code should be ready to go once the server side is ready
 
-                // let self = dti.navigatorv2;
-                // let node = data.node;
-                // let msg = 'Are you sure you want to delete ' + node.bindings.display() + '? <br /><br />WARNING: This will also delete all children of this node.';
-                // let done = (err) => {
-                //     if (!err) {
-                //         treeCb('delete', data);
-                //         dti.toast('Success', 2000);
-                //     }
-                // };
-                //
-                // mbox.confirm(msg, (yes) => {
-                //     if (yes) {
-                //         self.tree.serverOps.deleteNode(node, done);
-                //     }
-                // });
+                let self = dti.navigatorv2;
+                let node = data.node;
+                let msg = 'Are you sure you want to delete ' + node.bindings.display() + '? <br /><br />WARNING: This will also delete all children of this node.';
+                let done = (err) => {
+                    if (!err) {
+                        treeCb('delete', data);
+                        dti.toast('Success', 2000);
+                    }
+                };
+
+                mbox.confirm(msg, (yes) => {
+                    if (yes) {
+                        self.tree.serverOps.deleteNode(node, done);
+                    }
+                });
             },
             helper: {
                 blockUI() {
@@ -4443,6 +4522,7 @@ var dti = {
                     return {
                         id: obj._id,
                         parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                        _parentUpi: obj._parentUpi,
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
@@ -4459,6 +4539,7 @@ var dti = {
                     return {
                         upi: self.tree._addNodePoint._id,
                         parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                        _parentUpi: obj._parentUpi,
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: self.tree._addNodePoint['Point Type'].Value
@@ -4480,7 +4561,7 @@ var dti = {
 
                     return messages.length === 0 || messages.join('<br/>');
                 },
-                buildNodeFromModalOptions: () => {
+                buildNodeFromAddModalOptions: () => {
                     let self = dti.navigatorv2;
                     let modalBindings = dti.bindings.navigatorv2.addNodeModal;
                     let config = self.tree._addNodeData.config;
@@ -4501,6 +4582,31 @@ var dti = {
 
                     if (config.nodeType === 'Reference') {
                         ret.refNode = self.tree._addNodePoint._id;
+                    }
+
+                    return ret;
+                },
+                buildNodeFromEditModalOptions: () => {
+                    let self = dti.navigatorv2;
+                    let modalBindings = dti.bindings.navigatorv2.editNodeModal;
+                    let config = self.tree._editNodeData.config;
+                    let parentNode = self.tree._editNodeData.node;
+                    let point = self.tree._editNodePoint;
+
+                    if (modalBindings.needsPoint()) {
+                        modalBindings.editNodeSubType(point.pointType);
+                    }
+
+                    let ret = {
+                        display: modalBindings.editNodeDisplay(),
+                        nodeType: config.nodeType,
+                        nodeSubType: modalBindings.editNodeSubType(),
+                        parentNode: parentNode.bindings._id(),
+                        fetched: true
+                    };
+
+                    if (config.nodeType === 'Reference') {
+                        ret.refNode = self.tree._editNodePoint._id;
                     }
 
                     return ret;
@@ -4534,6 +4640,33 @@ var dti = {
 
                     modalBindings.modalOpen(true);
                 },
+                showEditNodeModal: (data, treeCb) => {
+                    // data = {
+                    //     node: node,
+                    //     config: config,
+                    //     configKey: configKey
+                    // }
+                    let self = dti.navigatorv2;
+                    let modalBindings = dti.bindings.navigatorv2.editNodeModal;
+                    let node = data.node;
+
+                    modalBindings.error('');
+                    modalBindings.editNodeDisplay(node.bindings.display());
+                    modalBindings.editNodePointName('');
+                    modalBindings.editNodeType(node.bindings.nodeType());
+                    modalBindings.editNodeSubType(node.bindings.nodeSubType());
+
+                    self.tree._editNodeData = data;
+                    self.tree._editNodeTreeCallback = treeCb; // Save a temp reference to the callback
+                    // this._addNodeParent = config.parent;
+
+                    modalBindings.needsPoint(false);  // TODO might be used for reference nodes
+
+                    // self.$editNodeModal.openModal();
+                    // self.$editNodeModal.find('select').material_select();
+                    //
+                    // modalBindings.modalOpen(true);
+                },
                 chooseNodePoint: () => {
                     let self = dti.navigatorv2;
                     let config = self.tree._addNodeData.config;
@@ -4556,6 +4689,19 @@ var dti = {
                         callback: self.tree.helper.handleChoosePoint,
                         disableNewPoint: true
                     });
+
+                    // let parameters = {
+                    //     terms: '',
+                    //     pointTypes: pointTypes,
+                    //     restrictPointTypes: false,
+                    //     disableNewPoint: true
+                    // };
+                    //
+                    // dtiUtility.showPointSelector(parameters);
+                    // dtiUtility.onPointSelect(self.tree.helper.handleChoosePoint);
+
+                    // dti.bindings.showPointSelector();
+                    // dti.bindings.onPointSelect(self.tree.helper.handleChoosePoint);
                 },
                 handleChoosePoint: (point) => {
                     let self = dti.navigatorv2;
@@ -4564,6 +4710,17 @@ var dti = {
                     modalBindings.newNodePointName(point.name);
                     self.tree._addNodePoint = point;
                     self.tree._addNodeFilter = point.filter;
+                },
+                isValidMenuAction: (action, actionObject) => {
+                    let data = {
+                        hierarchyNode: actionObject,
+                        nodeType: actionObject.bindings.nodeType(),
+                        nodeSubType: actionObject.bindings.nodeSubType(),
+                        parentUpiSet: (actionObject.bindings._parentUpi() > 0),
+                        rootNode: (!!actionObject.bindings && !!actionObject.bindings._isRoot && !!actionObject.bindings._isRoot())
+                    };
+
+                    return dtiCommon.isValidObjectAction(action, data);
                 }
             },
             serverOps: {
@@ -4691,7 +4848,7 @@ var dti = {
                         if (!result) {
                             err = 'An unknown error occurred';
                         } else if (result.err) {
-                            err = 'Error copying node: ' + result.err.errmsg || result.err;
+                            err = 'Error copying node: ' + result.err;
                         } else {
                             cbData.newNode = (!!result.newPoint ? result.newPoint : result.newNode);
                         }
@@ -4705,22 +4862,20 @@ var dti = {
                     });
                 },
                 deleteNode(node, cb) {
-                    let self = dti.navigatorv2;
-                    let data = {
-                        id: node.bindings._id(),
-                        deleteChildren: true
-                    };
-                    let err = false;
+                    let self = dti.navigatorv2,
+                        data = {
+                            id: node.bindings._id(),
+                            deleteChildren: true
+                        },
+                        err = false,
+                        hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
+                        rawPoint = hierarchyNodeTypes[node.bindings.nodeType()] === undefined,
+                        url = rawPoint ? '/api/points/delete' : '/api/hierarchy/delete';
 
                     dti.post({
-                        url: '/api/hierarchy/delete',
+                        url: url,
                         data: data
                     }).done((response) => {
-                        // reponse: {
-                        //     err: 'error message here',
-                        //     // OR
-                        //     message: 'success'
-                        // }
                         dti.log(response);
 
                         if (!response) {
@@ -4765,7 +4920,8 @@ var dti = {
                 currNodeType: '',
                 currNodeSubType: '',
                 currNodePath: '',
-                currNodeName: ''
+                currNodeName: '',
+                currRefNode: ''
             }), {
                 treeConfig: dti.navigatorv2.tree.config
             });
@@ -5849,6 +6005,24 @@ var dti = {
                 chooseNodePoint() {
                     dti.navigatorv2.tree.helper.chooseNodePoint();
                 }
+            }),
+            editNodeModal: $.extend(ko.viewmodel.fromModel({
+                modalOpen: false,
+                needsPoint: false,
+                error: '&nbsp;',
+                availableTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
+                //edit node stuff
+                editNodeDisplay: '',
+                editNodeType: '',
+                editNodeSubType: '',
+                editNodePointName: ''
+            }), {
+                editNode() {
+                    dti.navigatorv2.tree.editNode();
+                },
+                chooseNodePoint() {  // TODO perhaps for reference nodes?
+                    dti.navigatorv2.tree.helper.chooseNodePoint();
+                }
             })
         },
         globalSearch: {
@@ -6574,6 +6748,7 @@ var dti = {
                     return {
                         _id: dti.makeId(),
                         parentNode: 0,
+                        _parentUpi: 0,
                         nodeType: '',
                         nodeSubType: '',
                         path: [],
@@ -6723,112 +6898,55 @@ var dti = {
                             dti.log('No node for highlightNode', options);
                         }
                     };
-                    let isValidPasteAction = (node) => {
-                        let cutNode = manager._cutNode;
-                        let cutNodeId = cutNode && cutNode.bindings._id();
-                        let isValidCutMode = !!manager._cutNode;
-                        let copyNode = manager._copyNode;
-                        let copyNodeId = copyNode && copyNode.bindings._id();
-                        let isValidCopyMode = !!manager._copyNode;
-
-                        // Make sure we don't show paste if right-clicking the cut node or inside the cut node
-                        while (isValidCutMode && node) {
-                            if (node.bindings._id() === cutNodeId) {
-                                isValidCutMode = false;
-                            } else {
-                                node = node.parentNode;
-                            }
-                        }
-
-                        return isValidCutMode || isValidCopyMode;
-                    };
                     let preCallbackAction = (data) => {
-                        // data = {
-                        //     node: node,
-                        //     configKey: configKey,
-                        //     config: config
-                        // }
-                        let node = data.node;
-                        let configKey = data.configKey;
-                        let config = data.config;
-                        let runCb = true; // This routine's response determines if the context menu's callback is executed or not
-                        let validNodetypesToOpen = ['Reference', 'Point', 'Application'];
-                        let validNodetypesToCopy = ['Reference', 'Point', 'Application'];
-                        let validNodetypesToDelete = ['Location', 'Reference', 'Point', 'Application'];
+                        let node = data.node,
+                            configKey = data.configKey,
+                            config = data.config,
+                            runCb = true; // This routine's response determines if the context menu's callback is executed or not
 
                         if (node) {
-                            switch (config.action) {
-                                case "add":
-                                case "application":
-                                case "category":
-                                case "equipment":
-                                case "location":
-                                case "point":
-                                case "reference":
-                                    break;
-                                case "copy":
-                                    // this one gets complicated in a hurry
-                                    // for now duplicate the old "Cloning" logic for classic "points"
-                                    if (configKey === 'visible') {
-                                        if (validNodetypesToCopy.indexOf(data.node.bindings.nodeType()) === -1) {
-                                            runCb = false;
-                                        }
-                                    } else {
-                                        // User clicked the 'copy' option
-                                        // If we already have a copy node
-                                        if (manager._copyNode) {
-                                            manager._copyNode.bindings.isCopy(false); // Clear copy indication
-                                        }
-                                        manager._copyNode = node; // Update copy node
-                                        dti.navigatorv2.tree._copyNode = manager._copyNode;
-                                        // data.copyNode = manager._copyNode;
-                                        node.bindings.isCopy(true);
-                                    }
-                                    break;
-                                case "cut":
-                                    if (configKey === 'visible') {
-                                        // Cut is always visible unless context menu is invoked on the fake root node
-                                        runCb = !!!(node.bindings._isRoot && node.bindings._isRoot());
-                                    } else { // configKey = 'callback'
-                                        // User clicked the 'cut' option
-                                        // If we already have a cut node
-                                        if (manager._cutNode) {
-                                            manager._cutNode.bindings.isCut(false); // Clear cut indication
-                                        }
-                                        manager._cutNode = node; // Update cut node
-                                        dti.navigatorv2.tree._cutNode = manager._cutNode;
-                                        // data.cutNode = manager._cutNode;
-                                        node.bindings.isCut(true);
-                                    }
-                                    break;
-                                case "delete":
-                                    // this one gets complicated in a hurry
-                                    if (configKey === 'visible') {
-                                        if (validNodetypesToDelete.indexOf(data.node.bindings.nodeType()) === -1) {
-                                            runCb = false;
-                                        }
-                                    } else {
+                            if (configKey === 'visible' && config.cb) {
+                                runCb = config.cb(data);
+                            } else {
+                                switch (config.action) {
+                                    case "add":
+                                        break;
+                                    case "copy":
+                                            // User clicked the 'copy' option
+                                            // If we already have a copy node
+                                            if (manager._copyNode) {
+                                                manager._copyNode.bindings.isCopy(false); // Clear copy indication
+                                            }
+                                            manager._cutNode = null;
+                                            manager._copyNode = node; // Update copy node
 
-                                    }
-                                    break;
-                                case "open":
-                                    if (configKey === 'visible') {
-                                        if (validNodetypesToOpen.indexOf(data.node.bindings.nodeType()) === -1) {
-                                            runCb = false;
+                                            node.bindings.isCut(false);
+                                            node.bindings.isCopy(true);
+                                        break;
+                                    case "cut":
+                                            if (manager._cutNode) { // If we already have a cut node
+                                                manager._cutNode.bindings.isCut(false); // Clear cut indication
+                                            }
+                                            manager._cutNode = node; // Update cut node
+                                            manager._copyNode = null;
+
+                                            node.bindings.isCut(true);
+                                            node.bindings.isCopy(false);
+                                        break;
+                                    case "delete":
+                                        break;
+                                    case "open":
+                                        break;
+                                    case "paste":
+                                        if (!!manager._cutNode) {
+                                            data.sourceNode = manager._cutNode;
+                                        } else if (!!manager._copyNode) {
+                                            data.sourceNode = manager._copyNode;
                                         }
-                                    }
-                                    break;
-                                case "paste":
-                                    if (configKey === 'visible') {
-                                        runCb = isValidPasteAction(node);
-                                    } else if (!!manager._cutNode) {
-                                        data.sourceNode = manager._cutNode;
-                                    } else if (!!manager._copyNode) {
-                                        data.sourceNode = manager._copyNode;
-                                    }
-                                    break;
-                                default:
-                                    break;
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
 
@@ -6879,6 +6997,11 @@ var dti = {
                     $.extend(config.contextMenu, {
                         events: {
                             show: (options) => {
+                                // //no menu on gpl blocks    TODO feels specific to hierarchy nodes
+                                // if (ko.dataFor(options.$trigger[0])._parentUpi() !== 0) {
+                                //     return false;
+                                // }
+
                                 highlightNode(options, true);
                             },
                             hide: (options) => {

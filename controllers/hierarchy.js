@@ -124,9 +124,6 @@ router.post('/copy', function (req, res) {
             });
         }
 
-        // return utils.sendResponse(res, {
-        //     message: 'success'
-        // });
         return utils.sendResponse(res, {newNode: results});
     });
 });

@@ -72,9 +72,11 @@ const Hierarchy = class Hierarchy extends Common {
             fields: {
                 display: 1,
                 parentNode: 1,
+                _parentUpi: 1,
                 nodeType: 1,
                 nodeSubType: 1,
                 locationType: 1,
+                refNode: 1,
                 path: 1,
                 Name: 1
             }
@@ -170,7 +172,7 @@ const Hierarchy = class Hierarchy extends Common {
                                 newNode: result
                             });
                         }
-                        callback(err, results);
+                        callback();
                     });
                 }, (err) => {
                     cb(err, results);
@@ -180,39 +182,33 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     sortNodes(nodes) {
-        let sorted = [],
-            getParent = (node, path) => {
-                nodes.forEach((_node) => {
-                    if (_node._id === node.parentLocId) {
-                        addToPath(_node, path);
-                        getParent(_node, path);
-                    }
-                });
-            },
-            addToPath = (node, path) => {
-                if (!~sorted.indexOf(node._id) && !~path.indexOf(node._id)) {
-                    path.unshift(node._id);
+        let sorted = [];
+        let getParent = (node, path) => {
+            nodes.forEach((_node) => {
+                if (_node._id === node.parentLocId) {
+                    addToPath(_node, path);
+                    getParent(_node, path);
                 }
-            };
-
-        if (nodes.length > 1) {
+            });
+        };
+        let addToPath = (node, path) => {
+            if (!~sorted.indexOf(node._id) && !~path.indexOf(node._id)) {
+                path.unshift(node._id);
+            }
+        };
+        nodes.forEach((node) => {
+            let path = [];
+            addToPath(node, path);
+            getParent(node, path);
+            sorted.push(...path);
+        });
+        sorted.forEach((id, index) => {
             nodes.forEach((node) => {
-                let path = [];
-                addToPath(node, path);
-                getParent(node, path);
-                sorted.push(...path);
+                if (id === node._id) {
+                    sorted[index] = node;
+                }
             });
-            sorted.forEach((id, index) => {
-                nodes.forEach((node) => {
-                    if (id === node._id) {
-                        sorted[index] = node;
-                    }
-                });
-            });
-        } else {
-            sorted = nodes;
-        }
-
+        });
         return sorted;
     }
 
@@ -570,7 +566,7 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                oldDisplay = node.path[node.path - 2];
+                oldDisplay = [node.path.length - 1];
                 node.parentNode = parentNode;
 
                 if (parentNode === 0) {
@@ -592,8 +588,9 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     copyNode(data, cb) {
-        let id = this.getNumber(data.id),
-            parentNode = this.getNumber(data.parentNode);
+        let newNode,
+            id = this.getNumber(data.id),
+            parentNode = this.getNumber(data.parentNodeId);
 
         this.getNode({
             id: id
@@ -601,15 +598,19 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                node.parentNode = parentNode;
+                newNode = node;
+                newNode.parentNode = parentNode;
+                newNode.id = "newNode";
+                // newNode.targetUpi = id;
+                newNode.display += this.getCopyPostFix();
 
                 if (parentNode === 0) {
-                    node.path = [node.display];
+                    newNode.path = [newNode.display];
                 } else {
-                    node.path = [...parent.path, node.display];
+                    newNode.path = [...parent.path, newNode.display];
                 }
 
-                this.addAll({nodes: [node]}, cb);
+                this.addAll({nodes: [newNode]}, cb);
             });
         });
     }

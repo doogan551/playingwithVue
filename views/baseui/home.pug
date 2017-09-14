@@ -281,6 +281,35 @@ html
                     button.btn.blue-grey.waves-effect(data-bind="click: navigatorv2.addNodeModal.addNode, attr: {disabled: navigatorv2.addNodeModal.allowAddNode}") Add
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
+            #editNodeModal.modal
+                .modal-content
+                    h4(data-bind="text: 'Edit ' + navigatorv2.editNodeModal.editNodeType()")
+                    .row
+                        .input-field.col.s6
+                            input#editNodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: navigatorv2.editNodeModal.modalOpen, value: navigatorv2.editNodeModal.editNodeDisplay")
+                            label(for="editNodeDisplay") Display
+                    // ko if: navigatorv2.editNodeModal.editNodeType() === 'Location'
+                    .row
+                        .input-field.col.s3
+                            select(data-bind="options: navigatorv2.editNodeModal.availableTypes, value: navigatorv2.editNodeModal.editNodeSubType")
+                            label Type
+                    // /ko
+
+                    // ko if: navigatorv2.editNodeModal.needsPoint() === true
+                    .row
+                        .col.s9.valign-wrapper
+                            button.btn.blue-grey(data-bind="click: navigatorv2.editNodeModal.chooseNodePoint") Choose Point
+
+                            .valign(data-bind="text: navigatorv2.editNodeModal.newNodePointName")
+                    // /ko
+
+                    .row
+                        .col.s12.error.red-text(data-bind='html: navigatorv2.editNodeModal.error')
+
+                .modal-footer
+                    button.btn.blue-grey.waves-effect(data-bind="click: navigatorv2.editNodeModal.editNode, attr: {disabled: navigatorv2.editNodeModal.allowEditNode}") OK
+                    button.btn-flat.modal-action.modal-close.waves-effect Cancel
+
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -436,6 +465,9 @@ html
                     .treeRow
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Reference Id:
+                        .val(data-bind="text: currRefNode")
                     .treeRow
                         .cat Old Name:
                         .val(data-bind="text: currNodeName")

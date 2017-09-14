@@ -921,37 +921,14 @@ const Point = class Point extends Common {
         };
 
         let cloneGPLSequence = (oldSequence, callback) => {
-            let oName1;
-            let oName2;
-            let oName3;
-            let oName4;
 
             async.eachSeries(oldSequence.SequenceData.sequence.block, (block, acb) => {
+
                 if (block.upi === undefined || block.upi === 0) {
                     acb(null);
                 } else {
-                    oName1 = oldSequence.name1;
-                    oName2 = oldSequence.name2;
-                    oName3 = oldSequence.name3;
-                    oName4 = oldSequence.name4;
 
-                    if (oName1 === '' || oName1 === undefined) {
-                        oName1 = block.label;
-                        oName2 = '';
-                        oName3 = '';
-                        oName4 = '';
-                    } else if (oName2 === '' || oName2 === undefined) {
-                        oName2 = block.label;
-                        oName3 = '';
-                        oName4 = '';
-                    } else if (oName3 === '' || oName3 === undefined) {
-                        oName3 = block.label;
-                        oName4 = '';
-                    } else {
-                        oName4 = block.label;
-                    }
-
-                    doInitPoint(oName1, oName2, oName3, oName4, null, block.upi, null, (err, point) => {
+                    doInitPoint(null, block.upi, null, (err, point) => {
                         if (err) {
                             acb(err);
                         } else {
@@ -1058,17 +1035,17 @@ const Point = class Point extends Common {
 
                     template.Name = "";
                     template._Name = "";
-                    // once we decide what to do about those name segments
-                    // if (!!template.name1) {
-                    //     delete template.name1;
-                    //     delete template.name2;
-                    //     delete template.name3;
-                    //     delete template.name4;
-                    //     delete template._name1;
-                    //     delete template._name2;
-                    //     delete template._name3;
-                    //     delete template._name4;
-                    // }
+
+                    if (!!template.name1) {
+                        template.name1 = "";
+                        template.name2 = "";
+                        template.name3 = "";
+                        template.name4 = "";
+                        template._name1 = "";
+                        template._name2 = "";
+                        template._name3 = "";
+                        template._name4 = "";
+                    }
 
                     if (template['Point Type'].Value === 'Sequence') {
                         cloneGPLSequence(template, () => {
@@ -3011,9 +2988,14 @@ const Point = class Point extends Common {
                 if (!!err && !err.hasOwnProperty('msg')) {
                     return cb(err);
                 }
+                clonedPoint.parentNode = parentNodeId; // switch to ID
                 this.addPoint({newPoint: clonedPoint}, data.user, {}, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
-                        return cb(err);
+                        if (err.errmsg) {
+                            return cb(err.errmsg);
+                        } else {
+                            return cb(err);
+                        }
                     }
                     return cb(null, point);
                 });
