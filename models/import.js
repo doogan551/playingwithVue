@@ -51,9 +51,6 @@ let Import = class Import extends Common {
         var criteria = {
             collection: pointsCollection,
             query: {
-                _Name: {
-                    $exists: 0
-                }
             }
         };
 
@@ -391,10 +388,6 @@ let Import = class Import extends Common {
             }
         };
 
-        var splitName = (meter) => {
-            return meter.Name.split('_');
-        };
-
         this.iterateCursor({
             collection: 'PowerMeters',
             query: {}
@@ -715,7 +708,8 @@ let Import = class Import extends Common {
                 template = Config.Templates.getTemplate('Report'),
                 report = lodash.merge(template, guide),
                 index = 0;
-
+            delete report.parentNode;
+            delete report.display;
             report['Report Type'].Value = 'History';
             report['Report Type'].eValue = Config.Enums['Report Types'].History.enum;
             report['Point Refs'] = [];
@@ -810,6 +804,8 @@ let Import = class Import extends Common {
             var report = lodash.merge(template, guide);
             var refIds = [];
 
+            delete report.parentNode;
+            delete report.display;
             report['Report Type'].Value = 'Totalizer';
             report['Report Type'].eValue = Config.Enums['Report Types'].Totalizer.enum;
             report['Point Refs'] = [];
@@ -929,6 +925,10 @@ let Import = class Import extends Common {
         var scheduleEntryTemplate = Config.Templates.getTemplate('Schedule Entry');
         var scheduleTemplate = Config.Templates.getTemplate('Schedule');
 
+        delete scheduleTemplate.parentNode;
+        delete scheduleTemplate.display;
+        delete scheduleEntryTemplate.parentNode;
+        delete scheduleEntryTemplate.display;
         scheduleEntryTemplate._pStatus = 0;
         scheduleEntryTemplate._cfgRequired = false;
         scheduleTemplate._pStatus = 0;
@@ -1038,8 +1038,8 @@ let Import = class Import extends Common {
                 gplBlock.name4 = gplBlock.gplLabel;
                 gplBlock.Name = gplBlock.name1 + '_' + gplBlock.name2 + '_' + gplBlock.name3 + '_' + gplBlock.name4;
 
-                gplBlock._name4 = gplBlock.name4.toLowerCase();
-                gplBlock._Name = gplBlock.Name.toLowerCase();
+                // gplBlock._name4 = gplBlock.name4.toLowerCase();
+                // gplBlock._Name = gplBlock.Name.toLowerCase();
                 delete gplBlock.gplLabel;
                 this.update({
                     collection: pointsCollection,
@@ -1172,17 +1172,6 @@ let Import = class Import extends Common {
             collection: pointsCollection
         }, {
             index: {
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: '_name1-4'
-            },
-            collection: pointsCollection
-        }, {
-            index: {
                 Name: 1
             },
             options: {},
@@ -1248,18 +1237,6 @@ let Import = class Import extends Common {
                 'Network Segment.Value': 1
             },
             options: {},
-            collection: pointsCollection
-        }, {
-            index: {
-                'Point Type.Value': 1,
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: 'PT, _name1-4'
-            },
             collection: pointsCollection
         }, {
             index: {
@@ -1281,17 +1258,6 @@ let Import = class Import extends Common {
             collection: 'new_points'
         }, {
             index: {
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: '_name1-4'
-            },
-            collection: 'new_points'
-        }, {
-            index: {
                 Name: 1
             },
             options: {},
@@ -1357,18 +1323,6 @@ let Import = class Import extends Common {
                 'Network Segment.Value': 1
             },
             options: {},
-            collection: 'new_points'
-        }, {
-            index: {
-                'Point Type.Value': 1,
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: 'PT, _name1-4'
-            },
             collection: 'new_points'
         }, {
             index: {
@@ -1618,10 +1572,11 @@ let Import = class Import extends Common {
                             point[prop] = sensorTemplate[prop];
                         }
                     }
+                    delete point.display;
+                    delete point.parentNode;
                 };
 
             point._cfgRequired = false;
-
             if (!!point.Remarks) {
                 point.name1 = 'Sensor';
                 point.name2 = '';
@@ -1639,20 +1594,20 @@ let Import = class Import extends Common {
                     this.get({
                         collection: pointsCollection,
                         query: {
-                            _name1: point._name1,
-                            _name2: point._name2
+                            name1: point.name1,
+                            name2: point.name2
                         },
                         fields: {
-                            _name1: 1,
-                            _name2: 1,
-                            _name3: 1,
-                            _name4: 1
+                            name1: 1,
+                            name2: 1,
+                            name3: 1,
+                            name4: 1
                         }
                     }, (err, points) => {
                         var nextNum = 1,
                             name3Number;
                         for (var j = 0; j < points.length; j++) {
-                            name3Number = parseInt(points[j]._name3, 10);
+                            name3Number = parseInt(points[j].name3, 10);
                             if (nextNum < name3Number) {
                                 nextNum = name3Number + 1;
                             }
@@ -1662,7 +1617,6 @@ let Import = class Import extends Common {
                             point.Name += '_' + point.name3;
                         }
                         this.updateNameSegments(point, (err) => {
-                            delete point._Name;
                             updateProps();
                             this.update({
                                 collection: pointsCollection,
@@ -2475,17 +2429,17 @@ let Import = class Import extends Common {
         callback(null);
     }
     updateNameSegments(point, callback) {
-        point._name1 = point.name1.toLowerCase();
-        if (point.hasOwnProperty('name2')) {
-            point._name2 = point.name2.toString().toLowerCase();
-        }
-        if (point.hasOwnProperty('name3')) {
-            point._name3 = point.name3.toLowerCase();
-        }
-        if (point.hasOwnProperty('name4')) {
-            point._name4 = point.name4.toLowerCase();
-        }
-        point._Name = point.Name.toLowerCase();
+        // point._name1 = point.name1.toLowerCase();
+        // if (point.hasOwnProperty('name2')) {
+        //     point._name2 = point.name2.toString().toLowerCase();
+        // }
+        // if (point.hasOwnProperty('name3')) {
+        //     point._name3 = point.name3.toLowerCase();
+        // }
+        // if (point.hasOwnProperty('name4')) {
+        //     point._name4 = point.name4.toLowerCase();
+        // }
+        // point._Name = point.Name.toLowerCase();
         /*db.collection(pointsCollection).update({
           _id: point._id
         }, {
