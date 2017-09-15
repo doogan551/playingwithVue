@@ -8,7 +8,6 @@ const Point = require('../models/point');
 const dbConfig = config.get('Infoscan.dbConfig');
 const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-
 let test = () => {
     let pointModel = new Point();
     let pointTypes = [];
