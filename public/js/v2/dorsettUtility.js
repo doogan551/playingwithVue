@@ -211,6 +211,15 @@ var dtiUtility = {
 
                     delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
                 },
+                getBatchConfig: function () { 
+                    var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
+ 
+                    if (cb) { 
+                        cb(newValue.value); 
+                    } 
+ 
+                    delete dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
+                },
                 getUser: function () {
                     if (dtiUtility._getUserCb) {
                         dtiUtility._getUserCb(newValue.user);
@@ -365,6 +374,21 @@ var dtiUtility = {
             parameters: parameters,
             _getCfgID: getCfgID
         });
+    },
+    getBatchConfig: function (path, parameters, cb) { 
+        // path: string path to the desired config.js function, i.e. 'Utility.getPointName', 
+        // parameters: [param1, param2, param3, etc.] --> paramN is an array list of arguments passed to the path fn, 
+        // i.e. pathFn(param1a, param1b, ... param1x) 
+        var getCfgID = dtiUtility.makeId(); 
+ 
+        dtiUtility.getConfigCallbacks[getCfgID] = cb; 
+ 
+        dtiUtility.sendMessage('getBatchConfig', { 
+            messageID: getCfgID, 
+            path: path, 
+            parameters: parameters, 
+            _getCfgID: getCfgID 
+        }); 
     },
     getUser: function (cb) {
         dtiUtility._getUserCb = cb;
