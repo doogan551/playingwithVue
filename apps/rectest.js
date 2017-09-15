@@ -16,6 +16,7 @@ let test = () => {
     for(var type in types) {
         pointTypes.push(type);
     }
+
     let queries = [{
         path: {
             $all: pointModel.buildSearchTerms(['4220', 'unv01'])
