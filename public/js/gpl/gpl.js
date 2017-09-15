@@ -1,4 +1,6 @@
 /* eslint-disable linebreak-style */
+/* globals dtiCommon:false */ // Prevent JSLint from complaining about the dtiCommon variable not defined (it's global)
+
 'use strict';
 var gpl = {
     texts: {},
@@ -340,7 +342,7 @@ var gpl = {
                     gpl.log('AddReferencePoint error- upi:', upi, '--', data.message);
                 } else {
                     map = gpl.pointUpiMap[upi] = {
-                        Name: window.getConfig("Utility.getPointName", [data.path]),
+                        Name: dtiCommon.getPointName(data.path),
                         pointType: data['Point Type'].Value,
                         valueType: (data.Value.ValueType === 5) ? 'enum' : 'float'
                     };
@@ -2050,10 +2052,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setPointData: function (point, processChanges) {
         var newPoint = point.newPoint || point,
-            oldPoint = point.oldPoint || point,
-            setBlockPointName = (pointName) => {
-                this.pointName = pointName;
-            };
+            oldPoint = point.oldPoint || point;
 
         if (!this._origPointData) {
             this._origPointData = $.extend(true, {}, oldPoint);
@@ -2075,7 +2074,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             this.setLabel(this._pointData.path[this._pointData.path.length - 1]);
         }
 
-        dtiUtility.getConfig('Utility.getPointName', [this._pointData.path], setBlockPointName);
+        this.pointName = dtiCommon.getPointName(this._pointData.path);
 
         this.mapPointRefs();
     },
@@ -4237,7 +4236,7 @@ gpl.ActionButton = function (config) {
 
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                dtiUtility.getConfig('Utility.getPointName', [_local.pointData.path], setLocalPointName);
+                _local.pointName = dtiCommon.getPointName(_local.pointData.path);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -6226,7 +6225,7 @@ gpl.BlockManager = function (manager) {
             gpl.openPointSelector(function (selectedPoint) {
                 var pRef,
                     upi = selectedPoint._id,
-                    name = window.getConfig('Utility.getPointName', [selectedPoint.path]),
+                    name = dtiCommon.getPointName(selectedPoint.path),
                     pointType = selectedPoint['Point Type'].Value,
                     devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.deviceId);
 
@@ -6434,7 +6433,7 @@ gpl.BlockManager = function (manager) {
                 cleanup = function (ref, idx) {
                     pointData[ref._id] = ref;
                     return {
-                        Name: window.getConfig('Utility.getPointName', [ref.path]),
+                        Name: dtiCommon.getPointName(ref.path),
                         pointType: ref['Point Type'].Value,
                         valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
@@ -6862,13 +6861,9 @@ gpl.BlockManager = function (manager) {
             pointType,
             pointData,
             saveCallback = function (results) {
-                let adjustPointUpiMapPointName = (pointName) => {
-                    gpl.pointUpiMap[upi].Name = pointName;
-                };
-
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
-                    dtiUtility.getConfig('Utility.getPointName', [results.newPoint.path], adjustPointUpiMapPointName);
+                    gpl.pointUpiMap[upi].Name = dtiCommon.getPointName(results.newPoint.path);
                     gpl.pointUpiMap[upi] = {
                         pointType: results.newPoint['Point Type'].Value,
                         valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
@@ -6908,7 +6903,7 @@ gpl.BlockManager = function (manager) {
                 gpl.openWindow({
                     pointType: pointType,
                     upi: upi,
-                    title: (!!pointData && !!pointData.path ? window.getConfig('Utility.getPointName', [pointData.path]) : undefined),
+                    title: (!!pointData && !!pointData.path ? dtiCommon.getPointName(pointData.path) : undefined),
                     options: {
                         isGplEdit: gpl.isEdit && !overrideIsEdit,
                         callback: saveCallback,
@@ -7234,10 +7229,7 @@ gpl.Manager = function () {
                     }
                 },
                 prop,
-                c,
-                setDocumentTitle = (pointName) => {
-                    document.title = pointName;
-                };
+                c;
 
             managerSelf.useEditVersion = function () {
                 let i,
@@ -7551,7 +7543,7 @@ gpl.Manager = function () {
                     managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
-                dtiUtility.getConfig('Utility.getPointName', [gpl.point.path], setDocumentTitle);
+                document.title = dtiCommon.getPointName(gpl.point.path);
 
                 initPointNamePrefix();
 
@@ -8532,8 +8524,8 @@ gpl.Manager = function () {
                 formatSequencePoint('Update Interval', val);
             },
             setNames = () => {
-                dtiUtility.getConfig('Utility.getPointName', [gpl.point.path], managerSelf.bindings.sequenceName);
-                dtiUtility.getConfig('Utility.getPointName', [gpl.devicePoint.path], managerSelf.bindings.deviceName);
+                managerSelf.bindings.sequenceName(dtiCommon.getPointName(gpl.point.path));
+                managerSelf.bindings.deviceName(dtiCommon.getPointName(gpl.devicePoint.path));
             },
             handlers = {
                 deviceDescription: function (val) {
@@ -8642,7 +8634,7 @@ gpl.Manager = function () {
             selectActionButtonPoint: function () {
                 gpl.openPointSelector(function (selectedPoint) {
                     let upi = selectedPoint._id,
-                        pointName = window.getConfig('Utility.getPointName', [selectedPoint.path]),
+                        pointName = dtiCommon.getPointName(selectedPoint.path),
                         pointType = window.getConfig('Utility.getPointTypeNameFromId', upi);
                     managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
@@ -8788,7 +8780,7 @@ gpl.Manager = function () {
                         gpl.log('Error setting device point:', tmpData.err);
                         gpl.showMessage('Error setting device point: ' + tmpData.err);
                     } else {
-                        dtiUtility.getConfig('Utility.getPointName', [selectedPoint.path], managerSelf.bindings.deviceName);
+                        managerSelf.bindings.deviceName(dtiCommon.getPointName(selectedPoint.path));
                         managerSelf.bindings.deviceUpi(upi);
 
                         gpl.log('Set device point Successfully');
