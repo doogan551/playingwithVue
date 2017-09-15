@@ -1,5 +1,5 @@
 /* jslint white:true */
-define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS) {
+define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJS) {
     var $body = $('body'),
         $viewOverlay = $('.viewOverlay');
 
@@ -16,8 +16,8 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
             error: ko.observable(''),
             showModal: ko.observable(false),
             value: ko.observable(''),
-            cancel: function() {},
-            submit: function() {}
+            cancel: function () {},
+            submit: function () {}
         };
 
         //define any tab triggers here
@@ -33,7 +33,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
         params.initDOM();
     }
 
-    ViewModel.prototype.setValue = function(vm, event) {
+    ViewModel.prototype.setValue = function (vm, event) {
         var self = this,
             $btn = $(event.target),
             $btnIcon = $btn.find('i.fa'),
@@ -47,19 +47,16 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
                 point: {
                     _id: self.data._id(),
                     Security: self.data.Security(),
-                    Name: self.data.Name(),
-                    name1: self.data.name1(),
-                    name2: self.data.name2(),
-                    name3: self.data.name3(),
-                    name4: self.data.name4(),
-                    "Point Type": {
-                        eValue: self.data["Point Type"].eValue()
+                    path: self.data.path(),
+                    'Point Type': {
+                        eValue: self.data['Point Type'].eValue()
                     }
                 },
                 newValue: {
                     Value: 0
                 }
             };
+        $btnSubmit.prop('disabled', false);
 
         function callback(commandRX) {
             $btn.removeClass('btn-warning');
@@ -74,25 +71,24 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
             $btnIcon.addClass('fa-check');
         }
 
-        $modal.one('hide.bs.modal', function(e) {
+        $modal.one('hide.bs.modal', function (e) {
             modalValueListener.dispose();
         });
-        $modal.one('shown.bs.modal', function(e) {
+        $modal.one('shown.bs.modal', function (e) {
             $valueField = $modal.find('.val:first');
             modal.value.valueHasMutated();
             $valueField.focus();
         });
 
-        modalValueListener = modal.value.subscribe(function(newValue) {
-            if ($.trim(newValue) === '') {
-                $btnSubmit.prop('disabled', true);
-            } else {
-                $btnSubmit.prop('disabled', false);
+        modalValueListener = modal.value.subscribe(function (newValue) {
+            console.log('-----', newValue);
+            if ($.trim(newValue) === '' || isNaN($.trim(newValue))) {
+                modal.value(0);
             }
         });
 
-        modal.value('');
-        modal.submit = function() {
+        modal.value(0);
+        modal.submit = function () {
             logData.newValue.Value = modal.value();
 
             self.point.issueCommand('Command Point', {
@@ -110,7 +106,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
 
     };
 

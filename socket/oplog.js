@@ -24,16 +24,7 @@ module.exports = model = function (_common) {
     rooms = common.rooms;
 
     let checkAlarm = function (alarmData, alarm) {
-        if (compareOplogNames(alarmData.name1, alarm.Name1)) {
-            return false;
-        }
-        if (compareOplogNames(alarmData.name2, alarm.Name2)) {
-            return false;
-        }
-        if (compareOplogNames(alarmData.name3, alarm.Name3)) {
-            return false;
-        }
-        if (compareOplogNames(alarmData.name4, alarm.Name4)) {
+        if (!compareTerms(alarmData.terms, alarm.path)) {
             return false;
         }
 
@@ -89,7 +80,7 @@ module.exports = model = function (_common) {
                 }
             }
 
-            alarm.acknowledgeAlarm(doc.o);
+            alarm.acknowledgePointAlarms(doc.o);
             Notifications.processIncomingAlarm(doc.o);
         } else if (doc.ns === dbName + '.ActiveAlarms') {
             let activeViews = (rooms.hasOwnProperty('activeAlarms')) ? rooms.activeAlarms.views : {};
@@ -421,6 +412,11 @@ function updateFromTail(_id, value, reliability) {
     }, function (err, result) {
 
     });
+}
+
+function compareTerms(queryTerms, alarmPath) {
+    const commonModel = new Common();
+    return commonModel.compareTermsToPath(queryTerms, alarmPath);
 }
 
 
