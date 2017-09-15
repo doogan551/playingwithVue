@@ -4828,7 +4828,8 @@ var dti = {
             }); 
  
             return results; 
-        },         getEndpoint: function (type, id) {
+        },
+        getEndpoint: function (type, id) {
             return dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(type, id);
         },
         getParameterByName: function (name) {
