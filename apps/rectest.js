@@ -38,10 +38,25 @@ let test = () => {
         'Point Type.Value': {$in: pointTypes}
     }, {
         path: {
+            $all: pointModel.buildSearchTerms(['4220', 'unv01'])
+        },
+        'Point Type.Value': {$in: ['Device']}
+    }, {
+        path: {
+            $all: pointModel.buildSearchTerms(['4'])
+        },
+        'Point Type.Value': {$in: ['Device']}
+    }, {
+        path: {
+            $all: pointModel.buildSearchTerms(['4', 'u'])
+        },
+        'Point Type.Value': {$in: ['Device']}
+    }, {
+        path: {
             $all: pointModel.buildSearchTerms(['4220', 'UNV01'])
         },
         'Point Type.Value': {$in: ['Device']}
-    }];
+    } ];
 
     async.eachSeries(queries, (query, nextQuery)=>{
         console.time('test');
@@ -60,6 +75,20 @@ let test = () => {
     });
 };
 
+let buildTags = () => {
+    let pointModel = new Point();
+
+    pointModel.iterateCursor({}, (err, doc, nextDoc)=>{
+        doc.tags = doc.path.map((item)=>item.toLowerCase());
+        doc.tags.push(doc['Point Type'].Value.toLowerCase());
+        pointModel.update({query: {_id: doc._id}, updateObj: doc}, (err, result) =>{
+            nextDoc(err);
+        });
+    }, (err, count)=>{
+        console.log(err, count, 'done');
+    });
+};
+
 db.connect(connectionString.join(''), function (err) {
-    test();
+    buildTags();
 });
