@@ -254,16 +254,14 @@ const Common = class Common extends Utility {
 
     buildSearchTerms(terms) {
         return terms.map((term) => {
+            term = term.toLowerCase();
             if (term.match(/"/)) {
                 return term.replace(/"/g, '');
             }
-            return new RegExp(term.toLowerCase());
-        });
-    }
-
-    buildSearchTermsFront(terms) {
-        return terms.map((term) => {
-            return new RegExp('^' + term[0].toLowerCase());
+            if(term.match(/\*/)) {
+                return new RegExp(term.replace(/\*/g, '.*'));
+            }
+            return new RegExp('^' + term);
         });
     }
 

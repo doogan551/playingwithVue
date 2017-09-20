@@ -278,7 +278,7 @@ describe('Common', function () {
 
         path = ['A'];
         result = common.compareTermsToPath(terms, path);
-        expect(result).to.be.equal(true);
+        expect(result).to.be.equal(false);
 
         path = ['ABC', 'def'];
         terms = ['ABCDEF'];
@@ -289,5 +289,38 @@ describe('Common', function () {
         terms = ['4200', '01'];
         result = common.compareTermsToPath(terms, path);
         expect(result).to.be.equal(false);
+    });
+
+    it('should build search terms', () => {
+        let terms;
+        let qualifiers;
+
+        terms = ['*42'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('3420'.match(qualifiers[0])).to.not.be.equal(null);
+
+        terms = ['*4*2'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('3420'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('34120'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('42'.match(qualifiers[0])).to.not.be.equal(null);
+
+        terms = ['42'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('3420'.match(qualifiers[0])).to.be.equal(null);
+        expect('420'.match(qualifiers[0])).to.not.be.equal(null);
+
+        terms = ['aa'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('aa'.match(qualifiers[0])).to.not.be.equal(null);
+
+        terms = ['bb'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('BB'.match(qualifiers[0])).to.be.equal(null);
     });
 });

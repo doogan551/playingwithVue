@@ -121,6 +121,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
+            this.toLowerCasePath(node, newPath);
             this.recreateTags(node);
             try {
                 let result = Config.Templates.checkAgainstTemplate(node);
@@ -572,7 +573,7 @@ const Hierarchy = class Hierarchy extends Common {
                 } else {
                     node.path = [...parent.path, node.display];
                 }
-
+                this.toLowerCasePath(node, node.path);
                 this.update({
                     query: {
                         _id: id
@@ -592,6 +593,7 @@ const Hierarchy = class Hierarchy extends Common {
             }
         }, (err, child, nextChild) => {
             child.path = [...newPath, child.display];
+            this.toLowerCasePath(child, child.path);
 
             this.update({
                 query: {
@@ -636,6 +638,7 @@ const Hierarchy = class Hierarchy extends Common {
                 oldDisplay = node.display;
                 node.display = data.display;
                 node.path[node.path.length - 1] = data.display;
+                this.toLowerCasePath(node, node.path);
             }
 
             if (data.hasOwnProperty('nodeSubType')) {
@@ -1120,6 +1123,10 @@ const Hierarchy = class Hierarchy extends Common {
             }
             masterCb(err);
         });
+    }
+
+    toLowerCasePath(node, path) {
+        node._path = path.map((item) => item.toLowerCase());
     }
 };
 
