@@ -148,6 +148,11 @@ html
                     .col.s4.labelFormat
                         input#showTheLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
                         label(for="showTheLabel") Show Label
+                //- ch#299
+                .row
+                    .col.s4.labelFormat
+                        input#showTheValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
+                        label(for="showTheValue") Show Present Value
             .modal-footer
                 .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockLabel") Save
 

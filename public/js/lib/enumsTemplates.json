@@ -8517,18 +8517,6 @@
                     "ValueType": 2,
                     "Value": ""
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -8803,18 +8791,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -9119,18 +9095,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -9447,18 +9411,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -10072,18 +10024,6 @@
                     "ValueType": 1,
                     "Value": 1.0
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -10358,18 +10298,6 @@
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -10667,18 +10595,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -10990,18 +10906,6 @@
                         "On": 1
                     }
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -11264,18 +11168,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -12141,18 +12033,6 @@
                     "ValueType": 17,
                     "Value": 0
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -12491,18 +12371,6 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -12787,18 +12655,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -13156,18 +13012,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -13656,18 +13500,6 @@
                     "ValueType": 2,
                     "Value": ""
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -13968,18 +13800,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -14293,18 +14113,6 @@
                     "ValueType": 2,
                     "Value": ""
                 },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
                 "Shutdown Control": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -14602,18 +14410,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,

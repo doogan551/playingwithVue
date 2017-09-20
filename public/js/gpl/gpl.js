@@ -2148,12 +2148,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         if (ptUpdateInterval) {
             ptUpdateInterval.Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
         }
-        if (ptShowLabel) {
-            ptShowLabel.Value = bindings.deviceShowLabel;
-        }
-        if (ptShowValue) {
-            ptShowValue.Value = bindings.deviceShowValue;
-        }
         if (ptController) {
             ptController.Value = bindings.deviceControllerName;
             ptController.eValue = bindings.deviceControllerValue;
@@ -5941,6 +5935,7 @@ gpl.BlockManager = function (manager) {
 
                 bmSelf.bindings.editPointLabel(label);
                 bmSelf.bindings.editPointShowLabel(showLabel);
+                bmSelf.bindings.editPointShowValue(block.presentValueVisible); // ch#299
 
                 bmSelf.editBlock = block;
                 bmSelf.openLabelEditor();
@@ -5960,6 +5955,7 @@ gpl.BlockManager = function (manager) {
             updateBlockLabel: function () {
                 bmSelf.editBlock.setLabel(bmSelf.bindings.editPointLabel());
                 bmSelf.editBlock.setShowLabel(bmSelf.bindings.editPointShowLabel());
+                bmSelf.editBlock.setShowValue(bmSelf.bindings.editPointShowValue()); // ch#299
                 gpl.fire('editedblock', bmSelf.editBlock);
                 bmSelf.closeLabelEditor();
             },
