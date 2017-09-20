@@ -13,49 +13,51 @@ let test = () => {
     let pointTypes = [];
     let types = Config.Enums['Point Types'];
     for(var type in types) {
-        pointTypes.push(type);
+        if(type !== 'Schedule Entry') {
+            pointTypes.push(type);
+        }
     }
 
     let queries = [{
-        path: {
-            $all: pointModel.buildSearchTerms(['4220', 'unv01'])
-        },
-        'Point Type.Value': {$in: pointTypes}
+        tags: {$all: pointModel.buildSearchTerms([ '4220', 'unv01'])},
+        bitType: {
+            $bitsAnySet: Math.pow(2, 53) - 1
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4'])
-        },
-        'Point Type.Value': {$in: pointTypes}
+        tags: {$all: pointModel.buildSearchTerms([ '4'])},
+        bitType: {
+            $bitsAnySet: Math.pow(2, 53) - 1
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4', 'u'])
-        },
-        'Point Type.Value': {$in: pointTypes}
+        tags: {$all: pointModel.buildSearchTerms([ '4', 'u'])},
+        bitType: {
+            $bitsAnySet: Math.pow(2, 53) - 1
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4220', 'UNV01'])
-        },
-        'Point Type.Value': {$in: pointTypes}
+        tags: {$all: pointModel.buildSearchTerms([ '4220', 'UNV01'])},
+        bitType: {
+            $bitsAnySet: Math.pow(2, 53) - 1
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4220', 'unv01'])
-        },
-        'Point Type.Value': {$in: ['Device']}
+        tags: {$all: pointModel.buildSearchTerms([ '4220', 'unv01'])},
+        bitType: {
+            $bitsAnySet: 8192
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4'])
-        },
-        'Point Type.Value': {$in: ['Device']}
+        tags: {$all: pointModel.buildSearchTerms([ '4'])},
+        bitType: {
+            $bitsAnySet: 8192
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4', 'u'])
-        },
-        'Point Type.Value': {$in: ['Device']}
+        tags: {$all: pointModel.buildSearchTerms([ '4', 'u'])},
+        bitType: {
+            $bitsAnySet: 8192
+        }
     }, {
-        path: {
-            $all: pointModel.buildSearchTerms(['4220', 'UNV01'])
-        },
-        'Point Type.Value': {$in: ['Device']}
+        tags: {$all: pointModel.buildSearchTerms([ '4220', 'UNV01'])},
+        bitType: {
+            $bitsAnySet: 8192
+        }
     } ];
 
     async.eachSeries(queries, (query, nextQuery)=>{
@@ -67,6 +69,7 @@ let test = () => {
                 path: 1
             }
         }, (err, results) => {
+            console.log(results.length);
             console.timeEnd('test');
             nextQuery(err);
         });
@@ -80,7 +83,9 @@ let buildTags = () => {
 
     pointModel.iterateCursor({}, (err, doc, nextDoc)=>{
         doc.tags = doc.path.map((item)=>item.toLowerCase());
-        doc.tags.push(doc['Point Type'].Value.toLowerCase());
+        if(doc.hasOwnProperty('Point Type')) {
+            doc.bitType = Config.Enums['Point Types'][doc['Point Type'].Value].bit;
+        }
         pointModel.update({query: {_id: doc._id}, updateObj: doc}, (err, result) =>{
             nextDoc(err);
         });
@@ -90,5 +95,5 @@ let buildTags = () => {
 };
 
 db.connect(connectionString.join(''), function (err) {
-    buildTags();
+    test();
 });
