@@ -6890,7 +6890,8 @@ gpl.BlockManager = function (manager) {
                     // but not the point refs of points on the gpl point). All blocks are required to reside on the same device, 
                     // so i think we can safely add the GPL's device point name to the block's Point Refs before calling the point
                     // inspector
-                    if (gpl.devicePoint) { // Just CYB
+                    // ch336 - Don't do this if we're opening THE sequence device point
+                    if (gpl.devicePoint && (pointType !== 'Device')) { // Just CYB
                         let blockDevicePoint = pointData['Point Refs'][0]; // Device point always at array index 0
                         if (blockDevicePoint.PropertyName === 'Device Point') { // CYB
                             blockDevicePoint.PointName = window.getConfig('Utility.getPointName', [gpl.devicePoint.path]);
@@ -6925,7 +6926,6 @@ gpl.BlockManager = function (manager) {
                     }
                 }
             } else { //open device point
-                // pointData = ?????  // TODO
                 upi = gpl.devicePoint._id;
                 pointType = 'Device';
                 doOpenWindow();
