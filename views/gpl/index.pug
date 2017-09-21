@@ -333,32 +333,34 @@ html
                 .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
 
         #jqxMenu.contextMenu.hideLoading
+            //- ch281 (change href="" to href="#")
             ul.editSection
                 li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: editBlockLabel") Edit Label
+                    a(href="#", data-bind="click: editBlockLabel") Edit Label
                 li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: editBlockPrecision") Edit Precision
+                    a(href="#", data-bind="click: editBlockPrecision") Edit Precision
                 li.block.nonPoint(data-ignoretheme="true")
-                    a(href="", data-bind="click: showPointEditor") Edit Point
+                    a(href="#", data-bind="click: showPointEditor") Edit Point
                 li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteBlock") Delete Block
+                    a(href="#", data-bind="click: deleteBlock") Delete Block
                 li.line(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteLine") Delete Line
+                    a(href="#", data-bind="click: deleteLine") Delete Line
                 li.text(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteBlock") Delete Text
+                    a(href="#", data-bind="click: deleteBlock") Delete Text
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click:showUpdateSequenceModal") Sequence Properties
+                    a(href="#", data-bind="click:showUpdateSequenceModal") Sequence Properties
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: showDevicePoint") Edit Device Point
+                    a(href="#", data-bind="click: showDevicePoint") Edit Device Point
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewButton") Action Button
+                    a(href="#", data-bind="click: addNewButton") Action Button
                 //- li.default(data-ignoretheme="true")
-                //-     a(href="", data-bind="click: addNewDynamic") Dynamic
+                //-     a(href="#", data-bind="click: addNewDynamic") Dynamic
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewText") Add Text
+                    a(href="#", data-bind="click: addNewText") Add Text
             ul.viewSection
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: showDevicePoint") Edit Device Point
+                    a(href="#", data-bind="click: showDevicePoint") Edit Device Point
+            //- /ch
 
         script(src='/js/lib/jquery.min.js')
         script(src='/js/lib/jquery.blockUI.js')
