@@ -285,17 +285,9 @@ const Common = class Common extends Utility {
 
         return matchingTerms === queryTermsLengh;
     }
-    // https://stackoverflow.com/a/43666199
-    andLongInt(v1, v2) {
-        let hi = 0x80000000;
-        let low = 0x7fffffff;
-        let hi1 = ~~(v1 / hi);
-        let hi2 = ~~(v2 / hi);
-        let low1 = v1 & low;
-        let low2 = v2 & low;
-        let h = hi1 & hi2;
-        let l = low1 & low2;
-        return h * hi + l;
+
+    toLowerCasePath(node) {
+        node._path = node.path.map((item) => item.toLowerCase());
     }
 };
 
