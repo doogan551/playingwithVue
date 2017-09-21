@@ -1,5 +1,6 @@
 const Common = require('./common');
 const ActivityLog = require('./activitylog');
+const Point = require('./point');
 const utils = require('../helpers/utils');
 
 const calendarCollection = utils.CONSTANTS('calendarCollection');
@@ -25,6 +26,7 @@ const Calendar = class Calendar extends Common {
 
     newDate(data, cb) {
         const activityLog = new ActivityLog();
+        const pointModel = new Point();
         let year = parseInt(data.year, 10);
         let dates = data.dates;
 
@@ -78,7 +80,7 @@ const Calendar = class Calendar extends Common {
                     }
                 };
 
-                this.updateAll(criteria, (err) => {
+                pointModel.updateAll(criteria, (err) => {
                     if (err) {
                         return cb(err);
                     }
