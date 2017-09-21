@@ -2481,7 +2481,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             gplId: this.gplId
         };
 
-        if (this.labelVisible === 0 || this.labelVisible === false || this.labelVisible === undefined) {
+        // ch#311 Remove this part of the if statement: || this.labelVisible === false
+        if (this.labelVisible === 0 || this.labelVisible === undefined) {
             this.labelVisible = gpl.json.Show_Label;  // use global sequence option for Show Label
         }
 
@@ -2534,7 +2535,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config.originX = 'right';
         }
 
-        if (this.presentValueVisible === 0 || this.presentValueVisible === false || this.presentValueVisible === undefined) {
+        // ch#311 Remove this part of it statement: || this.presentValueVisible === false
+        if (this.presentValueVisible === 0 || this.presentValueVisible === undefined) {
             this.presentValueVisible = gpl.json.Show_Value;
         }
 
