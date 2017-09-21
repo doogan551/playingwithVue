@@ -475,12 +475,12 @@ tr:hover .showOnHover {
 /* control codes */
 
 /* Telemetry */
-tr th:first-child,
-tr td:first-child{
+#telemetry tr th:first-child,
+#telemetry tr td:first-child{
     width: 150px;
 }
-tr th:nth-child(3),
-tr td:nth-child(3){
+#telemetry tr th:nth-child(3),
+#telemetry tr td:nth-child(3){
     width: 250px;
 }
 #telemetryActionBar{
