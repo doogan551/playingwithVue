@@ -9723,10 +9723,18 @@ gpl.Manager = function () {
     init();
 };
 
+function doInit () {
+    if (window.dtiCommon && dtiCommon.init.isComplete) {
+        gpl.initGpl();
+    } else {
+        window.setTimeout(doInit, 100);
+    }
+}
+
 //initialization -------------------------------------
 $(function () {
     if (!gpl.skipInit) {
-        gpl.initGpl();
+        doInit();
     }
 });
 
