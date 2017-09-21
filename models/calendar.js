@@ -28,7 +28,7 @@ const Calendar = class Calendar extends Common {
         const activityLog = new ActivityLog();
         const pointModel = new Point();
         let year = parseInt(data.year, 10);
-        let dates = data.dates;
+        let dates = this.getDefault(data.dates, []);
 
         dates.forEach((date) => {
             date.month = parseInt(date.month, 10);
