@@ -212,6 +212,8 @@ var gpl = {
     closeModal: (modalElement) => {
         gpl.Manager.modalOpen = false;
         modalElement.closeModal();
+        // ch295 Apparently calling .closeModal doesn't trigger the 'complete' callback. Manually clear the 'modalIsOpen' flag
+        gpl.modalIsOpen = false;
     },
     openPointSelector: function (callback, pointType, property, pointAttribsFilter) {
         // TODO cleanup pointAttribsFilter logic and add functionality around terms
