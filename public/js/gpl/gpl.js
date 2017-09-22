@@ -6743,7 +6743,11 @@ gpl.BlockManager = function (manager) {
         //     gpl.log('not setup', block.type, block);
         // }
         if (!block.config.inactive) {
-            gpl.labelCounters[block.type]++;
+            // ch279 Increment label only if we're registering existing blocks as part of GPL initialization. After the
+            // sequence is initialized, the label is incremented before this function is called.
+            if (!gpl.manager.initDone()) {
+                gpl.getLabel(block.type, true); // Use standard gpl function to increment label counter
+            }
         }
 
         // gpl.log('labeling', block.type, gpl.labelCounters[block.type]);
@@ -7101,6 +7105,7 @@ gpl.Manager = function () {
         configuredEvents = {},
         log = gpl.log,
         initDelay = 1,
+        initDone = false,
         currInitStep = 0,
         // renderDelay = 100,
 
@@ -7206,6 +7211,7 @@ gpl.Manager = function () {
                             $('body').addClass('viewMode');
                         }
 
+                        initDone = true;
                         log('Finished initializing GPL Manager in', ((new Date().getTime() - started) / 1000).toFixed(3), 'seconds');
 
                         managerSelf.resizeWindow(true);
@@ -7570,6 +7576,11 @@ gpl.Manager = function () {
     log('Initializing GPL Manager');
 
     gpl.skipEventLog = true;
+
+    // ch279 Added function helper as part of this bug story
+    managerSelf.initDone = function () {
+        return initDone;
+    };
 
     managerSelf.postInit = function () {
         managerSelf.postInitActionButtons();
