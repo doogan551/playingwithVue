@@ -8,43 +8,25 @@ const Config = require('../public/js/lib/config.js');
 const LOCATION = 'Location';
 const MECHANICAL = 'Mechanical';
 
-const models = {
-    common: {
-        _id: 0,
-        id: '',
-        parent: 0,
-        display: '',
-        tags: [],
-        meta: {}
-    },
-    location: {
-        nodeType: 'Location',
-        locationType: ''
-    },
-    equipment: {
-        nodeType: 'Equipment',
-        libraryId: 0
-    },
-    category: {
-        nodeType: 'Category'
-    },
-    point: {
-        nodeType: 'Point',
-        libraryId: 0,
-        pointId: 0,
-        isReference: false
-    },
-    application: {
-        nodeType: 'Application',
-        applicationType: '',
-        pointId: 0
-    }
-};
-
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
         super('points');
+    }
+
+    checkUniqueDisplayUnderParent(data, cb) {
+        let parentNode = this.getNumber(data.parentNode);
+        let display = data.display;
+
+        this.getOne({
+            query: {
+                parentNode,
+                display
+            }
+        }, (err, result)=>{
+            let exists = (!!result) ? true : false;
+            return cb(err, {exists});
+        });
     }
 
     getNode(data, cb) {
