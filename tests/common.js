@@ -323,4 +323,13 @@ describe('Common', function () {
         expect(qualifiers.length).to.be.equal(1);
         expect('BB'.match(qualifiers[0])).to.be.equal(null);
     });
+
+    it('should create a lower case version of path on _path', () => {
+        let node = {path: ['ASDe', 'bsdf']};
+
+        common.toLowerCasePath(node);
+        expect(node.hasOwnProperty('_path')).to.be.equal(true);
+        expect(node._path[0]).to.be.equal(node.path[0].toLowerCase());
+        expect(node._path[1]).to.be.equal(node.path[1].toLowerCase());
+    });
 });

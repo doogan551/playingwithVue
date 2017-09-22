@@ -7,6 +7,7 @@ describe('Config Templates', () => {
             '_id': 'a',
             '_pStatus': 1,
             'path': [],
+            '_path': [],
             'parentNode': 0,
             'display': 'Marshall Space Flight Center1',
             'tags': [],
