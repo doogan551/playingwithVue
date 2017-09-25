@@ -395,7 +395,7 @@ const Point = class Point extends Common {
         let criteria = {
             query: buildQuery(),
             sort: sort,
-            _limit: limit,
+            limit: limit,
             fields: projection,
             data: data,
             count: false
