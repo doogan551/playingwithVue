@@ -24,7 +24,7 @@ module.exports = model = function (_common) {
     rooms = common.rooms;
 
     let checkAlarm = function (alarmData, alarm) {
-        if (!compareTerms(alarmData.terms, alarm.path)) {
+        if (!compareTerms(alarmData.terms, alarm._path)) {
             return false;
         }
 
