@@ -290,4 +290,29 @@ describe('Common', function () {
         result = common.compareTermsToPath(terms, path);
         expect(result).to.be.equal(false);
     });
+
+    it('should assing parentNode and _parentUpi', () => {
+        let nodes = [{
+            _id: 1,
+            id: 'a',
+            parentNode: 'b',
+            _parentUpi: 'b'
+        }, {
+            _id: 2,
+            id: 'b',
+            parentNode: 'a',
+            _parentUpi: 'a'
+        }];
+
+        common.assignParentRefs(nodes);
+        expect(nodes[0]._id).to.be.equal(1);
+        expect(nodes[0].id).to.be.equal('a');
+        expect(nodes[1]._id).to.be.equal(2);
+        expect(nodes[1].id).to.be.equal('b');
+
+        expect(nodes[0].parentNode).to.be.equal(2);
+        expect(nodes[0]._parentUpi).to.be.equal(2);
+        expect(nodes[1].parentNode).to.be.equal(1);
+        expect(nodes[1]._parentUpi).to.be.equal(1);
+    });
 });
