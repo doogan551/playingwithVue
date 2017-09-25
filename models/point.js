@@ -2984,6 +2984,7 @@ const Point = class Point extends Common {
     changeNewIds(points, cb) {
         this.updateIds(points, (err) => {
             this.reassignRefs(points);
+            this.assignParentRefs(points);
             cb(null, points);
         });
     }
@@ -3249,28 +3250,41 @@ const Point = class Point extends Common {
             from: 'ui'
         };
         async.waterfall([(callback) => {
-            this.changeNewIds(data.updates, (err, points) => {
-                async.mapSeries(points, (point, mapCallback) => {
-                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
-                        this.addPoint(point, user, null, (err, result) => {
-                            mapCallback(err.err, result);
-                        });
-                    } else {
-                        this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
-                            mapCallback(response.err, updatedPoint);
-                        });
-                    }
-                }, (err, newPoints) => {
-                    callback(err, newPoints);
-                });
-            });
-        }, (returnPoints, callback) => {
             async.mapSeries(data.deletes, (upi, mapCallback) => {
                 this.deletePoint(upi, 'hard', user, null, (response) => {
                     mapCallback(response.err);
                 });
             }, (err, newPoints) => {
-                callback(err, returnPoints);
+                callback(err);
+            });
+        }, (callback) => {
+            this.changeNewIds(data.updates, (err, points) => {
+                let adds = [];
+                let updates = [];
+                points.forEach((point)=>{
+                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                        adds.push(point);
+                    }else{
+                        updates.push(point);
+                    }
+                });
+                callback(null, updates, adds);
+            });
+        }, (updates, adds, callback)=>{
+            async.mapSeries(updates, (point, mapCallback) => {
+                this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
+                    mapCallback(response.err, updatedPoint);
+                });
+            }, (err, newPoints) => {
+                callback(err, adds, newPoints);
+            });
+        }, (adds, newPoints, callback)=>{
+            async.mapSeries(adds, (point, mapCallback) => {
+                this.addPoint(point, user, null, (err, result) => {
+                    mapCallback(err.err, result);
+                });
+            }, (err, _newPoints)=>{
+                callback(err, _newPoints.concat(newPoints));
             });
         }], (err, returnPoints) => {
             if (err) {

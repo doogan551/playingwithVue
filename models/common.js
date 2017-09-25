@@ -281,6 +281,21 @@ const Common = class Common extends Utility {
 
         return matchingTerms === queryTermsLengh;
     }
+
+    assignParentRefs(nodes) {
+        for (var p = 0; p < nodes.length; p++) {
+            let parent = nodes[p];
+            for (var c = 0; c < nodes.length; c++) {
+                let child = nodes[c];
+                if (child.parentNode === parent.id) {
+                    child.parentNode = parent._id;
+                }
+                if(child._parentUpi === parent.id) {
+                    child._parentUpi = parent._id;
+                }
+            }
+        }
+    }
 };
 
 module.exports = Common;
