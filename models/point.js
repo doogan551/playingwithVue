@@ -871,53 +871,37 @@ const Point = class Point extends Common {
         let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
 
         let doInitPoint = (pointType, targetUpi, subType, callback) => {
-            criteria = {
-                query: {
-                    _Name: _Name
-                }
-            };
-
-            this.getOne(criteria, (err, freeName) => {
+            system.getSystemInfoByName('Preferences', (err, sysInfo) => {
                 if (err) {
                     return callback(err);
                 }
 
-                if (freeName !== null && pointType !== 'Schedule Entry') {
-                    return callback('Name already exists.');
+                // if (pointType === 'Schedule Entry') {
+                //     name2 = '0';
+                //     buildName(name1, name2, name3, name4);
+                // }
+
+                if (targetUpi && targetUpi !== 0) {
+                    criteria = {
+                        query: {
+                            _id: targetUpi
+                        }
+                    };
+
+                    this.getOne(criteria, (err, targetPoint) => {
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        if (!targetPoint) {
+                            return callback('Target point not found.');
+                        }
+
+                        fixPoint(targetPoint, true, sysInfo, callback);
+                    });
+                } else {
+                    fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
                 }
-
-                system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    // if (pointType === 'Schedule Entry') {
-                    //     name2 = '0';
-                    //     buildName(name1, name2, name3, name4);
-                    // }
-
-                    if (targetUpi && targetUpi !== 0) {
-                        criteria = {
-                            query: {
-                                _id: targetUpi
-                            }
-                        };
-
-                        this.getOne(criteria, (err, targetPoint) => {
-                            if (err) {
-                                return cb(err);
-                            }
-
-                            if (!targetPoint) {
-                                return callback('Target point not found.');
-                            }
-
-                            fixPoint(targetPoint, true, sysInfo, callback);
-                        });
-                    } else {
-                        fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
-                    }
-                });
             });
         };
 

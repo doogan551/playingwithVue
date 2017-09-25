@@ -295,19 +295,30 @@ var gpl = {
     getBlock: function (arg) {
         return gpl.blockManager.getBlock(arg);
     },
+    labelIsUnique: function (label) {
+        // Returns true if label is unique to all blocks; false otherwise
+        let result = gpl.forEach(gpl.blockManager.blocks, function isUnique (block) {
+            if (block.label === label) {
+                return false;
+            } else {
+                return true;
+            }
+        });
+        return result;
+    },
     getLabel: function (type, increment) {
-        var currCount,
+        var count = gpl.labelCounters[type],
             ret;
 
         if (increment) {
-            gpl.labelCounters[type]++;
+            do {
+                count++;
+            } while (!gpl.labelIsUnique(type + count));
         }
 
-        currCount = gpl.labelCounters[type];
+        gpl.labelCounters[type] = count;
 
-        ret = type + currCount;
-        // gpl.log('returning label', ret);
-
+        ret = type + count;
         return ret;
     },
     formatValue: function (block, value) {
@@ -7845,73 +7856,53 @@ gpl.Manager = function () {
     };
 
     managerSelf.addNewPoint = function (block) {
-        var parameters = {},
-            // pointType = window.encodeURI(block.pointType),
-            names = (gpl.pointNamePrefix + block.label).split('_'),
-            called = false,
-            // name1 = names[0],
-            // name2 = names[1],
-            // name3 = names[2],
-            // name4 = names[3] || '',
-            handler = function (obj) {
-                var calcType;
-                if (obj === false) {
-                    log('New Point canceled, deleting block');
-                    gpl.fire('deleteblock', block, true);
-                    gpl.labelCounters[block.type]--;
-                    return;
-                }
-
-                var oldPoint = $.extend(true, {}, obj);
-
-                if (obj && obj.target) { //is event
-                    if (!called) {
-                        log('New Point canceled, deleting block');
-                        gpl.fire('deleteblock', block, true);
-                        gpl.labelCounters[block.type]--;
-                    }
-                    return;
-                }
-
-                obj.id = dtiUtility.generateFauxPointID(gpl.currentUser.username);
-                // block.upi = obj._id;
-                block.upi = obj.id;
-
-                obj['Point Refs'][0].Value = gpl.deviceId;
-
-                block.formatPointFromData(obj, obj, 'Device Point', gpl.devicePoint);
-                obj = block.getPointData();
-
-                if (obj['Calculation Type']) {
-                    calcType = block.getIconKey();
-                    obj['Calculation Type'].Value = calcType;
-                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[calcType];
-                }
-
-                block.setPointData(obj, true);
-
-                // log(block.gplId, 'save callback', obj);
-                gpl.fire('newblock', block);
-                called = true;
-
-                // managerSelf.socket.emit('updatePoint', JSON.stringify({
-                //     'newPoint': obj,
-                //     'oldPoint': oldPoint
-                // }));
+        let parameters = {
+                pointType: block.pointType,
+                parentUpi: gpl.point._id
             };
+        let handleError = function (err) {
+            window.alert('An unexpected error occurred: ' + err);
+            gpl.fire('deleteblock', block, true);
+            gpl.labelCounters[block.type]--;
+        };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
-            // gpl.blockUI();
-            // parameters.name1 = name1;
-            // parameters.name2 = name2;
-            // parameters.name3 = name3;
-            // parameters.name4 = name4;
-            parameters.path = gpl.point.path;
-            parameters.pointType = block.pointType;
+            // ch355 Create point workflow change
+            gpl.blockUI();
+            $.ajax({
+                type: 'post',
+                url: gpl.pointApiPath + 'initPoint',
+                data: parameters
+            }).done(function (data) {
+                let point = data;
+                let calcType;
 
-            // TODO - point naming based on GPL's path/name
-            dtiUtility.showCreatePoint(parameters);
-            dtiUtility.onCreatePoint(handler);
+                if (data.err) {
+                    return handleError(data.err);
+                }
+
+                block.upi = dtiUtility.generateFauxPointID(gpl.currentUser.username);
+                point.id = block.upi;
+                point.path = $.extend([], gpl.point.path);
+                point.path.push(block.label);
+                // Setup the device point
+                point['Point Refs'][0].Value = gpl.deviceId;
+                point['Point Refs'][0].PointInst = gpl.deviceId;
+
+                if (point['Calculation Type']) {
+                    calcType = block.getIconKey();
+                    point['Calculation Type'].Value = calcType;
+                    point['Calculation Type'].eValue = point['Calculation Type'].ValueOptions[calcType];
+                }
+
+                block.setPointData(point, true);
+
+                gpl.fire('newblock', block);
+            }).fail(function (xhr, stat, error) {
+                handleError(error);
+            }).always(function () {
+                gpl.unblockUI();
+            });
         } else {
             gpl.fire('newblock', block);
         }
