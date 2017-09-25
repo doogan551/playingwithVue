@@ -137,7 +137,7 @@ const Common = class Common extends Utility {
                     data.terms = data.terms.split(' ');
                 }
 
-                query.path = {
+                query._path = {
                     $all: this.buildSearchTerms(data.terms)
                 };
             }
