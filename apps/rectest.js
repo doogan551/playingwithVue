@@ -10,70 +10,12 @@ const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.p
 
 let test = () => {
     let pointModel = new Point();
-    let pointTypes = [];
-    let types = Config.Enums['Point Types'];
-    for(var type in types) {
-        if(type !== 'Schedule Entry') {
-            pointTypes.push(type);
-        }
-    }
-
-    let queries = [{
-        tags: {$all: pointModel.buildSearchTerms([ '4220', 'unv01'])},
-        bitType: {
-            $bitsAnySet: Math.pow(2, 53) - 1
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4'])},
-        bitType: {
-            $bitsAnySet: Math.pow(2, 53) - 1
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4', 'u'])},
-        bitType: {
-            $bitsAnySet: Math.pow(2, 53) - 1
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4220', 'UNV01'])},
-        bitType: {
-            $bitsAnySet: Math.pow(2, 53) - 1
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4220', 'unv01'])},
-        bitType: {
-            $bitsAnySet: 8192
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4'])},
-        bitType: {
-            $bitsAnySet: 8192
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4', 'u'])},
-        bitType: {
-            $bitsAnySet: 8192
-        }
-    }, {
-        tags: {$all: pointModel.buildSearchTerms([ '4220', 'UNV01'])},
-        bitType: {
-            $bitsAnySet: 8192
-        }
-    } ];
-
-    async.eachSeries(queries, (query, nextQuery)=>{
-        console.time('test');
-        pointModel.getAll({
-            query,
-            limit: 200,
-            sort: {
-                path: 1
-            }
-        }, (err, results) => {
-            console.log(results.length);
-            console.timeEnd('test');
-            nextQuery(err);
+    pointModel.iterateCursor({}, (err, node, nextNode)=>{
+        pointModel.toLowerCasePath(node);
+        pointModel.update({query: {_id: node._id}, updateObj: {$set: {_path: node._path}}}, (err, result)=>{
+            nextNode(err);
         });
-    }, (err)=>{
+    }, (err, count)=>{
         console.log(err, 'done');
     });
 };

@@ -102,6 +102,7 @@ const ActivityLog = class ActivityLog extends Common {
             username: data.user.username,
             upi: 0,
             path: [],
+            _path: [],
             pointType: null,
             activity: Enums['Activity Logs'][data.activity].enum,
             timestamp: data.timestamp || Date.now(),
@@ -126,6 +127,7 @@ const ActivityLog = class ActivityLog extends Common {
             log.pointType = (data.point['Point Type'].eValue !== undefined) ? data.point['Point Type'].eValue : null;
             if (data.point.path !== undefined && data.point.path !== null) {
                 log.path = data.point.path;
+                this.toLowerCasePath(log);
             }
         }
 

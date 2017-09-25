@@ -3423,7 +3423,7 @@ const Point = class Point extends Common {
 
         if (!!terms && terms.length) {
             match.$and.push({
-                path: {
+                _path: {
                     $all: this.buildSearchTerms(terms)
                 }
             });
