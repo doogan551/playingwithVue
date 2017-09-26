@@ -26,8 +26,13 @@ var dtiCommon = {
         return result;
     },
 
+    resolveAlarmName: (alarmsMsg, alarmPath) => {
+        return alarmsMsg.replace("%NAME", dtiCommon.getPointName(alarmPath));
+    },
+
     // init fns should only be run once after dtiCommon is loaded, and is normally self-handled (see end of this script)
     init: {
+        isComplete: false,
         clientSide: () => {
             if (window.dti) {
                 dtiCommon._private.pointNameSeparator = dti.utility.getConfig('Enums.Point Name Separator').Value;
@@ -37,12 +42,14 @@ var dtiCommon = {
                     //  Value: ' ► ' // or whatever the char is
                     // }
                     dtiCommon._private.pointNameSeparator = result.Value;
+                    dtiCommon.init.isComplete = true;
                 });
             }
         },
         serverSide: () => {
             let Config = require('../lib/config');
             dtiCommon._private.pointNameSeparator = Config.Enums['Point Name Separator'].Value;
+            dtiCommon.init.isComplete = true;
         }
     }
 };
