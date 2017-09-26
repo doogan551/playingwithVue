@@ -2058,6 +2058,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         for (c = 0; c < len; c++) {
             refs[c].isReadOnly = true;
+            
+            // ch379 Some point types require the 'PointName' property be defined on the point references, else the
+            // point inspector throws an error on load. See ch story for more info
+            if (!refs[c].hasOwnProperty('PointName')) {
+                refs[c].PointName = '';
+            }
         }
 
         pointData._parentUpi = gpl.upi;
