@@ -1489,6 +1489,7 @@ var dti = {
 
                     for (i = 0; i < len; i++) {
                         alarm = list[i];
+                        let pathString = dti.workspaceManager.config.Utility.getPointName(alarm.path);
                         alarm.ackStatus = ko.observable(alarm.ackStatus).extend({
                             rateLimit: 100
                         });
@@ -1496,6 +1497,7 @@ var dti = {
                         alarm.ackTime = ko.observable();
                         alarm.TextColor = '#' + alarm.TextColor;
                         alarm.BackColor = '#' + alarm.BackColor;
+                        alarm.msgText = dtiCommon.resolveAlarmName(alarm.msgText, alarm.path);
 
                         // TODO change this to use dti.workspaceManager.getConfig('revEnums.Alarm Classes.' + alarm.almClass)
                         // after it is available
@@ -4815,19 +4817,19 @@ var dti = {
 
             return dti.utility.clone(result);
         },
-        getBatchConfig: function (path, parameters) { 
-            // ------ This function Calls the config function defined by the path for each parameter in the parameters array 
-            // path: string path to the desired config.js function, i.e. 'Utility.getPointName', 
-            // parameters: [param1, param2, param3, etc.] --> paramN is an array list of arguments; if a single argument is itself 
-            //                                                an array, it must be wrapped because getConfig calls the 'path'  
-            //                                                function with fn.apply, i.e. parameters = [[['4250', 'Mech Room']], ...] 
-            var results = []; 
- 
-            dti.forEachArray(parameters, function (params) { 
-                results.push(dti.utility.getConfig(path, params)); 
-            }); 
- 
-            return results; 
+        getBatchConfig: function (path, parameters) {
+            // ------ This function Calls the config function defined by the path for each parameter in the parameters array
+            // path: string path to the desired config.js function, i.e. 'Utility.getPointName',
+            // parameters: [param1, param2, param3, etc.] --> paramN is an array list of arguments; if a single argument is itself
+            //                                                an array, it must be wrapped because getConfig calls the 'path'
+            //                                                function with fn.apply, i.e. parameters = [[['4250', 'Mech Room']], ...]
+            var results = [];
+
+            dti.forEachArray(parameters, function (params) {
+                results.push(dti.utility.getConfig(path, params));
+            });
+
+            return results;
         },
         getEndpoint: function (type, id) {
             return dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(type, id);
@@ -5106,12 +5108,10 @@ var dti = {
 
                     if (!selected) {
                         this.setPointTypes(type);
+                    } else if (numSelected === 1) {//only this one selected, select all
+                        this.setPointTypes(null);
                     } else {
-                        if (numSelected === 1) {//only this one selected, select all
-                            this.setPointTypes(null);
-                        } else {
-                            this.setPointTypes(type);
-                        }
+                        this.setPointTypes(type);
                     }
                 };
 
@@ -5376,7 +5376,6 @@ var dti = {
                 }
 
 
-
                 this.search();
 
                 this.$modal.openModal({
@@ -5444,27 +5443,27 @@ var dti = {
                     'sessionId': true,
                     'debug': true
                 },
-                doGetConfig = function (utilityFn) { 
-                    var path = config.path, 
-                        parameters = config.parameters, 
-                        id = config._getCfgID, 
-                        ret, 
-                        winId = config._windowId; 
- 
-                    ret = dti.utility[utilityFn](path, parameters); 
- 
-                    setTimeout(function sendConfigInfo() { 
-                        dti.messaging.sendMessage({ 
-                            messageID: messageID, 
-                            key: winId, 
-                            value: { 
-                                _getCfgID: id, 
-                                message: utilityFn, 
-                                value: ret 
-                            } 
-                        }); 
-                    }, 1000); 
-                }, 
+                doGetConfig = function (utilityFn) {
+                    var path = config.path,
+                        parameters = config.parameters,
+                        id = config._getCfgID,
+                        ret,
+                        winId = config._windowId;
+
+                    ret = dti.utility[utilityFn](path, parameters);
+
+                    setTimeout(function sendConfigInfo() {
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: winId,
+                            value: {
+                                _getCfgID: id,
+                                message: utilityFn,
+                                value: ret
+                            }
+                        });
+                    }, 1000);
+                },
                 callbacks = {
                     showPointSelectorOld: function () {
                         var sourceWindowId = config._windowId,
