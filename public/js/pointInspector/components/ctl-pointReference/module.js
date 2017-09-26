@@ -65,12 +65,6 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function (ko, bannerJS, vie
             } else {
                 point = self.utility.getPointRefPropertyByAppIndex(self.refType, self.appIndex);
             }
-            if(!point.data.hasOwnProperty('PointName')) {
-                point.data.PointName = ko.observable('');
-            }
-            if(!point.data.hasOwnProperty('PointType')) {
-                point.data.PointType = ko.observable(-1);
-            }
             self.arrayIndex = point.arrayIndex;
             self.data = point.data;
             return point.data;
