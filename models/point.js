@@ -1015,44 +1015,40 @@ const Point = class Point extends Common {
                 });
             } else {
                 // if cloned from "old" point schema
-                let finishCloningPoint = (err, newUpi) => {
-                    template._id = newUpi;
-                    template.path = data.path;
-                    template.display = data.display;
+                template.path = data.path;
+                template.display = data.display;
 
-                    template.Name = '';
-                    template._Name = '';
+                template.Name = '';
+                template._Name = '';
 
-                    if (!!template.name1) {
-                        template.name1 = '';
-                        template.name2 = '';
-                        template.name3 = '';
-                        template.name4 = '';
-                        template._name1 = '';
-                        template._name2 = '';
-                        template._name3 = '';
-                        template._name4 = '';
-                    }
+                if (!!template.name1) {
+                    template.name1 = '';
+                    template.name2 = '';
+                    template.name3 = '';
+                    template.name4 = '';
+                    template._name1 = '';
+                    template._name2 = '';
+                    template._name3 = '';
+                    template._name4 = '';
+                }
 
-                    if (template['Point Type'].Value === 'Sequence') {
-                        cloneGPLSequence(template, () => {
-                            addTemplateToDB(template, callback);
-                        });
-                    } else {
-                        if (template['Point Type'].Value !== 'Schedule Entry' && template._parentUpi !== 0) {
-                            template._parentUpi = 0;
-                            for (let i = 0; i < template['Point Refs'].length; i++) {
-                                template['Point Refs'][i].isReadOnly = false;
-                            }
-                        }
+                if (template['Point Type'].Value === 'Sequence') {
+                    cloneGPLSequence(template, () => {
                         addTemplateToDB(template, callback);
+                    });
+                } else {
+                    if (template['Point Type'].Value !== 'Schedule Entry' && template._parentUpi !== 0) {
+                        template._parentUpi = 0;
+                        for (let i = 0; i < template['Point Refs'].length; i++) {
+                            template['Point Refs'][i].isReadOnly = false;
+                        }
                     }
-                    if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
-                        template['Control Array'] = [];
-                    }
-                };
-
-                counterModel.getUpiForPointType(template['Point Type'].eValue, finishCloningPoint);
+                    addTemplateToDB(template, callback);
+                }
+                // does this even get called? is it suppose to?
+                if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
+                    template['Control Array'] = [];
+                }
             }
         };
 
@@ -3042,6 +3038,7 @@ const Point = class Point extends Common {
                 return cb(err);
             }
             ValidatedPoint.parentNode = parentNodeId; // switch to ID
+            // ValidatedPoint._id =
             this.addPoint({
                 newPoint: ValidatedPoint
             }, data.user, {}, (err, point) => {
@@ -3068,6 +3065,7 @@ const Point = class Point extends Common {
             } else {
                 newPoint.path = [...parentNode.path, newPoint.display];
             }
+            this.toLowerCasePath(newPoint);
 
             this.initPoint(newPoint, insertNewPoint);
         });
