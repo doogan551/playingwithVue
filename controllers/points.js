@@ -285,6 +285,21 @@ router.get('/:id', function (req, res) {
     });
 });
 
+router.post('/create', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.createPoint(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {newPoint: results});
+    });
+});
+
 router.post('/copy', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;

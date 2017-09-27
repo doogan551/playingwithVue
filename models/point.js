@@ -2979,17 +2979,60 @@ const Point = class Point extends Common {
         });
     }
 
+    createPoint(data, cb) {
+        const hierarchyModel = new Hierarchy();
+        let newPoint = data,
+            id = this.getNumber(newPoint.id),
+            parentNodeId = this.getNumber(newPoint.parentNodeId),
+            insertNewPoint = (err, validatedPoint) => {
+                if (!!err && !err.hasOwnProperty('msg')) {
+                    return cb(err);
+                }
+                validatedPoint.parentNode = parentNodeId; // switch to ID
+                this.addPoint({newPoint: validatedPoint}, data.user, {}, (err, point) => {
+                    if (!!err && !err.hasOwnProperty('msg')) {
+                        if (err.errmsg) {
+                            return cb(err.errmsg);
+                        } else {
+                            return cb(err);
+                        }
+                    }
+                    return cb(null, point);
+                });
+            };
+
+        hierarchyModel.getNode({
+            id: parentNodeId
+        }, (err, parentNode) => {
+            if (!!err) {
+                return cb(err);
+            } else {
+                newPoint.parentNode = parentNode;
+                newPoint.id = "newPoint";
+                newPoint.targetUpi = id;
+
+                if (data.parentNode === 0) {
+                    newPoint.path = [newPoint.display];
+                } else {
+                    newPoint.path = [...parentNode.path, newPoint.display];
+                }
+
+                this.initPoint(newPoint, insertNewPoint);
+            }
+        });
+    }
+
     copyPoint(data, cb) {
         const hierarchyModel = new Hierarchy();
         let newPoint = data,
             id = this.getNumber(newPoint.id),
             parentNodeId = this.getNumber(newPoint.parentNodeId),
-            insertNewPoint = (err, clonedPoint) => {
+            insertNewPoint = (err, ValidatedPoint) => {
                 if (!!err && !err.hasOwnProperty('msg')) {
                     return cb(err);
                 }
-                clonedPoint.parentNode = parentNodeId; // switch to ID
-                this.addPoint({newPoint: clonedPoint}, data.user, {}, (err, point) => {
+                ValidatedPoint.parentNode = parentNodeId; // switch to ID
+                this.addPoint({newPoint: ValidatedPoint}, data.user, {}, (err, point) => {
                     if (!!err && !err.hasOwnProperty('msg')) {
                         if (err.errmsg) {
                             return cb(err.errmsg);
@@ -3007,7 +3050,7 @@ const Point = class Point extends Common {
             newPoint.parentNode = parentNode;
             newPoint.id = "newPoint";
             newPoint.targetUpi = id;
-            newPoint.display += this.getCopyPostFix();
+            // newPoint.display += this.getCopyPostFix();
 
             if (data.parentNode === 0) {
                 newPoint.path = [newPoint.display];

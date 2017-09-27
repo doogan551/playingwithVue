@@ -26,97 +26,169 @@ var dtiCommon = {
         return result;
     },
 
-    isValidObjectAction: (action, actionObject) => {
-        let answer = true,
-            hierarchyNode = actionObject.hierarchyNode,
-            validTypesToOpen = ['Reference', 'Point', 'Application'],
-            validTypesToCopy = ['Reference', 'Point', 'Application'],
-            validTypesToDelete = ['Reference', 'Point', 'Application'],
-            isValidPasteAction = () => {
-                let cutNode = hierarchyNode.manager._cutNode,
-                    cutNodeId = cutNode && cutNode.bindings._id(),
-                    isValidPasteMode = !!hierarchyNode.manager._cutNode || !!hierarchyNode.manager._copyNode,
-                    copyNode = hierarchyNode.manager._copyNode,
-                    copyNodeId = copyNode && copyNode.bindings._id();
+    isPointDisplayCharacterLegal: function (_char) {
+        // a-z, A-Z, space, 0-9, %, ., &, -, +, [, ], (, ), /
+        var allowedChars = /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/;
 
-                // Make sure we don't show paste if right-clicking the cut hierarchyNode or inside the cut hierarchyNode
-                while (isValidPasteMode && hierarchyNode) {
-                    if (hierarchyNode.bindings._id() === cutNodeId) {
-                        isValidPasteMode = false;
-                    } else {
-                        hierarchyNode = hierarchyNode.parentNode;    //  TODO: hmmmm  will this work in pointselector?
-                    }
+        if (!allowedChars.test(_char)) {
+            return false;
+        }
+        return true;
+    },
+
+    isValidObjectAction: (action, actionObject, sourceNodeContainsTargetNode) => {
+        let isValidAction = true,
+            targetNode = actionObject.targetNode,
+            sourceNode = actionObject.sourceNode,
+            targetIsRootNode,
+            validTypesToCopy = ['Point', 'Application'],
+            protectedApplicationSubTypes = ['Sensor', 'Sequence', 'Schedule'],
+            isTargetNodeAnApplication = () => {
+                let answer = false;
+
+                if (targetNode.nodeType === "Application"
+                    && protectedApplicationSubTypes.indexOf(targetNode.nodeSubType) >= 0) {
+                    answer = true;
                 }
 
-                return isValidPasteMode;
+                return answer;
+            },
+            isTargetNodeParentAnApplication = () => {
+                let answer = false;
+
+                if (targetNode.parentNode
+                    && targetNode.parentNode.nodeType === "Application"
+                    && protectedApplicationSubTypes.indexOf(targetNode.parentNode.nodeSubType) >= 0) {
+                    answer = true;
+                }
+
+                return answer;
+            },
+            isValidPasteAction = () => {
+                let cutNodeOnClipboard = (sourceNode && sourceNode.isCut),
+                    copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
+                    clipboardNodeType = sourceNode && sourceNode.nodeType,
+                    validPaste = cutNodeOnClipboard || copyNodeOnClipboard;
+
+                if (isTargetNodeAnApplication() || isTargetNodeParentAnApplication()) {
+                    validPaste = false;
+                } else if (targetNode.nodeType === "Reference") {
+                    validPaste = false;
+                } else if (cutNodeOnClipboard) { // logic specific to CUT nodes
+                    // Make sure we don't show paste if right-clicking the cut targetNode or inside the cut targetNode
+                    if (sourceNodeContainsTargetNode) {
+                        validPaste = false;
+                    } else if (clipboardNodeType === "Location" && targetNode.nodeType !== "Location") { // a location can only be pasting into a location
+                        validPaste = false;
+                    } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
+                        validPaste = false;
+                    }
+                } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
+
+                }
+
+                return validPaste;
             },
             isValidAddAction = () => {
-                return (actionObject.nodeSubType !== "Sequence" && !actionObject.parentUpiSet);
+                return (targetNode.nodeType !== "Reference"
+                    && targetNode.nodeType !== "Application"
+                    && !isTargetNodeParentAnApplication());
+            },
+            isValidAddLocationAction = () => {
+                return (targetNode.nodeType === "Location");
+            },
+            isValidAddEquipmentAction = () => {
+                return true;
+            },
+            isValidAddCategoryAction = () => {
+                return true;
+            },
+            isValidAddPointAction = () => {
+                return true;
             },
             isValidCopyAction = () => {
-                let inCopyCollection = (validTypesToCopy.indexOf(actionObject.nodeType) !== -1);
+                let inCopyCollection = (validTypesToCopy.indexOf(targetNode.nodeType) >= 0);
 
-                return (inCopyCollection && !actionObject.rootNode && !actionObject.parentUpiSet);
+                return (inCopyCollection && !targetIsRootNode);
             },
             isValidCloneAction = () => {
                 return isValidCopyAction();
             },
             isValidCutAction = () => {
-                return (!actionObject.rootNode && !actionObject.parentUpiSet);
+                let validCut = true;
+
+                if (targetIsRootNode || isTargetNodeParentAnApplication()) {
+                    validCut = false;
+                }
+
+                return validCut;
             },
             isValidEditAction = () => {
-                return (actionObject.nodeType !== "Point" && !actionObject.parentUpiSet && !actionObject.rootNode);
+                return (!targetIsRootNode);
+            },
+            isValidRenameAction = () => {
+                return isValidEditAction();
             },
             isValidOpenAction = () => {
-                let inOpenCollection = (validTypesToOpen.indexOf(actionObject.nodeType) !== -1);
-
-                return inOpenCollection;
+                return (!targetIsRootNode);
             },
             isValidDeleteAction = () => {
-                let inDeleteCollection = (validTypesToDelete.indexOf(actionObject.nodeType) !== -1);
-
-                return (inDeleteCollection && !actionObject.parentUpiSet);
+                return (!targetIsRootNode && !isTargetNodeParentAnApplication());
             };
 
-        if (!!hierarchyNode && !!hierarchyNode.bindings) {
+        if (targetNode) {
+            targetIsRootNode = (targetNode._isRoot);
 
             switch (action) {
                 case "add":
-                case "addApplication":
-                case "addCategory":
-                case "addEquipment":
+                    isValidAction = isValidAddAction();
+                    break;
                 case "addLocation":
+                    isValidAction = isValidAddLocationAction();
+                    break;
+                case "addEquipment":
+                    isValidAction = isValidAddEquipmentAction();
+                    break;
+                case "addCategory":
+                    isValidAction = isValidAddCategoryAction();
+                    break;
                 case "addPoint":
-                case "addReference":
-                    answer = isValidAddAction();
+                    isValidAction = isValidAddPointAction();
                     break;
                 case "clone":
-                    answer = isValidCloneAction();
+                    isValidAction = isValidCloneAction();
                     break;
                 case "copy":
-                    answer = isValidCopyAction();
+                    isValidAction = isValidCopyAction();
                     break;
                 case "cut":
-                    answer = isValidCutAction();
+                    isValidAction = isValidCutAction();
                     break;
                 case "delete":
-                    answer = isValidDeleteAction();
+                    isValidAction = isValidDeleteAction();
                     break;
                 case "edit":
-                    answer = isValidEditAction();
+                    isValidAction = isValidEditAction();
+                    break;
+                case "rename":
+                    isValidAction = isValidRenameAction();
                     break;
                 case "open":
-                    answer = isValidOpenAction();
+                    isValidAction = isValidOpenAction();
                     break;
                 case "paste":
-                    answer = isValidPasteAction();
+                    isValidAction = isValidPasteAction();
+                    break;
+                case "pastereference":
+                    isValidAction = isValidPasteAction();
                     break;
                 default:
+                    isValidAction = false;
                     break;
             }
         }
 
-        return answer;
+        return isValidAction;
     },
 
     // init fns should only be run once after dtiCommon is loaded, and is normally self-handled (see end of this script)
@@ -142,7 +214,7 @@ var dtiCommon = {
 
 // If included on the client
 if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', function done (event) {
+    document.addEventListener('DOMContentLoaded', function done(event) {
         // We have to delay the init function to make sure Config has been loaded
         setTimeout(dtiCommon.init.clientSide, 1000);
     });
