@@ -257,7 +257,7 @@ const Common = class Common extends Utility {
             term = term.toLowerCase();
             // if the term begins and ends with a quote, replace only those two quotes to be equivilent to exact match search
             if (term.match(/^"/) && term.match(/"$/)) {
-                return term.replace(/^"/, '^').replace(/"$/, '$');
+                return new RegExp(term.replace(/^"/, '^').replace(/"$/, '$'));
             }
             term = '^' + term;
 
