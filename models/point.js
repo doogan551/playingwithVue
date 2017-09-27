@@ -868,8 +868,7 @@ const Point = class Point extends Common {
         const counterModel = new Counter();
         let criteria = {};
 
-        let Name;
-        let _Name;
+        let path = data.path;
         let subType = {};
 
         let pointType = data.pointType;
@@ -912,37 +911,11 @@ const Point = class Point extends Common {
         };
 
         let cloneGPLSequence = (oldSequence, callback) => {
-            let oName1;
-            let oName2;
-            let oName3;
-            let oName4;
-
             async.eachSeries(oldSequence.SequenceData.sequence.block, (block, acb) => {
                 if (block.upi === undefined || block.upi === 0) {
                     acb(null);
                 } else {
-                    oName1 = oldSequence.name1;
-                    oName2 = oldSequence.name2;
-                    oName3 = oldSequence.name3;
-                    oName4 = oldSequence.name4;
-
-                    if (oName1 === '' || oName1 === undefined) {
-                        oName1 = block.label;
-                        oName2 = '';
-                        oName3 = '';
-                        oName4 = '';
-                    } else if (oName2 === '' || oName2 === undefined) {
-                        oName2 = block.label;
-                        oName3 = '';
-                        oName4 = '';
-                    } else if (oName3 === '' || oName3 === undefined) {
-                        oName3 = block.label;
-                        oName4 = '';
-                    } else {
-                        oName4 = block.label;
-                    }
-
-                    doInitPoint(oName1, oName2, oName3, oName4, null, block.upi, null, (err, point) => {
+                    doInitPoint(null, block.upi, null, (err, point) => {
                         if (err) {
                             acb(err);
                         } else {
@@ -970,15 +943,25 @@ const Point = class Point extends Common {
         let fixPoint = (template, isClone, sysInfo, callback) => {
             template.id = null;
             template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
-            template.Name = Name;
-            template._Name = _Name;
-
             template._actvAlmId = ObjectID('000000000000000000000000');
-
             template._cfgRequired = true;
 
-            if (template['Point Type'].Value === 'Display') { // default background color for new Displays
-                template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
+
+            switch (pointType) {
+                case 'Report':
+                    subType.Value = template['Report Type'].Value;
+                    subType.eValue = template['Report Type'].eValue;
+                    break;
+                case 'Sensor':
+                    subType.Value = template['Sensor Type'].Value;
+                    subType.eValue = template['Sensor Type'].eValue;
+                    break;
+                case 'Display': // default background color for new Displays
+                    template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
+                    break;
+                default:
+                    subType.eValue = 0; // TODO
+                    break;
             }
 
             utils.setupNonFieldPoints(template);
@@ -1031,6 +1014,24 @@ const Point = class Point extends Common {
                     });
                 });
             } else {
+                // if cloned from "old" point schema
+                template.path = data.path;
+                template.display = data.display;
+
+                template.Name = '';
+                template._Name = '';
+
+                if (!!template.name1) {
+                    template.name1 = '';
+                    template.name2 = '';
+                    template.name3 = '';
+                    template.name4 = '';
+                    template._name1 = '';
+                    template._name2 = '';
+                    template._name3 = '';
+                    template._name4 = '';
+                }
+
                 if (template['Point Type'].Value === 'Sequence') {
                     cloneGPLSequence(template, () => {
                         addTemplateToDB(template, callback);
@@ -1044,6 +1045,7 @@ const Point = class Point extends Common {
                     }
                     addTemplateToDB(template, callback);
                 }
+                // does this even get called? is it suppose to?
                 if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
                     template['Control Array'] = [];
                 }
@@ -1058,16 +1060,6 @@ const Point = class Point extends Common {
             return callback(null, template);
             // });
         };
-
-        if ((pointType === 'Report' || pointType === 'Sensor') && data.subType === undefined) {
-            return cb('No type defined');
-        }
-        subType.Value = data.subType;
-        if (pointType === 'Report') {
-            subType.eValue = Config.Enums['Report Types'][data.subType].enum;
-        } else {
-            subType.eValue = 0; // TODO
-        }
 
         doInitPoint(pointType, targetUpi, subType, cb);
     }
@@ -2629,7 +2621,7 @@ const Point = class Point extends Common {
     }
 
     //updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
-    deletePoint(upi, method, user, options, callback) {
+    deletePoint(upi, user, options, callback) {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
@@ -2641,6 +2633,7 @@ const Point = class Point extends Common {
                 user: user,
                 timestamp: Date.now()
             },
+            _method = 'soft',
             _warning = '',
             _buildWarning = (msg) => {
                 if (_warning.length) {
@@ -2662,6 +2655,10 @@ const Point = class Point extends Common {
                     if (!err && !point) {
                         err = 'Point not found';
                     }
+
+                    if (_point._pStatus === 2) { //status already equals "Deleted"
+                        _method = 'hard';
+                    }
                     cb(err);
                 });
             },
@@ -2679,7 +2676,7 @@ const Point = class Point extends Common {
                         new: true
                     };
 
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     this.remove({
                         query: query
                     }, (err, result) => {
@@ -2705,7 +2702,7 @@ const Point = class Point extends Common {
             },
             _updateUpis = (cb) => {
                 // We only update the upis collection if the point is hard deleted (destroyed)
-                if (method === 'soft') {
+                if (_method === 'soft') {
                     return cb(null);
                 }
 
@@ -2713,7 +2710,7 @@ const Point = class Point extends Common {
             },
             _deleteHistory = (cb) => {
                 // We only remove entries from the history collection if the point is hard deleted (destroyed)
-                if (method === 'soft') {
+                if (_method === 'soft') {
                     return cb(null);
                 }
                 history.remove({
@@ -2737,7 +2734,7 @@ const Point = class Point extends Common {
                 if (_point._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                     return cb(null);
                 }
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     _logData.activity = 'Point Hard Delete';
                     _logData.log = 'Point destroyed';
                 } else {
@@ -2753,7 +2750,7 @@ const Point = class Point extends Common {
                 });
             },
             _deleteChildren = (cb) => {
-                this.deleteChildren(method, _point['Point Type'].Value, _point._id, null, (err) => {
+                this.deleteChildren(_method, _point['Point Type'].Value, _point._id, null, (err) => {
                     if (err) {
                         _buildWarning('could not delete all schedule entries associated with this point');
                     }
@@ -2773,7 +2770,7 @@ const Point = class Point extends Common {
                         _id: _upi
                     },
                     flags = {
-                        method: method
+                        method: _method
                     };
                 this.updateDependencies(refPoint, flags, user, (err) => {
                     if (err) {
@@ -2783,7 +2780,7 @@ const Point = class Point extends Common {
                 });
             },
             _updateRelatedSchedule = (cb) => {
-                if (method === 'hard') {
+                if (_method === 'hard') {
                     schedule.remove(upi, cb);
                 } else {
                     schedule.disable(upi, cb);
@@ -2988,6 +2985,92 @@ const Point = class Point extends Common {
         });
     }
 
+    createPoint(data, cb) {
+        const hierarchyModel = new Hierarchy();
+        let newPoint = data.newPoint;
+        const targetUpi = this.getNumber(newPoint.targetUpi);
+        const parentNodeId = this.getNumber(newPoint.parentNodeId);
+        const insertNewPoint = (err, validatedPoint) => {
+            if (!!err && !err.hasOwnProperty('msg')) {
+                return cb(err);
+            }
+            validatedPoint.parentNode = parentNodeId; // switch to ID
+            this.addPoint({
+                newPoint: validatedPoint
+            }, data.user, {}, (err, point) => {
+                if (!!err && !err.hasOwnProperty('msg')) {
+                    if (err.errmsg) {
+                        return cb(err.errmsg);
+                    }
+                    return cb(err);
+                }
+                return cb(null, point);
+            });
+        };
+
+        hierarchyModel.getNode({
+            id: parentNodeId
+        }, (err, parentNode) => {
+            if (!!err) {
+                return cb(err);
+            }
+            newPoint.parentNode = parentNode;
+            newPoint.id = 'newPoint';
+            newPoint.targetUpi = targetUpi;
+
+            if (data.parentNode === 0) {
+                newPoint.path = [newPoint.display];
+            } else {
+                newPoint.path = [...parentNode.path, newPoint.display];
+            }
+
+            this.initPoint(newPoint, insertNewPoint);
+        });
+    }
+
+    copyPoint(data, cb) {
+        const hierarchyModel = new Hierarchy();
+        let newPoint = data.newPoint;
+        const targetUpi = this.getNumber(newPoint.targetUpi);
+        const parentNodeId = this.getNumber(newPoint.parentNodeId);
+        const insertNewPoint = (err, ValidatedPoint) => {
+            if (!!err && !err.hasOwnProperty('msg')) {
+                return cb(err);
+            }
+            ValidatedPoint.parentNode = parentNodeId; // switch to ID
+            // ValidatedPoint._id =
+            this.addPoint({
+                newPoint: ValidatedPoint
+            }, data.user, {}, (err, point) => {
+                if (!!err && !err.hasOwnProperty('msg')) {
+                    if (err.errmsg) {
+                        return cb(err.errmsg);
+                    }
+                    return cb(err);
+                }
+                return cb(null, point);
+            });
+        };
+
+        hierarchyModel.getNode({
+            id: parentNodeId
+        }, (err, parentNode) => {
+            newPoint.parentNode = parentNode;
+            newPoint.id = 'newPoint';
+            newPoint.targetUpi = targetUpi;
+            newPoint.display += this.getCopyPostFix();
+
+            if (data.parentNode === 0) {
+                newPoint.path = [newPoint.display];
+            } else {
+                newPoint.path = [...parentNode.path, newPoint.display];
+            }
+            this.toLowerCasePath(newPoint);
+
+            this.initPoint(newPoint, insertNewPoint);
+        });
+    }
+
     bulkAdd(points, user, options, cb) {
         let updatedPoints = [];
         this.changeNewIds(points, (err, points) => {
@@ -3094,7 +3177,6 @@ const Point = class Point extends Common {
 
         this.getAll(criteria, cb);
     }
-
 
     addGroups(data, cb) {
         let newGroups = (data.Groups) ? data.Groups : [];
@@ -3501,3 +3583,4 @@ const Schedule = require('./schedule');
 const Security = require('./security');
 const Script = require('./scripts');
 const Counter = require('./counter');
+const Hierarchy = require('./hierarchy');

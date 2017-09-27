@@ -4,7 +4,7 @@
     1. Included by the view (i.e. a typical script include)
     2. Included through the inclusion of dorsettUtility.js (i.e. dorsettUtility.js includes dtiCommon.js if it is not already included)
 
-    Config.js functions can be moved to this file, however, they should still be accessible as Confg.whatever
+    Config.js functions can be moved to this file, however, they should still be accessible as Config.whatever
     Search config.js for "getPointName" to see a very simple implementation example.
 */
 var dtiCommon = {
@@ -24,6 +24,171 @@ var dtiCommon = {
         }
 
         return result;
+    },
+
+    isPointDisplayCharacterLegal: function (_char) {
+        // a-z, A-Z, space, 0-9, %, ., &, -, +, [, ], (, ), /
+        var allowedChars = /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/;
+
+        if (!allowedChars.test(_char)) {
+            return false;
+        }
+        return true;
+    },
+
+    isValidObjectAction: (action, actionObject, sourceNodeContainsTargetNode) => {
+        let isValidAction = true,
+            targetNode = actionObject.targetNode,
+            sourceNode = actionObject.sourceNode,
+            targetIsRootNode,
+            validTypesToCopy = ['Point', 'Application'],
+            protectedApplicationSubTypes = ['Sensor', 'Sequence', 'Schedule'],
+            isTargetNodeAnApplication = () => {
+                let answer = false;
+
+                if (targetNode.nodeType === "Application"
+                    && protectedApplicationSubTypes.indexOf(targetNode.nodeSubType) >= 0) {
+                    answer = true;
+                }
+
+                return answer;
+            },
+            isTargetNodeParentAnApplication = () => {
+                let answer = false;
+
+                if (targetNode.parentNode
+                    && targetNode.parentNode.nodeType === "Application"
+                    && protectedApplicationSubTypes.indexOf(targetNode.parentNode.nodeSubType) >= 0) {
+                    answer = true;
+                }
+
+                return answer;
+            },
+            isValidPasteAction = () => {
+                let cutNodeOnClipboard = (sourceNode && sourceNode.isCut),
+                    copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
+                    clipboardNodeType = sourceNode && sourceNode.nodeType,
+                    validPaste = cutNodeOnClipboard || copyNodeOnClipboard;
+
+                if (isTargetNodeAnApplication() || isTargetNodeParentAnApplication()) {
+                    validPaste = false;
+                } else if (targetNode.nodeType === "Reference") {
+                    validPaste = false;
+                } else if (cutNodeOnClipboard) { // logic specific to CUT nodes
+                    // Make sure we don't show paste if right-clicking the cut targetNode or inside the cut targetNode
+                    if (sourceNodeContainsTargetNode) {
+                        validPaste = false;
+                    } else if (clipboardNodeType === "Location" && targetNode.nodeType !== "Location") { // a location can only be pasting into a location
+                        validPaste = false;
+                    } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
+                        validPaste = false;
+                    }
+                } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
+
+                }
+
+                return validPaste;
+            },
+            isValidAddAction = () => {
+                return (targetNode.nodeType !== "Reference"
+                    && targetNode.nodeType !== "Application"
+                    && !isTargetNodeParentAnApplication());
+            },
+            isValidAddLocationAction = () => {
+                return (targetNode.nodeType === "Location");
+            },
+            isValidAddEquipmentAction = () => {
+                return true;
+            },
+            isValidAddCategoryAction = () => {
+                return true;
+            },
+            isValidAddPointAction = () => {
+                return true;
+            },
+            isValidCopyAction = () => {
+                let inCopyCollection = (validTypesToCopy.indexOf(targetNode.nodeType) >= 0);
+
+                return (inCopyCollection && !targetIsRootNode);
+            },
+            isValidCloneAction = () => {
+                return isValidCopyAction();
+            },
+            isValidCutAction = () => {
+                let validCut = true;
+
+                if (targetIsRootNode || isTargetNodeParentAnApplication()) {
+                    validCut = false;
+                }
+
+                return validCut;
+            },
+            isValidEditAction = () => {
+                return (!targetIsRootNode);
+            },
+            isValidRenameAction = () => {
+                return isValidEditAction();
+            },
+            isValidOpenAction = () => {
+                return (!targetIsRootNode);
+            },
+            isValidDeleteAction = () => {
+                return (!targetIsRootNode && !isTargetNodeParentAnApplication());
+            };
+
+        if (targetNode) {
+            targetIsRootNode = (targetNode._isRoot);
+
+            switch (action) {
+                case "add":
+                    isValidAction = isValidAddAction();
+                    break;
+                case "addLocation":
+                    isValidAction = isValidAddLocationAction();
+                    break;
+                case "addEquipment":
+                    isValidAction = isValidAddEquipmentAction();
+                    break;
+                case "addCategory":
+                    isValidAction = isValidAddCategoryAction();
+                    break;
+                case "addPoint":
+                    isValidAction = isValidAddPointAction();
+                    break;
+                case "clone":
+                    isValidAction = isValidCloneAction();
+                    break;
+                case "copy":
+                    isValidAction = isValidCopyAction();
+                    break;
+                case "cut":
+                    isValidAction = isValidCutAction();
+                    break;
+                case "delete":
+                    isValidAction = isValidDeleteAction();
+                    break;
+                case "edit":
+                    isValidAction = isValidEditAction();
+                    break;
+                case "rename":
+                    isValidAction = isValidRenameAction();
+                    break;
+                case "open":
+                    isValidAction = isValidOpenAction();
+                    break;
+                case "paste":
+                    isValidAction = isValidPasteAction();
+                    break;
+                case "pastereference":
+                    isValidAction = isValidPasteAction();
+                    break;
+                default:
+                    isValidAction = false;
+                    break;
+            }
+        }
+
+        return isValidAction;
     },
 
     resolveAlarmName: (alarmsMsg, alarmPath) => {
@@ -56,7 +221,7 @@ var dtiCommon = {
 
 // If included on the client
 if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', function done (event) {
+    document.addEventListener('DOMContentLoaded', function done(event) {
         // We have to delay the init function to make sure Config has been loaded
         setTimeout(dtiCommon.init.clientSide, 1000);
     });

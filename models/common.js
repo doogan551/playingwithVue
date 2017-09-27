@@ -290,6 +290,10 @@ const Common = class Common extends Utility {
         return matchingTerms === queryTermsLengh;
     }
 
+    getCopyPostFix() {
+        return ' - Copy';
+    }
+
     toLowerCasePath(node) {
         node._path = node.path.map((item) => item.toLowerCase());
     }
