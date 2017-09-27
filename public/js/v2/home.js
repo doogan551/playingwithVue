@@ -5243,10 +5243,11 @@ var dti = {
                 this._skipSearch = skipSearch;
 
                 this.bindings.busy(true);
+
                 dti.post({
                     url: '/api/points/getFilteredPoints',
                     data: {
-                        terms: this.bindings.searchString().split(' '),
+                        terms: this.bindings.searchString().trim().split(' '),
                         pointTypes: this.bindings.flatPointTypeList()
                     }
                 }).done((results) => {
