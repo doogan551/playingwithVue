@@ -162,4 +162,19 @@ router.post('/edit', function (req, res) {
     });
 });
 
+router.post('/checkUniqueDisplayUnderParent', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.checkUniqueDisplayUnderParent(data, function (err, exists) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, exists);
+    });
+});
+
 module.exports = router;

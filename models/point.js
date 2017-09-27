@@ -146,6 +146,12 @@ const Point = class Point extends Common {
             points.forEach((point) => {
                 point['Point Refs'].forEach((pointRef) => {
                     pointRef.PointName = Config.Utility.getPointName(pointRef.PointPath);
+                    if (!pointRef.PointName) {
+                        pointRef.PointName = '';
+                    }
+                    if (!pointRef.PointType) {
+                        pointRef.PointType = '';
+                    }
                 });
             });
             return cb(null, points);
@@ -395,7 +401,7 @@ const Point = class Point extends Common {
         let criteria = {
             query: buildQuery(),
             sort: sort,
-            _limit: limit,
+            limit: limit,
             fields: projection,
             data: data,
             count: false
@@ -870,53 +876,37 @@ const Point = class Point extends Common {
         let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
 
         let doInitPoint = (pointType, targetUpi, subType, callback) => {
-            criteria = {
-                query: {
-                    path: path
-                }
-            };
-
-            this.getOne(criteria, (err, freeName) => {
+            system.getSystemInfoByName('Preferences', (err, sysInfo) => {
                 if (err) {
                     return callback(err);
                 }
 
-                if (freeName !== null && pointType !== 'Schedule Entry') {
-                    return callback('Name already exists.');
+                // if (pointType === 'Schedule Entry') {
+                //     name2 = '0';
+                //     buildName(name1, name2, name3, name4);
+                // }
+
+                if (targetUpi && targetUpi !== 0) {
+                    criteria = {
+                        query: {
+                            _id: targetUpi
+                        }
+                    };
+
+                    this.getOne(criteria, (err, targetPoint) => {
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        if (!targetPoint) {
+                            return callback('Target point not found.');
+                        }
+
+                        fixPoint(targetPoint, true, sysInfo, callback);
+                    });
+                } else {
+                    fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
                 }
-
-                system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    // if (pointType === 'Schedule Entry') {
-                    //     name2 = '0';
-                    //     buildName(name1, name2, name3, name4);
-                    // }
-
-                    if (targetUpi && targetUpi !== 0) {
-                        criteria = {
-                            query: {
-                                _id: targetUpi
-                            }
-                        };
-
-                        this.getOne(criteria, (err, targetPoint) => {
-                            if (err) {
-                                return cb(err);
-                            }
-
-                            if (!targetPoint) {
-                                return callback('Target point not found.');
-                            }
-
-                            fixPoint(targetPoint, true, sysInfo, callback);
-                        });
-                    } else {
-                        fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
-                    }
-                });
             });
         };
 
@@ -1307,12 +1297,32 @@ const Point = class Point extends Common {
                 user: user,
                 timestamp: Date.now(),
                 point: newPoint
-            };
+            },
+            // Have to store the refs before removal because the point inspector expects the point refs to be returned correctly
+            refsStore = _.cloneDeep(newPoint['Point Refs']);
+
         readOnlyProps = ['_id', '_cfgDevice', '_updTOD', '_pollTime', '_pAccess',
             '_forceAllCOV', '_actvAlmId', 'Alarm State', 'Control Pending', 'Device Status',
             'Last Report Time', 'Point Type', 'Reliability'
         ];
         // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
+
+        let updatePointRefProperties = (_point) => {
+            let refs = _point['Point Refs'];
+            for(var r = 0; r < refs.length; r++) {
+                let ref = refs[r];
+                for(var s = 0; s < refsStore.length; s++) {
+                    let storedRef = refsStore[s];
+
+                    if(ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
+                        ref.PointName = storedRef.PointName;
+                        ref.PointType = storedRef.PointType;
+                        break;
+                    }
+                }
+            }
+            _point['Point Refs'] = refs;
+        };
 
         this.getOne({
             query: {
@@ -1338,6 +1348,7 @@ const Point = class Point extends Common {
             }
 
             configRequired = newPoint._cfgRequired;
+
 
             // TODO should this be === or !== ? - probably !== since it is used again
             if (flags.method !== null) {
@@ -2067,6 +2078,7 @@ const Point = class Point extends Common {
                                 }, null);
                             }
                             let error = null;
+                            updatePointRefProperties(result);
                             this.updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, (err) => {
                                 if (err) {
                                     return callback({
@@ -2124,6 +2136,7 @@ const Point = class Point extends Common {
                         });
                     });
                 } else {
+                    updatePointRefProperties(newPoint);
                     return callback({
                         message: 'success'
                     }, newPoint);
@@ -3523,7 +3536,7 @@ const Point = class Point extends Common {
 
         if (!!terms && terms.length) {
             match.$and.push({
-                path: {
+                _path: {
                     $all: this.buildSearchTerms(terms)
                 }
             });

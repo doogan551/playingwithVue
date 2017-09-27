@@ -8,43 +8,25 @@ const Config = require('../public/js/lib/config.js');
 const LOCATION = 'Location';
 const MECHANICAL = 'Mechanical';
 
-const models = {
-    common: {
-        _id: 0,
-        id: '',
-        parent: 0,
-        display: '',
-        tags: [],
-        meta: {}
-    },
-    location: {
-        nodeType: 'Location',
-        locationType: ''
-    },
-    equipment: {
-        nodeType: 'Equipment',
-        libraryId: 0
-    },
-    category: {
-        nodeType: 'Category'
-    },
-    point: {
-        nodeType: 'Point',
-        libraryId: 0,
-        pointId: 0,
-        isReference: false
-    },
-    application: {
-        nodeType: 'Application',
-        applicationType: '',
-        pointId: 0
-    }
-};
-
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
         super('points');
+    }
+
+    checkUniqueDisplayUnderParent(data, cb) {
+        let parentNode = this.getNumber(data.parentNode);
+        let display = data.display;
+
+        this.getOne({
+            query: {
+                parentNode,
+                display
+            }
+        }, (err, result)=>{
+            let exists = (!!result) ? true : false;
+            return cb(err, {exists});
+        });
     }
 
     getNode(data, cb) {
@@ -123,6 +105,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
+            this.toLowerCasePath(node);
             this.recreateTags(node);
             try {
                 let result = Config.Templates.checkAgainstTemplate(node);
@@ -574,7 +557,7 @@ const Hierarchy = class Hierarchy extends Common {
                 } else {
                     node.path = [...parent.path, node.display];
                 }
-
+                this.toLowerCasePath(node);
                 this.update({
                     query: {
                         _id: id
@@ -622,6 +605,7 @@ const Hierarchy = class Hierarchy extends Common {
             }
         }, (err, child, nextChild) => {
             child.path = [...newPath, child.display];
+            this.toLowerCasePath(child);
 
             this.update({
                 query: {
@@ -666,6 +650,7 @@ const Hierarchy = class Hierarchy extends Common {
                 oldDisplay = node.display;
                 node.display = data.display;
                 node.path[node.path.length - 1] = data.display;
+                this.toLowerCasePath(node);
             }
 
             if (data.hasOwnProperty('nodeSubType')) {

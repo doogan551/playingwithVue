@@ -1,4 +1,5 @@
 const Common = require('./common');
+const ObjectId = require('mongodb').ObjectID;
 
 const AlarmDefs = class AlarmDefs extends Common {
 
@@ -47,8 +48,10 @@ const AlarmDefs = class AlarmDefs extends Common {
 
             alarmDefs.save(criteria, (err) => {
                 logData.activity = 'Alarm Message Edit';
-                logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
-                activityLog.create(logData, () => {});
+                logData.log = 'Alarm Message with text "' + data.newObject.msgFormat + '" updated.';
+                activityLog.create(logData, () => {
+                    return cb(err);
+                });
             });
         }
     }
@@ -115,3 +118,5 @@ const AlarmDefs = class AlarmDefs extends Common {
 };
 
 module.exports = AlarmDefs;
+const ActivityLog = require('./activitylog');
+const Point = require('./point');

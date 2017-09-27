@@ -56,6 +56,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
                     Value: 0
                 }
             };
+        $btnSubmit.prop('disabled', false);
 
         function callback(commandRX) {
             $btn.removeClass('btn-warning');
@@ -80,14 +81,13 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
         });
 
         modalValueListener = modal.value.subscribe(function (newValue) {
-            if ($.trim(newValue) === '') {
-                $btnSubmit.prop('disabled', true);
-            } else {
-                $btnSubmit.prop('disabled', false);
+            console.log('-----', newValue);
+            if ($.trim(newValue) === '' || isNaN($.trim(newValue))) {
+                modal.value(0);
             }
         });
 
-        modal.value('');
+        modal.value(0);
         modal.submit = function () {
             logData.newValue.Value = modal.value();
 

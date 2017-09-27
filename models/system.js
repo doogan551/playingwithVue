@@ -25,6 +25,7 @@ const System = class System extends Common {
 
     updateSeason(data, cb) {
         const activityLog = new ActivityLog();
+        const pointModel = new Point();
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -46,10 +47,22 @@ const System = class System extends Common {
         };
 
         this.updateOne(criteria, (err) => {
-            logData.activity = 'Season Change';
-            logData.log = 'Season changed to ' + season + '.';
-            activityLog.create(logData, (err) => {
-                return cb(null, 'success');
+            criteria = {
+                query: {
+                    'Point Type.Value': 'Device'
+                },
+                updateObj: {
+                    $set: {
+                        _updPoint: true
+                    }
+                }
+            };
+            pointModel.updateAll(criteria, (err)=>{
+                logData.activity = 'Season Change';
+                logData.log = 'Season changed to ' + season + '.';
+                activityLog.create(logData, (err) => {
+                    return cb(null, 'success');
+                });
             });
         });
     }
