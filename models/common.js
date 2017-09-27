@@ -283,7 +283,7 @@ const Common = class Common extends Utility {
     }
 
     getCopyPostFix() {
-        return " - Copy";
+        return ' - Copy';
     }
 };
 

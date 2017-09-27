@@ -600,7 +600,7 @@ const Hierarchy = class Hierarchy extends Common {
             }, (err, parent) => {
                 newNode = node;
                 newNode.parentNode = parentNode;
-                newNode.id = "newNode";
+                newNode.id = 'newNode';
                 // newNode.targetUpi = id;
                 newNode.display += this.getCopyPostFix();
 
@@ -974,7 +974,7 @@ const Hierarchy = class Hierarchy extends Common {
                     cb(err);
                 });
             },
-            function segment1_Points(cb) {
+            function segment1Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -986,7 +986,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment1_Folders(cb) {
+            function segment1Folders(cb) {
                 let criteria = {
                     field: 'name1',
                     query: {
@@ -1010,7 +1010,7 @@ const Hierarchy = class Hierarchy extends Common {
                     });
                 });
             },
-            function segment2_Points(cb) {
+            function segment2Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1022,7 +1022,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment2_Folders(cb) {
+            function segment2Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1036,7 +1036,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT2, cb);
             },
-            function segment3_Points(cb) {
+            function segment3Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1048,7 +1048,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment3_Folders(cb) {
+            function segment3Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1062,7 +1062,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT3, cb);
             },
-            function segment4_Points(cb) {
+            function segment4Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3

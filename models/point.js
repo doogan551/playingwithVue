@@ -921,13 +921,10 @@ const Point = class Point extends Common {
         };
 
         let cloneGPLSequence = (oldSequence, callback) => {
-
             async.eachSeries(oldSequence.SequenceData.sequence.block, (block, acb) => {
-
                 if (block.upi === undefined || block.upi === 0) {
                     acb(null);
                 } else {
-
                     doInitPoint(null, block.upi, null, (err, point) => {
                         if (err) {
                             acb(err);
@@ -961,20 +958,20 @@ const Point = class Point extends Common {
 
 
             switch (pointType) {
-                case "Report":
-                    subType.Value = template["Report Type"].Value;
-                    subType.eValue = template["Report Type"].eValue;
+                case 'Report':
+                    subType.Value = template['Report Type'].Value;
+                    subType.eValue = template['Report Type'].eValue;
                     break;
-                case "Sensor":
-                    subType.Value = template["Sensor Type"].Value;
-                    subType.eValue = template["Sensor Type"].eValue;
+                case 'Sensor':
+                    subType.Value = template['Sensor Type'].Value;
+                    subType.eValue = template['Sensor Type'].eValue;
                     break;
-                case "Display":  // default background color for new Displays
+                case 'Display': // default background color for new Displays
                     template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];
                     break;
                 default:
                     subType.eValue = 0; // TODO
-                break;
+                    break;
             }
 
             utils.setupNonFieldPoints(template);
@@ -1033,18 +1030,18 @@ const Point = class Point extends Common {
                     template.path = data.path;
                     template.display = data.display;
 
-                    template.Name = "";
-                    template._Name = "";
+                    template.Name = '';
+                    template._Name = '';
 
                     if (!!template.name1) {
-                        template.name1 = "";
-                        template.name2 = "";
-                        template.name3 = "";
-                        template.name4 = "";
-                        template._name1 = "";
-                        template._name2 = "";
-                        template._name3 = "";
-                        template._name4 = "";
+                        template.name1 = '';
+                        template.name2 = '';
+                        template.name3 = '';
+                        template.name4 = '';
+                        template._name1 = '';
+                        template._name2 = '';
+                        template._name3 = '';
+                        template._name4 = '';
                     }
 
                     if (template['Point Type'].Value === 'Sequence') {
@@ -2650,8 +2647,8 @@ const Point = class Point extends Common {
                         err = 'Point not found';
                     }
 
-                    if (_point._pStatus === 2) {  //status already equals "Deleted"
-                        _method = 'hard'
+                    if (_point._pStatus === 2) { //status already equals "Deleted"
+                        _method = 'hard';
                     }
                     cb(err);
                 });
@@ -2981,76 +2978,77 @@ const Point = class Point extends Common {
 
     createPoint(data, cb) {
         const hierarchyModel = new Hierarchy();
-        let newPoint = data,
-            id = this.getNumber(newPoint.id),
-            parentNodeId = this.getNumber(newPoint.parentNodeId),
-            insertNewPoint = (err, validatedPoint) => {
+        let newPoint = data.newPoint;
+        const targetUpi = this.getNumber(newPoint.targetUpi);
+        const parentNodeId = this.getNumber(newPoint.parentNodeId);
+        const insertNewPoint = (err, validatedPoint) => {
+            if (!!err && !err.hasOwnProperty('msg')) {
+                return cb(err);
+            }
+            validatedPoint.parentNode = parentNodeId; // switch to ID
+            this.addPoint({
+                newPoint: validatedPoint
+            }, data.user, {}, (err, point) => {
                 if (!!err && !err.hasOwnProperty('msg')) {
+                    if (err.errmsg) {
+                        return cb(err.errmsg);
+                    }
                     return cb(err);
                 }
-                validatedPoint.parentNode = parentNodeId; // switch to ID
-                this.addPoint({newPoint: validatedPoint}, data.user, {}, (err, point) => {
-                    if (!!err && !err.hasOwnProperty('msg')) {
-                        if (err.errmsg) {
-                            return cb(err.errmsg);
-                        } else {
-                            return cb(err);
-                        }
-                    }
-                    return cb(null, point);
-                });
-            };
+                return cb(null, point);
+            });
+        };
 
         hierarchyModel.getNode({
             id: parentNodeId
         }, (err, parentNode) => {
             if (!!err) {
                 return cb(err);
-            } else {
-                newPoint.parentNode = parentNode;
-                newPoint.id = "newPoint";
-                newPoint.targetUpi = id;
-
-                if (data.parentNode === 0) {
-                    newPoint.path = [newPoint.display];
-                } else {
-                    newPoint.path = [...parentNode.path, newPoint.display];
-                }
-
-                this.initPoint(newPoint, insertNewPoint);
             }
+            newPoint.parentNode = parentNode;
+            newPoint.id = 'newPoint';
+            newPoint.targetUpi = targetUpi;
+
+            if (data.parentNode === 0) {
+                newPoint.path = [newPoint.display];
+            } else {
+                newPoint.path = [...parentNode.path, newPoint.display];
+            }
+
+            this.initPoint(newPoint, insertNewPoint);
         });
     }
 
     copyPoint(data, cb) {
         const hierarchyModel = new Hierarchy();
-        let newPoint = data,
-            id = this.getNumber(newPoint.id),
-            parentNodeId = this.getNumber(newPoint.parentNodeId),
-            insertNewPoint = (err, ValidatedPoint) => {
+        let newPoint = data.newPoint;
+        const targetUpi = this.getNumber(newPoint.targetUpi);
+        const parentNodeId = this.getNumber(newPoint.parentNodeId);
+        const insertNewPoint = (err, ValidatedPoint) => {
+            if (!!err && !err.hasOwnProperty('msg')) {
+                return cb(err);
+            }
+            ValidatedPoint.parentNode = parentNodeId; // switch to ID
+            this.addPoint({
+                newPoint: ValidatedPoint
+            }, data.user, {}, (err, point) => {
                 if (!!err && !err.hasOwnProperty('msg')) {
+                    if (err.errmsg) {
+                        return cb(err.errmsg);
+                    }
                     return cb(err);
                 }
-                ValidatedPoint.parentNode = parentNodeId; // switch to ID
-                this.addPoint({newPoint: ValidatedPoint}, data.user, {}, (err, point) => {
-                    if (!!err && !err.hasOwnProperty('msg')) {
-                        if (err.errmsg) {
-                            return cb(err.errmsg);
-                        } else {
-                            return cb(err);
-                        }
-                    }
-                    return cb(null, point);
-                });
-            };
+                return cb(null, point);
+            });
+        };
 
         hierarchyModel.getNode({
             id: parentNodeId
         }, (err, parentNode) => {
             newPoint.parentNode = parentNode;
-            newPoint.id = "newPoint";
-            newPoint.targetUpi = id;
-            // newPoint.display += this.getCopyPostFix();
+            newPoint.id = 'newPoint';
+            newPoint.targetUpi = targetUpi;
+            newPoint.display += this.getCopyPostFix();
 
             if (data.parentNode === 0) {
                 newPoint.path = [newPoint.display];
