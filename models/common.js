@@ -255,13 +255,17 @@ const Common = class Common extends Utility {
     buildSearchTerms(terms) {
         return terms.map((term) => {
             term = term.toLowerCase();
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
+            // if the term begins and ends with a quote, replace only those two quotes to be equivilent to exact match search
+            if (term.match(/^"/) && term.match(/"$/)) {
+                return term.replace(/^"/, '^').replace(/"$/, '$');
             }
+            term = '^' + term;
+
             if(term.match(/\*/)) {
+                term += '$';
                 return new RegExp(term.replace(/\*/g, '.*'));
             }
-            return new RegExp('^' + term);
+            return new RegExp(term);
         });
     }
 
