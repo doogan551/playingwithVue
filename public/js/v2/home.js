@@ -4429,6 +4429,8 @@ var dti = {
                 self.bindings.busy(false);
             },
             saveNode: () => {
+                dti.bindings.navigatorv2.configureNodeModal.activeSaveRequest(true);
+
                 let self = dti.navigatorv2,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     modalNodeData = self.tree.helper.buildNodeFromModalOptions();
@@ -4465,6 +4467,7 @@ var dti = {
 
                     selfBindings.busy(false);
                     modalBindings.modalOpen(false);
+                    modalBindings.activeSaveRequest(false);
                     self.$configureNodeModal.closeModal();
                 };
 
@@ -4512,6 +4515,7 @@ var dti = {
 
                         selfBindings.busy(false);
                         modalBindings.modalOpen(false);
+                        modalBindings.activeSaveRequest(false);
                         self.$configureNodeModal.closeModal();
                     };
 
@@ -6188,6 +6192,7 @@ var dti = {
             configureNodeModal: $.extend(ko.viewmodel.fromModel({
                 modalOpen: false,
                 needsPoint: false,
+                activeSaveRequest: false,
                 activeUniquenessCheck: false, // needed for binding of unique test on Label field (display field)
                 pathIsValid: true,  // needed for binding of unique test on Label field (display field)
                 parentID: '',  // needed for binding of unique test on Label field (display field)
