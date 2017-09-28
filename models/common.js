@@ -1,3 +1,5 @@
+const uuid = require('node-uuid');
+
 const Config = require('../public/js/lib/config.js');
 const Enums = Config.Enums;
 const zmq = require('../helpers/zmq');
@@ -296,6 +298,10 @@ const Common = class Common extends Utility {
 
     toLowerCasePath(node) {
         node._path = node.path.map((item) => item.toLowerCase());
+    }
+
+    getUuid() {
+        return uuid.v4();
     }
 };
 
