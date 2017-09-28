@@ -693,6 +693,21 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    checkUniqueness(data, cb) {
+        let requestedPath = data.path,
+            pathIsUnique = true;
+
+        console.log("requestedPath = " + requestedPath);
+
+        if (pathIsUnique) {
+            return cb(null, {msg: "unique"});
+        } else {
+            return cb("not unique");
+        }
+
+
+    }
+
     recreateTags(node) {
         const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId', '_pStatus'];
 

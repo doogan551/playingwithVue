@@ -258,17 +258,17 @@ html
                     h4(data-bind="text: modalAction()")
                     .row
                         .input-field.col.s6
-                            input#nodeDisplay(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, allowedChars: modalNodeDisplay, valueUpdate: 'afterkeydown'")
+                            input#nodeDisplay(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown'")
                             label(for="nodeDisplay") Label
                     // ko if: (modalAction() === "Paste")
                     .input-field.col.s12
                         label From &nbsp;&nbsp;
-                        span(data-bind="text: modalNodePath")
+                        span(data-bind="text: modalSourceNodePath")
                     // /ko
                     // ko if: (modalAction() === "Paste as reference")
                     .input-field.col.s12
                         label Reference to &nbsp;&nbsp;
-                        span(data-bind="text: modalNodePath")
+                        span(data-bind="text: modalSourceNodePath")
                     // /ko
                     // ko if: (modalAction() === 'Add location' && modalNodeType() === 'Location')
                     .row
@@ -288,7 +288,7 @@ html
                         .col.s12.error.red-text(data-bind='html: error')
 
                 .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: saveNode") Save
+                    button.btn.blue-grey.waves-effect(data-bind="click: saveNode, css: { disabled: (activeUniquenessCheck() || !pathIsValid()) }") Save
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
             #openItemsModal.modal.modal-large

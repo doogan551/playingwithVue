@@ -162,4 +162,21 @@ router.post('/edit', function (req, res) {
     });
 });
 
+router.post('/checkUniqueness', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.checkUniqueness(data, function (err) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {
+            message: 'path is unique'
+        });
+    });
+});
+
 module.exports = router;
