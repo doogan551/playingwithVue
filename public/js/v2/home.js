@@ -4661,7 +4661,7 @@ var dti = {
                             break;
                         case "add point":
                             modalBindings.modalNodeType("Point");
-                            // TODO rip this UI adjustement out
+                            // TODO rip this UI adjustment out
                             self.$configureNodeModal.find(".modal-footer").css("margin-top", "38%");
                             self.$configureNodeModal.css("height", "61%");
                             // TODO
@@ -4669,6 +4669,7 @@ var dti = {
                             break;
                         case "open":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.path(data.node.bindings.path());
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -4676,20 +4677,24 @@ var dti = {
                             break;
                         case "paste":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
-                            modalBindings.modalNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
+                            modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
+                            modalBindings.path(data.targetNode.bindings.path());
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
+                            modalBindings.path(data.targetNode.bindings.path());
                             modalBindings.modalNodeType("Reference");
-                            modalBindings.modalNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
+                            modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         case "rename":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.modalSourceNodePath(data.node.bindings.path());
+                            modalBindings.path(data.node.bindings.path());
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -4706,8 +4711,9 @@ var dti = {
 
                     self.$configureNodeModal.openModal();
                     modalBindings.modalOpen(true);
+                    self.$configureNodeModal.find('label').attr("data-error", "");   // clear all error messages
+                    self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
                     self.$configureNodeModal.find('select').material_select();
-
                 },
                 chooseNodePoint: () => {
                     let self = dti.navigatorv2;
@@ -5388,6 +5394,37 @@ var dti = {
                 }
             });
         },
+        checkPathForUniqueness(path, cb) {
+            let err,
+                cbData = {};
+
+            dti.post({
+                url: '/api/hierarchy/checkUniqueness',
+                data: {
+                    path: path
+                }
+            }).done((response) => {
+                dti.log(response);
+
+                let result = response;
+
+                if (!result) {
+                    err = 'An unknown error occurred';
+                } else if (result.err) {
+                    err = dtiCommon.getPointName(path) + ' is ' + result.err;
+                } else {
+                    cbData.message = result.message;
+                }
+            }).fail(() => {
+                err = 'A network error occurred';
+            }).always(() => {
+                // if (err) {
+                //     dti.toast(err, 5000, 'errorToast');
+                // }
+                cb(err, cbData);
+            });
+        },
+
         init: function () {
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
@@ -6154,6 +6191,8 @@ var dti = {
             configureNodeModal: $.extend(ko.viewmodel.fromModel({
                 modalOpen: false,
                 needsPoint: false,
+                activeUniquenessCheck: false, // needed for binding of unique test on Label field (display field)
+                pathIsValid: true,  // needed for binding of unique test on Label field (display field)
                 error: '&nbsp;',
                 hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
                 locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
@@ -6162,7 +6201,9 @@ var dti = {
                 //add node stuff
                 modalAction: '',
                 modalNodeDisplay: '',
-                modalNodePath: '',
+                modalTargetNodePath: '',
+                modalSourceNodePath: '',
+                path: '',  // needed for binding of unique test on Label field (display field)
                 modalNodeType: '',
                 modalNodeSubType: '',
                 modalNodePointName: '',
@@ -6692,21 +6733,51 @@ var dti = {
                 }
             };
 
-            ko.bindingHandlers.allowedChars = {
-                init: function (element, valueAccessor) {
+            ko.bindingHandlers.dtiHierarchyLabel = {
+                init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var $element = $(element),
-                        duplicateNameTimer;
+                        vm = viewModel,
+                        requestedPath,
+                        elementValue,
+                        keypressTimer = 300,
+                        keypressTimerID,
+                        handleElementStatus = (errorMessage) => {
+                            let $myLabels = $(element).siblings("label");
+                            if (errorMessage) {
+                                $element.addClass("invalid");
+                                $element.removeClass("valid");
+                                // $myLabels.setCustomValidity(errorMessage);
+                                $myLabels.attr("data-error", errorMessage);
+                                vm.pathIsValid(false);
+                            } else {
+                                $element.removeClass("invalid");
+                                $element.addClass("valid");
+                                // $myLabels.setCustomValidity("");
+                                $myLabels.attr("data-error", "");
+                                vm.pathIsValid(true);
+                            }
+                        },
+                        handleUniquenessResult = (err, result) => {
+                            vm.activeUniquenessCheck(false);
+                            handleElementStatus(err);
+                        };
+
                     $element
-                        .on("keypress", function (event) {
-                            let _char = String.fromCharCode(event.which);
-                            if (dtiCommon.isPointDisplayCharacterLegal(_char) == false) {
-                                dti.toast("'" + _char + "' is invalid within Name field", 5000, 'errorToast');
-                                // workspace.playSound('beep');
-
-                                event.preventDefault();
-                                event.stopImmediatePropagation();
-
-                                $element.blur();
+                        .on("keyup", function (event) {
+                            clearTimeout(keypressTimerID);
+                            if (!vm.activeUniquenessCheck()) {
+                                keypressTimerID = setTimeout(function () {
+                                    elementValue = $element.val();
+                                    let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+                                    if (labelTest.valid) {
+                                        requestedPath = (typeof vm.path === "function" ? vm.path() : vm.path);
+                                        requestedPath[requestedPath.length - 1] = elementValue;
+                                        vm.activeUniquenessCheck(true);
+                                        dti.utility.checkPathForUniqueness(requestedPath, handleUniquenessResult);
+                                    } else {
+                                        handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
+                                    }
+                                }, keypressTimer);
                             }
                         });
                 }
@@ -7697,7 +7768,7 @@ var dti = {
                         val.fn();
                     });
 
-                    $('select:not(.select-processed').material_select();
+                    $('select:not(.select-processed)').material_select();
 
                     complete();
                 });

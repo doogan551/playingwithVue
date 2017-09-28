@@ -10,7 +10,8 @@
 var dtiCommon = {
     // _private intended to only be used by dtiCommon API functions and not accessed outside of dtiCommon
     _private: {
-        pointNameSeparator: '' // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+        pointNameSeparator: '', // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+        pointLabelRegex: /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/
     },
 
     // API functions
@@ -26,14 +27,23 @@ var dtiCommon = {
         return result;
     },
 
-    isPointDisplayCharacterLegal: function (_char) {
-        // a-z, A-Z, space, 0-9, %, ., &, -, +, [, ], (, ), /
-        var allowedChars = /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/;
+    isPointDisplayStringValid: function (labelValue) {
+        var invalidChars = [],
+            i,
+            len = labelValue.length,
+            valid = true;
 
-        if (!allowedChars.test(_char)) {
-            return false;
+        for (i = 0; i < len; i++) {
+            if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
+                invalidChars.push(labelValue[i]);
+                valid = false;
+            }
         }
-        return true;
+
+        return {
+            valid: valid,
+            invalidChars: invalidChars
+        };
     },
 
     isValidObjectAction: (action, actionObject, sourceNodeContainsTargetNode) => {
@@ -43,7 +53,7 @@ var dtiCommon = {
             targetIsRootNode,
             validTypesToCopy = ['Point', 'Application'],
             protectedApplicationSubTypes = ['Sensor', 'Sequence', 'Schedule'],
-            isTargetNodeAnApplication = () => {
+            isTargetNodeProtectedApplication = () => {
                 let answer = false;
 
                 if (targetNode.nodeType === "Application"
@@ -53,7 +63,7 @@ var dtiCommon = {
 
                 return answer;
             },
-            isTargetNodeParentAnApplication = () => {
+            isTargetNodeParentProtectedApplication = () => {
                 let answer = false;
 
                 if (targetNode.parentNode
@@ -70,7 +80,7 @@ var dtiCommon = {
                     clipboardNodeType = sourceNode && sourceNode.nodeType,
                     validPaste = cutNodeOnClipboard || copyNodeOnClipboard;
 
-                if (isTargetNodeAnApplication() || isTargetNodeParentAnApplication()) {
+                if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
                     validPaste = false;
                 } else if (targetNode.nodeType === "Reference") {
                     validPaste = false;
@@ -91,8 +101,8 @@ var dtiCommon = {
             },
             isValidAddAction = () => {
                 return (targetNode.nodeType !== "Reference"
-                    && targetNode.nodeType !== "Application"
-                    && !isTargetNodeParentAnApplication());
+                    && !isTargetNodeProtectedApplication()
+                    && !isTargetNodeParentProtectedApplication());
             },
             isValidAddLocationAction = () => {
                 return (targetNode.nodeType === "Location");
@@ -117,7 +127,7 @@ var dtiCommon = {
             isValidCutAction = () => {
                 let validCut = true;
 
-                if (targetIsRootNode || isTargetNodeParentAnApplication()) {
+                if (targetIsRootNode || isTargetNodeParentProtectedApplication()) {
                     validCut = false;
                 }
 
@@ -133,7 +143,7 @@ var dtiCommon = {
                 return (!targetIsRootNode);
             },
             isValidDeleteAction = () => {
-                return (!targetIsRootNode && !isTargetNodeParentAnApplication());
+                return (!targetIsRootNode && !isTargetNodeParentProtectedApplication());
             };
 
         if (targetNode) {
