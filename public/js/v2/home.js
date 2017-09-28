@@ -4307,6 +4307,7 @@ var dti = {
                 let self = dti.navigatorv2;
                 let selfBindings = dti.navigatorv2.bindings;
 
+                selfBindings.currNodeId(node.bindings._id());
                 selfBindings.currNodeDisplay(node.bindings.display());
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
@@ -4669,7 +4670,7 @@ var dti = {
                             break;
                         case "open":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
-                            modalBindings.path(data.node.bindings.path());
+                            modalBindings.parentID(data.node.parentNode.bindings._id());
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -4678,14 +4679,14 @@ var dti = {
                         case "paste":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
-                            modalBindings.path(data.targetNode.bindings.path());
+                            modalBindings.parentID(data.targetNode.bindings._id());
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
-                            modalBindings.path(data.targetNode.bindings.path());
+                            modalBindings.parentID(data.targetNode.bindings._id());
                             modalBindings.modalNodeType("Reference");
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
@@ -4694,7 +4695,7 @@ var dti = {
                         case "rename":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
                             modalBindings.modalSourceNodePath(data.node.bindings.path());
-                            modalBindings.path(data.node.bindings.path());
+                            modalBindings.parentID(data.node.parentNode.bindings._id());
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -5048,6 +5049,7 @@ var dti = {
         initBindings: () => {
             dti.navigatorv2.bindings = $.extend(ko.viewmodel.fromModel({
                 busy: false,
+                currNodeId: '',
                 searchString: '',
                 currNodeDisplay: '',
                 currNodeType: '',
@@ -5394,34 +5396,29 @@ var dti = {
                 }
             });
         },
-        checkPathForUniqueness(path, cb) {
-            let err,
-                cbData = {};
+        checkPathForUniqueness(parentNodeId, display, cb) {
+            let err;
 
             dti.post({
-                url: '/api/hierarchy/checkUniqueness',
+                url: '/api/hierarchy/checkUniqueDisplayUnderParent',
                 data: {
-                    path: path
+                    parentNode: parentNodeId,
+                    display: display
                 }
             }).done((response) => {
                 dti.log(response);
 
                 let result = response;
 
-                if (!result) {
-                    err = 'An unknown error occurred';
+                if (result.exists) {
+                    err = "duplicate error: " + "'" + display + "' already exists at this level";
                 } else if (result.err) {
-                    err = dtiCommon.getPointName(path) + ' is ' + result.err;
-                } else {
-                    cbData.message = result.message;
+                    err = result.err;
                 }
             }).fail(() => {
                 err = 'A network error occurred';
             }).always(() => {
-                // if (err) {
-                //     dti.toast(err, 5000, 'errorToast');
-                // }
-                cb(err, cbData);
+                cb(err);
             });
         },
 
@@ -6193,6 +6190,7 @@ var dti = {
                 needsPoint: false,
                 activeUniquenessCheck: false, // needed for binding of unique test on Label field (display field)
                 pathIsValid: true,  // needed for binding of unique test on Label field (display field)
+                parentID: '',  // needed for binding of unique test on Label field (display field)
                 error: '&nbsp;',
                 hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
                 locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
@@ -6203,7 +6201,6 @@ var dti = {
                 modalNodeDisplay: '',
                 modalTargetNodePath: '',
                 modalSourceNodePath: '',
-                path: '',  // needed for binding of unique test on Label field (display field)
                 modalNodeType: '',
                 modalNodeSubType: '',
                 modalNodePointName: '',
@@ -6737,7 +6734,6 @@ var dti = {
                 init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var $element = $(element),
                         vm = viewModel,
-                        requestedPath,
                         elementValue,
                         keypressTimer = 300,
                         keypressTimerID,
@@ -6757,7 +6753,7 @@ var dti = {
                                 vm.pathIsValid(true);
                             }
                         },
-                        handleUniquenessResult = (err, result) => {
+                        handleUniquenessResult = (err) => {
                             vm.activeUniquenessCheck(false);
                             handleElementStatus(err);
                         };
@@ -6770,10 +6766,8 @@ var dti = {
                                     elementValue = $element.val();
                                     let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
                                     if (labelTest.valid) {
-                                        requestedPath = (typeof vm.path === "function" ? vm.path() : vm.path);
-                                        requestedPath[requestedPath.length - 1] = elementValue;
                                         vm.activeUniquenessCheck(true);
-                                        dti.utility.checkPathForUniqueness(requestedPath, handleUniquenessResult);
+                                        dti.utility.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
                                     } else {
                                         handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
                                     }

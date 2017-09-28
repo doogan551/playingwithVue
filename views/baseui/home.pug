@@ -258,8 +258,8 @@ html
                     h4(data-bind="text: modalAction()")
                     .row
                         .input-field.col.s6
-                            input#nodeDisplay(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown'")
-                            label(for="nodeDisplay") Label
+                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown'")
+                            label(for="pointDisplayField") Label
                     // ko if: (modalAction() === "Paste")
                     .input-field.col.s12
                         label From &nbsp;&nbsp;
@@ -445,6 +445,9 @@ html
                     .treeRow
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Node Id:
+                        .val(data-bind="text: currNodeId")
                     .treeRow
                         .cat Reference Id:
                         .val(data-bind="text: currRefNode")
