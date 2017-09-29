@@ -871,9 +871,12 @@ const Point = class Point extends Common {
         let path = data.path;
         let subType = {};
 
+        let display = data.display;
+        let parentNode = this.getDefault(data.parentNode, 0);
         let pointType = data.pointType;
-        let targetUpi = (data.targetUpi) ? parseInt(data.targetUpi, 10) : 0;
-        let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
+        let targetUpi = this.getDefault(data.targetUpi, 0);
+        let parentUpi = this.getDefault(data.parentUpi, 0);
+        let parentPath = data.parentPath;
 
         let doInitPoint = (pointType, targetUpi, subType, callback) => {
             system.getSystemInfoByName('Preferences', (err, sysInfo) => {
@@ -941,7 +944,8 @@ const Point = class Point extends Common {
         };
 
         let fixPoint = (template, isClone, sysInfo, callback) => {
-            template.id = null;
+            template.id = display.toString() + this.getUuid();
+            template.display = display;
             template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
             template._actvAlmId = ObjectID('000000000000000000000000');
             template._cfgRequired = true;
@@ -966,77 +970,85 @@ const Point = class Point extends Common {
 
             utils.setupNonFieldPoints(template);
 
-            console.log('isClone', isClone);
-            if (!isClone) {
-                // update device template here
-                // get telemetry ip port and set ethernet ip port and downlink ip port
-                // rmu - model type nin[5, 9, 10, 11, 12, 13, 14, 16] set ethernet ip port
-                setIpPort(template, () => {
-                    if (template['Point Type'].Value === 'Sensor') {
-                        template['Sensor Type'].Value = (subType) ? subType.Value : 'Input';
-                        template['Sensor Type'].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
-                    } else if (template['Point Type'].Value === 'Report') {
-                        template['Report Type'].Value = (subType) ? subType.Value : 'Property';
-                        template['Report Type'].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
-                    }
+            this.getOne({
+                query: {
+                    _id: parentNode
+                }
+            }, (err, parent) => {
+                if (!!parent) {
+                    template.path = [...parent.path, template.display];
+                } else if (!!parentPath) {
+                    template.path = [...parentPath, template.display];
+                } else {
+                    template.path = [template.display];
+                }
+                this.toLowerCasePath(template);
+                template.parentNode = parentNode;
 
-                    if (template['Point Type'].Value === 'Device') {
-                        template['Time Zone'].eValue = sysInfo['Time Zone'];
-                        template['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
-                    }
-
-                    template._parentUpi = parentUpi;
-
-                    alarmDefs.getSystemAlarms((err, alarmDefs) => {
-                        if (err) {
-                            return callback(err);
-                        }
-                        if (template['Alarm Messages'] !== undefined) {
-                            for (let i = 0; i < template['Alarm Messages'].length; i++) {
-                                for (let j = 0; j < alarmDefs.length; j++) {
-                                    if (template['Alarm Messages'][i].msgType === alarmDefs[j].msgType) {
-                                        template['Alarm Messages'][i].msgId = alarmDefs[j]._id.toString();
-                                    }
-                                }
-                            }
+                console.log('isClone', isClone);
+                if (!isClone) {
+                    // update device template here
+                    // get telemetry ip port and set ethernet ip port and downlink ip port
+                    // rmu - model type nin[5, 9, 10, 11, 12, 13, 14, 16] set ethernet ip port
+                    setIpPort(template, () => {
+                        if (template['Point Type'].Value === 'Sensor') {
+                            template['Sensor Type'].Value = (subType) ? subType.Value : 'Input';
+                            template['Sensor Type'].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+                        } else if (template['Point Type'].Value === 'Report') {
+                            template['Report Type'].Value = (subType) ? subType.Value : 'Property';
+                            template['Report Type'].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
                         }
 
+                        if (template['Point Type'].Value === 'Device') {
+                            template['Time Zone'].eValue = sysInfo['Time Zone'];
+                            template['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
+                        }
 
-                        system.getSystemInfoByName('Preferences', (err, sysInfo) => {
+                        alarmDefs.getSystemAlarms((err, alarmDefs) => {
                             if (err) {
                                 return callback(err);
                             }
-                            if (template['Quality Code Enable'] !== undefined) {
-                                template['Quality Code Enable'].Value = sysInfo['Quality Code Default Mask'];
+                            if (template['Alarm Messages'] !== undefined) {
+                                for (let i = 0; i < template['Alarm Messages'].length; i++) {
+                                    for (let j = 0; j < alarmDefs.length; j++) {
+                                        if (template['Alarm Messages'][i].msgType === alarmDefs[j].msgType) {
+                                            template['Alarm Messages'][i].msgId = alarmDefs[j]._id.toString();
+                                        }
+                                    }
+                                }
                             }
-                            addTemplateToDB(template, callback);
+
+
+                            system.getSystemInfoByName('Preferences', (err, sysInfo) => {
+                                if (err) {
+                                    return callback(err);
+                                }
+                                if (template['Quality Code Enable'] !== undefined) {
+                                    template['Quality Code Enable'].Value = sysInfo['Quality Code Default Mask'];
+                                }
+                                addTemplateToDB(template, callback);
+                            });
                         });
                     });
-                });
-            } else {
-                // if cloned from "old" point schema
-                template.path = data.path;
-                template.display = data.display;
-
-                template.Name = '';
-                template._Name = '';
-
-                if (!!template.name1) {
-                    template.name1 = '';
-                    template.name2 = '';
-                    template.name3 = '';
-                    template.name4 = '';
-                    template._name1 = '';
-                    template._name2 = '';
-                    template._name3 = '';
-                    template._name4 = '';
-                }
-
-                if (template['Point Type'].Value === 'Sequence') {
-                    cloneGPLSequence(template, () => {
-                        addTemplateToDB(template, callback);
-                    });
                 } else {
+                    // if cloned from "old" point schema
+
+                    template.Name = '';
+                    template._Name = '';
+                    template._oldUpi = 0;
+
+                    if (!!template.name1) {
+                        template.name1 = '';
+                        template.name2 = '';
+                        template.name3 = '';
+                        template.name4 = '';
+                        template._name1 = '';
+                        template._name2 = '';
+                        template._name3 = '';
+                        template._name4 = '';
+                    }
+
+
                     if (template['Point Type'].Value !== 'Schedule Entry' && template._parentUpi !== 0) {
                         template._parentUpi = 0;
                         for (let i = 0; i < template['Point Refs'].length; i++) {
@@ -1044,12 +1056,12 @@ const Point = class Point extends Common {
                         }
                     }
                     addTemplateToDB(template, callback);
+                    // does this even get called? is it suppose to?
+                    if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
+                        template['Control Array'] = [];
+                    }
                 }
-                // does this even get called? is it suppose to?
-                if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
-                    template['Control Array'] = [];
-                }
-            }
+            });
         };
 
         let addTemplateToDB = (template, callback) => {
@@ -1305,12 +1317,12 @@ const Point = class Point extends Common {
 
         let updatePointRefProperties = (_point) => {
             let refs = _point['Point Refs'];
-            for(var r = 0; r < refs.length; r++) {
+            for (var r = 0; r < refs.length; r++) {
                 let ref = refs[r];
-                for(var s = 0; s < refsStore.length; s++) {
+                for (var s = 0; s < refsStore.length; s++) {
                     let storedRef = refsStore[s];
 
-                    if(ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
+                    if (ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
                         ref.PointName = storedRef.PointName;
                         ref.PointType = storedRef.PointType;
                         break;
@@ -3032,43 +3044,51 @@ const Point = class Point extends Common {
         const hierarchyModel = new Hierarchy();
         let newPoint = data.newPoint;
         const targetUpi = this.getNumber(newPoint.targetUpi);
-        const parentNodeId = this.getNumber(newPoint.parentNodeId);
-        const insertNewPoint = (err, ValidatedPoint) => {
+        const parentNode = this.getNumber(newPoint.parentNode);
+        const display = newPoint.display;
+
+        const insertNewPoints = (err, validatedPoints) => {
             if (!!err && !err.hasOwnProperty('msg')) {
                 return cb(err);
             }
-            ValidatedPoint.parentNode = parentNodeId; // switch to ID
-            // ValidatedPoint._id =
-            this.addPoint({
-                newPoint: ValidatedPoint
-            }, data.user, {}, (err, point) => {
-                if (!!err && !err.hasOwnProperty('msg')) {
-                    if (err.errmsg) {
-                        return cb(err.errmsg);
-                    }
-                    return cb(err);
+            this.bulkAdd(validatedPoints, data.user, {}, (err, points) => {
+                return cb(err, points);
+            });
+        };
+        const buildPoint = (targetUpi, parentNode, display, callback) => {
+            this.initPoint({
+                targetUpi,
+                parentNode,
+                display
+            }, (err, validatedPoint) => {
+                let points = [{newPoint: validatedPoint}];
+                if (['Schedule', 'Sequence'].includes(validatedPoint['Point Type'].Value)) {
+                    this.iterateCursor({
+                        query: {
+                            _parentUpi: targetUpi
+                        }
+                    }, (err, child, nextChild) => {
+                        this.initPoint({
+                            parentUpi: validatedPoint.id,
+                            targetUpi: child._id,
+                            parentNode: validatedPoint.id,
+                            display: child.display,
+                            parentPath: validatedPoint.path
+                        }, (err, validatedPoint) => {
+                            validatedPoint._parentUpi = validatedPoint.parentNode;
+                            points.push({newPoint: validatedPoint});
+                            nextChild();
+                        });
+                    }, (err, count) => {
+                        callback(err, points);
+                    });
+                } else {
+                    callback(err, points);
                 }
-                return cb(null, point);
             });
         };
 
-        hierarchyModel.getNode({
-            id: parentNodeId
-        }, (err, parentNode) => {
-            newPoint.parentNode = parentNode;
-            newPoint.id = 'newPoint';
-            newPoint.targetUpi = targetUpi;
-            newPoint.display += this.getCopyPostFix();
-
-            if (data.parentNode === 0) {
-                newPoint.path = [newPoint.display];
-            } else {
-                newPoint.path = [...parentNode.path, newPoint.display];
-            }
-            this.toLowerCasePath(newPoint);
-
-            this.initPoint(newPoint, insertNewPoint);
-        });
+        buildPoint(targetUpi, parentNode, display, insertNewPoints);
     }
 
     bulkAdd(points, user, options, cb) {
@@ -3130,6 +3150,12 @@ const Point = class Point extends Common {
                         ref.Value = point._id;
                         ref.PointInst = point._id;
                     }
+                }
+                if (refPoint.parentNode === point.id) {
+                    refPoint.parentNode = point._id;
+                }
+                if (refPoint._parentUpi === point.id) {
+                    refPoint._parentUpi = point._id;
                 }
             }
         }
