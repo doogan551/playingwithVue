@@ -4341,8 +4341,9 @@ var dti = {
             handlePasteRequest: (action, data, treeCb) => {
                 let self = dti.navigatorv2,
                     reqData = {
-                        source: data.sourceNode,
-                        target: data.node
+                        sourceNode: data.sourceNode,
+                        targetNode: data.node,
+                        config: data.config
                     },
                     validPaste = false;
 
@@ -4370,8 +4371,7 @@ var dti = {
                 if (data.sourceNode.bindings.isCut()) {
                     self.tree.serverOps.moveNode(reqData, done);
                 } else if (data.sourceNode.bindings.isCopy()) {
-                    dti.navigatorv2.tree.helper.showConfigureNodeModal(action, data, treeCb);
-                    // self.tree.serverOps.copyNode(reqData, done);
+                    dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
                 }
             },
             // pasteNode: (data, treeCb) => {
@@ -4451,7 +4451,7 @@ var dti = {
 
                 let valid = self.tree.helper.validateHierarchyNodeOptions();
                 let config = self.tree._configureNodeData.config;
-                let parent = self.tree._configureNodeData.node;
+                let parent = self.tree._configureNodeData.targetNode;
                 let newNode;
 
                 let done = (err, returnedData) => {
@@ -4486,8 +4486,8 @@ var dti = {
                     selfBindings.busy(true);
 
                     if (modalBindings.modalAction() === "Paste") {
-                        newNode.source = self.tree._configureNodeData.sourceNode;
-                        newNode.target = self.tree._configureNodeData.node;
+                        newNode.sourceNode = self.tree._configureNodeData.sourceNode;
+                        newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
                     } else if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
                         self.tree.serverOps.createPoint(newNode, parent, done);
@@ -4599,9 +4599,9 @@ var dti = {
                     let self = dti.navigatorv2,
                         modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                         config = self.tree._configureNodeData.config,
-                        node = self.tree._configureNodeData.node,
-                        // for an "add" action the selected node is the parent of newly requested node
-                        parentNode = (modalBindings.generateNewNodeActions.indexOf(config.action) >= 0 ? node : node.parentNode),
+                        targetNode = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node,
+                        // for an "add" action the selected targetNode is the parent of newly requested targetNode
+                        parentNode = (modalBindings.generateNewNodeActions.indexOf(config.action) >= 0 ? targetNode : targetNode.parentNode),
                         point = self.tree._configureNodePoint,
                         getSelectedPointType = () => {  // TODO at the moment can be multiple pointtypes
                             let i,
@@ -4628,8 +4628,8 @@ var dti = {
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),  // TODO this is bound to location select (site, building, etc)
                         pointType: getSelectedPointType(),
-                        id: node.bindings._id(),
-                        node: node,
+                        id: targetNode.bindings._id(),
+                        node: targetNode,
                         parentNode: (!!parentNode ? parentNode.bindings._id() : null),
                         fetched: true,
                         action: config.action
@@ -4671,7 +4671,7 @@ var dti = {
                             break;
                         case "add point":
                             modalBindings.modalNodeType("Point");
-                            // TODO rip this UI adjustment out
+                            // TODO move this to CSS
                             self.$configureNodeModal.find(".modal-footer").css("margin-top", "38%");
                             self.$configureNodeModal.css("height", "61%");
                             // TODO
@@ -4684,6 +4684,7 @@ var dti = {
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
+                            modalBindings.pathIsValid(false);
                             break;
                         case "paste":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
@@ -4692,6 +4693,7 @@ var dti = {
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
+                            modalBindings.pathIsValid(false);
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
@@ -4700,6 +4702,7 @@ var dti = {
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
+                            modalBindings.pathIsValid(false);
                             break;
                         case "rename":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
@@ -4709,6 +4712,7 @@ var dti = {
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             self.$configureNodeModal.find('#nodeSubType').prop("disabled", true);
+                            modalBindings.pathIsValid(false);
                             break;
                         default:
                             break;
@@ -4932,17 +4936,13 @@ var dti = {
                     });
                 },
                 moveNode(data, cb) {
-                    // data: {
-                    //     source: source node
-                    //     target: target node to move the source node into
-                    // }
                     let err = false;
 
                     dti.post({
                         url: '/api/hierarchy/move',
                         data: {
-                            id: data.source.bindings._id(),
-                            parentNode: data.target.bindings._id()
+                            id: data.sourceNode.bindings._id(),
+                            parentNode: data.targetNode.bindings._id()
                         }
                     }).done((response) => {
                         // reponse: {
@@ -4970,18 +4970,19 @@ var dti = {
                     let err = false,
                         cbData = {},
                         hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
-                        rawPoint = hierarchyNodeTypes[data.source.bindings.nodeType()] === undefined,
+                        rawPoint = hierarchyNodeTypes[data.sourceNode.bindings.nodeType()] === undefined,
                         url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy';
 
                     dti.post({
                         url: url,
                         data: {
-                            id: data.source.bindings._id(),
-                            parentNodeId: data.target.bindings._id(),
-                            display: data.display,  // use display field entered into modal
-                            nodeType: data.source.bindings.nodeType(),
-                            nodeSubType: data.source.bindings.nodeSubType(),
-                            pointType: data.source.bindings.nodeSubType()
+                            newPoint: {
+                                display: data.display
+                                // nodeType: data.sourceNode.bindings.nodeType(),
+                                // nodeSubType: data.sourceNode.bindings.nodeSubType(),
+                                // pointType: data.sourceNode.bindings.nodeSubType()
+                            },
+                            parentNodeId: data.targetNode.bindings._id()
                         }
                     }).done((response) => {
                         dti.log(response);
