@@ -105,3 +105,7 @@ $dtiSelectedGreyBackground: #607d8b;
   background-color: $dtiSelectedGreyBackground;
   color: #ffffff;
 }
+
+div.spinner-layer {
+  border-color: $dtiBaseBlueGrey !important;
+}

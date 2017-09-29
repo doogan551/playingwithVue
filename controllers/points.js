@@ -3,6 +3,7 @@ let router = express.Router();
 let _ = require('lodash');
 let Point = require('../models/point');
 let utils = require('../helpers/utils.js');
+let pointModel = new(require('../models/point'))();
 
 // POSTMAN - broken?
 router.post('/globalSearch', function (req, res) {
@@ -253,6 +254,45 @@ router.post('/getFilteredPoints', function (req, res) {
         }
 
         return utils.sendResponse(res, results);
+    });
+});
+
+router.post('/create', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.createPoint(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {newPoint: results});
+    });
+});
+
+router.post('/copy', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.copyPoint(data, function (response, points) {
+        if (response.err) {
+            return utils.sendResponse(res, {
+                err: response.err
+            });
+        }
+
+        return utils.sendResponse(res, {message: response.msg, points: points});
+    });
+});
+
+router.post('/delete', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    pointModel.deletePoint(data.id, data.user, null, function (returnInfo) {
+        return utils.sendResponse(res, returnInfo);
     });
 });
 // POSTMAN

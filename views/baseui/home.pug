@@ -11,6 +11,7 @@ html
         link(rel='stylesheet', href='/css/lib/jquery.contextMenu.min.css')
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/lib/mbox.css')
 
     body.grey.lighten-3
@@ -252,35 +253,53 @@ html
                     .btn-flat.modal-action.modal-close.waves-effect.filterModeCancel Cancel
                 // /ko
 
-            #addNodeModal.modal
+            #configureNodeModal.modal(data-bind="with: navigatorv2.configureNodeModal")
                 .modal-content
-                    h4(data-bind="text: 'Add ' + navigatorv2.addNodeModal.newNodeType()")
+                    .row.center
+                        .col.s12(data-bind='visible: activeSaveRequest()')
+                            .preloader-wrapper.active
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper.right
+                                        .circle
+                    h4(data-bind="text: modalAction()")
                     .row
                         .input-field.col.s6
-                            input#nodeDisplay(placeholder="Display", type="text", data-bind="hasFocus: navigatorv2.addNodeModal.modalOpen, value: navigatorv2.addNodeModal.newNodeDisplay")
-                            label(for="nodeDisplay") Display
-                    // ko if: navigatorv2.addNodeModal.newNodeType() === 'Location'
+                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown'")
+                            label(for="pointDisplayField") Label
+                    // ko if: (modalAction() === "Paste")
+                    .input-field.col.s12
+                        label From &nbsp;&nbsp;
+                        span(data-bind="text: modalSourceNodePath")
+                    // /ko
+                    // ko if: (modalAction() === "Paste as reference")
+                    .input-field.col.s12
+                        label Reference to &nbsp;&nbsp;
+                        span(data-bind="text: modalSourceNodePath")
+                    // /ko
+                    // ko if: (modalAction() === 'Add location' && modalNodeType() === 'Location')
                     .row
                         .input-field.col.s3
-                            select(data-bind="options: navigatorv2.addNodeModal.availableTypes, value: navigatorv2.addNodeModal.newNodeSubType")
-                            label Type
+                            select#nodeSubType(data-bind="options: locationSubTypes, value: modalNodeSubType")
+                            label(data-bind="text: modalNodeType() + ' Type'")
                     // /ko
-
-                    // ko if: navigatorv2.addNodeModal.needsPoint() === true
+                    // ko if: (modalAction() === 'Add point' && typesNeedingPoint.indexOf(modalNodeType()) >= 0 )
                     .row
                         .col.s9.valign-wrapper
-                            button.btn.blue-grey(data-bind="click: navigatorv2.addNodeModal.chooseNodePoint") Choose Point
-
-                            .valign(data-bind="text: navigatorv2.addNodeModal.newNodePointName")
+                            .pointTypeList.z-depth-1(data-bind="foreach: pointTypes")
+                                span
+                                    input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
+                                    label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
                     // /ko
-
                     .row
-                        .col.s12.error.red-text(data-bind='html: navigatorv2.addNodeModal.error')
+                        .col.s12.error.red-text(data-bind='html: error')
 
                 .modal-footer
-                    button.btn.blue-grey.waves-effect(data-bind="click: navigatorv2.addNodeModal.addNode, attr: {disabled: navigatorv2.addNodeModal.allowAddNode}") Add
+                    button.btn.blue-grey.waves-effect(data-bind="click: saveNode, css: { disabled: (activeSaveRequest() || activeUniquenessCheck() || !pathIsValid()) }") Save
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
-
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -437,22 +456,28 @@ html
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
                     .treeRow
+                        .cat Node Id:
+                        .val(data-bind="text: currNodeId")
+                    .treeRow
+                        .cat Reference Id:
+                        .val(data-bind="text: currRefNode")
+                    .treeRow
                         .cat Old Name:
                         .val(data-bind="text: currNodeName")
                     // /ko
 
     script#treeViewTemplate(type='text/html')
-        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
+        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'dblclick', handler: $root.openNode, selector: '.dtcollapsible-header .nodeName'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
 
     script#node(type='text/html')
         //- .node
         //-     ul.collapsible
         li.treeNode(data-bind="css: {active: expanded}")
-            .collapseToggle(data-bind="cssc: {childless: hasChildren() === false}")
+            .collapseToggle(data-bind="css: {childless: hasChildren() === false}")
                 //- i.collapse.material-icons keyboard_arrow_down
                 i.expand.material-icons keyboard_arrow_right
 
-            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut}")
+            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut, isCopy: isCopy}")
                 .nodeName(data-bind="text: display")
             .dtcollapsible-body
                 ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")

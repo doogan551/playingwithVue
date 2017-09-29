@@ -54,9 +54,11 @@ const Hierarchy = class Hierarchy extends Common {
             fields: {
                 display: 1,
                 parentNode: 1,
+                _parentUpi: 1,
                 nodeType: 1,
                 nodeSubType: 1,
                 locationType: 1,
+                refNode: 1,
                 path: 1,
                 Name: 1
             }
@@ -547,7 +549,7 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                oldDisplay = node.path[node.path - 2];
+                oldDisplay = [node.path.length - 1];
                 node.parentNode = parentNode;
 
                 if (parentNode === 0) {
@@ -564,6 +566,34 @@ const Hierarchy = class Hierarchy extends Common {
                 }, (err) => {
                     this.updateChildrenPath(oldDisplay, node.path, cb);
                 });
+            });
+        });
+    }
+
+    copyNode(data, cb) {
+        let newNode,
+            id = this.getNumber(data.id),
+            parentNode = this.getNumber(data.parentNodeId);
+
+        this.getNode({
+            id: id
+        }, (err, node) => {
+            this.getNode({
+                id: parentNode
+            }, (err, parent) => {
+                newNode = node;
+                newNode.parentNode = parentNode;
+                newNode.id = 'newNode';
+                // newNode.targetUpi = id;
+                newNode.display += this.getCopyPostFix();
+
+                if (parentNode === 0) {
+                    newNode.path = [newNode.display];
+                } else {
+                    newNode.path = [...parent.path, newNode.display];
+                }
+
+                this.addAll({nodes: [newNode]}, cb);
             });
         });
     }
@@ -648,6 +678,21 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    checkUniqueness(data, cb) {
+        let requestedPath = data.path,
+            pathIsUnique = true;
+
+        console.log("requestedPath = " + requestedPath);
+
+        if (pathIsUnique) {
+            return cb(null, {msg: "unique"});
+        } else {
+            return cb("not unique");
+        }
+
+
+    }
+
     recreateTags(node) {
         const skipProperties = ['tags', '_id', 'parentNode', 'libraryId', 'pointId', 'isReference', 'refNode', 'libraryId', '_pStatus'];
 
@@ -711,7 +756,7 @@ const Hierarchy = class Hierarchy extends Common {
     checkAllNames(nodes, cb) {
         // if parentId is fake, ignore it
         // change node to normal structure before name check
-        return cb([]);
+        cb([]);
         // let problems = [];
         // async.eachSeries(nodes, (node, callback) => {
         //     if (this.isNumber(node.parentNode)) {
@@ -929,7 +974,7 @@ const Hierarchy = class Hierarchy extends Common {
                     cb(err);
                 });
             },
-            function segment1_Points(cb) {
+            function segment1Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -941,7 +986,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment1_Folders(cb) {
+            function segment1Folders(cb) {
                 let criteria = {
                     field: 'name1',
                     query: {
@@ -965,7 +1010,7 @@ const Hierarchy = class Hierarchy extends Common {
                     });
                 });
             },
-            function segment2_Points(cb) {
+            function segment2Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -977,7 +1022,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment2_Folders(cb) {
+            function segment2Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -991,7 +1036,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT2, cb);
             },
-            function segment3_Points(cb) {
+            function segment3Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1003,7 +1048,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment3_Folders(cb) {
+            function segment3Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1017,7 +1062,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT3, cb);
             },
-            function segment4_Points(cb) {
+            function segment4Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3
