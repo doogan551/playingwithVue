@@ -4353,11 +4353,6 @@ var dti = {
                             treeCb('move', reqData);
                             data.sourceNode.bindings.isCut(false);
                             validPaste = true;
-                        } else if (data.sourceNode.bindings.isCopy()) {
-                            $.extend(reqData, newNode);  // if pasting a copied node
-                            treeCb('copy', reqData);
-                            data.sourceNode.bindings.isCopy(false);
-                            validPaste = true;
                         }
 
                         if (validPaste) {
@@ -4451,29 +4446,38 @@ var dti = {
 
                 let valid = self.tree.helper.validateHierarchyNodeOptions();
                 let config = self.tree._configureNodeData.config;
-                let parent = self.tree._configureNodeData.targetNode;
+                let parent = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node;
                 let newNode;
 
                 let done = (err, returnedData) => {
-                    // returnedData = {
-                    //     newNode: newNode // This is new node with properties such as _id that are set by the server
-                    //     children: children // only present if we called serverOps.createPoint
-                    // }
-                    if (!err) {
-                        self.tree._configureNodeTreeCallback('add', $.extend(returnedData, {
-                            node: newNode, // This is the new node with properties set by us (like a fake _id)
-                            parent: parent
-                        }));
-                        self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
-                        dti.toast('Success', 2000);
-                    }
+                        let nNode = returnedData.newNode || newNode,
+                            children = returnedData.points;
 
-                    selfBindings.busy(false);
-                    modalBindings.modalOpen(false);
-                    modalBindings.activeSaveRequest(false);
-                    dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
-                    self.$configureNodeModal.closeModal();
-                };
+                        if (!err) {
+                            if (children && children.length) {
+                                children.splice(0, 1);  // slice off first index (the parent of new nodes)
+                            }
+                            self.tree._configureNodeTreeCallback('add', $.extend(returnedData, {
+                                node: nNode,
+                                newNode: nNode,
+                                parent: parent,
+                                children: children
+                            }));
+
+                            if (data.sourceNode && data.sourceNode.bindings.isCopy()) {
+                                data.sourceNode.bindings.isCopy(false);
+                            }
+
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
+                            dti.toast('Success', 2000);
+                        }
+                    };
 
                 if (valid !== true) {
                     modalBindings.error(valid);
@@ -4945,11 +4949,6 @@ var dti = {
                             parentNode: data.targetNode.bindings._id()
                         }
                     }).done((response) => {
-                        // reponse: {
-                        //     err: 'error message here',
-                        //     // OR
-                        //     message: 'success'
-                        // }
                         dti.log(response);
 
                         if (!response) {
@@ -4971,19 +4970,18 @@ var dti = {
                         cbData = {},
                         hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
                         rawPoint = hierarchyNodeTypes[data.sourceNode.bindings.nodeType()] === undefined,
-                        url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy';
+                        url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy',
+                        copyRequestData = {
+                            newPoint: {
+                                targetUpi: data.sourceNode.bindings._id(),
+                                display: data.display,
+                                parentNode: data.targetNode.bindings._id()
+                            }
+                        };
 
                     dti.post({
                         url: url,
-                        data: {
-                            newPoint: {
-                                display: data.display
-                                // nodeType: data.sourceNode.bindings.nodeType(),
-                                // nodeSubType: data.sourceNode.bindings.nodeSubType(),
-                                // pointType: data.sourceNode.bindings.nodeSubType()
-                            },
-                            parentNodeId: data.targetNode.bindings._id()
-                        }
+                        data: copyRequestData
                     }).done((response) => {
                         dti.log(response);
 
@@ -4994,7 +4992,9 @@ var dti = {
                         } else if (result.err) {
                             err = 'Error copying node: ' + result.err;
                         } else {
-                            cbData.newNode = (!!result.newPoint ? result.newPoint : result.newNode);
+                            cbData.sourceNode = data.sourceNode;
+                            cbData.newNode = (!!result.points ? result.points[0] : null);
+                            cbData.points = (!!result.points ? result.points : []);
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -7434,7 +7434,7 @@ var dti = {
                             let readyChildren = [];
 
                             dti.forEachArray(children, (child) => {
-                                readyChildren.push(child.newNode);
+                                readyChildren.push(child.newNode || child);
                             });
 
                             readyChildren = manager.normalize(readyChildren);
@@ -7479,9 +7479,9 @@ var dti = {
 
                 moveNode(data) { // Callback action
                     let manager = this;
-                    let source = data.source;
+                    let source = data.sourceNode;
                     let sourceParent = source.parentNode;
-                    let target = data.target;
+                    let target = data.targetNode;
                     let targetChildren = target.bindings.children;
                     let rebuildChildrenPaths = (parentPath, children) => {
                         dti.forEachArray(children, (child) => {
@@ -7511,7 +7511,7 @@ var dti = {
 
                 copyNode(data) {
                     let manager = this,
-                        source = data.source;
+                        source = data.sourceNode;
 
                     data.node = data.newNode;
                     data.parent = data.target;
