@@ -19,6 +19,7 @@ var gpl = {
     MAXZOOM: 4,
     MINZOOM: 0.1,
     editModeOffset: 77,
+    bottomBarHeight: $('.bottomBar').height(),
     scaleValue: 1,
     defaultLoopDelay: 10,
     resizeDelay: 250,
@@ -935,6 +936,20 @@ var gpl = {
         }
         gpl.manager.canvas.renderAll();
         gpl.log('Intersections:', intersections.length, 'in', new Date() - start, 'ms');
+    },
+    toast: function () {
+        var $closeMarkup = $('<i class="material-icons" style="padding-left:10px; cursor:pointer;">close</i>');
+
+        $closeMarkup.click(function (e) {
+            var $toast = $(e.target).parent();
+            $toast.fadeOut(100, function () {
+                $toast.remove();
+            });
+        });
+
+        Materialize.toast.apply(window, arguments);
+
+        $('#toast-container').find('.toast').last().append($closeMarkup);
     }
 };
 
@@ -1925,8 +1940,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     nudge: function (offset) {
-        this.left += offset.left;
-        this.top += offset.top;
+        var target = {
+                left: this.left + offset.left,
+                top: this.top + offset.top
+            };
+
+        // ch351 Limit the block's position to the on-screen area
+        gpl.manager.limitTargetPosition(this, target);
+        this.left = target.left;
+        this.top = target.top;
 
         this.syncObjects(this);
         this.redrawLines();
@@ -5495,7 +5517,8 @@ gpl.Toolbar = function (manager) {
                 //     return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
                 // };
 
-            if (x >= gpl.editModeOffset) { //} && isOverCanvas()) {
+            // ch351 make sure the block is in the canvas area before adding
+            if (newConfig.left >= gpl.editModeOffset) { //} && isOverCanvas()) {
                 newConfig.isToolbar = false;
                 newConfig.targetCanvas = 'main';
                 newConfig.bypassSave = false;
@@ -5510,6 +5533,8 @@ gpl.Toolbar = function (manager) {
                 clone = new Cls(newConfig);
 
                 manager.addNewPoint(clone);
+            } else {
+                gpl.toast('Operation cancelled', 1500);
             }
 
             newShape.delete();
@@ -5671,6 +5696,9 @@ gpl.Toolbar = function (manager) {
 
                     proxyShape.on('moving', function () {
                         var syncShape = proxyShape.gplShape; //shapes[proxyCfg.gplId];
+
+                        // ch351 Limit the block's position to the on-screen area
+                        gpl.manager.limitTargetPosition(syncShape, proxyShape);
 
                         if (syncShape.syncObjects) {
                             syncShape.syncObjects(proxyShape, {
@@ -6741,6 +6769,9 @@ gpl.BlockManager = function (manager) {
                     bmSelf.movingBlock = true;
 
                     if (movingBlock && movingBlock.syncObjects && target.gplType !== 'anchor') {
+                        // ch351 Limit the block's position to the on-screen area
+                        gpl.manager.limitTargetPosition(movingBlock, target);
+
                         // gpl.log('moving block', movingBlock);
                         movingBlock.syncObjects(target);
                     }
@@ -7647,6 +7678,93 @@ gpl.Manager = function () {
         gpl.blockManager.forEachBlock(function (block) {
             managerSelf.addToBoundingRect(block);
         });
+    };
+
+    // This function calculates the overall rectangular footprint of a block inclusive of all its items (anchors, 
+    // label text, etc.) so we can know the left-most, top-most, bottom-most, right-most coordinates of the block
+    // Padding between the block and the its items outer edge (anchors, text, etc.) is also calculated.
+    // FYI: Origin coordinates are 0,0; negative coordinates are left and above the origin
+    //  0,0           #,0
+    // (x,y)--------------
+    //     |
+    //     |
+    //     |
+    // 0,# |
+    // This function added as part of ch351
+    managerSelf.getFootprint = function (block) {
+        var rect = block.getBoundingRect(),
+            footprint = {
+                top: block.top,
+                left: block.left,
+                bottom: block.top + rect.height,
+                right: block.left + rect.width,
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                }
+            },
+            // greaterThanLessThan
+            gtlt = function (prop, val, doGreaterThan) {
+                if (footprint[prop] === undefined) {
+                    footprint[prop] = val;
+                } else if (doGreaterThan) {
+                    if (val > footprint[prop]) {
+                        footprint[prop] = val;
+                    }
+                } else if (val < footprint[prop]) {
+                    footprint[prop] = val;
+                }
+            },
+            calcPadding = function () {
+                gpl.forEachArray(['top', 'right', 'bottom', 'left'], function (prop) {
+                    footprint.padding[prop] = Math.abs(block[prop] - footprint[prop]);
+                });
+            };
+
+        gpl.forEachArray(block._shapes || [], function (shape) {
+            rect = shape.getBoundingRect();
+            // Top and left coordinates available; must calculate bottom and right
+            gtlt('top', rect.top);
+            gtlt('left', rect.left);
+            gtlt('bottom', rect.top + rect.height, true);
+            gtlt('right', rect.left + rect.width, true);
+        });
+
+        calcPadding();
+
+        return footprint;
+    };
+
+    // This function limits a block's target position so that it cannot be placed or moved off screen or behind the toolbar
+    // This function added as part of ch351
+    managerSelf.limitTargetPosition = function (block, target) {
+        // Block is the gpl block; target contains the requested block location
+        var footprint = managerSelf.getFootprint(block),
+            footprintWidth = footprint.right - footprint.left,
+            footprintHeight = footprint.bottom - footprint.top,
+            minLeft = gpl.editModeOffset + footprint.padding.left,
+            minTop = 0 + footprint.padding.top,
+            maxLeft = window.innerWidth - footprintWidth,
+            maxTop = window.innerHeight - gpl.bottomBarHeight - footprintHeight,
+            top = target.top,
+            left = target.left;
+
+        if (target.top < minTop) {
+            top = minTop;
+        } else if (target.top > maxTop) {
+            top = maxTop;
+        }
+
+        if (target.left < minLeft) {
+            left = minLeft;
+        } else if (target.left > maxLeft) {
+            left = maxLeft;
+        }
+
+        target.left = left;
+        target.top = top;
     };
 
     managerSelf.addToBoundingRect = function (block) {
@@ -9535,6 +9653,7 @@ gpl.Manager = function () {
         }, {
             event: 'object:moving',
             handler: function (e) {
+                // This function handles group moves
                 var c,
                     objects,
                     object,
@@ -9545,11 +9664,13 @@ gpl.Manager = function () {
                         top: e.target.top - e.target._originalTop
                     };
 
+                // Enforce the grid
                 e.target.set({
                     left: Math.round(e.target.left / gpl.gridSize) * gpl.gridSize,
                     top: Math.round(e.target.top / gpl.gridSize) * gpl.gridSize
                 });
 
+                // If a group of objects is selected
                 if (e.target instanceof fabric.Group) {
                     objects = e.target._objects;
                     for (c = 0; c < objects.length; c++) {
