@@ -4429,11 +4429,14 @@ var dti = {
                 self.bindings.busy(false);
             },
             saveNode: () => {
-                dti.bindings.navigatorv2.configureNodeModal.activeSaveRequest(true);
-
                 let self = dti.navigatorv2,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
-                    modalNodeData = self.tree.helper.buildNodeFromModalOptions();
+                    modalNodeData;
+
+                dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, true);
+                modalBindings.activeSaveRequest(true);
+
+                modalNodeData = self.tree.helper.buildNodeFromModalOptions();
 
                 if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {
                     self.tree.addNode(modalNodeData);
@@ -4468,6 +4471,7 @@ var dti = {
                     selfBindings.busy(false);
                     modalBindings.modalOpen(false);
                     modalBindings.activeSaveRequest(false);
+                    dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
                     self.$configureNodeModal.closeModal();
                 };
 
@@ -4516,6 +4520,7 @@ var dti = {
                         selfBindings.busy(false);
                         modalBindings.modalOpen(false);
                         modalBindings.activeSaveRequest(false);
+                        dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
                         self.$configureNodeModal.closeModal();
                     };
 
@@ -4674,7 +4679,7 @@ var dti = {
                             break;
                         case "open":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
-                            modalBindings.parentID(data.node.parentNode.bindings._id());
+                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -4699,7 +4704,7 @@ var dti = {
                         case "rename":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
                             modalBindings.modalSourceNodePath(data.node.bindings.path());
-                            modalBindings.parentID(data.node.parentNode.bindings._id());
+                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
@@ -5137,6 +5142,22 @@ var dti = {
     utility: {
         systemEnums: {},
         systemEnumObjects: {},
+        blockControlUI: ($control, state) => {
+            if (state) {
+                $control.block({
+                    message: null,
+                    css: {
+                        border: 'none'
+                    },
+                    overlayCSS: {
+                        backgroundColor: 'transparent'
+                    }
+                });
+            } else {
+                $control.unblock();
+            }
+            $control.attr("disabled", state);
+        },
         getPointTypeFromUPI(upi) {
             return dti.utility.getConfig('Utility.getPointTypeNameFromId', upi);
         },
@@ -5415,7 +5436,7 @@ var dti = {
                 let result = response;
 
                 if (result.exists) {
-                    err = "duplicate error: " + "'" + display + "' already exists at this level";
+                    err = "error: " + "'" + display + "' already exists at this level";
                 } else if (result.err) {
                     err = result.err;
                 }

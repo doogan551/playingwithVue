@@ -35,7 +35,10 @@ var dtiCommon = {
 
         for (i = 0; i < len; i++) {
             if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
-                invalidChars.push(labelValue[i]);
+                if (!invalidChars.includes(labelValue[i])) {
+                    invalidChars.push(labelValue[i]);
+                }
+
                 valid = false;
             }
         }

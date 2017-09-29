@@ -255,6 +255,16 @@ html
 
             #configureNodeModal.modal(data-bind="with: navigatorv2.configureNodeModal")
                 .modal-content
+                    .row.center
+                        .col.s12(data-bind='visible: activeSaveRequest()')
+                            .preloader-wrapper.active
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper.right
+                                        .circle
                     h4(data-bind="text: modalAction()")
                     .row
                         .input-field.col.s6
