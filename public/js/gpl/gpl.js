@@ -9527,6 +9527,8 @@ gpl.Manager = function () {
     };
 
     managerSelf.initEvents = function () {
+        var timerId = 0;
+
         window.onbeforeunload = managerSelf.handleNavigateAway;
 
         managerSelf.registerHandlers([{
@@ -9773,7 +9775,10 @@ gpl.Manager = function () {
             type: 'DOM',
             window: true,
             handler: function () {
-                managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+                window.clearTimeout(timerId);
+                timerId = window.setTimeout(function () {
+                    managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+                }, 50);
             }
         }, {
             event: 'keydown',
