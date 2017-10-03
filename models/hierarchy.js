@@ -12,7 +12,6 @@ const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
         super('points');
-        this._count = 0;
     }
 
     checkUniqueDisplayUnderParent(data, cb) {
@@ -624,10 +623,6 @@ const Hierarchy = class Hierarchy extends Common {
                 this.updateChildrenPaths(child._id, path, nextChild);
             });
         }, (err, count)=>{
-            this._count += count;
-            if(this._count % 1000 === 0) {
-                console.log(this._count);
-            }
             cb(err);
         });
     }
