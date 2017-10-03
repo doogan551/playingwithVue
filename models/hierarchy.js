@@ -17,15 +17,19 @@ const Hierarchy = class Hierarchy extends Common {
     checkUniqueDisplayUnderParent(data, cb) {
         let parentNode = this.getNumber(data.parentNode);
         let display = data.display;
-
+        if (!display) {
+            return cb(null, false);
+        }
         this.getOne({
             query: {
                 parentNode,
                 display
             }
-        }, (err, result)=>{
+        }, (err, result) => {
             let exists = (!!result) ? true : false;
-            return cb(err, {exists});
+            return cb(err, {
+                exists
+            });
         });
     }
 
@@ -316,39 +320,38 @@ const Hierarchy = class Hierarchy extends Common {
         let pipeline = [];
         pipeline.push({
             '$match': {
-                'parent': id
+                '_id': id
             }
         });
         pipeline.push({
             '$graphLookup': {
-                'from': 'hierarchy',
+                'from': 'points',
                 'startWith': '$_id',
                 'connectFromField': '_id',
-                'connectToField': 'parent',
+                'connectToField': 'parentNode',
                 'as': 'children'
             }
         });
         pipeline.push({
             '$project': {
-                'display': 1,
-                'parent': 1,
-                'nodeType': 1,
-                'locationType': 1,
-                'children': 1
+                'children._id': 1,
+                'children.path': 1
+            }
+        });
+        pipeline.push({
+            '$unwind': {
+                'path': '$children'
+            }
+        });
+        pipeline.push({
+            '$replaceRoot': {
+                'newRoot': '$children'
             }
         });
 
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
-            let newDescendants = [];
-            descendants.forEach((descendant) => {
-                newDescendants = newDescendants.concat([...descendant.children]);
-                delete descendant.children;
-                newDescendants.push(descendant);
-            });
-
-            descendants = this.orderDescendants(newDescendants, id);
             cb(err, descendants);
         });
     }
@@ -541,7 +544,6 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
-        let oldDisplay;
 
         this.getNode({
             id: id
@@ -549,7 +551,6 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                oldDisplay = [node.path.length - 1];
                 node.parentNode = parentNode;
 
                 if (parentNode === 0) {
@@ -564,7 +565,7 @@ const Hierarchy = class Hierarchy extends Common {
                     },
                     updateObj: node
                 }, (err) => {
-                    this.updateChildrenPath(oldDisplay, node.path, cb);
+                    this.updateChildrenPath(id, node.path, cb);
                 });
             });
         });
@@ -593,29 +594,39 @@ const Hierarchy = class Hierarchy extends Common {
                     newNode.path = [...parent.path, newNode.display];
                 }
 
-                this.addAll({nodes: [newNode]}, cb);
+                this.addAll({
+                    nodes: [newNode]
+                }, cb);
             });
         });
     }
 
-    updateChildrenPath(oldDisplay, newPath, cb) {
-        this.iterateCursor({
-            query: {
-                'path': oldDisplay
-            }
-        }, (err, child, nextChild) => {
-            child.path = [...newPath, child.display];
-            this.toLowerCasePath(child);
-
-            this.update({
-                query: {
-                    _id: child._id
-                },
-                updateObj: child
-            }, (err, result) => {
-                nextChild(err);
+    updateChildrenPath(parentNode, path, cb) {
+        this.getDescendants({
+            id: parentNode
+        }, (err, descendants) => {
+            async.eachSeries(descendants, (descendant, nextDesc) => {
+                for (var d = 0; d < descendant.path.length; d++) {
+                    for (var p = 0; p < path.length; p++) {
+                        descendant.path[p] = path[p];
+                    }
+                }
+                this.toLowerCasePath(descendant);
+                this.update({
+                    query: {
+                        _id: descendant._id
+                    },
+                    updateObj: {
+                        $set: {
+                            path: descendant.path,
+                            _path: descendant._path
+                        }
+                    }
+                }, nextDesc);
+            }, (err) => {
+                cb(err);
             });
-        }, cb);
+        });
     }
 
     updateParent(parentId, query, cb) {
@@ -664,33 +675,28 @@ const Hierarchy = class Hierarchy extends Common {
                 }
             }
             this.recreateTags(node);
-            this.update({
-                query: {
-                    _id: id
-                },
-                updateObj: node
-            }, (err) => {
-                if (err) {
-                    return cb(err);
+            this.checkUniqueDisplayUnderParent({
+                parentNode: node.parentNode,
+                display: data.display
+            }, (err, exists) => {
+                if (!!err || !!exists) {
+                    return cb({
+                        err: 'Name already exists'
+                    });
                 }
-                this.updateChildrenPath(oldDisplay, node.path, cb);
+                this.update({
+                    query: {
+                        _id: id
+                    },
+                    updateObj: node
+                }, (err) => {
+                    if (err) {
+                        return cb(err);
+                    }
+                    this.updateChildrenPath(id, node.path, cb);
+                });
             });
         });
-    }
-
-    checkUniqueness(data, cb) {
-        let requestedPath = data.path,
-            pathIsUnique = true;
-
-        console.log("requestedPath = " + requestedPath);
-
-        if (pathIsUnique) {
-            return cb(null, {msg: "unique"});
-        } else {
-            return cb("not unique");
-        }
-
-
     }
 
     recreateTags(node) {
