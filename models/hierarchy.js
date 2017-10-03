@@ -12,6 +12,7 @@ const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
         super('points');
+        this._count = 0;
     }
 
     checkUniqueDisplayUnderParent(data, cb) {
@@ -565,7 +566,7 @@ const Hierarchy = class Hierarchy extends Common {
                     },
                     updateObj: node
                 }, (err) => {
-                    this.updateChildrenPath(id, node.path, cb);
+                    this.updateChildrenPaths(id, node.path, cb);
                 });
             });
         });
@@ -601,15 +602,43 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    updateChildrenPaths(parentNode, path, cb) {
+        this.iterateCursor({query: {
+            parentNode
+        }, fields: {path: 1}}, (err, child, nextChild)=>{
+            for (var p = 0; p < path.length; p++) {
+                child.path[p] = path[p];
+            }
+            this.toLowerCasePath(child);
+            this.update({
+                query: {
+                    _id: child._id
+                },
+                updateObj: {
+                    $set: {
+                        path: child.path,
+                        _path: child._path
+                    }
+                }
+            }, (err, result)=>{
+                this.updateChildrenPaths(child._id, path, nextChild);
+            });
+        }, (err, count)=>{
+            this._count += count;
+            if(this._count % 1000 === 0) {
+                console.log(this._count);
+            }
+            cb(err);
+        });
+    }
+
     updateChildrenPath(parentNode, path, cb) {
         this.getDescendants({
             id: parentNode
         }, (err, descendants) => {
             async.eachSeries(descendants, (descendant, nextDesc) => {
-                for (var d = 0; d < descendant.path.length; d++) {
-                    for (var p = 0; p < path.length; p++) {
-                        descendant.path[p] = path[p];
-                    }
+                for (var p = 0; p < path.length; p++) {
+                    descendant.path[p] = path[p];
                 }
                 this.toLowerCasePath(descendant);
                 this.update({
@@ -679,7 +708,7 @@ const Hierarchy = class Hierarchy extends Common {
                 parentNode: node.parentNode,
                 display: data.display
             }, (err, exists) => {
-                if (!!err || !!exists) {
+                if (!!err || !!exists.exists) {
                     return cb({
                         err: 'Name already exists'
                     });
@@ -693,7 +722,7 @@ const Hierarchy = class Hierarchy extends Common {
                     if (err) {
                         return cb(err);
                     }
-                    this.updateChildrenPath(id, node.path, cb);
+                    this.updateChildrenPaths(id, node.path, cb);
                 });
             });
         });
