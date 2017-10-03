@@ -102,6 +102,23 @@ var dtiCommon = {
 
                 return validPaste;
             },
+            isValidPasteAsReferenceAction = () => {
+                let copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
+                    clipboardNodeType = sourceNode && sourceNode.nodeType,
+                    validPaste = copyNodeOnClipboard;
+
+                if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
+                    validPaste = false;
+                } else if (targetNode.nodeType === "Reference") {
+                    validPaste = false;
+                } else if (copyNodeOnClipboard) {
+                    if (sourceNodeContainsTargetNode) {
+                        validPaste = false;
+                    }
+                }
+
+                return validPaste;
+            },
             isValidAddAction = () => {
                 return (targetNode.nodeType !== "Reference"
                     && !isTargetNodeProtectedApplication()
@@ -193,7 +210,7 @@ var dtiCommon = {
                     isValidAction = isValidPasteAction();
                     break;
                 case "pastereference":
-                    isValidAction = isValidPasteAction();
+                    isValidAction = isValidPasteAsReferenceAction();
                     break;
                 default:
                     isValidAction = false;

@@ -4278,7 +4278,7 @@ var dti = {
                             callback: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    dti.navigatorv2.tree.helper.showConfigureNodeModal('paste as reference', data, treeCb);
+                                    dti.navigatorv2.tree.handlePasteRequest('paste as reference', data, treeCb);
                                 }
                             }
                         },
@@ -4495,12 +4495,15 @@ var dti = {
                         self.tree.serverOps.copyNode(newNode, done);
                     } else if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
                         self.tree.serverOps.createPoint(newNode, parent, done);
+                    } else if (newNode.nodeType === 'Reference') {
+                        newNode.refNode = self.tree._configureNodeData.sourceNode.bindings._id();
+                        self.tree.serverOps.addNode(newNode, self.tree._configureNodeData.targetNode, done);
                     } else {
                         self.tree.serverOps.addNode(newNode, parent, done);
                     }
                 }
             },
-            editNode: (data, treeCb) => {
+            editNode: (data) => {
                 let self = dti.navigatorv2,
                     selfBindings = self.bindings,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
@@ -4514,11 +4517,12 @@ var dti = {
                     },
                     done = (err, returnedData) => {
                         if (!err) {
-                            // treeCb('edit', data);
-                            self.tree._configureNodeTreeCallback('edit', editedData);
+                            self.tree._configureNodeTreeCallback('edit', data);
                             self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
                             editedData.node.bindings.display();
                             dti.toast('Success', 2000);
+                        } else {
+                            dti.toast('Error: ' + err, 4000);
                         }
 
                         selfBindings.busy(false);
@@ -4654,7 +4658,7 @@ var dti = {
                     modalBindings.error('');
                     self.tree._configureNodeData = data;
                     self.tree._configureNodeTreeCallback = treeCb; // Save a temp reference to the callback
-                    // TODO rip this UI adjustement out
+                    // TODO move this to CSS
                     self.$configureNodeModal.find(".modal-footer").css("margin-top", "");
                     self.$configureNodeModal.css("height", "auto");
                     // TODO
@@ -4662,6 +4666,14 @@ var dti = {
                     modalBindings.modalNodeDisplay("");
                     modalBindings.modalNodePointName("");
                     modalBindings.modalNodeSubType("");
+
+                    if (modalBindings.modalNodeType() === '') {
+                        modalBindings.modalNodeType(data.config.nodeType);
+                    }
+                    modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
+
+                    self.$configureNodeModal.openModal();
+                    modalBindings.modalOpen(true);
 
                     switch (action) {
                         case "add location":
@@ -4683,12 +4695,23 @@ var dti = {
                             break;
                         case "open":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.modalSourceNodePath(data.node.bindings.path());
+                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
+                            modalBindings.modalNodeType(data.node.bindings.nodeType());
+                            modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            self.$configureNodeModal.find('#nodeType').prop("disabled", true);
+                            // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
+                            modalBindings.pathIsValid(true);
+                            break;
+                        case "rename":
+                            modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.modalSourceNodePath(data.node.bindings.path());
                             modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
-                            modalBindings.pathIsValid(false);
+                            modalBindings.pathIsValid(true);
                             break;
                         case "paste":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
@@ -4708,27 +4731,10 @@ var dti = {
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             modalBindings.pathIsValid(false);
                             break;
-                        case "rename":
-                            modalBindings.modalNodeDisplay(data.node.bindings.display());
-                            modalBindings.modalSourceNodePath(data.node.bindings.path());
-                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
-                            modalBindings.modalNodeType(data.node.bindings.nodeType());
-                            modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
-                            self.$configureNodeModal.find('#nodeType').prop("disabled", true);
-                            self.$configureNodeModal.find('#nodeSubType').prop("disabled", true);
-                            modalBindings.pathIsValid(false);
-                            break;
                         default:
                             break;
                     }
 
-                    if (modalBindings.modalNodeType() === '') {
-                        modalBindings.modalNodeType(data.config.nodeType);
-                    }
-                    modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
-
-                    self.$configureNodeModal.openModal();
-                    modalBindings.modalOpen(true);
                     self.$configureNodeModal.find('label').attr("data-error", "");   // clear all error messages
                     self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
                     self.$configureNodeModal.find('select').material_select();
@@ -7131,7 +7137,8 @@ var dti = {
                         delete: this.deleteNode,
                         move: this.moveNode,
                         copy: this.copyNode,
-                        edit: this.editNode
+                        edit: this.editNode,
+                        rename: this.editNode
                     };
 
                     this.initBindings(config);
@@ -7186,6 +7193,7 @@ var dti = {
                                             // If we already have a copy node
                                             if (manager.clipboardNode) {
                                                 manager.clipboardNode.bindings.isCopy(false); // Clear copy indication
+                                                manager.clipboardNode.bindings.isCut(false); // Clear cut indication
                                             }
                                             manager.clipboardNode = node; // Update copy node
 
@@ -7194,6 +7202,7 @@ var dti = {
                                         break;
                                     case "cut":
                                             if (manager.clipboardNode) { // If we already have a cut node
+                                                manager.clipboardNode.bindings.isCopy(false); // Clear copy indication
                                                 manager.clipboardNode.bindings.isCut(false); // Clear cut indication
                                             }
                                             manager.clipboardNode = node; // Update cut node

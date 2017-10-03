@@ -268,7 +268,7 @@ html
                     h4(data-bind="text: modalAction()")
                     .row
                         .input-field.col.s6
-                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown'")
+                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
                             label(for="pointDisplayField") Label
                     // ko if: (modalAction() === "Paste")
                     .input-field.col.s12
@@ -280,11 +280,11 @@ html
                         label Reference to &nbsp;&nbsp;
                         span(data-bind="text: modalSourceNodePath")
                     // /ko
-                    // ko if: (modalAction() === 'Add location' && modalNodeType() === 'Location')
+                    // ko if: ((modalAction() === 'Add location' || modalAction() === 'Open') && modalNodeType() === 'Location')
                     .row
                         .input-field.col.s3
                             select#nodeSubType(data-bind="options: locationSubTypes, value: modalNodeSubType")
-                            label(data-bind="text: modalNodeType() + ' Type'")
+                            label(data-bind="attr: { for: 'nodeSubType' }, text: modalNodeType() + ' Type'")
                     // /ko
                     // ko if: (modalAction() === 'Add point' && typesNeedingPoint.indexOf(modalNodeType()) >= 0 )
                     .row
