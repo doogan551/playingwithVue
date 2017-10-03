@@ -7907,6 +7907,17 @@ gpl.Manager = function () {
 
         height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
         height += heightOffset;
+        
+        // ch479 Set height/width to window if it's bigger so canvas covers entire window area
+        if (gpl.isEdit) {
+            if (width < window.innerWidth) {
+                width = window.innerWidth;
+            }
+            if (height < window.innerHeight) {
+                height = window.innerHeight;
+            }
+        }
+
         managerSelf.currWidth = width;
         managerSelf.currHeight = height;
 
