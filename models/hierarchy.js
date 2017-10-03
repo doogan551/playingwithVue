@@ -17,7 +17,9 @@ const Hierarchy = class Hierarchy extends Common {
     checkUniqueDisplayUnderParent(data, cb) {
         let parentNode = this.getNumber(data.parentNode);
         let display = data.display;
-
+        if (!display) {
+            return cb(null, false);
+        }
         this.getOne({
             query: {
                 parentNode,
@@ -673,32 +675,28 @@ const Hierarchy = class Hierarchy extends Common {
                 }
             }
             this.recreateTags(node);
-            this.update({
-                query: {
-                    _id: id
-                },
-                updateObj: node
-            }, (err) => {
-                if (err) {
-                    return cb(err);
+            this.checkUniqueDisplayUnderParent({
+                parentNode: node.parentNode,
+                display: data.display
+            }, (err, exists) => {
+                if (!!err || !!exists) {
+                    return cb({
+                        err: 'Name already exists'
+                    });
                 }
-                this.updateChildrenPath(id, node.path, cb);
+                this.update({
+                    query: {
+                        _id: id
+                    },
+                    updateObj: node
+                }, (err) => {
+                    if (err) {
+                        return cb(err);
+                    }
+                    this.updateChildrenPath(id, node.path, cb);
+                });
             });
         });
-    }
-
-    checkUniqueness(data, cb) {
-        let requestedPath = data.path,
-            pathIsUnique = true;
-
-        console.log('requestedPath = ' + requestedPath);
-
-        if (pathIsUnique) {
-            return cb(null, {
-                msg: 'unique'
-            });
-        }
-        return cb('not unique');
     }
 
     recreateTags(node) {
