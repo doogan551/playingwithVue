@@ -4369,42 +4369,6 @@ var dti = {
                     dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
                 }
             },
-            // pasteNode: (data, treeCb) => {
-            //     let self = dti.navigatorv2,
-            //         reqData = {
-            //             source: data.sourceNode,
-            //             target: data.node
-            //         },
-            //         validPaste = false;
-            //
-            //     let done = (err, newNode) => {
-            //         if (!err) {
-            //             if (data.sourceNode.bindings.isCut()) {
-            //                 treeCb('move', reqData);
-            //                 data.sourceNode.bindings.isCut(false);
-            //                 validPaste = true;
-            //             } else if (data.sourceNode.bindings.isCopy()) {
-            //                 $.extend(reqData, newNode);  // if pasting a copied node
-            //                 treeCb('copy', reqData);
-            //                 data.sourceNode.bindings.isCopy(false);
-            //                 validPaste = true;
-            //             }
-            //
-            //             if (validPaste) {
-            //                 dti.toast('Success', 2000);
-            //             }
-            //         }
-            //         self.bindings.busy(false);
-            //     };
-            //
-            //     self.bindings.busy(true);
-            //     if (data.sourceNode.bindings.isCut()) {
-            //         self.tree.serverOps.moveNode(reqData, done);
-            //     } else if (data.sourceNode.bindings.isCopy()) {
-            //         dti.navigatorv2.tree.helper.showConfigureNodeModal('paste', data, treeCb);
-            //         // self.tree.serverOps.copyNode(reqData, done);
-            //     }
-            // },
             cutNode: (data) => {
                 let self = dti.navigatorv2,
                     node = data.node;

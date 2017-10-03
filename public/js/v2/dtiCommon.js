@@ -11,7 +11,7 @@ var dtiCommon = {
     // _private intended to only be used by dtiCommon API functions and not accessed outside of dtiCommon
     _private: {
         pointNameSeparator: '', // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
-        pointLabelRegex: /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/
+        pointLabelRegex: /[a-zA-Z 0-9%\.&\-\+\_\[\]\(\)\/]/
     },
 
     // API functions
