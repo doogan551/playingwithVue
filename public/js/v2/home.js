@@ -6727,53 +6727,6 @@ var dti = {
                 }
             };
 
-            ko.bindingHandlers.dtiHierarchyLabel = {
-                init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-                    var $element = $(element),
-                        vm = viewModel,
-                        elementValue,
-                        keypressTimer = 300,
-                        keypressTimerID,
-                        handleElementStatus = (errorMessage) => {
-                            let $myLabels = $(element).siblings("label");
-                            if (errorMessage) {
-                                $element.addClass("invalid");
-                                $element.removeClass("valid");
-                                // $myLabels.setCustomValidity(errorMessage);
-                                $myLabels.attr("data-error", errorMessage);
-                                vm.pathIsValid(false);
-                            } else {
-                                $element.removeClass("invalid");
-                                $element.addClass("valid");
-                                // $myLabels.setCustomValidity("");
-                                $myLabels.attr("data-error", "");
-                                vm.pathIsValid(true);
-                            }
-                        },
-                        handleUniquenessResult = (err) => {
-                            vm.activeUniquenessCheck(false);
-                            handleElementStatus(err);
-                        };
-
-                    $element
-                        .on("keyup", function (event) {
-                            clearTimeout(keypressTimerID);
-                            if (!vm.activeUniquenessCheck()) {
-                                keypressTimerID = setTimeout(function () {
-                                    elementValue = $element.val();
-                                    let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
-                                    if (labelTest.valid) {
-                                        vm.activeUniquenessCheck(true);
-                                        dti.utility.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
-                                    } else {
-                                        handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
-                                    }
-                                }, keypressTimer);
-                            }
-                        });
-                }
-            };
-
             ko.applyBindings(dti.bindings);
             //needed for prefilled text input labels to not overlap
             Materialize.updateTextFields();

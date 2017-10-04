@@ -10,8 +10,7 @@
 var dtiCommon = {
     // _private intended to only be used by dtiCommon API functions and not accessed outside of dtiCommon
     _private: {
-        pointNameSeparator: '', // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
-        pointLabelRegex: /[a-zA-Z 0-9%\.&\-\+\_\[\]\(\)\/]/
+        pointNameSeparator: '' // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
     },
 
     // API functions
@@ -34,7 +33,8 @@ var dtiCommon = {
             valid = true;
 
         for (i = 0; i < len; i++) {
-            if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
+            // if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
+            if (!dti.utility.getConfig('Utility.isPointNameCharacterLegal', [labelValue[i]])) {
                 if (!invalidChars.includes(labelValue[i])) {
                     invalidChars.push(labelValue[i]);
                 }
@@ -225,10 +225,63 @@ var dtiCommon = {
         return alarmsMsg.replace("%NAME", dtiCommon.getPointName(alarmPath));
     },
 
+    knockout: {
+        init: () => {
+            ko.bindingHandlers.dtiHierarchyLabel = {
+                init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                    var $element = $(element),
+                        vm = viewModel,
+                        elementValue,
+                        keypressTimer = 300,
+                        keypressTimerID,
+                        handleElementStatus = (errorMessage) => {
+                            let $myLabels = $(element).siblings("label");
+                            if (errorMessage) {
+                                $element.addClass("invalid");
+                                $element.removeClass("valid");
+                                // $myLabels.setCustomValidity(errorMessage);
+                                $myLabels.attr("data-error", errorMessage);
+                                vm.pathIsValid(false);
+                            } else {
+                                $element.removeClass("invalid");
+                                $element.addClass("valid");
+                                // $myLabels.setCustomValidity("");
+                                $myLabels.attr("data-error", "");
+                                vm.pathIsValid(true);
+                            }
+                        },
+                        handleUniquenessResult = (err) => {
+                            vm.activeUniquenessCheck(false);
+                            handleElementStatus(err);
+                        };
+
+                    $element
+                        .on("keyup", function (event) {
+                            clearTimeout(keypressTimerID);
+                            if (!vm.activeUniquenessCheck()) {
+                                keypressTimerID = setTimeout(function () {
+                                    elementValue = $element.val();
+                                    let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+                                    if (labelTest.valid) {
+                                        vm.activeUniquenessCheck(true);
+                                        dti.utility.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
+                                    } else {
+                                        handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
+                                    }
+                                }, keypressTimer);
+                            }
+                        });
+                }
+            };
+        }
+    },
+
     // init fns should only be run once after dtiCommon is loaded, and is normally self-handled (see end of this script)
     init: {
         isComplete: false,
         clientSide: () => {
+            dtiCommon.knockout.init();
+
             if (window.dti) {
                 dtiCommon._private.pointNameSeparator = dti.utility.getConfig('Enums.Point Name Separator').Value;
             } else {
