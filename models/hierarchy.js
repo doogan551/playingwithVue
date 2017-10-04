@@ -23,9 +23,11 @@ const Hierarchy = class Hierarchy extends Common {
                 parentNode,
                 display
             }
-        }, (err, result)=>{
+        }, (err, result) => {
             let exists = (!!result) ? true : false;
-            return cb(err, {exists});
+            return cb(err, {
+                exists
+            });
         });
     }
 
@@ -732,13 +734,128 @@ const Hierarchy = class Hierarchy extends Common {
         // });
     }
 
+    createHierarchy(cb) {
+        const pointModel = new Point();
+        const firstNode = 'IS2k';
+        const nameSegments = ['name1', 'name2', 'name3', 'name4'];
+        const ioPointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+
+        const getNextSegment = (segment) => {
+            return nameSegments[nameSegments.indexOf(segment) + 1];
+        };
+        const getNodeType = (pointType) => {
+            if (!!~ioPointTypes.indexOf(pointType)) {
+                return 'Point';
+            }
+            return 'Application';
+        };
+
+        const createFolder = (parent, point, segment, callback) => {
+
+        };
+        const addPoint = (parent, point, callback) => {
+
+        };
+        const shelvePoints = (criteria, callback) => {
+
+        };
+        const getShelvedPoints = (criteria, callback) => {
+
+        };
+        const createRoot = (callback) => {
+            createFolder({
+                _id: 0
+            }, {
+                Name: firstNode,
+                name1: firstNode
+            }, callback);
+        };
+        const addFolders = (segment, parent, callback) => {
+            // for each folder, add points then add folders for next segment (recursively)
+            const nextSegment = getNextSegment();
+            let field = segment;
+            let query = {};
+            if (!nextSegment) {
+                query[nextSegment] = {
+                    $ne: ''
+                };
+            }
+
+            this.distinct({
+                field,
+                query
+            }, (err, folderNames) => {
+                async.eachSeries(folderNames, (folder, nextFolder) => {
+                    let data = {};
+                    this.getNewId('Location', (err, upi) => {
+                        data._id = upi;
+                        data.display = folder;
+                        data.parentNode = parent._id;
+                        this.add(data, (err, nextParent) => {
+                            doSegment(nextSegment, nextParent, nextFolder);
+                        });
+                    });
+                }, callback);
+            });
+        };
+        const addPoints = (segment, parent, callback) => {
+            const nextSegment = getNextSegment();
+            let query = {};
+            if (!nextSegment) {
+                query[segment] = {
+                    $ne: ''
+                };
+            } else {
+                query = {
+                    nextSegment
+                };
+            }
+
+            this.iterateCursor({
+                query,
+                fields: {
+                    name1: 1,
+                    name2: 1,
+                    name3: 1,
+                    name4: 1,
+                    'Point Type': 1
+                }
+            }, (err, point, nextPoint) => {
+                let data = {
+                    upi: point._id,
+                    parentNode: parent._id,
+                    display: point[segment],
+                    nodeType: getNodeType(point['Point Type'].Value),
+                    nodeSubType: point['Point Type'].Value
+                };
+                pointModel.addPointToHierarchy(data, (err, result) => {
+                    nextPoint(err);
+                });
+            }, callback);
+        };
+        const doSegment = (segment, parent, callback) => {
+            addPoints(segment, parent, (err) => {
+                addFolders(segment, parent, callback);
+            });
+        };
+        const start = (callback) => {
+            // do points then folders
+            createRoot((err, root) => {
+                doSegment(nameSegments[0], root, callback);
+            });
+        };
+
+        start(cb);
+    }
+
+
     import(masterCb) {
-        let locCount;
-        let locPrefix;
+        let locCount; // strip
+        let locPrefix; // strip
         let importNodeName = 'IS2k';
 
-        let doLog = true;
-        let self = this;
+        let doLog = true; // strip
+        let self = this; // strip
 
         let SEGMENT1 = 1;
         let SEGMENT2 = 2;
@@ -876,6 +993,7 @@ const Hierarchy = class Hierarchy extends Common {
         log('Running hierarchy import');
 
         async.waterfall([
+            // strip
             function getLocationCounter(cb) {
                 let criteria = {
                     collection: 'counters',
@@ -907,13 +1025,13 @@ const Hierarchy = class Hierarchy extends Common {
                         }
                     },
                     options: {
-                        multi: true
+                        multi: true // strip
                     }
                 };
 
                 log('Working on shelveScheduleEntries');
 
-                self.update(criteria, (err, results) => {
+                self.update(criteria, (err, results) => { // updateAll
                     cb(err);
                 });
             },
