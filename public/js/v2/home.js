@@ -4315,7 +4315,7 @@ var dti = {
                 selfBindings.currNodeName(node.bindings.Name());
                 selfBindings.currRefNode(node.bindings.refNode());
             },
-            openNode: (data) => {
+            openNode: (data, treeCb) => {
                 let id;
 
                 switch (data.node.bindings.nodeType()) {
@@ -4335,7 +4335,7 @@ var dti = {
                         upi: id
                     });
                 } else {
-                    dti.navigatorv2.tree.helper.showConfigureNodeModal('open', data, dti.navigatorv2.tree.editNode);
+                    dti.navigatorv2.tree.helper.showConfigureNodeModal('open', data, treeCb);
                 }
             },
             handlePasteRequest: (action, data, treeCb) => {
@@ -4475,9 +4475,10 @@ var dti = {
                     editedData = data, // used in done() callback
                     requestData = {
                         id: data.id,
-                        display: data.display,
-                        nodeSubType: data.nodeSubType,
-                        meta: data.meta
+                        display: (data.node.bindings.display() !== data.display ? data.display : undefined),
+                        nodeSubType: (data.node.bindings.nodeSubType() !== data.nodeSubType ? data.nodeSubType : undefined)
+                        // meta: (data.node.bindings.meta() !== data.meta ? data.meta : undefined),
+                        // tags: (data.node.bindings.tags() !== data.tags ? data.tags : undefined)
                     },
                     done = (err, returnedData) => {
                         if (!err) {
