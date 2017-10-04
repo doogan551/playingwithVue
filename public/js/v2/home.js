@@ -4458,7 +4458,7 @@ var dti = {
                         newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
                     } else if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
-                        self.tree.serverOps.createPoint(newNode, parent, done);
+                        self.tree.serverOps.createPoint(newNode, parent, dti.navigatorv2.handleNewPoint);
                     } else if (newNode.nodeType === 'Reference') {
                         newNode.refNode = self.tree._configureNodeData.sourceNode.bindings._id();
                         self.tree.serverOps.addNode(newNode, self.tree._configureNodeData.targetNode, done);
@@ -4638,24 +4638,29 @@ var dti = {
                     modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
 
                     self.$configureNodeModal.openModal();
+                    self.$configureNodeModal.removeClass("addingPoint");
                     modalBindings.modalOpen(true);
 
                     switch (action) {
                         case "add location":
                             modalBindings.modalNodeType("Location");
+                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add equipment":
                             modalBindings.modalNodeType("Equipment");
+                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add category":
                             modalBindings.modalNodeType("Category");
+                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add point":
                             modalBindings.modalNodeType("Point");
-                            // TODO move this to CSS
-                            self.$configureNodeModal.find(".modal-footer").css("margin-top", "38%");
-                            self.$configureNodeModal.css("height", "61%");
-                            // TODO
+                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            self.$configureNodeModal.addClass("addingPoint");
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "open":
@@ -4665,7 +4670,7 @@ var dti = {
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
-                            // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
+                            // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);  // TODO perhaps some logic around Location Type
                             modalBindings.pathIsValid(true);
                             break;
                         case "rename":
@@ -4816,6 +4821,7 @@ var dti = {
                     let cbData = {};
                     let data = {
                         upi: "newAnewPoint",
+                        targetUpi: "newAnewPoint",
                         parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                         display: node.display,
                         nodeType: node.nodeType,
@@ -4829,15 +4835,14 @@ var dti = {
                     }).done((response) => {
                         dti.log(response);
 
-                        let result = response[0];
+                        let result = response;
 
                         if (!result) {
-                            err = 'An unknown error occured';
+                            err = 'An unknown error occurred';
                         } else if (result.err) {
-                            err = 'Error adding node: ' + result.err.errmsg || result.err;
+                            err = 'Error creating point: ' + result.err;
                         } else {
-                            cbData.newNode = result;
-                            cbData.children = response.slice(1);
+                            cbData.newPoint = result.newPoint;
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -5060,6 +5065,32 @@ var dti = {
                     }
                 })
             ];
+        },
+        handleNewPoint: (err, data, cb) => {
+            if (err) {
+                dti.log(err);
+                dti.toast('Point Creation Error: ' + err, 3000);
+            } else {
+                let newPoint = data.newPoint,
+                    pointType = newPoint["Point Type"].Value,
+                    endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id),
+                    handoffMode = endPoint.edit || endPoint.review;
+
+                if (cb) {
+                } else {
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: dtiCommon.getPointName(newPoint.path),
+                        pointType: pointType,
+                        upi: newPoint._id,
+                        pointData: newPoint,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                }
+            }
         },
         destroy(config) {
             let self = dti.navigatorv2;
@@ -5393,32 +5424,6 @@ var dti = {
                 }
             });
         },
-        checkPathForUniqueness(parentNodeId, display, cb) {
-            let err;
-
-            dti.post({
-                url: '/api/hierarchy/checkUniqueDisplayUnderParent',
-                data: {
-                    parentNode: parentNodeId,
-                    display: display
-                }
-            }).done((response) => {
-                dti.log(response);
-
-                let result = response;
-
-                if (result.exists) {
-                    err = "error: " + "'" + display + "' already exists at this level";
-                } else if (result.err) {
-                    err = result.err;
-                }
-            }).fail(() => {
-                err = 'A network error occurred';
-            }).always(() => {
-                cb(err);
-            });
-        },
-
         init: function () {
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();

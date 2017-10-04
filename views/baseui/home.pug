@@ -298,7 +298,7 @@ html
                         .col.s12.error.red-text(data-bind='html: error')
 
                 .modal-footer
-                    button.btn.blue-grey.waves-effect.saveButton(data-bind="click: saveNode, enable: (!activeSaveRequest() && !activeUniquenessCheck() && pathIsValid())") Save
+                    button.btn.blue-grey.waves-effect.saveButton(data-bind="click: saveNode, enable: (!activeSaveRequest() && !activeUniquenessCheck() && pathIsValid()), text: (modalAction() === 'Add point' ? 'Create' : 'Save')")
                     button.btn-flat.modal-action.modal-close.waves-effect Cancel
 
             #openItemsModal.modal.modal-large

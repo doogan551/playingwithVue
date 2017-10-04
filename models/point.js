@@ -984,6 +984,8 @@ const Point = class Point extends Common {
                 }
                 this.toLowerCasePath(template);
                 template.parentNode = parentNode;
+                template.nodeType = data.nodeType;
+                template.nodeSubType = data.nodeSubType;
 
                 console.log('isClone', isClone);
                 if (!isClone) {
@@ -3002,22 +3004,11 @@ const Point = class Point extends Common {
         let newPoint = data.newPoint;
         const targetUpi = this.getNumber(newPoint.targetUpi);
         const parentNodeId = this.getNumber(newPoint.parentNodeId);
-        const insertNewPoint = (err, validatedPoint) => {
+        const handleInitiatedPoint = (err, validatedPoint) => {
             if (!!err && !err.hasOwnProperty('msg')) {
                 return cb(err);
             }
-            validatedPoint.parentNode = parentNodeId; // switch to ID
-            this.addPoint({
-                newPoint: validatedPoint
-            }, data.user, {}, (err, point) => {
-                if (!!err && !err.hasOwnProperty('msg')) {
-                    if (err.errmsg) {
-                        return cb(err.errmsg);
-                    }
-                    return cb(err);
-                }
-                return cb(null, point);
-            });
+            return cb(null, validatedPoint);
         };
 
         hierarchyModel.getNode({
@@ -3026,9 +3017,11 @@ const Point = class Point extends Common {
             if (!!err) {
                 return cb(err);
             }
-            newPoint.parentNode = parentNode;
+            newPoint.parentNode = parentNodeId;
             newPoint.id = 'newPoint';
             newPoint.targetUpi = targetUpi;
+            newPoint.parentUpi = parentNodeId;
+            newPoint.parentPath = parentNode.path;
 
             if (data.parentNode === 0) {
                 newPoint.path = [newPoint.display];
@@ -3036,7 +3029,7 @@ const Point = class Point extends Common {
                 newPoint.path = [...parentNode.path, newPoint.display];
             }
 
-            this.initPoint(newPoint, insertNewPoint);
+            this.initPoint(newPoint, handleInitiatedPoint);
         });
     }
 

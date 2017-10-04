@@ -13,6 +13,15 @@ var dtiCommon = {
         pointNameSeparator: '' // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
     },
 
+    post(config) {
+        return $.ajax({
+            url: config.url,
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify(config.data)
+        });
+    },
+
     // API functions
     getPointName: (target) => {
         // 'target' is a point object, or the point's path array
@@ -225,6 +234,30 @@ var dtiCommon = {
         return alarmsMsg.replace("%NAME", dtiCommon.getPointName(alarmPath));
     },
 
+    checkPathForUniqueness(parentNodeId, display, cb) {
+        let err;
+
+        dtiCommon.post({
+            url: '/api/hierarchy/checkUniqueDisplayUnderParent',
+            data: {
+                parentNode: parentNodeId,
+                display: display
+            }
+        }).done((response) => {
+            let result = response;
+
+            if (result.exists) {
+                err = "error: " + "'" + display + "' already exists at this level";
+            } else if (result.err) {
+                err = result.err;
+            }
+        }).fail(() => {
+            err = 'A network error occurred';
+        }).always(() => {
+            cb(err);
+        });
+    },
+
     knockout: {
         init: () => {
             ko.bindingHandlers.dtiHierarchyLabel = {
@@ -264,7 +297,7 @@ var dtiCommon = {
                                     let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
                                     if (labelTest.valid) {
                                         vm.activeUniquenessCheck(true);
-                                        dti.utility.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
+                                        dtiCommon.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
                                     } else {
                                         handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
                                     }

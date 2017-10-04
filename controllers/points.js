@@ -258,8 +258,10 @@ router.post('/getFilteredPoints', function (req, res) {
 });
 
 router.post('/create', function (req, res) {
-    let data = _.merge(req.params, req.body);
-    data.user = req.user;
+    let data = {
+        newPoint: _.merge(req.params, req.body),
+        user: req.user
+    };
 
     pointModel.createPoint(data, function (err, results) {
         if (err) {

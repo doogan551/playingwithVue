@@ -1734,6 +1734,8 @@ input:focus {
 }
 
 #configureNodeModal {
+    height: auto;
+
     .modal-header {
         background-color: $blue-grey-darken-2;
     }
@@ -1773,7 +1775,7 @@ input:focus {
         // opacity: 0;
         right: 0;
         max-width: 100%;
-        top: 163px;
+        top: 180px;
 
         &.active {
             width: 100%;
@@ -1784,6 +1786,13 @@ input:focus {
             width: 148px;
             float: left;
         }
+    }
+}
+
+#configureNodeModal.addingPoint {
+    height: 61%;
+    .modal-footer {
+        margin-top: 38%;
     }
 }
 
