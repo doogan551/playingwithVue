@@ -307,20 +307,22 @@ var gpl = {
         });
         return result;
     },
-    getLabel: function (type, increment) {
-        var count = gpl.labelCounters[type],
-            ret;
+    getLabel: function (block, increment) {
+        var blockType = block.type,
+            pointType = block.pointType,
+            count = gpl.labelCounters[blockType],
+            label = pointType + ' ' + count;
 
         if (increment) {
             do {
                 count++;
-            } while (!gpl.labelIsUnique(type + count));
+                label = pointType + ' ' + count;
+            } while (!gpl.labelIsUnique(label));
+
+            gpl.labelCounters[blockType] = count;
         }
 
-        gpl.labelCounters[type] = count;
-
-        ret = type + count;
-        return ret;
+        return label;
     },
     formatValue: function (block, value) {
         var numDecimals = parseInt(block.precision.decimals, 10),
@@ -1965,7 +1967,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     getLabel: function () {
-        var label = gpl.getLabel(this.type, true);
+        var label = gpl.getLabel(this, true);
 
         this.setLabel(label);
     },
@@ -2534,7 +2536,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config._wasHidden = true;
         }
 
-        this.label = this.label || (!this.config.inactive ? gpl.getLabel(this.type) : '');
+        this.label = this.label || (!this.config.inactive ? gpl.getLabel(this) : '');
 
         if (typeof this.label === 'number') {
             this.label = this.label.toString();
@@ -2911,7 +2913,7 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
     hasReferenceType: true,
 
     type: 'MonitorBlock',
-    pointType: 'Monitor Point',
+    pointType: 'Input',
 
     shapes: {
         'External': {
@@ -3034,7 +3036,7 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
     hasOutput: false,
 
     type: 'ControlBlock',
-    pointType: 'Control Point',
+    pointType: 'Output',
 
     shapes: {
         'External': {
@@ -3868,6 +3870,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
     hasRotatingPoint: false,
 
     type: 'TextBlock',
+    pointType: 'Text',
     gplType: 'text',
 
     initialize: function (config) {
@@ -6794,7 +6797,7 @@ gpl.BlockManager = function (manager) {
             // ch279 Increment label only if we're registering existing blocks as part of GPL initialization. After the
             // sequence is initialized, the label is incremented before this function is called.
             if (!gpl.manager.initDone()) {
-                gpl.getLabel(block.type, true); // Use standard gpl function to increment label counter
+                gpl.labelCounters[block.type]++;
             }
         }
 
@@ -9606,7 +9609,7 @@ gpl.Manager = function () {
                             obj = managerSelf.toolbarCanvas.findTarget(event);
                             gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
                             if (gplObj) {
-                                text = gplObj.blockType;
+                                text = gplObj.pointType;
                                 managerSelf.updateTooltip(text, x, y);
                             } else {
                                 managerSelf.clearTooltip();
