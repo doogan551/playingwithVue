@@ -5,19 +5,25 @@ let utils = require('../helpers/utils.js');
 let Reports = require('../models/reports');
 
 let reportMainCallback = function (res, err, locals, result) {
-    if (err) {
+    let reportType = 'Property';
+
+    if (err && locals.id != 0) {  // only error out if can't find valid ID
         return utils.sendResponse(res, {
             err: err
         });
     }
+
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With');
 
     if (!locals) {
         res.render('reports/reportErrorNotFound');
-    } else if (result['Report Type']) {
+    } else {
+        if (result && result['Report Type']) {
+            reportType = result['Report Type'].Value;
+        }
         res.locals = locals;
-        switch (result['Report Type'].Value) {
+        switch (reportType) {
             case 'Property':
             case 'History':
             case 'Totalizer':

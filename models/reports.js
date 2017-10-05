@@ -482,7 +482,7 @@ const Report = class Report {
         // this is weird. change it to be nested instead of relying on flags in handlResults()
         point.getPointById(reportCriteria.data, (err, message, result) => {
             if (err) {
-                return cb(err);
+                return cb(err, {id: data.id});
             }
 
             if (!!result) {
@@ -495,7 +495,7 @@ const Report = class Report {
                 reportData = result;
                 handleResults();
             } else {
-                return cb(message); // error
+                return cb(message, {id: data.id}); // error
             }
         });
     }

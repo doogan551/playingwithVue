@@ -4,4 +4,4 @@ script.
     scheduledIncludeChart = (!!scheduledConfig) ? scheduledConfig.scheduledIncludeChart : false;
     scheduled = (!!scheduledConfig);
     dataUrl = '!{dataUrl}';
-    point = JSON.parse('!{point}');
+    point = ('!{point}' !== '' ? JSON.parse('!{point}') : '');

@@ -1,6 +1,6 @@
 "use strict";
 
-var dti = {
+var dtiReporting = {
     settings: {
         logLinePrefix: true,
         webEndpoint: window.location.origin,
@@ -49,9 +49,9 @@ var dti = {
             pad = function (num) {
                 return ('    ' + num).slice(-4);
             },
-            formattedtime = dti.formatDate(new Date(), true);
+            formattedtime = dtiReporting.formatDate(new Date(), true);
 
-        if (dti.settings.logLinePrefix === true) {
+        if (dtiReporting.settings.logLinePrefix === true) {
             err = new Error();
             if (Error.captureStackTrace) {
                 Error.captureStackTrace(err);
@@ -66,16 +66,16 @@ var dti = {
             }
         }
         // args.unshift(formattedtime);
-        if (!dti.noLog) {
+        if (!dtiReporting.noLog) {
             console.log.apply(console, args);
         }
     },
     makeId: function () {
-        dti.itemIdx++;
-        return dti.settings.idxPrefix + dti.itemIdx;
+        dtiReporting.itemIdx++;
+        return dtiReporting.settings.idxPrefix + dtiReporting.itemIdx;
     },
     getLastId: function () {
-        return dti.settings.idxPrefix + dti.itemIdx;
+        return dtiReporting.settings.idxPrefix + dtiReporting.itemIdx;
     },
     forEach: function (obj, fn) {
         var keys = Object.keys(obj),
@@ -163,7 +163,7 @@ var dti = {
                 selectors = (function () {
                     var obj = {};
 
-                    dti.forEach(cfg.classNames, function (cssClass, name) {
+                    dtiReporting.forEach(cfg.classNames, function (cssClass, name) {
                         obj[name] = '.' + cssClass;
                     });
 
@@ -252,12 +252,12 @@ var dti = {
                         chain,
                         stopIndex;
 
-                    dti.forEachArray(self.bindings.sources(), function (source) {
+                    dtiReporting.forEachArray(self.bindings.sources(), function (source) {
                         matches = [];
                         data = source.data;
 
                         if (Array.isArray(data)) {
-                            dti.forEachArray(data, function (item) {
+                            dtiReporting.forEachArray(data, function (item) {
                                 if (regex.test(item.text)) {
                                     if (cfg.highlight) {
                                         item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
@@ -280,7 +280,7 @@ var dti = {
                                     // We want to stop on 'Sub2' so we get all of Sub2's available keys and match against string 'stillWorkingOnThisOne'
                                 }
 
-                                dti.forEachArray(chain, function (link, ndx) {
+                                dtiReporting.forEachArray(chain, function (link, ndx) {
                                     if (data.hasOwnProperty(link)) {
                                         data = data[link];
                                     } else {
@@ -306,7 +306,7 @@ var dti = {
                                 if (parsed.operator) {
                                     regex = new RegExp(parsed.value, 'ig');
 
-                                    dti.forEachArray(data, function (_private, index) {
+                                    dtiReporting.forEachArray(data, function (_private, index) {
                                         if (regex.test(_private.text)) {
                                             if (cfg.highlight) {
                                                 _private.html(_private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
@@ -315,7 +315,7 @@ var dti = {
                                         }
                                     });
                                 } else {
-                                    dti.forEach(data, function (item, key) {
+                                    dtiReporting.forEach(data, function (item, key) {
                                         if (key === '_private') {
                                             return;
                                         }
@@ -433,20 +433,20 @@ var dti = {
                 };
 
             if (!cfg.$inputElement || !cfg.$inputElement.length) {
-                return dti.log('Invalid $inputElement', config.$inputElement);
+                return dtiReporting.log('Invalid $inputElement', config.$inputElement);
             }
             if (!cfg.$resultsContainer || !cfg.$resultsContainer.length) {
-                return dti.log('Invalid $resultsContainer', config.$resultsContainer);
+                return dtiReporting.log('Invalid $resultsContainer', config.$resultsContainer);
             }
             if (cfg.$chips && !cfg.$chips.length) {
-                return dti.log('Invalid $chips', config.$chips);
+                return dtiReporting.log('Invalid $chips', config.$chips);
             }
 
             self.getSource = function (name) {
                 var sources = self.bindings.sources(),
                     source;
 
-                dti.forEachArray(sources, function (src) {
+                dtiReporting.forEachArray(sources, function (src) {
                     if (src.name() === name) {
                         source = src;
                         return false;
@@ -458,7 +458,7 @@ var dti = {
 
             self.addSource = function (src) {
                 var source = {
-                    name: ko.observable(src.name || dti.makeId()),
+                    name: ko.observable(src.name || dtiReporting.makeId()),
                     nameShown: ko.observable(src.nameShown),
                     data: Array.isArray(src.data) ? [] : {},
                     matches: ko.observableArray([])
@@ -487,7 +487,7 @@ var dti = {
                         }
                         additionalProperties = additionalProperties || {};
 
-                        dti.forEachArray(fromArray, function (value) {
+                        dtiReporting.forEachArray(fromArray, function (value) {
                             value = value.toString();
                             item = $.extend({
                                 text: value,
@@ -541,7 +541,7 @@ var dti = {
                             } else {
                                 item._private.hasChildren = true;
 
-                                dti.forEach(param.srcItem, function (subSource, subText) {
+                                dtiReporting.forEach(param.srcItem, function (subSource, subText) {
                                     // Look for special keys and handle accordingly
                                     if (subText === '_values') {
                                         item._private.hasValues = true;
@@ -564,12 +564,12 @@ var dti = {
                     };
 
                 if (!source) {
-                    return dti.log('Source not found');
+                    return dtiReporting.log('Source not found');
                 }
 
                 // If the new data is not the same type as our source
                 if (Array.isArray(data) !== Array.isArray(source.data)) {
-                    return dti.log('Invalid data');
+                    return dtiReporting.log('Invalid data');
                 }
 
                 if (Array.isArray(data)) {
@@ -579,7 +579,7 @@ var dti = {
                         hasValues: false
                     });
                 } else { // data must be an object
-                    dti.forEach(data, function (item, text) {
+                    dtiReporting.forEach(data, function (item, text) {
                         addObj({
                             root: source.data,
                             srcItem: item,
@@ -595,7 +595,7 @@ var dti = {
                 var source = self.getSource(sourceName);
 
                 if (!source) {
-                    return dti.log('Source not found');
+                    return dtiReporting.log('Source not found');
                 }
 
                 if (Array.isArray(source.data)) {
@@ -612,19 +612,19 @@ var dti = {
                 var source = self.getSource(sourceName);
 
                 if (!source) {
-                    return dti.log('Source not found');
+                    return dtiReporting.log('Source not found');
                 }
 
                 if (!Array.isArray(source.data)) {
-                    return dti.log('This source\'s data cannot be removed because it is not an array');
+                    return dtiReporting.log('This source\'s data cannot be removed because it is not an array');
                 }
 
                 if (!Array.isArray(dataToRemove)) {
                     dataToRemove = [dataToRemove];
                 }
 
-                dti.forEachArray(dataToRemove, function (text) {
-                    dti.forEachArray(source.data, function (sourceItem, ndx) {
+                dtiReporting.forEachArray(dataToRemove, function (text) {
+                    dtiReporting.forEachArray(source.data, function (sourceItem, ndx) {
                         // sourceItem = {
                         //     hasChildren : false,
                         //     hasValues : false,
@@ -749,10 +749,10 @@ var dti = {
             };
 
             // Get autosuggest DOM template
-            $markup = dti.utility.getTemplate('#autosuggestTemplate');
+            $markup = dtiReporting.utility.getTemplate('#autosuggestTemplate');
 
             // Change default class names if needed
-            dti.forEach(defaults.classNames, function changeDefaultClassName(defaultClassName, key) {
+            dtiReporting.forEach(defaults.classNames, function changeDefaultClassName(defaultClassName, key) {
                 var defaultSelector = '.' + defaultClassName,
                     requestedClassName = cfg.classNames[key];
 
@@ -819,7 +819,7 @@ var dti = {
             }
 
             // Add autosuggest sources
-            dti.forEachArray(cfg.sources, self.addSource);
+            dtiReporting.forEachArray(cfg.sources, self.addSource);
         }
     },
     toast: function () {
@@ -828,7 +828,7 @@ var dti = {
         $closeMarkup.click(function (e) {
             var $toast = $(e.target).parent();
 
-            dti.animations.fadeOut($toast, function () {
+            dtiReporting.animations.fadeOut($toast, function () {
                 $toast.remove();
             });
         });
@@ -854,10 +854,10 @@ var dti = {
                 $el[0].style.willChange = 'opacity, display';
             }
             $el.css('display', 'block');
-            dti.animations._fade($el, 1, cb);
+            dtiReporting.animations._fade($el, 1, cb);
         },
         fadeOut: function ($el, cb) {
-            dti.animations._fade($el, 0, function finishFadeOut() {
+            dtiReporting.animations._fade($el, 0, function finishFadeOut() {
                 $el.css('display', 'none');
                 $el[0].style.willChange = '';
                 if (cb) {
@@ -1393,6 +1393,7 @@ let reportsViewModel = function () {
         reportPoint = point,
         scheduledReport = scheduled,
         includeChart = scheduledIncludeChart,
+        afterSaveCallback,
         reportName = "dorsett.reportUI",
         getPointURL = "/api/points/",
         originalPoint = {},
@@ -2406,7 +2407,7 @@ let reportsViewModel = function () {
                 $control.attr("disabled", state);
             },
             displayError: (errorMessage) => {
-                dti.toast(errorMessage, 6000);
+                dtiReporting.toast(errorMessage, 6000);
             },
             registerEvents: () => {
                 var intervals,
@@ -4968,7 +4969,7 @@ let reportsViewModel = function () {
             });
         },
         userCanEdit = (data, requestedAccessLevel) => {
-            return !!(data._pAccess & requestedAccessLevel);
+            return (!!(data._pAccess & requestedAccessLevel) || data._id === 0);
         },
         ajaxCall = (type, input, url, callback) => {
             var errorRaised = false;
@@ -4982,13 +4983,13 @@ let reportsViewModel = function () {
             }).done(function (data) {
                 if (data.err) {
                     errorRaised = data.err;
-                    return dti.log("Request failed: url = " + url + "  error message " + data.err);
+                    return dtiReporting.log("Request failed: url = " + url + "  error message " + data.err);
                 } else if (callback) {
                     callback.call(self, data);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 errorRaised = jqXHR.fail().responseText + " - " + jqXHR.status + "  " + errorThrown;
-                dti.log("Request failed: url = " + url, jqXHR, textStatus, errorThrown);
+                dtiReporting.log("Request failed: url = " + url, jqXHR, textStatus, errorThrown);
                 self.activeRequestDataDrawn(true);
                 if (callback) {
                     callback.call(self, {err: errorRaised});
@@ -6015,7 +6016,7 @@ let reportsViewModel = function () {
                             } else {
                                 msg = 'Report Saved';
                             }
-                            dti.toast(msg, duration);
+                            dtiReporting.toast(msg, duration);
                             self.activeSaveRequest(false);
                             $activeSidePane = $rightPanel.find(".side-nav-pane.active");
                             ui.blockUI($activeSidePane, self.activeDataRequest());  // don't display pane if datarequest is active
@@ -6222,7 +6223,7 @@ let reportsViewModel = function () {
                 }],
                 obj = {};
 
-            dti.forEachArray(arr, function (durationObj) {
+            dtiReporting.forEachArray(arr, function (durationObj) {
                 obj[durationObj.value] = durationObj;
             });
 
@@ -6251,7 +6252,7 @@ let reportsViewModel = function () {
             var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                 arr = [];
 
-            dti.forEachArray(months, function addMonth(month, index) {
+            dtiReporting.forEachArray(months, function addMonth(month, index) {
                 arr.push({
                     text: month,
                     value: index + 1
@@ -6263,7 +6264,7 @@ let reportsViewModel = function () {
             var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
                 arr = [];
 
-            dti.forEachArray(dow, function addDay(day, index) {
+            dtiReporting.forEachArray(dow, function addDay(day, index) {
                 arr.push({
                     text: day,
                     value: index
@@ -6281,7 +6282,7 @@ let reportsViewModel = function () {
                     advanced = false,
                     interval;
 
-                dti.forEachArray(cron.split(' '), function (val, index) {
+                dtiReporting.forEachArray(cron.split(' '), function (val, index) {
                     var _val;
 
                     if (index < 2) { // If hour or minute
@@ -6296,7 +6297,7 @@ let reportsViewModel = function () {
                         if (!!~val.indexOf(',')) {
                             advanced = true;
 
-                            dti.forEachArray(val.split(','), function (val, index) {
+                            dtiReporting.forEachArray(val.split(','), function (val, index) {
                                 _val.push(val);
                             });
                         } else {
@@ -6403,7 +6404,7 @@ let reportsViewModel = function () {
                         if (months[0] === '*') {
                             allMonths = true;
                         } else {
-                            dti.forEachArray(months, function (val, index) {
+                            dtiReporting.forEachArray(months, function (val, index) {
                                 monthsText.push(self.scheduler.availableMonths[val - 1].text);
                             });
 
@@ -6423,7 +6424,7 @@ let reportsViewModel = function () {
                         if (daysOfWeek[0] === '*') {
                             allDaysOfWeek = true;
                         } else {
-                            dti.forEachArray(daysOfWeek, function (val) {
+                            dtiReporting.forEachArray(daysOfWeek, function (val) {
                                 daysOfWeekText.push(self.scheduler.availableDaysOfWeek[val].text);
                             });
 
@@ -6443,7 +6444,7 @@ let reportsViewModel = function () {
                         if (dates[0] === '*') {
                             allDates = true;
                         } else {
-                            dti.forEachArray(dates, function (val) {
+                            dtiReporting.forEachArray(dates, function (val) {
                                 datesText.push(self.scheduler.availableDates[val - 1].text);
                             });
 
@@ -6500,7 +6501,7 @@ let reportsViewModel = function () {
                 var _parsed,
                     autosuggest,
                     isValidEmailRegex = /^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i,
-                    $modal = dti.utility.getTemplate('#scheduleModalTemplate'),
+                    $modal = dtiReporting.utility.getTemplate('#scheduleModalTemplate'),
                     $chips = $modal.find('.chips'),
                     $input = null,
                     $selectInterval = null,
@@ -6511,7 +6512,7 @@ let reportsViewModel = function () {
                         var arr = [];
 
                         if (data !== 'new') {
-                            dti.forEachArray(data.users(), function (userId) {
+                            dtiReporting.forEachArray(data.users(), function (userId) {
                                 var user = self.scheduler.availableUsersLookup[userId];
 
                                 if (user) {
@@ -6694,13 +6695,13 @@ let reportsViewModel = function () {
 
                 // Init our timepickers
                 timepickerOpts.default = bindings.selectedTime();
-                dti.pickatime($modal.find('#timepicker, #timepicker2'), timepickerOpts);
+                dtiReporting.pickatime($modal.find('#timepicker, #timepicker2'), timepickerOpts);
 
                 timepickerOpts.default = bindings.selectedReportStartTimeOffset();
-                dti.pickatime($modal.find('#reportStartTimeOffset'), timepickerOpts);
+                dtiReporting.pickatime($modal.find('#reportStartTimeOffset'), timepickerOpts);
 
                 timepickerOpts.default = bindings.selectedReportEndTimeOffset();
-                dti.pickatime($modal.find('#reportEndTimeOffset'), timepickerOpts);
+                dtiReporting.pickatime($modal.find('#reportEndTimeOffset'), timepickerOpts);
 
                 // Init our chips element
                 $chips.material_chip({
@@ -6753,7 +6754,7 @@ let reportsViewModel = function () {
                     }
                 });
 
-                autosuggest = new dti.autosuggest.Autosuggest({
+                autosuggest = new dtiReporting.autosuggest.Autosuggest({
                     $inputElement: $input,
                     $resultsContainer: $modal,
                     $chips: $chips,
@@ -6803,7 +6804,7 @@ let reportsViewModel = function () {
                 str,
                 i;
 
-            dti.forEachArray(data.users(), function (userId) {
+            dtiReporting.forEachArray(data.users(), function (userId) {
                 var user = self.scheduler.availableUsersLookup[userId];
 
                 if (user) {
@@ -6871,7 +6872,7 @@ let reportsViewModel = function () {
                     } else {
                         msg = 'Success. Your report will be emailed shortly.';
                     }
-                    dti.toast(msg, 4000);
+                    dtiReporting.toast(msg, 4000);
                 };
 
             $btn.attr('disabled', true);
@@ -6879,7 +6880,7 @@ let reportsViewModel = function () {
 
             $.ajax({
                 type: 'post',
-                url: dti.settings.apiEndpoint + 'schedules/runSchedule',
+                url: dtiReporting.settings.apiEndpoint + 'schedules/runSchedule',
                 data: JSON.stringify({
                     _id: data._id
                 }),
@@ -6887,13 +6888,13 @@ let reportsViewModel = function () {
             }).done(
                 function handleData(data) {
                     if (data.err) {
-                        dti.log('schedules/runSchedule error', data.err);
+                        dtiReporting.log('schedules/runSchedule error', data.err);
                     }
                     toast(data.err);
                 }
             ).fail(
                 function handleFail(jqXHR, textStatus, errorThrown) {
-                    dti.log('schedules/runSchedule fail', jqXHR, textStatus, errorThrown);
+                    dtiReporting.log('schedules/runSchedule fail', jqXHR, textStatus, errorThrown);
                     toast(true);
                 }
             ).always(
@@ -6909,7 +6910,7 @@ let reportsViewModel = function () {
                 haveNewEntries = false,
                 err = false;
 
-            dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
+            dtiReporting.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
                 if (schedule.isDirty()) {
                     // Get a shallow copy of the source so we can remove the UI-only keys
                     schedule = $.extend({}, ko.toJS(schedule));
@@ -6932,7 +6933,7 @@ let reportsViewModel = function () {
             if (schedulesToSave.length) {
                 $.ajax({
                     type: 'post',
-                    url: dti.settings.apiEndpoint + 'schedules/saveSchedules',
+                    url: dtiReporting.settings.apiEndpoint + 'schedules/saveSchedules',
                     data: JSON.stringify({
                         schedules: schedulesToSave
                     }),
@@ -6941,13 +6942,13 @@ let reportsViewModel = function () {
                     function handleData(data) {
                         if (data.err) {
                             err = data.err;
-                            return dti.log('schedules/saveSchedules error', data.err);
+                            return dtiReporting.log('schedules/saveSchedules error', data.err);
                         }
                     }
                 ).fail(
                     function handleFail(jqXHR, textStatus, errorThrown) {
                         err = textStatus + ' ' + errorThrown;
-                        dti.log('schedules/saveSchedules fail', jqXHR, textStatus, errorThrown);
+                        dtiReporting.log('schedules/saveSchedules fail', jqXHR, textStatus, errorThrown);
                     }
                 ).always(
                     function finished() {
@@ -6958,7 +6959,7 @@ let reportsViewModel = function () {
                                 return self.scheduler.getScheduleEntries(callback);
                             }
                             // Clear our isDirty flags
-                            dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
+                            dtiReporting.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
                                 schedule.isDirty(false);
                             });
                         }
@@ -6977,7 +6978,7 @@ let reportsViewModel = function () {
 
             $.ajax({
                 type: 'post',
-                url: dti.settings.apiEndpoint + 'schedules/getSchedules',
+                url: dtiReporting.settings.apiEndpoint + 'schedules/getSchedules',
                 data: JSON.stringify({
                     upi: reportPoint._id
                 }),
@@ -6986,12 +6987,12 @@ let reportsViewModel = function () {
                 function handleData(data) {
                     if (data.err) {
                         err = data.err;
-                        return dti.log('schedules/getSchedules error', data.err);
+                        return dtiReporting.log('schedules/getSchedules error', data.err);
                     }
 
                     self.scheduler.scheduleEntries.removeAll();
 
-                    dti.forEachArray(data.schedules, function addSchedule(schedule) {
+                    dtiReporting.forEachArray(data.schedules, function addSchedule(schedule) {
                         // Add UI-only keys
                         schedule.isDirty = ko.observable(false);
                         schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
@@ -7010,7 +7011,7 @@ let reportsViewModel = function () {
             ).fail(
                 function handleFail(jqXHR, textStatus, errorThrown) {
                     err = textStatus + ' ' + errorThrown;
-                    dti.log('schedules/getSchedules fail', jqXHR, textStatus, errorThrown);
+                    dtiReporting.log('schedules/getSchedules fail', jqXHR, textStatus, errorThrown);
                 }
             ).always(
                 function finished() {
@@ -7019,7 +7020,7 @@ let reportsViewModel = function () {
                     if (callback) { // Let callback handle/report error
                         callback(err);
                     } else if (err) {
-                        dti.toast('Error: ' + err);
+                        dtiReporting.toast('Error: ' + err);
                     }
                 }
             );
@@ -7031,16 +7032,16 @@ let reportsViewModel = function () {
 
             $.ajax({
                 type: 'post',
-                url: dti.settings.apiEndpoint + 'security/users/getallusers',
+                url: dtiReporting.settings.apiEndpoint + 'security/users/getallusers',
                 contentType: 'application/json'
             }).done(
                 function handleData(data) {
                     if (data.err) {
                         err = data.err;
-                        return dti.log('security/users/getallusers error', data.err);
+                        return dtiReporting.log('security/users/getallusers error', data.err);
                     }
 
-                    dti.forEachArray(data.Users, function (user) {
+                    dtiReporting.forEachArray(data.Users, function (user) {
                         self.scheduler.availableUsersObj[user['First Name'].Value + ' ' + user['Last Name'].Value] = user;
                         self.scheduler.availableUsersLookup[user._id] = user;
                     });
@@ -7048,13 +7049,13 @@ let reportsViewModel = function () {
             ).fail(
                 function handleFail(jqXHR, textStatus, errorThrown) {
                     err = textStatus + ' ' + errorThrown;
-                    dti.log('security/users/getallusers fail', jqXHR, textStatus, errorThrown);
+                    dtiReporting.log('security/users/getallusers fail', jqXHR, textStatus, errorThrown);
                 }
             ).always(
                 function finished() {
                     self.scheduler.gettingDataSemaphore.decrement();
                     if (err) {
-                        dti.toast('Error: ' + err);
+                        dtiReporting.toast('Error: ' + err);
                     }
                 }
             );
@@ -7115,6 +7116,20 @@ let reportsViewModel = function () {
                 currentUser = results;
             },
             initGlobals = () => {
+                if (window.getWindowParameters) {
+                    var cfg = window.getWindowParameters();
+
+                    window.attach = {};
+
+                    if (cfg.pointData) {
+                        reportPoint = $.extend(true, {}, cfg.pointData);
+                    }
+
+                    if (cfg.afterSaveCallback) {
+                        afterSaveCallback = cfg.afterSaveCallback;
+                    }
+                }
+
                 var dateRanges = reportDateRanges(),
                     dateRangeCollection = [],
                     key;
@@ -7186,7 +7201,8 @@ let reportsViewModel = function () {
                                 break;
                         }
                     } else { // Initial config
-                        self.reportDisplayTitle(reportPoint.Name.replace(/_/g, " "));
+                        self.reportDisplayTitle(dtiCommon.getPointName(reportPoint.path));
+                        // self.reportDisplayTitle(reportPoint.Name.replace(/_/g, " "));
                         reportPoint["Point Refs"] = [];  // new report, clear out initial Report create data
                         reportPoint["Report Config"].columns = [];
                         reportPoint["Report Config"].filters = [];
@@ -8043,8 +8059,8 @@ let reportsViewModel = function () {
 
     self.scheduler.init();
 
-    self.makeId = dti.makeId;
-    self.getLastId = dti.getLastId;
+    self.makeId = dtiReporting.makeId;
+    self.getLastId = dtiReporting.getLastId;
 };
 
 function applyBindings(extConfig) {

@@ -5084,17 +5084,20 @@ var dti = {
                 dti.toast('Point Creation Error: ' + err, 3000);
             } else {
                 let self = dti.navigatorv2,
+                    treeViewerCallback = treeCb,
                     newPoint = data.newPoint,
                     pointType = newPoint["Point Type"].Value,
                     endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id),
                     handoffMode = endPoint.edit || endPoint.review,
                     handleAddNewPointToHierarchy = (returnData) => {
-                        console.log("newPoint = " + returnData);
-                        treeCb('add', {
-                            node: returnData,
-                            parent: data.parent,
-                            newNode: returnData
-                        });
+                        if (treeViewerCallback) {
+                            treeViewerCallback('add', {
+                                node: returnData,
+                                parent: data.parent,
+                                newNode: returnData
+                            });
+                            treeViewerCallback = null;
+                        }
                     };
 
                 dti.windows.openWindow({
