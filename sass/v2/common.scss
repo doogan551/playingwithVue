@@ -109,3 +109,8 @@ $dtiSelectedGreyBackground: #607d8b;
 div.spinner-layer {
   border-color: $dtiBaseBlueGrey !important;
 }
+
+input#pointDisplayField[type=text] + label:after {
+  width: 375px;
+}
+

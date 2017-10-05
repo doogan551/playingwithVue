@@ -243,6 +243,10 @@ define([
                     window.attach.saveCallback = cfg.callback;
                 }
 
+                if (cfg.afterSaveCallback) {
+                    window.attach.afterSaveCallback = cfg.afterSaveCallback;
+                }
+
                 if (!!cfg.options && cfg.options.isGplEdit) {
                     pointInspector.isGplEdit = true;
                 }
@@ -1129,6 +1133,10 @@ define([
 
                     if (data.exitEditModeOnSave) {
                         pointInspector.isInEditMode(false);
+                    }
+
+                    if (!!window.attach && typeof window.attach.afterSaveCallback === 'function') {
+                        window.attach.afterSaveCallback.call(undefined, updatedPoint);
                     }
                 };
 

@@ -4412,7 +4412,6 @@ var dti = {
                 let config = self.tree._configureNodeData.config;
                 let parent = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node;
                 let newNode;
-
                 let done = (err, returnedData) => {
                         let nNode = returnedData.newNode || newNode,
                             children = returnedData.points;
@@ -4450,19 +4449,21 @@ var dti = {
                     }, 2000);
                 } else {
                     newNode = data;
-                    delete newNode.node;
                     selfBindings.busy(true);
 
                     if (modalBindings.modalAction() === "Paste") {
+                        delete newNode.node;
                         newNode.sourceNode = self.tree._configureNodeData.sourceNode;
                         newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
                     } else if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
-                        self.tree.serverOps.createPoint(newNode, parent, dti.navigatorv2.handleNewPoint);
+                        self.tree.serverOps.createPoint(newNode, parent, self.tree._configureNodeTreeCallback);
                     } else if (newNode.nodeType === 'Reference') {
+                        delete newNode.node;
                         newNode.refNode = self.tree._configureNodeData.sourceNode.bindings._id();
                         self.tree.serverOps.addNode(newNode, self.tree._configureNodeData.targetNode, done);
                     } else {
+                        delete newNode.node;
                         self.tree.serverOps.addNode(newNode, parent, done);
                     }
                 }
@@ -4815,19 +4816,24 @@ var dti = {
                 }
             },
             serverOps: {
-                createPoint(node, parent, cb) {
-                    let self = dti.navigatorv2;
-                    let err = false;
-                    let cbData = {};
-                    let data = {
-                        upi: "newAnewPoint",
-                        targetUpi: "newAnewPoint",
-                        parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
-                        display: node.display,
-                        nodeType: node.nodeType,
-                        nodeSubType: (node.nodeType === "Point" ? node.pointType : node.nodeSubType),
-                        pointType: (node.nodeType === "Point" ? node.pointType : node.nodeSubType)
-                    };
+                createPoint(nodeData, parent, treeCb) {
+                    let self = dti.navigatorv2,
+                        selfBindings = self.bindings,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        err = false,
+                        cbData = {
+                            newNode: nodeData.node,
+                            parent: parent
+                        },
+                        data = {
+                            upi: "newPoint",
+                            targetUpi: "newPoint",
+                            parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                            display: nodeData.display,
+                            nodeType: nodeData.nodeType,
+                            nodeSubType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType),
+                            pointType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType)
+                        };
 
                     dti.post({
                         url: '/api/points/create',
@@ -4849,8 +4855,14 @@ var dti = {
                     }).always(() => {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
                         }
-                        cb(!!err, cbData);
+                        dti.navigatorv2.handleNewPoint(!!err, cbData, treeCb);
                     });
                 },
                 addNode(node, parent, cb) {
@@ -5066,30 +5078,37 @@ var dti = {
                 })
             ];
         },
-        handleNewPoint: (err, data, cb) => {
+        handleNewPoint: (err, data, treeCb) => {
             if (err) {
                 dti.log(err);
                 dti.toast('Point Creation Error: ' + err, 3000);
             } else {
-                let newPoint = data.newPoint,
+                let self = dti.navigatorv2,
+                    newPoint = data.newPoint,
                     pointType = newPoint["Point Type"].Value,
                     endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id),
-                    handoffMode = endPoint.edit || endPoint.review;
+                    handoffMode = endPoint.edit || endPoint.review,
+                    handleAddNewPointToHierarchy = (returnData) => {
+                        console.log("newPoint = " + returnData);
+                        treeCb('add', {
+                            node: returnData,
+                            parent: data.parent,
+                            newNode: returnData
+                        });
+                    };
 
-                if (cb) {
-                } else {
-                    dti.windows.openWindow({
-                        url: handoffMode.url,
-                        title: dtiCommon.getPointName(newPoint.path),
-                        pointType: pointType,
-                        upi: newPoint._id,
-                        pointData: newPoint,
-                        options: {
-                            height: 750,
-                            width: 1250
-                        }
-                    });
-                }
+                dti.windows.openWindow({
+                    url: handoffMode.url,
+                    title: dtiCommon.getPointName(newPoint.path),
+                    pointType: pointType,
+                    upi: newPoint._id,
+                    pointData: newPoint,
+                    afterSaveCallback: handleAddNewPointToHierarchy,
+                    options: {
+                        height: 750,
+                        width: 1250
+                    }
+                });
             }
         },
         destroy(config) {
