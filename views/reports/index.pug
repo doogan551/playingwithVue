@@ -28,7 +28,7 @@ html.direports
                             a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='attr: {disabled: activeSaveRequest}', style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Save report")
                                 i.mdi.mdi-content-save.center
                         li.viewReportButton
-                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Run report")
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }, css: { disabled: $root.unpersistedReport() }", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Run report")
                                 //| Run Report
                                 i.material-icons.center play_arrow
                             .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Report Data")
@@ -77,19 +77,19 @@ html.direports
                         .row
                             .reportTabs.col.s12
                                 ul.tabs
-                                    li.tab.col.attribs(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                    li.tab.col.attribs(data-bind='css: { s2: (reportType === "Property"), s3: (reportType !== "Property")}')
                                         a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
-                                    li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                    li.tab.col.columns(data-bind='css: { s2: (reportType === "Property"), s3: (reportType !== "Property"), disabled: unpersistedReport()}')
                                         a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
                                     //li.tab.col.s1.columns2(role="presentation")
                                         a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType() === 'Property')
-                                    li.tab.col.s4.filterByPoint(role="presentation")
+                                    li.tab.col.s4.filterByPoint(data-bind='css: { disabled: unpersistedReport() }')
                                         a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Point Type Filters
                                     // /ko
-                                    li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                    li.tab.col.additionalFilters(data-bind='css: { s2: (reportType === "Property"), s3: (reportType !== "Property"), disabled: unpersistedReport()}')
                                         a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
-                                    li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                    li.tab.col(data-bind='css: { s2: (reportType === "Property"), s3: (reportType !== "Property"), disabled: unpersistedReport()}')
                                         a.strong.toggleTab.blue-grey-text(href="#schedule") Scheduled Actions
                         .configurationContent
                             .hideDiv
@@ -99,34 +99,28 @@ html.direports
                                 .tab-pane.reportAttribs#reportAttribs
                                     .form-inline.blue-grey-text(style="display: inline-flex")
                                         .input-field.col
-                                            input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
-                                            label(data-bind="updateLabel: $root.pointName1, attr: {for: 'pointName1'}") Name 1
-                                        .input-field.col
-                                            input.pointName2.form-control.input-md#pointName2(data-bind="enable: $root.canEdit(), textInput: $root.pointName2", required, type="text")
-                                            label(data-bind="updateLabel: $root.pointName2, attr: {for: 'pointName2'}") Name 2
-                                        .input-field.col
-                                            input.pointName3.form-control.input-md#pointName3(data-bind="enable: $root.canEdit(), textInput: $root.pointName3", required, type="text")
-                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Name 3
-                                        .input-field.col
-                                            input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
-                                            label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
+                                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: true, value: display, dtiHierarchyLabel: display, valueUpdate: 'afterkeydown', enable: true")
+                                            label(for="pointDisplayField") Label
                                     .form-inline.blue-grey-text
                                         .input-field.col
                                             input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
-                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
+                                            label(data-bind="attr: {for: 'reportTitleInput'}") Report Title
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
+                                            // ko if: !unpersistedReport()
                                             label.tiny Report Type
                                             span(data-bind="text: reportType")
-                                            // ko if: false
+                                            // /ko
+                                            // ko if: unpersistedReport()
                                             .col.s1.reportTypes
-                                                .availableReportTypes.disabled
+                                                .availableReportTypes
                                                     // ko if: ($root.listOfReportTypes().length > 1)
-                                                    ul.disabled#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
+                                                    label.tiny Report Type
+                                                    ul#reportTypesDropdown.reportTypes.dropdown-content(data-bind="foreach: $root.listOfReportTypes()")
                                                         li
-                                                            a(data-bind="click: function(){ $root.selectSelectReportType($element, $data.text) }, text: $data.text")
+                                                            a(data-bind="click: function(){ $root.selectSelectReportType($element, $data) }, text: $data.text")
                                                     // /ko
-                                                    a.disabled.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="reportTypesDropdown")
                                                         span(data-bind="text: reportType")
                                             // /ko
                                     .form-group.clearfix(style="display: inline-flex")
@@ -135,11 +129,11 @@ html.direports
                                             .col.s1.entries
                                                 .availableEntries
                                                     // ko if: ($root.listOfEntriesPerPage().length > 1)
-                                                    ul#enteriesDropdown.entries.dropdown-content(data-bind="foreach: $root.listOfEntriesPerPage()")
+                                                    ul#enteriesDropdown.entries.dropdown-content(data-bind="foreach: $root.listOfEntriesPerPage(), css: { disabled: unpersistedReport() } ")
                                                         li
-                                                            a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
+                                                            a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value, css: { disabled: $root.unpersistedReport() }")
                                                     // /ko
-                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="enteriesDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown, css: { disabled: $root.unpersistedReport() } ", href="#", data-activates="enteriesDropdown")
                                                         span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                         // ko if: (chartable())
                                         .chartTypeSelection
@@ -158,11 +152,11 @@ html.direports
                                         // /ko
                                         .footerSettings Footer Settings
                                             .displayColumnFilters
-                                                input.form-control.filled-in(data-bind="checked: $root.displayGridFilters, enable: $root.canEdit(), attr: {id : 'displayColumnFilters' }", type="checkbox")
-                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnFilters' }") Display Filters
+                                                input.form-control.filled-in(data-bind="checked: $root.displayGridFilters, enable: $root.canEdit() && !unpersistedReport(), attr: {id : 'displayColumnFilters'} ", type="checkbox")
+                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnFilters'") Display Filters
                                             // ko if: (reportType() !== 'Property')
                                             .displayColumnCalculations
-                                                input.form-control.filled-in(data-bind="checked: $root.displayGridCalculations, enable: $root.canEdit(), attr: {id : 'displayColumnCalculations' }", type="checkbox")
+                                                input.form-control.filled-in(data-bind="checked: $root.displayGridCalculations, enable: $root.canEdit() && !unpersistedReport(), attr: {id : 'displayColumnCalculations' } ", type="checkbox")
                                                 label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnCalculations' }") Display Calculations
                                             // /ko
                                 div.tab-pane#reportColumns
@@ -516,11 +510,11 @@ html.direports
                                         span.reportStartDatePicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'reportStartDate' }") Start Date
-                                                input.datepicker(data-bind="attr: { 'id': 'reportStartDate' }, select: $root.startDate, dtiReportsMaterializePickadate", type="date")
+                                                input.datepicker(data-bind="attr: { 'id': 'reportStartDate' }, dtiReportsMaterializePickadate: startDate", type="date")
                                         span.reportEndDatePicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'reportEndDate' }") End Date
-                                                input.datepicker(data-bind="attr: { 'id': 'reportEndDate' }, select: $root.endDate, dtiReportsMaterializePickadate", type="date")
+                                                input.datepicker(data-bind="attr: { 'id': 'reportEndDate' }, dtiReportsMaterializePickadate: endDate", type="date")
                                     br
                                     .reportTimePickers
                                         span.startTimepicker

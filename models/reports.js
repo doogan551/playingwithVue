@@ -435,8 +435,31 @@ const Report = class Report {
             scheduled = (!!data.scheduleID),
             reportResults = {},
             reportData,
+            resolveColumnsPointNames = (columns) => {
+                let i,
+                    column;
+
+                if (columns) {
+                    //
+                    // for (i = 1; i < columns.length; i++) {
+                    //     column = columns[i];
+                    //     point.getOne({
+                    //         query: {
+                    //             _id: upi
+                    //         },
+                    //         fields: {
+                    //             path: 1
+                    //         }
+                    //     }, (err, point) => {
+                    //         if (!!point) {
+                    //             let reportName = point.Name;
+                    //         }
+                    //
+                    //     });
+                    // }
+                }
+            },
             getValueTypes = (data) => {
-                'use strict';
                 let i,
                     column,
                     filter;
@@ -478,7 +501,6 @@ const Report = class Report {
                 }
             };
 
-
         // this is weird. change it to be nested instead of relying on flags in handlResults()
         point.getPointById(reportCriteria.data, (err, message, result) => {
             if (err) {
@@ -486,9 +508,14 @@ const Report = class Report {
             }
 
             if (!!result) {
-                if (result['Report Type'].Value === 'Property') {
-                    result = getValueTypes(result);
+                if (result['Report Config'].columns) {
+                    if (result['Report Type'].Value === 'Property') {
+                        result = getValueTypes(result);
+                    } else {
+                        resolveColumnsPointNames(data['Report Config'].columns);
+                    }
                 }
+
                 reportResults.id = data.id;
                 reportResults.point = JSON.stringify(result);
 
