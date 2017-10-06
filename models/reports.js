@@ -512,7 +512,7 @@ const Report = class Report {
                     if (result['Report Type'].Value === 'Property') {
                         result = getValueTypes(result);
                     } else {
-                        resolveColumnsPointNames(data['Report Config'].columns);
+                        resolveColumnsPointNames(result['Report Config'].columns);
                     }
                 }
 
