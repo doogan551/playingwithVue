@@ -5912,7 +5912,7 @@ gpl.BlockManager = function (manager) {
         upiListeners: {},
         bindings: {
             blockTitle: ko.observable(),
-            editPointType: ko.observable(),
+            editBlockType: ko.observable(),
             editPointName: ko.observable(),
             editPointCharacters: ko.observable(),
             editPointDecimals: ko.observable(),
@@ -5969,47 +5969,15 @@ gpl.BlockManager = function (manager) {
             showDevicePoint: function () {
                 bmSelf.openPointEditor(true);
             },
-            editBlockPrecision: function () {
-                var block = manager.contextObject,
-                    chars = parseInt(block.precision.characters, 10),
-                    numDecimals = parseInt(block.precision.decimals, 10);
+            editBlock: function () {
+                var block = manager.contextObject;
 
-                bmSelf.bindings.editPointCharacters(chars);
-                bmSelf.bindings.editPointDecimals(numDecimals);
-
-                bmSelf.editBlock = block;
-                bmSelf.openPrecisionEditor();
-            },
-            editBlockLabel: function () {
-                var block = manager.contextObject,
-                    label = block.label,
-                    showLabel = block.labelVisible;
-
-                bmSelf.bindings.editPointLabel(label);
-                bmSelf.bindings.editPointShowLabel(showLabel);
-                bmSelf.bindings.editPointShowValue(block.presentValueVisible); // ch#299
-
-                bmSelf.editBlock = block;
-                bmSelf.openLabelEditor();
+                gpl.blockManager.openBlockEditor(block);
             },
             showPointEditor: function () {
                 var block = manager.contextObject;
 
                 gpl.blockManager.openPointEditor(block, true);
-            },
-            updateBlockPrecision: function () {
-                bmSelf.editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
-                bmSelf.editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
-                bmSelf.editBlock.setPlaceholderText();
-                gpl.fire('editedblock', bmSelf.editBlock);
-                bmSelf.closePrecisionEditor();
-            },
-            updateBlockLabel: function () {
-                bmSelf.editBlock.setLabel(bmSelf.bindings.editPointLabel());
-                bmSelf.editBlock.setShowLabel(bmSelf.bindings.editPointShowLabel());
-                bmSelf.editBlock.setShowValue(bmSelf.bindings.editPointShowValue()); // ch#299
-                gpl.fire('editedblock', bmSelf.editBlock);
-                bmSelf.closeLabelEditor();
             },
             editPointReference: function () {
                 var editBlock = bmSelf.editBlock,
@@ -6092,7 +6060,7 @@ gpl.BlockManager = function (manager) {
                         }
                         anchor.adjustRelatedBlocks(true);
                     }
-                } else { //constant
+                } else if (editBlock.type === 'ConstantBlock') { //constant
                     editBlock.setValue(bmSelf.bindings.editPointValue());
                 }
 
@@ -6288,14 +6256,6 @@ gpl.BlockManager = function (manager) {
             }, 'Sequence', property);
         },
 
-        openPrecisionEditor: function (block) {
-            gpl.openModal(gpl.$editPrecisionModal);
-        },
-
-        closePrecisionEditor: function () {
-            gpl.closeModal(gpl.$editPrecisionModal);
-        },
-
         openLabelEditor: function (block) {
             gpl.openModal(gpl.$editLabelModal);
         },
@@ -6320,7 +6280,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.editBlock = block;
             bmSelf.editBlockUpi = block.upi;
             bmSelf.bindings.blockTitle(block.label);
-            bmSelf.bindings.editPointType(block.type);
+            bmSelf.bindings.editBlockType(block.type);
             bmSelf.bindings.editPointName(block.pointName);
             bmSelf.bindings.editPointCharacters(chars);
             bmSelf.bindings.editPointDecimals(numDecimals);
@@ -7021,6 +6981,7 @@ gpl.BlockManager = function (manager) {
         var target = event.target,
             gplId,
             targetBlock,
+            isInputOrOutputBlock,
             now = new Date().getTime();
 
         if (target && gpl.isEdit) {
@@ -7030,15 +6991,16 @@ gpl.BlockManager = function (manager) {
             if (now - bmSelf.lastSelectedTime < bmSelf.doubleClickDelay && targetBlock) { //doubleclick
                 bmSelf.handlingDoubleClick = true;
                 bmSelf.deselect();
-                // gpl.log('processing double click');
-                if (!targetBlock.isNonPoint) {
-                    bmSelf.openPointEditor(targetBlock);
-                } else if (!targetBlock.useNativeEdit && gpl.isEdit) {
-                    if (targetBlock instanceof gpl.Block) {
-                        bmSelf.openBlockEditor(targetBlock);
-                    } else {
-                        bmSelf.openTextEditor(targetBlock);
-                    }
+
+                isInputOrOutputBlock = !!~['Input','Output'].indexOf(targetBlock.blockType);
+
+                // ch492 Double-click opens the block editor unless the shift key is pressed
+                if (event.e.shiftKey && (!targetBlock.isNonPoint || isInputOrOutputBlock)) {
+                    bmSelf.openPointEditor(targetBlock, isInputOrOutputBlock);
+                } else if (targetBlock instanceof gpl.Block) {
+                    bmSelf.openBlockEditor(targetBlock);
+                } else {
+                    bmSelf.openTextEditor(targetBlock);
                 }
             } else {
                 // gpl.log('too much time');

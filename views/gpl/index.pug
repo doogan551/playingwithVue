@@ -123,39 +123,6 @@ html
                 .modal-footer
                     .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: doCancel") Ok
 
-        #editPrecisionModal.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle Edit Precision
-            .modal-content
-                .row
-                    .col.s2.numericFormat
-                        label(for="numberOfCharactersPrecision") # of Characters
-                        input#numberOfCharactersPrecision.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
-                    .col.s2.numericFormat
-                        label(for="numberOfDecimalsPrecision") # of Decimals
-                        input#numberOfDecimalsPrecision.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
-            .modal-footer
-                    .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockPrecision") Save
-        #editLabelModal.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle Edit Label
-            .modal-content
-                .row
-                    .col.s8.blockLabel
-                        label(for="editLabel") Label
-                        input#editLabel(data-bind="value: editPointLabel")
-                .row
-                    .col.s4.labelFormat
-                        input#showTheLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
-                        label(for="showTheLabel") Show Label
-                //- ch#299
-                .row
-                    .col.s4.labelFormat
-                        input#showTheValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
-                        label(for="showTheValue") Show Present Value
-            .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockLabel") Save
-
         #editTextModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Edit Text
@@ -282,17 +249,17 @@ html
 
         #editInputOutput.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
             .modal-header
-                .modalTitle(data-bind="text: (editPointType() === 'ConstantBlock' ? 'Edit Constant Block' : 'Edit Block')")
+                .modalTitle Edit Block
             .modal-content
                 .clearfix
-                    .row(data-bind="visible: editPointType() !== 'ConstantBlock'")
+                    .row(data-bind="visible: editBlockType() === 'MonitorBlock' || editBlockType() === 'ControlBlock'")
                         //.row
                         //    .col.s4.subtitle Reference
                         .row.pointName
                             .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
                             .col.s9
                                 span(data-bind="text: editPointName")
-                    .row(data-bind="visible: editPointType() === 'ConstantBlock'")
+                    .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
                         //.row
                         //    .col.s4.subtitle Configuration
                         .row
@@ -336,9 +303,7 @@ html
             //- ch281 (change href="" to href="#")
             ul.editSection
                 li.block(data-ignoretheme="true")
-                    a(href="#", data-bind="click: editBlockLabel") Edit Label
-                li.block(data-ignoretheme="true")
-                    a(href="#", data-bind="click: editBlockPrecision") Edit Precision
+                    a(href='#', data-bind="click: editBlock") Edit Block
                 li.block.nonPoint(data-ignoretheme="true")
                     a(href="#", data-bind="click: showPointEditor") Edit Point
                 li.block(data-ignoretheme="true")
