@@ -275,8 +275,9 @@ html
                             // /ko
                     .row
                         .col.s6.blockLabel
-                            label(for="blocklabel") Block Label
-                            input#blocklabel(data-bind="value: editPointLabel")
+                            //- ch485 check for label uniqueness on keyup; use materialize valid error class to indicate invalid label
+                            label(for="blocklabel", data-error="This label is already in use") Block Label
+                            input#blocklabel(data-bind="value: editPointLabel, event: { keyup: checkLabelUniqueness }, css: { valid: labelIsUnique() }")
                     .row
                         .col.s4 Numeric Format
                         .col.s2
@@ -297,7 +298,7 @@ html
                                 input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
                                 label(for="showPresentValue") Show Present Value
             .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined && !labelIsUnique())}") Save
 
         #jqxMenu.contextMenu.hideLoading
             //- ch281 (change href="" to href="#")

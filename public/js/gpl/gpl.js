@@ -5942,6 +5942,7 @@ gpl.BlockManager = function (manager) {
             selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
+            labelIsUnique: ko.observable(true), // ch485
             updateText: function () {
                 var text = bmSelf.bindings.editText(),
                     fontSize = bmSelf.bindings.editTextFontSize(),
@@ -5987,7 +5988,7 @@ gpl.BlockManager = function (manager) {
                 bmSelf.doOpenPointSelector(property);
             },
             updatePoint: function () {
-                var label = bmSelf.bindings.editPointLabel(),
+                var label = bmSelf.bindings.editPointLabel().toString(),
                     showValue = bmSelf.bindings.editPointShowValue(),
                     showLabel = bmSelf.bindings.editPointShowLabel(),
                     props = {
@@ -6076,6 +6077,13 @@ gpl.BlockManager = function (manager) {
                 if (editBlock.label !== label) {
                     editBlock.setLabel(label);
                     gpl.manager.bindings.hasEdits(true);
+
+                    // ch334 Update point name
+                    if (!editBlock.isNonPoint) {
+                        editBlock._pointData.path.splice(-1, 1, label);
+                        editBlock._pointData._path.splice(-1, 1, label.toLowerCase());
+                        editBlock._pointData.display = label;
+                    }
                 }
 
                 if (editBlock.labelVisible !== showLabel) {
@@ -6092,6 +6100,11 @@ gpl.BlockManager = function (manager) {
                 gpl.closeModal(gpl.$editInputOutputModal);
 
                 gpl.fire('editedblock', bmSelf.editBlock);
+            },
+            checkLabelUniqueness: function () { // ch485 (added function)
+                label = bmSelf.bindings.editPointLabel().toString();
+
+                bmSelf.bindings.labelIsUnique(gpl.labelIsUnique(label));
             }
         },
 
