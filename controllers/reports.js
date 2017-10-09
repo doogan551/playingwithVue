@@ -4,14 +4,13 @@ let _ = require('lodash');
 let utils = require('../helpers/utils.js');
 let Reports = require('../models/reports');
 
-let reportMainCallback = function (res, err, locals, result) {
-    let reportType = 'Property';
-
-    if (err && locals.id != 0) {  // only error out if can't find valid ID
+let reportMainCallback = function (res, err, locals) {
+    if (err && locals.point) {  // only error out if can't find valid ID
         return utils.sendResponse(res, {
             err: err
         });
     }
+    let pointType = locals.reportType;
 
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With');
@@ -19,19 +18,22 @@ let reportMainCallback = function (res, err, locals, result) {
     if (!locals) {
         res.render('reports/reportErrorNotFound');
     } else {
-        if (result && result['Report Type']) {
-            reportType = result['Report Type'].Value;
-        }
-        res.locals = locals;
-        switch (reportType) {
-            case 'Property':
-            case 'History':
-            case 'Totalizer':
-                res.render('reports/index');
-                break;
-            default:
-                res.render('reports/reportErrorNotFound');
-                break;
+        res.locals.point = JSON.stringify(locals.point);
+        res.locals.scheduledConfig = JSON.stringify(locals.scheduledConfig);
+
+        if (pointType) {
+            switch (pointType) {
+                case 'Property':
+                case 'History':
+                case 'Totalizer':
+                    res.render('reports/index');
+                    break;
+                default:
+                    res.render('reports/reportErrorNotFound');
+                    break;
+            }
+        } else {
+            res.render('reports/reportErrorNotFound');
         }
     }
 };
@@ -165,8 +167,8 @@ router.get('/:id', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    reports.reportMain(data, function (err, locals, result) {
-        reportMainCallback(res, err, locals, result);
+    reports.reportMain(data, function (err, locals) {
+        reportMainCallback(res, err, locals);
     });
 });
 // NOT CHECKED
@@ -175,8 +177,8 @@ router.get('/view/:id', function (req, res, next) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    reports.reportMain(data, function (err, locals, result) {
-        reportMainCallback(res, err, locals, result);
+    reports.reportMain(data, function (err, locals) {
+        reportMainCallback(res, err, locals);
     });
 });
 // NOT CHECKED

@@ -4,6 +4,7 @@ const async = require('async');
 const moment = require('moment');
 const ObjectID = require('mongodb').ObjectID;
 const config = require('config');
+const dtiCommon = require('../public/js/v2/dtiCommon');
 const RETURNLIMIT = 3000;
 
 const Report = class Report {
@@ -419,6 +420,7 @@ const Report = class Report {
         //     return timestamps;
         // }
     }
+
     reportMain(data, cb) {
         const point = new Point();
         const schedule = new Schedule();
@@ -433,94 +435,131 @@ const Report = class Report {
                 data: data
             },
             scheduled = (!!data.scheduleID),
-            reportResults = {},
-            reportData,
-            resolveColumnsPointNames = (columns) => {
+            reportResults = {
+                point: {}
+            },
+            pointRefs = [],
+            resolveColumnsPointNames = () => {
                 let i,
-                    column;
+                    column,
+                    pointRef,
+                    matchingPoint,
+                    upis = [],
+                    upisMapAppIndex = {},
+                    columns = reportResults.point['Report Config'].columns,
+                    matchingAppIndex = (ref) => {
+                        return ref.AppIndex === column.AppIndex;
+                    },
+                    matchingIDs = (ref) => {
+                        return ref._id === upisMapAppIndex[column.AppIndex];
+                    },
+                    fillInPointNames = () => {
+                        if (pointRef && pointRef.length) {
+                            point.getAll({
+                                query: {
+                                    _id: {
+                                        $in: upis
+                                    }
+                                },
+                                fields: {
+                                    _id: 1,
+                                    path: 1
+                                }
+                            }, (err, points) => {
+                                if (err) {
+                                    return cb(err, {id: data.id});
+                                } else if (points && points.length) {
+                                    for (i = 1; i < columns.length; i++) {
+                                        column = columns[i];
+                                        matchingPoint = points.filter(matchingIDs);
+                                        if (matchingPoint.length && matchingPoint[0].path.length) {
+                                            column.colName = dtiCommon.getPointName(matchingPoint[0].path);
+                                        } else {
+                                            column.colName = "";
+                                        }
+                                    }
+
+                                    return cb(null, reportResults);
+                                }
+                            });
+                        }
+                    };
 
                 if (columns) {
-                    //
-                    // for (i = 1; i < columns.length; i++) {
-                    //     column = columns[i];
-                    //     point.getOne({
-                    //         query: {
-                    //             _id: upi
-                    //         },
-                    //         fields: {
-                    //             path: 1
-                    //         }
-                    //     }, (err, point) => {
-                    //         if (!!point) {
-                    //             let reportName = point.Name;
-                    //         }
-                    //
-                    //     });
-                    // }
+                    for (i = 1; i < columns.length; i++) {
+                        column = columns[i];
+                        pointRef = pointRefs.filter(matchingAppIndex);
+                        if (upis.indexOf(pointRef[0].PointInst) === -1) {
+                            upis.push(pointRef[0].PointInst);
+                            upisMapAppIndex[column.AppIndex] = pointRef[0].PointInst;
+                        }
+                    }
+                    fillInPointNames();
                 }
             },
-            getValueTypes = (data) => {
+            getValueTypes = () => {
                 let i,
                     column,
                     filter;
-                if (data['Report Config'].columns) {
-                    for (i = 1; i < data['Report Config'].columns.length; i++) {
-                        column = data['Report Config'].columns[i];
+                if (reportResults.point['Report Config'].columns) {
+                    for (i = 1; i < reportResults.point['Report Config'].columns.length; i++) {
+                        column = reportResults.point['Report Config'].columns[i];
                         column.valueType = Config.Enums.Properties[column.colName].valueType;
                     }
                 }
 
-                if (data['Report Config'].filters) {
-                    for (i = 0; i < data['Report Config'].filters.length; i++) {
-                        filter = data['Report Config'].filters[i];
+                if (reportResults.point['Report Config'].filters) {
+                    for (i = 0; i < reportResults.point['Report Config'].filters.length; i++) {
+                        filter = reportResults.point['Report Config'].filters[i];
                         filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
                     }
                 }
 
-                return data;
+                return cb(null, reportResults);
             },
-            handleResults = () => {
+            getReportColumnInfo = () => {
+                if (reportResults.point['Report Config'].columns) {
+                    pointRefs = reportResults.point['Point Refs'];
+
+                    reportResults.reportType = reportResults.point['Report Type'].Value;
+                    if (reportResults.reportType === 'Property') {
+                        getValueTypes();
+                    } else {
+                        resolveColumnsPointNames();
+                    }
+                }
+            },
+            getScheduleConfig = () => {
                 if (scheduled) {
                     schedule.getOne(scheduleCriteria, (err, scheduleData) => {
                         if (err) {
                             return cb(err);
-                        }
-                        if (scheduleData === null) {
+                        } else if (scheduleData === null) {
                             return cb();
-                        }
-                        reportResults.scheduledConfig = {};
-                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
-                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
-                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
+                        } else {
+                            reportResults.scheduledConfig = {};
+                            reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                            reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                            reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
 
-                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
-                        return cb(null, reportResults, reportData);
+                            reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
+                            getReportColumnInfo();
+                        }
                     });
                 } else {
-                    return cb(null, reportResults, reportData);
+                    getReportColumnInfo();
                 }
             };
 
         // this is weird. change it to be nested instead of relying on flags in handlResults()
-        point.getPointById(reportCriteria.data, (err, message, result) => {
+        point.getPointById(reportCriteria.data, (err, message, reportPoint) => {
             if (err) {
                 return cb(err, {id: data.id});
-            }
+            } else if (!!reportPoint) {
+                reportResults.point = reportPoint;
 
-            if (!!result) {
-                if (result['Report Config'].columns) {
-                    if (result['Report Type'].Value === 'Property') {
-                        result = getValueTypes(result);
-                    } else {
-                        resolveColumnsPointNames(result['Report Config'].columns);
-                    }
-                }
+                getScheduleConfig();
 
-                reportResults.id = data.id;
-                reportResults.point = JSON.stringify(result);
-
-                reportData = result;
-                handleResults();
             } else {
                 return cb(message, {id: data.id}); // error
             }
