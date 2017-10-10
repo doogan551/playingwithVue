@@ -2913,7 +2913,9 @@ let Import = class Import extends Common {
                 async.eachOfSeries(weather, (value, prop, callback) => {
                     if (typeof value === 'number') {
                         pointModel.getOne({
-                            _oldUpi: value
+                            query: {
+                                _oldUpi: value
+                            }
                         }, (err, refPoint) => {
                             weather[prop] = (!!refPoint) ? refPoint._id : 0;
                             callback(err);

@@ -6,6 +6,7 @@ const Config = require('../public/js/lib/config.js');
 const config = require('config');
 const Point = require('../models/point');
 const Hierarchy = require('../models/hierarchy');
+const System = require('../models/system');
 
 const dbConfig = config.get('Infoscan.dbConfig');
 const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
@@ -32,8 +33,8 @@ let checkHierarchy = () => {
     let pointModel = new Point();
     pointModel.iterateCursor({}, (err, point, nextPoint) => {
         let newProps = Object.keys(Config.Templates.getTemplate('Location'));
-        for(var n = 0; n < newProps; n++) {
-            if(!point.hasOwnProperty(newProps[n])) {
+        for (var n = 0; n < newProps; n++) {
+            if (!point.hasOwnProperty(newProps[n])) {
                 console.log('missing property', newProps[n], point._id);
                 return nextPoint(null, true);
             }
@@ -47,11 +48,11 @@ let checkHierarchy = () => {
                 _id: point.parentNode
             }
         }, (err, parent) => {
-            if(!parent) {
+            if (!parent) {
                 console.log('no parent', point._id, point.display);
                 return nextPoint();
             }
-            if(!!err) {
+            if (!!err) {
                 return nextPoint(err);
             }
             if (!point.path.includes(parent.display)) {
@@ -92,6 +93,41 @@ let buildTags = () => {
     });
 };
 
+let fixToUUtil = () => {
+    let systemModel = new System();
+    let pointModel = new Point();
+
+    systemModel.getOne({
+        query: {
+            Name: 'Weather'
+        }
+    }, (err, weather) => {
+        async.eachOfSeries(weather, (value, prop, callback) => {
+            if (typeof value === 'number') {
+                pointModel.getOne({
+                    query: {
+                        _oldUpi: value
+                    }
+                }, (err, refPoint) => {
+                    weather[prop] = (!!refPoint) ? refPoint._id : 0;
+                    callback(err);
+                });
+            } else {
+                return callback();
+            }
+        }, (err) => {
+            systemModel.update({
+                query: {
+                    Name: 'Weather'
+                },
+                updateObj: weather
+            }, (err, results) => {
+                console.log('done', err, results);
+            });
+        });
+    });
+};
+
 db.connect(connectionString.join(''), function (err) {
-    checkHierarchy();
+    fixToUUtil();
 });
