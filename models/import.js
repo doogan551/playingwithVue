@@ -50,8 +50,7 @@ let Import = class Import extends Common {
         var count = 0;
         var criteria = {
             collection: pointsCollection,
-            query: {
-            }
+            query: {}
         };
 
         this.iterateCursor(criteria, (err, doc, cb) => {
@@ -73,7 +72,7 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                hierarchy.import((err) => {
+                                hierarchy.createHierarchy((err) => {
                                     this.fixToUUtil((err) => {
                                         if (err) {
                                             logger.info('updateGPLReferences err:', err);
@@ -1455,7 +1454,7 @@ let Import = class Import extends Common {
     updateGPLBlocks(point, callback) {
         var parentUpi = point._parentUpi;
         var pointTypes = ['Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer'];
-        if (pointTypes.indexOf(point['Point Type'].Value) !== -1) {
+        if (pointTypes.includes(point['Point Type'].Value)) {
             for (var prop in point) {
                 if (point[prop].ValueType === 8) {
                     if (parentUpi !== 0) {
