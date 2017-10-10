@@ -7249,6 +7249,7 @@ let reportsViewModel = function () {
             },
             postConfigInit = () => {
                 if (!!reportPoint) {
+                    self.parentID(reportPoint.parentNode);
                     self.canEdit(userCanEdit(reportPoint, permissionLevels.WRITE));
                     originalPoint = JSON.parse(JSON.stringify(reportPoint));
                     if (reportPoint["Report Config"] === undefined) {
