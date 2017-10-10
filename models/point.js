@@ -866,6 +866,8 @@ const Point = class Point extends Common {
         const alarmDefs = new AlarmDefs();
         const system = new System();
         const counterModel = new Counter();
+        const hierarchyModel = new Hierarchy();
+
         let criteria = {};
 
         let path = data.path;
@@ -984,8 +986,6 @@ const Point = class Point extends Common {
                 }
                 this.toLowerCasePath(template);
                 template.parentNode = parentNode;
-                template.nodeType = data.nodeType;
-                template.nodeSubType = data.nodeSubType;
 
                 console.log('isClone', isClone);
                 if (!isClone) {
@@ -1074,8 +1074,14 @@ const Point = class Point extends Common {
             return callback(null, template);
             // });
         };
-
-        doInitPoint(pointType, targetUpi, subType, cb);
+        hierarchyModel.checkUniqueDisplayUnderParent({display, parentNode}, (err, exists)=>{
+            if(!!err) {
+                return cb(err);
+            }else if(!!exists.exists) {
+                return cb('Label already exists under node');
+            }
+            doInitPoint(pointType, targetUpi, subType, cb);
+        });
     }
 
     getPointRefsSmall(data, cb) {
@@ -3054,6 +3060,9 @@ const Point = class Point extends Common {
                 parentNode,
                 display
             }, (err, validatedPoint) => {
+                if(err) {
+                    return callback(err);
+                }
                 let points = [{newPoint: validatedPoint}];
                 if (['Schedule', 'Sequence'].includes(validatedPoint['Point Type'].Value)) {
                     this.iterateCursor({

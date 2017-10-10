@@ -278,14 +278,14 @@ router.post('/copy', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    pointModel.copyPoint(data, function (response, points) {
-        if (response.err) {
+    pointModel.copyPoint(data, function (err, points) {
+        if (!!err && !err.msg) {
             return utils.sendResponse(res, {
-                err: response.err
+                err: err
             });
         }
 
-        return utils.sendResponse(res, {message: response.msg, points: points});
+        return utils.sendResponse(res, {message: err.msg, points: points});
     });
 });
 
