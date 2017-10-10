@@ -1154,7 +1154,6 @@ let Import = class Import extends Common {
                 'display': 1
             },
             options: {
-                unique: true,
                 sparse: true
             },
             collection: 'new_points'
@@ -2791,9 +2790,9 @@ let Import = class Import extends Common {
                         var json = cleanup(result),
                             newName = name.replace('.xml', '');
 
-                        while (newName.slice(-1) === '_') {
-                            newName = newName.slice(0, -1);
-                        }
+                        // while (newName.slice(-1) === '_') {
+                        //     newName = newName.slice(0, -1);
+                        // }
 
                         json = convertStrings(json);
 
