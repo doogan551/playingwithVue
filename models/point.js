@@ -3319,6 +3319,8 @@ const Point = class Point extends Common {
         let nodeSubType = this.getDefault(data.nodeSubType, '');
         let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
+            data.path = path;
+            this.toLowerCasePath(data);
             this.findAndModify({
                 query: {
                     _id: upi
@@ -3330,7 +3332,8 @@ const Point = class Point extends Common {
                         nodeType,
                         nodeSubType,
                         path,
-                        _pStatus
+                        _pStatus,
+                        _path: data._path
                     }
                 },
                 options: {

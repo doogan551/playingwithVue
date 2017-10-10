@@ -749,67 +749,140 @@ const Hierarchy = class Hierarchy extends Common {
             }
             return 'Application';
         };
-
-        const createFolder = (parent, point, segment, callback) => {
-
+        const createFolder = (parent, display, callback) => {
+            let data = Config.Templates.getTemplate('Location');
+            this.getNewId('Location', (err, upi) => {
+                data._id = upi;
+                data.display = display;
+                data.parentNode = parent._id;
+                data.nodeSubType = 'Area';
+                this.checkUniqueDisplayUnderParent({
+                    display,
+                    parentNode: parent._id
+                }, (err, exists) => {
+                    if (!!exists.exists) {
+                        this.getOne({
+                            query: {
+                                parentNode: parent._id,
+                                display
+                            }
+                        }, callback);
+                    } else {
+                        this.add(data, callback);
+                    }
+                });
+            });
         };
-        const addPoint = (parent, point, callback) => {
-
+        const createPoint = (parent, point, display, callback) => {
+            let data = {
+                upi: point._id,
+                parentNode: parent._id,
+                display: display,
+                nodeType: getNodeType(point['Point Type'].Value),
+                nodeSubType: point['Point Type'].Value
+            };
+            pointModel.addPointToHierarchy(data, (err, result) => {
+                callback(err);
+            });
         };
-        const shelvePoints = (criteria, callback) => {
-
+        const shelvePoints = (query, callback) => {
+            this.updateAll({
+                query,
+                updateObj: {
+                    $set: {
+                        _pStatus: 4
+                    }
+                }
+            }, callback);
         };
-        const getShelvedPoints = (criteria, callback) => {
+        const shelveScheduleEntries = (callback) => {
+            shelvePoints({
+                'Point Type.Value': 'Schedule Entry'
+            }, callback);
+        };
+        const addScheduleEntries = (callback) => {
+            this.iterateCursor({
+                query: {
+                    'Point Type.Value': 'Schedule Entry',
+                    _pStatus: 4
+                }
+            }, (err, entry, nextEntry) => {
+                let updateObj = {
+                    $set: {
+                        display: entry.Name,
+                        _pStatus: Config.Enums['Point Statuses'].Active.enum
+                    }
+                };
 
+                if (entry._parentUpi) {
+                    updateObj.$set.parentNode = entry._parentUpi;
+                } else {
+                    updateObj.$set.parentNode = entry['Point Refs'][0].Value;
+                }
+                this.update({
+                    query: {
+                        _id: entry._id
+                    },
+                    updateObj
+                }, (err, result) => {
+                    nextEntry(err);
+                });
+            }, callback);
         };
         const createRoot = (callback) => {
             createFolder({
                 _id: 0
-            }, {
-                Name: firstNode,
-                name1: firstNode
-            }, callback);
+            }, firstNode, callback);
         };
-        const addFolders = (segment, parent, callback) => {
+        const addFolders = (segment, parent, names, callback) => {
             // for each folder, add points then add folders for next segment (recursively)
-            const nextSegment = getNextSegment();
-            let field = segment;
-            let query = {};
+            const nextSegment = getNextSegment(segment);
             if (!nextSegment) {
-                query[nextSegment] = {
-                    $ne: ''
-                };
+                return callback();
             }
-
+            let field = segment;
+            let query = _.cloneDeep(names);
+            query['Point Type'] = {
+                $exists: 1
+            };
+            query[segment] = {
+                $exists: 1
+            };
+            query[nextSegment] = {
+                $ne: ''
+            };
+            // console.log('f', field, JSON.stringify(query));
             this.distinct({
                 field,
                 query
             }, (err, folderNames) => {
                 async.eachSeries(folderNames, (folder, nextFolder) => {
-                    let data = {};
-                    this.getNewId('Location', (err, upi) => {
-                        data._id = upi;
-                        data.display = folder;
-                        data.parentNode = parent._id;
-                        this.add(data, (err, nextParent) => {
-                            doSegment(nextSegment, nextParent, nextFolder);
-                        });
+                    // console.log('folder:', folder);
+                    createFolder(parent, folder, (err, nextParent) => {
+                        names[segment] = folder;
+                        doSegment(nextSegment, nextParent, names, nextFolder);
                     });
-                }, callback);
+                }, (err) => {
+                    if (!!err) {
+                        console.log(err);
+                    }
+                    callback(err);
+                });
             });
         };
-        const addPoints = (segment, parent, callback) => {
-            const nextSegment = getNextSegment();
-            let query = {};
-            if (!nextSegment) {
-                query[segment] = {
-                    $ne: ''
-                };
-            } else {
-                query = {
-                    nextSegment
-                };
+        const addPoints = (segment, parent, names, callback) => {
+            const nextSegment = getNextSegment(segment);
+            let query = _.cloneDeep(names);
+            query['Point Type'] = {
+                $exists: 1
+            };
+            query[segment] = {
+                $ne: ''
+            };
+            if (!!nextSegment) {
+                query[nextSegment] = '';
             }
+            // console.log('p', JSON.stringify(query));
 
             this.iterateCursor({
                 query,
@@ -818,30 +891,33 @@ const Hierarchy = class Hierarchy extends Common {
                     name2: 1,
                     name3: 1,
                     name4: 1,
+                    Name: 1,
                     'Point Type': 1
                 }
             }, (err, point, nextPoint) => {
-                let data = {
-                    upi: point._id,
-                    parentNode: parent._id,
-                    display: point[segment],
-                    nodeType: getNodeType(point['Point Type'].Value),
-                    nodeSubType: point['Point Type'].Value
-                };
-                pointModel.addPointToHierarchy(data, (err, result) => {
+                // console.log('point:', point.Name);
+                createPoint(parent, point, point[segment], (err) => {
                     nextPoint(err);
                 });
-            }, callback);
+            }, (err, count) => {
+                // console.log(err, count);
+                callback(err);
+            });
         };
-        const doSegment = (segment, parent, callback) => {
-            addPoints(segment, parent, (err) => {
-                addFolders(segment, parent, callback);
+        const doSegment = (segment, parent, names, callback) => {
+            parent = _.cloneDeep(parent);
+            names = _.cloneDeep(names);
+            addPoints(segment, parent, names, (err) => {
+                addFolders(segment, parent, names, callback);
             });
         };
         const start = (callback) => {
-            // do points then folders
-            createRoot((err, root) => {
-                doSegment(nameSegments[0], root, callback);
+            shelveScheduleEntries((err) => {
+                createRoot((err, root) => {
+                    doSegment(nameSegments[0], root, {}, (err) => {
+                        addScheduleEntries(callback);
+                    });
+                });
             });
         };
 
