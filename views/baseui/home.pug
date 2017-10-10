@@ -291,7 +291,7 @@ html
                         .col.s9.valign-wrapper
                             .pointTypeList.z-depth-1(data-bind="foreach: pointTypes")
                                 span
-                                    input.filled-in(name="availablePointTypes", type="radio", data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
+                                    input.filled-in(name="availablePointTypes", type="radio", data-bind="checked: $parent.selectedPointType, checkedValue: name, attr: {id: 'spt-' + $index() }")
                                     label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
                     // /ko
                     .row

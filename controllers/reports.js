@@ -10,7 +10,7 @@ let reportMainCallback = function (res, err, locals) {
             err: err
         });
     }
-    let pointType = locals.reportType;
+    let pointType = (locals.reportType ? locals.reportType : 'Property');
 
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With');

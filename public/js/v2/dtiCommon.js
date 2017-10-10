@@ -35,26 +35,35 @@ var dtiCommon = {
         return result;
     },
 
-    isPointDisplayStringValid: function (labelValue) {
+    isPointDisplayStringValid: (labelValue) => {
         var invalidChars = [],
             i,
             len = labelValue.length,
-            valid = true;
+            valid = true,
+            errMessage = "";
 
-        for (i = 0; i < len; i++) {
-            // if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
-            if (!dti.utility.getConfig('Utility.isPointNameCharacterLegal', [labelValue[i]])) {
-                if (!invalidChars.includes(labelValue[i])) {
-                    invalidChars.push(labelValue[i]);
+        if (len === 0) {
+            valid = false;
+            errMessage = "Label field is blank";
+        } else {
+            for (i = 0; i < len; i++) {
+                // if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
+                if (!dti.utility.getConfig('Utility.isPointNameCharacterLegal', [labelValue[i]])) {
+                    if (!invalidChars.includes(labelValue[i])) {
+                        invalidChars.push(labelValue[i]);
+                    }
+
+                    valid = false;
                 }
-
-                valid = false;
+            }
+            if (!valid) {
+                errMessage = "Label field contains invalid characters " + invalidChars.join();
             }
         }
 
         return {
             valid: valid,
-            invalidChars: invalidChars
+            errorMessage: errMessage
         };
     },
 
@@ -293,13 +302,14 @@ var dtiCommon = {
                             clearTimeout(keypressTimerID);
                             if (!vm.activeUniquenessCheck()) {
                                 keypressTimerID = setTimeout(function () {
-                                    elementValue = $element.val();
+                                    elementValue = $element.val().trim();
                                     let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+                                    $element.val(elementValue.trim());
                                     if (labelTest.valid) {
                                         vm.activeUniquenessCheck(true);
                                         dtiCommon.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
                                     } else {
-                                        handleElementStatus("Label field contains invalid characters " + labelTest.invalidChars.join());
+                                        handleElementStatus(labelTest.errorMessage);
                                     }
                                 }, keypressTimer);
                             }

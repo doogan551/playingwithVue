@@ -3609,6 +3609,9 @@ let reportsViewModel = function () {
                         delete results.collection[index].upi;
                         delete results.collection[index].searchable;
                         delete results.collection[index].searchFilter;
+                        if (index !== 0) {
+                            delete results.collection[index].colName;  // the first column is protected  (date || pointName)
+                        }
                     }
 
                     delete self.listOfColumns()[index].searchFilter;  // remove for every request, only used for search filtering the result set in ui
@@ -5089,7 +5092,9 @@ let reportsViewModel = function () {
                     reportPoint = data.points[0];
                     let reportConfig = (reportPoint["Report Config"] ? reportPoint["Report Config"] : undefined);
                     reportUtil.initExistingReport(reportConfig);
+                    afterSaveCallback(reportPoint);
                     saveManager.saveReportCallback(data);
+                    afterSaveCallback = null;  // clear callback once new point added to hierarchy
                 }
             });
         },
@@ -7205,8 +7210,6 @@ let reportsViewModel = function () {
             initGlobals = () => {
                 if (window.getWindowParameters) {
                     var cfg = window.getWindowParameters();
-
-                    window.attach = {};
 
                     if (cfg.pointData) {
                         reportPoint = $.extend(true, {}, cfg.pointData);

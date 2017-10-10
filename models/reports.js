@@ -482,10 +482,13 @@ const Report = class Report {
                                     return cb(null, reportResults);
                                 }
                             });
+                        } else {  // no point refs
+                            return cb(null, reportResults);
                         }
                     };
 
                 if (columns) {
+                    columns[0].colName = columns[0].colDisplayName;  //  the first column holds  Date || pointName
                     for (i = 1; i < columns.length; i++) {
                         column = columns[i];
                         pointRef = pointRefs.filter(matchingAppIndex);
@@ -499,18 +502,21 @@ const Report = class Report {
             },
             getValueTypes = () => {
                 let i,
+                    columns = reportResults.point['Report Config'].columns,
                     column,
+                    filters = reportResults.point['Report Config'].filters,
                     filter;
-                if (reportResults.point['Report Config'].columns) {
-                    for (i = 1; i < reportResults.point['Report Config'].columns.length; i++) {
-                        column = reportResults.point['Report Config'].columns[i];
+                if (columns) {
+                    columns[0].colName = columns[0].colDisplayName;   //  the first column holds  Date || pointName
+                    for (i = 1; i < columns.length; i++) {
+                        column = columns[i];
                         column.valueType = Config.Enums.Properties[column.colName].valueType;
                     }
                 }
 
-                if (reportResults.point['Report Config'].filters) {
-                    for (i = 0; i < reportResults.point['Report Config'].filters.length; i++) {
-                        filter = reportResults.point['Report Config'].filters[i];
+                if (filters) {
+                    for (i = 0; i < filters.length; i++) {
+                        filter = filters[i];
                         filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
                     }
                 }
@@ -527,6 +533,8 @@ const Report = class Report {
                     } else {
                         resolveColumnsPointNames();
                     }
+                } else {
+                    return cb("no columns configured");
                 }
             },
             getScheduleConfig = () => {
@@ -551,19 +559,22 @@ const Report = class Report {
                 }
             };
 
-        // this is weird. change it to be nested instead of relying on flags in handlResults()
-        point.getPointById(reportCriteria.data, (err, message, reportPoint) => {
-            if (err) {
-                return cb(err, {id: data.id});
-            } else if (!!reportPoint) {
-                reportResults.point = reportPoint;
+        if (data.id != 0) { // persisted points
+            point.getPointById(reportCriteria.data, (err, message, reportPoint) => {
+                if (err) {
+                    return cb(err, {id: data.id});
+                } else if (!!reportPoint) {
+                    reportResults.point = reportPoint;
 
-                getScheduleConfig();
+                    getScheduleConfig();
 
-            } else {
-                return cb(message, {id: data.id}); // error
-            }
-        });
+                } else {
+                    return cb(message, {id: data.id}); // error
+                }
+            });
+        } else {  // unpersisted points
+            return cb(null, {id: data.id});
+        }
     }
     reportSearch(data, cb) {
         const point = new Point();

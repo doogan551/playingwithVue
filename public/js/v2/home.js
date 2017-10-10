@@ -4331,9 +4331,7 @@ var dti = {
                 }
 
                 if (!!id) {
-                    dti.windows.openWindow({
-                        upi: id
-                    });
+                    dti.windows.openWindow(id);
                 } else {
                     dti.navigatorv2.tree.helper.showConfigureNodeModal('open', data, treeCb);
                 }
@@ -4576,22 +4574,7 @@ var dti = {
                         targetNode = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node,
                         // for an "add" action the selected targetNode is the parent of newly requested targetNode
                         parentNode = (modalBindings.generateNewNodeActions.indexOf(config.action) >= 0 ? targetNode : targetNode.parentNode),
-                        point = self.tree._configureNodePoint,
-                        getSelectedPointType = () => {  // TODO at the moment can be multiple pointtypes
-                            let i,
-                                uiPointTypes = modalBindings.pointTypes(),
-                                len = uiPointTypes.length,
-                                answer = "";
-
-                            for (i = 0; i < len; i++) {
-                                if (uiPointTypes[i].selected) {
-                                    answer = uiPointTypes[i].name;
-                                    break;
-                                }
-                            }
-
-                            return answer;
-                        };
+                        point = self.tree._configureNodePoint;
 
                     if (modalBindings.needsPoint() && !!point) {
                         modalBindings.modalNodeSubType(point.pointType);
@@ -4601,7 +4584,7 @@ var dti = {
                         display: modalBindings.modalNodeDisplay(),
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),  // TODO this is bound to location select (site, building, etc)
-                        pointType: getSelectedPointType(),
+                        pointType: modalBindings.selectedPointType(),
                         id: targetNode.bindings._id(),
                         node: targetNode,
                         parentNode: (!!parentNode ? parentNode.bindings._id() : null),
@@ -5078,6 +5061,14 @@ var dti = {
                 })
             ];
         },
+        resetPointTypesArray: () => {
+            let i,
+                len = dti.navigatorv2.addMenusPointTypes.length;
+            for (i = 0; i < len; i++) {
+                dti.navigatorv2.addMenusPointTypes[i].selected = false;
+                dti.navigatorv2.addMenusPointTypes[i].visible = true;
+            }
+        },
         handleNewPoint: (err, data, treeCb) => {
             if (err) {
                 dti.log(err);
@@ -5112,6 +5103,7 @@ var dti = {
                         width: 1250
                     }
                 });
+                dti.navigatorv2.resetPointTypesArray();
             }
         },
         destroy(config) {
@@ -6231,6 +6223,7 @@ var dti = {
                 modalNodePointName: '',
                 pointTypesShown: false,
                 pointTypeText: 'Point Types',
+                selectedPointType: '',
                 pointTypes: []
             }), {
                 addNode() {
