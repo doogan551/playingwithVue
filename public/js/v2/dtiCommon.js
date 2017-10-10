@@ -10,7 +10,8 @@
 var dtiCommon = {
     // _private intended to only be used by dtiCommon API functions and not accessed outside of dtiCommon
     _private: {
-        pointNameSeparator: '' // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+        pointNameSeparator: '', // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
+        validPointLabelRegEx: /[a-zA-Z 0-9%\.&\-\+\[\]\(\)\/]/
     },
 
     post(config) {
@@ -47,8 +48,8 @@ var dtiCommon = {
             errMessage = "Label field is blank";
         } else {
             for (i = 0; i < len; i++) {
-                // if (!dtiCommon._private.pointLabelRegex.test(labelValue[i])) {
-                if (!dti.utility.getConfig('Utility.isPointNameCharacterLegal', [labelValue[i]])) {
+                if (!dtiCommon._private.validPointLabelRegEx.test(labelValue[i])) {
+                // if (!dti.utility.getConfig('Utility.isPointNameCharacterLegal', [labelValue[i]])) {
                     if (!invalidChars.includes(labelValue[i])) {
                         invalidChars.push(labelValue[i]);
                     }
@@ -295,6 +296,17 @@ var dtiCommon = {
                         handleUniquenessResult = (err) => {
                             vm.activeUniquenessCheck(false);
                             handleElementStatus(err);
+                        },
+                        testFieldValidity = () => {
+                            elementValue = $element.val().trim();
+                            let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+                            $element.val(elementValue.trim());
+                            if (labelTest.valid) {
+                                vm.activeUniquenessCheck(true);
+                                dtiCommon.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
+                            } else {
+                                handleElementStatus(labelTest.errorMessage);
+                            }
                         };
 
                     $element
@@ -302,15 +314,7 @@ var dtiCommon = {
                             clearTimeout(keypressTimerID);
                             if (!vm.activeUniquenessCheck()) {
                                 keypressTimerID = setTimeout(function () {
-                                    elementValue = $element.val().trim();
-                                    let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
-                                    $element.val(elementValue.trim());
-                                    if (labelTest.valid) {
-                                        vm.activeUniquenessCheck(true);
-                                        dtiCommon.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
-                                    } else {
-                                        handleElementStatus(labelTest.errorMessage);
-                                    }
+                                    testFieldValidity();
                                 }, keypressTimer);
                             }
                         });

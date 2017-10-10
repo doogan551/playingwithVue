@@ -6235,6 +6235,16 @@ var dti = {
                 chooseNodePoint() {
                     dti.navigatorv2.tree.helper.chooseNodePoint();
                 }
+            }),
+            okToSave: ko.pureComputed(() => {
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    answer = (!modalBindings.activeSaveRequest() &&
+                        !modalBindings.activeUniquenessCheck() &&
+                        modalBindings.pathIsValid() &&
+                        modalBindings.modalNodeDisplay() !== '' &&
+                        modalBindings.selectedPointType() !== '');
+
+                return answer;
             })
         },
         globalSearch: {

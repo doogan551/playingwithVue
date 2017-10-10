@@ -6126,6 +6126,12 @@ let reportsViewModel = function () {
             };
         })();
 
+    self.activeUniquenessCheck = ko.observable(false);
+
+    self.pathIsValid = ko.observable(true);
+
+    self.parentID = ko.observable(reportPoint.parentNode);
+
     self.reportType = ko.observable("");
 
     self.reportTypeEnum = ko.observable(0);
@@ -7973,6 +7979,13 @@ let reportsViewModel = function () {
         return true;
     };
 
+    self.okToSave = ko.pureComputed(() => {
+        return (!self.activeSaveRequest() &&
+            !self.activeUniquenessCheck() &&
+            self.pathIsValid() &&
+            self.display() !== '');
+    });
+
     self.listOfIntervalsComputed = ko.computed(function () {
         var result = [],
             resetInterval = true,
@@ -8095,6 +8108,7 @@ function applyBindings(extConfig) {
         window.setTimeout(function () {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
+            dtiCommon.knockout.init();
             ko.applyBindings(reportsVM);
         }, 150);
     }
