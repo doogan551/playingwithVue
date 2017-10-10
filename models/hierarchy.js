@@ -21,7 +21,8 @@ const Hierarchy = class Hierarchy extends Common {
         this.getOne({
             query: {
                 parentNode,
-                display
+                display,
+                _pStatus: Config.Enums['Point Statuses'].Active.enum
             }
         }, (err, result) => {
             let exists = (!!result) ? true : false;
