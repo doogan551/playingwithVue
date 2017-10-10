@@ -5942,7 +5942,7 @@ gpl.BlockManager = function (manager) {
             selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
-            labelIsUnique: ko.observable(true), // ch485
+            labelIsValid: ko.observable(true), // ch485
             updateText: function () {
                 var text = bmSelf.bindings.editText(),
                     fontSize = bmSelf.bindings.editTextFontSize(),
@@ -5988,6 +5988,11 @@ gpl.BlockManager = function (manager) {
                 bmSelf.doOpenPointSelector(property);
             },
             updatePoint: function () {
+                // ch485 Do not allow save operation if the save is disabled (user needs to fix a problem)
+                if (bmSelf.bindings.editBlock_saveDisabled()) {
+                    return;
+                }
+
                 var label = bmSelf.bindings.editPointLabel().toString(),
                     showValue = bmSelf.bindings.editPointShowValue(),
                     showLabel = bmSelf.bindings.editPointShowLabel(),
@@ -6101,10 +6106,22 @@ gpl.BlockManager = function (manager) {
 
                 gpl.fire('editedblock', bmSelf.editBlock);
             },
-            checkLabelUniqueness: function () { // ch485 (added function)
-                label = bmSelf.bindings.editPointLabel().toString();
+            validateLabel: function (data, e) { // ch485 (added function)
+                var label = bmSelf.bindings.editPointLabel().toString().trim(),
+                    originalLabel = bmSelf.editBlock.label,
+                    isValid = true;
 
-                bmSelf.bindings.labelIsUnique(gpl.labelIsUnique(label));
+                if (label === '') {
+                    isValid = false;
+                } else if (label !== originalLabel) {
+                    isValid = gpl.labelIsUnique(label);
+                }
+
+                bmSelf.bindings.labelIsValid(isValid);
+
+                gpl.log('isValid', isValid);
+
+                return true;
             }
         },
 
@@ -6302,6 +6319,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointLabel(label);
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
+            bmSelf.bindings.labelIsValid(true); // ch485
 
             // gpl.blockUI();
             gpl.openModal(gpl.$editInputOutputModal);
@@ -6512,6 +6530,15 @@ gpl.BlockManager = function (manager) {
             bmSelf.prepReferences();
         }
     };
+
+    // ch485 (added binding)
+    bmSelf.bindings.editBlock_saveDisabled = ko.pureComputed(function () {
+        var editPointValue = bmSelf.bindings.editPointValue(),
+            editPointName = bmSelf.bindings.editPointName(),
+            labelIsValid = bmSelf.bindings.labelIsValid();
+
+        return ($.isNumeric(editPointValue) === false && editPointName === undefined) || !labelIsValid;
+    });
 
     bmSelf.bindings.gridSize.subscribe(function (val) {
         var newVal = parseInt(val, 10);

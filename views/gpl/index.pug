@@ -248,57 +248,54 @@ html
 
 
         #editInputOutput.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle Edit Block
             .modal-content
-                .clearfix
-                    .row(data-bind="visible: editBlockType() === 'MonitorBlock' || editBlockType() === 'ControlBlock'")
-                        //.row
-                        //    .col.s4.subtitle Reference
-                        .row.pointName
-                            .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
-                            .col.s9
-                                span(data-bind="text: editPointName")
-                    .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
-                        //.row
-                        //    .col.s4.subtitle Configuration
-                        .row
-                            // ko if: (editPointValueOptions().length > 0)
-                            .col.s3
-                                label Options
-                                select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
-                            // /ko
-                            // ko if: (editPointValueOptions().length === 0)
-                            .col.s3
-                                label(for="constantvalue") Value
-                                input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
-                            // /ko
+                .row(data-bind="visible: editBlockType() === 'MonitorBlock' || editBlockType() === 'ControlBlock'")
+                    //.row
+                    //    .col.s4.subtitle Reference
+                    .row.pointName
+                        .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
+                        .col.s9
+                            span(data-bind="text: editPointName")
+                .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
+                    //.row
+                    //    .col.s4.subtitle Configuration
                     .row
-                        .col.s6.blockLabel
-                            //- ch485 check for label uniqueness on keyup; use materialize valid error class to indicate invalid label
-                            label(for="blocklabel", data-error="This label is already in use") Block Label
-                            input#blocklabel(data-bind="value: editPointLabel, event: { keyup: checkLabelUniqueness }, css: { valid: labelIsUnique() }")
-                    .row
-                        .col.s4 Numeric Format
-                        .col.s2
-                        .col.s4 Label Format
-                    .row
-                        .col.s2.numericFormat
-                            label(for="numberOfCharacters") # of Characters
-                            input#numberOfCharacters.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
-                        .col.s2.numericFormat
-                            label(for="numberOfDecimals") # of Decimals
-                            input#numberOfDecimals.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
-                        .col.s2
-                        .col.s5.labelFormat
-                            .checkbox
-                                input#showLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
-                                label(for="showLabel") Show Label
-                            .checkbox
-                                input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
-                                label(for="showPresentValue") Show Present Value
+                        // ko if: (editPointValueOptions().length > 0)
+                        .col.s3
+                            label Options
+                            select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
+                        // /ko
+                        // ko if: (editPointValueOptions().length === 0)
+                        .col.s3
+                            label(for="constantvalue") Value
+                            input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
+                        // /ko
+                .row
+                    .col.s6.input-field
+                        //- ch485 check for label validity & indicate invalid label
+                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }")
+                        label(for="blocklabel", data-error="Invalid (must be unique and not blank)") Block Label
+                .row
+                    .col.s4 Numeric Format
+                    .col.s2
+                    .col.s4 Label Format
+                .row
+                    .col.s2.numericFormat
+                        label(for="numberOfCharacters") # of Characters
+                        input#numberOfCharacters.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                    .col.s2.numericFormat
+                        label(for="numberOfDecimals") # of Decimals
+                        input#numberOfDecimals.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
+                    .col.s2
+                    .col.s5.labelFormat
+                        .checkbox
+                            input#showLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
+                            label(for="showLabel") Show Label
+                        .checkbox
+                            input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
+                            label(for="showPresentValue") Show Present Value
             .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined && !labelIsUnique())}") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: editBlock_saveDisabled }") Save
 
         #jqxMenu.contextMenu.hideLoading
             //- ch281 (change href="" to href="#")
