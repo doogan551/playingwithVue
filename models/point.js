@@ -3010,40 +3010,6 @@ const Point = class Point extends Common {
         });
     }
 
-    createPoint(data, cb) {
-        const hierarchyModel = new Hierarchy();
-        let newPoint = data.newPoint;
-        const targetUpi = this.getNumber(newPoint.targetUpi);
-        const parentNodeId = this.getNumber(newPoint.parentNodeId);
-        const handleInitiatedPoint = (err, validatedPoint) => {
-            if (!!err && !err.hasOwnProperty('msg')) {
-                return cb(err);
-            }
-            return cb(null, validatedPoint);
-        };
-
-        hierarchyModel.getNode({
-            id: parentNodeId
-        }, (err, parentNode) => {
-            if (!!err) {
-                return cb(err);
-            }
-            newPoint.parentNode = parentNodeId;
-            newPoint.id = 'newPoint';
-            newPoint.targetUpi = targetUpi;
-            newPoint.parentUpi = parentNodeId;
-            newPoint.parentPath = parentNode.path;
-
-            if (data.parentNode === 0) {
-                newPoint.path = [newPoint.display];
-            } else {
-                newPoint.path = [...parentNode.path, newPoint.display];
-            }
-
-            this.initPoint(newPoint, handleInitiatedPoint);
-        });
-    }
-
     copyPoint(data, cb) {
         const hierarchyModel = new Hierarchy();
         let newPoint = data.newPoint;

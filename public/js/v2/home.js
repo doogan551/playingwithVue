@@ -4809,9 +4809,11 @@ var dti = {
                             parent: parent
                         },
                         data = {
-                            upi: "newPoint",
-                            targetUpi: "newPoint",
+                            upi: 0,
+                            targetUpi: 0,
+                            id: 0,
                             parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                            parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
                             nodeSubType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType),

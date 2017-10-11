@@ -263,7 +263,7 @@ router.post('/create', function (req, res) {
         user: req.user
     };
 
-    pointModel.createPoint(data, function (err, results) {
+    pointModel.initPoint(data.newPoint, function (err, results) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
