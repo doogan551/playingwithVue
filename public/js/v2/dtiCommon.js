@@ -68,7 +68,7 @@ var dtiCommon = {
         };
     },
 
-    isValidObjectAction: (action, actionObject, sourceNodeContainsTargetNode) => {
+    isValidHierarchyAction: (action, actionObject, sourceNodeContainsTargetNode) => {
         let isValidAction = true,
             targetNode = actionObject.targetNode,
             sourceNode = actionObject.sourceNode,
@@ -100,23 +100,33 @@ var dtiCommon = {
                 let cutNodeOnClipboard = (sourceNode && sourceNode.isCut),
                     copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
                     clipboardNodeType = sourceNode && sourceNode.nodeType,
-                    validPaste = cutNodeOnClipboard || copyNodeOnClipboard;
+                    validPaste = cutNodeOnClipboard || copyNodeOnClipboard,
+                    handleUniquenessCheck = (result) => {
+                        if (result) {
+                        } else {
+                            return validPaste;
+                        }
+                    };
 
-                if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
-                    validPaste = false;
-                } else if (targetNode.nodeType === "Reference") {
-                    validPaste = false;
-                } else if (cutNodeOnClipboard) { // logic specific to CUT nodes
-                    // Make sure we don't show paste if right-clicking the cut targetNode or inside the cut targetNode
-                    if (sourceNodeContainsTargetNode) {
+                if (validPaste) {
+                    if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
                         validPaste = false;
-                    } else if (clipboardNodeType === "Location" && targetNode.nodeType !== "Location") { // a location can only be pasting into a location
+                    } else if (targetNode.nodeType === "Reference") {
                         validPaste = false;
-                    } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
-                        validPaste = false;
+                    } else if (cutNodeOnClipboard) { // logic specific to CUT nodes
+                        if (sourceNodeContainsTargetNode) {  // if right-clicking the cut targetNode or inside the cut targetNode
+                            validPaste = false;
+                        } else if (clipboardNodeType === "Location" && targetNode.nodeType !== "Location") { // a location can only be pasting into a location
+                            validPaste = false;
+                        } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
+                            validPaste = false;
+                        } else {
+                            // check for uniqueness
+                            // dtiCommon.checkPathForUniqueness(targetNode._id, sourceNode.display, handleUniquenessCheck);
+                        }
+                    } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
+
                     }
-                } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
-
                 }
 
                 return validPaste;

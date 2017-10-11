@@ -4125,7 +4125,7 @@ var dti = {
                             visible: {
                                 action: 'add',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('add', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             items: {
@@ -4200,7 +4200,7 @@ var dti = {
                             visible: {
                                 action: 'open',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('open', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
@@ -4215,13 +4215,13 @@ var dti = {
                             visible: {
                                 action: 'rename',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('rename', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
                                 action: 'rename',
                                 cb: (data, treeCb) => {
-                                    dti.navigatorv2.tree.helper.showConfigureNodeModal('rename', data, treeCb);
+                                    dti.navigatorv2.tree.helper.showConfigureNodeModal(data.config.action, data, treeCb);
                                 }
                             }
                         },
@@ -4230,7 +4230,7 @@ var dti = {
                             visible: {
                                 action: 'cut',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('cut', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
@@ -4245,7 +4245,7 @@ var dti = {
                             visible: {
                                 action: 'copy',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('copy', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
@@ -4257,13 +4257,13 @@ var dti = {
                             visible: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('paste', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    dti.navigatorv2.tree.handlePasteRequest('paste', data, treeCb);
+                                    dti.navigatorv2.tree.handlePasteRequest(data.config.action, data, treeCb);
                                 }
                             }
                         },
@@ -4287,7 +4287,7 @@ var dti = {
                             visible: {
                                 action: 'delete',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('delete', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
                                 }
                             },
                             callback: {
@@ -4619,7 +4619,6 @@ var dti = {
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
                     }
-                    modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
 
                     self.$configureNodeModal.openModal();
                     self.$configureNodeModal.removeClass("addingPoint");
@@ -4689,7 +4688,8 @@ var dti = {
                             break;
                     }
 
-                    self.$configureNodeModal.find('label').attr("data-error", "");   // clear all error messages
+                    modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
+                    self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
                     self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
                     self.$configureNodeModal.find('select').material_select();
                 },
@@ -4795,7 +4795,19 @@ var dti = {
                         };
                     }
 
-                    return dtiCommon.isValidObjectAction(action, data, sourceContainsTarget);
+                    return dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget);
+                },
+                closeModal: () => {
+                    let self = dti.navigatorv2,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal;
+
+                    self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
+                    self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
+                    self.$configureNodeModal.removeClass("addingPoint");
+                    self.$configureNodeModal.closeModal();
+
+                    modalBindings.modalOpen(false);
+                    self.bindings.busy(false);
                 }
             },
             serverOps: {
@@ -6236,6 +6248,9 @@ var dti = {
                 },
                 chooseNodePoint() {
                     dti.navigatorv2.tree.helper.chooseNodePoint();
+                },
+                closeModal() {
+                    dti.navigatorv2.tree.helper.closeModal();
                 }
             }),
             okToSave: ko.pureComputed(() => {
@@ -7333,7 +7348,7 @@ var dti = {
                 handleCallback(action, data) {
                     // This routine is always called with 'this' set to the TreeViewer class instance.
                     // We need to preserve 'this' when calling the action, hence the '.call' in the function invocation
-                    if (this.callbackActions[action]) {
+                    if (this.callbackActions && this.callbackActions[action]) {
                         this.callbackActions[action].call(this, data);
                     } else {
                         dti.log('treeAction "', action, '" not found');
