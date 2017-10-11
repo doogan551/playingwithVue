@@ -6940,20 +6940,6 @@ gpl.BlockManager = function (manager) {
                     // TFS #573; set this to force the point editor to save changes to the db (changes activated immediately, as 
                     // opposed to being activated when the sequence is activated)
                     overrideIsEdit = true;
-                } else { // in edit mode
-                    // TFS #528 - The block's Device Point name is not shown in point inspector when launched from GPL edit mode
-                    // This is because we are not storing the Device Point name in the point refs anymore, and the API only does a 
-                    // 1st order resolution of point refs when a point is requested (i.e. we resolve point refs of the gpl point, 
-                    // but not the point refs of points on the gpl point). All blocks are required to reside on the same device, 
-                    // so i think we can safely add the GPL's device point name to the block's Point Refs before calling the point
-                    // inspector
-                    // ch336 - Don't do this if we're opening THE sequence device point
-                    if (gpl.devicePoint && (pointType !== 'Device')) { // Just CYB
-                        let blockDevicePoint = pointData['Point Refs'][0]; // Device point always at array index 0
-                        if (blockDevicePoint.PropertyName === 'Device Point') { // CYB
-                            blockDevicePoint.PointName = window.getConfig('Utility.getPointName', [gpl.devicePoint.path]);
-                        }
-                    }
                 }
                 
                 gpl.openWindow({
