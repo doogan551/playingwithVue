@@ -23,52 +23,52 @@ const Point = class Point extends Common {
         let stages = [{
             '$facet': {
                 'Ref': [{
-                        '$unwind': {
-                            'path': '$Point Refs',
-                            'preserveNullAndEmptyArrays': true
+                    '$unwind': {
+                        'path': '$Point Refs',
+                        'preserveNullAndEmptyArrays': true
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'points',
+                        'localField': 'Point Refs.Value',
+                        'foreignField': '_id',
+                        'as': 'refNames'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$refNames'
+                    }
+                }, {
+                    '$addFields': {
+                        'Point Refs.PointPath': '$refNames.path',
+                        'Point Refs.PointType': '$refNames.Point Type.eValue'
+                    }
+                }, {
+                    '$group': {
+                        '_id': '$_id',
+                        'Point Refs': {
+                            '$push': '$Point Refs'
                         }
-                    }, {
-                        '$lookup': {
-                            'from': 'points',
-                            'localField': 'Point Refs.Value',
-                            'foreignField': '_id',
-                            'as': 'refNames'
-                        }
-                    }, {
-                        '$unwind': {
-                            'path': '$refNames'
-                        }
-                    }, {
-                        '$addFields': {
-                            'Point Refs.PointPath': '$refNames.path',
-                            'Point Refs.PointType': '$refNames.Point Type.eValue'
-                        }
-                    }, {
-                        '$group': {
-                            '_id': '$_id',
-                            'Point Refs': {
-                                '$push': '$Point Refs'
-                            }
-                        }
-                    }],
+                    }
+                }],
                 'Point': [{
-                        '$sort': {
-                            '_id': 1
-                        }
-                    }],
+                    '$sort': {
+                        '_id': 1
+                    }
+                }],
                 'Points': [{
-                        '$project': {
-                            'Point Refs': {
-                                '$filter': {
-                                    'input': '$Point Refs',
-                                    'as': 'ref',
-                                    'cond': {
-                                        '$eq': ['$$ref.Value', 0]
-                                    }
+                    '$project': {
+                        'Point Refs': {
+                            '$filter': {
+                                'input': '$Point Refs',
+                                'as': 'ref',
+                                'cond': {
+                                    '$eq': ['$$ref.Value', 0]
                                 }
                             }
                         }
-                    }]
+                    }
+                }]
             }
         },
         {
@@ -77,18 +77,18 @@ const Point = class Point extends Common {
             }
         }, {
             '$project': {
-                    'Ref': {
-                        '$filter': {
-                            'input': '$Ref',
-                            'as': 'ref',
-                            'cond': {
-                                '$eq': ['$$ref._id', '$Point._id']
-                            }
+                'Ref': {
+                    '$filter': {
+                        'input': '$Ref',
+                        'as': 'ref',
+                        'cond': {
+                            '$eq': ['$$ref._id', '$Point._id']
                         }
-                    },
-                    'Point': 1,
-                    'Points': 1
-                }
+                    }
+                },
+                'Point': 1,
+                'Points': 1
+            }
         },
         {
             '$unwind': {
@@ -97,42 +97,42 @@ const Point = class Point extends Common {
             }
         }, {
             '$unwind': {
-                    'path': '$Points',
-                    'preserveNullAndEmptyArrays': true
-                }
+                'path': '$Points',
+                'preserveNullAndEmptyArrays': true
+            }
         },
         {
             '$group': {
                 '_id': '$Point._id',
                 'Point': {
-                        '$first': '$Point'
-                    },
+                    '$first': '$Point'
+                },
                 'Points': {
-                        '$first': '$Points'
-                    },
+                    '$first': '$Points'
+                },
                 'refs': {
-                        '$first': '$Ref'
-                    }
+                    '$first': '$Ref'
+                }
             }
         },
         {
             '$addFields': {
                 'Point.Point Refs': {
-                        '$concatArrays': [{
-                            '$cond': {
-                                'if': {
-                                    '$ne': ['$refs', null]
-                                },
-                                'then': '$refs.Point Refs',
-                                'else': []
-                            }
-                        }, '$Points.Point Refs']
-                    }
+                    '$concatArrays': [{
+                        '$cond': {
+                            'if': {
+                                '$ne': ['$refs', null]
+                            },
+                            'then': '$refs.Point Refs',
+                            'else': []
+                        }
+                    }, '$Points.Point Refs']
+                }
             }
         }, {
             '$replaceRoot': {
-                    'newRoot': '$Point'
-                }
+                'newRoot': '$Point'
+            }
         }
         ];
         let pipeline = [matchStage, ...stages];
