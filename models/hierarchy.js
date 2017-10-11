@@ -812,16 +812,9 @@ const Hierarchy = class Hierarchy extends Common {
         const pointModel = new Point();
         const firstNode = 'IS2k';
         const nameSegments = ['name1', 'name2', 'name3', 'name4'];
-        const ioPointTypes = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
 
         const getNextSegment = (segment) => {
             return nameSegments[nameSegments.indexOf(segment) + 1];
-        };
-        const getNodeType = (pointType) => {
-            if (!!~ioPointTypes.indexOf(pointType)) {
-                return 'Point';
-            }
-            return 'Application';
         };
         const createFolder = (parent, display, callback) => {
             let data = Config.Templates.getTemplate('Location');
@@ -852,7 +845,7 @@ const Hierarchy = class Hierarchy extends Common {
                 upi: point._id,
                 parentNode: parent._id,
                 display: display,
-                nodeType: getNodeType(point['Point Type'].Value),
+                nodeType: Config.Utility.getNodeType(point['Point Type'].Value),
                 nodeSubType: point['Point Type'].Value
             };
             pointModel.addPointToHierarchy(data, (err, result) => {
