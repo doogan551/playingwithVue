@@ -315,7 +315,8 @@ const Report = class Report {
                     }
                 }
             } else {
-                tempObj.Value = historyPoint.Value.toString();
+                // tempObj.Value = historyPoint.Value.toString();
+                tempObj.Value = historyPoint.value.toString();
             }
             // console.log(tempObj);
             return tempObj;

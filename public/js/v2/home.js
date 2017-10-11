@@ -6242,7 +6242,7 @@ var dti = {
                         !modalBindings.activeUniquenessCheck() &&
                         modalBindings.pathIsValid() &&
                         modalBindings.modalNodeDisplay() !== '' &&
-                        modalBindings.selectedPointType() !== '');
+                        (modalBindings.modalAction() !== "Add point" || modalBindings.selectedPointType() !== ''));
 
                 return answer;
             })
