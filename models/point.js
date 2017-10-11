@@ -3438,6 +3438,8 @@ const Point = class Point extends Common {
         let nodeSubType = this.getDefault(data.nodeSubType, '');
         let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
+            data.path = path;
+            this.toLowerCasePath(data);
             this.findAndModify({
                 query: {
                     _id: upi
@@ -3449,7 +3451,8 @@ const Point = class Point extends Common {
                         nodeType,
                         nodeSubType,
                         path,
-                        _pStatus
+                        _pStatus,
+                        _path: data._path
                     }
                 },
                 options: {
@@ -3465,20 +3468,21 @@ const Point = class Point extends Common {
                 addedPoints.push({
                     newNode: result
                 });
-                if (nodeSubType === 'Sequence') {
-                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
-                        addedPoints.push(...addedNodes);
-                        return cb(null, addedPoints);
-                    });
-                } else if (nodeSubType === 'Schedule') {
-                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
-                        return cb(null, addedPoints);
-                    });
-                } else {
-                    this.setHierarchyScheduleReference(upi, (err, addedEntries) => {
-                        return cb(null, addedPoints);
-                    });
-                }
+                return cb(null, addedPoints);
+                // if (nodeSubType === 'Sequence') { // TODO maybe remove
+                //     this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                //         addedPoints.push(...addedNodes);
+                //         return cb(null, addedPoints);
+                //     });
+                // } else if (nodeSubType === 'Schedule') { // TODO maybe remove
+                //     this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                //         return cb(null, addedPoints);
+                //     });
+                // } else {
+                //     this.setHierarchyScheduleReference(upi, (err, addedEntries) => { // TODO maybe remove
+                //         return cb(null, addedPoints);
+                //     });
+                // }
             });
         });
     }
