@@ -989,7 +989,7 @@ const Point = class Point extends Common {
 
                 console.log('isClone', isClone);
                 if (!isClone) {
-                    template.nodeType = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'].includes(pointType) ? 'Point' : 'Application';
+                    template.nodeType = Config.Utility.getNodeType(pointType);
                     template.nodeSubType = pointType;
                     // update device template here
                     // get telemetry ip port and set ethernet ip port and downlink ip port
