@@ -327,7 +327,9 @@ var dtiCommon = {
     init: {
         isComplete: false,
         clientSide: () => {
-            dtiCommon.knockout.init();
+            if (window.ko !== undefined) {
+                dtiCommon.knockout.init();
+            }
 
             if (window.dti && dti.utility) {
                 dtiCommon._private.pointNameSeparator = dti.utility.getConfig('Enums.Point Name Separator').Value;

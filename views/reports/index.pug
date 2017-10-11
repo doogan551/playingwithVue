@@ -100,12 +100,12 @@ html.direports
                                 .tab-pane.reportAttribs#reportAttribs
                                     .form-inline.blue-grey-text(style="display: inline-flex")
                                         .input-field.col
-                                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: true, value: display, dtiHierarchyLabel: display, valueUpdate: 'afterkeydown', enable: true")
+                                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: true, value: display, dtiHierarchyLabel: display, valueUpdate: 'afterkeydown', enable: unpersistedReport()")
                                             label(for="pointDisplayField") Label
-                                    .form-inline.blue-grey-text
-                                        .input-field.col
-                                            input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
-                                            label(data-bind="attr: {for: 'reportTitleInput'}") Report Title
+                                    //.form-inline.blue-grey-text
+                                    //    .input-field.col
+                                    //        input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: false, textInput: $root.reportDisplayTitle", required, type="text")
+                                    //        label(data-bind="attr: {for: 'reportTitleInput'}") Report Name
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
                                             // ko if: !unpersistedReport()
