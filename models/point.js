@@ -29,28 +29,28 @@ const Point = class Point extends Common {
                     }
                 }, {
                     '$lookup': {
-                        'from': 'points',
-                        'localField': 'Point Refs.Value',
-                        'foreignField': '_id',
-                        'as': 'refNames'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$refNames'
-                    }
-                }, {
-                    '$addFields': {
-                        'Point Refs.PointPath': '$refNames.path',
-                        'Point Refs.PointType': '$refNames.Point Type.eValue'
-                    }
-                }, {
-                    '$group': {
-                        '_id': '$_id',
-                        'Point Refs': {
-                            '$push': '$Point Refs'
+                            'from': 'points',
+                            'localField': 'Point Refs.Value',
+                            'foreignField': '_id',
+                            'as': 'refNames'
                         }
-                    }
-                }],
+                }, {
+                        '$unwind': {
+                            'path': '$refNames'
+                        }
+                    }, {
+                        '$addFields': {
+                            'Point Refs.PointPath': '$refNames.path',
+                            'Point Refs.PointType': '$refNames.Point Type.eValue'
+                        }
+                    }, {
+                        '$group': {
+                            '_id': '$_id',
+                            'Point Refs': {
+                                '$push': '$Point Refs'
+                            }
+                        }
+                    }],
                 'Point': [{
                     '$sort': {
                         '_id': 1
@@ -59,14 +59,14 @@ const Point = class Point extends Common {
                 'Points': [{
                     '$project': {
                         'Point Refs': {
-                            '$filter': {
-                                'input': '$Point Refs',
-                                'as': 'ref',
-                                'cond': {
-                                    '$eq': ['$$ref.Value', 0]
+                                '$filter': {
+                                    'input': '$Point Refs',
+                                    'as': 'ref',
+                                    'cond': {
+                                        '$eq': ['$$ref.Value', 0]
+                                    }
                                 }
                             }
-                        }
                     }
                 }]
             }
@@ -79,12 +79,12 @@ const Point = class Point extends Common {
             '$project': {
                 'Ref': {
                     '$filter': {
-                        'input': '$Ref',
-                        'as': 'ref',
-                        'cond': {
-                            '$eq': ['$$ref._id', '$Point._id']
+                            'input': '$Ref',
+                            'as': 'ref',
+                            'cond': {
+                                '$eq': ['$$ref._id', '$Point._id']
+                            }
                         }
-                    }
                 },
                 'Point': 1,
                 'Points': 1
@@ -120,12 +120,12 @@ const Point = class Point extends Common {
                 'Point.Point Refs': {
                     '$concatArrays': [{
                         '$cond': {
-                            'if': {
-                                '$ne': ['$refs', null]
-                            },
-                            'then': '$refs.Point Refs',
-                            'else': []
-                        }
+                                'if': {
+                                    '$ne': ['$refs', null]
+                                },
+                                'then': '$refs.Point Refs',
+                                'else': []
+                            }
                     }, '$Points.Point Refs']
                 }
             }
@@ -149,6 +149,22 @@ const Point = class Point extends Common {
                 });
             });
             return cb(null, points);
+        });
+    }
+
+    getAllPointsById(data, cb) {
+        let results = [];
+        async.eachSeries(data.upis, (upi, nextUpi) => {
+            this.getPointById({
+                id: upi,
+                user: data.user,
+                resolvePointRefs: data.resolvePointRefs
+            }, (err, message, point) => {
+                results.push(point);
+                nextUpi(err);
+            });
+        }, (err) => {
+            return cb(err, results);
         });
     }
 
@@ -3261,16 +3277,16 @@ const Point = class Point extends Common {
             this.changeNewIds(data.updates, (err, points) => {
                 let adds = [];
                 let updates = [];
-                points.forEach((point)=>{
+                points.forEach((point) => {
                     if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                         adds.push(point);
-                    }else{
+                    } else {
                         updates.push(point);
                     }
                 });
                 callback(null, updates, adds);
             });
-        }, (updates, adds, callback)=>{
+        }, (updates, adds, callback) => {
             async.mapSeries(updates, (point, mapCallback) => {
                 this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
                     mapCallback(response.err, updatedPoint);
@@ -3278,12 +3294,12 @@ const Point = class Point extends Common {
             }, (err, newPoints) => {
                 callback(err, adds, newPoints);
             });
-        }, (adds, newPoints, callback)=>{
+        }, (adds, newPoints, callback) => {
             async.mapSeries(adds, (point, mapCallback) => {
                 this.addPoint(point, user, null, (err, result) => {
                     mapCallback(err.err, result);
                 });
-            }, (err, _newPoints)=>{
+            }, (err, _newPoints) => {
                 callback(err, _newPoints.concat(newPoints));
             });
         }], (err, returnPoints) => {
