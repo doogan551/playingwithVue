@@ -546,27 +546,37 @@ const Hierarchy = class Hierarchy extends Common {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
 
-        this.getNode({
-            id: id
-        }, (err, node) => {
+        this.checkUniqueDisplayUnderParent({
+            id,
+            parentNode
+        }, (err, exists) => {
+            if (!!err) {
+                return cb(err);
+            } else if (!!exists.exists) {
+                return cb('Label already exists under node');
+            }
             this.getNode({
-                id: parentNode
-            }, (err, parent) => {
-                node.parentNode = parentNode;
+                id: id
+            }, (err, node) => {
+                this.getNode({
+                    id: parentNode
+                }, (err, parent) => {
+                    node.parentNode = parentNode;
 
-                if (parentNode === 0) {
-                    node.path = [node.display];
-                } else {
-                    node.path = [...parent.path, node.display];
-                }
-                this.toLowerCasePath(node);
-                this.update({
-                    query: {
-                        _id: id
-                    },
-                    updateObj: node
-                }, (err) => {
-                    this.updateChildrenPaths(id, node.path, cb);
+                    if (parentNode === 0) {
+                        node.path = [node.display];
+                    } else {
+                        node.path = [...parent.path, node.display];
+                    }
+                    this.toLowerCasePath(node);
+                    this.update({
+                        query: {
+                            _id: id
+                        },
+                        updateObj: node
+                    }, (err) => {
+                        this.updateChildrenPaths(id, node.path, cb);
+                    });
                 });
             });
         });
@@ -603,9 +613,14 @@ const Hierarchy = class Hierarchy extends Common {
     }
 
     updateChildrenPaths(parentNode, path, cb) {
-        this.iterateCursor({query: {
-            parentNode
-        }, fields: {path: 1}}, (err, child, nextChild)=>{
+        this.iterateCursor({
+            query: {
+                parentNode
+            },
+            fields: {
+                path: 1
+            }
+        }, (err, child, nextChild) => {
             for (var p = 0; p < path.length; p++) {
                 child.path[p] = path[p];
             }
@@ -620,10 +635,10 @@ const Hierarchy = class Hierarchy extends Common {
                         _path: child._path
                     }
                 }
-            }, (err, result)=>{
+            }, (err, result) => {
                 this.updateChildrenPaths(child._id, path, nextChild);
             });
-        }, (err, count)=>{
+        }, (err, count) => {
             cb(err);
         });
     }
