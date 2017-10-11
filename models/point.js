@@ -24,50 +24,50 @@ const Point = class Point extends Common {
             '$facet': {
                 'Ref': [{
                     '$unwind': {
-                        'path': '$Point Refs',
-                        'preserveNullAndEmptyArrays': true
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'points',
-                        'localField': 'Point Refs.Value',
-                        'foreignField': '_id',
-                        'as': 'refNames'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$refNames'
-                    }
-                }, {
-                    '$addFields': {
-                        'Point Refs.PointPath': '$refNames.path',
-                        'Point Refs.PointType': '$refNames.Point Type.eValue'
-                    }
-                }, {
-                    '$group': {
-                        '_id': '$_id',
-                        'Point Refs': {
-                            '$push': '$Point Refs'
+                            'path': '$Point Refs',
+                            'preserveNullAndEmptyArrays': true
                         }
-                    }
-                }],
+                }, {
+                        '$lookup': {
+                            'from': 'points',
+                            'localField': 'Point Refs.Value',
+                            'foreignField': '_id',
+                            'as': 'refNames'
+                        }
+                    }, {
+                        '$unwind': {
+                            'path': '$refNames'
+                        }
+                    }, {
+                        '$addFields': {
+                            'Point Refs.PointPath': '$refNames.path',
+                            'Point Refs.PointType': '$refNames.Point Type.eValue'
+                        }
+                    }, {
+                        '$group': {
+                            '_id': '$_id',
+                            'Point Refs': {
+                                '$push': '$Point Refs'
+                            }
+                        }
+                    }],
                 'Point': [{
                     '$sort': {
-                        '_id': 1
-                    }
+                            '_id': 1
+                        }
                 }],
                 'Points': [{
                     '$project': {
-                        'Point Refs': {
-                            '$filter': {
-                                'input': '$Point Refs',
-                                'as': 'ref',
-                                'cond': {
-                                    '$eq': ['$$ref.Value', 0]
+                            'Point Refs': {
+                                '$filter': {
+                                    'input': '$Point Refs',
+                                    'as': 'ref',
+                                    'cond': {
+                                        '$eq': ['$$ref.Value', 0]
+                                    }
                                 }
                             }
                         }
-                    }
                 }]
             }
         },
@@ -78,14 +78,14 @@ const Point = class Point extends Common {
         }, {
             '$project': {
                 'Ref': {
-                    '$filter': {
-                        'input': '$Ref',
-                        'as': 'ref',
-                        'cond': {
-                            '$eq': ['$$ref._id', '$Point._id']
+                        '$filter': {
+                            'input': '$Ref',
+                            'as': 'ref',
+                            'cond': {
+                                '$eq': ['$$ref._id', '$Point._id']
+                            }
                         }
-                    }
-                },
+                    },
                 'Point': 1,
                 'Points': 1
             }
@@ -119,14 +119,14 @@ const Point = class Point extends Common {
             '$addFields': {
                 'Point.Point Refs': {
                     '$concatArrays': [{
-                        '$cond': {
-                            'if': {
-                                '$ne': ['$refs', null]
-                            },
-                            'then': '$refs.Point Refs',
-                            'else': []
-                        }
-                    }, '$Points.Point Refs']
+                            '$cond': {
+                                'if': {
+                                    '$ne': ['$refs', null]
+                                },
+                                'then': '$refs.Point Refs',
+                                'else': []
+                            }
+                        }, '$Points.Point Refs']
                 }
             }
         }, {
@@ -3025,6 +3025,17 @@ const Point = class Point extends Common {
                 return cb(err, points);
             });
         };
+        const updateRef = (point, newId, oldId) => {
+            let refs = point['Point Refs'];
+            for (var r = 0; r < refs.length; r++) {
+                if(refs[r].Value === oldId) {
+                    refs[r].Value = newId;
+                }
+                if(refs[r].PointInst === oldId) {
+                    refs[r].PointInst = newId;
+                }
+            }
+        };
         const buildPoint = (targetUpi, parentNode, display, callback) => {
             this.initPoint({
                 targetUpi,
@@ -3049,11 +3060,12 @@ const Point = class Point extends Common {
                             parentNode: validatedPoint.id,
                             display: child.display,
                             parentPath: validatedPoint.path
-                        }, (err, validatedPoint) => {
-                            validatedPoint._parentUpi = validatedPoint.parentNode;
+                        }, (err, newBlock) => {
+                            newBlock._parentUpi = newBlock.parentNode;
                             points.push({
-                                newPoint: validatedPoint
+                                newPoint: newBlock
                             });
+                            updateRef(validatedPoint, newBlock.id, child._id);
                             nextChild();
                         });
                     }, (err, count) => {
