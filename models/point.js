@@ -3434,7 +3434,7 @@ const Point = class Point extends Common {
     getFilteredPoints(data, cb) {
         // Do we have a device ID?
         let deviceId = data.deviceId || null;
-        // Do we have a RU ID?
+        // Do we have a RMU ID?
         let remoteUnitId = data.remoteUnitId || null;
         // Do we have a point type?
         let pointType = data.pointType || null;
