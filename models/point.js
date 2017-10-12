@@ -1313,12 +1313,12 @@ const Point = class Point extends Common {
 
         let updatePointRefProperties = (_point) => {
             let refs = _point['Point Refs'];
-            for(var r = 0; r < refs.length; r++) {
+            for (var r = 0; r < refs.length; r++) {
                 let ref = refs[r];
-                for(var s = 0; s < refsStore.length; s++) {
+                for (var s = 0; s < refsStore.length; s++) {
                     let storedRef = refsStore[s];
 
-                    if(ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
+                    if (ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
                         ref.PointName = storedRef.PointName;
                         ref.PointType = storedRef.PointType;
                         break;
@@ -3479,17 +3479,22 @@ const Point = class Point extends Common {
         }
 
         if (!!deviceId) {
-            match.$and.push(...[{
-                'Point Refs.PointInst': parseInt(deviceId, 10)
-            }, {
-                'Point Refs.PropertyName': 'Device Point'
-            }]);
+            match.$and.push({
+                'Point Refs': {
+                    '$elemMatch': {
+                        'PointInst': parseInt(deviceId, 10),
+                        'PropertyName': 'Device Point'
+                    }
+                }
+            });
             if (!!remoteUnitId) {
                 match.$and.push({
-                    'Point Refs.PointInst': parseInt(remoteUnitId, 10)
-                });
-                match.$and.push({
-                    'Point Refs.PropertyName': 'Remote Unit Point'
+                    'Point Refs': {
+                        '$elemMatch': {
+                            'PointInst': parseInt(remoteUnitId, 10),
+                            'PropertyName': 'Remote Unit Point'
+                        }
+                    }
                 });
             }
         }
