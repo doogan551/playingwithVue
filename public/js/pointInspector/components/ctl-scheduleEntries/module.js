@@ -47,7 +47,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         socket = this.root.socket;
         config = this.utility.config;
         enumToArray = this.utility.enumToArray;
-        saveBtn = null;
+        var saveBtn = null;
         buildMonthStr = function (monthNo, day, year) {
             var monthStr = '';
 
@@ -306,7 +306,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 }
             }
             if (ooRFlag && !window.confirm('Base Time will max out at least one control time. Proceed?')) {
-
+                // making sure user wants to max times
             } else {
                 for (i = 0; i < self.entries().length; i++) {
                     var initTime = self.entries()[i].intervalAdjust();
@@ -394,7 +394,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
 
                     var newPoint = ko.viewmodel.fromModel(data);
                     self.oldPoints.push(oldPoint);
-                    item = self.buildObservable({
+                    var item = self.buildObservable({
                         point: newPoint,
                         oldPoint: oldPoint
                     });
@@ -487,18 +487,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 .done(function (response) {
                     var newPoint = _.cloneDeep(ko.viewmodel.toModel(data.point));
                     newPoint._id = response._id;
-                    newPoint.Name = response.Name;
-                    newPoint.name1 = response.name1;
-                    newPoint.name2 = response.name2;
-                    newPoint.name3 = response.name3;
-                    newPoint.name4 = response.name4;
-                    newPoint._Name = response.Name;
-                    newPoint._name1 = response._name1;
-                    newPoint._name2 = response._name2;
-                    newPoint._name3 = response._name3;
-                    newPoint._name4 = response._name4;
                     newPoint._pStatus = response._pStatus;
-                    item = self.buildObservable({
+                    var item = self.buildObservable({
                         oldPoint: response,
                         point: ko.viewmodel.fromModel(newPoint)
                     }, data);
@@ -773,7 +763,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         if (self.pointType !== 'Schedule' && indiv._parentUpi() !== 0) {
             getRefData(indiv._parentUpi()).done(function (data) {
                 if (data.hasOwnProperty('message')) {
-
+                    // ignore
                 } else {
                     var endPoint = config.Utility.pointTypes.getUIEndpoint(self.pointType, indiv._parentUpi());
                     item.scheduleName(config.Utility.getPointName(data.path));
@@ -787,8 +777,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
 
         item.refPoint = null;
         item.hasRef = ko.computed(function () {
-            currentRef = indiv['Point Refs']()[0].Value();
-            return currentRef !== 0;
+            return indiv['Point Refs']()[0].Value() !== 0;
         });
 
         item.intervalAdjust.subscribe(function (time) {
@@ -1065,7 +1054,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                     }
                     return dir;
                 }
-                return (obj1[prop].Name === obj2[prop].Name) ? 0 : (obj1[prop].Name < obj2[prop].Name) ? opp : dir;
+                return (obj1[prop].path === obj2[prop].path) ? 0 : (obj1[prop].path < obj2[prop].path) ? opp : dir;
             } else if (obj1.point[prop].hasOwnProperty('Value')) {
                 return (obj1.point[prop].Value() === obj2.point[prop].Value()) ? 0 : (obj1.point[prop].Value() < obj2.point[prop].Value()) ? opp : dir;
             }
@@ -1106,7 +1095,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
     ViewModel.prototype.sortTable = function (property, viewModel, e) {
         var $e = $(e.currentTarget);
 
-        if (this.sortProperty == property) {
+        if (this.sortProperty === property) {
             this.sortDirection = -this.sortDirection; // Change direction (-1 to 1 or 1 to -1)
         } else {
             this.sortProperty = property;
@@ -1116,7 +1105,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         sortArray.call(this.filteredEntries, property, this.sortDirection);
 
         $('table.entryTable thead div i.fa').removeClass('fa-chevron-down fa-chevron-up');
-        $e.find('i.fa').addClass(this.sortDirection == ASC ? 'fa-chevron-up' : 'fa-chevron-down');
+        $e.find('i.fa').addClass(this.sortDirection === ASC ? 'fa-chevron-up' : 'fa-chevron-down');
     };
     ViewModel.prototype.clearSearch = function () {
         this.searchTerm('');
@@ -1127,7 +1116,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         var $e = $(e.currentTarget),
             dayEnum = $e.data('enum');
 
-        days = data.point['Days Active'].Value();
+        var days = data.point['Days Active'].Value();
         data.point['Days Active'].Value(days ^ dayEnum);
     };
 
@@ -1135,7 +1124,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         var $e = $(e.currentTarget),
             dayEnum = $e.data('enum');
 
-        days = data.emptyEntry['Days Active'].Value();
+        var days = data.emptyEntry['Days Active'].Value();
         data.emptyEntry['Days Active'].Value(days ^ dayEnum);
     };
 
@@ -1163,7 +1152,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                         return false;
                     }
 
-                    return ko.unwrap(item.value) == newValue;
+                    return ko.unwrap(item.value) === newValue;
                 });
                 var garbageVar = !!match && value(ko.unwrap(match.name));
             });

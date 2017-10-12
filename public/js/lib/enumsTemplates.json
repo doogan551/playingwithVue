@@ -4227,7 +4227,10 @@
             "libraryId": 0,
             "refNode": 0,
             "_pStatus": 0,
-            "path": []
+            "path": [],
+            "_path": [],
+            "parentNode": 0,
+            "display": ""
         },
         "_common": {
             "_relDevice": 0,

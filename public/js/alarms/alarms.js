@@ -1,6 +1,6 @@
 /*jslint white: true */
 'use strict';
-var dti = {
+var dtiAlarms = {
     $: function (fn) {
         $(function delayFn() {
             setTimeout(function runInit() {
@@ -506,7 +506,7 @@ let AlarmManager = function (conf) {
                     pointAttribsFilterObj.pointTypes.push(results[i].key);
                 }
             }
-            numberPointTypes = results.length;
+            numberPointTypes = (!!results && results.length ? results.length : 0);
         },
         sendAcknowledge = function (idList) {
             let request,
@@ -919,9 +919,9 @@ let AlarmManager = function (conf) {
             }
 
             // Build concatenated name string & attach to alarm
-            alarm.Name = utilGetConfig("Utility.getPointName", [alarm.path]);
+            alarm.Name = dtiCommon.getPointName(alarm.path);
 
-            alarm.msgText = alarm.msgText.replace("%NAME", alarm.Name);  // server level sets %NAME place holder
+            alarm.msgText = dtiCommon.resolveAlarmName(alarm.msgText, alarm.path);  // server level sets %NAME place holder
         },
         // This routine is indirectly called from a computed. All ko observables should be accessed with .peek()
         buildAlarmRequestObject = function (alarmTable, reqObj) {
@@ -2748,7 +2748,9 @@ let AlarmManager = function (conf) {
     });
 
     dtiUtility.getUser(setCurrentUser);
-    utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    setTimeout(function runInit() {
+        utilGetConfig("Utility.pointTypes.getAllowedPointTypes", [], setAvailablePointTypes);
+    }, 30);
 
     //------ Computeds ------------------------------------
     // Computeds are calculated on creation; They are located here because the logic inside a couple of them
@@ -3141,19 +3143,20 @@ function initPage(manager) {
 function applyBindings () {
     // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). AlarmManager requires this opener method to be established
     // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-    if (window.top === undefined) {
-        window.setTimeout(applyBindings, 2);
-    } else {
+
+    if (window.dtiCommon && dtiCommon.init.isComplete) {
         window.manager = new AlarmManager({});
         ko.applyBindings(window.manager);
         window.manager.handleResize();
+
+        // Perform some page initializations (mostly click handlers)
+        initPage(window.manager);
+    } else {
+        window.setTimeout(applyBindings, 2);
     }
 }
 
-dti.$(function () {
+dtiAlarms.$(function () {
     // Apply KO bindings
     applyBindings();
-
-    // Perform some page initializations (mostly click handlers)
-    initPage(window.manager);
 });

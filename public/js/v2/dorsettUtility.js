@@ -116,6 +116,15 @@ var dtiUtility = {
                 }, 100);
             });
         }
+        // If dtiCommon.js isn't already included, get it
+        if (window.dtiCommon === undefined) {
+            $.getScript('/js/v2/dtiCommon.js', function handleGetFile() {
+                // When dtiCommon is included by the view, it inits itself by listening 
+                // to the DOM load event, but that event has already come and gone so we 
+                // manually call init
+                window.dtiCommon.init.clientSide();
+            });
+        }
 
         dtiUtility.initKnockout();
         dtiUtility.initEventListener();
@@ -201,6 +210,15 @@ var dtiUtility = {
                     }
 
                     delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
+                },
+                getBatchConfig: function () { 
+                    var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
+ 
+                    if (cb) { 
+                        cb(newValue.value); 
+                    } 
+ 
+                    delete dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
                 },
                 getUser: function () {
                     if (dtiUtility._getUserCb) {
@@ -356,6 +374,21 @@ var dtiUtility = {
             parameters: parameters,
             _getCfgID: getCfgID
         });
+    },
+    getBatchConfig: function (path, parameters, cb) { 
+        // path: string path to the desired config.js function, i.e. 'Utility.getPointName', 
+        // parameters: [param1, param2, param3, etc.] --> paramN is an array list of arguments passed to the path fn, 
+        // i.e. pathFn(param1a, param1b, ... param1x) 
+        var getCfgID = dtiUtility.makeId(); 
+ 
+        dtiUtility.getConfigCallbacks[getCfgID] = cb; 
+ 
+        dtiUtility.sendMessage('getBatchConfig', { 
+            messageID: getCfgID, 
+            path: path, 
+            parameters: parameters, 
+            _getCfgID: getCfgID 
+        }); 
     },
     getUser: function (cb) {
         dtiUtility._getUserCb = cb;

@@ -146,6 +146,12 @@ const Point = class Point extends Common {
             points.forEach((point) => {
                 point['Point Refs'].forEach((pointRef) => {
                     pointRef.PointName = Config.Utility.getPointName(pointRef.PointPath);
+                    if (!pointRef.PointName) {
+                        pointRef.PointName = '';
+                    }
+                    if (!pointRef.PointType) {
+                        pointRef.PointType = '';
+                    }
                 });
             });
             return cb(null, points);
@@ -395,7 +401,7 @@ const Point = class Point extends Common {
         let criteria = {
             query: buildQuery(),
             sort: sort,
-            _limit: limit,
+            limit: limit,
             fields: projection,
             data: data,
             count: false
@@ -871,53 +877,37 @@ const Point = class Point extends Common {
         let parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
 
         let doInitPoint = (pointType, targetUpi, subType, callback) => {
-            criteria = {
-                query: {
-                    _Name: _Name
-                }
-            };
-
-            this.getOne(criteria, (err, freeName) => {
+            system.getSystemInfoByName('Preferences', (err, sysInfo) => {
                 if (err) {
                     return callback(err);
                 }
 
-                if (freeName !== null && pointType !== 'Schedule Entry') {
-                    return callback('Name already exists.');
+                // if (pointType === 'Schedule Entry') {
+                //     name2 = '0';
+                //     buildName(name1, name2, name3, name4);
+                // }
+
+                if (targetUpi && targetUpi !== 0) {
+                    criteria = {
+                        query: {
+                            _id: targetUpi
+                        }
+                    };
+
+                    this.getOne(criteria, (err, targetPoint) => {
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        if (!targetPoint) {
+                            return callback('Target point not found.');
+                        }
+
+                        fixPoint(targetPoint, true, sysInfo, callback);
+                    });
+                } else {
+                    fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
                 }
-
-                system.getSystemInfoByName('Preferences', (err, sysInfo) => {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    // if (pointType === 'Schedule Entry') {
-                    //     name2 = '0';
-                    //     buildName(name1, name2, name3, name4);
-                    // }
-
-                    if (targetUpi && targetUpi !== 0) {
-                        criteria = {
-                            query: {
-                                _id: targetUpi
-                            }
-                        };
-
-                        this.getOne(criteria, (err, targetPoint) => {
-                            if (err) {
-                                return cb(err);
-                            }
-
-                            if (!targetPoint) {
-                                return callback('Target point not found.');
-                            }
-
-                            fixPoint(targetPoint, true, sysInfo, callback);
-                        });
-                    } else {
-                        fixPoint(Config.Templates.getTemplate(pointType), false, sysInfo, callback);
-                    }
-                });
             });
         };
 
@@ -1311,12 +1301,32 @@ const Point = class Point extends Common {
                 user: user,
                 timestamp: Date.now(),
                 point: newPoint
-            };
+            },
+            // Have to store the refs before removal because the point inspector expects the point refs to be returned correctly
+            refsStore = _.cloneDeep(newPoint['Point Refs']);
+
         readOnlyProps = ['_id', '_cfgDevice', '_updTOD', '_pollTime', '_pAccess',
             '_forceAllCOV', '_actvAlmId', 'Alarm State', 'Control Pending', 'Device Status',
             'Last Report Time', 'Point Type', 'Reliability'
         ];
         // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
+
+        let updatePointRefProperties = (_point) => {
+            let refs = _point['Point Refs'];
+            for(var r = 0; r < refs.length; r++) {
+                let ref = refs[r];
+                for(var s = 0; s < refsStore.length; s++) {
+                    let storedRef = refsStore[s];
+
+                    if(ref.PropertyEnum === storedRef.PropertyEnum && ref.AppIndex === storedRef.AppIndex) {
+                        ref.PointName = storedRef.PointName;
+                        ref.PointType = storedRef.PointType;
+                        break;
+                    }
+                }
+            }
+            _point['Point Refs'] = refs;
+        };
 
         this.getOne({
             query: {
@@ -1343,36 +1353,37 @@ const Point = class Point extends Common {
 
             configRequired = newPoint._cfgRequired;
 
+
             // TODO should this be === or !== ? - probably !== since it is used again
             if (flags.method !== null) {
                 if (oldPoint._pStatus === Config.Enums['Point Statuses'].Active.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Active.enum) {
                     generateActivityLog = true;
                 } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Active.enum) {
                     if (flags.method === 'restore') {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: 'Point restored',
                             activity: 'Point Restore'
                         }));
                     } else {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: 'Point added',
                             activity: 'Point Add'
                         }));
                     }
                 } else if (oldPoint._pStatus === Config.Enums['Point Statuses'].Active.enum && newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
                     if (flags.method === 'hard') {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: 'Point destroyed',
                             activity: 'Point Hard Delete'
                         }));
                     } else if (flags.method === 'soft') {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: 'Point deleted',
                             activity: 'Point Soft Delete'
                         }));
                     }
                 } else if (newPoint.Name !== oldPoint.Name) {
-                    activityLogObjects.push(_.merge(logData, {
+                    activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                         log: 'Point renamed from ' + oldPoint.Name + ' to ' + newPoint.Name,
                         activity: 'Point Restore'
                     }));
@@ -1862,41 +1873,41 @@ const Point = class Point extends Common {
                                     newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : '[blank]';
                                 //if enum, if evalue changed AL, else if not enum, compare value
                                 if (['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0) {
-                                    activityLogObjects.push(_.merge(logData, {
+                                    activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                         log: newPoint['Point Type'].Value + ' updated',
                                         activity: 'Point Property Edit'
                                     }));
                                 } else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
                                     if (prop === 'Configure Device') {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: 'Device configuration requested',
                                             activity: 'Device Configuration'
                                         }));
                                     } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].Bool.enum) {
                                         if (newPoint[prop].Value === true) {
-                                            activityLogObjects.push(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                                 log: prop + ' set',
                                                 activity: 'Point Property Edit'
                                             }));
                                         } else {
-                                            activityLogObjects.push(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                                 log: prop + ' cleared',
                                                 activity: 'Point Property Edit'
                                             }));
                                         }
                                     } else if (newPoint[prop].ValueType === Config.Enums['Value Types'].UniquePID.enum) {
                                         if (oldPoint[prop].PointInst !== null && newPoint[prop].PointInst === null) {
-                                            activityLogObjects.push(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                                 log: newPoint[prop].Name + ' removed from ' + prop,
                                                 activity: 'Point Property Edit'
                                             }));
                                         } else if (oldPoint[prop].PointInst === null && newPoint[prop].PointInst !== null) {
-                                            activityLogObjects.push(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                                 log: newPoint[prop].Name + ' added to ' + prop,
                                                 activity: 'Point Property Edit'
                                             }));
                                         } else {
-                                            activityLogObjects.push(_.merge(logData, {
+                                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                                 log: prop + ' changed from ' + oldPoint[prop].Name + ' to ' + newPoint[prop].Name,
                                                 activity: 'Point Property Edit'
                                             }));
@@ -1955,24 +1966,24 @@ const Point = class Point extends Common {
                                                 timeMessage += hour + ':' + min;
                                                 break;
                                         }
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: timeMessage,
                                             activity: 'Point Property Edit'
                                         }));
                                     } else {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: prop + ' changed from ' + oldVal + ' to ' + newVal,
                                             activity: 'Point Property Edit'
                                         }));
                                     }
                                 } else if (prop === 'Point Refs') {
                                     if (newPoint['Point Type'].Value === 'Slide Show') {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: 'Slide Show edited',
                                             activity: 'Slideshow Edit'
                                         }));
                                     } else if (newPoint['Point Type'].Value === 'Program') {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: 'Program edited',
                                             activity: 'Program Edit'
                                         }));
@@ -1980,27 +1991,27 @@ const Point = class Point extends Common {
                                         compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                                     }
                                 } else if (prop === 'Alarm Messages' || prop === 'Occupancy Schedule' || prop === 'Sequence Details' || prop === 'Security' || prop === 'Script Source File') {
-                                    activityLogObjects.push(_.merge(logData, {
+                                    activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                         log: prop + ' updated',
                                         activity: 'Point Property Edit'
                                     }));
                                 } else if (prop === 'Name') {
                                     if (newPoint[prop] !== oldPoint[prop]) {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: prop + ' changed from ' + oldPoint[prop] + ' to ' + newPoint[prop],
                                             activity: 'Point Property Edit'
                                         }));
                                     }
                                     /*} else if (prop === "Value") {
                                       if (newPoint[prop].Value !== oldPoint[prop].Value) {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                           log: prop + " changed from " + oldVal + " to " + newVal,
                                           activity: "Point Property Edit"
                                         }));
                                       }*/
                                 } else if (prop === 'States') {
                                     if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
-                                        activityLogObjects.push(_.merge(logData, {
+                                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                                             log: prop + ' updated',
                                             activity: 'Point Property Edit'
                                         }));
@@ -2071,6 +2082,7 @@ const Point = class Point extends Common {
                                 }, null);
                             }
                             let error = null;
+                            updatePointRefProperties(result);
                             this.updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, (err) => {
                                 if (err) {
                                     return callback({
@@ -2128,6 +2140,7 @@ const Point = class Point extends Common {
                         });
                     });
                 } else {
+                    updatePointRefProperties(newPoint);
                     return callback({
                         message: 'success'
                     }, newPoint);
@@ -2154,17 +2167,17 @@ const Point = class Point extends Common {
                 if (newArray[i].Value !== oldArray[i].Value) {
                     logData.prop = newArray[i].PropertyName;
                     if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: logData.prop + ' removed',
                             activity: 'Point Property Edit'
                         }));
                     } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: logData.prop + ' added',
                             activity: 'Point Property Edit'
                         }));
                     } else {
-                        activityLogObjects.push(_.merge(logData, {
+                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
                             log: logData.prop + ' changed from ' + oldArray[i].PointName + ' to ' + newArray[i].PointName,
                             activity: 'Point Property Edit'
                         }));
@@ -2385,7 +2398,6 @@ const Point = class Point extends Common {
                     }
                 }, (err, dependency) => {
                     // TODO Check for errors
-                    console.log('waterfall', dependency.Name, dependency['Point Type'].Value, flags.method);
                     async.waterfall([
                         (cb1) => {
                             if (dependency['Point Type'].Value === 'Schedule Entry' && flags.method === 'hard') {
@@ -2478,7 +2490,6 @@ const Point = class Point extends Common {
                             }
                         }
                     ], (err) => {
-                        console.log('err', err);
                         depCB(err);
                     });
                 });
@@ -3308,6 +3319,8 @@ const Point = class Point extends Common {
         let nodeSubType = this.getDefault(data.nodeSubType, '');
         let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
+            data.path = path;
+            this.toLowerCasePath(data);
             this.findAndModify({
                 query: {
                     _id: upi
@@ -3319,7 +3332,8 @@ const Point = class Point extends Common {
                         nodeType,
                         nodeSubType,
                         path,
-                        _pStatus
+                        _pStatus,
+                        _path: data._path
                     }
                 },
                 options: {
@@ -3335,20 +3349,21 @@ const Point = class Point extends Common {
                 addedPoints.push({
                     newNode: result
                 });
-                if (nodeSubType === 'Sequence') {
-                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
-                        addedPoints.push(...addedNodes);
-                        return cb(null, addedPoints);
-                    });
-                } else if (nodeSubType === 'Schedule') {
-                    this.setHierarchyParentUpi(upi, (err, addedNodes) => {
-                        return cb(null, addedPoints);
-                    });
-                } else {
-                    this.setHierarchyScheduleReference(upi, (err, addedEntries) => {
-                        return cb(null, addedPoints);
-                    });
-                }
+                return cb(null, addedPoints);
+                // if (nodeSubType === 'Sequence') { // TODO maybe remove
+                //     this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                //         addedPoints.push(...addedNodes);
+                //         return cb(null, addedPoints);
+                //     });
+                // } else if (nodeSubType === 'Schedule') { // TODO maybe remove
+                //     this.setHierarchyParentUpi(upi, (err, addedNodes) => {
+                //         return cb(null, addedPoints);
+                //     });
+                // } else {
+                //     this.setHierarchyScheduleReference(upi, (err, addedEntries) => { // TODO maybe remove
+                //         return cb(null, addedPoints);
+                //     });
+                // }
             });
         });
     }
@@ -3449,7 +3464,7 @@ const Point = class Point extends Common {
 
         if (!!terms && terms.length) {
             match.$and.push({
-                path: {
+                _path: {
                     $all: this.buildSearchTerms(terms)
                 }
             });

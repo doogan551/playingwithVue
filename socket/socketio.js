@@ -674,7 +674,7 @@ function getVals(upis) {
                 }
 
                 dyn['Quality Label'] = point['Quality Label'];
-                dyn.Name = point.Name;
+                dyn.path = point.path;
                 common.sendUpdate(dyn);
             }
         });

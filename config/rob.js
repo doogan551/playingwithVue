@@ -28,7 +28,7 @@ var rob = {
     minifyFiles: false
 };
 
-rob.Infoscan.files.firmwareLocation = '\\\\192.168.1.88/d$/InfoScan/Firmware/';
+rob.Infoscan.files.firmwareLocation = '\\\\info-int/d$/InfoScan/Firmware/';
 rob.Infoscan.processes.zmqProcess = rob.Infoscan.files.driveLetter + ':/InfoScan/Server/zmqServer.exe';
 rob.Infoscan.processes.smProcess = rob.Infoscan.files.driveLetter + ':/InfoScan/Server/ServerMonitor.exe';
 

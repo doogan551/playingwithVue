@@ -1,28 +1,30 @@
 var stephen = {
-    'Infoscan': {
-        'dbConfig': {
-            'host': 'localhost',
-            'dbName': 'infoscan'
+    Infoscan: {
+        dbConfig: {
+            host: 'localhost',
+            dbName: 'infoscan'
         },
-        'files': {
-            'driveLetter': 'C'
+        zmqConfig: {
+            server: 'info-int'
         },
-        'location': {
-            'site': 'Stephen'
+        files: {
+            driveLetter: 'C'
         },
-        'email': {
-            'onError': {
-                'to': 'strent@dorsett-tech.com',
-                'enabled': true
+        location: {
+            site: 'Stephen'
+        },
+        email: {
+            onError: {
+                to: 'strent@dorsett-tech.com',
+                enabled: true
             }
         }
     },
+    redisConfig: {
+        host: 'localhost'
+    },
     runNotifications: false
     // minifyFiles: false
-};
-
-stephen.redisConfig = {
-    host: stephen.Infoscan.dbConfig.host
 };
 
 module.exports = stephen;

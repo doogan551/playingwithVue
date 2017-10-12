@@ -676,6 +676,7 @@ html
                 .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
             // /ko
 
+
     script.
         var isAuthenticated = !{isAuthenticated};
         var userData = !{user};
@@ -684,7 +685,6 @@ html
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
     script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
     script(type='text/javascript', src='/js/lib/lodash.min.js')
-    script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
     script(type='text/javascript', src='/js/lib/store2.min.js')
     script(type='text/javascript', src='/js/lib/jstree.js')
@@ -695,5 +695,12 @@ html
     script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/lib/mbox.js')
-    script(type='text/javascript', src='/js/v2/home.js')
+    script.
+        // The following files are order dependent:
+        // dtiCommon.js must precede dorsettUtility.js
+        // dorsettUtility.js must precede config.js
+        // config.js must precede home.js
+    script(type='text/javascript', src='/js/v2/dtiCommon.js')
     script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+    script(type='text/javascript', src='/js/lib/config.js')
+    script(type='text/javascript', src='/js/v2/home.js')

@@ -1,25 +1,10 @@
-[{
-    '$match': {
-        '$and': [{
-            'path': {
-                '$all': [{}]
-            }
-        }, {
-            'Point Type.Value': {
-                '$in': ['Accumulator', 'Alarm Status', 'Analog Input', 'Analog Output', 'Analog Selector', 'Analog Value', 'Average', 'Binary Input', 'Binary Output', 'Binary Selector', 'Binary Value', 'Comparator', 'Delay', 'Device', 'Digital Logic', 'Display', 'Economizer', 'Enthalpy', 'Lift Station', 'Logic', 'Math', 'Multiplexer', 'MultiState Value', 'Optimum Start', 'Program', 'Proportional', 'Ramp', 'Remote Unit', 'Report', 'Schedule', 'Script', 'Select Value', 'Sensor', 'Sequence', 'Setpoint Adjust', 'Slide Show', 'Totalizer', 'VAV']
-            }
-        }]
-    }
-}, {
-    '$limit': 200
-}, {
-    '$limit': 200
-}, {
-    '$project': {
-        '_id': 1,
-        'pointType': '$Point Type.Value',
-        'path': 1,
-        'display': 1,
-        'parentNode': 1
-    }
-}];
+
+db.points.distinct('name1', {'Point Type': {'$exists': 1}, 'name1': {'$exists': 1}, 'name2': {'$ne': ''}});
+db.points.find({'name1': '4194', 'name2': 'DXAC1', 'name3': 'OSTOSP', 'Point Type': {'$exists': 1}, 'name4': {'$ne': ''}});
+db.points.count({_path: {$exists: 1}});
+db.points.count({'Point Type.Value': 'Schedule Entry'});
+db.points.count({nodeType: 'Location'});
+db.points.remove({nodeType: 'Location'});
+db.points.update({}, {$unset: {display: 1, parentNode: 1}}, {multi: true});
+db.points.distinct('Point Type.Value', {name1: {$exists: false}});
+//db.points.remove({_id:{$nin:[36700161, 36700160]}})
