@@ -4125,7 +4125,7 @@ var dti = {
                             visible: {
                                 action: 'add',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             items: {
@@ -4134,7 +4134,7 @@ var dti = {
                                     visible: {
                                         action: 'add',
                                         cb: (data, treeCb) => {
-                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addPoint', data.node, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addPoint', data.node);
                                         }
                                     },
                                     callback: {
@@ -4150,7 +4150,7 @@ var dti = {
                                     visible: {
                                         action: 'add',
                                         cb: (data, treeCb) => {
-                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addLocation', data.node, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addLocation', data.node);
                                         }
                                     },
                                     callback: {
@@ -4166,7 +4166,7 @@ var dti = {
                                     visible: {
                                         action: 'add',
                                         cb: (data, treeCb) => {
-                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addEquipment', data.node, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addEquipment', data.node);
                                         }
                                     },
                                     callback: {
@@ -4182,7 +4182,7 @@ var dti = {
                                     visible: {
                                         action: 'add',
                                         cb: (data, treeCb) => {
-                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addCategory', data.node, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addCategory', data.node);
                                         }
                                     },
                                     callback: {
@@ -4200,7 +4200,7 @@ var dti = {
                             visible: {
                                 action: 'open',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
@@ -4215,7 +4215,7 @@ var dti = {
                             visible: {
                                 action: 'rename',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
@@ -4230,7 +4230,7 @@ var dti = {
                             visible: {
                                 action: 'cut',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
@@ -4245,7 +4245,7 @@ var dti = {
                             visible: {
                                 action: 'copy',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
@@ -4257,8 +4257,11 @@ var dti = {
                             visible: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
+                                // cb: async (data, treeCb) => {
+                                //     return await dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                // }
                             },
                             callback: {
                                 action: 'paste',
@@ -4272,7 +4275,7 @@ var dti = {
                             visible: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction('pastereference', data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('pastereference', data.node);
                                 }
                             },
                             callback: {
@@ -4287,7 +4290,7 @@ var dti = {
                             visible: {
                                 action: 'delete',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
@@ -4785,6 +4788,7 @@ var dti = {
                             _isRoot: (sourceNode.bindings._isRoot && sourceNode.bindings._isRoot()),
                             isCut: sourceNode.bindings.isCut(),
                             isCopy: sourceNode.bindings.isCopy(),
+                            display: sourceNode.bindings.display(),
                             nodeType: sourceNode.bindings.nodeType(),
                             nodeSubType: sourceNode.bindings.nodeSubType(),
                             parentNode: {
@@ -4794,6 +4798,11 @@ var dti = {
                             }
                         };
                     }
+
+                    // async & await
+                    // return new Promise(resolve => {
+                    //     dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget, resolve);
+                    // });
 
                     return dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget);
                 },
@@ -7194,15 +7203,32 @@ var dti = {
                     };
                     let makeHandler = (configKey, config) => {
                         return (key, opt) => {
-                            let node = getNode(key, opt);
-                            let runCb = true;
-                            let data = {
-                                node: node,
-                                configKey: configKey,
-                                config: config
-                            };
+                            let node = getNode(key, opt),
+                                runCb = true,
+                                data = {
+                                    node: node,
+                                    configKey: configKey,
+                                    config: config
+                                };
 
                             if (node) {
+                                // if (config.action) {
+                                //     preCallbackAction(data).then(result => {
+                                //         runCb = result;
+                                //
+                                //         if (runCb && config.cb) {
+                                //             return config.cb(data, function () {
+                                //                 manager.handleCallback.apply(manager, arguments);
+                                //             });
+                                //         } else {
+                                //             return runCb;
+                                //         }
+                                //     });
+                                // } else {
+                                //     return runCb;
+                                // }
+
+                                // ** Original **
                                 if (config.action) {
                                     runCb = preCallbackAction(data);
                                 }
@@ -7834,7 +7860,7 @@ $(function initWorkspaceV2() {
         dti.animations.fadeIn($('#login'));
     }
 
-    // $('#grouping').openModal();
+    // $('#grouping').modal("open");
 
     // $('.groupingBody').jstree({
     //     core: {

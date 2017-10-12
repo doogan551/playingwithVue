@@ -68,7 +68,7 @@ var dtiCommon = {
         };
     },
 
-    isValidHierarchyAction: (action, actionObject, sourceNodeContainsTargetNode) => {
+    isValidHierarchyAction: (action, actionObject, sourceNodeContainsTargetNode, cb) => {
         let isValidAction = true,
             targetNode = actionObject.targetNode,
             sourceNode = actionObject.sourceNode,
@@ -97,16 +97,11 @@ var dtiCommon = {
                 return answer;
             },
             isValidPasteAction = () => {
-                let cutNodeOnClipboard = (sourceNode && sourceNode.isCut),
-                    copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
+                let cutNodeOnClipboard = (!!sourceNode && sourceNode.isCut),
+                    copyNodeOnClipboard = (!!sourceNode && sourceNode.isCopy),
                     clipboardNodeType = sourceNode && sourceNode.nodeType,
-                    validPaste = cutNodeOnClipboard || copyNodeOnClipboard,
-                    handleUniquenessCheck = (result) => {
-                        if (result) {
-                        } else {
-                            return validPaste;
-                        }
-                    };
+                    validPaste = (cutNodeOnClipboard || copyNodeOnClipboard),
+                    testForUniqueness = false;
 
                 if (validPaste) {
                     if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
@@ -121,19 +116,28 @@ var dtiCommon = {
                         } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
                             validPaste = false;
                         } else {
-                            // check for uniqueness
-                            // dtiCommon.checkPathForUniqueness(targetNode._id, sourceNode.display, handleUniquenessCheck);
+                            testForUniqueness = true;
                         }
                     } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
 
                     }
                 }
 
-                return validPaste;
+                if (testForUniqueness) {
+                    // once sync & await are working
+                    // dtiCommon.checkPathForUniqueness(targetNode._id, sourceNode.display, (results) => {
+                    //     if (cb) {
+                    //         cb(!results);
+                    //     }
+                    // });
+                    return validPaste;
+                } else {
+                    return validPaste;
+                }
             },
             isValidPasteAsReferenceAction = () => {
-                let copyNodeOnClipboard = (sourceNode && sourceNode.isCopy),
-                    clipboardNodeType = sourceNode && sourceNode.nodeType,
+                let copyNodeOnClipboard = (!!sourceNode && sourceNode.isCopy),
+                    clipboardNodeType = !!sourceNode && sourceNode.nodeType,
                     validPaste = copyNodeOnClipboard;
 
                 if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
@@ -236,7 +240,7 @@ var dtiCommon = {
                     isValidAction = isValidOpenAction();
                     break;
                 case "paste":
-                    isValidAction = isValidPasteAction();
+                    isValidAction = isValidPasteAction();  // special case for cut (needs uniqueness check)
                     break;
                 case "pastereference":
                     isValidAction = isValidPasteAsReferenceAction();
@@ -247,7 +251,11 @@ var dtiCommon = {
             }
         }
 
-        return isValidAction;
+        if (cb) {
+            // perhaps I can get promises working eventually
+        } else {
+            return isValidAction;
+        }
     },
 
     resolveAlarmName: (alarmsMsg, alarmPath) => {
