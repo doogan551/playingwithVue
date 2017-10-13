@@ -4618,10 +4618,6 @@ var dti = {
                     modalBindings.error('');
                     self.tree._configureNodeData = data;
                     self.tree._configureNodeTreeCallback = treeCb; // Save a temp reference to the callback
-                    // TODO move this to CSS
-                    self.$configureNodeModal.find(".modal-footer").css("margin-top", "");
-                    self.$configureNodeModal.css("height", "auto");
-                    // TODO
 
                     modalBindings.modalNodeDisplay("");
                     modalBindings.modalNodePointName("");
@@ -4681,6 +4677,7 @@ var dti = {
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.parentID(data.targetNode.bindings._id());
+                            modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
@@ -4690,6 +4687,7 @@ var dti = {
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
                             modalBindings.refID(data.sourceNode.bindings._id());
                             modalBindings.parentID(data.targetNode.bindings._id());
+                            modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
                             modalBindings.modalNodeType("Reference");
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
