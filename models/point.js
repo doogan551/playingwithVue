@@ -3544,9 +3544,17 @@ const Point = class Point extends Common {
     }
 
     getFilteredPoints(data, cb) {
+        // Do we have a device ID?
+        let deviceId = data.deviceId || null;
+        // Do we have a RMU ID?
+        let remoteUnitId = data.remoteUnitId || null;
+        // Do we have a point type?
+        let pointType = data.pointType || null;
+
         let terms = data.terms;
         let pointTypes = data.pointTypes;
         let pipeline = [];
+
         let match = {
             $and: []
         };
@@ -3557,6 +3565,35 @@ const Point = class Point extends Common {
                     $all: this.buildSearchTerms(terms)
                 }
             });
+        }
+
+        if (pointTypes.length === 1 && pointTypes[0] === 'Sensor') {
+            if (pointType === 'Analog Input' || pointType === 'Analog Output') {
+                match.$and.push({
+                    'Sensor Type.Value': pointType.split(' ')[1]
+                });
+            }
+        }
+
+        if (!!deviceId) {
+            match.$and.push({
+                'Point Refs': {
+                    '$elemMatch': {
+                        'PointInst': parseInt(deviceId, 10),
+                        'PropertyName': 'Device Point'
+                    }
+                }
+            });
+            if (!!remoteUnitId) {
+                match.$and.push({
+                    'Point Refs': {
+                        '$elemMatch': {
+                            'PointInst': parseInt(remoteUnitId, 10),
+                            'PropertyName': 'Remote Unit Point'
+                        }
+                    }
+                });
+            }
         }
 
         match.$and.push({
