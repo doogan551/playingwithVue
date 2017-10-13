@@ -270,14 +270,9 @@ html
                         .input-field.col.s6
                             input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
                             label(for="pointDisplayField") Label
-                    // ko if: (modalAction() === "Paste")
+                    // ko if: (modalAction().indexOf("Paste") >= 0)
                     .input-field.col.s12
-                        label From &nbsp;&nbsp;
-                        span(data-bind="text: modalSourceNodePath")
-                    // /ko
-                    // ko if: (modalAction() === "Paste as reference")
-                    .input-field.col.s12
-                        label Reference to &nbsp;&nbsp;
+                        label(data-bind="text: (modalAction() === 'Paste as reference' ? 'Reference to' : 'From')")
                         span(data-bind="text: modalSourceNodePath")
                     // /ko
                     // ko if: ((modalAction() === 'Add location' || modalAction() === 'Open') && modalNodeType() === 'Location')

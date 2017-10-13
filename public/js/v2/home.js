@@ -4457,12 +4457,8 @@ var dti = {
                         newNode.sourceNode = self.tree._configureNodeData.sourceNode;
                         newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
-                    } else if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
+                    } else if (modalBindings.needsPoint() && newNode.nodeType !== 'Reference') {
                         self.tree.serverOps.createPoint(newNode, parent, self.tree._configureNodeTreeCallback);
-                    } else if (newNode.nodeType === 'Reference') {
-                        delete newNode.node;
-                        newNode.refNode = self.tree._configureNodeData.sourceNode.bindings._id();
-                        self.tree.serverOps.addNode(newNode, self.tree._configureNodeData.targetNode, done);
                     } else {
                         delete newNode.node;
                         self.tree.serverOps.addNode(newNode, parent, done);
@@ -4584,20 +4580,17 @@ var dti = {
                     }
 
                     let ret = {
-                        display: modalBindings.modalNodeDisplay(),
+                        display: dtiCommon.cleanLabelField(modalBindings.modalNodeDisplay()),  // remove leading & trailing spaces
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),  // TODO this is bound to location select (site, building, etc)
                         pointType: modalBindings.selectedPointType(),
                         id: targetNode.bindings._id(),
+                        refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
                         node: targetNode,
                         parentNode: (!!parentNode ? parentNode.bindings._id() : null),
                         fetched: true,
                         action: config.action
                     };
-
-                    if (config.nodeType === 'Reference') {
-                        ret.refNode = self.tree._configureNodePoint._id;
-                    }
 
                     return ret;
                 },
@@ -4680,6 +4673,7 @@ var dti = {
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
+                            modalBindings.refID(data.sourceNode.bindings._id());
                             modalBindings.parentID(data.targetNode.bindings._id());
                             modalBindings.modalNodeType("Reference");
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
@@ -6231,6 +6225,7 @@ var dti = {
                 activeUniquenessCheck: false, // needed for binding of unique test on Label field (display field)
                 pathIsValid: true,  // needed for binding of unique test on Label field (display field)
                 parentID: '',  // needed for binding of unique test on Label field (display field)
+                refID: '',
                 error: '&nbsp;',
                 hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
                 locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
@@ -7452,8 +7447,7 @@ var dti = {
                                 let newPath = parentPath.concat([child.display()]);
 
                                 child.path(newPath);
-
-                                if (child.children.length) {
+                                if (child.children().length) {
                                     rebuildChildrenPaths(newPath, child.children());
                                 }
                             });

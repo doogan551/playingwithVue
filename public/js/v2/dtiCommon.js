@@ -36,6 +36,11 @@ var dtiCommon = {
         return result;
     },
 
+    cleanLabelField: (labelField) => {
+        let answer = labelField.replace(/ {1,}/g," ");
+        return answer.trim();
+    },
+
     isPointDisplayStringValid: (labelValue) => {
         var invalidChars = [],
             i,
@@ -300,13 +305,11 @@ var dtiCommon = {
                             if (errorMessage) {
                                 $element.addClass("invalid");
                                 $element.removeClass("valid");
-                                // $myLabels.setCustomValidity(errorMessage);
                                 $myLabels.attr("data-error", errorMessage);
                                 vm.pathIsValid(false);
                             } else {
                                 $element.removeClass("invalid");
                                 $element.addClass("valid");
-                                // $myLabels.setCustomValidity("");
                                 $myLabels.attr("data-error", "");
                                 vm.pathIsValid(true);
                             }
@@ -318,10 +321,10 @@ var dtiCommon = {
                         testFieldValidity = () => {
                             elementValue = $element.val().trim();
                             let labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
-                            $element.val(elementValue.trim());
+                            // $element.val(elementValue.trim());
                             if (labelTest.valid) {
                                 vm.activeUniquenessCheck(true);
-                                dtiCommon.checkPathForUniqueness(vm.parentID(), elementValue, handleUniquenessResult);
+                                dtiCommon.checkPathForUniqueness(vm.parentID(), dtiCommon.cleanLabelField(elementValue), handleUniquenessResult);
                             } else {
                                 handleElementStatus(labelTest.errorMessage);
                             }

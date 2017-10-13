@@ -1901,6 +1901,10 @@ input:focus {
             transition: background-color .1s ease, color .1s ease;
         }
     }
+
+    .input-field.col label {
+        margin-top: -33px !important;
+    }
 }
 
 .filterMode {
