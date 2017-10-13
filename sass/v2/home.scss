@@ -1787,10 +1787,18 @@ input:focus {
             float: left;
         }
     }
+
+    .input-field.col.nodePath label {
+        margin-top: -33px !important;
+    }
+
+    .input-field.col.nodePath {
+        padding-bottom: 10px;
+    }
 }
 
 #configureNodeModal.addingPoint {
-    height: 61%;
+    height: 63%;
     .modal-footer {
         margin-top: 38%;
     }
@@ -1900,10 +1908,6 @@ input:focus {
             color: white;
             transition: background-color .1s ease, color .1s ease;
         }
-    }
-
-    .input-field.col label {
-        margin-top: -33px !important;
     }
 }
 
