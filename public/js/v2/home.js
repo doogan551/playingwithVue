@@ -4623,22 +4623,22 @@ var dti = {
                     switch (action) {
                         case "add location":
                             modalBindings.modalNodeType("Location");
-                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            modalBindings.parentID((data.node && !data.node.bindings._isRoot() ? data.node.bindings._id() : 0));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add equipment":
                             modalBindings.modalNodeType("Equipment");
-                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            modalBindings.parentID((data.node && !data.node.bindings._isRoot() ? data.node.bindings._id() : 0));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add category":
                             modalBindings.modalNodeType("Category");
-                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            modalBindings.parentID((data.node && !data.node.bindings._isRoot() ? data.node.bindings._id() : 0));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add point":
                             modalBindings.modalNodeType("Point");
-                            modalBindings.parentID((data.node ? data.node.bindings._id() : 0));
+                            modalBindings.parentID((data.node && !data.node.bindings._isRoot() ? data.node.bindings._id() : 0));
                             self.$configureNodeModal.addClass("addingPoint");
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
