@@ -5530,7 +5530,9 @@ var dti = {
                     focus: false,
                     mode: this.modes.DEFAULT,
                     pointTypesShown: false,
-                    pointTypes: this.pointTypes
+                    pointTypes: this.pointTypes,
+                    remoteUnitId: null,
+                    deviceId: null
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
@@ -5680,15 +5682,15 @@ var dti = {
                     return false;
                 }
 
-                this._skipSearch = skipSearch;
-
                 this.bindings.busy(true);
 
                 dti.post({
                     url: '/api/points/getFilteredPoints',
                     data: {
                         terms: this.bindings.searchString().trim().split(' '),
-                        pointTypes: this.bindings.flatPointTypeList()
+                        pointTypes: this.bindings.flatPointTypeList(),
+                        remoteUnitId: this.bindings.remoteUnitId(),
+                        deviceId: this.bindings.deviceId()
                     }
                 }).done((results) => {
                     this.handleSearchResults(results);
@@ -5800,6 +5802,8 @@ var dti = {
                     this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
                     this.bindings.searchString(config.terms || '');
                     this.bindings.mode(config.mode ? config.mode : this.modes.DEFAULT);
+                    this.bindings.deviceId(config.deviceId);
+                    this.bindings.remoteUnitId(config.remoteUnitId);
 
                     this.setPointTypes(config, true);
                 } else {
