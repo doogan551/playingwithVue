@@ -1733,6 +1733,68 @@ input:focus {
     color: transparent;
 }
 
+#configureNodeModal {
+    height: auto;
+
+    .modal-header {
+        background-color: $blue-grey-darken-2;
+    }
+
+    .content-header {
+        position: relative;
+    }
+
+    .pointTypeButton {
+        width: 20%;
+        display: inline-block;
+        position: absolute;
+        //bottom: 1em;
+
+        .active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            display: flex;
+            padding: 0;
+        }
+
+        i {
+            position: absolute;
+            right: 10px;
+        }
+
+        span {
+            margin-left: 10px;
+        }
+    }
+
+    .pointTypeList {
+        position: absolute;
+        background-color: white;
+        // opacity: 0;
+        right: 0;
+        max-width: 100%;
+        top: 180px;
+
+        &.active {
+            width: 100%;
+        }
+
+        span {
+            padding: 5px;
+            width: 148px;
+            float: left;
+        }
+    }
+}
+
+#configureNodeModal.addingPoint {
+    height: 61%;
+    .modal-footer {
+        margin-top: 38%;
+    }
+}
 
 #pointSelectorModal {
     .modal-header {
@@ -1838,6 +1900,10 @@ input:focus {
             color: white;
             transition: background-color .1s ease, color .1s ease;
         }
+    }
+
+    .input-field.col label {
+        margin-top: -33px !important;
     }
 }
 
@@ -2403,7 +2469,8 @@ $treeIconWidth: 22px;
             background-color: $blue-grey-lighten-2 !important;
         }
 
-        .dtcollapsible-header.isCut {
+        .dtcollapsible-header.isCut,
+        .dtcollapsible-header.isCopy {
             font-style: italic;
         }
     }
