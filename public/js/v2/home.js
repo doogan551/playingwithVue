@@ -4597,16 +4597,16 @@ var dti = {
                 showConfigureNodeModal: (action, data, treeCb) => {
                     let self = dti.navigatorv2,
                         modalBindings = dti.bindings.navigatorv2.configureNodeModal,
-                        getParentID = () => {
+                        getParentID = (node) => {
                             let answer = 0;
 
-                            if (data.node) {
-                                if (data.node &&
-                                    data.node.bindings._isRoot &&
-                                    data.node.bindings._isRoot()) {
+                            if (node) {
+                                if (node &&
+                                    node.bindings._isRoot &&
+                                    node.bindings._isRoot()) {
                                     answer = 0;
                                 } else {
-                                    answer = data.node.bindings._id();
+                                    answer = node.bindings._id();
                                 }
                             }
 
@@ -4634,22 +4634,22 @@ var dti = {
                     switch (action) {
                         case "add location":
                             modalBindings.modalNodeType("Location");
-                            modalBindings.parentID(getParentID());
+                            modalBindings.parentID(getParentID(data.node));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add equipment":
                             modalBindings.modalNodeType("Equipment");
-                            modalBindings.parentID(getParentID());
+                            modalBindings.parentID(getParentID(data.node));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add category":
                             modalBindings.modalNodeType("Category");
-                            modalBindings.parentID(getParentID());
+                            modalBindings.parentID(getParentID(data.node));
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
                         case "add point":
                             modalBindings.modalNodeType("Point");
-                            modalBindings.parentID(getParentID());
+                            modalBindings.parentID(getParentID(data.node));
                             self.$configureNodeModal.addClass("addingPoint");
                             self.$configureNodeModal.find('select').prop("disabled", false);
                             break;
@@ -4941,13 +4941,28 @@ var dti = {
                     });
                 },
                 moveNode(data, cb) {
-                    let err = false;
+                    let err = false,
+                        getParentID = (node) => {
+                            let answer = 0;
+
+                            if (node) {
+                                if (node &&
+                                    node.bindings._isRoot &&
+                                    node.bindings._isRoot()) {
+                                    answer = 0;
+                                } else {
+                                    answer = node.bindings._id();
+                                }
+                            }
+
+                            return answer;
+                        };
 
                     dti.post({
                         url: '/api/hierarchy/move',
                         data: {
                             id: data.sourceNode.bindings._id(),
-                            parentNode: data.targetNode.bindings._id()
+                            parentNode: getParentID(data.targetNode)
                         }
                     }).done((response) => {
                         dti.log(response);
