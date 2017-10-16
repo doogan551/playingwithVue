@@ -914,11 +914,7 @@ let reportsVM,
     };
 
 let initKnockout = () => {
-    var $startDate,
-        initStartDate,
-        $endDate,
-        initEndDate,
-        datePickerDefaultOptions = {
+    var datePickerDefaultOptions = {
             selectMonths: true,     // Creates a dropdown to control month
             selectYears: 15,        // Creates a dropdown of 15 years to control year,
             today: 'Today',
@@ -937,220 +933,7 @@ let initKnockout = () => {
             ampmclickable: false,   // make AM PM clickable
             aftershow: function () {
             } // Function for after opening timepicker
-        },
-        characterAllowedInTimeField = function (event, timeValue, selectionLen) {
-            var keyCode = event.keyCode,
-                shiftKey = event.shiftKey;
-            if (keyCode === 16 || keyCode === 17) {
-                return false;
-            } else {
-                return keyCode === 8 ||  // backspace
-                    keyCode === 13 ||  // CR
-                    keyCode === 35 ||  // end
-                    keyCode === 36 ||  // home
-                    keyCode === 37 ||  // left
-                    keyCode === 38 ||  // up
-                    keyCode === 39 ||  // right
-                    keyCode === 40 ||  // down
-                    keyCode === 46 ||  // del
-                    (keyCode === 186 && shiftKey && timeValue.indexOf(":") === -1) ||  // allow only 1 ":"
-                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey) &&  // allow numbers
-                    timeValue.length - selectionLen <= 4;
-            }
-        },
-        incrementTime = function (incrementUnit, value) {
-            var arr,
-                hrs,
-                mins,
-                timeLen = value.length,
-                wrapped = false;
-
-            if (timeLen > 2) {  // don't allow increment til 3 chars in time field
-                if (value.indexOf(":") > 0) {
-                    arr = value.split(":");
-                } else {
-                    arr = [];
-                    if (timeLen === 5) {  // step on errant text
-                        arr[0] = value.substr(0, 2);
-                        arr[1] = value.substr(3, 2);
-                    } else {
-                        arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1));
-                        arr[1] = value.substr(timeLen - 2, 2);
-                    }
-                }
-                hrs = isNaN(parseInt(arr[0], 10)) ? 0 : parseInt(arr[0], 10);
-                mins = isNaN(parseInt(arr[1], 10)) ? 0 : parseInt(arr[1], 10);
-
-                if (hrs > 23) {
-                    hrs = 23;
-                }
-                if (mins > 59) {
-                    mins = 59;
-                }
-
-                if ((incrementUnit > 0 && mins < 59) ||
-                    (incrementUnit < 0 && mins > 0)) {
-                    mins += incrementUnit;
-                } else if (incrementUnit < 0 && mins === 0) {
-                    if (hrs === 0 || hrs > 24) {
-                        hrs = 24;
-                    }
-                    mins = 59;
-                    wrapped = true;
-                } else if (incrementUnit > 0 && mins >= 59) {
-                    if (hrs >= 23) {
-                        hrs = 0;
-                    }
-                    mins = 0;
-                    wrapped = true;
-                }
-
-                if (wrapped) { // the increment is wrapping
-                    switch (true) {
-                        case (incrementUnit > 0 && hrs < 23):
-                        case (incrementUnit < 0 && hrs > 0):
-                            hrs += incrementUnit;
-                            break;
-                    }
-                }
-
-                return ((hrs < 10 ? "0" : "") + hrs) + ":" + ((mins < 10 ? "0" : "") + mins);
-            } else {
-                return value;
-            }
         };
-
-    ko.bindingHandlers.reportDatePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element),
-                options = {
-                    autoclose: true,
-                    clearBtn: true
-                };
-
-            $element.datepicker(options).on("changeDate", function (ev) {
-                var $dependantDatePicker,
-                    val = $.isFunction(valueAccessor()) ? valueAccessor() : parseInt(valueAccessor(), 10);
-                if (ev.date) {
-                    viewModel.date = moment(ev.date).unix();
-                } else {
-                    if (val !== "") {
-                        viewModel.date = val;
-                    }
-                }
-
-                $element.datepicker("setEndDate", moment().format("MM/DD/YYYY"));  // nothing greater than today.
-
-                if ($element.hasClass("startDate")) { // if startdate changed adjust limits on Enddate
-                    $dependantDatePicker = $element.closest("tr").next().find(".endDate");
-                    $dependantDatePicker.datepicker("setStartDate", moment.unix(viewModel.date).format("MM/DD/YYYY"));
-                } else if ($element.hasClass("endDate")) {  // if enddate changed adjust limits on startdate
-                    $dependantDatePicker = $element.closest("tr").prev().find(".startDate");
-                    $dependantDatePicker.datepicker("setEndDate", moment.unix(viewModel.date).format("MM/DD/YYYY"));
-                }
-            });
-
-            $element.change(function () {
-                if (moment(new Date($(element).val())).isValid()) {
-                    $element.parent().removeClass("has-error");
-                    $element.parent().attr("title", "");
-                } else {
-                    $element.parent().addClass("has-error");
-                    $element.parent().attr("title", "Error in date format");
-                }
-            });
-
-            if (viewModel.filterName === "Start_Date") {
-                $startDate = $(element);
-                initStartDate = moment.unix(valueAccessor()).format("MM/DD/YYYY");
-            } else if (viewModel.filterName === "End_Date") {
-                $endDate = $(element);
-                initEndDate = moment.unix(valueAccessor()).format("MM/DD/YYYY");
-            }
-
-            if ($endDate && $startDate) { // only hit during init/pageload
-                $endDate.datepicker("setStartDate", initStartDate);
-                $startDate.datepicker("setEndDate", initEndDate);
-            }
-        },
-        update: function (element, valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
-            $(element).datepicker("setDate", moment.unix(value).format("MM/DD/YYYY"));
-        }
-    };
-
-    ko.bindingHandlers.reportTimePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element),
-                timestamp = valueAccessor(),
-                options = {
-                    doneText: "Done",
-                    autoclose: true
-                };
-
-            $element.clockpicker(options);
-
-            $element.change(function () {
-                if (ko.isObservable(timestamp)) {
-                    timestamp($(element).val());
-                } else {
-                    viewModel.time = $(element).val();
-                }
-            });
-
-            $element.keyup(function () {
-                if ($element.val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                    $element.parent().removeClass("has-error");
-                    $element.parent().attr("title", "");
-                    $element.clockpicker("hide");
-                    $element.clockpicker("resetClock");
-                    $element.clockpicker("show");
-                } else {
-                    $element.parent().addClass("has-error");
-                    $element.parent().attr("title", "Error in time format");
-                }
-                if (ko.isObservable(timestamp)) {
-                    timestamp($(element).val());
-                } else {
-                    viewModel.time = $(element).val();
-                }
-            });
-
-            $element.keydown(function (event) {
-                var timeValue = $element.val(),
-                    selectionLen = element.selectionEnd - element.selectionStart;
-                if (characterAllowedInTimeField(event, timeValue, selectionLen)) {
-                    if (event.keyCode === 38) { // up arrow
-                        $element.val(incrementTime(1, timeValue));
-                    } else if (event.keyCode === 40) { // down arrow
-                        $element.val(incrementTime(-1, timeValue));
-                    } else if (event.keyCode === 13) { // CR
-                        $element.val(incrementTime(0, timeValue));
-                    }
-                    $element.clockpicker("hide");
-                    $element.clockpicker("resetClock");
-                    $element.clockpicker("show");
-                } else {
-                    event.preventDefault();
-                }
-            });
-        },
-
-        update: function (element, valueAccessor) {
-            var $element = $(element),
-                value = ko.utils.unwrapObservable(valueAccessor()),
-                hr,
-                min;
-
-            if (typeof value !== "string") {
-                hr = ("00" + Math.floor(value / 100)).slice(-2);
-                min = ("00" + value % 100).slice(-2);
-                $element.val(hr + ":" + min);
-            } else {
-                $element.val(value);
-            }
-        }
-    };
 
     ko.bindingHandlers.reportPrecisionInput = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -1283,41 +1066,6 @@ let initKnockout = () => {
             // }
         },
         update: function (element, valueAccessor, allBindings) {
-        }
-    };
-
-    ko.bindingHandlers.dtiReportsMaterializeSelect2 = {
-        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var $element = $(element),
-                $select = $element.children('select'),
-                config = valueAccessor(),
-                $liList;
-
-            // Initial initialization:
-            $element.material_select();
-
-            $select.material_select({
-                belowOrigin: true,
-                showCount: true,
-                countSuffix: 'Types'
-            });
-
-            $select.on('change', function handleMaterialSelectChange(event, target) {
-                var $target = $(target),
-                    index = $target.index(),
-                    selected = $target.hasClass('active');
-
-            });
-
-            $element.on('change', function handleMaterialSelectChange(event, target) {
-                var $target = $(event.target);
-
-                if ($target[0].value === "Starts") {
-                    viewModel.precision = 0;
-                    bindingContext.$data.precision = 0;
-                    // console.log("bindingContext = " + bindingContext);
-                }
-            });
         }
     };
 
@@ -1742,6 +1490,9 @@ let reportsViewModel = function () {
                 result = reportUtil.getAdjustedDatetimeMoment(validatedDate, time.toString());
                 return result.unix();
             },
+            getJSDate: (date, time) => {
+                return new Date(reportUtil.getAdjustedDatetimeUnix(date, time) * 1000);
+            },
             getKeyBasedOnEnum: (obj, enumValue) => {
                 for (var key in obj) {
                     if (obj.hasOwnProperty(key)) {
@@ -1796,14 +1547,14 @@ let reportsViewModel = function () {
                     tempDuration.endTimeOffSet = self.durationEndTimeOffSet();
 
                     if (tempDuration.selectedRange === "Custom Range") {
-                        self.startDate(reportUtil.getAdjustedDatetimeUnix(tempDuration.startDate.unix(), self.durationStartTimeOffSet()));
-                        self.endDate(reportUtil.getAdjustedDatetimeUnix(tempDuration.endDate.unix(), self.durationEndTimeOffSet()));
+                        self.startDate(reportUtil.getJSDate(tempDuration.startDate.unix(), self.durationStartTimeOffSet()));
+                        self.endDate(reportUtil.getJSDate(tempDuration.endDate.unix(), self.durationEndTimeOffSet()));
                     } else {
                         var dateRange = reportDateRanges(tempDuration.selectedRange);
                         tempDuration.startDate = reportUtil.getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
                         tempDuration.endDate = reportUtil.getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                        self.startDate(tempDuration.startDate.unix());
-                        self.endDate(tempDuration.endDate.unix());
+                        self.startDate(reportUtil.getJSDate(tempDuration.startDate.unix(), "00:00"));
+                        self.endDate(reportUtil.getJSDate(tempDuration.endDate.unix(), "00:00"));
                         tempDuration.duration = tempDuration.startDate.diff(tempDuration.endDate);
                     }
                     self.selectedDuration(tempDuration);
@@ -1941,8 +1692,8 @@ let reportsViewModel = function () {
                 switch (self.reportType()) {
                     case "History":
                     case "Totalizer":
-                        if (!!reportPoint["Report Config"].duration) { // have to set each manually because of computed relationship
-                            reportUtil.configureSelectedDuration(reportPoint["Report Config"]);
+                        if (!!reportConfig.duration) { // have to set each manually because of computed relationship
+                            reportUtil.configureSelectedDuration(reportConfig);
                         }
                         break;
                     case "Property":
@@ -5206,8 +4957,8 @@ let reportsViewModel = function () {
                     case "History":
                     case "Totalizer":
                         if (!scheduledReport) {
-                            self.selectedDuration().startDate = moment($reportStartDate.pickadate('picker').get('select').pick);
-                            self.selectedDuration().endDate = moment($reportEndDate.pickadate('picker').get('select').pick);
+                            self.selectedDuration().startDate = moment(new Date(self.startDate()));
+                            self.selectedDuration().endDate = moment(new Date(self.endDate()));
                         }
                         reportUtil.configureSelectedDuration();
 
@@ -5249,8 +5000,8 @@ let reportsViewModel = function () {
                     requestID: uuid,
                     upis: upis,
                     range: {
-                        start: self.startDate(),
-                        end: self.endDate()
+                        start: reportPoint["Report Config"].duration.startDate,
+                        end: reportPoint["Report Config"].duration.endDate
                     },
                     reportConfig: cleanUpReportConfig(reportPoint["Report Config"]),
                     reportType: reportPoint["Report Type"].Value,
@@ -5283,13 +5034,9 @@ let reportsViewModel = function () {
             return (answer !== "" ? answer : 0);
         },
         setReportConfig = (cb) => {
-            var formattingPointRequest = 0,
-                i,
-                errors,
+            var i,
                 validatedColumns,
-                validatedFilters,
-                $reportStartDate = $additionalFilters.find("#reportStartDate"),
-                $reportEndDate = $additionalFilters.find("#reportEndDate");
+                validatedFilters;
 
             validatedColumns = columnLogic.validateColumns(true);
             validatedFilters = filterLogic.validateFilters(true);
@@ -5327,10 +5074,8 @@ let reportsViewModel = function () {
                 reportPoint["Report Type"].eValue = self.reportTypeEnum();
 
                 if (self.reportType() !== "Property") {
-                    self.selectedDuration().startDate = moment(self.startDate());
-                    self.selectedDuration().endDate = moment(self.endDate());
-                    self.startDate(self.selectedDuration().startDate.unix());
-                    self.endDate(self.selectedDuration().endDate.unix());
+                    self.selectedDuration().startDate = moment(new Date(self.startDate()));
+                    self.selectedDuration().endDate = moment(new Date(self.endDate()));
                 }
 
                 reportPoint["Report Config"].columns = validatedColumns.collection;
@@ -7200,12 +6945,10 @@ let reportsViewModel = function () {
                         $reportEndDatePicker = $additionalFilters.find("#reportEndDate").pickadate('picker');
 
                     $additionalFilters.find(".reportRangeDropdown select").material_select();
-                    $reportStartDatePicker.set('select', self.startDate() * 1000);
-                    $reportEndDatePicker.set({min: new Date(self.startDate() * 1000)});
-                    $reportEndDatePicker.set('select', self.endDate() * 1000);
-                    $reportStartDatePicker.set({max: new Date(self.endDate() * 1000)});
-                    // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
-                    // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
+                    $reportStartDatePicker.set('select', self.startDate());
+                    $reportStartDatePicker.set({max: new Date(self.endDate())});
+                    $reportEndDatePicker.set('select', self.endDate());
+                    $reportEndDatePicker.set({min: new Date(self.startDate())});
                 }
                 Materialize.updateTextFields();
                 // too late  initKnockout();

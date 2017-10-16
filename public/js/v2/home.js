@@ -4582,7 +4582,7 @@ var dti = {
                     let ret = {
                         display: dtiCommon.cleanLabelField(modalBindings.modalNodeDisplay()),  // remove leading & trailing spaces
                         nodeType: modalBindings.modalNodeType(),
-                        nodeSubType: modalBindings.modalNodeSubType(),  // TODO this is bound to location select (site, building, etc)
+                        nodeSubType: modalBindings.modalNodeSubType(),
                         pointType: modalBindings.selectedPointType(),
                         id: targetNode.bindings._id(),
                         refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
