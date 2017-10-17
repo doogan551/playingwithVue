@@ -66,7 +66,10 @@ const Hierarchy = class Hierarchy extends Common {
                 refNode: 1,
                 path: 1,
                 Name: 1,
-                'Point Type.Value': 1
+                'Point Type.Value': 1,
+                locatedIn: 1,
+                servedBy: 1,
+                descriptors: 1
             }
         }, cb);
     }
@@ -874,7 +877,7 @@ const Hierarchy = class Hierarchy extends Common {
                 parentNode: parent._id,
                 display: display,
                 nodeType: Config.Utility.getNodeType(point['Point Type'].Value),
-                nodeSubType: point['Point Type'].Value
+                nodeSubType: ''
             };
             pointModel.addPointToHierarchy(data, (err, result) => {
                 callback(err);
@@ -1093,7 +1096,7 @@ const Hierarchy = class Hierarchy extends Common {
                         _pStatus: 0,
                         parentNode: parentNode,
                         nodeType: getNodeType(pointType),
-                        nodeSubType: pointType,
+                        nodeSubType: '',
                         path: path,
                         display: path[path.length - 1]
                     }
