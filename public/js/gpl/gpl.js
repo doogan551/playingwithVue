@@ -4,6 +4,7 @@
 'use strict';
 var gpl = {
     texts: {},
+    actionButtons: {}, // ch473
     blocks: {},
     shapes: {},
     anchors: {},
@@ -4075,6 +4076,187 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
         this._setBoundaries(ctx, textLines);
         this._totalLineHeight = 0;
     }
+});
+
+// ch473 (added)
+fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.Rect, {
+    // TODO this fabric element isn't 100% correct; when moving the button, the shapes do not move with it
+    // because fabric is indicating the active element is the shape, not the fabric button (see canvas.getActiveObject)
+    opacity: 0,
+    selectable: false,
+
+    fill: '#888',
+    borderColor: '#000000',
+    cornerColor: '#000000',
+    width: 100,
+    height: 30,
+
+    label: 'Action',
+    fontSize: 12,
+    fontFamily: 'Arial',
+    fontWeight: 'normal',
+
+    isNonPoint: true,
+    type: 'ActionButton',
+    pointType: 'Action',
+    gplType: 'action',
+
+    syncObjects: function (target) {
+        var left = target.left,
+            top = target.top,
+            shape,
+            c;
+
+        this.left = left;
+        this.top = top;
+
+        for (c = 0; c < this._shapes.length; c++) {
+            shape = this._shapes[c];
+            shape.left = left + (shape.offsetLeft); //left + shape.offsetLeft * gpl.scaleValue;// - this.width/2;
+            shape._originalLeft = shape.left;
+            shape.top = top + (shape.offsetTop); //top + shape.offsetTop * gpl.scaleValue;// - this.height/2;
+            shape._originalTop = shape.top;
+            if (shape.setCoords) {
+                shape.setCoords();
+            }
+            // gpl.log(shape.gplType, left, top, shape.offsetLeft, shape.offsetTop);
+        }
+    },
+
+    redrawLines: gpl.emptyFn,
+
+    add: function (object, render) {
+        object.offsetLeft = object.left - this.left;
+        object.offsetTop = object.top - this.top;
+        this._shapes.push(object);
+        if (this.initialized || this.isNonPoint) {
+            gpl.blockManager.add(object, this.targetCanvas, render);
+        }
+    },
+
+    delete: function () {
+        gpl.manager.canvas.remove(this);
+        // TODO remove this's shapes
+        delete gpl.actionButtons[this.gplId];
+    },
+
+    initialize: function (config) {
+        this._shapes = [];
+
+        this.convertConfig(config);
+
+        this.callSuper('initialize', this.config);
+
+        this.set('lockUniScaling', false);
+        this.set('lockScalingY', true);
+
+        this.initShapes();
+
+        this.setControlsVisibility({
+            tl: false,
+            tr: false,
+            br: false,
+            bl: false,
+            ml: true,
+            mt: false,
+            mr: true,
+            mb: false,
+            mtr: false
+        });
+
+        this.gplId = gpl.makeId();
+        gpl.actionButtons[this.gplId] = this;
+
+        // this.add(this);
+        gpl.blockManager.registerBlock(this);
+
+        gpl.manager.bindings.hasEdits(true);
+    },
+
+    convertConfig: function (config) {
+        var cfg = config,
+            fontConfig = cfg.font,
+            alignments = {
+                1: 'right',
+                0: 'left'
+            };
+
+        this.config = config;
+
+        // cfg.lockUniScaling = true;
+        cfg.originX = 'left';
+        cfg.originY = 'top';
+
+        if (!cfg._v2) {
+            this.config.left += 10;
+            this.config.top += 5;
+        }
+
+        this.config.selectable = !!gpl.isEdit;
+
+        this.config.textAlign = alignments[cfg.alignment] || 'center';
+
+        $.extend(this, this.config);
+    },
+
+    setActive: function () {
+        this.inactive = false;
+        this.setCoords();
+    },
+
+    initShapes: function () {
+        this.initBackground();
+        this.initLabel();
+    },
+
+    initBackground: function () {
+        var config = {
+            top: this.top,
+            left: this.left,
+            originX: 'left',
+            originY: 'top',
+            width: this.width,
+            height: this.height,
+            fill: this.fill,
+            selectable: true,
+            hasControls: false,
+            hasRotatingPoint: false,
+        };
+
+        this.background = new fabric.Rect(config);
+        this.background._originalTop = this.background.top;
+        this.background._originalLeft = this.background.left;
+        this.add(this.background);
+    },
+    
+    initLabel: function () {
+        var config = {
+            top: this.top + (this.height / 2),
+            left: this.left + (this.width / 2),
+            textAlign: 'center',
+            originX: 'center',
+            originY: 'center',
+            fontSize: parseInt(this.fontSize, 10),
+            fontFamily: this.fontFamily,
+            gplType: 'label',
+            readOnly: true,
+            opacity: 1,
+            selectable: true,
+            hasControls: false,
+            hasRotatingPoint: false,
+            gplId: this.gplId
+        };
+
+        if (this.config.inactive) {
+            config.visible = false;
+        }
+
+        this.labelText = new fabric.Text(this.text, config);
+
+        this.labelText._originalTop = this.labelText.top;
+        this.labelText._originalLeft = this.labelText.left;
+        this.add(this.labelText);
+    },
 });
 
 /* *
@@ -8940,6 +9122,18 @@ gpl.Manager = function () {
                     }
                 });
                 gpl.blockManager.openTextEditor(newBlock);
+            },
+
+            // ch473 (added)
+            addNewActionButton: function () {
+                var newBlock = gpl.blockManager.create({
+                    cls: gpl.blocks.ActionButton,
+                    cfg: {
+                        left: (managerSelf.contextX - 15) / gpl.scaleValue, //10 in textblock
+                        top: (managerSelf.contextY - 10) / gpl.scaleValue, //5 in textblock
+                        text: 'Action'
+                    }
+                });
             }
         });
 
