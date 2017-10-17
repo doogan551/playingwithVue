@@ -65,7 +65,10 @@ const Hierarchy = class Hierarchy extends Common {
                 locationType: 1,
                 refNode: 1,
                 path: 1,
-                Name: 1
+                Name: 1,
+                locatedIn: 1,
+                servedBy: 1,
+                descriptors: 1
             }
         }, cb);
     }
