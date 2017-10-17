@@ -2325,7 +2325,7 @@ let Import = class Import extends Common {
             point['Device Status'].Value = 'Stop Scan';
             point['Device Status'].eValue = 66;
         } else if (point['Point Type'].Value === 'Remote Unit') {
-            point['Model Number'] = Config.Templates.getTemplate('Device')['Model Number'];
+            point['Model Number'] = Config.Templates.getTemplate('Remote Unit')['Model Number'];
             point['Device Address'].ValueType = 2;
             if (typeof point['Device Address'].Value !== 'string') {
                 point['Device Address'].Value = point['Device Address'].Value.toString();

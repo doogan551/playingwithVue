@@ -4906,9 +4906,8 @@
                 "Model Number": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "",
-                    "eValue": 0
+                    "ValueType": 2,
+                    "Value": ""
                 },
                 "Model Type": {
                     "isDisplayable": true,
