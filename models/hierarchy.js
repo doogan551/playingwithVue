@@ -65,7 +65,8 @@ const Hierarchy = class Hierarchy extends Common {
                 locationType: 1,
                 refNode: 1,
                 path: 1,
-                Name: 1
+                Name: 1,
+                'Point Type.Value': 1
             }
         }, cb);
     }
