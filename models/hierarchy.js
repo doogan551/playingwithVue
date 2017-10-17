@@ -545,6 +545,7 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
+        let editedLabel = data.display;
 
         this.checkUniqueDisplayUnderParent({
             id,
@@ -563,6 +564,9 @@ const Hierarchy = class Hierarchy extends Common {
                 }, (err, parent) => {
                     node.parentNode = parentNode;
 
+                    if (node.display !== editedLabel) {  // UI allows for an edit during a move
+                        node.display = editedLabel;
+                    }
                     if (parentNode === 0) {
                         node.path = [node.display];
                     } else {

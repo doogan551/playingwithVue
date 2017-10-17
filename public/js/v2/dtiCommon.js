@@ -73,7 +73,7 @@ var dtiCommon = {
         };
     },
 
-    isValidHierarchyAction: (action, actionObject, sourceNodeContainsTargetNode, cb) => {
+    isValidHierarchyAction: (action, actionObject, sourceNodeContainsTargetNode) => {
         let isValidAction = true,
             targetNode = actionObject.targetNode,
             sourceNode = actionObject.sourceNode,
@@ -105,8 +105,7 @@ var dtiCommon = {
                 let cutNodeOnClipboard = (!!sourceNode && sourceNode.isCut),
                     copyNodeOnClipboard = (!!sourceNode && sourceNode.isCopy),
                     clipboardNodeType = sourceNode && sourceNode.nodeType,
-                    validPaste = (cutNodeOnClipboard || copyNodeOnClipboard),
-                    testForUniqueness = false;
+                    validPaste = (cutNodeOnClipboard || copyNodeOnClipboard);
 
                 if (validPaste) {
                     if (isTargetNodeProtectedApplication() || isTargetNodeParentProtectedApplication()) {
@@ -120,25 +119,13 @@ var dtiCommon = {
                             validPaste = false;
                         } else if (sourceNode.parentNode._id === targetNode._id) { // the cut node is being pasted in exact same place
                             validPaste = false;
-                        } else {
-                            testForUniqueness = true;
                         }
                     } else if (copyNodeOnClipboard) {  // logic specific to COPY nodes
 
                     }
                 }
 
-                if (testForUniqueness) {
-                    // once sync & await are working
-                    // dtiCommon.checkPathForUniqueness(targetNode._id, sourceNode.display, (results) => {
-                    //     if (cb) {
-                    //         cb(!results);
-                    //     }
-                    // });
-                    return validPaste;
-                } else {
-                    return validPaste;
-                }
+                return validPaste;
             },
             isValidPasteAsReferenceAction = () => {
                 let copyNodeOnClipboard = (!!sourceNode && sourceNode.isCopy),
@@ -245,7 +232,7 @@ var dtiCommon = {
                     isValidAction = isValidOpenAction();
                     break;
                 case "paste":
-                    isValidAction = isValidPasteAction();  // special case for cut (needs uniqueness check)
+                    isValidAction = isValidPasteAction();
                     break;
                 case "pastereference":
                     isValidAction = isValidPasteAsReferenceAction();
@@ -256,11 +243,7 @@ var dtiCommon = {
             }
         }
 
-        if (cb) {
-            // perhaps I can get promises working eventually
-        } else {
-            return isValidAction;
-        }
+        return isValidAction;
     },
 
     resolveAlarmName: (alarmsMsg, alarmPath) => {
