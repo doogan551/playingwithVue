@@ -546,6 +546,7 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
+        let editedLabel = data.display;
 
         this.checkUniqueDisplayUnderParent({
             id,
@@ -564,6 +565,9 @@ const Hierarchy = class Hierarchy extends Common {
                 }, (err, parent) => {
                     node.parentNode = parentNode;
 
+                    if (node.display !== editedLabel) {  // UI allows for an edit during a move
+                        node.display = editedLabel;
+                    }
                     if (parentNode === 0) {
                         node.path = [node.display];
                     } else {
@@ -619,25 +623,33 @@ const Hierarchy = class Hierarchy extends Common {
                 parentNode
             },
             fields: {
-                path: 1
+                path: 1,
+                parentNode: 1,
+                display: 1
             }
         }, (err, child, nextChild) => {
-            for (var p = 0; p < path.length; p++) {
-                child.path[p] = path[p];
-            }
-            this.toLowerCasePath(child);
-            this.update({
-                query: {
-                    _id: child._id
-                },
-                updateObj: {
-                    $set: {
-                        path: child.path,
-                        _path: child._path
-                    }
+            this.getNode({
+                id: child.parentNode
+            }, (err, parent) => {
+                if (!parent) {
+                    child.path = [child.display];
+                } else {
+                    child.path = [...parent.path, child.display];
                 }
-            }, (err, result) => {
-                this.updateChildrenPaths(child._id, path, nextChild);
+                this.toLowerCasePath(child);
+                this.update({
+                    query: {
+                        _id: child._id
+                    },
+                    updateObj: {
+                        $set: {
+                            path: child.path,
+                            _path: child._path
+                        }
+                    }
+                }, (err, result) => {
+                    this.updateChildrenPaths(child._id, path, nextChild);
+                });
             });
         }, (err, count) => {
             cb(err);
