@@ -284,7 +284,7 @@ html
                         thead
                             tr
                                 th Make Default
-                                th 
+                                th
                                 th Network Segment
                                 th IP Port
                         tbody(data-bind='foreach:networks')
@@ -355,6 +355,9 @@ html
                                 tr
                                     td.col-sm-4 InfoscanJS Version
                                     td.col-sm-9(data-bind="text: $data.ijsVer")
+                                tr
+                                    td.col-sm-4 InfoscanJS Version
+                                    td.col-sm-9(data-bind="text: $data.siteName")
 
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")

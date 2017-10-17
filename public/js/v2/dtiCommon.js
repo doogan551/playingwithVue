@@ -79,12 +79,12 @@ var dtiCommon = {
             sourceNode = actionObject.sourceNode,
             targetIsRootNode,
             validTypesToCopy = ['Point', 'Application'],
-            protectedApplicationSubTypes = ['Sensor', 'Sequence', 'Schedule'],
+            protectedApplications = ['Sensor', 'Sequence', 'Schedule'],
             isTargetNodeProtectedApplication = () => {
                 let answer = false;
 
                 if (targetNode.nodeType === "Application"
-                    && protectedApplicationSubTypes.indexOf(targetNode.nodeSubType) >= 0) {
+                    && protectedApplications.indexOf(targetNode.pointType) >= 0) {
                     answer = true;
                 }
 
@@ -95,7 +95,7 @@ var dtiCommon = {
 
                 if (targetNode.parentNode
                     && targetNode.parentNode.nodeType === "Application"
-                    && protectedApplicationSubTypes.indexOf(targetNode.parentNode.nodeSubType) >= 0) {
+                    && protectedApplications.indexOf(targetNode.parentNode.pointType) >= 0) {
                     answer = true;
                 }
 
@@ -170,13 +170,7 @@ var dtiCommon = {
                 return isValidCopyAction();
             },
             isValidCutAction = () => {
-                let validCut = true;
-
-                if (targetIsRootNode || isTargetNodeParentProtectedApplication()) {
-                    validCut = false;
-                }
-
-                return validCut;
+                return !(targetIsRootNode || isTargetNodeParentProtectedApplication());
             },
             isValidEditAction = () => {
                 return (!targetIsRootNode);
