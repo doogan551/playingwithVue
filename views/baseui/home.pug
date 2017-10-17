@@ -267,7 +267,7 @@ html
                                         .circle
                     h4(data-bind="text: modalAction()")
                     .row
-                        .input-field.col.s6
+                        .input-field.col.s6.pointDisplayField
                             input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
                             label(for="pointDisplayField") Label
                     // ko if: (modalAction().indexOf("Paste") >= 0)

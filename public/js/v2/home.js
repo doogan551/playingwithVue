@@ -4341,34 +4341,79 @@ var dti = {
             },
             handlePasteRequest: (action, data, treeCb) => {
                 let self = dti.navigatorv2,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     reqData = {
                         sourceNode: data.sourceNode,
                         targetNode: data.node,
                         config: data.config
                     },
-                    validPaste = false;
+                    validPaste = false,
+                    getParentID = (node) => {
+                        let answer = 0;
 
-                let done = (err, newNode) => {
-                    if (!err) {
+                        if (node) {
+                            if (node &&
+                                node.bindings._isRoot &&
+                                node.bindings._isRoot()) {
+                                answer = 0;
+                            } else {
+                                answer = node.bindings._id();
+                            }
+                        }
+
+                        return answer;
+                    },
+                    done = (err) => {
+                        if (!err) {
+                            if (data.sourceNode.bindings.isCut()) {
+                                treeCb('move', reqData);
+                                data.sourceNode.bindings.isCut(false);
+                                validPaste = true;
+                            }
+
+                            if (validPaste) {
+                                dti.toast('Success', 2000);
+                            }
+                        } else {
+
+                        }
+                        self.bindings.busy(false);
+                    },
+                    uniquenessTestResult = (err) => {
+                        let $displayField = self.$configureNodeModal.find('.pointDisplayField');
+
+                        modalBindings.activeUniquenessCheck(false);
+                        modalBindings.pathIsValid(!err);
+
                         if (data.sourceNode.bindings.isCut()) {
-                            treeCb('move', reqData);
-                            data.sourceNode.bindings.isCut(false);
-                            validPaste = true;
+                            if (err) {
+                                dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                                self.tree.serverOps.moveNode(reqData, done);
+                            }
+                        } else if (data.sourceNode.bindings.isCopy()) {
+                            dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                            if (err) {
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                            }
                         }
-
-                        if (validPaste) {
-                            dti.toast('Success', 2000);
-                        }
-                    }
-                    self.bindings.busy(false);
-                };
+                    };
 
                 self.bindings.busy(true);
-                if (data.sourceNode.bindings.isCut()) {
-                    self.tree.serverOps.moveNode(reqData, done);
-                } else if (data.sourceNode.bindings.isCopy()) {
-                    dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
-                }
+                modalBindings.activeUniquenessCheck(true);
+                dtiCommon.checkPathForUniqueness(getParentID(reqData.targetNode), reqData.sourceNode.bindings.display(), uniquenessTestResult);
             },
             cutNode: (data) => {
                 let self = dti.navigatorv2,
@@ -4391,14 +4436,25 @@ var dti = {
             saveNode: () => {
                 let self = dti.navigatorv2,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
-                    modalNodeData;
+                    modalNodeData,
+                    sourceNode = self.tree._configureNodeData.sourceNode,
+                    reqData;
 
                 dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, true);
                 modalBindings.activeSaveRequest(true);
 
                 modalNodeData = self.tree.helper.buildNodeFromModalOptions();
 
-                if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {
+                if (sourceNode && sourceNode.bindings.isCut()) {  // handles Cut-n-Paste
+                    reqData = {
+                        sourceNode: self.tree._configureNodeData.sourceNode,
+                        targetNode: self.tree._configureNodeData.targetNode,
+                        config: self.tree._configureNodeData.config
+                    };
+
+                    reqData.sourceNode.bindings.display(modalNodeData.display);  // the changed point label from modal
+                    self.tree.moveNode(reqData);
+                } else if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {  // handles Copy-n-*
                     self.tree.addNode(modalNodeData);
                 } else {
                     self.tree.editNode(modalNodeData);
@@ -4453,7 +4509,7 @@ var dti = {
                     selfBindings.busy(true);
 
                     if (modalBindings.modalAction() === "Paste") {
-                        delete newNode.node;
+                        delete newNode.node;  // data.sourceNode.bindings.isCut()
                         newNode.sourceNode = self.tree._configureNodeData.sourceNode;
                         newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
@@ -4470,7 +4526,6 @@ var dti = {
                     selfBindings = self.bindings,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     valid = self.tree.helper.validateHierarchyNodeOptions(),
-                    editedData = data, // used in done() callback
                     requestData = {
                         id: data.id,
                         display: (data.node.bindings.display() !== data.display ? data.display : undefined),
@@ -4482,7 +4537,6 @@ var dti = {
                         if (!err) {
                             self.tree._configureNodeTreeCallback('edit', data);
                             self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
-                            editedData.node.bindings.display();
                             dti.toast('Success', 2000);
                         } else {
                             dti.toast('Error: ' + err, 4000);
@@ -4503,6 +4557,29 @@ var dti = {
                 } else {
                     self.tree.serverOps.editNode(requestData, done);
                 }
+            },
+            moveNode: (data) => {
+                let self = dti.navigatorv2,
+                    selfBindings = self.bindings,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    done = (err, returnedData) => {
+                        if (!err) {
+                            self.tree._configureNodeTreeCallback('move', data);
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+                            dti.toast('Success', 2000);
+                        } else {
+                            dti.toast('Error: ' + err, 4000);
+                        }
+
+                        selfBindings.busy(false);
+                        modalBindings.modalOpen(false);
+                        modalBindings.activeSaveRequest(false);
+                        data.sourceNode.bindings.isCut(false);
+                        dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                        self.$configureNodeModal.closeModal();
+                    };
+
+                self.tree.serverOps.moveNode(data, done);
             },
             deleteNode: (data, treeCb) => {
                 let self = dti.navigatorv2;
@@ -4681,7 +4758,6 @@ var dti = {
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
-                            modalBindings.pathIsValid(false);
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
@@ -4692,15 +4768,14 @@ var dti = {
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             self.$configureNodeModal.find('select').prop("disabled", true);
-                            modalBindings.pathIsValid(false);
                             break;
                         default:
                             break;
                     }
 
                     modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
-                    self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
-                    self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
+                    // self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
+                    // self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
                     self.$configureNodeModal.find('select').material_select();
                 },
                 chooseNodePoint: () => {
@@ -4805,11 +4880,6 @@ var dti = {
                             }
                         };
                     }
-
-                    // async & await
-                    // return new Promise(resolve => {
-                    //     dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget, resolve);
-                    // });
 
                     return dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget);
                 },
@@ -4962,6 +5032,7 @@ var dti = {
                         url: '/api/hierarchy/move',
                         data: {
                             id: data.sourceNode.bindings._id(),
+                            display: data.sourceNode.bindings.display(), // UI allows for a label change
                             parentNode: getParentID(data.targetNode)
                         }
                     }).done((response) => {

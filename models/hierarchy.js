@@ -65,7 +65,8 @@ const Hierarchy = class Hierarchy extends Common {
                 locationType: 1,
                 refNode: 1,
                 path: 1,
-                Name: 1
+                Name: 1,
+                'Point Type.Value': 1
             }
         }, cb);
     }
@@ -545,6 +546,7 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
+        let editedLabel = data.display;
 
         this.checkUniqueDisplayUnderParent({
             id,
@@ -563,6 +565,9 @@ const Hierarchy = class Hierarchy extends Common {
                 }, (err, parent) => {
                     node.parentNode = parentNode;
 
+                    if (node.display !== editedLabel) {  // UI allows for an edit during a move
+                        node.display = editedLabel;
+                    }
                     if (parentNode === 0) {
                         node.path = [node.display];
                     } else {
