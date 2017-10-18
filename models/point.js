@@ -990,7 +990,6 @@ const Point = class Point extends Common {
                 console.log('isClone', isClone);
                 if (!isClone) {
                     template.nodeType = Config.Utility.getNodeType(pointType);
-                    template.nodeSubType = pointType;
                     // update device template here
                     // get telemetry ip port and set ethernet ip port and downlink ip port
                     // rmu - model type nin[5, 9, 10, 11, 12, 13, 14, 16] set ethernet ip port
@@ -2960,6 +2959,7 @@ const Point = class Point extends Common {
 
     addPoint(data, user, options, callback) {
         const activityLog = new ActivityLog();
+        const hierarchyModel = new Hierarchy();
         let point = data.newPoint;
         let logData = {
             user: user,
@@ -2969,43 +2969,56 @@ const Point = class Point extends Common {
             log: 'Point added'
         };
 
-        this.updateCfgRequired(point, (err) => {
-            if (err) {
-                callback(err);
+        hierarchyModel.checkUniqueDisplayUnderParent({
+            display: point.display,
+            parentNode: point.parentNode
+        }, (err, exists) => {
+            if (!!err) {
+                return callback(err);
+            } else if (!!exists.exists) {
+                return callback({
+                    err: 'Label already exists under node'
+                });
             }
 
-            delete point.id;
-            point._pStatus = 0;
-            point.Security = [];
-            point._actvAlmId = ObjectID(point._actvAlmId);
-            // point._curAlmId = ObjectID(updateObj._curAlmId);
-
-            this.insert({
-                insertObj: point
-            }, (err, result) => {
+            this.updateCfgRequired(point, (err) => {
                 if (err) {
                     callback(err);
-                } else {
-                    logData.point = point;
-                    if (!options || (!!options && options.from !== 'updateSchedules')) {
-                        activityLog.create(logData, (err, result) => {});
-                    }
-
-                    if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
-                        this.newUpdate(data.oldPoint, point, {
-                            from: 'addpoint',
-                            path: data.path
-                        }, user, (err, newPoint) => {
-                            callback({
-                                msg: 'success'
-                            }, newPoint);
-                        });
-                    } else {
-                        return callback({
-                            msg: 'success'
-                        }, point);
-                    }
                 }
+
+                delete point.id;
+                point._pStatus = 0;
+                point.Security = [];
+                point._actvAlmId = ObjectID(point._actvAlmId);
+                // point._curAlmId = ObjectID(updateObj._curAlmId);
+
+                this.insert({
+                    insertObj: point
+                }, (err, result) => {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        logData.point = point;
+                        if (!options || (!!options && options.from !== 'updateSchedules')) {
+                            activityLog.create(logData, (err, result) => {});
+                        }
+
+                        if (data.hasOwnProperty('oldPoint') && data.oldPoint !== undefined) {
+                            this.newUpdate(data.oldPoint, point, {
+                                from: 'addpoint',
+                                path: data.path
+                            }, user, (err, newPoint) => {
+                                callback({
+                                    msg: 'success'
+                                }, newPoint);
+                            });
+                        } else {
+                            return callback({
+                                msg: 'success'
+                            }, point);
+                        }
+                    }
+                });
             });
         });
     }

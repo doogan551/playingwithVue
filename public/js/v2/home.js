@@ -4440,26 +4440,39 @@ var dti = {
                 let self = dti.navigatorv2,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     modalNodeData,
-                    sourceNode = self.tree._configureNodeData.sourceNode,
-                    reqData;
+                    configNodeData = self.tree._configureNodeData,
+                    sourceNode = configNodeData.sourceNode,
+                    reqData,
+                    parentNode,
+                    handleCopyAndPaste = () => {
+                        if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
+                            parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
+                            self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
+                        } else { // handles hierarchy nodes  (Location, Category, Equipment, etc)
+                            self.tree.addNode(modalNodeData);
+                        }
+                    },
+                    handleCutAndPaste = () => {
+                        reqData = {
+                            sourceNode: configNodeData.sourceNode,
+                            targetNode: configNodeData.targetNode,
+                            config: configNodeData.config
+                        };
+
+                        reqData.sourceNode.bindings.display(modalNodeData.display);  // the changed point label from modal
+                        self.tree.moveNode(reqData);
+                    };
 
                 dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, true);
                 modalBindings.activeSaveRequest(true);
 
                 modalNodeData = self.tree.helper.buildNodeFromModalOptions();
 
-                if (sourceNode && sourceNode.bindings.isCut()) {  // handles Cut-n-Paste
-                    reqData = {
-                        sourceNode: self.tree._configureNodeData.sourceNode,
-                        targetNode: self.tree._configureNodeData.targetNode,
-                        config: self.tree._configureNodeData.config
-                    };
-
-                    reqData.sourceNode.bindings.display(modalNodeData.display);  // the changed point label from modal
-                    self.tree.moveNode(reqData);
-                } else if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {  // handles Copy-n-*
-                    self.tree.addNode(modalNodeData);
-                } else {
+                if (sourceNode && sourceNode.bindings.isCut()) {
+                    handleCutAndPaste();
+                } else if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {
+                    handleCopyAndPaste();
+                } else { // handles Open (edits) of hierarchy nodes (not classic points)
                     self.tree.editNode(modalNodeData);
                 }
             },
@@ -4668,7 +4681,7 @@ var dti = {
                         display: dtiCommon.cleanLabelField(modalBindings.modalNodeDisplay()),  // remove leading & trailing spaces
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),
-                        pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : targetNode.bindings["Point Type"].Value()),
+                        pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : modalBindings.modalNodePointType()),
                         id: targetNode.bindings._id(),
                         refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
                         node: targetNode,
@@ -4713,7 +4726,9 @@ var dti = {
                         modalBindings.modalNodeType(data.config.nodeType);
                     }
 
-                    self.$configureNodeModal.openModal();
+                    self.$configureNodeModal.openModal({
+                        dismissible: false
+                    });
                     self.$configureNodeModal.removeClass("addingPoint");
                     modalBindings.modalOpen(true);
 
