@@ -2936,7 +2936,7 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
-        const hierarchyCounters = ['Location', 'Equipment', 'Category', 'Reference'];
+        const hierarchyCounters = Config.Enums['Hierarchy Types'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
@@ -2947,13 +2947,13 @@ let Import = class Import extends Common {
                 enum: pointTypes[type].enum
             });
         }
-        hierarchyCounters.forEach((counter) => {
+        for (var hierarchyType in hierarchyCounters) {
             counters.push({
-                _id: counter.toLowerCase(),
+                _id: hierarchyType.toLowerCase(),
                 count: 0,
-                enum: Config.Enums['Hierarchy Types'][counter].enum
+                enum: hierarchyCounters[hierarchyType].enum
             });
-        });
+        }
         this.insert({
             collection: 'counters',
             insertObj: counters
