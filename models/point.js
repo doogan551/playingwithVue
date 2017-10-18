@@ -3030,14 +3030,6 @@ const Point = class Point extends Common {
         const parentNode = this.getNumber(newPoint.parentNode);
         const display = newPoint.display;
 
-        const insertNewPoints = (err, validatedPoints) => {
-            if (!!err && !err.hasOwnProperty('msg')) {
-                return cb(err);
-            }
-            this.bulkAdd(validatedPoints, data.user, {}, (err, points) => {
-                return cb(err, points);
-            });
-        };
         const updateRef = (point, newId, oldId) => {
             let refs = point['Point Refs'];
             for (var r = 0; r < refs.length; r++) {
@@ -3090,7 +3082,7 @@ const Point = class Point extends Common {
             });
         };
 
-        buildPoint(targetUpi, parentNode, display, insertNewPoints);
+        buildPoint(targetUpi, parentNode, display, cb);
     }
 
     bulkAdd(points, user, options, cb) {
