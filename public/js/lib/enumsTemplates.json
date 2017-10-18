@@ -3226,6 +3226,11 @@
                 "valueType": "Unsigned",
                 "reportEnable": true
             },
+            "Model Number": {
+                "enum": 129,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
@@ -4230,7 +4235,10 @@
             "path": [],
             "_path": [],
             "parentNode": 0,
-            "display": ""
+            "display": "",
+            "locatedIn": 0,
+            "servedBy": [],
+            "descriptors": []
         },
         "_common": {
             "_relDevice": 0,
@@ -4894,6 +4902,12 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 255
+                },
+                "Model Number": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
                 },
                 "Model Type": {
                     "isDisplayable": true,

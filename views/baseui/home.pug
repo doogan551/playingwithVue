@@ -267,7 +267,7 @@ html
                                         .circle
                     h4(data-bind="text: modalAction()")
                     .row
-                        .input-field.col.s6
+                        .input-field.col.s6.pointDisplayField
                             input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
                             label(for="pointDisplayField") Label
                     // ko if: (modalAction().indexOf("Paste") >= 0)
@@ -453,11 +453,23 @@ html
                         .cat SubType:
                         .val(data-bind="text: currNodeSubType")
                     .treeRow
+                        .cat PointType:
+                        .val(data-bind="text: currNodePointType")
+                    .treeRow
                         .cat Path:
                         .val(data-bind="diPointName: currNodePath")
                     .treeRow
                         .cat Node Id:
                         .val(data-bind="text: currNodeId")
+                    .treeRow
+                        .cat Located In:
+                        .val(data-bind="text: currNodeLocatedIn")
+                    .treeRow
+                        .cat ServedBy:
+                        .val(data-bind="text: currNodeServedBy")
+                    .treeRow
+                        .cat Descriptors:
+                        .val(data-bind="text: currNodeDescriptors")
                     .treeRow
                         .cat Reference Id:
                         .val(data-bind="text: currRefNode")

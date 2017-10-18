@@ -1506,6 +1506,7 @@ var versionsViewModel = function() {
     self.hasError = ko.observable(false);
     self.processVer = ko.observable('');
     self.ijsVer = ko.observable('');
+    self.siteName = ko.observable('');
 
     self.getData = function() {
         $.ajax({
@@ -1517,6 +1518,7 @@ var versionsViewModel = function() {
             } else {
                 self.ijsVer(data.infoscanjs);
                 self.processVer(data.Processes);
+                self.siteName(data.siteName);
             }
         });
     };

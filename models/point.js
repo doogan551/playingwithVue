@@ -24,21 +24,21 @@ const Point = class Point extends Common {
             '$facet': {
                 'Ref': [{
                     '$unwind': {
-                            'path': '$Point Refs',
-                            'preserveNullAndEmptyArrays': true
-                        }
+                        'path': '$Point Refs',
+                        'preserveNullAndEmptyArrays': true
+                    }
                 }, {
-                        '$lookup': {
-                            'from': 'points',
-                            'localField': 'Point Refs.Value',
-                            'foreignField': '_id',
-                            'as': 'refNames'
-                        }
-                    }, {
-                        '$unwind': {
+                    '$lookup': {
+                        'from': 'points',
+                        'localField': 'Point Refs.Value',
+                        'foreignField': '_id',
+                        'as': 'refNames'
+                    }
+                }, {
+                    '$unwind': {
                             'path': '$refNames'
                         }
-                    }, {
+                }, {
                         '$addFields': {
                             'Point Refs.PointPath': '$refNames.path',
                             'Point Refs.PointType': '$refNames.Point Type.eValue'
@@ -53,21 +53,21 @@ const Point = class Point extends Common {
                     }],
                 'Point': [{
                     '$sort': {
-                            '_id': 1
-                        }
+                        '_id': 1
+                    }
                 }],
                 'Points': [{
                     '$project': {
-                            'Point Refs': {
-                                '$filter': {
+                        'Point Refs': {
+                            '$filter': {
                                     'input': '$Point Refs',
                                     'as': 'ref',
                                     'cond': {
                                         '$eq': ['$$ref.Value', 0]
                                     }
                                 }
-                            }
                         }
+                    }
                 }]
             }
         },
@@ -78,14 +78,14 @@ const Point = class Point extends Common {
         }, {
             '$project': {
                 'Ref': {
-                        '$filter': {
-                            'input': '$Ref',
-                            'as': 'ref',
-                            'cond': {
+                    '$filter': {
+                        'input': '$Ref',
+                        'as': 'ref',
+                        'cond': {
                                 '$eq': ['$$ref._id', '$Point._id']
                             }
-                        }
-                    },
+                    }
+                },
                 'Point': 1,
                 'Points': 1
             }
@@ -119,14 +119,14 @@ const Point = class Point extends Common {
             '$addFields': {
                 'Point.Point Refs': {
                     '$concatArrays': [{
-                            '$cond': {
-                                'if': {
+                        '$cond': {
+                            'if': {
                                     '$ne': ['$refs', null]
                                 },
-                                'then': '$refs.Point Refs',
-                                'else': []
-                            }
-                        }, '$Points.Point Refs']
+                            'then': '$refs.Point Refs',
+                            'else': []
+                        }
+                    }, '$Points.Point Refs']
                 }
             }
         }, {
@@ -3414,6 +3414,9 @@ const Point = class Point extends Common {
         let display = this.getDefault(data.display, '');
         let nodeType = this.getDefault(data.nodeType, '');
         let nodeSubType = this.getDefault(data.nodeSubType, '');
+        let locatedIn = this.getDefault(data.locatedIn, 0);
+        let servedBy = this.getDefault(data.nodeSubType, []);
+        let descriptors = this.getDefault(data.nodeSubType, []);
         let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
             data.path = path;
@@ -3430,6 +3433,9 @@ const Point = class Point extends Common {
                         nodeSubType,
                         path,
                         _pStatus,
+                        locatedIn,
+                        servedBy,
+                        descriptors,
                         _path: data._path
                     }
                 },

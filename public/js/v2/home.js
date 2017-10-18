@@ -4118,7 +4118,9 @@ var dti = {
                 contextMenu: {
                     selector: '.dtcollapsible-header',
                     items: {
-                        kicktothehead: " ",
+                        placeHolder: {
+                            className: 'hide'
+                        },
                         add: {
                             name: 'Add',
                             action: 'add',
@@ -4314,6 +4316,7 @@ var dti = {
                 selfBindings.currNodeDisplay(node.bindings.display());
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
+                selfBindings.currNodePointType(node.bindings["Point Type"].Value());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
                 selfBindings.currRefNode(node.bindings.refNode());
@@ -4341,34 +4344,79 @@ var dti = {
             },
             handlePasteRequest: (action, data, treeCb) => {
                 let self = dti.navigatorv2,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     reqData = {
                         sourceNode: data.sourceNode,
                         targetNode: data.node,
                         config: data.config
                     },
-                    validPaste = false;
+                    validPaste = false,
+                    getParentID = (node) => {
+                        let answer = 0;
 
-                let done = (err, newNode) => {
-                    if (!err) {
+                        if (node) {
+                            if (node &&
+                                node.bindings._isRoot &&
+                                node.bindings._isRoot()) {
+                                answer = 0;
+                            } else {
+                                answer = node.bindings._id();
+                            }
+                        }
+
+                        return answer;
+                    },
+                    done = (err) => {
+                        if (!err) {
+                            if (data.sourceNode.bindings.isCut()) {
+                                treeCb('move', reqData);
+                                data.sourceNode.bindings.isCut(false);
+                                validPaste = true;
+                            }
+
+                            if (validPaste) {
+                                dti.toast('Success', 2000);
+                            }
+                        } else {
+
+                        }
+                        self.bindings.busy(false);
+                    },
+                    uniquenessTestResult = (err) => {
+                        let $displayField = self.$configureNodeModal.find('.pointDisplayField');
+
+                        modalBindings.activeUniquenessCheck(false);
+                        modalBindings.pathIsValid(!err);
+
                         if (data.sourceNode.bindings.isCut()) {
-                            treeCb('move', reqData);
-                            data.sourceNode.bindings.isCut(false);
-                            validPaste = true;
+                            if (err) {
+                                dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                                self.tree.serverOps.moveNode(reqData, done);
+                            }
+                        } else if (data.sourceNode.bindings.isCopy()) {
+                            dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                            if (err) {
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                            }
                         }
-
-                        if (validPaste) {
-                            dti.toast('Success', 2000);
-                        }
-                    }
-                    self.bindings.busy(false);
-                };
+                    };
 
                 self.bindings.busy(true);
-                if (data.sourceNode.bindings.isCut()) {
-                    self.tree.serverOps.moveNode(reqData, done);
-                } else if (data.sourceNode.bindings.isCopy()) {
-                    dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
-                }
+                modalBindings.activeUniquenessCheck(true);
+                dtiCommon.checkPathForUniqueness(getParentID(reqData.targetNode), reqData.sourceNode.bindings.display(), uniquenessTestResult);
             },
             cutNode: (data) => {
                 let self = dti.navigatorv2,
@@ -4391,14 +4439,25 @@ var dti = {
             saveNode: () => {
                 let self = dti.navigatorv2,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
-                    modalNodeData;
+                    modalNodeData,
+                    sourceNode = self.tree._configureNodeData.sourceNode,
+                    reqData;
 
                 dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, true);
                 modalBindings.activeSaveRequest(true);
 
                 modalNodeData = self.tree.helper.buildNodeFromModalOptions();
 
-                if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {
+                if (sourceNode && sourceNode.bindings.isCut()) {  // handles Cut-n-Paste
+                    reqData = {
+                        sourceNode: self.tree._configureNodeData.sourceNode,
+                        targetNode: self.tree._configureNodeData.targetNode,
+                        config: self.tree._configureNodeData.config
+                    };
+
+                    reqData.sourceNode.bindings.display(modalNodeData.display);  // the changed point label from modal
+                    self.tree.moveNode(reqData);
+                } else if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {  // handles Copy-n-*
                     self.tree.addNode(modalNodeData);
                 } else {
                     self.tree.editNode(modalNodeData);
@@ -4453,7 +4512,7 @@ var dti = {
                     selfBindings.busy(true);
 
                     if (modalBindings.modalAction() === "Paste") {
-                        delete newNode.node;
+                        delete newNode.node;  // data.sourceNode.bindings.isCut()
                         newNode.sourceNode = self.tree._configureNodeData.sourceNode;
                         newNode.targetNode = self.tree._configureNodeData.targetNode;
                         self.tree.serverOps.copyNode(newNode, done);
@@ -4470,7 +4529,6 @@ var dti = {
                     selfBindings = self.bindings,
                     modalBindings = dti.bindings.navigatorv2.configureNodeModal,
                     valid = self.tree.helper.validateHierarchyNodeOptions(),
-                    editedData = data, // used in done() callback
                     requestData = {
                         id: data.id,
                         display: (data.node.bindings.display() !== data.display ? data.display : undefined),
@@ -4482,7 +4540,6 @@ var dti = {
                         if (!err) {
                             self.tree._configureNodeTreeCallback('edit', data);
                             self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
-                            editedData.node.bindings.display();
                             dti.toast('Success', 2000);
                         } else {
                             dti.toast('Error: ' + err, 4000);
@@ -4503,6 +4560,29 @@ var dti = {
                 } else {
                     self.tree.serverOps.editNode(requestData, done);
                 }
+            },
+            moveNode: (data) => {
+                let self = dti.navigatorv2,
+                    selfBindings = self.bindings,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    done = (err, returnedData) => {
+                        if (!err) {
+                            self.tree._configureNodeTreeCallback('move', data);
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+                            dti.toast('Success', 2000);
+                        } else {
+                            dti.toast('Error: ' + err, 4000);
+                        }
+
+                        selfBindings.busy(false);
+                        modalBindings.modalOpen(false);
+                        modalBindings.activeSaveRequest(false);
+                        data.sourceNode.bindings.isCut(false);
+                        dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                        self.$configureNodeModal.closeModal();
+                    };
+
+                self.tree.serverOps.moveNode(data, done);
             },
             deleteNode: (data, treeCb) => {
                 let self = dti.navigatorv2;
@@ -4549,6 +4629,10 @@ var dti = {
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
+                        "Point Type.Value": (obj["Point Type"] ? obj["Point Type"].Value : undefined),
+                        locatedIn: (obj.locatedIn ? obj.locatedIn : 0),
+                        servedBy: (obj.servedBy ? obj.servedBy : []),
+                        descriptors: (obj.descriptors ? obj.descriptors : []),
                         tags: [],
                         meta: {},
                         refNode: obj.refNode || 0,
@@ -4576,7 +4660,7 @@ var dti = {
                         point = self.tree._configureNodePoint;
 
                     if (modalBindings.needsPoint() && !!point) {
-                        modalBindings.modalNodeSubType(point.pointType);
+                        modalBindings.modalNodePointType(point.pointType);
                     }
 
                     let ret = {
@@ -4622,6 +4706,7 @@ var dti = {
                     modalBindings.modalNodeDisplay("");
                     modalBindings.modalNodePointName("");
                     modalBindings.modalNodeSubType("");
+                    modalBindings.modalNodePointType("");
 
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
@@ -4659,6 +4744,7 @@ var dti = {
                             modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);  // TODO perhaps some logic around Location Type
                             modalBindings.pathIsValid(true);
@@ -4669,6 +4755,7 @@ var dti = {
                             modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
                             modalBindings.pathIsValid(true);
@@ -4680,8 +4767,8 @@ var dti = {
                             modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('select').prop("disabled", true);
-                            modalBindings.pathIsValid(false);
                             break;
                         case "paste as reference":
                             modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
@@ -4691,16 +4778,16 @@ var dti = {
                             modalBindings.modalNodeType("Reference");
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('select').prop("disabled", true);
-                            modalBindings.pathIsValid(false);
                             break;
                         default:
                             break;
                     }
 
                     modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
-                    self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
-                    self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
+                    // self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
+                    // self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
                     self.$configureNodeModal.find('select').material_select();
                 },
                 chooseNodePoint: () => {
@@ -4747,7 +4834,7 @@ var dti = {
                     self.tree._configureNodePoint = point;
                     self.tree._configureNodeFilter = point.filter;
                 },
-                isValidMenuAction: (action, actionObject) => {
+                isValidMenuAction: (action, actionObject) => {  // strip out hierarchy bindings to test generic tree actions
                     let sourceContainsTarget,
                         pasteMode = action.indexOf("paste") >= 0,
                         sourceNode = (pasteMode ? actionObject.manager.clipboardNode : actionObject),
@@ -4781,10 +4868,12 @@ var dti = {
                             _isRoot: (targetNode.bindings._isRoot && targetNode.bindings._isRoot()),
                             nodeType: targetNode.bindings.nodeType(),
                             nodeSubType: targetNode.bindings.nodeSubType(),
+                            pointType: targetNode.bindings["Point Type"].Value(),
                             parentNode: {
                                 _id: targetNode.parentNode ? targetNode.parentNode.bindings._id() : null,
                                 nodeType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeType() : null,
-                                nodeSubType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeSubType() : null
+                                nodeSubType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: targetNode.parentNode ? targetNode.parentNode.bindings["Point Type"].Value() : null
                             }
                         };
                     }
@@ -4798,18 +4887,15 @@ var dti = {
                             display: sourceNode.bindings.display(),
                             nodeType: sourceNode.bindings.nodeType(),
                             nodeSubType: sourceNode.bindings.nodeSubType(),
+                            pointType: sourceNode.bindings["Point Type"].Value(),
                             parentNode: {
                                 _id: sourceNode.parentNode ? sourceNode.parentNode.bindings._id() : null,
                                 nodeType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeType() : null,
-                                nodeSubType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeSubType() : null
+                                nodeSubType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: sourceNode.parentNode ? sourceNode.parentNode.bindings["Point Type"].Value() : null
                             }
                         };
                     }
-
-                    // async & await
-                    // return new Promise(resolve => {
-                    //     dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget, resolve);
-                    // });
 
                     return dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget);
                 },
@@ -4844,8 +4930,8 @@ var dti = {
                             parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
-                            nodeSubType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType),
-                            pointType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType)
+                            nodeSubType: nodeData.nodeSubType,
+                            pointType: nodeData.pointType
                         };
 
                     dti.post({
@@ -4962,6 +5048,7 @@ var dti = {
                         url: '/api/hierarchy/move',
                         data: {
                             id: data.sourceNode.bindings._id(),
+                            display: data.sourceNode.bindings.display(), // UI allows for a label change
                             parentNode: getParentID(data.targetNode)
                         }
                     }).done((response) => {
@@ -5080,6 +5167,10 @@ var dti = {
                 currNodeDisplay: '',
                 currNodeType: '',
                 currNodeSubType: '',
+                currNodePointType: '',
+                currNodeLocatedIn: 0,
+                currNodeServedBy: [],
+                currNodeDescriptors: [],
                 currNodePath: '',
                 currNodeName: '',
                 currRefNode: ''
@@ -6271,6 +6362,10 @@ var dti = {
                 modalNodeType: '',
                 modalNodeSubType: '',
                 modalNodePointName: '',
+                modalNodePointType: '',
+                modalNodeLocatedIn: 0,
+                modalNodeServedBy: [],
+                modalNodeDescriptors: [],
                 pointTypesShown: false,
                 pointTypeText: 'Point Types',
                 selectedPointType: '',
@@ -7025,6 +7120,12 @@ var dti = {
                         parentNode: 0,
                         nodeType: '',
                         nodeSubType: '',
+                        "Point Type" : {
+                            Value: ""
+                        },
+                        locatedIn: 0,
+                        servedBy: [],
+                        descriptors: [],
                         path: [],
                         Name: '',
                         refNode: 0,
@@ -7048,6 +7149,13 @@ var dti = {
 
                     this.manager = config.manager;
                     this.defaultConfig = $.extend(true, this.defaultConfig, config);
+
+                    // ****   loss of purity here, but I do like the simplified field name backend is returning "Point Type.Value"
+                    // if (this.defaultConfig["Point Type"]) {
+                    //     this.defaultConfig.pointType = this.defaultConfig["Point Type"].Value;
+                    // }
+                    // ****
+
                     delete this.defaultConfig.manager;
 
                     this.bindings = ko.viewmodel.fromModel(this.defaultConfig);
@@ -7488,6 +7596,7 @@ var dti = {
                     newPath[newPath.length - 1] = data.display; // a rename
                     node.bindings.display(data.display);
                     node.bindings.nodeSubType(data.nodeSubType);
+                    node.bindings["Point Type"].Value(data["Point Type"].Value);
                     node.bindings.path(newPath);
                     rebuildChildrenPaths(node.bindings.path(), node.bindings.children());
                 }
