@@ -4118,7 +4118,9 @@ var dti = {
                 contextMenu: {
                     selector: '.dtcollapsible-header',
                     items: {
-                        kicktothehead: " ",
+                        placeHolder: {
+                            className: 'hide'
+                        },
                         add: {
                             name: 'Add',
                             action: 'add',
@@ -4628,6 +4630,9 @@ var dti = {
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
                         "Point Type.Value": (obj["Point Type"] ? obj["Point Type"].Value : undefined),
+                        locatedIn: (obj.locatedIn ? obj.locatedIn : 0),
+                        servedBy: (obj.servedBy ? obj.servedBy : []),
+                        descriptors: (obj.descriptors ? obj.descriptors : []),
                         tags: [],
                         meta: {},
                         refNode: obj.refNode || 0,
@@ -4829,7 +4834,7 @@ var dti = {
                     self.tree._configureNodePoint = point;
                     self.tree._configureNodeFilter = point.filter;
                 },
-                isValidMenuAction: (action, actionObject) => {
+                isValidMenuAction: (action, actionObject) => {  // strip out hierarchy bindings to test generic tree actions
                     let sourceContainsTarget,
                         pasteMode = action.indexOf("paste") >= 0,
                         sourceNode = (pasteMode ? actionObject.manager.clipboardNode : actionObject),
