@@ -6962,6 +6962,7 @@ let reportsViewModel = function () {
 
                     if (cfg.pointData) {
                         reportPoint = $.extend(true, {}, cfg.pointData);
+                        self.display(reportPoint.display);
                     }
 
                     if (cfg.afterSaveCallback) {

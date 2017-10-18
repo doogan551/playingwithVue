@@ -285,7 +285,7 @@ router.post('/copy', function (req, res) {
             });
         }
 
-        return utils.sendResponse(res, {message: err.msg, points: points});
+        return utils.sendResponse(res, {message: err, points: points});
     });
 });
 
