@@ -831,6 +831,12 @@
             },
             "Reference": {
                 "enum": 508
+            },
+            "System": {
+                "enum": 507
+            },
+            "Instrumentation": {
+                "enum": 506
             }
         },
         "Input Ranges": {
