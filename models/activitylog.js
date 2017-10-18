@@ -44,16 +44,10 @@ const ActivityLog = class ActivityLog extends Common {
             }]
         };
 
-        if (!!data.terms) {
-            if (data.terms.length) {
-                if (typeof data.terms === 'string') {
-                    data.terms = data.terms.split(' ');
-                }
-
-                query.path = {
-                    $all: this.buildSearchTerms(data.terms)
-                };
-            }
+        if (!!data.terms.length) {
+            query._path = {
+                $all: this.buildSearchTerms(data.terms)
+            };
         }
 
         /** @type {Array} Point Type enums */

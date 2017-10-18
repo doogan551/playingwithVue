@@ -487,43 +487,25 @@ const Hierarchy = class Hierarchy extends Common {
     deleteNode(data, cb) {
         let id = this.getNumber(data.id);
         let nodeType = this.getDefault(data.nodeType, 'Location');
-        let points = [];
-        let hierarchies = [];
+        let nodes = [];
 
-        let deleteHierachyNodes = (ids, callback) => {
-            if (!ids.length) {
-                return callback();
-            }
-            this.remove({
+        const setNodesToDeleted = (ids, callback) => {
+            this.updateAll({
                 query: {
                     _id: {
                         $in: ids
+                    }
+                },
+                updateObj: {
+                    $set: {
+                        _pStatus: Config.Enums['Point Statuses'].Deleted.enum
                     }
                 }
             }, callback);
         };
 
-        let removePointNodes = (ids, callback) => {
-            if (!ids.length) {
-                return callback();
-            }
-            // could potentially call point.deletePoint() but needs to be run through
-            // to make sure it doesn't do something we don't want, like delete children
-            this.remove({
-                query: {
-                    _id: {
-                        $in: ids
-                    }
-                }
-            }, callback);
-        };
-
-        let sortId = (type, id) => {
-            if (['Point', 'Application'].includes(type)) {
-                points.push(id);
-            } else {
-                hierarchies.push(id);
-            }
+        let sortId = (id) => {
+            nodes.push(id);
         };
 
         this.getDescendantIds({
@@ -532,16 +514,14 @@ const Hierarchy = class Hierarchy extends Common {
             let allIds = descendants[0];
             if (!!allIds && !!allIds.nodes.length) {
                 allIds.nodes.forEach((descendant) => {
-                    sortId(descendant.nodeType, descendant.id);
+                    sortId(descendant.id);
                 });
             }
 
-            sortId(nodeType, id);
+            sortId(id);
 
-            deleteHierachyNodes(hierarchies, (err, result) => {
-                removePointNodes(points, (err, result) => {
-                    return cb();
-                });
+            setNodesToDeleted(nodes, (err, result) => {
+                return cb(err);
             });
         });
     }
@@ -568,7 +548,7 @@ const Hierarchy = class Hierarchy extends Common {
                 }, (err, parent) => {
                     node.parentNode = parentNode;
 
-                    if (node.display !== editedLabel) {  // UI allows for an edit during a move
+                    if (node.display !== editedLabel) { // UI allows for an edit during a move
                         node.display = editedLabel;
                     }
                     if (parentNode === 0) {
