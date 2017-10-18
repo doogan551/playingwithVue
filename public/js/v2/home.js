@@ -4532,7 +4532,8 @@ var dti = {
                     requestData = {
                         id: data.id,
                         display: (data.node.bindings.display() !== data.display ? data.display : undefined),
-                        nodeSubType: (data.node.bindings.nodeSubType() !== data.nodeSubType ? data.nodeSubType : undefined)
+                        nodeSubType: (data.node.bindings.nodeSubType() !== data.nodeSubType ? data.nodeSubType : undefined),
+                        pointType: data.node.bindings["Point Type"].Value()
                         // meta: (data.node.bindings.meta() !== data.meta ? data.meta : undefined),
                         // tags: (data.node.bindings.tags() !== data.tags ? data.tags : undefined)
                     },
@@ -4667,7 +4668,7 @@ var dti = {
                         display: dtiCommon.cleanLabelField(modalBindings.modalNodeDisplay()),  // remove leading & trailing spaces
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),
-                        pointType: modalBindings.selectedPointType(),
+                        pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : targetNode.bindings["Point Type"].Value()),
                         id: targetNode.bindings._id(),
                         refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
                         node: targetNode,
@@ -7596,7 +7597,7 @@ var dti = {
                     newPath[newPath.length - 1] = data.display; // a rename
                     node.bindings.display(data.display);
                     node.bindings.nodeSubType(data.nodeSubType);
-                    node.bindings["Point Type"].Value(data["Point Type"].Value);
+                    node.bindings["Point Type"].Value(data["Point Type"] ? data["Point Type"].Value : data.pointType);
                     node.bindings.path(newPath);
                     rebuildChildrenPaths(node.bindings.path(), node.bindings.children());
                 }
