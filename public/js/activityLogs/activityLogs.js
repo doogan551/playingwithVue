@@ -147,7 +147,7 @@ var ActivityLogsManager = function (conf) {
             reqObj.currentPage = gotoPageOne ? 1 : self.pageNumber();
             reqObj.usernames = self.getFilteredUsers();
 
-            reqObj.terms = self.terms();
+            reqObj.terms = dtiCommon.buildSearchTerms(self.terms());
 
             if (availablePointTypes) {
                 if (self.pointTypes().length > 0 && self.pointTypes().length !== numberPointTypes.length) {
@@ -485,10 +485,12 @@ var ActivityLogsManager = function (conf) {
         let upi = parseInt(data.upi, 10),
             $element = $(event.target),
             originalElementText,
-            path = data.path.join(" "),
+            path = data.path,
             setAttribsFilter = (pointType) => {
                 setPointAttribsFilter({
-                    terms: path,
+                    terms: path.map(function(term) {
+                        return '"'+term+'"';
+                    }).join(' '),
                     pointTypes: [pointType]
                 });
             },

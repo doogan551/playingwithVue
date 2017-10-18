@@ -461,6 +461,9 @@ let AlarmManager = function (conf) {
             self.pointAttribsFilterPaused(true);
 
             val = (typeof data.path === 'function') ? data.path() : data.path; // using path of clicked point as search terms for backend filtering
+            val = val.map(function(term) {
+                return '"'+term+'"';
+            });
             pointAttribsFilterObj.terms = (val.length ? val.join(" ") : "");
 
             utilGetConfig('Utility.getPointTypeNameFromId', upi, setFilter);
@@ -968,7 +971,7 @@ let AlarmManager = function (conf) {
                         if (val === undefined) {
                             reqObj[key] = null;
                         } else if (val !== "") {
-                            reqObj[key] = val.split(" ");
+                            reqObj[key] = dtiCommon.buildSearchTerms(val.trim());
                         }
                         break;
                     case "path":
