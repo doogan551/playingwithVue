@@ -5822,7 +5822,7 @@ var dti = {
                 dti.post({
                     url: '/api/points/getFilteredPoints',
                     data: {
-                        terms: this.bindings.searchString().trim().split(' '),
+                        terms: dtiCommon.buildSearchTerms(this.bindings.searchString().trim()),
                         pointTypes: this.bindings.flatPointTypeList(),
                         remoteUnitId: this.bindings.remoteUnitId(),
                         deviceId: this.bindings.deviceId()

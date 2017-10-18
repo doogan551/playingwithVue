@@ -240,6 +240,40 @@ var dtiCommon = {
         return isValidAction;
     },
 
+    buildSearchTerms: (searchString) => {
+        var terms = [];
+        var term = '';
+        var inQuote = false;
+        searchString.split('').forEach(function (char) {
+            if (char === '"') {
+                term += char;
+                if (inQuote) {
+                    terms.push(term);
+                    term = '';
+                    inQuote = false;
+                } else {
+                    inQuote = true;
+                }
+            } else if (inQuote) {
+                term += char;
+            } else if (char === ' ') {
+                if (term.length > 0) {
+                    terms.push(term);
+                    term = '';
+                }
+            } else {
+                term += char;
+            }
+        });
+        if (term.length > 0) {
+            term.split(' ').forEach(function (newTerm) {
+                terms.push(newTerm);
+            });
+        }
+
+        return terms;
+    },
+
     resolveAlarmName: (alarmsMsg, alarmPath) => {
         return alarmsMsg.replace("%NAME", dtiCommon.getPointName(alarmPath));
     },
