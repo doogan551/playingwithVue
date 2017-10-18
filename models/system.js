@@ -551,7 +551,7 @@ const System = class System extends Common {
     }
     getVersions(data, cb) {
         let pjson = require('../package.json');
-        let versions = {
+        let systemPreferences = {
             infoscanjs: pjson.version
         };
         let criteria = {
@@ -564,8 +564,9 @@ const System = class System extends Common {
             if (err) {
                 return cb(err);
             }
-            versions.Processes = result['Server Version'];
-            return cb(null, versions);
+            systemPreferences.Processes = result['Server Version'];
+            systemPreferences.siteName = result['Site Name'];
+            return cb(null, systemPreferences);
         });
     }
 };

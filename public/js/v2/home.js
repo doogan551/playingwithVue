@@ -4118,7 +4118,9 @@ var dti = {
                 contextMenu: {
                     selector: '.dtcollapsible-header',
                     items: {
-                        kicktothehead: " ",
+                        placeHolder: {
+                            className: 'hide'
+                        },
                         add: {
                             name: 'Add',
                             action: 'add',
@@ -4314,6 +4316,7 @@ var dti = {
                 selfBindings.currNodeDisplay(node.bindings.display());
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
+                selfBindings.currNodePointType(node.bindings["Point Type"].Value());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
                 selfBindings.currRefNode(node.bindings.refNode());
@@ -4626,6 +4629,10 @@ var dti = {
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
+                        "Point Type.Value": (obj["Point Type"] ? obj["Point Type"].Value : undefined),
+                        locatedIn: (obj.locatedIn ? obj.locatedIn : 0),
+                        servedBy: (obj.servedBy ? obj.servedBy : []),
+                        descriptors: (obj.descriptors ? obj.descriptors : []),
                         tags: [],
                         meta: {},
                         refNode: obj.refNode || 0,
@@ -4653,7 +4660,7 @@ var dti = {
                         point = self.tree._configureNodePoint;
 
                     if (modalBindings.needsPoint() && !!point) {
-                        modalBindings.modalNodeSubType(point.pointType);
+                        modalBindings.modalNodePointType(point.pointType);
                     }
 
                     let ret = {
@@ -4699,6 +4706,7 @@ var dti = {
                     modalBindings.modalNodeDisplay("");
                     modalBindings.modalNodePointName("");
                     modalBindings.modalNodeSubType("");
+                    modalBindings.modalNodePointType("");
 
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
@@ -4736,6 +4744,7 @@ var dti = {
                             modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);  // TODO perhaps some logic around Location Type
                             modalBindings.pathIsValid(true);
@@ -4746,6 +4755,7 @@ var dti = {
                             modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
                             modalBindings.modalNodeType(data.node.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('#nodeType').prop("disabled", true);
                             self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
                             modalBindings.pathIsValid(true);
@@ -4757,6 +4767,7 @@ var dti = {
                             modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         case "paste as reference":
@@ -4767,6 +4778,7 @@ var dti = {
                             modalBindings.modalNodeType("Reference");
                             modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         default:
@@ -4822,7 +4834,7 @@ var dti = {
                     self.tree._configureNodePoint = point;
                     self.tree._configureNodeFilter = point.filter;
                 },
-                isValidMenuAction: (action, actionObject) => {
+                isValidMenuAction: (action, actionObject) => {  // strip out hierarchy bindings to test generic tree actions
                     let sourceContainsTarget,
                         pasteMode = action.indexOf("paste") >= 0,
                         sourceNode = (pasteMode ? actionObject.manager.clipboardNode : actionObject),
@@ -4856,10 +4868,12 @@ var dti = {
                             _isRoot: (targetNode.bindings._isRoot && targetNode.bindings._isRoot()),
                             nodeType: targetNode.bindings.nodeType(),
                             nodeSubType: targetNode.bindings.nodeSubType(),
+                            pointType: targetNode.bindings["Point Type"].Value(),
                             parentNode: {
                                 _id: targetNode.parentNode ? targetNode.parentNode.bindings._id() : null,
                                 nodeType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeType() : null,
-                                nodeSubType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeSubType() : null
+                                nodeSubType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: targetNode.parentNode ? targetNode.parentNode.bindings["Point Type"].Value() : null
                             }
                         };
                     }
@@ -4873,10 +4887,12 @@ var dti = {
                             display: sourceNode.bindings.display(),
                             nodeType: sourceNode.bindings.nodeType(),
                             nodeSubType: sourceNode.bindings.nodeSubType(),
+                            pointType: sourceNode.bindings["Point Type"].Value(),
                             parentNode: {
                                 _id: sourceNode.parentNode ? sourceNode.parentNode.bindings._id() : null,
                                 nodeType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeType() : null,
-                                nodeSubType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeSubType() : null
+                                nodeSubType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: sourceNode.parentNode ? sourceNode.parentNode.bindings["Point Type"].Value() : null
                             }
                         };
                     }
@@ -4914,8 +4930,8 @@ var dti = {
                             parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
-                            nodeSubType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType),
-                            pointType: (nodeData.nodeType === "Point" ? nodeData.pointType : nodeData.nodeSubType)
+                            nodeSubType: nodeData.nodeSubType,
+                            pointType: nodeData.pointType
                         };
 
                     dti.post({
@@ -5151,6 +5167,10 @@ var dti = {
                 currNodeDisplay: '',
                 currNodeType: '',
                 currNodeSubType: '',
+                currNodePointType: '',
+                currNodeLocatedIn: 0,
+                currNodeServedBy: [],
+                currNodeDescriptors: [],
                 currNodePath: '',
                 currNodeName: '',
                 currRefNode: ''
@@ -6342,6 +6362,10 @@ var dti = {
                 modalNodeType: '',
                 modalNodeSubType: '',
                 modalNodePointName: '',
+                modalNodePointType: '',
+                modalNodeLocatedIn: 0,
+                modalNodeServedBy: [],
+                modalNodeDescriptors: [],
                 pointTypesShown: false,
                 pointTypeText: 'Point Types',
                 selectedPointType: '',
@@ -7096,6 +7120,12 @@ var dti = {
                         parentNode: 0,
                         nodeType: '',
                         nodeSubType: '',
+                        "Point Type" : {
+                            Value: ""
+                        },
+                        locatedIn: 0,
+                        servedBy: [],
+                        descriptors: [],
                         path: [],
                         Name: '',
                         refNode: 0,
@@ -7119,6 +7149,13 @@ var dti = {
 
                     this.manager = config.manager;
                     this.defaultConfig = $.extend(true, this.defaultConfig, config);
+
+                    // ****   loss of purity here, but I do like the simplified field name backend is returning "Point Type.Value"
+                    // if (this.defaultConfig["Point Type"]) {
+                    //     this.defaultConfig.pointType = this.defaultConfig["Point Type"].Value;
+                    // }
+                    // ****
+
                     delete this.defaultConfig.manager;
 
                     this.bindings = ko.viewmodel.fromModel(this.defaultConfig);
@@ -7559,6 +7596,7 @@ var dti = {
                     newPath[newPath.length - 1] = data.display; // a rename
                     node.bindings.display(data.display);
                     node.bindings.nodeSubType(data.nodeSubType);
+                    node.bindings["Point Type"].Value(data["Point Type"].Value);
                     node.bindings.path(newPath);
                     rebuildChildrenPaths(node.bindings.path(), node.bindings.children());
                 }
