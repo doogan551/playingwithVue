@@ -7669,7 +7669,7 @@ var dti = {
 
                             child.path(newPath);
 
-                            if (child.children.length) {
+                            if (child.children().length) {
                                 rebuildChildrenPaths(newPath, child.children());
                             }
                         });
