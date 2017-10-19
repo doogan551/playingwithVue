@@ -4729,6 +4729,7 @@ var dti = {
                     modalBindings.modalNodePointName("");
                     modalBindings.modalNodeSubType("");
                     modalBindings.modalNodePointType("");
+                    modalBindings.selectedPointType("");
 
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
@@ -5100,12 +5101,13 @@ var dti = {
                         cbData = {},
                         hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
                         rawPoint = hierarchyNodeTypes[data.sourceNode.bindings.nodeType()] === undefined,
+                        parentNode = data.targetNode,
                         url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy',
                         copyRequestData = {
                             newPoint: {
                                 targetUpi: data.sourceNode.bindings._id(),
                                 display: data.display,
-                                parentNode: data.targetNode.bindings._id()
+                                parentNode: parentNode.bindings._id()
                             }
                         };
 
@@ -5125,6 +5127,7 @@ var dti = {
                             cbData.sourceNode = data.sourceNode;
                             cbData.newNode = (!!result.points ? result.points[0] : null);
                             cbData.points = (!!result.points ? result.points : []);
+                            cbData.parent = (!!parentNode ? parentNode : null);
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -5138,7 +5141,11 @@ var dti = {
                             dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
                             self.$configureNodeModal.closeModal();
                         }
-                        dti.navigatorv2.handleNewPoint(!!err, cbData, cb);
+                        if (rawPoint) {
+                            dti.navigatorv2.handleNewPoint(!!err, cbData, cb);
+                        } else  {
+                            cb(!!err, cbData);
+                        }
                     });
                 },
                 deleteNode(node, cb) {
