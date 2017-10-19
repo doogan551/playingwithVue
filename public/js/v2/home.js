@@ -7577,18 +7577,35 @@ var dti = {
                     return this.getNodeById(_id);
                 }
 
-                addRootNode() {
+                addRootNode(cb) {
                     let manager = this;
-                    var rootNode = manager.getNode({
-                        display: 'InfoScan',
-                        fetched: true,
-                        expanded: true,
-                        nodeType: 'Location',
-                        nodeSubType: 'Site',
-                        _isRoot: true
-                    });
+                    var rootNode,
+                        createRootNode = (siteName) => {
+                            rootNode = manager.getNode({
+                                display: siteName,
+                                fetched: true,
+                                expanded: true,
+                                nodeType: 'Location',
+                                nodeSubType: 'Site',
+                                _isRoot: true
+                            });
 
-                    manager.rootNode = manager.createNode(rootNode, null, true);
+                            manager.rootNode = manager.createNode(rootNode, null, true);
+                            if (cb) {
+                                cb();
+                            }
+                        }
+
+                    $.ajax({
+                        url: '/api/system/preferences'
+                    }).done(function (data) {
+                        if (!!data.err) {
+                            console.log(data);
+                            alert('There was an error getting preferences.');
+                        } else {
+                            createRootNode(data.siteName);
+                        }
+                    });
                 }
 
                 addNode(data) { // Callback action
@@ -7854,28 +7871,29 @@ var dti = {
 
                 handleTreeResults(results, overwrite, cb) {
                     var rootNode,
-                        bindings = this.bindings;
+                        bindings = this.bindings,
+                        finishBuildingTree = () => {
+                            // if (results.length > 0) {
+                            rootNode = this.rootNode;
+                            this.tree = this.normalize(results, {
+                                expanded: false
+                            });
 
-                    this.addRootNode();
-                    rootNode = this.rootNode;
+                            this.sortRawNodes(this.tree);
 
-                    // if (results.length > 0) {
-                    this.tree = this.normalize(results, {
-                        expanded: false
-                    });
+                            dti.forEachArray(this.tree, (branch) => {
+                                this.createNode(branch, rootNode, true);
+                            });
+                            // } else {
+                            //     this.bindings.addRootNode();
+                            // }
 
-                    this.sortRawNodes(this.tree);
+                            if (cb) {
+                                cb();
+                            }
+                        };
 
-                    dti.forEachArray(this.tree, (branch) => {
-                        this.createNode(branch, rootNode, true);
-                    });
-                    // } else {
-                    //     this.bindings.addRootNode();
-                    // }
-
-                    if (cb) {
-                        cb();
-                    }
+                    this.addRootNode(finishBuildingTree);
                 }
 
                 getDefaultTree(cb, overwrite) {

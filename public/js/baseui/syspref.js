@@ -1499,9 +1499,12 @@ var backupViewModel = function() {
 };
 
 // About screen ---------------------------------------------------------------
-var versionsViewModel = function() {
-    var self = this;
-    self.displayName = 'Versions';
+var preferencesViewModel = function() {
+    var self = this,
+    makeDirty = function() {
+        self.dirty(true);
+    };
+    self.displayName = 'Preferences';
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
     self.processVer = ko.observable('');
@@ -1510,20 +1513,40 @@ var versionsViewModel = function() {
 
     self.getData = function() {
         $.ajax({
-            url: '/api/system/versions'
+            url: '/api/system/preferences'
         }).done(function(data) {
             if (!!data.err) {
                 console.log(data);
-                alert('There was an error getting versions.');
+                alert('There was an error getting preferences.');
             } else {
                 self.ijsVer(data.infoscanjs);
                 self.processVer(data.Processes);
                 self.siteName(data.siteName);
+                self.siteName.subscribe(makeDirty);
             }
         });
     };
     self.init = function() {
         self.getData();
+    };
+    self.save = function() {
+        $.ajax({
+            url: '/api/system/setpreferences',
+            data: {
+                siteName: self.siteName()
+            },
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            self.dirty(false);
+        });
+
+        self.dirty(false);
+    };
+
+    self.cancel = function() {
+        self.setData();
+        self.dirty(false);
     };
 };
 
@@ -3547,7 +3570,7 @@ $(function() {
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
-            sysPrefsViewModel.registerSection(versionsViewModel, 'init');
+            sysPrefsViewModel.registerSection(preferencesViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');

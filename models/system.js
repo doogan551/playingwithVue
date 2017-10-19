@@ -549,7 +549,7 @@ const System = class System extends Common {
 
         this.update(criteria, cb);
     }
-    getVersions(data, cb) {
+    getPreferences(data, cb) {
         let pjson = require('../package.json');
         let systemPreferences = {
             infoscanjs: pjson.version
@@ -568,6 +568,21 @@ const System = class System extends Common {
             systemPreferences.siteName = result['Site Name'];
             return cb(null, systemPreferences);
         });
+    }
+    setPreferences(data, cb) {
+        let preferencesUpdate = {
+            $set: {
+                'Site Name': data.siteName
+            }
+        };
+        let criteria = {
+            query: {
+                Name: 'Preferences'
+            },
+            updateObj: preferencesUpdate
+        };
+
+        this.updateOne(criteria, cb);
     }
 };
 

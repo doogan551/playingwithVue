@@ -343,11 +343,11 @@ html
 
 
             // ------ About -----------------------------------------------------------------------------------------
-            div#versions(data-bind="visible: section() == 'Versions'")
-                div(data-bind="with: versionsViewModel")
-                    .title Versions
-                    .versionsContainer
-                        table#versionList.linedTable
+            div#preferences(data-bind="visible: section() == 'Preferences'")
+                div(data-bind="with: preferencesViewModel")
+                    .title Preferences
+                    .preferencesContainer
+                        table#preferencesList.linedTable
                             tbody
                                 tr
                                     td.col-sm-4 Server Processes Version
@@ -356,9 +356,10 @@ html
                                     td.col-sm-4 InfoscanJS Version
                                     td.col-sm-9(data-bind="text: $data.ijsVer")
                                 tr
-                                    td.col-sm-4 InfoscanJS Version
-                                    td.col-sm-9(data-bind="text: $data.siteName")
-
+                                    td.col-sm-4 Site Name
+                                    td.col-sm-9.clickToEdit(data-bind="clickEdit: $data.siteName")
+                                        span(data-bind="text: $data.siteName")
+                                        input.hide.form-control(type="text", maxlength="60", data-bind="value: $data.siteName")
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")
