@@ -25,7 +25,7 @@ html.direports
                             button.btn.tiny.waves-effect.waves-light.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Report settings")
                                 //| Configuration
                                 i.material-icons.center settings
-                        li.saveReportButton(data-bind='if: $root.canEdit()')
+                        li.saveReportButton
                             button.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='enable: $root.okToSave()', style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Save report")
                                 i.mdi.mdi-content-save.center
                         li.viewReportButton
@@ -108,11 +108,11 @@ html.direports
                                     //        label(data-bind="attr: {for: 'reportTitleInput'}") Report Name
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
-                                            // ko if: !unpersistedReport()
+                                            // ko if: !unpersistedReport() || isCopiedPoint()
                                             label.tiny Report Type
                                             span(data-bind="text: reportType")
                                             // /ko
-                                            // ko if: unpersistedReport()
+                                            // ko if: unpersistedReport() && !isCopiedPoint()
                                             .col.s1.reportTypes
                                                 .availableReportTypes
                                                     // ko if: ($root.listOfReportTypes().length > 1)

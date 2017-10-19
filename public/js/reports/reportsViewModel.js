@@ -5913,6 +5913,8 @@ let reportsViewModel = function () {
 
     self.display = ko.observable("");
 
+    self.isCopiedPoint = ko.observable(false);
+
     self.unpersistedReport = ko.observable(false);
 
     self.name1Filter = ko.observable("");
@@ -6962,6 +6964,8 @@ let reportsViewModel = function () {
 
                     if (cfg.pointData) {
                         reportPoint = $.extend(true, {}, cfg.pointData);
+                        reportPoint._id = 0;
+                        self.isCopiedPoint(true);
                         self.display(reportPoint.display);
                     }
 
@@ -7728,6 +7732,7 @@ let reportsViewModel = function () {
         return (!self.activeSaveRequest() &&
             !self.activeUniquenessCheck() &&
             self.pathIsValid() &&
+            self.canEdit() &&
             self.display() !== '');
     });
 
