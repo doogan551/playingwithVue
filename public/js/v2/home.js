@@ -4443,13 +4443,14 @@ var dti = {
                     configNodeData = self.tree._configureNodeData,
                     sourceNode = configNodeData.sourceNode,
                     reqData,
-                    parentNode,
                     handleCopyAndPaste = () => {
                         if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
-                            parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
-                            self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
-                        } else { // handles hierarchy nodes  (Location, Category, Equipment, etc)
-                            self.tree.addNode(modalNodeData);
+                            reqData = {
+                                sourceNode: configNodeData.sourceNode,
+                                targetNode: (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node),
+                                display: modalNodeData.display  // the changed point label from modal
+                            };
+                            self.tree.serverOps.copyNode(reqData, self.tree._configureNodeTreeCallback);
                         }
                     },
                     handleCutAndPaste = () => {
@@ -4470,8 +4471,15 @@ var dti = {
 
                 if (sourceNode && sourceNode.bindings.isCut()) {
                     handleCutAndPaste();
-                } else if (modalBindings.generateNewNodeActions.indexOf(modalNodeData.action) >= 0) {
+                } else if (sourceNode && sourceNode.bindings.isCopy()) {  // only classic points can be copied
                     handleCopyAndPaste();
+                } else if (modalNodeData.action === "add") {
+                    if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
+                        let parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
+                        self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
+                    } else {
+                        self.tree.addNode(modalNodeData);
+                    }
                 } else { // handles Open (edits) of hierarchy nodes (not classic points)
                     self.tree.editNode(modalNodeData);
                 }
@@ -4721,6 +4729,7 @@ var dti = {
                     modalBindings.modalNodePointName("");
                     modalBindings.modalNodeSubType("");
                     modalBindings.modalNodePointType("");
+                    modalBindings.selectedPointType("");
 
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
@@ -4963,7 +4972,7 @@ var dti = {
                         } else if (result.err) {
                             err = 'Error creating point: ' + result.err;
                         } else {
-                            cbData.newPoint = result.newPoint;
+                            cbData.newNode = result.newPoint;
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -5085,16 +5094,20 @@ var dti = {
                     });
                 },
                 copyNode(data, cb) {
-                    let err = false,
+                    let self = dti.navigatorv2,
+                        selfBindings = self.bindings,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        err = false,
                         cbData = {},
                         hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
                         rawPoint = hierarchyNodeTypes[data.sourceNode.bindings.nodeType()] === undefined,
+                        parentNode = data.targetNode,
                         url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy',
                         copyRequestData = {
                             newPoint: {
                                 targetUpi: data.sourceNode.bindings._id(),
                                 display: data.display,
-                                parentNode: data.targetNode.bindings._id()
+                                parentNode: parentNode.bindings._id()
                             }
                         };
 
@@ -5114,14 +5127,25 @@ var dti = {
                             cbData.sourceNode = data.sourceNode;
                             cbData.newNode = (!!result.points ? result.points[0] : null);
                             cbData.points = (!!result.points ? result.points : []);
+                            cbData.parent = (!!parentNode ? parentNode : null);
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
                     }).always(() => {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
                         }
-                        cb(!!err, cbData);
+                        if (rawPoint) {
+                            dti.navigatorv2.handleNewPoint(!!err, cbData, cb);
+                        } else  {
+                            cb(!!err, cbData);
+                        }
                     });
                 },
                 deleteNode(node, cb) {
@@ -5228,10 +5252,11 @@ var dti = {
             } else {
                 let self = dti.navigatorv2,
                     treeViewerCallback = treeCb,
-                    newPoint = data.newPoint,
-                    pointType = newPoint["Point Type"].Value,
-                    endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id),
-                    handoffMode = endPoint.edit || endPoint.review,
+                    newNode = data.newNode,
+                    newPoint = (newNode.newPoint ? newNode.newPoint : newNode),
+                    pointType = (newPoint["Point Type"] ? newPoint["Point Type"].Value : null),
+                    endPoint = (pointType ? dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id) : null),
+                    handoffMode = (endPoint ? (endPoint.edit || endPoint.review) : null),
                     handleAddNewPointToHierarchy = (returnData) => {
                         if (treeViewerCallback) {
                             treeViewerCallback('add', {
@@ -5243,19 +5268,23 @@ var dti = {
                         }
                     };
 
-                dti.windows.openWindow({
-                    url: handoffMode.url,
-                    title: dtiCommon.getPointName(newPoint.path),
-                    pointType: pointType,
-                    upi: newPoint._id,
-                    pointData: newPoint,
-                    afterSaveCallback: handleAddNewPointToHierarchy,
-                    options: {
-                        height: 750,
-                        width: 1250
-                    }
-                });
-                dti.navigatorv2.resetPointTypesArray();
+                if (endPoint) {
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: dtiCommon.getPointName(newPoint.path),
+                        pointType: pointType,
+                        upi: newPoint._id,
+                        pointData: newPoint,
+                        afterSaveCallback: handleAddNewPointToHierarchy,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                    dti.navigatorv2.resetPointTypesArray();
+                } else {
+
+                }
             }
         },
         destroy(config) {
@@ -7640,7 +7669,7 @@ var dti = {
 
                             child.path(newPath);
 
-                            if (child.children.length) {
+                            if (child.children().length) {
                                 rebuildChildrenPaths(newPath, child.children());
                             }
                         });
