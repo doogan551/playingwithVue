@@ -7853,9 +7853,11 @@ var dti = {
                 }
 
                 handleTreeResults(results, overwrite, cb) {
-                    var bindings = this.bindings;
+                    var rootNode,
+                        bindings = this.bindings;
 
                     this.addRootNode();
+                    rootNode = this.rootNode;
 
                     // if (results.length > 0) {
                     this.tree = this.normalize(results, {
@@ -7865,7 +7867,7 @@ var dti = {
                     this.sortRawNodes(this.tree);
 
                     dti.forEachArray(this.tree, (branch) => {
-                        this.createNode(branch, null, true);
+                        this.createNode(branch, rootNode, true);
                     });
                     // } else {
                     //     this.bindings.addRootNode();
