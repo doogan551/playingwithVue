@@ -4119,13 +4119,13 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
             if (shape.setCoords) {
                 shape.setCoords();
             }
-            // gpl.log(shape.gplType, left, top, shape.offsetLeft, shape.offsetTop);
         }
     },
 
     redrawLines: gpl.emptyFn,
 
     add: function (object, render) {
+        object.gplId = this.gplId;
         object.offsetLeft = object.left - this.left;
         object.offsetTop = object.top - this.top;
         this._shapes.push(object);
@@ -4135,39 +4135,26 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
     },
 
     delete: function () {
-        gpl.manager.canvas.remove(this);
-        // TODO remove this's shapes
+        var canvas = gpl.canvases[this.targetCanvas || 'main'];
+
+        gpl.forEachArray(this._shapes, canvas.remove.bind(canvas));
+        canvas.remove.call(canvas, this);
+
         delete gpl.actionButtons[this.gplId];
     },
 
     initialize: function (config) {
+        this.gplId = gpl.makeId();
+        gpl.actionButtons[this.gplId] = this;
+
         this._shapes = [];
 
         this.convertConfig(config);
 
         this.callSuper('initialize', this.config);
 
-        this.set('lockUniScaling', false);
-        this.set('lockScalingY', true);
-
         this.initShapes();
 
-        this.setControlsVisibility({
-            tl: false,
-            tr: false,
-            br: false,
-            bl: false,
-            ml: true,
-            mt: false,
-            mr: true,
-            mb: false,
-            mtr: false
-        });
-
-        this.gplId = gpl.makeId();
-        gpl.actionButtons[this.gplId] = this;
-
-        // this.add(this);
         gpl.blockManager.registerBlock(this);
 
         gpl.manager.bindings.hasEdits(true);
@@ -4207,6 +4194,7 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
     initShapes: function () {
         this.initBackground();
         this.initLabel();
+        this.initMovable(); // This has to be the last shape added otherwise we can't move the button
     },
 
     initBackground: function () {
@@ -4218,9 +4206,7 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
             width: this.width,
             height: this.height,
             fill: this.fill,
-            selectable: true,
-            hasControls: false,
-            hasRotatingPoint: false,
+            selectable: false
         };
 
         this.background = new fabric.Rect(config);
@@ -4241,10 +4227,7 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
             gplType: 'label',
             readOnly: true,
             opacity: 1,
-            selectable: true,
-            hasControls: false,
-            hasRotatingPoint: false,
-            gplId: this.gplId
+            selectable: false
         };
 
         if (this.config.inactive) {
@@ -4257,6 +4240,60 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
         this.labelText._originalLeft = this.labelText.left;
         this.add(this.labelText);
     },
+
+    initMovable: function () {
+        var movable = new fabric.Rect({
+                top: this.top,
+                left: this.left,
+                originX: 'left',
+                originY: 'top',
+                width: this.width,
+                height: this.height,
+                opacity: 0,
+                selectable: true,
+                hasRotatingPoint: false,
+                hasControls: true,
+                lockScalingX: false
+            }),
+            handleScaling = function () {
+                // Update the block and all shapes to the new width; "this" is the movable shape
+                console.log('scaling', arguments, this);
+                var block = gpl.blockManager.blocks[this.gplId],
+                    left = this.left,
+                    width = parseInt(this.width * this.zoomX, 10);
+
+                gpl.forEachArray(block._shapes, function (shape, i) {
+                    shape.left = left;
+                    shape.width = width;
+                    shape.zoomX = 1;
+                    shape.scaleX = 1;
+                });
+
+                block.left = left;
+                block.width = width;
+            },
+            handleSelected = function () {
+                console.log('selected', arguments, this);
+            };
+        
+        movable.setControlsVisibility({
+            tl: false, // top left
+            tr: false, // top right
+            br: false, // bottom right
+            bl: false, // etc. etc.
+            ml: true,
+            mt: false,
+            mr: true,
+            mb: false,
+            mtr: false // middle-top rotate
+        });
+
+        movable.on('scaling', handleScaling);
+        movable.on('selected', handleSelected);
+        
+        this.add(movable);
+        this.movable = movable;
+    }
 });
 
 /* *
@@ -4283,7 +4320,7 @@ fabric.Textbox.__setObjectScaleOverridden = fabric.Canvas.prototype._setObjectSc
  * Override _setObjectScale and add Textbox specific resizing behavior. Resizing
  * a Textbox doesn't scale text, it only changes width and makes text wrap automatically.
  */
-fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip) {
+fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip, dim) {
     var t = transform.target,
         setObjectScaleOverridden = fabric.Textbox.__setObjectScaleOverridden,
         w;
@@ -4294,7 +4331,7 @@ fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockS
             t.set('width', w);
         }
     } else {
-        setObjectScaleOverridden.call(fabric.Canvas.prototype, localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip);
+        return setObjectScaleOverridden.call(fabric.Canvas.prototype, localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip, dim);
     }
 };
 
