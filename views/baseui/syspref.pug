@@ -359,7 +359,7 @@ html
                                     td.col-sm-4 Site Name
                                     td.col-sm-9.clickToEdit(data-bind="clickEdit: $data.siteName")
                                         span(data-bind="text: $data.siteName")
-                                        input.hide.form-control(type="text", maxlength="60", data-bind="value: $data.siteName")
+                                        input.hide.form-control.siteName(type="text", maxlength="60", data-bind="value: $data.siteName")
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")

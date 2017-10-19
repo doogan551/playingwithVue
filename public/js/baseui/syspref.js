@@ -3553,7 +3553,9 @@ $(function() {
     function postInit() {
         var year,
             calendarVM,
-            hash;
+            hash,
+            keypressTimer = 300,
+            keypressTimerID;
 
         // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
         // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
@@ -3601,6 +3603,31 @@ $(function() {
                     container.css('display', 'none');
                 }
             });
+
+            $("#preferences").find(".siteName")
+                .on("keyup", function (event) {
+                    clearTimeout(keypressTimerID);
+                    keypressTimerID = setTimeout(function () {
+                        let $element = $(event.target),
+                            elementValue = $element.val().trim(),
+                            labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+
+                        if (labelTest.valid) {
+                            let $myLabels = $(element).siblings("label");
+                            if (labelTest.errorMessage) {
+                                $element.addClass("invalid");
+                                $element.removeClass("valid");
+                                $myLabels.attr("data-error", labelTest.errorMessage);
+                                vm.pathIsValid(false);
+                            } else {
+                                $element.removeClass("invalid");
+                                $element.addClass("valid");
+                                $myLabels.attr("data-error", "");
+                                vm.pathIsValid(true);
+                            }
+                        }
+                    }, keypressTimer);
+                });
 
             ko.applyBindings(sysPrefsViewModel);
             sysPrefsViewModel.runInitFunctions();
