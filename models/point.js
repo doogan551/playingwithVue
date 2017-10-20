@@ -36,21 +36,21 @@ const Point = class Point extends Common {
                     }
                 }, {
                     '$unwind': {
-                            'path': '$refNames'
-                        }
+                        'path': '$refNames'
+                    }
                 }, {
-                        '$addFields': {
-                            'Point Refs.PointPath': '$refNames.path',
-                            'Point Refs.PointType': '$refNames.Point Type.eValue'
+                    '$addFields': {
+                        'Point Refs.PointPath': '$refNames.path',
+                        'Point Refs.PointType': '$refNames.Point Type.eValue'
+                    }
+                }, {
+                    '$group': {
+                        '_id': '$_id',
+                        'Point Refs': {
+                            '$push': '$Point Refs'
                         }
-                    }, {
-                        '$group': {
-                            '_id': '$_id',
-                            'Point Refs': {
-                                '$push': '$Point Refs'
-                            }
-                        }
-                    }],
+                    }
+                }],
                 'Point': [{
                     '$sort': {
                         '_id': 1
@@ -60,80 +60,80 @@ const Point = class Point extends Common {
                     '$project': {
                         'Point Refs': {
                             '$filter': {
-                                    'input': '$Point Refs',
-                                    'as': 'ref',
-                                    'cond': {
-                                        '$eq': ['$$ref.Value', 0]
-                                    }
+                                'input': '$Point Refs',
+                                'as': 'ref',
+                                'cond': {
+                                    '$eq': ['$$ref.Value', 0]
                                 }
+                            }
                         }
                     }
                 }]
             }
         },
-        {
-            '$unwind': {
-                'path': '$Point'
-            }
-        }, {
-            '$project': {
-                'Ref': {
-                    '$filter': {
-                        'input': '$Ref',
-                        'as': 'ref',
-                        'cond': {
+            {
+                '$unwind': {
+                    'path': '$Point'
+                }
+            }, {
+                '$project': {
+                    'Ref': {
+                        '$filter': {
+                            'input': '$Ref',
+                            'as': 'ref',
+                            'cond': {
                                 '$eq': ['$$ref._id', '$Point._id']
                             }
-                    }
-                },
-                'Point': 1,
-                'Points': 1
-            }
-        },
-        {
-            '$unwind': {
-                'path': '$Ref',
-                'preserveNullAndEmptyArrays': true
-            }
-        }, {
-            '$unwind': {
-                'path': '$Points',
-                'preserveNullAndEmptyArrays': true
-            }
-        },
-        {
-            '$group': {
-                '_id': '$Point._id',
-                'Point': {
-                    '$first': '$Point'
-                },
-                'Points': {
-                    '$first': '$Points'
-                },
-                'refs': {
-                    '$first': '$Ref'
+                        }
+                    },
+                    'Point': 1,
+                    'Points': 1
                 }
-            }
-        },
-        {
-            '$addFields': {
-                'Point.Point Refs': {
-                    '$concatArrays': [{
-                        '$cond': {
-                            'if': {
+            },
+            {
+                '$unwind': {
+                    'path': '$Ref',
+                    'preserveNullAndEmptyArrays': true
+                }
+            }, {
+                '$unwind': {
+                    'path': '$Points',
+                    'preserveNullAndEmptyArrays': true
+                }
+            },
+            {
+                '$group': {
+                    '_id': '$Point._id',
+                    'Point': {
+                        '$first': '$Point'
+                    },
+                    'Points': {
+                        '$first': '$Points'
+                    },
+                    'refs': {
+                        '$first': '$Ref'
+                    }
+                }
+            },
+            {
+                '$addFields': {
+                    'Point.Point Refs': {
+                        '$concatArrays': [{
+                            '$cond': {
+                                'if': {
                                     '$ne': ['$refs', null]
                                 },
-                            'then': '$refs.Point Refs',
-                            'else': []
-                        }
-                    }, '$Points.Point Refs']
+                                'then': '$refs.Point Refs',
+                                'else': []
+                            }
+                        }, '$Points.Point Refs']
+                    }
+                }
+            }, {
+                '$replaceRoot': {
+                    'newRoot': '$Point'
                 }
             }
-        }, {
-            '$replaceRoot': {
-                'newRoot': '$Point'
-            }
-        }
         ];
         let pipeline = [matchStage, ...stages];
 
@@ -3025,6 +3025,7 @@ const Point = class Point extends Common {
 
     copyPoint(data, cb) {
         const hierarchyModel = new Hierarchy();
+        const report = new Report();
         let newPoint = data.newPoint;
         const targetUpi = this.getNumber(newPoint.targetUpi);
         const parentNode = this.getNumber(newPoint.parentNode);
@@ -3052,32 +3053,49 @@ const Point = class Point extends Common {
                 }
                 let points = [{
                     newPoint: validatedPoint
-                }];
-                if (['Schedule', 'Sequence'].includes(validatedPoint['Point Type'].Value)) {
-                    this.iterateCursor({
-                        query: {
-                            _parentUpi: targetUpi
-                        }
-                    }, (err, child, nextChild) => {
-                        this.initPoint({
-                            parentUpi: validatedPoint.id,
-                            targetUpi: child._id,
-                            parentNode: validatedPoint.id,
-                            display: child.display,
-                            parentPath: validatedPoint.path
-                        }, (err, newBlock) => {
-                            newBlock._parentUpi = newBlock.parentNode;
-                            points.push({
-                                newPoint: newBlock
-                            });
-                            updateRef(validatedPoint, newBlock.id, child._id);
-                            nextChild();
-                        });
-                    }, (err, count) => {
-                        callback(err, points);
-                    });
-                } else {
+                }],
+                reportCallback = (err, report) => {
                     callback(err, points);
+                };
+                switch (validatedPoint['Point Type'].Value) {
+                    case "Schedule":
+                    case "Sequence":
+                        this.iterateCursor({
+                            query: {
+                                _parentUpi: targetUpi
+                            }
+                        }, (err, child, nextChild) => {
+                            this.initPoint({
+                                parentUpi: validatedPoint.id,
+                                targetUpi: child._id,
+                                parentNode: validatedPoint.id,
+                                display: child.display,
+                                parentPath: validatedPoint.path
+                            }, (err, newBlock) => {
+                                newBlock._parentUpi = newBlock.parentNode;
+                                points.push({
+                                    newPoint: newBlock
+                                });
+                                updateRef(validatedPoint, newBlock.id, child._id);
+                                nextChild();
+                            });
+                        }, (err, count) => {
+                            callback(err, points);
+                        });
+                        break;
+                    case "Report":
+                        validatedPoint.resolvePointRefs = true;
+                        this.getPointById(validatedPoint, () => {
+                            if (err) {
+                                return callback(err);
+                            } else {
+                                report.getReportColumnInfo(validatedPoint, null, null, reportCallback);
+                            }
+                        });
+                        break;
+                    default:
+                        callback(err, points);
+                        break;
                 }
             });
         };
@@ -3656,6 +3674,7 @@ const System = require('./system');
 const ActivityLog = require('./activitylog');
 const AlarmDefs = require('./alarmdefs');
 const History = require('./history');
+const Report = require('./reports');
 const Schedule = require('./schedule');
 const Security = require('./security');
 const Script = require('./scripts');

@@ -3360,7 +3360,7 @@ let reportsViewModel = function () {
                         delete results.collection[index].upi;
                         delete results.collection[index].searchable;
                         delete results.collection[index].searchFilter;
-                        if (index !== 0) {
+                        if (index !== 0 && self.reportType() !== "Property") {  // property reports needs this value for backend
                             delete results.collection[index].colName;  // the first column is protected  (date || pointName)
                         }
                     }
@@ -3459,7 +3459,7 @@ let reportsViewModel = function () {
                 if (!!existingPointRef) {
                     column.AppIndex = existingPointRef.AppIndex;
                     column.upi = existingPointRef.Value;
-                    // column.colName = existingPointRef.PointName;  // TODO existing reports would use something like this
+                    column.colName = existingPointRef.PointName;
                 } else {
                     console.log("ERROR - columnLogic.updateColumnFromPointRefs() could not locate Point Ref for upi = " + column.colName);
                 }
@@ -5000,16 +5000,23 @@ let reportsViewModel = function () {
                     requestID: uuid,
                     upis: upis,
                     range: {
-                        start: reportPoint["Report Config"].duration.startDate,
-                        end: reportPoint["Report Config"].duration.endDate
+                        start: 0,
+                        end: 0
                     },
                     reportConfig: cleanUpReportConfig(reportPoint["Report Config"]),
                     reportType: reportPoint["Report Type"].Value,
                     "Point Refs": reportPoint["Point Refs"],
                     sort: ""
                 };
-            }
 
+                if (self.reportType() !== "Property") {
+                    result.range = {
+                        start: reportPoint["Report Config"].duration.startDate,
+                        end: reportPoint["Report Config"].duration.endDate
+                    };
+                }
+
+            }
             return result;
         },
         getDurationText = (duration, precision, hoursOnly) => {
@@ -5796,7 +5803,9 @@ let reportsViewModel = function () {
                         dtiUtility.updateWindow('updateTitle', reportPoint.Name);
                         if (reportPoint._pStatus === 1) {
                             // call addPoint here integrate into dtiutil
+                            reportPoint.isCopiedPoint = undefined;
                             reportSocket.emit("addPoint", [{
+                                resolvePointRefs: true,
                                 newPoint: reportPoint,
                                 oldPoint: originalPoint
                             }]);
@@ -6965,7 +6974,7 @@ let reportsViewModel = function () {
                     if (cfg.pointData) {
                         reportPoint = $.extend(true, {}, cfg.pointData);
                         reportPoint._id = 0;
-                        self.isCopiedPoint(true);
+                        self.isCopiedPoint((!!reportPoint.isCopiedPoint));
                         self.display(reportPoint.display);
                     }
 
