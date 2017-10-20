@@ -50,7 +50,7 @@ var dtiCommon = {
 
         if (len === 0) {
             valid = false;
-            errMessage = "Label field is blank";
+            errMessage = "Field is blank";
         } else {
             for (i = 0; i < len; i++) {
                 if (!dtiCommon._private.validPointLabelRegEx.test(labelValue[i])) {
@@ -63,7 +63,7 @@ var dtiCommon = {
                 }
             }
             if (!valid) {
-                errMessage = "Label field contains invalid characters " + invalidChars.join();
+                errMessage = "Field contains invalid characters " + invalidChars.join();
             }
         }
 

@@ -102,6 +102,20 @@ var sysPrefsViewModel = (function() {
 
     self.section = ko.observable('');
 
+    self.okToSave = ko.pureComputed(() => {
+        let i,
+            len = self.sections.length,
+            okToSave = true;
+        for (i = 0; i < len; i++) {
+            if (self.sections[i].hasError()) {
+                okToSave = false;
+                break;
+            }
+        }
+
+        return okToSave;
+    });
+
     $(window).on('hashchange', function() {
         var displayName = location.hash.substring(1);
         self.section(displayName);
@@ -1499,11 +1513,16 @@ var backupViewModel = function() {
 };
 
 // About screen ---------------------------------------------------------------
-var preferencesViewModel = function() {
+var preferencesViewModel = function () {
     var self = this,
-    makeDirty = function() {
-        self.dirty(true);
-    };
+        originalData,
+        makeDirty = function () {
+            self.dirty(true);
+        },
+        setData = function(orgData) {
+            self.siteName(orgData);
+            self.dirty(false);
+        };
     self.displayName = 'Preferences';
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
@@ -1511,6 +1530,7 @@ var preferencesViewModel = function() {
     self.ijsVer = ko.observable('');
     self.siteName = ko.observable('');
     self.siteNameIsValid = ko.observable(true);
+    self.errorMessage = ko.observable('');
 
     self.getData = function() {
         $.ajax({
@@ -1523,6 +1543,7 @@ var preferencesViewModel = function() {
                 self.ijsVer(data.infoscanjs);
                 self.processVer(data.Processes);
                 self.siteName(data.siteName);
+                originalData = self.siteName();
                 self.siteName.subscribe(makeDirty);
             }
         });
@@ -1531,6 +1552,7 @@ var preferencesViewModel = function() {
         self.getData();
     };
     self.save = function() {
+        self.siteName(dtiCommon.cleanLabelField(self.siteName()));
         if (self.siteNameIsValid()) {
             $.ajax({
                 url: '/api/system/setpreferences',
@@ -1548,8 +1570,10 @@ var preferencesViewModel = function() {
     };
 
     self.cancel = function() {
-        self.setData();
+        setData(originalData);
         self.dirty(false);
+        self.hasError(false);
+        self.errorMessage("");
     };
 };
 
@@ -3616,11 +3640,11 @@ $(function() {
                             labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
 
                         if (!labelTest.valid) {
-                            $element.addClass("invalid");
-                            preferencesViewModel.siteNameIsValid(false);
+                            preferencesViewModel.hasError(true);
+                            preferencesViewModel.errorMessage(labelTest.errorMessage);
                         } else {
-                            $element.removeClass("invalid");
-                            preferencesViewModel.siteNameIsValid(true);
+                            preferencesViewModel.hasError(false);
+                            preferencesViewModel.errorMessage("");
                         }
                     }, keypressTimer);
                 });

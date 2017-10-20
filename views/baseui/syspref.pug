@@ -64,7 +64,7 @@ html
 
             #navActions.center-block(data-bind="visible: dirty")
                 button(class="btn btn-default btn-sm", data-bind="enable: dirty, click: cancelAll") Cancel
-                button(class="btn btn-info btn-sm", data-bind="enable: dirty, click: saveAll") Save
+                button(class="btn btn-info btn-sm", data-bind="enable: dirty, click: saveAll, visible: okToSave") Save
         div#content
             // ------ Calendar --------------------------------------------------------------------------------------
             div#calendar(data-bind="visible: section() == 'Calendar'")
@@ -360,6 +360,10 @@ html
                                     td.col-sm-9.clickToEdit(data-bind="clickEdit: $data.siteName")
                                         span(data-bind="text: $data.siteName")
                                         input.hide.form-control.siteName(type="text", maxlength="60", data-bind="value: $data.siteName")
+                                tr.errorMessageRow
+                                    td.col-sm-4
+                                    td.col-sm-9
+                                        span.errormessage(data-bind="text: $data.errorMessage")
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")

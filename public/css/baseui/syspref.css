@@ -1121,8 +1121,11 @@ tr:hover .showOnHover {
 .hideDiv {
     display: none;
 }
-.invalid {
-    border: 1px red solid;
+.errorMessageRow {
+    border-bottom: none !important;
+}
+.errormessage {
+    color: red;
 }
 /*.policyList .policyTitle,
 .policyList .policyInfo {

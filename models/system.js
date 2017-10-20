@@ -169,6 +169,7 @@ const System = class System extends Common {
             'Name': 'Quality Codes'
         };
 
+        let user = data.user;
         let maskSearch = {
             'Name': 'Preferences'
         };
@@ -213,7 +214,7 @@ const System = class System extends Common {
             };
             this.updateOne(criteria, (err, result) => {
                 let logData = {
-                    user: data.user,
+                    user: user,
                     timestamp: Date.now(),
                     activity: 'Quality Code Edit',
                     log: 'Quality Codes edited.'
@@ -570,6 +571,7 @@ const System = class System extends Common {
         });
     }
     setPreferences(data, cb) {
+        const activityLog = new ActivityLog();
         let preferencesUpdate = {
             $set: {
                 'Site Name': data.siteName
@@ -582,7 +584,16 @@ const System = class System extends Common {
             updateObj: preferencesUpdate
         };
 
-        this.updateOne(criteria, cb);
+        this.updateOne(criteria, (err, result) => {
+            let logData = {
+                user: data.user,
+                timestamp: Date.now(),
+                activity: 'Site Name Edit',
+                log: 'Site Name changed to "' + data.siteName + '"'
+            };
+            activityLog.create(logData, () => {});
+            return cb(err, result);
+        });
     }
 };
 
