@@ -1510,6 +1510,7 @@ var preferencesViewModel = function() {
     self.processVer = ko.observable('');
     self.ijsVer = ko.observable('');
     self.siteName = ko.observable('');
+    self.siteNameIsValid = ko.observable(true);
 
     self.getData = function() {
         $.ajax({
@@ -1530,18 +1531,20 @@ var preferencesViewModel = function() {
         self.getData();
     };
     self.save = function() {
-        $.ajax({
-            url: '/api/system/setpreferences',
-            data: {
-                siteName: self.siteName()
-            },
-            dataType: 'json',
-            type: 'post'
-        }).done(function(response) {
-            self.dirty(false);
-        });
+        if (self.siteNameIsValid()) {
+            $.ajax({
+                url: '/api/system/setpreferences',
+                data: {
+                    siteName: self.siteName()
+                },
+                dataType: 'json',
+                type: 'post'
+            }).done(function(response) {
+                self.dirty(false);
+            });
 
-        self.dirty(false);
+            self.dirty(false);
+        }
     };
 
     self.cancel = function() {
@@ -3612,19 +3615,12 @@ $(function() {
                             elementValue = $element.val().trim(),
                             labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
 
-                        if (labelTest.valid) {
-                            let $myLabels = $(element).siblings("label");
-                            if (labelTest.errorMessage) {
-                                $element.addClass("invalid");
-                                $element.removeClass("valid");
-                                $myLabels.attr("data-error", labelTest.errorMessage);
-                                vm.pathIsValid(false);
-                            } else {
-                                $element.removeClass("invalid");
-                                $element.addClass("valid");
-                                $myLabels.attr("data-error", "");
-                                vm.pathIsValid(true);
-                            }
+                        if (!labelTest.valid) {
+                            $element.addClass("invalid");
+                            preferencesViewModel.siteNameIsValid(false);
+                        } else {
+                            $element.removeClass("invalid");
+                            preferencesViewModel.siteNameIsValid(true);
                         }
                     }, keypressTimer);
                 });
