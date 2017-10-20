@@ -5126,6 +5126,7 @@ var dti = {
                         } else {
                             cbData.sourceNode = data.sourceNode;
                             cbData.newNode = (!!result.points ? result.points[0] : null);
+                            cbData.newNode.newPoint.isCopiedPoint = true;
                             cbData.points = (!!result.points ? result.points : []);
                             cbData.parent = (!!parentNode ? parentNode : null);
                         }

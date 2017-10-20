@@ -83,6 +83,80 @@ const Report = class Report {
             return cb(err);
         });
     }
+    getReportColumnInfo(report, scheduleID, includeChart, cb) {
+        const schedule = new Schedule();
+        let pointRefs = [],
+            reportResults = {
+                point: report
+            },
+            getValueTypes = () => {
+                let i,
+                    columns = reportResults.point['Report Config'].columns,
+                    column,
+                    filters = reportResults.point['Report Config'].filters,
+                    filter;
+                if (columns) {
+                    columns[0].colName = columns[0].colDisplayName;   //  the first column holds  Date || pointName
+                    for (i = 1; i < columns.length; i++) {
+                        column = columns[i];
+                        column.valueType = Config.Enums.Properties[column.colName].valueType;
+                    }
+                }
+
+                if (filters) {
+                    for (i = 0; i < filters.length; i++) {
+                        filter = filters[i];
+                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
+                    }
+                }
+
+                cb(null, reportResults);
+            },
+            processColumns = () => {
+                if (reportResults.point['Report Config'].columns) {
+                    pointRefs = reportResults.point['Point Refs'];
+
+                    reportResults.reportType = reportResults.point['Report Type'].Value;
+                    if (reportResults.reportType === 'Property') {
+                        getValueTypes();
+                    } else {
+                        cb(null, reportResults);
+                    }
+                } else {
+                    cb("no columns configured");
+                }
+            },
+            getScheduleConfig = () => {
+                let scheduleCriteria = {
+                        query: {
+                            _id: new ObjectID(scheduleID)
+                        }
+                    },
+                    scheduled = (!!scheduleID);
+
+                if (scheduled) {
+                    schedule.getOne(scheduleCriteria, (err, scheduleData) => {
+                        if (err) {
+                            cb(err);
+                        } else if (scheduleData === null) {
+                            cb();
+                        } else {
+                            reportResults.scheduledConfig = {};
+                            reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                            reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                            reportResults.scheduledConfig.scheduledIncludeChart = includeChart;
+
+                            reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
+                            processColumns(reportResults);
+                        }
+                    });
+                } else {
+                    processColumns(reportResults);
+                }
+            };
+
+        getScheduleConfig();
+    }
     historyDataSearch(data, cb) {
         const history = new History();
         const point = new Point();
@@ -421,154 +495,20 @@ const Report = class Report {
         //     return timestamps;
         // }
     }
-
     reportMain(data, cb) {
-        const point = new Point();
-        const schedule = new Schedule();
+        const pointInstance = new Point();
+        data.resolvePointRefs = true;
         let reportCriteria = {
-                id: utils.converters.convertType(data.id),
-                data: data
-            },
-            scheduleCriteria = {
-                query: {
-                    _id: new ObjectID(data.scheduleID)
-                },
-                data: data
-            },
-            scheduled = (!!data.scheduleID),
-            reportResults = {
-                point: {}
-            },
-            pointRefs = [],
-            resolveColumnsPointNames = () => {
-                let i,
-                    column,
-                    pointRef,
-                    matchingPoint,
-                    upis = [],
-                    upisMapAppIndex = {},
-                    columns = reportResults.point['Report Config'].columns,
-                    matchingAppIndex = (ref) => {
-                        return ref.AppIndex === column.AppIndex;
-                    },
-                    matchingIDs = (ref) => {
-                        return ref._id === upisMapAppIndex[column.AppIndex];
-                    },
-                    fillInPointNames = () => {
-                        if (pointRef && pointRef.length) {
-                            point.getAll({
-                                query: {
-                                    _id: {
-                                        $in: upis
-                                    }
-                                },
-                                fields: {
-                                    _id: 1,
-                                    path: 1
-                                }
-                            }, (err, points) => {
-                                if (err) {
-                                    return cb(err, {id: data.id});
-                                } else if (points && points.length) {
-                                    for (i = 1; i < columns.length; i++) {
-                                        column = columns[i];
-                                        matchingPoint = points.filter(matchingIDs);
-                                        if (matchingPoint.length && matchingPoint[0].path.length) {
-                                            column.colName = dtiCommon.getPointName(matchingPoint[0].path);
-                                        } else {
-                                            column.colName = "";
-                                        }
-                                    }
-
-                                    return cb(null, reportResults);
-                                }
-                            });
-                        } else {  // no point refs
-                            return cb(null, reportResults);
-                        }
-                    };
-
-                if (columns) {
-                    columns[0].colName = columns[0].colDisplayName;  //  the first column holds  Date || pointName
-                    for (i = 1; i < columns.length; i++) {
-                        column = columns[i];
-                        pointRef = pointRefs.filter(matchingAppIndex);
-                        if (upis.indexOf(pointRef[0].PointInst) === -1) {
-                            upis.push(pointRef[0].PointInst);
-                            upisMapAppIndex[column.AppIndex] = pointRef[0].PointInst;
-                        }
-                    }
-                    fillInPointNames();
-                }
-            },
-            getValueTypes = () => {
-                let i,
-                    columns = reportResults.point['Report Config'].columns,
-                    column,
-                    filters = reportResults.point['Report Config'].filters,
-                    filter;
-                if (columns) {
-                    columns[0].colName = columns[0].colDisplayName;   //  the first column holds  Date || pointName
-                    for (i = 1; i < columns.length; i++) {
-                        column = columns[i];
-                        column.valueType = Config.Enums.Properties[column.colName].valueType;
-                    }
-                }
-
-                if (filters) {
-                    for (i = 0; i < filters.length; i++) {
-                        filter = filters[i];
-                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
-                    }
-                }
-
-                return cb(null, reportResults);
-            },
-            getReportColumnInfo = () => {
-                if (reportResults.point['Report Config'].columns) {
-                    pointRefs = reportResults.point['Point Refs'];
-
-                    reportResults.reportType = reportResults.point['Report Type'].Value;
-                    if (reportResults.reportType === 'Property') {
-                        getValueTypes();
-                    } else {
-                        resolveColumnsPointNames();
-                    }
-                } else {
-                    return cb("no columns configured");
-                }
-            },
-            getScheduleConfig = () => {
-                if (scheduled) {
-                    schedule.getOne(scheduleCriteria, (err, scheduleData) => {
-                        if (err) {
-                            return cb(err);
-                        } else if (scheduleData === null) {
-                            return cb();
-                        } else {
-                            reportResults.scheduledConfig = {};
-                            reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
-                            reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
-                            reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
-
-                            reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
-                            getReportColumnInfo();
-                        }
-                    });
-                } else {
-                    getReportColumnInfo();
-                }
-            };
+            id: utils.converters.convertType(data.id),
+            data: data
+        };
 
         if (data.id != 0) { // persisted points
-            point.getPointById(reportCriteria.data, (err, message, reportPoint) => {
+            pointInstance.getPointById(reportCriteria.data, (err, message, reportPoint) => {
                 if (err) {
                     return cb(err, {id: data.id});
                 } else if (!!reportPoint) {
-                    reportResults.point = reportPoint;
-
-                    getScheduleConfig();
-
+                    this.getReportColumnInfo(reportPoint, data.scheduleID, data.scheduledIncludeChart, cb);
                 } else {
                     return cb(message, {id: data.id}); // error
                 }
@@ -1356,7 +1296,6 @@ const Report = class Report {
             }
         });
     }
-
     buildIntervals(range, interval) {
         let intervalPeriod = interval.period;
         let intervalValue = interval.value;
@@ -1384,7 +1323,6 @@ const Report = class Report {
 
         return intervalRanges;
     }
-
     propertyCheckForValue(prop) {
         if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
             return prop;
