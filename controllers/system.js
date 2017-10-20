@@ -267,18 +267,33 @@ router.post('/updateWeather', function (req, res, next) {
     });
 });
 // Checked
-router.get('/versions', function (req, res, next) {
+router.get('/preferences', function (req, res, next) {
     const system = new System();
     let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    system.getVersions(data, function (err, versions) {
+    system.getPreferences(data, function (err, preferences) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
             });
         }
-        return utils.sendResponse(res, versions);
+        return utils.sendResponse(res, preferences);
+    });
+});
+
+router.post('/setpreferences', function (req, res, next) {
+    const system = new System();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    system.setPreferences(data, function (err, preferences) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+        return utils.sendResponse(res, preferences);
     });
 });
 

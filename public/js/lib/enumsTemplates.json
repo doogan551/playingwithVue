@@ -163,6 +163,9 @@
             },
             "Report Edit": {
                 "enum": 43
+            },
+            "Site Name Edit": {
+                "enum": 44
             }
         },
         "Alarm Classes": {
