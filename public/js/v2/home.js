@@ -4443,6 +4443,14 @@ var dti = {
                     configNodeData = self.tree._configureNodeData,
                     sourceNode = configNodeData.sourceNode,
                     reqData,
+                    handleAddNewNode = () => {
+                        if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
+                            let parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
+                            self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
+                        } else {
+                            self.tree.addNode(modalNodeData);
+                        }
+                    },
                     handleCopyAndPaste = () => {
                         if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
                             reqData = {
@@ -4452,6 +4460,9 @@ var dti = {
                             };
                             self.tree.serverOps.copyNode(reqData, self.tree._configureNodeTreeCallback);
                         }
+                    },
+                    handleCopyAndPasteAsReference = () => {
+                        self.tree.addNode(modalNodeData);
                     },
                     handleCutAndPaste = () => {
                         reqData = {
@@ -4472,14 +4483,13 @@ var dti = {
                 if (sourceNode && sourceNode.bindings.isCut()) {
                     handleCutAndPaste();
                 } else if (sourceNode && sourceNode.bindings.isCopy()) {  // only classic points can be copied
-                    handleCopyAndPaste();
-                } else if (modalNodeData.action === "add") {
-                    if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
-                        let parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
-                        self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
+                    if (modalNodeData.nodeType === "Reference") {
+                        handleCopyAndPasteAsReference();
                     } else {
-                        self.tree.addNode(modalNodeData);
+                        handleCopyAndPaste();
                     }
+                } else if (modalNodeData.action === "add") {
+                    handleAddNewNode();
                 } else { // handles Open (edits) of hierarchy nodes (not classic points)
                     self.tree.editNode(modalNodeData);
                 }
