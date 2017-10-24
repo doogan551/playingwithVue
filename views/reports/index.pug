@@ -98,14 +98,14 @@ html.direports
                                 .reporttype.tiny.center-align(data-bind="text: reportType")
                             .tab-content
                                 .tab-pane.reportAttribs#reportAttribs
-                                    .form-inline.blue-grey-text(style="display: inline-flex")
-                                        .input-field.col
-                                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: true, value: display, dtiHierarchyLabel: display, valueUpdate: 'afterkeydown', enable: unpersistedReport()")
+                                    .form-inline.blue-grey-text(style="width: 60%")
+                                        .input-field
                                             label(for="pointDisplayField") Label
-                                    //.form-inline.blue-grey-text
-                                    //    .input-field.col
-                                    //        input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: false, textInput: $root.reportDisplayTitle", required, type="text")
-                                    //        label(data-bind="attr: {for: 'reportTitleInput'}") Report Name
+                                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: true, value: display, dtiHierarchyLabel: display, valueUpdate: 'afterkeydown', enable: unpersistedReport()")
+                                    .form-inline.blue-grey-text(data-bind="visible: !unpersistedReport()", style="width: 60%")
+                                        .input-field
+                                            label(data-bind="attr: {for: 'reportTitleInput'}") Report Title
+                                            input.reportTitleInput#reportTitleInput(data-bind="textInput: $root.reportDisplayTitle", required, type="text")
                                     .form-inline.blue-grey-text
                                         .input-field.col.reporttype
                                             // ko if: !unpersistedReport() || isCopiedPoint()
