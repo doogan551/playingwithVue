@@ -253,7 +253,7 @@ html
                     .btn-flat.modal-action.modal-close.waves-effect.filterModeCancel Cancel
                 // /ko
 
-            #configureNodeModal.modal(data-bind="with: navigatorv2.configureNodeModal")
+            #configureNodeModal.modal.dtiModal.modal-fixed-footer.blue-grey-form.fade(data-bind="with: navigatorv2.configureNodeModal")
                 .modal-content
                     .row.center
                         .col.s12(data-bind='visible: activeSaveRequest()')
@@ -267,7 +267,7 @@ html
                                         .circle
                     h4(data-bind="text: modalAction()")
                     .row
-                        .input-field.col.s6.pointDisplayField
+                        .input-field.col.s8.pointDisplayField
                             input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
                             label(for="pointDisplayField") Label
                     // ko if: (modalAction().indexOf("Paste") >= 0)
