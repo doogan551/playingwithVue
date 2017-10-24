@@ -3435,6 +3435,11 @@
                 "valueType": "HourMin",
                 "reportEnable": true
             },
+            "path": {
+                "enum": 159,
+                "valueType": "Array",
+                "reportEnable": true
+            },
             "Point Instance": {
                 "enum": 449,
                 "valueType": "Unsigned",
