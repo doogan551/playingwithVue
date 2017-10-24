@@ -4234,6 +4234,56 @@
             "ByteArray": {
                 "enum": 19
             }
+        },
+        "Internal Properties": {
+            "_id": {
+                "enum": 1
+            },
+            "_pAccess": {
+                "enum": 2
+            },
+            "_relDevice": {
+                "enum": 3
+            },
+            "_relRMU": {
+                "enum": 4
+            },
+            "_relPoint": {
+                "enum": 5
+            },
+            "_devModel": {
+                "enum": 6
+            },
+            "_rmuModel": {
+                "enum": 7
+            },
+            "_cfgDevice": {
+                "enum": 8
+            },
+            "_updPoint": {
+                "enum": 9
+            },
+            "_updTOD": {
+                "enum": 10
+            },
+            "_parentUpi": {
+                "enum": 11
+            },
+            "_pollTime": {
+                "enum": 12
+            },
+            "_pStatus": {
+                "enum": 13
+            },
+            "_cfgRequired": {
+                "enum": 14
+            },
+            "_forceAllCOV": {
+                "enum": 15
+            },
+            "_actvAlmId": {
+                "enum": 16
+            }
         }
     },
     "Templates": {

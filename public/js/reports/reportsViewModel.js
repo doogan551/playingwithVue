@@ -1736,9 +1736,9 @@ let reportsViewModel = function () {
                         reportUtil.collectEnumProperties();
                         // reportPoint["Report Config"].returnLimit = 2000;
                         self.listOfColumns.push(columnLogic.getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Name";
-                        self.listOfColumns()[0].colDisplayName = "Name";
-                        self.listOfColumns()[0].dataColumnName = "Name";
+                        self.listOfColumns()[0].colName = "path";
+                        self.listOfColumns()[0].colDisplayName = "path";
+                        self.listOfColumns()[0].dataColumnName = "path";
                         self.listOfColumns()[0].valueType = "String";
                         self.listOfColumns()[0].AppIndex = -1;
                         break;
@@ -3440,7 +3440,7 @@ let reportsViewModel = function () {
                 return result;
             },
             getProperties: () => {
-                var listOfKeysToRemove = ["Name"];
+                var listOfKeysToRemove = ["path"];
 
                 columnsPropertyFields = filtersPropertyFields.filter(function (enumProp) {
                     return ($.inArray(enumProp.name, listOfKeysToRemove) === -1);
@@ -3508,7 +3508,9 @@ let reportsViewModel = function () {
                     rawValue,
                     result = {};
 
-                if (typeof dataField !== "object") {
+                if (columnConfig.colName === "path") {
+                    rawValue = dtiCommon.getPointName(dataField);
+                } else if (typeof dataField !== "object") {
                     rawValue = dataField;
                 } else if (typeof dataField === "object") {
                     rawValue = dataField.Value;
@@ -4247,7 +4249,7 @@ let reportsViewModel = function () {
                             maxColumnDataHeight = 0,
                             headerSize,
                             dataSize,
-                            columnOneSize,  // "Date" || "Name" Column
+                            columnOneSize,  // "Date" || "path" Column
                             currentPageWidth = 0,
                             currentPageHeight = 0,
                             rowIndex = dataIndex.rowStartIdx,
@@ -4476,7 +4478,6 @@ let reportsViewModel = function () {
                 if (data.err === undefined) {
                     reportData = dataParse.cleanResultData(data);
                     self.truncatedData(reportData.truncated);
-                    // render.baseReport();
                 } else {
                     console.log(" - * - * - render.propertyReport() ERROR = ", data.err);
                     ui.displayError(data.err);
@@ -4843,9 +4844,11 @@ let reportsViewModel = function () {
                     reportPoint = data.points[0];
                     let reportConfig = (reportPoint["Report Config"] ? reportPoint["Report Config"] : undefined);
                     reportUtil.initExistingReport(reportConfig);
-                    afterSaveCallback(reportPoint);
+                    if (afterSaveCallback) {
+                        afterSaveCallback($.extend(true, {}, reportPoint));
+                        afterSaveCallback = null;  // clear callback once new point added to hierarchy
+                    }
                     saveManager.saveReportCallback(data);
-                    afterSaveCallback = null;  // clear callback once new point added to hierarchy
                 }
             });
         },
@@ -5154,7 +5157,7 @@ let reportsViewModel = function () {
                             }
                             break;
                         case "Property":
-                            if (columnConfig.colName === "Name") {
+                            if (columnConfig.colName === "path") {
                                 $(tdField).attr("upi", data._id);
                                 $(tdField).attr("columnIndex", columnIndex);
                                 if (data["Point Type"] && data["Point Type"].Value) {
@@ -5172,7 +5175,7 @@ let reportsViewModel = function () {
                 },
                 setColumnClasses = function (columnConfig, columnIndex) {
                     var result = "";
-                    if (columnConfig.colName === "Name") {
+                    if (columnConfig.colName === "path") {
                         switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
@@ -5266,6 +5269,9 @@ let reportsViewModel = function () {
                             }
                             break;
                         case "Property":
+                            if (columnIndex === 0 && columnConfig.colName === "path") {
+                                columnTitle = "Path";
+                            }
                             break;
                         default:
                             columnTitle = "Default";
