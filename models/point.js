@@ -71,11 +71,11 @@ const Point = class Point extends Common {
                 }]
             }
         },
-            {
-                '$unwind': {
+        {
+            '$unwind': {
                     'path': '$Point'
                 }
-            }, {
+        }, {
                 '$project': {
                     'Ref': {
                         '$filter': {
@@ -90,19 +90,19 @@ const Point = class Point extends Common {
                     'Points': 1
                 }
             },
-            {
-                '$unwind': {
+        {
+            '$unwind': {
                     'path': '$Ref',
                     'preserveNullAndEmptyArrays': true
                 }
-            }, {
+        }, {
                 '$unwind': {
                     'path': '$Points',
                     'preserveNullAndEmptyArrays': true
                 }
             },
-            {
-                '$group': {
+        {
+            '$group': {
                     '_id': '$Point._id',
                     'Point': {
                         '$first': '$Point'
@@ -114,9 +114,9 @@ const Point = class Point extends Common {
                         '$first': '$Ref'
                     }
                 }
-            },
-            {
-                '$addFields': {
+        },
+        {
+            '$addFields': {
                     'Point.Point Refs': {
                         '$concatArrays': [{
                             '$cond': {
@@ -129,7 +129,7 @@ const Point = class Point extends Common {
                         }, '$Points.Point Refs']
                     }
                 }
-            }, {
+        }, {
                 '$replaceRoot': {
                     'newRoot': '$Point'
                 }
@@ -3052,14 +3052,14 @@ const Point = class Point extends Common {
                     return callback(err);
                 }
                 let points = [{
-                    newPoint: validatedPoint
-                }],
-                reportCallback = (err, report) => {
+                        newPoint: validatedPoint
+                    }],
+                    reportCallback = (err, report) => {
                     callback(err, points);
                 };
                 switch (validatedPoint['Point Type'].Value) {
-                    case "Schedule":
-                    case "Sequence":
+                    case 'Schedule':
+                    case 'Sequence':
                         this.iterateCursor({
                             query: {
                                 _parentUpi: targetUpi
@@ -3083,14 +3083,14 @@ const Point = class Point extends Common {
                             callback(err, points);
                         });
                         break;
-                    case "Report":
+                    case 'Report':
                         validatedPoint.resolvePointRefs = true;
                         this.getPointById(validatedPoint, () => {
                             if (err) {
                                 return callback(err);
-                            } else {
+                            } 
                                 report.getReportColumnInfo(validatedPoint, null, null, reportCallback);
-                            }
+                            
                         });
                         break;
                     default:
@@ -3438,8 +3438,8 @@ const Point = class Point extends Common {
         let nodeType = this.getDefault(data.nodeType, '');
         let nodeSubType = this.getDefault(data.nodeSubType, '');
         let locatedIn = this.getDefault(data.locatedIn, 0);
-        let servedBy = this.getDefault(data.nodeSubType, []);
-        let descriptors = this.getDefault(data.nodeSubType, []);
+        let servedBy = this.getDefault(data.servedBy, []);
+        let descriptors = this.getDefault(data.descriptors, []);
         let _pStatus = Config.Enums['Point Statuses'].Active.enum;
         this.buildPath(parentNode, display, (err, path) => {
             data.path = path;
