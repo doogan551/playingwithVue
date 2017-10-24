@@ -1538,6 +1538,13 @@ button {
     cursor: pointer;
     padding-left: 10px;
 }
+.toast.errorToast {
+    background-color: #f44336;
+}
+.toast.warningToast {
+    background-color: #ff5722;
+}
+
 .preloader-wrapper .spinner-layer {
     /*border-color: $blue-grey-lighten-1;*/
     border-color: #78909c;

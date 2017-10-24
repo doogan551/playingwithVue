@@ -4317,6 +4317,8 @@ var dti = {
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
                 selfBindings.currNodePointType(node.bindings["Point Type"].Value());
+                selfBindings.currNodeLocatedIn(node.bindings.locatedIn());
+                selfBindings.currNodeServedBy(node.bindings.servedBy());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
                 selfBindings.currRefNode(node.bindings.refNode());
@@ -4973,7 +4975,7 @@ var dti = {
                         url: '/api/points/create',
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         let result = response;
 
@@ -5011,7 +5013,7 @@ var dti = {
                         url: '/api/hierarchy/add',
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         let result = response[0];
 
@@ -5041,7 +5043,7 @@ var dti = {
                         url: '/api/hierarchy/edit',
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         let result = response;
 
@@ -5087,7 +5089,7 @@ var dti = {
                             parentNode: getParentID(data.targetNode)
                         }
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         if (!response) {
                             err = 'An unknown error occurred';
@@ -5125,7 +5127,7 @@ var dti = {
                         url: url,
                         data: copyRequestData
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         let result = response;
 
@@ -5174,7 +5176,7 @@ var dti = {
                         url: url,
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         if (!response) {
                             err = 'An unknown error occured';

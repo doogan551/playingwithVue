@@ -5,7 +5,7 @@ const moment = require('moment');
 const ObjectID = require('mongodb').ObjectID;
 const config = require('config');
 const dtiCommon = require('../public/js/v2/dtiCommon');
-const RETURNLIMIT = 3000;
+const PROPERTYREPORTRETURNLIMIT = 200000;
 
 const Report = class Report {
     saveSVG(data, cb) {
@@ -536,7 +536,6 @@ const Report = class Report {
             searchCriteria = {
                 $and: []
             },
-            // returnLimit = RETURNLIMIT,
             parseNameField = (paramsField, fieldName) => {
                 let parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
@@ -555,7 +554,6 @@ const Report = class Report {
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
             for (let k = 0; k < properties.length; k++) {
-                // let p = properties[k].colName;
                 let p = utils.getDBProperty(properties[k].colName);
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
                     fields['Point Refs'] = true;
@@ -600,10 +598,10 @@ const Report = class Report {
             searchCriteria = {};
         }
 
-        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
+        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         let criteria = {
             query: searchCriteria,
-            limit: RETURNLIMIT,
+            limit: PROPERTYREPORTRETURNLIMIT,
             fields: fields
         };
         point.getAll(criteria, (err, docs) => {
@@ -665,6 +663,7 @@ const Report = class Report {
                 let searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
+                    internalProperty = (filter.filterName !== key),
                     searchKey = key,
                     searchKeyExists = {},
                     searchKeyIsDisplayable = {},
@@ -713,11 +712,13 @@ const Report = class Report {
                             };
                             break;
                         case 'EqualTo':
-                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
-                                $eq: true
-                            };
                             searchQuery.$and = [];
-                            searchQuery.$and.push(searchKeyIsDisplayable);
+                            if (!internalProperty) {
+                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                    $eq: true
+                                };
+                                searchQuery.$and.push(searchKeyIsDisplayable);
+                            }
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
@@ -771,12 +772,14 @@ const Report = class Report {
                             searchKeyExists[key] = {
                                 $exists: true
                             };
-                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
-                                $eq: true
-                            };
                             searchQuery.$and = [];
                             searchQuery.$and.push(searchKeyExists);
-                            searchQuery.$and.push(searchKeyIsDisplayable);
+                            if (!internalProperty) {
+                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                    $eq: true
+                                };
+                                searchQuery.$and.push(searchKeyIsDisplayable);
+                            }
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
@@ -1324,7 +1327,7 @@ const Report = class Report {
         return intervalRanges;
     }
     propertyCheckForValue(prop) {
-        if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
+        if (prop.match(/^path/i) !== null || (Config.Enums['Internal Properties'] && Config.Enums['Internal Properties'].hasOwnProperty(prop))) {
             return prop;
         }
         return prop + '.Value';
