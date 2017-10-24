@@ -1976,7 +1976,7 @@ let reportsViewModel = function () {
                     tempRef.AppIndex = ++appIndex;
                     tempRef.isDisplayable = true;
                     tempRef.isReadOnly = false;
-                    tempRef.PointName = refPoint.Name;
+                    tempRef.PointName = dtiCommon.getPointName(refPoint.path);
                     tempRef.PointType = (!!ENUMSTEMPLATESENUMS["Point Types"] ? ENUMSTEMPLATESENUMS["Point Types"][pointType].enum : "");
                     reportPoint["Point Refs"].push(tempRef);
                 } else {
@@ -2281,7 +2281,7 @@ let reportsViewModel = function () {
                 $control.attr("disabled", state);
             },
             displayError: (errorMessage) => {
-                dtiReporting.toast(errorMessage, 6000);
+                dtiReporting.toast(errorMessage, 6000, 'errorToast');
             },
             registerEvents: () => {
                 var intervals,
@@ -4839,7 +4839,11 @@ let reportsViewModel = function () {
 
             reportSocket.on("pointUpdated", function (data) {
                 if (!!data.err) {
+                    ui.displayError(data.err);
                     console.log("Error: " + data.err);
+                    self.activeSaveRequest(false);
+                    self.selectConfigReportTabSubTab("reportAttribs");
+                    self.reportConfiguration();
                 } else {
                     reportPoint = data.points[0];
                     let reportConfig = (reportPoint["Report Config"] ? reportPoint["Report Config"] : undefined);
@@ -5080,6 +5084,9 @@ let reportsViewModel = function () {
                 ui.tabSwitch(1);
                 self.activeSaveRequest(false);
             } else {
+                if (self.unpersistedReport()) {
+                    reportPoint.display = self.display();
+                }
                 reportPoint["Report Type"].Value = self.reportType();
                 reportPoint["Report Type"].eValue = self.reportTypeEnum();
 
@@ -5806,7 +5813,7 @@ let reportsViewModel = function () {
                     if (!!errors) {
                         itemFinished(errors);
                     } else {
-                        dtiUtility.updateWindow('updateTitle', reportPoint.Name);
+                        dtiUtility.updateWindow('updateTitle', dtiCommon.getPointName(reportPoint.path));
                         if (reportPoint._pStatus === 1) {
                             // call addPoint here integrate into dtiutil
                             reportPoint.isCopiedPoint = undefined;
@@ -5868,12 +5875,14 @@ let reportsViewModel = function () {
                                 msg = 'Error: ' + errList.join('. ');
                                 duration = undefined; // Show toast until user manually closes it
                             } else {
+                                duration = 6000;
                                 msg = 'Report Saved';
                             }
                             dtiReporting.toast(msg, duration);
                             self.activeSaveRequest(false);
                             $activeSidePane = $rightPanel.find(".side-nav-pane.active");
                             ui.blockUI($activeSidePane, self.activeDataRequest());  // don't display pane if datarequest is active
+                            Materialize.updateTextFields();
                         }
                     }
                 };
