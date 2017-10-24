@@ -4317,6 +4317,8 @@ var dti = {
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
                 selfBindings.currNodePointType(node.bindings["Point Type"].Value());
+                selfBindings.currNodeLocatedIn(node.bindings.locatedIn());
+                selfBindings.currNodeServedBy(node.bindings.servedBy());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
                 selfBindings.currRefNode(node.bindings.refNode());
