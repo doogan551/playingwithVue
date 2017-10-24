@@ -1734,8 +1734,6 @@ input:focus {
 }
 
 #configureNodeModal {
-    height: auto;
-
     .modal-header {
         background-color: $blue-grey-darken-2;
     }
@@ -1795,13 +1793,6 @@ input:focus {
 
     .input-field.col.nodePath {
         padding-bottom: 10px;
-    }
-}
-
-#configureNodeModal.addingPoint {
-    height: 63%;
-    .modal-footer {
-        margin-top: 38%;
     }
 }
 
