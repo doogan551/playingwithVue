@@ -1590,45 +1590,6 @@ let reportsViewModel = function () {
                     };
                 dtiUtility.getConfig("Update.formatPoint", [params], callback);
             },
-            setValueList: (property, pointType, index, activeRequest) => {
-                var result = [],
-                    maxWidth = 0,
-                    maxWidthInPixels = 0,
-                    i,
-                    setOptions = function (options) {
-                        if (!!self.listOfFilters()[index]) {
-                            if (!!options && Array.isArray(options)) {
-                                result.push({
-                                    value: "<blank>",
-                                    evalue: -1
-                                });
-
-                                for (i = 0; i < options.length; i++) {
-                                    if (maxWidth < options[i].name.length) {
-                                        maxWidth = options[i].name.length;
-                                    }
-                                    result.push({
-                                        value: options[i].name,
-                                        evalue: options[i].value
-                                    });
-                                }
-                                maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
-                                if (self.listOfFilters()[index].evalue === undefined || self.listOfFilters()[index].evalue < 0) {
-                                    self.listOfFilters()[index].value = result[0].value;
-                                    self.listOfFilters()[index].evalue = result[0].evalue;
-                                }
-                                self.listOfFilters()[index].valueList = result;
-                                self.listOfFilters()[index].valueListMaxWidth = maxWidthInPixels;
-                                filterLogic.updateListOfFilters(self.listOfFilters());
-                            }
-                        }
-                        if (!!activeRequest && typeof activeRequest === "function") {
-                            activeRequest({index: index, status: false});
-                        }
-                    };
-
-                dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType], setOptions);
-            },
             getTotalizerValueList: (pointType) => {
                 var result = [];
 
@@ -1673,36 +1634,39 @@ let reportsViewModel = function () {
                 }
                 return (isNaN(result) || result === "" ? 0 : result);
             },
-            initExistingReport: (reportConfig) => {
+            initExistingReport: (reportConfig, cb) => {
+                let finishInit = () => {
+                    if (!!reportConfig.pointFilter) {
+                        self.name1Filter(reportConfig.pointFilter.name1);
+                        self.name2Filter(reportConfig.pointFilter.name2);
+                        self.name3Filter(reportConfig.pointFilter.name3);
+                        self.name4Filter(reportConfig.pointFilter.name4);
+                        self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
+                    }
+                    self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
+                    self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                    self.displayGridCalculations((reportConfig.displayGridCalculations !== undefined ? reportConfig.displayGridCalculations : true));
+                    self.displayGridFilters((reportConfig.displayGridFilters !== undefined ? reportConfig.displayGridFilters : true));
+                    switch (self.reportType()) {
+                        case "History":
+                        case "Totalizer":
+                            if (!!reportConfig.duration) { // have to set each manually because of computed relationship
+                                reportUtil.configureSelectedDuration(reportConfig);
+                            }
+                            break;
+                        case "Property":
+                            reportUtil.collectEnumProperties();
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  init()");
+                            break;
+                    }
+                    cb();
+                };
                 self.unpersistedReport(reportPoint._id === 0);
                 self.reportDisplayTitle((!!reportConfig.reportTitle ? reportConfig.reportTitle : reportPoint.Name.replace(/_/g, " ")));
                 self.listOfColumns(columnLogic.initColumns(reportConfig.columns));
-                self.listOfFilters(filterLogic.initFilters(reportConfig.filters));
-                if (!!reportConfig.pointFilter) {
-                    self.name1Filter(reportConfig.pointFilter.name1);
-                    self.name2Filter(reportConfig.pointFilter.name2);
-                    self.name3Filter(reportConfig.pointFilter.name3);
-                    self.name4Filter(reportConfig.pointFilter.name4);
-                    self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
-                }
-                self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
-                self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
-                self.displayGridCalculations((reportConfig.displayGridCalculations !== undefined ? reportConfig.displayGridCalculations : true));
-                self.displayGridFilters((reportConfig.displayGridFilters !== undefined ? reportConfig.displayGridFilters : true));
-                switch (self.reportType()) {
-                    case "History":
-                    case "Totalizer":
-                        if (!!reportConfig.duration) { // have to set each manually because of computed relationship
-                            reportUtil.configureSelectedDuration(reportConfig);
-                        }
-                        break;
-                    case "Property":
-                        reportUtil.collectEnumProperties();
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init()");
-                        break;
-                }
+                self.listOfFilters(filterLogic.initFilters(reportConfig.filters, finishInit));
             },
             initNewReport: () => {
                 self.unpersistedReport(reportPoint._id === 0);
@@ -1949,7 +1913,7 @@ let reportsViewModel = function () {
             }
         },
         pointRefUtil = {
-            setNewReference: (refPointUPI, property) => {
+            setNewReference: (refPointUPI, property) => {  // possible async call (if new pointref needed)
                 // console.log("- - - - pointRefUtil.setNewReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
                 var refPoint,
                     appIndex = pointRefUtil.getMaxAppIndexUsed(),
@@ -2982,6 +2946,48 @@ let reportsViewModel = function () {
             }
         },
         filterLogic = {
+            setValueList: (property, pointType, index, activeRequest) => {
+                var result = [],
+                    adjustedFilters = $.extend(true, [], self.listOfFilters()),
+                    maxWidth = 0,
+                    maxWidthInPixels = 0,
+                    params = [property, pointType],
+                    i,
+                    setOptions = function (options) {
+                        console.log("   setValueList() --->  options.length = " + options.length);
+                        if (!!adjustedFilters[index]) {
+                            if (!!options && Array.isArray(options)) {
+                                result.push({
+                                    value: "<blank>",
+                                    evalue: -1
+                                });
+
+                                for (i = 0; i < options.length; i++) {
+                                    if (maxWidth < options[i].name.length) {
+                                        maxWidth = options[i].name.length;
+                                    }
+                                    result.push({
+                                        value: options[i].name,
+                                        evalue: options[i].value
+                                    });
+                                }
+                                maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
+                                if (adjustedFilters[index].evalue === undefined || adjustedFilters[index].evalue < 0) {
+                                    adjustedFilters[index].value = result[0].value;
+                                    adjustedFilters[index].evalue = result[0].evalue;
+                                }
+                                adjustedFilters[index].valueList = result;
+                                adjustedFilters[index].valueListMaxWidth = maxWidthInPixels;
+                                filterLogic.updateListOfFilters(adjustedFilters);
+                            }
+                        }
+                        if (!!activeRequest && typeof activeRequest === "function") {
+                            activeRequest({index: index, status: false});
+                        }
+                    };
+
+                dtiUtility.getConfig("Utility.pointTypes.getEnums", params, setOptions);
+            },
             updateListOfFilters: (newArray) => {
                 self.listOfFilters([]);
                 if (self.reportType() === "Property") {
@@ -3040,7 +3046,7 @@ let reportsViewModel = function () {
                 delete filter.AppIndex;
                 filter.value = filterLogic.setDefaultFilterValue(filter.valueType);
                 filter.valueList = [];
-                reportUtil.setValueList(selectedItem.name, selectedItem.name, indexOfFilter, self.activePropertyFilterRequest);
+                filterLogic.setValueList(selectedItem.name, selectedItem.name, indexOfFilter, self.activePropertyFilterRequest);
                 switch (filter.valueType) {
                     case "Timet":
                     case "DateTime":
@@ -3098,7 +3104,7 @@ let reportsViewModel = function () {
 
                 return result;
             },
-            initFilters: (theFilters) => {
+            initFilters: (theFilters, callback) => {
                 var result = [],
                     i,
                     currentFilter,
@@ -3124,7 +3130,7 @@ let reportsViewModel = function () {
                     if (validFilter) {
                         currentFilter.valueList = [];
                         currentFilter.valueListMaxWidth = 0;
-                        reportUtil.setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
+                        filterLogic.setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
                         result.push(currentFilter);
                     }
                 }
@@ -3157,7 +3163,7 @@ let reportsViewModel = function () {
                         for (i = 0; i < self.listOfFilters().length; i++) {
                             filter = self.listOfFilters()[i];
                             if (filter.valueType === "UniquePID" && !!filter.AppIndex) {
-                                filterLogic.updateFilterFromPointRefs(filter);
+                                filterLogic.updateFilterFromPointRefs(filter);  // TODO possible async issue here
                             }
                         }
                     };
@@ -3174,7 +3180,7 @@ let reportsViewModel = function () {
                         switch (filter.valueType) {
                             case "Enum":
                                 if (!validEnumEvalue(filter)) {
-                                    console.log("- - filterLogic.validateFilters() Enum evalue not in ValueList " + filter.evalue);
+                                    console.log("- - filterLogic.validateFilters() Enum evalue (" + filter.evalue + ") not in ValueList for '" + filter.filterName + "'");
                                 }
                                 break;
                             case "Unsigned":
@@ -7021,6 +7027,49 @@ let reportsViewModel = function () {
             },
             postConfigInit = () => {
                 if (!!reportPoint) {
+                    let isNewReport,
+                        finishPostInit = (error) => {
+                        if (error) {
+                            // TODO handle the error
+                        }
+
+                        $direports.find("#wrapper").show();
+                        ui.tabSwitch(1);
+
+                        filterLogic.updateListOfFilters(self.listOfFilters());
+                        setTimeout(function () {
+                            $reportTitleInput.focus();
+                            reportName = $reportTitleInput.val();
+                        }, 1500);
+                        ui.registerEvents();
+                        reportCalc.checkForColumnCalculations();
+                        reportCalc.checkForIncludeInChart();
+                        ui.adjustConfigTabActivePaneHeight();
+                        if (scheduledReport && !!includeChart) {
+                            reportUtil.configureSelectedDuration(scheduledConfig);
+                            self.requestReportData();
+                        } else if (!!externalConfig) {
+                            if (self.reportType() === "History" || self.reportType() === "Totalizer") {
+                                reportUtil.configureSelectedDuration(externalConfig);
+                            }
+                            self.requestReportData();
+                        }
+
+                        self.filterPropertiesSearchFilter(""); // computed props jolt
+                        self.columnPropertiesSearchFilter(""); // computed props jolt
+                        self.filterPropertiesSearchFilter.valueHasMutated();
+                        self.columnPropertiesSearchFilter.valueHasMutated();
+                        if (self.reportType() === "Property") {
+                            // property reports only use Pie charts
+                            self.listOfChartTypes([{
+                                text: "Pie",
+                                value: "pie"
+                            }]);
+                        }
+
+                        initializeForMaterialize();
+                    };
+
                     self.parentID(reportPoint.parentNode);
                     self.canEdit(userCanEdit(reportPoint, permissionLevels.WRITE));
                     originalPoint = JSON.parse(JSON.stringify(reportPoint));
@@ -7030,6 +7079,7 @@ let reportsViewModel = function () {
                     self.reportType(reportPoint["Report Type"].Value);
                     reportConfig = (reportPoint["Report Config"] ? reportPoint["Report Config"] : undefined);
                     columns = (reportConfig ? reportConfig.columns : undefined);
+                    isNewReport = (columns === undefined);
                     self.display(reportPoint.display);
 
                     if (!scheduledReport) {
@@ -7037,47 +7087,12 @@ let reportsViewModel = function () {
                         initSocket();
                     }
 
-                    if (columns) {
-                        reportUtil.initExistingReport(reportConfig);
-                    } else { // Initial config
+                    if (isNewReport) {  // Initial config
                         reportUtil.initNewReport();
+                        finishPostInit();
+                    } else {
+                        reportUtil.initExistingReport(reportConfig, finishPostInit);
                     }
-
-                    $direports.find("#wrapper").show();
-                    ui.tabSwitch(1);
-
-                    filterLogic.updateListOfFilters(self.listOfFilters());
-                    setTimeout(function () {
-                        $reportTitleInput.focus();
-                        reportName = $reportTitleInput.val();
-                    }, 1500);
-                    ui.registerEvents();
-                    reportCalc.checkForColumnCalculations();
-                    reportCalc.checkForIncludeInChart();
-                    ui.adjustConfigTabActivePaneHeight();
-                    if (scheduledReport && !!includeChart) {
-                        reportUtil.configureSelectedDuration(scheduledConfig);
-                        self.requestReportData();
-                    } else if (!!externalConfig) {
-                        if (self.reportType() === "History" || self.reportType() === "Totalizer") {
-                            reportUtil.configureSelectedDuration(externalConfig);
-                        }
-                        self.requestReportData();
-                    }
-
-                    self.filterPropertiesSearchFilter(""); // computed props jolt
-                    self.columnPropertiesSearchFilter(""); // computed props jolt
-                    self.filterPropertiesSearchFilter.valueHasMutated();
-                    self.columnPropertiesSearchFilter.valueHasMutated();
-                    if (self.reportType() === "Property") {
-                        // property reports only use Pie charts
-                        self.listOfChartTypes([{
-                            text: "Pie",
-                            value: "pie"
-                        }]);
-                    }
-
-                    initializeForMaterialize();
                 }
 
                 window.setTimeout(function () {
