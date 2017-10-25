@@ -4957,7 +4957,8 @@ var dti = {
                         err = false,
                         cbData = {
                             newNode: nodeData.node,
-                            parent: parent
+                            parent: parent,
+                            action: "add"
                         },
                         data = {
                             upi: 0,
@@ -5141,6 +5142,7 @@ var dti = {
                             cbData.newNode.newPoint.isCopiedPoint = true;
                             cbData.points = (!!result.points ? result.points : []);
                             cbData.parent = (!!parentNode ? parentNode : null);
+                            cbData.action = "copy";
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
@@ -5272,9 +5274,11 @@ var dti = {
                     handoffMode = (endPoint ? (endPoint.edit || endPoint.review) : null),
                     handleAddNewPointToHierarchy = (returnData) => {
                         if (treeViewerCallback) {
-                            treeViewerCallback('add', {
+                            treeViewerCallback(data.action, {
                                 node: returnData,
+                                sourceNode: data.sourceNode,
                                 parent: data.parent,
+                                target: data.parent,
                                 newNode: returnData
                             });
                             treeViewerCallback = null;
@@ -7679,12 +7683,42 @@ var dti = {
                 deleteNode(data) { // Callback action
                     let node = data.node;
                     let parent = node.parentNode;
+                    let clipboardNode = node.manager.clipboardNode;
+                    let anyOfMyChildrenOnClipboard = (theChildren) => {
+                        let foundNode = false,
+                            numberOfChildren = theChildren.length;
+
+                        if (numberOfChildren) {
+                            for (let i = 0; i < numberOfChildren; i++) {
+                                if (clipboardNode.defaultConfig._id === theChildren[i]._id()) {
+                                    foundNode = true;
+                                } else {
+                                    foundNode = anyOfMyChildrenOnClipboard(theChildren[i].children());
+                                }
+
+                                if (foundNode) {
+                                    return foundNode;
+                                }
+                            }
+                        }
+
+                        return foundNode;
+                    };
+
+                    if (clipboardNode) {
+                        if (clipboardNode.defaultConfig._id === node.defaultConfig._id) {
+                            node.manager.clipboardNode = null;
+                        } else if (anyOfMyChildrenOnClipboard(node.bindings.children())) {
+                            node.manager.clipboardNode = null;
+                        }
+                    }
 
                     if (parent) {
                         parent.deleteChild(node);
                     } else {
                         this.rootNode.bindings.children.remove(node.bindings);
                     }
+
                 }
 
                 moveNode(data) { // Callback action

@@ -165,8 +165,6 @@ const Point = class Point extends Common {
         };
         let upi = parseInt(data.id, 10);
         let point = null;
-        let resolvedPointsMap = {};
-        let pointRef;
 
         let fixPoint = (permissions, results, callback) => {
             if (results.length) {
@@ -2693,7 +2691,7 @@ const Point = class Point extends Common {
                     sort = [],
                     update = {
                         $set: {
-                            _pStatus: 2
+                            _pStatus: Config.Enums['Point Statuses'].Deleted.enum
                         }
                     },
                     options = {
@@ -3084,13 +3082,17 @@ const Point = class Point extends Common {
                         });
                         break;
                     case 'Report':
-                        validatedPoint.resolvePointRefs = true;
-                        this.getPointById(validatedPoint, () => {
+                        let reportCriteria = {
+                            id: validatedPoint._id,
+                            data: validatedPoint,
+                            resolvePointRefs: true
+                        };
+                        this.getPointById(reportCriteria, () => {
                             if (err) {
                                 return callback(err);
-                            } 
+                            }
                                 report.getReportColumnInfo(validatedPoint, null, null, reportCallback);
-                            
+
                         });
                         break;
                     default:
