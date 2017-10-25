@@ -51,10 +51,6 @@ const Report = class Report {
             updateObj: {
                 $set: {
                     _pStatus: (!!data._pStatus ? data._pStatus : 0),
-                    name1: data.name1,
-                    name2: data.name2,
-                    name3: data.name3,
-                    name4: data.name4,
                     'Point Refs': data['Point Refs'],
                     'Report Config': data['Report Config']
                 }
@@ -497,14 +493,14 @@ const Report = class Report {
     }
     reportMain(data, cb) {
         const pointInstance = new Point();
-        data.resolvePointRefs = true;
         let reportCriteria = {
             id: utils.converters.convertType(data.id),
-            data: data
+            data: data,
+            resolvePointRefs: true
         };
 
         if (data.id != 0) { // persisted points
-            pointInstance.getPointById(reportCriteria.data, (err, message, reportPoint) => {
+            pointInstance.getPointById(reportCriteria, (err, message, reportPoint) => {
                 if (err) {
                     return cb(err, {id: data.id});
                 } else if (!!reportPoint) {
