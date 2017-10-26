@@ -5011,9 +5011,12 @@ let reportsViewModel = function () {
                 }
             }
 
-            if (validatedColumns.collection.length === 1 && self.reportType() !== "Property") {
+            if (validatedColumns.collection.length === 1 && self.reportType() !== "Property") {  // 1st column is reserved
                 activeError = true;
-                ui.displayError("Column list is blank. Nothing to report on.");
+                ui.displayError("Column list is blank. ");
+            } else if (validatedFilters.collection.length === 0 && self.reportType() === "Property") {
+                activeError = true;
+                ui.displayError("Filters are blank. ");
             }
 
             if (!activeError) {
