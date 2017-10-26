@@ -1768,12 +1768,12 @@ input:focus {
     }
 
     .pointTypeList {
-        position: absolute;
+        //position: absolute;
         background-color: white;
         // opacity: 0;
         right: 0;
         max-width: 100%;
-        top: 180px;
+        //top: 180px;
 
         &.active {
             width: 100%;

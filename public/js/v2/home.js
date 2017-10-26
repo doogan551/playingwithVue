@@ -5233,7 +5233,8 @@ var dti = {
                 treeConfig: dti.navigatorv2.tree.config
             });
 
-            let selfBindings = dti.navigatorv2.bindings;
+            let selfBindings = dti.navigatorv2.bindings,
+                modalBindings = dti.bindings.navigatorv2.configureNodeModal;
 
             selfBindings.searchInput = ko.computed(selfBindings.searchString).extend({
                 throttle: 1000
@@ -5249,6 +5250,19 @@ var dti = {
                     } else {
                         dti.navigatorv2.tree.helper.unblockUI();
                     }
+                }),
+                modalBindings.selectedPointType.subscribe((val) => {
+                    let subTypes,
+                        arrayOfSubTypes = [];
+                    if (val !== "") {
+                        subTypes = dti.utility.getConfig("Enums." + val +" Types");
+                        for (var subType in subTypes) {
+                            arrayOfSubTypes.push(subType);
+                        }
+                        dti.bindings.navigatorv2.configureNodeModal.pointSubTypes(arrayOfSubTypes);
+                    }
+
+                    dti.navigatorv2.$configureNodeModal.find("#pointSubTypesDropdown").material_select();
                 })
             ];
         },
@@ -6414,6 +6428,7 @@ var dti = {
                 error: '&nbsp;',
                 hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
                 locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
+                pointSubTypes: [],
                 typesNeedingPoint: ['Application', 'Point', 'Reference'],
                 generateNewNodeActions: ["add", "paste", "pastereference"],
                 //add node stuff
@@ -6425,6 +6440,7 @@ var dti = {
                 modalNodeSubType: '',
                 modalNodePointName: '',
                 modalNodePointType: '',
+                modalPointSubType: '',
                 modalNodeLocatedIn: 0,
                 modalNodeServedBy: [],
                 modalNodeDescriptors: [],
@@ -6455,6 +6471,10 @@ var dti = {
                         (modalBindings.modalAction() !== "Add point" || modalBindings.selectedPointType() !== ''));
 
                 return answer;
+            }),
+            activatePointSubType: ko.pureComputed(() => {
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
+                return (modalBindings.selectedPointType() !== "" && modalBindings.pointSubTypes().length > 0);
             })
         },
         globalSearch: {

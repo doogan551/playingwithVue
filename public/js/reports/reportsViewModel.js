@@ -7663,7 +7663,7 @@ let reportsViewModel = function () {
         }
     };
 
-    self.selectSelectReportType = (element, selectedItem) => {
+    self.selectReportType = (element, selectedItem) => {
         for (var i = 0; i < self.listOfReportTypes().length; i++) {
             if (self.listOfReportTypes()[i].text === selectedItem.text) {
                 self.reportType(selectedItem.text);

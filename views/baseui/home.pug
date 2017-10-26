@@ -293,6 +293,11 @@ html
                                 span
                                     input.filled-in(name="availablePointTypes", type="radio", data-bind="checked: $parent.selectedPointType, checkedValue: name, attr: {id: 'spt-' + $index() }")
                                     label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
+                    .row
+                        .col.s4.valign-wrapper
+                            .availablePointSubTypes(data-bind="visible: $parent.navigatorv2.activatePointSubType")
+                                label(data-bind="attr: { for: 'pointSubTypesDropdown' }, text: selectedPointType() + ' SubType'")
+                                select#pointSubTypesDropdown.pointSubTypes(data-bind="options: pointSubTypes, value: modalPointSubType")
                     // /ko
                     .row
                         .col.s12.error.red-text(data-bind='html: error')
