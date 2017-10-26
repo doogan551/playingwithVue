@@ -1635,38 +1635,56 @@ let reportsViewModel = function () {
                 return (isNaN(result) || result === "" ? 0 : result);
             },
             initExistingReport: (reportConfig, cb) => {
-                let finishInit = () => {
-                    if (!!reportConfig.pointFilter) {
-                        self.name1Filter(reportConfig.pointFilter.name1);
-                        self.name2Filter(reportConfig.pointFilter.name2);
-                        self.name3Filter(reportConfig.pointFilter.name3);
-                        self.name4Filter(reportConfig.pointFilter.name4);
-                        self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
-                    }
-                    self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
-                    self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
-                    self.displayGridCalculations((reportConfig.displayGridCalculations !== undefined ? reportConfig.displayGridCalculations : true));
-                    self.displayGridFilters((reportConfig.displayGridFilters !== undefined ? reportConfig.displayGridFilters : true));
-                    switch (self.reportType()) {
-                        case "History":
-                        case "Totalizer":
-                            if (!!reportConfig.duration) { // have to set each manually because of computed relationship
-                                reportUtil.configureSelectedDuration(reportConfig);
+                let filtersSet = false,
+                    columnsSet = false,
+                    finish = () => {
+                        if (columnsSet && filtersSet) {
+                            if (!!reportConfig.pointFilter) {
+                                self.name1Filter(reportConfig.pointFilter.name1);
+                                self.name2Filter(reportConfig.pointFilter.name2);
+                                self.name3Filter(reportConfig.pointFilter.name3);
+                                self.name4Filter(reportConfig.pointFilter.name4);
+                                self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
                             }
-                            break;
-                        case "Property":
-                            reportUtil.collectEnumProperties();
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  init()");
-                            break;
-                    }
-                    cb();
-                };
+                            self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
+                            self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                            self.displayGridCalculations((reportConfig.displayGridCalculations !== undefined ? reportConfig.displayGridCalculations : true));
+                            self.displayGridFilters((reportConfig.displayGridFilters !== undefined ? reportConfig.displayGridFilters : true));
+                            switch (self.reportType()) {
+                                case "History":
+                                case "Totalizer":
+                                    if (!!reportConfig.duration) { // have to set each manually because of computed relationship
+                                        reportUtil.configureSelectedDuration(reportConfig);
+                                    }
+                                    break;
+                                case "Property":
+                                    reportUtil.collectEnumProperties();
+                                    break;
+                                default:
+                                    console.log(" - - - DEFAULT  init()");
+                                    break;
+                            }
+                            if (!!cb) {
+                                if (typeof cb === "function") {
+                                    cb();
+                                }
+                            }
+                        }
+                    },
+                    finishInitFilters = (filters) => {
+                        self.listOfFilters(filters);
+                        filtersSet = true;
+                        finish();
+                    },
+                    finishInitColumns = (columns) => {
+                        self.listOfColumns(columns);
+                        columnsSet = true;
+                        finish();
+                    };
                 self.unpersistedReport(reportPoint._id === 0);
                 self.reportDisplayTitle((!!reportConfig.reportTitle ? reportConfig.reportTitle : reportPoint.Name.replace(/_/g, " ")));
-                self.listOfColumns(columnLogic.initColumns(reportConfig.columns));
-                self.listOfFilters(filterLogic.initFilters(reportConfig.filters, finishInit));
+                columnLogic.initColumns(reportConfig.columns, finishInitColumns);
+                filterLogic.initFilters(reportConfig.filters, finishInitFilters);
             },
             initNewReport: () => {
                 self.unpersistedReport(reportPoint._id === 0);
@@ -2946,16 +2964,19 @@ let reportsViewModel = function () {
             }
         },
         filterLogic = {
-            setValueList: (property, pointType, index, activeRequest) => {
+            setValueList: (filterData, activeRequest, cb) => {
                 var result = [],
-                    adjustedFilters = $.extend(true, [], self.listOfFilters()),
+                    currentFilter = filterData.filter,
+                    prop = ENUMSTEMPLATESENUMS.Properties[filterData.property],
                     maxWidth = 0,
                     maxWidthInPixels = 0,
-                    params = [property, pointType],
+                    params = [filterData.property, filterData.pointType],
                     i,
-                    setOptions = function (options) {
-                        console.log("   setValueList() --->  options.length = " + options.length);
-                        if (!!adjustedFilters[index]) {
+                    finish = (filter) => {
+                        cb(filter);
+                    },
+                    setOptions = (options) => {
+                        if (!!currentFilter) {
                             if (!!options && Array.isArray(options)) {
                                 result.push({
                                     value: "<blank>",
@@ -2972,18 +2993,21 @@ let reportsViewModel = function () {
                                     });
                                 }
                                 maxWidthInPixels = (maxWidth < 14 ? maxWidth * 14 : maxWidth * 9); // TODO needs to check font/size
-                                if (adjustedFilters[index].evalue === undefined || adjustedFilters[index].evalue < 0) {
-                                    adjustedFilters[index].value = result[0].value;
-                                    adjustedFilters[index].evalue = result[0].evalue;
+                                if (currentFilter.evalue === undefined || currentFilter.evalue < 0) {  // set to default value
+                                    currentFilter.value = result[0].value;
+                                    currentFilter.evalue = result[0].evalue;
                                 }
-                                adjustedFilters[index].valueList = result;
-                                adjustedFilters[index].valueListMaxWidth = maxWidthInPixels;
-                                filterLogic.updateListOfFilters(adjustedFilters);
+                                currentFilter.valueList = result;
+                                currentFilter.valueListMaxWidth = maxWidthInPixels;
+                            }
+                            if (!currentFilter.valueType) {
+                                currentFilter.valueType = prop.valueType;
                             }
                         }
                         if (!!activeRequest && typeof activeRequest === "function") {
-                            activeRequest({index: index, status: false});
+                            activeRequest({index: filterData.index, status: false});
                         }
+                        finish(currentFilter);
                     };
 
                 dtiUtility.getConfig("Utility.pointTypes.getEnums", params, setOptions);
@@ -3034,8 +3058,18 @@ let reportsViewModel = function () {
                 return filters;
             },
             initializeNewFilter: (selectedItem, indexOfFilter) => {
-                var filter = self.listOfFilters()[indexOfFilter],
-                    prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
+                let filter = self.listOfFilters()[indexOfFilter],
+                    prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name],
+                    filterData = {
+                        property: selectedItem.name,
+                        pointType: selectedItem.name,
+                        filter: filter,
+                        index: indexOfFilter
+                    },
+                    finish = (updatedFilter) => {
+                        self.listOfFilters()[indexOfFilter] = updatedFilter;
+                        filterLogic.updateListOfFilters(self.listOfFilters());
+                    };
 
                 filter.filterName = selectedItem.name;
                 filter.condition = "$and";
@@ -3046,7 +3080,6 @@ let reportsViewModel = function () {
                 delete filter.AppIndex;
                 filter.value = filterLogic.setDefaultFilterValue(filter.valueType);
                 filter.valueList = [];
-                filterLogic.setValueList(selectedItem.name, selectedItem.name, indexOfFilter, self.activePropertyFilterRequest);
                 switch (filter.valueType) {
                     case "Timet":
                     case "DateTime":
@@ -3068,7 +3101,7 @@ let reportsViewModel = function () {
                         filter.bitStringEnumsArray = reportUtil.getBitStringEnumsArray(ENUMSTEMPLATESENUMS[filter.filterName + " Bits"]);
                         break;
                 }
-                filterLogic.updateListOfFilters(self.listOfFilters());
+                filterLogic.setValueList(filterData, self.activePropertyFilterRequest, finish);
             },
             setDefaultFilterValue: (valueType) => {
                 var result;
@@ -3109,33 +3142,50 @@ let reportsViewModel = function () {
                     i,
                     currentFilter,
                     len = theFilters.length,
-                    validFilter;
+                    validFilter,
+                    callbackCounter = 0,
+                    filterData,
+                    finish = (adjustedFilter) => {
+                        result.push(adjustedFilter);
+                        --callbackCounter;
+                        if (callbackCounter === 0) {
+                            callback(result);
+                        }
+                    };
 
-                for (i = 0; i < len; i++) {
-                    currentFilter = theFilters[i];
-                    validFilter = true;
-                    if (!!currentFilter.AppIndex) {
-                        filterLogic.updateFilterFromPointRefs(currentFilter);
-                        if (!pointRefUtil.isHardDeleted(currentFilter, "Qualifier Point")) {
-                            if (pointRefUtil.isSoftDeleted(currentFilter, "Qualifier Point")) {
-                                console.log("softdeleted theFilters[" + i + "].upi = " + currentFilter.upi);
-                                currentFilter.softDeleted = true;
+                if (len === 0) {
+                    callback(result);
+                } else {
+                    for (i = 0; i < len; i++) {
+                        currentFilter = theFilters[i];
+                        validFilter = true;
+                        if (!!currentFilter.AppIndex) {
+                            filterLogic.updateFilterFromPointRefs(currentFilter);
+                            if (!pointRefUtil.isHardDeleted(currentFilter, "Qualifier Point")) {
+                                if (pointRefUtil.isSoftDeleted(currentFilter, "Qualifier Point")) {
+                                    console.log("softdeleted theFilters[" + i + "].upi = " + currentFilter.upi);
+                                    currentFilter.softDeleted = true;
+                                }
+                            } else {
+                                validFilter = false;
+                                console.log("'" + currentFilter.name + "' has been 'Destroyed', filter " + i + " is being removed from the displayed report.");
                             }
-                        } else {
-                            validFilter = false;
-                            console.log("'" + currentFilter.name + "' has been 'Destroyed', filter " + i + " is being removed from the displayed report.");
+                        }
+
+                        if (validFilter) {
+                            currentFilter.valueList = [];
+                            currentFilter.valueListMaxWidth = 0;
+                            callbackCounter++;
+                            filterData = {
+                                property: currentFilter.filterName,
+                                pointType: currentFilter.filterName,
+                                filter: currentFilter
+                            };
+
+                            filterLogic.setValueList(filterData, null, finish);
                         }
                     }
-
-                    if (validFilter) {
-                        currentFilter.valueList = [];
-                        currentFilter.valueListMaxWidth = 0;
-                        filterLogic.setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
-                        result.push(currentFilter);
-                    }
                 }
-
-                return result;
             },
             validateFilters: (cleanup) => {
                 var results = {},
@@ -3380,7 +3430,7 @@ let reportsViewModel = function () {
 
                 return results;
             },
-            initColumns: (theColumns) => {
+            initColumns: (theColumns, callback) => {
                 var result = [],
                     i,
                     len = theColumns.length,
@@ -3392,7 +3442,7 @@ let reportsViewModel = function () {
                     valid = true;
 
                     if (!!currentColumn.AppIndex && i > 0) {
-                        columnLogic.updateColumnFromPointRefs(currentColumn);
+                        columnLogic.updateColumnFromPointRefs(currentColumn);  // TODO async
                         if (!pointRefUtil.isHardDeleted(currentColumn, "Column Point")) {
                             if (pointRefUtil.isSoftDeleted(currentColumn, "Column Point")) {
                                 console.log("softdeleted theColumns[" + i + "].colName = " + theColumns[i].colName);
@@ -3443,7 +3493,8 @@ let reportsViewModel = function () {
                         result.push(currentColumn);
                     }
                 }
-                return result;
+
+                callback(result);
             },
             getProperties: () => {
                 var listOfKeysToRemove = ["path"];
@@ -7029,46 +7080,46 @@ let reportsViewModel = function () {
                 if (!!reportPoint) {
                     let isNewReport,
                         finishPostInit = (error) => {
-                        if (error) {
-                            // TODO handle the error
-                        }
-
-                        $direports.find("#wrapper").show();
-                        ui.tabSwitch(1);
-
-                        filterLogic.updateListOfFilters(self.listOfFilters());
-                        setTimeout(function () {
-                            $reportTitleInput.focus();
-                            reportName = $reportTitleInput.val();
-                        }, 1500);
-                        ui.registerEvents();
-                        reportCalc.checkForColumnCalculations();
-                        reportCalc.checkForIncludeInChart();
-                        ui.adjustConfigTabActivePaneHeight();
-                        if (scheduledReport && !!includeChart) {
-                            reportUtil.configureSelectedDuration(scheduledConfig);
-                            self.requestReportData();
-                        } else if (!!externalConfig) {
-                            if (self.reportType() === "History" || self.reportType() === "Totalizer") {
-                                reportUtil.configureSelectedDuration(externalConfig);
+                            if (error) {
+                                // TODO handle the error
                             }
-                            self.requestReportData();
-                        }
 
-                        self.filterPropertiesSearchFilter(""); // computed props jolt
-                        self.columnPropertiesSearchFilter(""); // computed props jolt
-                        self.filterPropertiesSearchFilter.valueHasMutated();
-                        self.columnPropertiesSearchFilter.valueHasMutated();
-                        if (self.reportType() === "Property") {
-                            // property reports only use Pie charts
-                            self.listOfChartTypes([{
-                                text: "Pie",
-                                value: "pie"
-                            }]);
-                        }
+                            $direports.find("#wrapper").show();
+                            ui.tabSwitch(1);
 
-                        initializeForMaterialize();
-                    };
+                            // filterLogic.updateListOfFilters(self.listOfFilters());  // TODO
+                            setTimeout(function () {
+                                $reportTitleInput.focus();
+                                reportName = $reportTitleInput.val();
+                            }, 1500);
+                            ui.registerEvents();
+                            reportCalc.checkForColumnCalculations();
+                            reportCalc.checkForIncludeInChart();
+                            ui.adjustConfigTabActivePaneHeight();
+                            if (scheduledReport && !!includeChart) {
+                                reportUtil.configureSelectedDuration(scheduledConfig);
+                                self.requestReportData();
+                            } else if (!!externalConfig) {
+                                if (self.reportType() === "History" || self.reportType() === "Totalizer") {
+                                    reportUtil.configureSelectedDuration(externalConfig);
+                                }
+                                self.requestReportData();
+                            }
+
+                            self.filterPropertiesSearchFilter(""); // computed props jolt
+                            self.columnPropertiesSearchFilter(""); // computed props jolt
+                            self.filterPropertiesSearchFilter.valueHasMutated();
+                            self.columnPropertiesSearchFilter.valueHasMutated();
+                            if (self.reportType() === "Property") {
+                                // property reports only use Pie charts
+                                self.listOfChartTypes([{
+                                    text: "Pie",
+                                    value: "pie"
+                                }]);
+                            }
+
+                            initializeForMaterialize();
+                        };
 
                     self.parentID(reportPoint.parentNode);
                     self.canEdit(userCanEdit(reportPoint, permissionLevels.WRITE));

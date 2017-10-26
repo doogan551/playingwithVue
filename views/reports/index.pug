@@ -475,9 +475,11 @@ html.direports
                                                             span(data-bind="text: (filterName !== '' ? filterName : 'Select property (' + $root.listOfFilterPropertiesLength + ')  ')")
                                                 td.filterOperator
                                                     .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                        // ko if: (valueType)
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
                                                             li
                                                                 a.operator.center-text(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
+                                                        // /ko
                                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: $root.displayOperator(operator)")
                                                 td.emptyColumn
@@ -498,7 +500,9 @@ html.direports
                                                     // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
+                                                    // ko if: (valueType)
                                                     i.removerow.blue-grey-text.material-icons.center(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") clear
+                                                    // /ko
                                                 // /ko
                                     // ko if: ($root.reportType() === 'Property' && $root.canEdit())
                                     a.small.addFilterbutton(href="#") Add Filter
