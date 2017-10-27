@@ -4691,10 +4691,22 @@ var dti = {
                         targetNode = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node,
                         // for an "add" action the selected targetNode is the parent of newly requested targetNode
                         parentNode = (modalBindings.generateNewNodeActions.indexOf(config.action) >= 0 ? targetNode : targetNode.parentNode),
-                        point = self.tree._configureNodePoint;
+                        point = self.tree._configureNodePoint,
+                        pointSubType;
 
-                    if (modalBindings.needsPoint() && !!point) {
-                        modalBindings.modalNodePointType(point.pointType);
+                    if (modalBindings.needsPoint()) {
+                        if (!!point) {
+                            modalBindings.modalNodePointType(point.pointType);
+                        }
+                        if (modalBindings.pointSubTypes().length) {
+                            for (let i = 0; i < modalBindings.pointSubTypes().length; i++) {
+                                if (modalBindings.modalPointSubType() == modalBindings.pointSubTypes()[i].enum) {
+                                    pointSubType = {};
+                                    pointSubType.Value = modalBindings.pointSubTypes()[i].text;
+                                    pointSubType.eValue = modalBindings.pointSubTypes()[i].enum;
+                                }
+                            }
+                        }
                     }
 
                     let ret = {
@@ -4702,6 +4714,7 @@ var dti = {
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),
                         pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : modalBindings.modalNodePointType()),
+                        pointSubType: pointSubType,
                         id: targetNode.bindings._id(),
                         refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
                         node: targetNode,
@@ -4742,6 +4755,7 @@ var dti = {
                     modalBindings.modalNodeSubType("");
                     modalBindings.modalNodePointType("");
                     modalBindings.selectedPointType("");
+                    modalBindings.saveButtonText("Save");
 
                     if (modalBindings.modalNodeType() === '') {
                         modalBindings.modalNodeType(data.config.nodeType);
@@ -4774,6 +4788,7 @@ var dti = {
                             modalBindings.parentID(getParentID(data.node));
                             self.$configureNodeModal.addClass("addingPoint");
                             self.$configureNodeModal.find('select').prop("disabled", false);
+                            modalBindings.saveButtonText("Create");
                             break;
                         case "open":
                             modalBindings.modalNodeDisplay(data.node.bindings.display());
@@ -4805,6 +4820,7 @@ var dti = {
                             modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
                             modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
                             modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
+                            modalBindings.saveButtonText((modalBindings.modalNodePointType() ? "Create" : "Save"));
                             self.$configureNodeModal.find('select').prop("disabled", true);
                             break;
                         case "paste as reference":
@@ -4969,7 +4985,8 @@ var dti = {
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
                             nodeSubType: nodeData.nodeSubType,
-                            pointType: nodeData.pointType
+                            pointType: nodeData.pointType,
+                            pointSubType: nodeData.pointSubType
                         };
 
                     dti.post({
@@ -5233,7 +5250,8 @@ var dti = {
                 treeConfig: dti.navigatorv2.tree.config
             });
 
-            let selfBindings = dti.navigatorv2.bindings;
+            let selfBindings = dti.navigatorv2.bindings,
+                modalBindings = dti.bindings.navigatorv2.configureNodeModal;
 
             selfBindings.searchInput = ko.computed(selfBindings.searchString).extend({
                 throttle: 1000
@@ -5249,6 +5267,23 @@ var dti = {
                     } else {
                         dti.navigatorv2.tree.helper.unblockUI();
                     }
+                }),
+                modalBindings.selectedPointType.subscribe((val) => {
+                    let subTypes,
+                        arrayOfSubTypes = [];
+                    if (val !== "") {
+                        subTypes = dti.utility.getConfig("Enums." + val +" Types");
+                        if (subTypes) {
+                            arrayOfSubTypes = Object.keys(subTypes).map(function (subType) {
+                                return {
+                                    text: subType,
+                                    enum: subTypes[subType].enum
+                                };
+                            });
+                        }
+                    }
+                    dti.bindings.navigatorv2.configureNodeModal.pointSubTypes(arrayOfSubTypes);
+                    dti.navigatorv2.$configureNodeModal.find("#pointSubTypesDropdown").material_select();
                 })
             ];
         },
@@ -6414,6 +6449,7 @@ var dti = {
                 error: '&nbsp;',
                 hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
                 locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
+                pointSubTypes: [],
                 typesNeedingPoint: ['Application', 'Point', 'Reference'],
                 generateNewNodeActions: ["add", "paste", "pastereference"],
                 //add node stuff
@@ -6425,13 +6461,15 @@ var dti = {
                 modalNodeSubType: '',
                 modalNodePointName: '',
                 modalNodePointType: '',
+                modalPointSubType: '',
                 modalNodeLocatedIn: 0,
                 modalNodeServedBy: [],
                 modalNodeDescriptors: [],
                 pointTypesShown: false,
                 pointTypeText: 'Point Types',
                 selectedPointType: '',
-                pointTypes: []
+                pointTypes: [],
+                saveButtonText: 'Save'
             }), {
                 addNode() {
                     dti.navigatorv2.tree.addNode();
@@ -6455,6 +6493,10 @@ var dti = {
                         (modalBindings.modalAction() !== "Add point" || modalBindings.selectedPointType() !== ''));
 
                 return answer;
+            }),
+            activatePointSubType: ko.pureComputed(() => {
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
+                return (modalBindings.selectedPointType() !== "" && modalBindings.pointSubTypes().length > 0);
             })
         },
         globalSearch: {
