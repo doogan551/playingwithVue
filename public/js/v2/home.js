@@ -4702,6 +4702,7 @@ var dti = {
                         nodeType: modalBindings.modalNodeType(),
                         nodeSubType: modalBindings.modalNodeSubType(),
                         pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : modalBindings.modalNodePointType()),
+                        pointSubType: modalBindings.modalPointSubType(),
                         id: targetNode.bindings._id(),
                         refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
                         node: targetNode,
@@ -4969,7 +4970,8 @@ var dti = {
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
                             nodeSubType: nodeData.nodeSubType,
-                            pointType: nodeData.pointType
+                            pointType: nodeData.pointType,
+                            pointSubType: nodeData.pointSubType
                         };
 
                     dti.post({
