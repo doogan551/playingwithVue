@@ -869,7 +869,7 @@ const Point = class Point extends Common {
         let criteria = {};
 
         let path = data.path;
-        let subType = {};
+        let subType = (data.pointSubType ? data.pointSubType : {});
 
         let display = data.display;
         let parentNode = this.getDefault(data.parentNode, 0);
@@ -953,12 +953,16 @@ const Point = class Point extends Common {
 
             switch (pointType) {
                 case 'Report':
-                    subType.Value = template['Report Type'].Value;
-                    subType.eValue = template['Report Type'].eValue;
+                    if (subType.eValue === undefined) {  // subType passed in from initPoint
+                        subType.Value = template['Report Type'].Value;
+                        subType.eValue = template['Report Type'].eValue;
+                    }
                     break;
                 case 'Sensor':
-                    subType.Value = template['Sensor Type'].Value;
-                    subType.eValue = template['Sensor Type'].eValue;
+                    if (subType.eValue === undefined) {  // subType passed in from initPoint
+                        subType.Value = template['Sensor Type'].Value;
+                        subType.eValue = template['Sensor Type'].eValue;
+                    }
                     break;
                 case 'Display': // default background color for new Displays
                     template['Background Color'] = Config.Templates.getTemplate('Display')['Background Color'];

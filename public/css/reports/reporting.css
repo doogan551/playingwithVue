@@ -612,6 +612,12 @@ html, body {
     position: relative;
     font-size: 18px;
 }
+.unpersistedReport {
+    border: #821616 2px solid;
+}
+.unSavedChange {
+    border: #f1a445 2px solid;
+}
 i.iconLink {
     vertical-align: middle;
 }

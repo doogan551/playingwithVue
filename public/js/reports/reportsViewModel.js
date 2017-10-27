@@ -1682,7 +1682,7 @@ let reportsViewModel = function () {
                         finish();
                     };
                 self.unpersistedReport(reportPoint._id === 0);
-                self.reportDisplayTitle((!!reportConfig.reportTitle ? reportConfig.reportTitle : reportPoint.Name.replace(/_/g, " ")));
+                self.reportDisplayTitle((!!reportConfig.reportTitle ? reportConfig.reportTitle : dtiCommon.getPointName(reportPoint.path)));
                 columnLogic.initColumns(reportConfig.columns, finishInitColumns);
                 filterLogic.initFilters(reportConfig.filters, finishInitFilters);
             },
@@ -2778,6 +2778,40 @@ let reportsViewModel = function () {
                             scroll: true,
                             handle: ".handle"
                         });
+
+                        self.saveButtonToolTip.subscribe(() => {
+                            if (!!$saveReportButton && typeof $saveReportButton.tooltip === "function") {
+                                ui.saveButtonTooltipChange();
+                            }
+                        });
+
+                        self.reportDisplayTitle.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.startDate.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.endDate.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.durationStartTimeOffSet.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.durationEndTimeOffSet.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.intervalPeriod.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.intervalValue.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
                     }
                 }, 200);
 
@@ -2961,6 +2995,12 @@ let reportsViewModel = function () {
                 htmlString += '</div>';
 
                 return htmlString;
+            },
+            saveButtonTooltipChange: () => {
+                $saveReportButton.attr('data-tooltip', self.saveButtonToolTip());
+                $saveReportButton.attr('data-position', 'bottom');
+                $saveReportButton.attr('data-delay', '50');
+                $saveReportButton.tooltip();
             }
         },
         filterLogic = {
@@ -3020,7 +3060,7 @@ let reportsViewModel = function () {
                     self.listOfFilters(newArray);
                 }
                 self.designChanged(true);
-                self.unSavedDesignChange(true);
+                self.unSavedDesignChange(true && !self.unpersistedReport());
                 self.refreshData(true);
             },
             setFiltersParentChildLogic: (array) => {
@@ -3352,7 +3392,7 @@ let reportsViewModel = function () {
                 reportCalc.checkForColumnCalculations();
                 reportCalc.checkForIncludeInChart();
                 self.designChanged(true);
-                self.unSavedDesignChange(true);
+                self.unSavedDesignChange(true && !self.unpersistedReport());
                 self.refreshData(true);
             },
             validColumn: (column, colIndex) => {
@@ -5911,7 +5951,7 @@ let reportsViewModel = function () {
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
                     }
-                    self.unSavedDesignChange(!!err);  // report save returned with ERROR
+                    self.unSavedDesignChange(!!err && !self.unpersistedReport());  // report save returned with ERROR
 
                     itemFinished(err);
                 },
@@ -7022,8 +7062,8 @@ let reportsViewModel = function () {
         let columns,
             reportConfig,
             initializeForMaterialize = () => {
-                columnLogic.updateListOfColumns(self.listOfColumns());
-                filterLogic.updateListOfFilters(self.listOfFilters());
+                // columnLogic.updateListOfColumns(self.listOfColumns());
+                // filterLogic.updateListOfFilters(self.listOfFilters());
                 self.startDate.valueHasMutated();
                 self.endDate.valueHasMutated();
                 if (self.reportType() !== "Property" && !scheduledReport) {
@@ -7037,6 +7077,7 @@ let reportsViewModel = function () {
                     $reportEndDatePicker.set({min: new Date(self.startDate())});
                 }
                 Materialize.updateTextFields();
+                ui.saveButtonTooltipChange();
                 // too late  initKnockout();
             },
             setCurrentUser = function (results) {
@@ -7153,6 +7194,22 @@ let reportsViewModel = function () {
                     $tabConfiguration.find('ul.tabs').tabs();
                     $tabViewReport.find('ul.tabs').tabs();
                 }, 200);
+            },
+            initializeReport = () => {
+                if (!scheduledReport) {
+                    initGlobals();
+                } else {
+                    postConfigInit();
+                }
+            },
+            tryToInitializeReport = () => {
+                if (!dtiCommon.init.isComplete) {
+                    window.setTimeout(function () {
+                        tryToInitializeReport();
+                    }, 200);
+                } else {
+                    initializeReport();
+                }
             };
 
         ui.getScreenFields();
@@ -7161,11 +7218,8 @@ let reportsViewModel = function () {
 
         exportEventSet = false;
         activeDataRequests = [];
-        if (!scheduledReport) {
-            initGlobals();
-        } else {
-            postConfigInit();
-        }
+
+        tryToInitializeReport();
     };
 
     self.operators = (op) => {
@@ -7348,49 +7402,47 @@ let reportsViewModel = function () {
     };
 
     self.requestReportData = () => {
-        if (!self.unpersistedReport()) {
-            if (!self.durationError()) {
-                // TODO to Materialize  $(".tableFooter > td").popover("destroy");
-                var requestObj = buildReportDataRequest();
-                if (!!requestObj) {
-                    if (self.currentTab() !== 2) {
-                        ui.tabSwitch(2);
-                        self.selectViewReportTabSubTab("gridData");
-                    }
-                    if (self.reportResultViewed()) {
-                        self.activeDataRequest(true);
-                        self.reportResultViewed(false);
-                        $tabViewReport.hide();
-                        if (!scheduledReport) {
-                            configureDataTable(true, true);
-                        }
-                        reportData = undefined;
-                        switch (self.reportType()) {
-                            case "History":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", render.historyReport);
-                                break;
-                            case "Totalizer":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", render.totalizerReport);
-                                break;
-                            case "Property":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", render.propertyReport);
-                                break;
-                            default:
-                                console.log(" - - - DEFAULT  requestReportData()");
-                                break;
-                        }
-                    } else {
-                        self.activeRequestDataDrawn(false);
-                        render.baseReport();
-                    }
+        if (!self.durationError()) {
+            // TODO to Materialize  $(".tableFooter > td").popover("destroy");
+            var requestObj = buildReportDataRequest();
+            if (!!requestObj) {
+                if (self.currentTab() !== 2) {
+                    ui.tabSwitch(2);
+                    self.selectViewReportTabSubTab("gridData");
                 }
-            } else {
-                ui.displayError("Invalid Date Time selection");
+                if (self.reportResultViewed()) {
+                    self.activeDataRequest(true);
+                    self.reportResultViewed(false);
+                    $tabViewReport.hide();
+                    if (!scheduledReport) {
+                        configureDataTable(true, true);
+                    }
+                    reportData = undefined;
+                    switch (self.reportType()) {
+                        case "History":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", render.historyReport);
+                            break;
+                        case "Totalizer":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", render.totalizerReport);
+                            break;
+                        case "Property":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", render.propertyReport);
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  requestReportData()");
+                            break;
+                    }
+                } else {
+                    self.activeRequestDataDrawn(false);
+                    render.baseReport();
+                }
             }
-            $("html,body").stop().animate({
-                scrollTop: 0
-            }, 700);
+        } else {
+            ui.displayError("Invalid Date Time selection");
         }
+        $("html,body").stop().animate({
+            scrollTop: 0
+        }, 700);
     };
 
     self.requestChart = (printFormat) => {
@@ -7657,7 +7709,7 @@ let reportsViewModel = function () {
             if (self.listOfEntriesPerPage()[i].value === selectedItem) {
                 self.selectedPageLength(self.listOfEntriesPerPage()[i].unit);
                 self.designChanged(true);
-                self.unSavedDesignChange(true);
+                self.unSavedDesignChange(true && !self.unpersistedReport());
                 break;
             }
         }
@@ -7669,7 +7721,7 @@ let reportsViewModel = function () {
                 self.reportType(selectedItem.text);
                 self.reportTypeEnum(selectedItem.enum);
                 self.designChanged(true);
-                self.unSavedDesignChange(true);
+                self.unSavedDesignChange(true && !self.unpersistedReport());
                 reportUtil.initNewReport();
                 break;
             }
@@ -7681,7 +7733,7 @@ let reportsViewModel = function () {
             if (self.listOfChartTypes()[i].value === selectedItem) {
                 self.selectedChartType(self.listOfChartTypes()[i].text);
                 self.designChanged(true);
-                self.unSavedDesignChange(true);
+                self.unSavedDesignChange(true && !self.unpersistedReport());
                 break;
             }
         }
@@ -7938,6 +7990,20 @@ let reportsViewModel = function () {
         return answer;
     }, self);
 
+    self.saveButtonToolTip = ko.computed(function () {
+        let toolTipText = "";
+
+        if (self.unpersistedReport()) {
+            toolTipText = "Unsaved Report";
+        } else if (self.unSavedDesignChange()) {
+            toolTipText = "Unsaved Report Change";
+        } else {
+            toolTipText = "Save Report";
+        }
+
+        return toolTipText;
+    }, self);
+
     self.scheduler.init();
 
     self.makeId = dtiReporting.makeId;
@@ -7948,10 +8014,10 @@ function applyBindings(extConfig) {
     if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
+        dtiCommon.knockout.init();
         window.setTimeout(function () {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
-            dtiCommon.knockout.init();
             ko.applyBindings(reportsVM);
         }, 150);
     }
