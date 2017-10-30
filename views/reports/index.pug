@@ -23,14 +23,12 @@ html.direports
                     ul#slide-out.side-nav.fixed
                         li.configurationButton
                             button.btn.tiny.waves-effect.waves-light.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Report settings")
-                                //| Configuration
                                 i.material-icons.center settings
                         li.saveReportButton
                             button.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='css: { unpersistedReport: unpersistedReport(), unSavedChange: unSavedDesignChange() }, enable: $root.okToSave()', style="margin-top: 2px;")
                                 i.mdi.mdi-content-save.center
                         li.viewReportButton
                             button.btn.tiny.waves-effect.waves-light.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="750" data-tooltip="Run report")
-                                //| Run Report
                                 i.material-icons.center play_arrow
                             .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Report Data")
                                 .spinner-layer
@@ -420,18 +418,9 @@ html.direports
                                     h6.strong.panel-title
                                     .selectorNames
                                         .form-inline.black-text(style="display: inline-flex")
-                                            div.input-field.col
-                                                input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
-                                                label.grey-text(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}, css: { active: ($root.name1Filter() !== '') }") Name 1
-                                            div.input-field.col
-                                                input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
-                                                label.grey-text(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}, css: { active: ($root.name2Filter() !== '') }") Name 2
-                                            div.input-field.col
-                                                input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
-                                                label.grey-text(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}, css: { active: ($root.name3Filter() !== '') }") Name 3
-                                            div.input-field.col
-                                                input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
-                                                label.grey-text(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}, css: { active: ($root.name4Filter() !== '') }") Name 4
+                                            .col(style="display: inline-grid")
+                                                span.title Terms
+                                                label.blue-grey-text.label-tight(data-bind="text: terms()")
                                     div.pointTypesFilter
                                         span.title Filtered Point Types
                                         ul

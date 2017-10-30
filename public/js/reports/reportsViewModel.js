@@ -1196,15 +1196,15 @@ let reportsViewModel = function () {
             ACKNOWLEDGE: 4,
             WRITE: 8
         },
-        initialFilterSettings = {
-            name1: "",
-            name2: "",
-            name3: "",
-            name4: "",
+        availablePointTypes = {},
+        numberPointTypes,
+        pointAttribsFilterObj = {
+            path: [],
+            terms: "",
             pointTypes: []
         },
-        columnsFilter = initialFilterSettings,
-        filtersFilter = initialFilterSettings,
+        columnsFilter = pointAttribsFilterObj,
+        filtersFilter = pointAttribsFilterObj,
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         newlyReferencedPoints = [],
@@ -1444,20 +1444,26 @@ let reportsViewModel = function () {
             },
             getPointInspectorParams: (filter) => {
                 return {
-                    name1: filter.name1,
-                    name2: filter.name2,
-                    name3: filter.name3,
-                    name4: filter.name4,
+                    terms: filter.terms,
                     pointTypes: (filter.pointTypes.length === 0 ? self.pointTypes() : filter.pointTypes),
                     disableNewPoint: true
                 };
             },
-            setPointInspectorParams: (filterObject, filter) => {
-                // filterObject.name1 = filter.name1;
-                // filterObject.name2 = filter.name2;
-                // filterObject.name3 = filter.name3;
-                // filterObject.name4 = filter.name4;
-                // filterObject.pointTypes = filter.pointTypes;
+            setPointInspectorParams: (filterObject) => {
+                let arrayOfPointTypes = [],
+                    pointType;
+
+                self.terms(filterObject.terms);
+
+                if (!!filterObject.pointTypes && filterObject.pointTypes.length !== numberPointTypes) {
+                    self.pointTypes(filterObject.pointTypes);
+                } else {
+                    for (pointType in availablePointTypes) {
+                        arrayOfPointTypes.push(pointType);
+                    }
+                    numberPointTypes = arrayOfPointTypes.length;
+                    self.pointTypes(arrayOfPointTypes);
+                }
             },
             collectEnumProperties: () => {
                 filterLogic.getProperties();
@@ -1640,10 +1646,7 @@ let reportsViewModel = function () {
                     finish = () => {
                         if (columnsSet && filtersSet) {
                             if (!!reportConfig.pointFilter) {
-                                self.name1Filter(reportConfig.pointFilter.name1);
-                                self.name2Filter(reportConfig.pointFilter.name2);
-                                self.name3Filter(reportConfig.pointFilter.name3);
-                                self.name4Filter(reportConfig.pointFilter.name4);
+                                self.terms(!!reportConfig.pointFilter.terms ? reportConfig.pointFilter.terms : "");
                                 self.selectedPointTypesFilter(!!reportConfig.pointFilter.selectedPointTypes ? reportConfig.pointFilter.selectedPointTypes : []);
                             }
                             self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
@@ -1693,10 +1696,7 @@ let reportsViewModel = function () {
                 reportPoint["Report Config"].columns = [];
                 reportPoint["Report Config"].filters = [];
                 reportPoint["Report Config"].pointFilter = {
-                    "name1": self.name1Filter(),
-                    "name2": self.name2Filter(),
-                    "name3": self.name3Filter(),
-                    "name4": self.name4Filter(),
+                    "terms": self.terms(),
                     "selectedPointTypes": self.selectedPointTypesFilter()
                 };
                 reportPoint["Report Config"].displayGridCalculations = self.displayGridCalculations();
@@ -1871,6 +1871,7 @@ let reportsViewModel = function () {
                 var updatedList = $.extend(true, [], self.listOfFilters()),
                     tempObject = updatedList[selectObjectIndex],
                     callShowPointSelector = function (availablePointTypes) {
+                        numberPointTypes = availablePointTypes.length;
                         self.pointTypes(availablePointTypes);
                         self.activePointSelectorRequest(false);
                         self.activePointSelectorRow(-1);
@@ -1908,25 +1909,32 @@ let reportsViewModel = function () {
             },
             openForFilterMode: () => {
                 if (!scheduledReport) {
-                    var pointSelectedCallback = function (pointFilter) {
-                        if (!!pointFilter) {
-                            self.name1Filter(pointFilter.name1);
-                            self.name2Filter(pointFilter.name2);
-                            self.name3Filter(pointFilter.name3);
-                            self.name4Filter(pointFilter.name4);
-                            self.selectedPointTypesFilter(pointFilter.pointTypes);
+                    let arrayOfPointTypes = [],
+                        pointType,
+                        pointSelectedCallback = function (filterObject) {
+                            if (!!filterObject) {
+                                self.terms(filterObject.terms);
+                                self.selectedPointTypesFilter(filterObject.pointTypes);
+                            }
+                        };
+
+                    if (self.selectedPointTypesFilter().length === 0) {
+                        for (pointType in availablePointTypes) {
+                            arrayOfPointTypes.push(pointType);
                         }
+                        self.selectedPointTypesFilter(arrayOfPointTypes);
+                    }
+
+                    numberPointTypes = arrayOfPointTypes.length;
+                    let parameters = {
+                        path: [],  // not used yet
+                        terms: self.terms(),
+                        restrictPointTypes: false,
+                        pointTypes: self.selectedPointTypesFilter()
                     };
 
-                    dtiUtility.showPointFilter({
-                        name1: self.name1Filter(),
-                        name2: self.name2Filter(),
-                        name3: self.name3Filter(),
-                        name4: self.name4Filter(),
-                        pointTypes: self.selectedPointTypesFilter(),
-                        disableNewPoint: true
-                    });
-                    dtiUtility.onPointSelect(pointSelectedCallback);
+                    dtiUtility.showPointFilter(parameters);
+                    dtiUtility.onPointFilterSelect(pointSelectedCallback);
                 }
             }
         },
@@ -2999,7 +3007,7 @@ let reportsViewModel = function () {
             saveButtonTooltipChange: () => {
                 $saveReportButton.attr('data-tooltip', self.saveButtonToolTip());
                 $saveReportButton.attr('data-position', 'bottom');
-                $saveReportButton.attr('data-delay', '50');
+                $saveReportButton.attr('data-delay', '200');
                 $saveReportButton.tooltip();
             }
         },
@@ -5055,8 +5063,10 @@ let reportsViewModel = function () {
                 activeError = true;
                 ui.displayError("Column list is blank. ");
             } else if (validatedFilters.collection.length === 0 && self.reportType() === "Property") {
-                activeError = true;
-                ui.displayError("Filters are blank. ");
+                if (self.terms() === "" && !self.selectedPointTypesFilter().length) {
+                    activeError = true;
+                    ui.displayError("Filters are blank. ");
+                }
             }
 
             if (!activeError) {
@@ -5091,10 +5101,7 @@ let reportsViewModel = function () {
                 }
 
                 reportPoint["Report Config"].pointFilter = {
-                    "name1": self.name1Filter(),
-                    "name2": self.name2Filter(),
-                    "name3": self.name3Filter(),
-                    "name4": self.name4Filter(),
+                    "terms": self.terms(),
                     "selectedPointTypes": self.selectedPointTypesFilter()
                 };
                 reportPoint["Report Config"].columns = validatedColumns.collection;
@@ -5198,10 +5205,7 @@ let reportsViewModel = function () {
                 reportPoint["Report Config"].columns = validatedColumns.collection;
                 reportPoint["Report Config"].filters = validatedFilters.collection;
                 reportPoint["Report Config"].pointFilter = {
-                    "name1": self.name1Filter(),
-                    "name2": self.name2Filter(),
-                    "name3": self.name3Filter(),
-                    "name4": self.name4Filter(),
+                    "terms": self.terms(),
                     "selectedPointTypes": self.selectedPointTypesFilter()
                 };
                 reportPoint["Report Config"].selectedPageLength = self.selectedPageLength();
@@ -6041,13 +6045,7 @@ let reportsViewModel = function () {
 
     self.unpersistedReport = ko.observable(false);
 
-    self.name1Filter = ko.observable("");
-
-    self.name2Filter = ko.observable("");
-
-    self.name3Filter = ko.observable("");
-
-    self.name4Filter = ko.observable("");
+    self.terms = ko.observable("");
 
     self.selectedPointTypesFilter = ko.observableArray([]);
 

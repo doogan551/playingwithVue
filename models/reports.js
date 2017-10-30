@@ -524,27 +524,13 @@ const Report = class Report {
             selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
                 return type.key;
             }),
+            terms = dtiCommon.buildSearchTerms(pointFilter.terms),
             uniquePIDs = [],
             properties = reportConfig.columns,
             sort = data.Sort,
             sortObject = {},
-            nameQuery,
             searchCriteria = {
                 $and: []
-            },
-            parseNameField = (paramsField, fieldName) => {
-                let parsedNameField = {};
-                if (paramsField !== null && paramsField !== undefined) {
-                    //logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
-                    if (paramsField === 'ISBLANK') {
-                        parsedNameField[fieldName] = '';
-                    } else {
-                        parsedNameField[fieldName] = {
-                            '$regex': '(?i)^' + paramsField
-                        };
-                    }
-                }
-                return parsedNameField;
             };
 
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
@@ -570,14 +556,12 @@ const Report = class Report {
             });
         }
 
-        for (let i = 1; i < 5; i++) {
-            let key = 'name' + i;
-            if (pointFilter[key]) {
-                nameQuery = parseNameField(pointFilter[key], ('name' + i));
-                if (nameQuery) {
-                    searchCriteria.$and.push(nameQuery);
+        if (!!terms && terms.length) {
+            searchCriteria.$and.push({
+                _path: {
+                    $all: point.buildSearchTerms(terms)
                 }
-            }
+            });
         }
 
         if (filters && filters.length > 0) {

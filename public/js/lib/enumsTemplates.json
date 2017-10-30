@@ -3713,7 +3713,7 @@
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": false,
+                "reportEnable": true,
                 "enumsSet": "Report Types"
             },
             "Repeat Count": {
