@@ -2400,6 +2400,8 @@ let reportsViewModel = function () {
 
                         $saveReportButton.on("click", function () {
                             if (!self.activeSaveRequest()) {
+                                $saveReportButton.tooltip('remove');
+
                                 saveManager.doSave();
                             }
                         });
@@ -3007,8 +3009,7 @@ let reportsViewModel = function () {
             saveButtonTooltipChange: () => {
                 $saveReportButton.attr('data-tooltip', self.saveButtonToolTip());
                 $saveReportButton.attr('data-position', 'bottom');
-                $saveReportButton.attr('data-delay', '200');
-                $saveReportButton.tooltip();
+                $saveReportButton.tooltip({delay: 750});
             }
         },
         filterLogic = {
@@ -5982,6 +5983,7 @@ let reportsViewModel = function () {
                                 duration = 6000;
                                 msg = 'Report Saved';
                             }
+                            $saveReportButton.tooltip({delay: 750});   // reset tooltip
                             dtiReporting.toast(msg, duration);
                             self.activeSaveRequest(false);
                             $activeSidePane = $rightPanel.find(".side-nav-pane.active");
@@ -7201,12 +7203,16 @@ let reportsViewModel = function () {
                 }
             },
             tryToInitializeReport = () => {
-                if (!dtiCommon.init.isComplete) {
-                    window.setTimeout(function () {
-                        tryToInitializeReport();
-                    }, 200);
-                } else {
+                if (scheduledReport) {
                     initializeReport();
+                } else {
+                    if (!dtiCommon.init.isComplete) {
+                        window.setTimeout(function () {
+                            tryToInitializeReport();
+                        }, 200);
+                    } else {
+                        initializeReport();
+                    }
                 }
             };
 
@@ -8012,7 +8018,10 @@ function applyBindings(extConfig) {
     if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
-        dtiCommon.knockout.init();
+        if (scheduled) {
+        } else {
+            dtiCommon.knockout.init();
+        }
         window.setTimeout(function () {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);

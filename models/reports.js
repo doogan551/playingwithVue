@@ -1189,7 +1189,7 @@ const Report = class Report {
             }
         }, (err, point) => {
             if (!!point) {
-                let reportName = point.Name;
+                let reportName = dtiCommon.getPointName(point.path);
                 let users = schedule.users.map((id) => {
                     return ObjectID(id);
                 });
@@ -1235,6 +1235,7 @@ const Report = class Report {
                         });
                     });
                 });
+
                 // chromePageRender.renderPage(uri, path, (err, stdout, stderr) => {
                 //     fs.readFile(path, (err, data) => {
                 //         user.iterateCursor({
