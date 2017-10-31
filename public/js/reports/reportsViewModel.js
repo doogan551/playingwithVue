@@ -4951,6 +4951,9 @@ let reportsViewModel = function () {
                     self.selectConfigReportTabSubTab("reportAttribs");
                     self.reportConfiguration();
                 } else {
+                    if (reportPoint._id !== data.points[0]._id) {
+                        dtiUtility.updateWindow('updateWindowUPI', reportPoint._id);
+                    }
                     reportPoint = data.points[0];
                     let reportConfig = (reportPoint["Report Config"] ? reportPoint["Report Config"] : undefined);
                     reportUtil.initExistingReport(reportConfig);
