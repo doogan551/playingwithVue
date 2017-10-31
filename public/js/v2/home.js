@@ -896,6 +896,20 @@ var dti = {
                         updateTitle: function () {
                             self.bindings.title(message.parameters);
                         },
+                        updateWindowUPI: function () {
+                            let oldUPI = self.bindings.upi();
+
+                            if (message.parameters && message.parameters !== self.bindings.upi()) {
+                                self.bindings.upi(message.parameters);
+                                config.upi = message.parameters;
+
+                                dti.forEachArray(dti.windows.windowList, function checkForTargetWindow(win) {
+                                    if (win.upi === oldUPI) {
+                                        win.upi = self.bindings.upi();
+                                    }
+                                });
+                            }
+                        },
                         resize: function () {
                             var measurements = prepMeasurements(message.parameters, self.bindings);
 
@@ -4420,6 +4434,22 @@ var dti = {
                 modalBindings.activeUniquenessCheck(true);
                 dtiCommon.checkPathForUniqueness(getParentID(reqData.targetNode), reqData.sourceNode.bindings.display(), uniquenessTestResult);
             },
+            resetFields: () => {
+                let selfBindings = dti.navigatorv2.bindings;
+                selfBindings.busy(false);
+                selfBindings.currNodeId('');
+                selfBindings.searchString('');
+                selfBindings.currNodeDisplay('');
+                selfBindings.currNodeType('');
+                selfBindings.currNodeSubType('');
+                selfBindings.currNodePointType('');
+                selfBindings.currNodeLocatedIn(0);
+                selfBindings.currNodeServedBy([]);
+                selfBindings.currNodeDescriptors([]);
+                selfBindings.currNodePath('');
+                selfBindings.currNodeName('');
+                selfBindings.currRefNode('');
+            },
             cutNode: (data) => {
                 let self = dti.navigatorv2,
                     node = data.node;
@@ -5207,6 +5237,8 @@ var dti = {
                     }).always(() => {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            dti.navigatorv2.tree.resetFields();
                         }
                         cb(!!err);
                     });
@@ -5325,7 +5357,7 @@ var dti = {
                         url: handoffMode.url,
                         title: dtiCommon.getPointName(newPoint.path),
                         pointType: pointType,
-                        upi: newPoint._id,
+                        upi: newPoint.id,
                         pointData: newPoint,
                         afterSaveCallback: handleAddNewPointToHierarchy,
                         options: {
