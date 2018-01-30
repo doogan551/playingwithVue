@@ -381,6 +381,7 @@ var dti = {
     },
     once: function (event, handler) {
         dti._onceEvents[event] = dti._onceEvents[event] || [];
+        dti._onceEvents[event].push(handler);
     },
     off: function (event, handler) {
         var handlers = dti._events[event] || [];
@@ -393,23 +394,18 @@ var dti = {
         });
     },
     fire: function (event, obj1, obj2) {
-        var c,
-            handlers = dti._events[event] || [],
-            len = handlers.length;
+        var handlers = dti._events[event] || [],
+            onceHandlers = dti._onceEvents[event] || [];
 
-        // dti.log('firing', event);
+        dti.forEachArray(handlers, function fireEventHandlers (handler) {
+            handler(obj1 || null, obj2 || null);
+        });
 
-        // if (!dti.skipEventLog) {
-        //     dti.eventLog.push({
-        //         event: event,
-        //         obj1: obj1 && obj1.dtiId,
-        //         obj2: obj2 && obj2.dtiId
-        //     });
-        // }
+        dti.forEachArray(onceHandlers, function fireOnceEvent (handler) {
+            handler(obj1 || null, obj2 || null);
+        });
 
-        for (c = 0; c < len; c++) {
-            handlers[c](obj1 || null, obj2 || null);
-        }
+        dti._onceEvents[event] = [];
     },
     thumbs: {},
     thumbnails: {
@@ -503,7 +499,104 @@ var dti = {
                 }
             });
         },
-        slideUp: function ($el, cb) {
+        _scaleOld: ($el, type, cb) => {
+            let animType;
+            let destScale;
+            let startScale;
+            
+            $el.velocity('stop');
+
+            if (type === 'in') {
+                animType = 'easeOut';
+                destScale = 1;
+                startScale = 0;
+                $el.addClass('active');
+            } else {
+                animType = 'easeIn';
+                destScale = 0;
+                startScale = 1;
+                $el.removeClass('active');
+            }
+
+            let opts = [{
+                scale: [destScale, startScale]
+            }, {
+                queue: false,
+                easing: animType,
+                duration: 200,
+                complete: () => {
+                    if (cb) {
+                        cb();
+                    }
+                }
+            }];
+
+            // if (startScale === 0) {
+            //     opts[0].display = 'block';
+            // }
+
+            $el.velocity.apply($el, opts);
+
+            $el[0].style.display = 'block';
+        },
+        _scale: ($el, $container, type, cb) => {
+            let animType;
+            let destHeight;
+            let destWidth;
+            let startHeight;
+            let startWidth;
+            let duration = 150;
+            let smallDuration = 100;
+            
+            $el.velocity('stop');
+
+            if (type === 'in') {
+                animType = 'easeOut';
+                destHeight = $container && parseInt($container.css('height'));
+                destWidth = $container && parseInt($container.css('width'));
+                startWidth = startHeight = 0;
+                $el.addClass('active');
+            } else {
+                animType = 'easeIn';
+                startHeight = $container && parseInt($container.css('height'));
+                startWidth = $container && parseInt($container.css('width'));
+                destWidth = destHeight = 0;
+                $el.removeClass('active');
+            }
+
+            let max = Math.max(Math.max(destWidth, startWidth), Math.max(destHeight, startHeight));
+
+            // dti.log('duration', max < duration ? smallDuration: duration);
+            
+            let opts = [{
+                width: [destWidth, startWidth],
+                height: [destHeight, startHeight]
+            }, {
+                queue: false,
+                easing: animType,
+                duration: max < duration ? smallDuration: duration,
+                complete: () => {
+                    if (cb) {
+                        cb();
+                    }
+                }
+            }];
+
+            // if (startScale === 0) {
+            //     opts[0].display = 'block';
+            // }
+
+            $el.velocity.apply($el, opts);
+
+            $el[0].style.display = 'block';
+        },
+        scaleIn: ($el, $container, cb) => {
+            dti.animations._scale($el, $container, 'in', cb);
+        },
+        scaleOut: ($el, $container, cb) => {
+            dti.animations._scale($el, $container, 'out', cb);
+        },
+        slideUp: function($el, cb) {
             $el[0].style.willChange = 'height, padding-top, padding-bottom';
             $el.css('overflow', 'hidden');
             $el.velocity('stop');
@@ -513,8 +606,8 @@ var dti = {
                 'padding-bottom': 0
             }, {
                 queue: false,
-                duration: 300,
-                easing: 'easeOutSine',
+                duration: 150,
+                easing: 'easeIn',
                 complete: function finishSlideUp() {
                     $el.css('display', 'none');
                     $el[0].style.willChange = '';
@@ -581,68 +674,112 @@ var dti = {
                 menuShown = false,
                 menuID = menuEl || $button.data('menu'),
                 $menu = $('#' + menuID),
+                $container = $menu.find('.menuContainer'),
                 hideTimer,
-                hoverDelay = 500,
-                closeMenu = function (id) {
-                    if (id || id !== menuID) {
-                        if (menuShown) {
+                hoverDelay = 300,
+                closeMenu = function(id) {
+                    if (menuShown) {
+                        dti.animations.scaleOut($menu, $container, function checkMenuClose() {
+                            if (eventHandlers && eventHandlers.onHide) {
+                                eventHandlers.onHide();
+                            }
                             menuShown = false;
-                            dti.animations.fadeOut($menu, function checkMenuClose() {
-                                if (eventHandlers && eventHandlers.onHide) {
-                                    eventHandlers.onHide();
-                                }
-                            });
-                        }
+                        });
                     }
                 },
-                setOpen = function () {
+                handleCloseMenu = (id) => {
+                    if (!id || id !== menuID) {
+                        closeMenu();
+                    }
+                },                
+                setOpen = function() {
                     menuShown = true;
                 },
-                setTimer = function () {
+                setTimer = function(text) {
                     // clearTimeout(hideTimer);
-                    hideTimer = setTimeout(closeMenu, hoverDelay);
+                    hideTimer = setTimeout(() => {
+                        closeMenu();
+                    }, hoverDelay);
                 },
                 destroy = function () {
                     $button.off('mouseenter mouseleave');
                     $('#' + menuID).off('mouseenter mouseleave');
                     clearTimeout(hideTimer);
-                    dti.off('hideMenus', closeMenu);
-                    dti.off('openMenu', closeMenu);
+                    dti.off('hideMenus', handleCloseMenu);
+                    dti.off('openMenu', handleCloseMenu);
+                },
+                repositioners = {
+                    top() {
+                        $menu.position({
+                            of: $button,
+                            my: 'left top',
+                            at: 'left bottom'
+                        });
+                    },
+                    left() {
+                        $menu.position({
+                            of: $button,
+                            my: 'left top',
+                            at: 'left bottom'
+                        });
+                    },
+                    right() {
+                        let width = parseInt($menu.css('width'));
+                        $menu.position({
+                            of: $button,
+                            my: 'right top',
+                            at: 'right bottom'
+                        });
+                    }
                 };
 
+            // $menu.addClass('scales');
+            // $menu[0].style.transform = 'scale(0)';
+
             $button.hover(function showHoverMenu(event) {
-                dti.fire('openMenu', menuID);
                 clearTimeout(hideTimer);
+
                 if (!menuShown) {
-                    menuShown = true;
+                    setOpen();
+                    dti.fire('openMenu', menuID);
+
+                    let reposition = $menu.data('scale-reposition');
+
+                    if (reposition !== false) {
+                        let scaleOrigin = $menu.data('scale-origin');
+                        repositioners[scaleOrigin]();
+                    }
+
                     if (eventHandlers && eventHandlers.onBeforeShow) {
                         eventHandlers.onBeforeShow();
                     }
-                    dti.animations.fadeIn($menu, function checkMenuOpen() {
-                        if (eventHandlers && eventHandlers.onShow) {
-                            eventHandlers.onShow();
-                        }
-                    });
+                    setTimeout(() => {
+                        dti.animations.scaleIn($menu, $container, function checkMenuOpen() {
+                            if (eventHandlers && eventHandlers.onShow) {
+                                eventHandlers.onShow();
+                            }
+                        });
+                    },1);
                 }
             }, function hideHoverMenu(event) {
                 var $relatedTarget = $(event.relatedTarget);
 
                 if ($relatedTarget.attr('id') !== menuID && $relatedTarget.parents('#' + menuID).length === 0) {
-                    setTimer();
+                    setTimer('button');
                 }
             });
 
             $('#' + menuID).hover(function maintainHoverMenu() {
                 clearTimeout(hideTimer);
                 if (!menuShown) {
-                    dti.animations.fadeIn($menu);
-                    menuShown = true;
+                    setOpen();
+                    dti.animations.scaleIn($menu, $container);
                 }
             }, function hideHoverMenu(event) {
                 var $target = $(event.relatedTarget);
 
                 if (($target.parents(button).length === 0) && ($target.attr('id')) !== 'context-menu-layer') {
-                    setTimer();
+                    setTimer('menu');
                 }
             });
 
@@ -655,9 +792,9 @@ var dti = {
                 }
             });
 
-            dti.on('hideMenus', closeMenu);
+            dti.on('hideMenus', handleCloseMenu);
 
-            dti.on('openMenu', closeMenu);
+            dti.on('openMenu', handleCloseMenu);
 
             return {
                 isOpen: function () {
@@ -1066,10 +1203,10 @@ var dti = {
             containment: 'main',
             handles: 'all',
             start: function () {
-                dti.windows.resizeStart();
+                dti.windows.resizeStart.apply(this, arguments);
             },
             stop: function () {
-                dti.windows.resizeStop();
+                dti.windows.resizeStop.apply(this, arguments);
             }
         },
         windowList: [],
@@ -1109,7 +1246,17 @@ var dti = {
         resizeStart: function () {
             dti.windows._setInteractingFlag(true);
         },
-        resizeStop: function () {
+        resizeStop: function (event, obj) {
+            var $el = $(obj.element),
+                win = dti.windows.getWindowById($el.attr('id')),
+                bindings;
+
+            // shouldn't ever be null
+            if (win) {
+                bindings = win.bindings;
+                bindings.width(obj.size.width + 'px');
+                bindings.height(obj.size.height + 'px');
+            }
             dti.windows._setInteractingFlag(false);
         },
         dragStart: function () {
@@ -1157,14 +1304,14 @@ var dti = {
                 dti.windows._offsetY += dti.windows._offset;
             }
         },
-        sendMessage: function (e) {
+        sendMessage: function (e, cb) {
             var targetWindow,
                 winId = e.winId || e._windowId;
 
             targetWindow = dti.windows.getWindowById(winId);
 
             if (targetWindow) {
-                targetWindow.handleMessage(e);
+                targetWindow.handleMessage(e, cb);
             }
         },
         create: function (config) {
@@ -5478,7 +5625,13 @@ var dti = {
             return ret;
         },
         getTemplate: function (id) {
-            var markup = $(id).html();
+            var markup;
+
+            if (id[0] !== '#') {
+                id = '#' + id;
+            }
+
+            markup = $(id).html();
 
             return $(markup);
         },
@@ -6457,7 +6610,7 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
-        darkMode: ko.observable(true),
+        darkMode: ko.observable(false),
         hasAccess: function (obj) {
             var cfg = ko.toJS(obj.value);
 
@@ -6819,7 +6972,17 @@ var dti = {
                         $menu,
                         menuId = dti.makeId(),
                         buttonId = $element.attr('id'),
-                        hoverMenu;
+                        hoverMenu,
+                        initMenu = () => {
+                            $menu.attr('id', menuId)
+                                .position({
+                                    of: $element,
+                                    my: 'left top',
+                                    at: 'left bottom'
+                                });
+
+                            hoverMenu = dti.events.hoverMenu('#' + buttonId, menuId);
+                        };
 
                     if (!buttonId) {
                         buttonId = dti.makeId();
@@ -6832,16 +6995,11 @@ var dti = {
 
                     ko.applyBindingsToDescendants(newContext, $menu[0]);
 
-                    setTimeout(function positionTaskbarMenu() {
-                        $menu.attr('id', menuId)
-                            .position({
-                                of: $element,
-                                my: 'center top-48',
-                                at: 'center bottom'
-                            });
-
-                        hoverMenu = dti.events.hoverMenu('#' + buttonId, menuId);
-                    }, 100);
+                    if (dti.loaded !== true) {
+                        dti.on('loaded', initMenu);
+                    } else {
+                        initMenu();
+                    }
 
                     ko.utils.domNodeDisposal.addDisposeCallback(element, function disposeTaskbarMenu() {
                         hoverMenu.destroy();
@@ -8110,18 +8268,21 @@ var dti = {
                         val.fn();
                     });
 
-                    $('select:not(.select-processed)').material_select();
+                    $('select:not(.select-processed').material_select();
 
                     complete();
                 });
             },
             complete = function () {
                 setTimeout(function doLoginFadeout() {
-                    dti.fire('loaded');
-                    dti.animations.fadeOut($('#loading'), function afterLoadFadeOut() {
-                        dti.log('Load time:', (new Date() - dti.startLoad) / 1000, 'seconds');
+                    dti.animations.slideUp($('#loading'), function afterLoadFadeOut() {
+                        setTimeout(() => {
+                            dti.fire('loaded');
+                            dti.loaded = true;
+                            dti.log('Load time:', (new Date() - dti.startLoad) / 1000, 'seconds');
+                        }, 1);
                         // #223
-                        dti.toast('#223', 100, 'hiddenToast');
+                        // dti.toast('#223', 100, 'hiddenToast');
                     });
                 }, 1500);
             },
@@ -8210,33 +8371,6 @@ $(function initWorkspaceV2() {
     //     ]
     // });
 });
-
-var Widget = function (config) {
-    var emptyFn = function () {
-            return;
-        },
-        utility = {
-
-        },
-        local = {
-            getConfig: emptyFn,
-            setConfig: emptyFn,
-
-            getPosition: emptyFn,
-            setPosition: emptyFn,
-
-            beforeRender: emptyFn,
-            afterRender: emptyFn,
-            render: emptyFn,
-
-            _init: emptyFn,
-            beforeInit: emptyFn,
-            afterInit: emptyFn,
-            init: emptyFn
-        };
-
-    return local;
-};
 
 
 /*
