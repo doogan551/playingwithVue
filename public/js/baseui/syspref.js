@@ -102,6 +102,20 @@ var sysPrefsViewModel = (function() {
 
     self.section = ko.observable('');
 
+    self.okToSave = ko.pureComputed(() => {
+        let i,
+            len = self.sections.length,
+            okToSave = true;
+        for (i = 0; i < len; i++) {
+            if (self.sections[i].hasError()) {
+                okToSave = false;
+                break;
+            }
+        }
+
+        return okToSave;
+    });
+
     $(window).on('hashchange', function() {
         var displayName = location.hash.substring(1);
         self.section(displayName);
@@ -1499,29 +1513,67 @@ var backupViewModel = function() {
 };
 
 // About screen ---------------------------------------------------------------
-var versionsViewModel = function() {
-    var self = this;
-    self.displayName = 'Versions';
+var preferencesViewModel = function () {
+    var self = this,
+        originalData,
+        makeDirty = function () {
+            self.dirty(true);
+        },
+        setData = function(orgData) {
+            self.siteName(orgData);
+            self.dirty(false);
+        };
+    self.displayName = 'Preferences';
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
     self.processVer = ko.observable('');
     self.ijsVer = ko.observable('');
+    self.siteName = ko.observable('');
+    self.siteNameIsValid = ko.observable(true);
+    self.errorMessage = ko.observable('');
 
     self.getData = function() {
         $.ajax({
-            url: '/api/system/versions'
+            url: '/api/system/preferences'
         }).done(function(data) {
             if (!!data.err) {
                 console.log(data);
-                alert('There was an error getting versions.');
+                alert('There was an error getting preferences.');
             } else {
                 self.ijsVer(data.infoscanjs);
                 self.processVer(data.Processes);
+                self.siteName(data.siteName);
+                originalData = self.siteName();
+                self.siteName.subscribe(makeDirty);
             }
         });
     };
     self.init = function() {
         self.getData();
+    };
+    self.save = function() {
+        self.siteName(dtiCommon.cleanLabelField(self.siteName()));
+        if (self.siteNameIsValid()) {
+            $.ajax({
+                url: '/api/system/setpreferences',
+                data: {
+                    siteName: self.siteName()
+                },
+                dataType: 'json',
+                type: 'post'
+            }).done(function(response) {
+                self.dirty(false);
+            });
+
+            self.dirty(false);
+        }
+    };
+
+    self.cancel = function() {
+        setData(originalData);
+        self.dirty(false);
+        self.hasError(false);
+        self.errorMessage("");
     };
 };
 
@@ -3528,7 +3580,9 @@ $(function() {
     function postInit() {
         var year,
             calendarVM,
-            hash;
+            hash,
+            keypressTimer = 300,
+            keypressTimerID;
 
         // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
         // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
@@ -3545,7 +3599,7 @@ $(function() {
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
-            sysPrefsViewModel.registerSection(versionsViewModel, 'init');
+            sysPrefsViewModel.registerSection(preferencesViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');
@@ -3576,6 +3630,24 @@ $(function() {
                     container.css('display', 'none');
                 }
             });
+
+            $("#preferences").find(".siteName")
+                .on("keyup", function (event) {
+                    clearTimeout(keypressTimerID);
+                    keypressTimerID = setTimeout(function () {
+                        let $element = $(event.target),
+                            elementValue = $element.val().trim(),
+                            labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+
+                        if (!labelTest.valid) {
+                            preferencesViewModel.hasError(true);
+                            preferencesViewModel.errorMessage(labelTest.errorMessage);
+                        } else {
+                            preferencesViewModel.hasError(false);
+                            preferencesViewModel.errorMessage("");
+                        }
+                    }, keypressTimer);
+                });
 
             ko.applyBindings(sysPrefsViewModel);
             sysPrefsViewModel.runInitFunctions();

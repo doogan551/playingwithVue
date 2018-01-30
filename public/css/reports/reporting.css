@@ -2,20 +2,23 @@
     z-index: 5;
     padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 86px;
+    width: 60px;
     height: 100%;
     color: #ffffff;
     border-right: 1px solid #ccc;
 }
-.leftBar a {
-    /*padding-top: 0px;*/
+.leftBar button {
+    margin-top: 2px;
+    margin-left: 7px;
+    padding-left: 14px;
+    width: 48px;
 }
 #slide-out.side-nav.fixed {
-    width: 86px;
+    width: 60px;
 }
 .rightPanel {
     z-index: 0;
-    padding-left: 75px;
+    padding-left: 50px;
     right: 0px;
     top: 0px;
     bottom: 0px;
@@ -83,23 +86,6 @@ input.input.form-control.durationDateRangeTime {
 .leftBar .tabs li:hover {
     cursor: pointer;
     text-decoration: underline;
-}
-.material-icons {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    text-rendering: optimizeLegibility;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    font-feature-settings: 'liga';
-    -webkit-font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
 }
 .viewReportNav {
     width: 400px !important;
@@ -556,8 +542,7 @@ a.tab {
     padding-top: 12px;
 }
 .adjustPointTypesFilterButton {
-    margin-top: 30px;
-    margin-bottom: 50px;
+    margin-top: 12px;
     color: #fff !important;
 }
 .adjustPointTypesFilterButton:hover {
@@ -568,7 +553,6 @@ a.tab {
     flex-wrap: wrap;
     width: 80vw !important;
     right: 30px;
-    padding-top: 10px;
 }
 .pointTypesFilter ul li {
     clear: none;
@@ -625,6 +609,12 @@ html, body {
     padding-top: 200px;
     position: relative;
     font-size: 18px;
+}
+.unpersistedReport {
+    border: #821616 2px solid;
+}
+.unSavedChange {
+    border: #f1a445 2px solid;
 }
 i.iconLink {
     vertical-align: middle;
@@ -1552,6 +1542,13 @@ button {
     cursor: pointer;
     padding-left: 10px;
 }
+.toast.errorToast {
+    background-color: #f44336;
+}
+.toast.warningToast {
+    background-color: #ff5722;
+}
+
 .preloader-wrapper .spinner-layer {
     /*border-color: $blue-grey-lighten-1;*/
     border-color: #78909c;

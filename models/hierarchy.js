@@ -8,43 +8,30 @@ const Config = require('../public/js/lib/config.js');
 const LOCATION = 'Location';
 const MECHANICAL = 'Mechanical';
 
-const models = {
-    common: {
-        _id: 0,
-        id: '',
-        parent: 0,
-        display: '',
-        tags: [],
-        meta: {}
-    },
-    location: {
-        nodeType: 'Location',
-        locationType: ''
-    },
-    equipment: {
-        nodeType: 'Equipment',
-        libraryId: 0
-    },
-    category: {
-        nodeType: 'Category'
-    },
-    point: {
-        nodeType: 'Point',
-        libraryId: 0,
-        pointId: 0,
-        isReference: false
-    },
-    application: {
-        nodeType: 'Application',
-        applicationType: '',
-        pointId: 0
-    }
-};
-
 const Hierarchy = class Hierarchy extends Common {
 
     constructor() {
         super('points');
+    }
+
+    checkUniqueDisplayUnderParent(data, cb) {
+        let parentNode = this.getNumber(data.parentNode);
+        let display = data.display;
+        if (!display) {
+            return cb(null, false);
+        }
+        this.getOne({
+            query: {
+                parentNode,
+                display,
+                _pStatus: Config.Enums['Point Statuses'].Active.enum
+            }
+        }, (err, result) => {
+            let exists = (!!result) ? true : false;
+            return cb(err, {
+                exists
+            });
+        });
     }
 
     getNode(data, cb) {
@@ -72,11 +59,17 @@ const Hierarchy = class Hierarchy extends Common {
             fields: {
                 display: 1,
                 parentNode: 1,
+                _parentUpi: 1,
                 nodeType: 1,
                 nodeSubType: 1,
                 locationType: 1,
+                refNode: 1,
                 path: 1,
-                Name: 1
+                Name: 1,
+                'Point Type.Value': 1,
+                locatedIn: 1,
+                servedBy: 1,
+                descriptors: 1
             }
         }, cb);
     }
@@ -121,6 +114,7 @@ const Hierarchy = class Hierarchy extends Common {
 
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
+            this.toLowerCasePath(node);
             this.recreateTags(node);
             try {
                 let result = Config.Templates.checkAgainstTemplate(node);
@@ -319,39 +313,38 @@ const Hierarchy = class Hierarchy extends Common {
         let pipeline = [];
         pipeline.push({
             '$match': {
-                'parent': id
+                '_id': id
             }
         });
         pipeline.push({
             '$graphLookup': {
-                'from': 'hierarchy',
+                'from': 'points',
                 'startWith': '$_id',
                 'connectFromField': '_id',
-                'connectToField': 'parent',
+                'connectToField': 'parentNode',
                 'as': 'children'
             }
         });
         pipeline.push({
             '$project': {
-                'display': 1,
-                'parent': 1,
-                'nodeType': 1,
-                'locationType': 1,
-                'children': 1
+                'children._id': 1,
+                'children.path': 1
+            }
+        });
+        pipeline.push({
+            '$unwind': {
+                'path': '$children'
+            }
+        });
+        pipeline.push({
+            '$replaceRoot': {
+                'newRoot': '$children'
             }
         });
 
         this.aggregate({
             pipeline: pipeline
         }, (err, descendants) => {
-            let newDescendants = [];
-            descendants.forEach((descendant) => {
-                newDescendants = newDescendants.concat([...descendant.children]);
-                delete descendant.children;
-                newDescendants.push(descendant);
-            });
-
-            descendants = this.orderDescendants(newDescendants, id);
             cb(err, descendants);
         });
     }
@@ -482,43 +475,25 @@ const Hierarchy = class Hierarchy extends Common {
     deleteNode(data, cb) {
         let id = this.getNumber(data.id);
         let nodeType = this.getDefault(data.nodeType, 'Location');
-        let points = [];
-        let hierarchies = [];
+        let nodes = [];
 
-        let deleteHierachyNodes = (ids, callback) => {
-            if (!ids.length) {
-                return callback();
-            }
-            this.remove({
+        const setNodesToDeleted = (ids, callback) => {
+            this.updateAll({
                 query: {
                     _id: {
                         $in: ids
+                    }
+                },
+                updateObj: {
+                    $set: {
+                        _pStatus: Config.Enums['Point Statuses'].Deleted.enum
                     }
                 }
             }, callback);
         };
 
-        let removePointNodes = (ids, callback) => {
-            if (!ids.length) {
-                return callback();
-            }
-            // could potentially call point.deletePoint() but needs to be run through
-            // to make sure it doesn't do something we don't want, like delete children
-            this.remove({
-                query: {
-                    _id: {
-                        $in: ids
-                    }
-                }
-            }, callback);
-        };
-
-        let sortId = (type, id) => {
-            if (['Point', 'Application'].includes(type)) {
-                points.push(id);
-            } else {
-                hierarchies.push(id);
-            }
+        let sortId = (id) => {
+            nodes.push(id);
         };
 
         this.getDescendantIds({
@@ -527,16 +502,14 @@ const Hierarchy = class Hierarchy extends Common {
             let allIds = descendants[0];
             if (!!allIds && !!allIds.nodes.length) {
                 allIds.nodes.forEach((descendant) => {
-                    sortId(descendant.nodeType, descendant.id);
+                    sortId(descendant.id);
                 });
             }
 
-            sortId(nodeType, id);
+            sortId(id);
 
-            deleteHierachyNodes(hierarchies, (err, result) => {
-                removePointNodes(points, (err, result) => {
-                    return cb();
-                });
+            setNodesToDeleted(nodes, (err, result) => {
+                return cb(err);
             });
         });
     }
@@ -544,7 +517,51 @@ const Hierarchy = class Hierarchy extends Common {
     moveNode(data, cb) {
         let id = this.getNumber(data.id);
         let parentNode = this.getNumber(data.parentNode);
-        let oldDisplay;
+        let editedLabel = data.display;
+
+        this.checkUniqueDisplayUnderParent({
+            id,
+            parentNode
+        }, (err, exists) => {
+            if (!!err) {
+                return cb(err);
+            } else if (!!exists.exists) {
+                return cb('Label already exists under node');
+            }
+            this.getNode({
+                id: id
+            }, (err, node) => {
+                this.getNode({
+                    id: parentNode
+                }, (err, parent) => {
+                    node.parentNode = parentNode;
+
+                    if (node.display !== editedLabel) { // UI allows for an edit during a move
+                        node.display = editedLabel;
+                    }
+                    if (parentNode === 0) {
+                        node.path = [node.display];
+                    } else {
+                        node.path = [...parent.path, node.display];
+                    }
+                    this.toLowerCasePath(node);
+                    this.update({
+                        query: {
+                            _id: id
+                        },
+                        updateObj: node
+                    }, (err) => {
+                        this.updateChildrenPaths(id, node.path, cb);
+                    });
+                });
+            });
+        });
+    }
+
+    copyNode(data, cb) {
+        let newNode,
+            id = this.getNumber(data.id),
+            parentNode = this.getNumber(data.parentNodeId);
 
         this.getNode({
             id: id
@@ -552,44 +569,88 @@ const Hierarchy = class Hierarchy extends Common {
             this.getNode({
                 id: parentNode
             }, (err, parent) => {
-                oldDisplay = node.path[node.path - 2];
-                node.parentNode = parentNode;
+                newNode = node;
+                newNode.parentNode = parentNode;
+                newNode.id = 'newNode';
+                // newNode.targetUpi = id;
+                newNode.display += this.getCopyPostFix();
 
                 if (parentNode === 0) {
-                    node.path = [node.display];
+                    newNode.path = [newNode.display];
                 } else {
-                    node.path = [...parent.path, node.display];
+                    newNode.path = [...parent.path, newNode.display];
                 }
 
-                this.update({
-                    query: {
-                        _id: id
-                    },
-                    updateObj: node
-                }, (err) => {
-                    this.updateChildrenPath(oldDisplay, node.path, cb);
-                });
+                this.addAll({
+                    nodes: [newNode]
+                }, cb);
             });
         });
     }
 
-    updateChildrenPath(oldDisplay, newPath, cb) {
+    updateChildrenPaths(parentNode, path, cb) {
         this.iterateCursor({
             query: {
-                'path': oldDisplay
+                parentNode
+            },
+            fields: {
+                path: 1,
+                parentNode: 1,
+                display: 1
             }
         }, (err, child, nextChild) => {
-            child.path = [...newPath, child.display];
-
-            this.update({
-                query: {
-                    _id: child._id
-                },
-                updateObj: child
-            }, (err, result) => {
-                nextChild(err);
+            this.getNode({
+                id: child.parentNode
+            }, (err, parent) => {
+                if (!parent) {
+                    child.path = [child.display];
+                } else {
+                    child.path = [...parent.path, child.display];
+                }
+                this.toLowerCasePath(child);
+                this.update({
+                    query: {
+                        _id: child._id
+                    },
+                    updateObj: {
+                        $set: {
+                            path: child.path,
+                            _path: child._path
+                        }
+                    }
+                }, (err, result) => {
+                    this.updateChildrenPaths(child._id, path, nextChild);
+                });
             });
-        }, cb);
+        }, (err, count) => {
+            cb(err);
+        });
+    }
+
+    updateChildrenPath(parentNode, path, cb) {
+        this.getDescendants({
+            id: parentNode
+        }, (err, descendants) => {
+            async.eachSeries(descendants, (descendant, nextDesc) => {
+                for (var p = 0; p < path.length; p++) {
+                    descendant.path[p] = path[p];
+                }
+                this.toLowerCasePath(descendant);
+                this.update({
+                    query: {
+                        _id: descendant._id
+                    },
+                    updateObj: {
+                        $set: {
+                            path: descendant.path,
+                            _path: descendant._path
+                        }
+                    }
+                }, nextDesc);
+            }, (err) => {
+                cb(err);
+            });
+        });
     }
 
     updateParent(parentId, query, cb) {
@@ -624,6 +685,7 @@ const Hierarchy = class Hierarchy extends Common {
                 oldDisplay = node.display;
                 node.display = data.display;
                 node.path[node.path.length - 1] = data.display;
+                this.toLowerCasePath(node);
             }
 
             if (data.hasOwnProperty('nodeSubType')) {
@@ -637,16 +699,26 @@ const Hierarchy = class Hierarchy extends Common {
                 }
             }
             this.recreateTags(node);
-            this.update({
-                query: {
-                    _id: id
-                },
-                updateObj: node
-            }, (err) => {
-                if (err) {
-                    return cb(err);
+            this.checkUniqueDisplayUnderParent({
+                parentNode: node.parentNode,
+                display: data.display
+            }, (err, exists) => {
+                if (!!err || !!exists.exists) {
+                    return cb({
+                        err: 'Name already exists'
+                    });
                 }
-                this.updateChildrenPath(oldDisplay, node.path, cb);
+                this.update({
+                    query: {
+                        _id: id
+                    },
+                    updateObj: node
+                }, (err) => {
+                    if (err) {
+                        return cb(err);
+                    }
+                    this.updateChildrenPaths(id, node.path, cb);
+                });
             });
         });
     }
@@ -714,7 +786,7 @@ const Hierarchy = class Hierarchy extends Common {
     checkAllNames(nodes, cb) {
         // if parentId is fake, ignore it
         // change node to normal structure before name check
-        return cb([]);
+        cb([]);
         // let problems = [];
         // async.eachSeries(nodes, (node, callback) => {
         //     if (this.isNumber(node.parentNode)) {
@@ -735,13 +807,197 @@ const Hierarchy = class Hierarchy extends Common {
         // });
     }
 
+    createHierarchy(cb) {
+        const pointModel = new Point();
+        const firstNode = 'IS2k';
+        const nameSegments = ['name1', 'name2', 'name3', 'name4'];
+
+        const getNextSegment = (segment) => {
+            return nameSegments[nameSegments.indexOf(segment) + 1];
+        };
+        const createFolder = (parent, display, callback) => {
+            let data = Config.Templates.getTemplate('Location');
+            this.getNewId('Location', (err, upi) => {
+                data._id = upi;
+                data.display = display;
+                data.parentNode = parent._id;
+                data.nodeSubType = 'Area';
+                this.checkUniqueDisplayUnderParent({
+                    display,
+                    parentNode: parent._id
+                }, (err, exists) => {
+                    if (!!exists.exists) {
+                        this.getOne({
+                            query: {
+                                parentNode: parent._id,
+                                display
+                            }
+                        }, callback);
+                    } else {
+                        this.add(data, callback);
+                    }
+                });
+            });
+        };
+        const createPoint = (parent, point, display, callback) => {
+            let data = {
+                upi: point._id,
+                parentNode: parent._id,
+                display: display,
+                nodeType: Config.Utility.getNodeType(point['Point Type'].Value),
+                nodeSubType: ''
+            };
+            pointModel.addPointToHierarchy(data, (err, result) => {
+                callback(err);
+            });
+        };
+        const shelvePoints = (query, callback) => {
+            this.updateAll({
+                query,
+                updateObj: {
+                    $set: {
+                        _pStatus: 4
+                    }
+                }
+            }, callback);
+        };
+        const shelveScheduleEntries = (callback) => {
+            shelvePoints({
+                'Point Type.Value': 'Schedule Entry'
+            }, callback);
+        };
+        const addScheduleEntries = (callback) => {
+            this.iterateCursor({
+                query: {
+                    'Point Type.Value': 'Schedule Entry',
+                    _pStatus: 4
+                }
+            }, (err, entry, nextEntry) => {
+                let updateObj = {
+                    $set: {
+                        display: entry.Name,
+                        _pStatus: Config.Enums['Point Statuses'].Active.enum
+                    }
+                };
+
+                if (entry._parentUpi) {
+                    updateObj.$set.parentNode = entry._parentUpi;
+                } else {
+                    updateObj.$set.parentNode = entry['Point Refs'][0].Value;
+                }
+                this.update({
+                    query: {
+                        _id: entry._id
+                    },
+                    updateObj
+                }, (err, result) => {
+                    nextEntry(err);
+                });
+            }, callback);
+        };
+        const createRoot = (callback) => {
+            createFolder({
+                _id: 0
+            }, firstNode, callback);
+        };
+        const addFolders = (segment, parent, names, callback) => {
+            // for each folder, add points then add folders for next segment (recursively)
+            const nextSegment = getNextSegment(segment);
+            if (!nextSegment) {
+                return callback();
+            }
+            let field = segment;
+            let query = _.cloneDeep(names);
+            query['Point Type'] = {
+                $exists: 1
+            };
+            query[segment] = {
+                $exists: 1
+            };
+            query[nextSegment] = {
+                $ne: ''
+            };
+            // console.log('f', field, JSON.stringify(query));
+            this.distinct({
+                field,
+                query
+            }, (err, folderNames) => {
+                async.eachSeries(folderNames, (folder, nextFolder) => {
+                    // console.log('folder:', folder);
+                    createFolder(parent, folder, (err, nextParent) => {
+                        names[segment] = folder;
+                        doSegment(nextSegment, nextParent, names, nextFolder);
+                    });
+                }, (err) => {
+                    if (!!err) {
+                        console.log(err);
+                    }
+                    callback(err);
+                });
+            });
+        };
+        const addPoints = (segment, parent, names, callback) => {
+            const nextSegment = getNextSegment(segment);
+            let query = _.cloneDeep(names);
+            query['Point Type'] = {
+                $exists: 1
+            };
+            query[segment] = {
+                $ne: ''
+            };
+            if (!!nextSegment) {
+                query[nextSegment] = '';
+            }
+            // console.log('p', JSON.stringify(query));
+
+            this.iterateCursor({
+                query,
+                fields: {
+                    name1: 1,
+                    name2: 1,
+                    name3: 1,
+                    name4: 1,
+                    Name: 1,
+                    'Point Type': 1
+                }
+            }, (err, point, nextPoint) => {
+                // console.log('point:', point.Name);
+                createPoint(parent, point, point[segment], (err) => {
+                    nextPoint(err);
+                });
+            }, (err, count) => {
+                // console.log(err, count);
+                callback(err);
+            });
+        };
+        const doSegment = (segment, parent, names, callback) => {
+            parent = _.cloneDeep(parent);
+            names = _.cloneDeep(names);
+            addPoints(segment, parent, names, (err) => {
+                addFolders(segment, parent, names, callback);
+            });
+        };
+        const start = (callback) => {
+            shelveScheduleEntries((err) => {
+                createRoot((err, root) => {
+                    doSegment(nameSegments[0], root, {}, (err) => {
+                        addScheduleEntries(callback);
+                    });
+                });
+            });
+        };
+
+        start(cb);
+    }
+
+
     import(masterCb) {
-        let locCount;
-        let locPrefix;
+        let locCount; // strip
+        let locPrefix; // strip
         let importNodeName = 'IS2k';
 
-        let doLog = true;
-        let self = this;
+        let doLog = true; // strip
+        let self = this; // strip
 
         let SEGMENT1 = 1;
         let SEGMENT2 = 2;
@@ -808,7 +1064,7 @@ const Hierarchy = class Hierarchy extends Common {
                         _pStatus: 0,
                         parentNode: parentNode,
                         nodeType: getNodeType(pointType),
-                        nodeSubType: pointType,
+                        nodeSubType: '',
                         path: path,
                         display: path[path.length - 1]
                     }
@@ -879,6 +1135,7 @@ const Hierarchy = class Hierarchy extends Common {
         log('Running hierarchy import');
 
         async.waterfall([
+            // strip
             function getLocationCounter(cb) {
                 let criteria = {
                     collection: 'counters',
@@ -910,13 +1167,13 @@ const Hierarchy = class Hierarchy extends Common {
                         }
                     },
                     options: {
-                        multi: true
+                        multi: true // strip
                     }
                 };
 
                 log('Working on shelveScheduleEntries');
 
-                self.update(criteria, (err, results) => {
+                self.update(criteria, (err, results) => { // updateAll
                     cb(err);
                 });
             },
@@ -932,7 +1189,7 @@ const Hierarchy = class Hierarchy extends Common {
                     cb(err);
                 });
             },
-            function segment1_Points(cb) {
+            function segment1Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -944,7 +1201,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment1_Folders(cb) {
+            function segment1Folders(cb) {
                 let criteria = {
                     field: 'name1',
                     query: {
@@ -968,7 +1225,7 @@ const Hierarchy = class Hierarchy extends Common {
                     });
                 });
             },
-            function segment2_Points(cb) {
+            function segment2Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -980,7 +1237,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment2_Folders(cb) {
+            function segment2Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -994,7 +1251,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT2, cb);
             },
-            function segment3_Points(cb) {
+            function segment3Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1006,7 +1263,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 importPoints(criteria, cb);
             },
-            function segment3_Folders(cb) {
+            function segment3Folders(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3,
@@ -1020,7 +1277,7 @@ const Hierarchy = class Hierarchy extends Common {
 
                 createFolders(criteria, SEGMENT3, cb);
             },
-            function segment4_Points(cb) {
+            function segment4Points(cb) {
                 let criteria = {
                     query: {
                         _pStatus: 3

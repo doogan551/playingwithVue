@@ -115,7 +115,7 @@ let Utils = {
         return property;
     },
     getHumanProperty: function (property) {
-        if (Enums['Internal Properties'].hasOwnProperty(property)) {
+        if (Enums['Internal Properties'] && Enums['Internal Properties'].hasOwnProperty(property)) {
             for (let prop in Enums.Properties) {
                 if (Enums.Properties[prop].hasOwnProperty('intLink') && Enums.Properties[prop].intLink === property) {
                     return prop;
@@ -126,7 +126,7 @@ let Utils = {
         }
     },
     getHumanPropertyObj: function (property, value) {
-        if (Enums['Internal Properties'].hasOwnProperty(property)) {
+        if (Enums['Internal Properties'] && Enums['Internal Properties'].hasOwnProperty(property)) {
             for (let prop in Enums.Properties) {
                 if (Enums.Properties[prop].hasOwnProperty('intLink') && Enums.Properties[prop].intLink === property) {
                     let obj = {};

@@ -1047,6 +1047,11 @@ var Config = (function (obj) {
                 return pointId - (8 << 22);
             }
             return Math.pow(2, 22) - 1 & pointId;
+        },
+
+        getNodeType: function (pointType) {
+            let points = ['Analog Input', 'Analog Output', 'Analog Value', 'Binary Input', 'Binary Output', 'Binary Value', 'Accumulator', 'MultiState Value'];
+            return points.includes(pointType) ? 'Point' : 'Application';
         }
     };
 
@@ -4987,8 +4992,8 @@ var Config = (function (obj) {
             let template;
             if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {
                 template = obj.Templates.getTemplate(node.nodeType);
-            } else if (node.hasOwnProperty['Point Type']) {
-                template = obj.Templates.getTemplate(node['Point Type']);
+            } else if (node.hasOwnProperty('Point Type')) {
+                template = obj.Templates.getTemplate(node['Point Type'].Value);
             } else {
                 throw new Error('Wrong nodeType or missing Point Type');
             }

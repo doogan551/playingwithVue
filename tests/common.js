@@ -278,7 +278,7 @@ describe('Common', function () {
 
         path = ['A'];
         result = common.compareTermsToPath(terms, path);
-        expect(result).to.be.equal(true);
+        expect(result).to.be.equal(false);
 
         path = ['ABC', 'def'];
         terms = ['ABCDEF'];
@@ -291,28 +291,96 @@ describe('Common', function () {
         expect(result).to.be.equal(false);
     });
 
-    it('should assing parentNode and _parentUpi', () => {
-        let nodes = [{
-            _id: 1,
-            id: 'a',
-            parentNode: 'b',
-            _parentUpi: 'b'
-        }, {
-            _id: 2,
-            id: 'b',
-            parentNode: 'a',
-            _parentUpi: 'a'
-        }];
+    it('should build search terms', () => {
+        let terms;
+        let qualifiers;
 
-        common.assignParentRefs(nodes);
-        expect(nodes[0]._id).to.be.equal(1);
-        expect(nodes[0].id).to.be.equal('a');
-        expect(nodes[1]._id).to.be.equal(2);
-        expect(nodes[1].id).to.be.equal('b');
+        // [ab] will equate to starts with "ab" and can have anything after
+        terms = ['ab'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.be.equal(null);
 
-        expect(nodes[0].parentNode).to.be.equal(2);
-        expect(nodes[0]._parentUpi).to.be.equal(2);
-        expect(nodes[1].parentNode).to.be.equal(1);
-        expect(nodes[1]._parentUpi).to.be.equal(1);
+        // [*ab] will equate to starts with anything and will end with "ab"
+        terms = ['*ab'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.be.equal(null);
+
+        // [ab*yz] will equate to starts with "ab" and end with "yz" and have any characters in-between
+        terms = ['ab*yz'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('abyz'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('ab1yz'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abmnyz'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.be.equal(null);
+        expect('aby'.match(qualifiers[0])).to.be.equal(null);
+        expect('abz'.match(qualifiers[0])).to.be.equal(null);
+        expect('byz'.match(qualifiers[0])).to.be.equal(null);
+
+        // [ab*] will equate to starts with "ab" and can have anything after
+        terms = ['ab*'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.be.equal(null);
+
+        // ["ab"] will equate to exact match of "ab"
+        terms = ['"ab"'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.be.equal(null);
+
+        // ["ab] will equate to starts with '"ab'
+        terms = ['"ab'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('"ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('"abc'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('"cab'.match(qualifiers[0])).to.be.equal(null);
+        expect('ab'.match(qualifiers[0])).to.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.be.equal(null);
+
+        // [*ab*] will equate to ab anywhere in the string (contains "ab")
+        terms = ['*ab*'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('cab'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('abc'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('1abc'.match(qualifiers[0])).to.not.be.equal(null);
+        expect('ba'.match(qualifiers[0])).to.be.equal(null);
+
+        // Check case insensitivity
+        terms = ['"AB"'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        terms = ['AB*'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+        terms = ['AB'];
+        qualifiers = common.buildSearchTerms(terms);
+        expect(qualifiers.length).to.be.equal(1);
+        expect('ab'.match(qualifiers[0])).to.not.be.equal(null);
+    });
+
+    it('should create a lower case version of path on _path', () => {
+        let node = {path: ['ASDe', 'bsdf']};
+
+        common.toLowerCasePath(node);
+        expect(node.hasOwnProperty('_path')).to.be.equal(true);
+        expect(node._path[0]).to.be.equal(node.path[0].toLowerCase());
+        expect(node._path[1]).to.be.equal(node.path[1].toLowerCase());
     });
 });

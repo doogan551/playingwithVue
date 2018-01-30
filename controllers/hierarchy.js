@@ -113,6 +113,21 @@ router.post('/delete', function (req, res) {
     });
 });
 
+router.post('/copy', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.copyNode(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {newNode: results});
+    });
+});
+
 router.post('/move', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -144,6 +159,21 @@ router.post('/edit', function (req, res) {
         return utils.sendResponse(res, {
             message: 'success'
         });
+    });
+});
+
+router.post('/checkUniqueDisplayUnderParent', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Hierarchy.checkUniqueDisplayUnderParent(data, function (err, exists) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, exists);
     });
 });
 

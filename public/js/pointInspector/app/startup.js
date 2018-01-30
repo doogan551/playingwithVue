@@ -243,6 +243,10 @@ define([
                     window.attach.saveCallback = cfg.callback;
                 }
 
+                if (cfg.afterSaveCallback) {
+                    window.attach.afterSaveCallback = cfg.afterSaveCallback;
+                }
+
                 if (!!cfg.options && cfg.options.isGplEdit) {
                     pointInspector.isGplEdit = true;
                 }
@@ -1113,6 +1117,9 @@ define([
                 emitString = 'updatePoint',
                 close,
                 finishSave = (updatedPoint) => {
+                    if (self.originalData._id !== updatedPoint._id) {
+                        dtiUtility.updateWindow('updateWindowUPI', updatedPoint._id);
+                    }
                     // Update our originalData with rxData received from the server
                     self.originalData = ko.viewmodel.toModel(updatedPoint);
                     // Update our viewmodel with the new originalData
@@ -1125,10 +1132,14 @@ define([
                         delete pointInspector.point.data.id;
                     }
 
-                    dtiUtility.updateUPI(updatedPoint._id);
+                    dtiUtility.updateUPI(updatedPoint._id);  // ????
 
                     if (data.exitEditModeOnSave) {
                         pointInspector.isInEditMode(false);
+                    }
+
+                    if (!!window.attach && typeof window.attach.afterSaveCallback === 'function') {
+                        window.attach.afterSaveCallback.call(undefined, updatedPoint);
                     }
                 };
 

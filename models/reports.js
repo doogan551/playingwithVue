@@ -4,7 +4,8 @@ const async = require('async');
 const moment = require('moment');
 const ObjectID = require('mongodb').ObjectID;
 const config = require('config');
-const RETURNLIMIT = 3000;
+const dtiCommon = require('../public/js/v2/dtiCommon');
+const PROPERTYREPORTRETURNLIMIT = 200000;
 
 const Report = class Report {
     saveSVG(data, cb) {
@@ -50,10 +51,6 @@ const Report = class Report {
             updateObj: {
                 $set: {
                     _pStatus: (!!data._pStatus ? data._pStatus : 0),
-                    name1: data.name1,
-                    name2: data.name2,
-                    name3: data.name3,
-                    name4: data.name4,
                     'Point Refs': data['Point Refs'],
                     'Report Config': data['Report Config']
                 }
@@ -81,6 +78,80 @@ const Report = class Report {
             }
             return cb(err);
         });
+    }
+    getReportColumnInfo(report, scheduleID, includeChart, cb) {
+        const schedule = new Schedule();
+        let pointRefs = [],
+            reportResults = {
+                point: report
+            },
+            getValueTypes = () => {
+                let i,
+                    columns = reportResults.point['Report Config'].columns,
+                    column,
+                    filters = reportResults.point['Report Config'].filters,
+                    filter;
+                if (columns) {
+                    columns[0].colName = columns[0].colDisplayName;   //  the first column holds  Date || pointName
+                    for (i = 1; i < columns.length; i++) {
+                        column = columns[i];
+                        column.valueType = Config.Enums.Properties[column.colName].valueType;
+                    }
+                }
+
+                if (filters) {
+                    for (i = 0; i < filters.length; i++) {
+                        filter = filters[i];
+                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
+                    }
+                }
+
+                cb(null, reportResults);
+            },
+            processColumns = () => {
+                if (reportResults.point['Report Config'].columns) {
+                    pointRefs = reportResults.point['Point Refs'];
+
+                    reportResults.reportType = reportResults.point['Report Type'].Value;
+                    if (reportResults.reportType === 'Property') {
+                        getValueTypes();
+                    } else {
+                        cb(null, reportResults);
+                    }
+                } else {
+                    cb("no columns configured");
+                }
+            },
+            getScheduleConfig = () => {
+                let scheduleCriteria = {
+                        query: {
+                            _id: new ObjectID(scheduleID)
+                        }
+                    },
+                    scheduled = (!!scheduleID);
+
+                if (scheduled) {
+                    schedule.getOne(scheduleCriteria, (err, scheduleData) => {
+                        if (err) {
+                            cb(err);
+                        } else if (scheduleData === null) {
+                            cb();
+                        } else {
+                            reportResults.scheduledConfig = {};
+                            reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                            reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                            reportResults.scheduledConfig.scheduledIncludeChart = includeChart;
+
+                            reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
+                            processColumns(reportResults);
+                        }
+                    });
+                } else {
+                    processColumns(reportResults);
+                }
+            };
+
+        getScheduleConfig();
     }
     historyDataSearch(data, cb) {
         const history = new History();
@@ -314,7 +385,8 @@ const Report = class Report {
                     }
                 }
             } else {
-                tempObj.Value = historyPoint.Value.toString();
+                // tempObj.Value = historyPoint.Value.toString();
+                tempObj.Value = historyPoint.value.toString();
             }
             // console.log(tempObj);
             return tempObj;
@@ -420,84 +492,26 @@ const Report = class Report {
         // }
     }
     reportMain(data, cb) {
-        const point = new Point();
-        const schedule = new Schedule();
+        const pointInstance = new Point();
         let reportCriteria = {
-                id: utils.converters.convertType(data.id),
-                data: data
-            },
-            scheduleCriteria = {
-                query: {
-                    _id: new ObjectID(data.scheduleID)
-                },
-                data: data
-            },
-            scheduled = (!!data.scheduleID),
-            reportResults = {},
-            reportData,
-            getValueTypes = (data) => {
-                'use strict';
-                let i,
-                    column,
-                    filter;
-                if (data['Report Config'].columns) {
-                    for (i = 1; i < data['Report Config'].columns.length; i++) {
-                        column = data['Report Config'].columns[i];
-                        column.valueType = Config.Enums.Properties[column.colName].valueType;
-                    }
-                }
+            id: utils.converters.convertType(data.id),
+            data: data,
+            resolvePointRefs: true
+        };
 
-                if (data['Report Config'].filters) {
-                    for (i = 0; i < data['Report Config'].filters.length; i++) {
-                        filter = data['Report Config'].filters[i];
-                        filter.valueType = Config.Enums.Properties[filter.filterName].valueType;
-                    }
-                }
-
-                return data;
-            },
-            handleResults = () => {
-                if (scheduled) {
-                    schedule.getOne(scheduleCriteria, (err, scheduleData) => {
-                        if (err) {
-                            return cb(err);
-                        }
-                        if (scheduleData === null) {
-                            return cb();
-                        }
-                        reportResults.scheduledConfig = {};
-                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
-                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
-                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
-
-                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);
-                        return cb(null, reportResults, reportData);
-                    });
+        if (data.id != 0) { // persisted points
+            pointInstance.getPointById(reportCriteria, (err, message, reportPoint) => {
+                if (err) {
+                    return cb(err, {id: data.id});
+                } else if (!!reportPoint) {
+                    this.getReportColumnInfo(reportPoint, data.scheduleID, data.scheduledIncludeChart, cb);
                 } else {
-                    return cb(null, reportResults, reportData);
+                    return cb(message, {id: data.id}); // error
                 }
-            };
-
-
-        // this is weird. change it to be nested instead of relying on flags in handlResults()
-        point.getPointById(reportCriteria.data, (err, message, result) => {
-            if (err) {
-                return cb(err);
-            }
-
-            if (!!result) {
-                if (result['Report Type'].Value === 'Property') {
-                    result = getValueTypes(result);
-                }
-                reportResults.id = data.id;
-                reportResults.point = JSON.stringify(result);
-
-                reportData = result;
-                handleResults();
-            } else {
-                return cb(message); // error
-            }
-        });
+            });
+        } else {  // unpersisted points
+            return cb(null, {id: data.id});
+        }
     }
     reportSearch(data, cb) {
         const point = new Point();
@@ -510,34 +524,18 @@ const Report = class Report {
             selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map((type) => {
                 return type.key;
             }),
+            terms = dtiCommon.buildSearchTerms(pointFilter.terms),
             uniquePIDs = [],
             properties = reportConfig.columns,
             sort = data.Sort,
             sortObject = {},
-            nameQuery,
             searchCriteria = {
                 $and: []
-            },
-            // returnLimit = RETURNLIMIT,
-            parseNameField = (paramsField, fieldName) => {
-                let parsedNameField = {};
-                if (paramsField !== null && paramsField !== undefined) {
-                    //logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
-                    if (paramsField === 'ISBLANK') {
-                        parsedNameField[fieldName] = '';
-                    } else {
-                        parsedNameField[fieldName] = {
-                            '$regex': '(?i)^' + paramsField
-                        };
-                    }
-                }
-                return parsedNameField;
             };
 
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
             for (let k = 0; k < properties.length; k++) {
-                // let p = properties[k].colName;
                 let p = utils.getDBProperty(properties[k].colName);
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
                     fields['Point Refs'] = true;
@@ -558,14 +556,12 @@ const Report = class Report {
             });
         }
 
-        for (let i = 1; i < 5; i++) {
-            let key = 'name' + i;
-            if (pointFilter[key]) {
-                nameQuery = parseNameField(pointFilter[key], ('name' + i));
-                if (nameQuery) {
-                    searchCriteria.$and.push(nameQuery);
+        if (!!terms && terms.length) {
+            searchCriteria.$and.push({
+                _path: {
+                    $all: point.buildSearchTerms(terms)
                 }
-            }
+            });
         }
 
         if (filters && filters.length > 0) {
@@ -582,10 +578,10 @@ const Report = class Report {
             searchCriteria = {};
         }
 
-        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
+        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         let criteria = {
             query: searchCriteria,
-            limit: RETURNLIMIT,
+            limit: PROPERTYREPORTRETURNLIMIT,
             fields: fields
         };
         point.getAll(criteria, (err, docs) => {
@@ -647,6 +643,7 @@ const Report = class Report {
                 let searchQuery = {},
                     // change key to internal property if possible.
                     key = utils.getDBProperty(filter.filterName),
+                    internalProperty = (filter.filterName !== key),
                     searchKey = key,
                     searchKeyExists = {},
                     searchKeyIsDisplayable = {},
@@ -695,11 +692,13 @@ const Report = class Report {
                             };
                             break;
                         case 'EqualTo':
-                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
-                                $eq: true
-                            };
                             searchQuery.$and = [];
-                            searchQuery.$and.push(searchKeyIsDisplayable);
+                            if (!internalProperty) {
+                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                    $eq: true
+                                };
+                                searchQuery.$and.push(searchKeyIsDisplayable);
+                            }
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
@@ -753,12 +752,14 @@ const Report = class Report {
                             searchKeyExists[key] = {
                                 $exists: true
                             };
-                            searchKeyIsDisplayable[key + ".isDisplayable"] = {
-                                $eq: true
-                            };
                             searchQuery.$and = [];
                             searchQuery.$and.push(searchKeyExists);
-                            searchQuery.$and.push(searchKeyIsDisplayable);
+                            if (!internalProperty) {
+                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                    $eq: true
+                                };
+                                searchQuery.$and.push(searchKeyIsDisplayable);
+                            }
                             if (filter.valueType === 'Enum' && utils.converters.isNumber(filter.evalue) && filter.valueList.length > 0) {
                                 if (filter.evalue === -1) {
                                     searchPart2[this.propertyCheckForValue(key)] = {
@@ -1188,7 +1189,7 @@ const Report = class Report {
             }
         }, (err, point) => {
             if (!!point) {
-                let reportName = point.Name;
+                let reportName = dtiCommon.getPointName(point.path);
                 let users = schedule.users.map((id) => {
                     return ObjectID(id);
                 });
@@ -1234,6 +1235,7 @@ const Report = class Report {
                         });
                     });
                 });
+
                 // chromePageRender.renderPage(uri, path, (err, stdout, stderr) => {
                 //     fs.readFile(path, (err, data) => {
                 //         user.iterateCursor({
@@ -1278,7 +1280,6 @@ const Report = class Report {
             }
         });
     }
-
     buildIntervals(range, interval) {
         let intervalPeriod = interval.period;
         let intervalValue = interval.value;
@@ -1306,9 +1307,8 @@ const Report = class Report {
 
         return intervalRanges;
     }
-
     propertyCheckForValue(prop) {
-        if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
+        if (prop.match(/^path/i) !== null || (Config.Enums['Internal Properties'] && Config.Enums['Internal Properties'].hasOwnProperty(prop))) {
             return prop;
         }
         return prop + '.Value';

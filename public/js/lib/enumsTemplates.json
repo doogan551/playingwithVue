@@ -163,6 +163,9 @@
             },
             "Report Edit": {
                 "enum": 43
+            },
+            "Site Name Edit": {
+                "enum": 44
             }
         },
         "Alarm Classes": {
@@ -831,6 +834,12 @@
             },
             "Reference": {
                 "enum": 508
+            },
+            "System": {
+                "enum": 507
+            },
+            "Instrumentation": {
+                "enum": 506
             }
         },
         "Input Ranges": {
@@ -3226,6 +3235,11 @@
                 "valueType": "Unsigned",
                 "reportEnable": true
             },
+            "Model Number": {
+                "enum": 129,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
@@ -3419,6 +3433,11 @@
             "Override Time": {
                 "enum": 374,
                 "valueType": "HourMin",
+                "reportEnable": true
+            },
+            "path": {
+                "enum": 159,
+                "valueType": "Array",
                 "reportEnable": true
             },
             "Point Instance": {
@@ -3694,7 +3713,7 @@
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": false,
+                "reportEnable": true,
                 "enumsSet": "Report Types"
             },
             "Repeat Count": {
@@ -4215,6 +4234,56 @@
             "ByteArray": {
                 "enum": 19
             }
+        },
+        "Internal Properties": {
+            "_id": {
+                "enum": 1
+            },
+            "_pAccess": {
+                "enum": 2
+            },
+            "_relDevice": {
+                "enum": 3
+            },
+            "_relRMU": {
+                "enum": 4
+            },
+            "_relPoint": {
+                "enum": 5
+            },
+            "_devModel": {
+                "enum": 6
+            },
+            "_rmuModel": {
+                "enum": 7
+            },
+            "_cfgDevice": {
+                "enum": 8
+            },
+            "_updPoint": {
+                "enum": 9
+            },
+            "_updTOD": {
+                "enum": 10
+            },
+            "_parentUpi": {
+                "enum": 11
+            },
+            "_pollTime": {
+                "enum": 12
+            },
+            "_pStatus": {
+                "enum": 13
+            },
+            "_cfgRequired": {
+                "enum": 14
+            },
+            "_forceAllCOV": {
+                "enum": 15
+            },
+            "_actvAlmId": {
+                "enum": 16
+            }
         }
     },
     "Templates": {
@@ -4228,8 +4297,12 @@
             "refNode": 0,
             "_pStatus": 0,
             "path": [],
+            "_path": [],
             "parentNode": 0,
-            "display": ""
+            "display": "",
+            "locatedIn": 0,
+            "servedBy": [],
+            "descriptors": []
         },
         "_common": {
             "_relDevice": 0,
@@ -4893,6 +4966,12 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 255
+                },
+                "Model Number": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
                 },
                 "Model Type": {
                     "isDisplayable": true,

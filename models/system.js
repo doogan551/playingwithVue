@@ -25,6 +25,7 @@ const System = class System extends Common {
 
     updateSeason(data, cb) {
         const activityLog = new ActivityLog();
+        const pointModel = new Point();
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -46,10 +47,22 @@ const System = class System extends Common {
         };
 
         this.updateOne(criteria, (err) => {
-            logData.activity = 'Season Change';
-            logData.log = 'Season changed to ' + season + '.';
-            activityLog.create(logData, (err) => {
-                return cb(null, 'success');
+            criteria = {
+                query: {
+                    'Point Type.Value': 'Device'
+                },
+                updateObj: {
+                    $set: {
+                        _updPoint: true
+                    }
+                }
+            };
+            pointModel.updateAll(criteria, (err)=>{
+                logData.activity = 'Season Change';
+                logData.log = 'Season changed to ' + season + '.';
+                activityLog.create(logData, (err) => {
+                    return cb(null, 'success');
+                });
             });
         });
     }
@@ -156,6 +169,7 @@ const System = class System extends Common {
             'Name': 'Quality Codes'
         };
 
+        let user = data.user;
         let maskSearch = {
             'Name': 'Preferences'
         };
@@ -200,7 +214,7 @@ const System = class System extends Common {
             };
             this.updateOne(criteria, (err, result) => {
                 let logData = {
-                    user: data.user,
+                    user: user,
                     timestamp: Date.now(),
                     activity: 'Quality Code Edit',
                     log: 'Quality Codes edited.'
@@ -536,9 +550,9 @@ const System = class System extends Common {
 
         this.update(criteria, cb);
     }
-    getVersions(data, cb) {
+    getPreferences(data, cb) {
         let pjson = require('../package.json');
-        let versions = {
+        let systemPreferences = {
             infoscanjs: pjson.version
         };
         let criteria = {
@@ -551,8 +565,34 @@ const System = class System extends Common {
             if (err) {
                 return cb(err);
             }
-            versions.Processes = result['Server Version'];
-            return cb(null, versions);
+            systemPreferences.Processes = result['Server Version'];
+            systemPreferences.siteName = result['Site Name'];
+            return cb(null, systemPreferences);
+        });
+    }
+    setPreferences(data, cb) {
+        const activityLog = new ActivityLog();
+        let preferencesUpdate = {
+            $set: {
+                'Site Name': data.siteName
+            }
+        };
+        let criteria = {
+            query: {
+                Name: 'Preferences'
+            },
+            updateObj: preferencesUpdate
+        };
+
+        this.updateOne(criteria, (err, result) => {
+            let logData = {
+                user: data.user,
+                timestamp: Date.now(),
+                activity: 'Site Name Edit',
+                log: 'Site Name changed to "' + data.siteName + '"'
+            };
+            activityLog.create(logData, () => {});
+            return cb(err, result);
         });
     }
 };

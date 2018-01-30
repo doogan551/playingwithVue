@@ -418,7 +418,8 @@ let setupSystemInfo = (db, callback) => {
         }, {
             $set: {
                 'Time Zone': localTZ,
-                'InfoscanJS Version': curVersion
+                'InfoscanJS Version': curVersion,
+                'Site Name': 'InfoScan'
             }
         }, callback);
     });

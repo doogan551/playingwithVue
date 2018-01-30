@@ -44,16 +44,10 @@ const ActivityLog = class ActivityLog extends Common {
             }]
         };
 
-        if (!!data.terms) {
-            if (data.terms.length) {
-                if (typeof data.terms === 'string') {
-                    data.terms = data.terms.split(' ');
-                }
-
-                query.path = {
-                    $all: this.buildSearchTerms(data.terms)
-                };
-            }
+        if (!!data.terms.length) {
+            query._path = {
+                $all: this.buildSearchTerms(data.terms)
+            };
         }
 
         /** @type {Array} Point Type enums */
@@ -102,6 +96,7 @@ const ActivityLog = class ActivityLog extends Common {
             username: data.user.username,
             upi: 0,
             path: [],
+            _path: [],
             pointType: null,
             activity: Enums['Activity Logs'][data.activity].enum,
             timestamp: data.timestamp || Date.now(),
@@ -126,6 +121,7 @@ const ActivityLog = class ActivityLog extends Common {
             log.pointType = (data.point['Point Type'].eValue !== undefined) ? data.point['Point Type'].eValue : null;
             if (data.point.path !== undefined && data.point.path !== null) {
                 log.path = data.point.path;
+                this.toLowerCasePath(log);
             }
         }
 

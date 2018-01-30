@@ -50,11 +50,7 @@ let Import = class Import extends Common {
         var count = 0;
         var criteria = {
             collection: pointsCollection,
-            query: {
-                _Name: {
-                    $exists: 0
-                }
-            }
+            query: {}
         };
 
         this.iterateCursor(criteria, (err, doc, cb) => {
@@ -76,7 +72,7 @@ let Import = class Import extends Common {
                         this.updateHistory((err) => {
                             logger.info('finished updateHistory', err);
                             this.cleanupDB((err) => {
-                                hierarchy.import((err) => {
+                                hierarchy.createHierarchy((err) => {
                                     this.fixToUUtil((err) => {
                                         if (err) {
                                             logger.info('updateGPLReferences err:', err);
@@ -391,18 +387,14 @@ let Import = class Import extends Common {
             }
         };
 
-        var splitName = (meter) => {
-            return meter.Name.split('_');
-        };
-
         this.iterateCursor({
             collection: 'PowerMeters',
             query: {}
         }, (err, meter, cb) => {
             var names = {
-                name1: splitName(meter)[0],
-                name2: splitName(meter)[1],
-                name4: splitName(meter)[3]
+                name1: meter.name1,
+                name2: meter.name2,
+                name4: meter.name4
             };
             async.waterfall([(wfCb) => {
                 this.getOne({
@@ -713,8 +705,10 @@ let Import = class Import extends Common {
         }, (err, point, next) => {
             var guide = importconfig.reportGuide,
                 template = Config.Templates.getTemplate('Report'),
-                report = lodash.merge(template, guide);
-
+                report = lodash.merge(template, guide),
+                index = 0;
+            delete report.parentNode;
+            delete report.display;
             report['Report Type'].Value = 'History';
             report['Report Type'].eValue = Config.Enums['Report Types'].History.enum;
             report['Point Refs'] = [];
@@ -724,18 +718,11 @@ let Import = class Import extends Common {
             //report._Name = point.Name.toLowerCase();
             delete report._Name;
 
-            var names = report.Name.split('_'),
-                index = 0;
+            report.name1 = point.name1;
+            report.name2 = point.name2;
+            report.name3 = point.name3;
+            report.name4 = point.name4;
 
-            for (var i = 1; i <= 4; i++) {
-                if (i <= names.length) {
-                    report['name' + i] = names[i - 1];
-                    report['_name' + i] = names[i - 1].toLowerCase();
-                } else {
-                    report['name' + i] = '';
-                    report['_name' + i] = '';
-                }
-            }
             report['Report Config'].reportTitle = report.Name;
 
             report['Report Config'].interval.period = 'Minute';
@@ -816,6 +803,8 @@ let Import = class Import extends Common {
             var report = lodash.merge(template, guide);
             var refIds = [];
 
+            delete report.parentNode;
+            delete report.display;
             report['Report Type'].Value = 'Totalizer';
             report['Report Type'].eValue = Config.Enums['Report Types'].Totalizer.enum;
             report['Point Refs'] = [];
@@ -824,17 +813,10 @@ let Import = class Import extends Common {
             //report._Name = point.Name.toLowerCase();
             delete report._Name;
 
-            var names = report.Name.split('_');
-
-            for (var i = 1; i <= 4; i++) {
-                if (i <= names.length) {
-                    report['name' + i] = names[i - 1];
-                    report['_name' + i] = names[i - 1].toLowerCase();
-                } else {
-                    report['name' + i] = '';
-                    report['_name' + i] = '';
-                }
-            }
+            report.name1 = doc.name1;
+            report.name2 = doc.name2;
+            report.name3 = doc.name3;
+            report.name4 = doc.name4;
             report['Report Config'].reportTitle = report.Name;
 
             switch (doc['Reset Interval']) {
@@ -942,6 +924,10 @@ let Import = class Import extends Common {
         var scheduleEntryTemplate = Config.Templates.getTemplate('Schedule Entry');
         var scheduleTemplate = Config.Templates.getTemplate('Schedule');
 
+        delete scheduleTemplate.parentNode;
+        delete scheduleTemplate.display;
+        delete scheduleEntryTemplate.parentNode;
+        delete scheduleEntryTemplate.display;
         scheduleEntryTemplate._pStatus = 0;
         scheduleEntryTemplate._cfgRequired = false;
         scheduleTemplate._pStatus = 0;
@@ -964,9 +950,6 @@ let Import = class Import extends Common {
                     scheduleEntryTemplate.name3 = '';
                     scheduleEntryTemplate.name4 = '';
                     scheduleEntryTemplate.Name = scheduleEntryTemplate.name1 + '_' + scheduleEntryTemplate.name2;
-                    /*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
-                    scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
-                    scheduleEntryTemplate._Name = scheduleEntryTemplate.Name.toLowerCase();*/
 
                     scheduleEntryTemplate['Control Point'] = oldScheduleEntry['Control Point'];
                     scheduleEntryTemplate['Host Schedule'].Value = oldScheduleEntry.hostEntry;
@@ -1054,8 +1037,8 @@ let Import = class Import extends Common {
                 gplBlock.name4 = gplBlock.gplLabel;
                 gplBlock.Name = gplBlock.name1 + '_' + gplBlock.name2 + '_' + gplBlock.name3 + '_' + gplBlock.name4;
 
-                gplBlock._name4 = gplBlock.name4.toLowerCase();
-                gplBlock._Name = gplBlock.Name.toLowerCase();
+                // gplBlock._name4 = gplBlock.name4.toLowerCase();
+                // gplBlock._Name = gplBlock.Name.toLowerCase();
                 delete gplBlock.gplLabel;
                 this.update({
                     collection: pointsCollection,
@@ -1158,11 +1141,11 @@ let Import = class Import extends Common {
     updateIndexes(callback) {
         var indexes = [{
             index: {
-                'path': 1,
+                '_path': 1,
                 'Point Type.Value': 1
             },
             options: {
-                name: 'hierarchyPathAndType'
+                name: 'hierarchy_PathAndType'
             },
             collection: 'new_points'
         }, {
@@ -1171,7 +1154,6 @@ let Import = class Import extends Common {
                 'display': 1
             },
             options: {
-                unique: true,
                 sparse: true
             },
             collection: 'new_points'
@@ -1188,17 +1170,6 @@ let Import = class Import extends Common {
             collection: pointsCollection
         }, {
             index: {
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: '_name1-4'
-            },
-            collection: pointsCollection
-        }, {
-            index: {
                 Name: 1
             },
             options: {},
@@ -1264,18 +1235,6 @@ let Import = class Import extends Common {
                 'Network Segment.Value': 1
             },
             options: {},
-            collection: pointsCollection
-        }, {
-            index: {
-                'Point Type.Value': 1,
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: 'PT, _name1-4'
-            },
             collection: pointsCollection
         }, {
             index: {
@@ -1297,17 +1256,6 @@ let Import = class Import extends Common {
             collection: 'new_points'
         }, {
             index: {
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: '_name1-4'
-            },
-            collection: 'new_points'
-        }, {
-            index: {
                 Name: 1
             },
             options: {},
@@ -1373,18 +1321,6 @@ let Import = class Import extends Common {
                 'Network Segment.Value': 1
             },
             options: {},
-            collection: 'new_points'
-        }, {
-            index: {
-                'Point Type.Value': 1,
-                _name1: 1,
-                _name2: 1,
-                _name3: 1,
-                _name4: 1
-            },
-            options: {
-                name: 'PT, _name1-4'
-            },
             collection: 'new_points'
         }, {
             index: {
@@ -1517,7 +1453,7 @@ let Import = class Import extends Common {
     updateGPLBlocks(point, callback) {
         var parentUpi = point._parentUpi;
         var pointTypes = ['Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer'];
-        if (pointTypes.indexOf(point['Point Type'].Value) !== -1) {
+        if (pointTypes.includes(point['Point Type'].Value)) {
             for (var prop in point) {
                 if (point[prop].ValueType === 8) {
                     if (parentUpi !== 0) {
@@ -1634,10 +1570,11 @@ let Import = class Import extends Common {
                             point[prop] = sensorTemplate[prop];
                         }
                     }
+                    delete point.display;
+                    delete point.parentNode;
                 };
 
             point._cfgRequired = false;
-
             if (!!point.Remarks) {
                 point.name1 = 'Sensor';
                 point.name2 = '';
@@ -1655,20 +1592,20 @@ let Import = class Import extends Common {
                     this.get({
                         collection: pointsCollection,
                         query: {
-                            _name1: point._name1,
-                            _name2: point._name2
+                            name1: point.name1,
+                            name2: point.name2
                         },
                         fields: {
-                            _name1: 1,
-                            _name2: 1,
-                            _name3: 1,
-                            _name4: 1
+                            name1: 1,
+                            name2: 1,
+                            name3: 1,
+                            name4: 1
                         }
                     }, (err, points) => {
                         var nextNum = 1,
                             name3Number;
                         for (var j = 0; j < points.length; j++) {
-                            name3Number = parseInt(points[j]._name3, 10);
+                            name3Number = parseInt(points[j].name3, 10);
                             if (nextNum < name3Number) {
                                 nextNum = name3Number + 1;
                             }
@@ -1678,7 +1615,6 @@ let Import = class Import extends Common {
                             point.Name += '_' + point.name3;
                         }
                         this.updateNameSegments(point, (err) => {
-                            delete point._Name;
                             updateProps();
                             this.update({
                                 collection: pointsCollection,
@@ -2389,6 +2325,7 @@ let Import = class Import extends Common {
             point['Device Status'].Value = 'Stop Scan';
             point['Device Status'].eValue = 66;
         } else if (point['Point Type'].Value === 'Remote Unit') {
+            point['Model Number'] = Config.Templates.getTemplate('Remote Unit')['Model Number'];
             point['Device Address'].ValueType = 2;
             if (typeof point['Device Address'].Value !== 'string') {
                 point['Device Address'].Value = point['Device Address'].Value.toString();
@@ -2491,17 +2428,17 @@ let Import = class Import extends Common {
         callback(null);
     }
     updateNameSegments(point, callback) {
-        point._name1 = point.name1.toLowerCase();
-        if (point.hasOwnProperty('name2')) {
-            point._name2 = point.name2.toString().toLowerCase();
-        }
-        if (point.hasOwnProperty('name3')) {
-            point._name3 = point.name3.toLowerCase();
-        }
-        if (point.hasOwnProperty('name4')) {
-            point._name4 = point.name4.toLowerCase();
-        }
-        point._Name = point.Name.toLowerCase();
+        // point._name1 = point.name1.toLowerCase();
+        // if (point.hasOwnProperty('name2')) {
+        //     point._name2 = point.name2.toString().toLowerCase();
+        // }
+        // if (point.hasOwnProperty('name3')) {
+        //     point._name3 = point.name3.toLowerCase();
+        // }
+        // if (point.hasOwnProperty('name4')) {
+        //     point._name4 = point.name4.toLowerCase();
+        // }
+        // point._Name = point.Name.toLowerCase();
         /*db.collection(pointsCollection).update({
           _id: point._id
         }, {
@@ -2854,9 +2791,9 @@ let Import = class Import extends Common {
                         var json = cleanup(result),
                             newName = name.replace('.xml', '');
 
-                        while (newName.slice(-1) === '_') {
-                            newName = newName.slice(0, -1);
-                        }
+                        // while (newName.slice(-1) === '_') {
+                        //     newName = newName.slice(0, -1);
+                        // }
 
                         json = convertStrings(json);
 
@@ -2977,7 +2914,9 @@ let Import = class Import extends Common {
                 async.eachOfSeries(weather, (value, prop, callback) => {
                     if (typeof value === 'number') {
                         pointModel.getOne({
-                            _oldUpi: value
+                            query: {
+                                _oldUpi: value
+                            }
                         }, (err, refPoint) => {
                             weather[prop] = (!!refPoint) ? refPoint._id : 0;
                             callback(err);
@@ -2997,7 +2936,7 @@ let Import = class Import extends Common {
         });
     }
     setupCounters(cb) {
-        const hierarchyCounters = ['Location', 'Equipment', 'Category', 'Reference'];
+        const hierarchyCounters = Config.Enums['Hierarchy Types'];
         let pointTypes = Config.Enums['Point Types'];
         let counters = [];
         for (var type in pointTypes) {
@@ -3008,13 +2947,13 @@ let Import = class Import extends Common {
                 enum: pointTypes[type].enum
             });
         }
-        hierarchyCounters.forEach((counter) => {
+        for (var hierarchyType in hierarchyCounters) {
             counters.push({
-                _id: counter.toLowerCase(),
+                _id: hierarchyType.toLowerCase(),
                 count: 0,
-                enum: Config.Enums['Hierarchy Types'][counter].enum
+                enum: hierarchyCounters[hierarchyType].enum
             });
-        });
+        }
         this.insert({
             collection: 'counters',
             insertObj: counters

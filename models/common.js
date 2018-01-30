@@ -1,3 +1,5 @@
+const uuid = require('node-uuid');
+
 const Config = require('../public/js/lib/config.js');
 const Enums = Config.Enums;
 const zmq = require('../helpers/zmq');
@@ -137,7 +139,7 @@ const Common = class Common extends Utility {
                     data.terms = data.terms.split(' ');
                 }
 
-                query.path = {
+                query._path = {
                     $all: this.buildSearchTerms(data.terms)
                 };
             }
@@ -254,10 +256,18 @@ const Common = class Common extends Utility {
 
     buildSearchTerms(terms) {
         return terms.map((term) => {
-            if (term.match(/"/)) {
-                return term.replace(/"/g, '');
+            term = term.toLowerCase();
+            // if the term begins and ends with a quote, replace only those two quotes to be equivilent to exact match search
+            if (term.match(/^"/) && term.match(/"$/)) {
+                return new RegExp(term.replace(/^"/, '^').replace(/"$/, '$'));
             }
-            return new RegExp('^' + term, 'ig');
+            term = '^' + term;
+
+            if(term.match(/\*/)) {
+                term += '$';
+                return new RegExp(term.replace(/\*/g, '.*'));
+            }
+            return new RegExp(term);
         });
     }
 
@@ -282,19 +292,16 @@ const Common = class Common extends Utility {
         return matchingTerms === queryTermsLengh;
     }
 
-    assignParentRefs(nodes) {
-        for (var p = 0; p < nodes.length; p++) {
-            let parent = nodes[p];
-            for (var c = 0; c < nodes.length; c++) {
-                let child = nodes[c];
-                if (child.parentNode === parent.id) {
-                    child.parentNode = parent._id;
-                }
-                if(child._parentUpi === parent.id) {
-                    child._parentUpi = parent._id;
-                }
-            }
-        }
+    getCopyPostFix() {
+        return ' - Copy';
+    }
+
+    toLowerCasePath(node) {
+        node._path = node.path.map((item) => item.toLowerCase());
+    }
+
+    getUuid() {
+        return uuid.v4();
     }
 };
 

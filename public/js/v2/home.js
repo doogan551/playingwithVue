@@ -381,6 +381,7 @@ var dti = {
     },
     once: function (event, handler) {
         dti._onceEvents[event] = dti._onceEvents[event] || [];
+        dti._onceEvents[event].push(handler);
     },
     off: function (event, handler) {
         var handlers = dti._events[event] || [];
@@ -393,23 +394,18 @@ var dti = {
         });
     },
     fire: function (event, obj1, obj2) {
-        var c,
-            handlers = dti._events[event] || [],
-            len = handlers.length;
+        var handlers = dti._events[event] || [],
+            onceHandlers = dti._onceEvents[event] || [];
 
-        // dti.log('firing', event);
+        dti.forEachArray(handlers, function fireEventHandlers (handler) {
+            handler(obj1 || null, obj2 || null);
+        });
 
-        // if (!dti.skipEventLog) {
-        //     dti.eventLog.push({
-        //         event: event,
-        //         obj1: obj1 && obj1.dtiId,
-        //         obj2: obj2 && obj2.dtiId
-        //     });
-        // }
+        dti.forEachArray(onceHandlers, function fireOnceEvent (handler) {
+            handler(obj1 || null, obj2 || null);
+        });
 
-        for (c = 0; c < len; c++) {
-            handlers[c](obj1 || null, obj2 || null);
-        }
+        dti._onceEvents[event] = [];
     },
     thumbs: {},
     thumbnails: {
@@ -503,7 +499,104 @@ var dti = {
                 }
             });
         },
-        slideUp: function ($el, cb) {
+        _scaleOld: ($el, type, cb) => {
+            let animType;
+            let destScale;
+            let startScale;
+            
+            $el.velocity('stop');
+
+            if (type === 'in') {
+                animType = 'easeOut';
+                destScale = 1;
+                startScale = 0;
+                $el.addClass('active');
+            } else {
+                animType = 'easeIn';
+                destScale = 0;
+                startScale = 1;
+                $el.removeClass('active');
+            }
+
+            let opts = [{
+                scale: [destScale, startScale]
+            }, {
+                queue: false,
+                easing: animType,
+                duration: 200,
+                complete: () => {
+                    if (cb) {
+                        cb();
+                    }
+                }
+            }];
+
+            // if (startScale === 0) {
+            //     opts[0].display = 'block';
+            // }
+
+            $el.velocity.apply($el, opts);
+
+            $el[0].style.display = 'block';
+        },
+        _scale: ($el, $container, type, cb) => {
+            let animType;
+            let destHeight;
+            let destWidth;
+            let startHeight;
+            let startWidth;
+            let duration = 150;
+            let smallDuration = 100;
+            
+            $el.velocity('stop');
+
+            if (type === 'in') {
+                animType = 'easeOut';
+                destHeight = $container && parseInt($container.css('height'));
+                destWidth = $container && parseInt($container.css('width'));
+                startWidth = startHeight = 0;
+                $el.addClass('active');
+            } else {
+                animType = 'easeIn';
+                startHeight = $container && parseInt($container.css('height'));
+                startWidth = $container && parseInt($container.css('width'));
+                destWidth = destHeight = 0;
+                $el.removeClass('active');
+            }
+
+            let max = Math.max(Math.max(destWidth, startWidth), Math.max(destHeight, startHeight));
+
+            // dti.log('duration', max < duration ? smallDuration: duration);
+            
+            let opts = [{
+                width: [destWidth, startWidth],
+                height: [destHeight, startHeight]
+            }, {
+                queue: false,
+                easing: animType,
+                duration: max < duration ? smallDuration: duration,
+                complete: () => {
+                    if (cb) {
+                        cb();
+                    }
+                }
+            }];
+
+            // if (startScale === 0) {
+            //     opts[0].display = 'block';
+            // }
+
+            $el.velocity.apply($el, opts);
+
+            $el[0].style.display = 'block';
+        },
+        scaleIn: ($el, $container, cb) => {
+            dti.animations._scale($el, $container, 'in', cb);
+        },
+        scaleOut: ($el, $container, cb) => {
+            dti.animations._scale($el, $container, 'out', cb);
+        },
+        slideUp: function($el, cb) {
             $el[0].style.willChange = 'height, padding-top, padding-bottom';
             $el.css('overflow', 'hidden');
             $el.velocity('stop');
@@ -513,8 +606,8 @@ var dti = {
                 'padding-bottom': 0
             }, {
                 queue: false,
-                duration: 300,
-                easing: 'easeOutSine',
+                duration: 150,
+                easing: 'easeIn',
                 complete: function finishSlideUp() {
                     $el.css('display', 'none');
                     $el[0].style.willChange = '';
@@ -581,68 +674,112 @@ var dti = {
                 menuShown = false,
                 menuID = menuEl || $button.data('menu'),
                 $menu = $('#' + menuID),
+                $container = $menu.find('.menuContainer'),
                 hideTimer,
-                hoverDelay = 500,
-                closeMenu = function (id) {
-                    if (id || id !== menuID) {
-                        if (menuShown) {
+                hoverDelay = 300,
+                closeMenu = function(id) {
+                    if (menuShown) {
+                        dti.animations.scaleOut($menu, $container, function checkMenuClose() {
+                            if (eventHandlers && eventHandlers.onHide) {
+                                eventHandlers.onHide();
+                            }
                             menuShown = false;
-                            dti.animations.fadeOut($menu, function checkMenuClose() {
-                                if (eventHandlers && eventHandlers.onHide) {
-                                    eventHandlers.onHide();
-                                }
-                            });
-                        }
+                        });
                     }
                 },
-                setOpen = function () {
+                handleCloseMenu = (id) => {
+                    if (!id || id !== menuID) {
+                        closeMenu();
+                    }
+                },                
+                setOpen = function() {
                     menuShown = true;
                 },
-                setTimer = function () {
+                setTimer = function(text) {
                     // clearTimeout(hideTimer);
-                    hideTimer = setTimeout(closeMenu, hoverDelay);
+                    hideTimer = setTimeout(() => {
+                        closeMenu();
+                    }, hoverDelay);
                 },
                 destroy = function () {
                     $button.off('mouseenter mouseleave');
                     $('#' + menuID).off('mouseenter mouseleave');
                     clearTimeout(hideTimer);
-                    dti.off('hideMenus', closeMenu);
-                    dti.off('openMenu', closeMenu);
+                    dti.off('hideMenus', handleCloseMenu);
+                    dti.off('openMenu', handleCloseMenu);
+                },
+                repositioners = {
+                    top() {
+                        $menu.position({
+                            of: $button,
+                            my: 'left top',
+                            at: 'left bottom'
+                        });
+                    },
+                    left() {
+                        $menu.position({
+                            of: $button,
+                            my: 'left top',
+                            at: 'left bottom'
+                        });
+                    },
+                    right() {
+                        let width = parseInt($menu.css('width'));
+                        $menu.position({
+                            of: $button,
+                            my: 'right top',
+                            at: 'right bottom'
+                        });
+                    }
                 };
 
+            // $menu.addClass('scales');
+            // $menu[0].style.transform = 'scale(0)';
+
             $button.hover(function showHoverMenu(event) {
-                dti.fire('openMenu', menuID);
                 clearTimeout(hideTimer);
+
                 if (!menuShown) {
-                    menuShown = true;
+                    setOpen();
+                    dti.fire('openMenu', menuID);
+
+                    let reposition = $menu.data('scale-reposition');
+
+                    if (reposition !== false) {
+                        let scaleOrigin = $menu.data('scale-origin');
+                        repositioners[scaleOrigin]();
+                    }
+
                     if (eventHandlers && eventHandlers.onBeforeShow) {
                         eventHandlers.onBeforeShow();
                     }
-                    dti.animations.fadeIn($menu, function checkMenuOpen() {
-                        if (eventHandlers && eventHandlers.onShow) {
-                            eventHandlers.onShow();
-                        }
-                    });
+                    setTimeout(() => {
+                        dti.animations.scaleIn($menu, $container, function checkMenuOpen() {
+                            if (eventHandlers && eventHandlers.onShow) {
+                                eventHandlers.onShow();
+                            }
+                        });
+                    },1);
                 }
             }, function hideHoverMenu(event) {
                 var $relatedTarget = $(event.relatedTarget);
 
                 if ($relatedTarget.attr('id') !== menuID && $relatedTarget.parents('#' + menuID).length === 0) {
-                    setTimer();
+                    setTimer('button');
                 }
             });
 
             $('#' + menuID).hover(function maintainHoverMenu() {
                 clearTimeout(hideTimer);
                 if (!menuShown) {
-                    dti.animations.fadeIn($menu);
-                    menuShown = true;
+                    setOpen();
+                    dti.animations.scaleIn($menu, $container);
                 }
             }, function hideHoverMenu(event) {
                 var $target = $(event.relatedTarget);
 
                 if (($target.parents(button).length === 0) && ($target.attr('id')) !== 'context-menu-layer') {
-                    setTimer();
+                    setTimer('menu');
                 }
             });
 
@@ -655,9 +792,9 @@ var dti = {
                 }
             });
 
-            dti.on('hideMenus', closeMenu);
+            dti.on('hideMenus', handleCloseMenu);
 
-            dti.on('openMenu', closeMenu);
+            dti.on('openMenu', handleCloseMenu);
 
             return {
                 isOpen: function () {
@@ -896,6 +1033,20 @@ var dti = {
                         updateTitle: function () {
                             self.bindings.title(message.parameters);
                         },
+                        updateWindowUPI: function () {
+                            let oldUPI = self.bindings.upi();
+
+                            if (message.parameters && message.parameters !== self.bindings.upi()) {
+                                self.bindings.upi(message.parameters);
+                                config.upi = message.parameters;
+
+                                dti.forEachArray(dti.windows.windowList, function checkForTargetWindow(win) {
+                                    if (win.upi === oldUPI) {
+                                        win.upi = self.bindings.upi();
+                                    }
+                                });
+                            }
+                        },
                         resize: function () {
                             var measurements = prepMeasurements(message.parameters, self.bindings);
 
@@ -1052,10 +1203,10 @@ var dti = {
             containment: 'main',
             handles: 'all',
             start: function () {
-                dti.windows.resizeStart();
+                dti.windows.resizeStart.apply(this, arguments);
             },
             stop: function () {
-                dti.windows.resizeStop();
+                dti.windows.resizeStop.apply(this, arguments);
             }
         },
         windowList: [],
@@ -1095,7 +1246,17 @@ var dti = {
         resizeStart: function () {
             dti.windows._setInteractingFlag(true);
         },
-        resizeStop: function () {
+        resizeStop: function (event, obj) {
+            var $el = $(obj.element),
+                win = dti.windows.getWindowById($el.attr('id')),
+                bindings;
+
+            // shouldn't ever be null
+            if (win) {
+                bindings = win.bindings;
+                bindings.width(obj.size.width + 'px');
+                bindings.height(obj.size.height + 'px');
+            }
             dti.windows._setInteractingFlag(false);
         },
         dragStart: function () {
@@ -1143,7 +1304,7 @@ var dti = {
                 dti.windows._offsetY += dti.windows._offset;
             }
         },
-        sendMessage: function (e) {
+        sendMessage: function (e, cb) {
             var targetWindow,
                 winId;
 
@@ -1154,7 +1315,7 @@ var dti = {
             }
 
             if (targetWindow) {
-                targetWindow.handleMessage(e);
+                targetWindow.handleMessage(e, cb);
             }
         },
         create: function (config) {
@@ -1493,6 +1654,7 @@ var dti = {
 
                     for (i = 0; i < len; i++) {
                         alarm = list[i];
+                        let pathString = dti.workspaceManager.config.Utility.getPointName(alarm.path);
                         alarm.ackStatus = ko.observable(alarm.ackStatus).extend({
                             rateLimit: 100
                         });
@@ -1500,6 +1662,7 @@ var dti = {
                         alarm.ackTime = ko.observable();
                         alarm.TextColor = '#' + alarm.TextColor;
                         alarm.BackColor = '#' + alarm.BackColor;
+                        alarm.msgText = dtiCommon.resolveAlarmName(alarm.msgText, alarm.path);
 
                         // TODO change this to use dti.workspaceManager.getConfig('revEnums.Alarm Classes.' + alarm.almClass)
                         // after it is available
@@ -4103,12 +4266,13 @@ var dti = {
         }
     },
     navigatorv2: {
-        $addNodeModal: $('#addNodeModal'),
+        $configureNodeModal: $('#configureNodeModal'),
+        addMenusPointTypes: [],
         tree: {
-            _addNodeData: null,         // state variable
-            _addNodePoint: null,        // state variable
-            _addNodeFilter: null,       // state variable
-            _addNodeTreeCallback: null, // state variable
+            _configureNodeData: null,          // state variable
+            _configureNodePoint: null,         // state variable
+            _configureNodeFilter: null,        // state variable
+            _configureNodeTreeCallback: null,  // state variable
             config: {
                 $container: null, // This is set by the "treeView" knockout binding when the tree is instantiated
                 nodeClickHandler: function (event, node) {
@@ -4119,66 +4283,81 @@ var dti = {
                 contextMenu: {
                     selector: '.dtcollapsible-header',
                     items: {
+                        placeHolder: {
+                            className: 'hide'
+                        },
                         add: {
                             name: 'Add',
+                            action: 'add',
+                            visible: {
+                                action: 'add',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                            },
                             items: {
+                                point: {
+                                    name: 'Point',
+                                    visible: {
+                                        action: 'add',
+                                        cb: (data, treeCb) => {
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addPoint', data.node);
+                                        }
+                                    },
+                                    callback: {
+                                        action: 'add',
+                                        cb: (data, treeCb) => {
+                                            dti.navigatorv2.tree.helper.showConfigureNodeModal('add point', data, treeCb);
+                                        },
+                                        nodeType: 'Point'
+                                    }
+                                },
                                 location: {
                                     name: 'Location',
-                                    callback: {
+                                    visible: {
+                                        action: 'add',
                                         cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addLocation', data.node);
+                                        }
+                                    },
+                                    callback: {
+                                        action: 'add',
+                                        cb: (data, treeCb) => {
+                                            dti.navigatorv2.tree.helper.showConfigureNodeModal('add location', data, treeCb);
                                         },
                                         nodeType: 'Location'
                                     }
                                 },
                                 equipment: {
                                     name: 'Equipment',
-                                    callback: {
+                                    visible: {
+                                        action: 'add',
                                         cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addEquipment', data.node);
+                                        }
+                                    },
+                                    callback: {
+                                        action: 'add',
+                                        cb: (data, treeCb) => {
+                                            dti.navigatorv2.tree.helper.showConfigureNodeModal('add equipment', data, treeCb);
                                         },
                                         nodeType: 'Equipment'
                                     }
                                 },
                                 category: {
                                     name: 'Category',
-                                    callback: {
+                                    visible: {
+                                        action: 'add',
                                         cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
+                                            return dti.navigatorv2.tree.helper.isValidMenuAction('addCategory', data.node);
+                                        }
+                                    },
+                                    callback: {
+                                        action: 'add',
+                                        cb: (data, treeCb) => {
+                                            dti.navigatorv2.tree.helper.showConfigureNodeModal('add category', data, treeCb);
                                         },
                                         nodeType: 'Category'
-                                    }
-                                },
-                                reference: {
-                                    name: 'Reference',
-                                    callback: {
-                                        cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
-                                        },
-                                        nodeType: 'Reference'
-                                    }
-                                }
-                            }
-                        },
-                        insert: {
-                            name: 'Insert',
-                            items: {
-                                point: {
-                                    name: 'Point',
-                                    callback: {
-                                        cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
-                                        },
-                                        nodeType: 'Point'
-                                    }
-                                },
-                                application: {
-                                    name: 'Application',
-                                    callback: {
-                                        cb: (data, treeCb) => {
-                                            dti.navigatorv2.tree.helper.showAddNodeModal(data, treeCb);
-                                        },
-                                        nodeType: 'Application'
                                     }
                                 }
                             }
@@ -4186,40 +4365,103 @@ var dti = {
                         open: {
                             name: 'Open',
                             visible: {
+                                action: 'open',
                                 cb: (data, treeCb) => {
-                                    return dti.navigatorv2.tree.helper.isValidOpenAction(data, treeCb);
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
                                 }
                             },
                             callback: {
+                                action: 'open',
                                 cb: (data, treeCb) => {
                                     dti.navigatorv2.tree.openNode(data, treeCb);
                                 }
                             }
                         },
+                        rename: {
+                            name: 'Rename',
+                            visible: {
+                                action: 'rename',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                            },
+                            callback: {
+                                action: 'rename',
+                                cb: (data, treeCb) => {
+                                    dti.navigatorv2.tree.helper.showConfigureNodeModal(data.config.action, data, treeCb);
+                                }
+                            }
+                        },
                         cut: {
                             name: 'Cut',
-                            callback: {
-                                action: 'cut'
-                            },
                             visible: {
-                                action: 'cut'
+                                action: 'cut',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                            },
+                            callback: {
+                                action: 'cut',
+                                cb: (data, treeCb) => {
+                                    dti.navigatorv2.tree.cutNode(data, treeCb);
+                                }
+                            }
+                        },
+                        copy: {
+                            name: 'Copy',
+                            visible: {
+                                action: 'copy',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                            },
+                            callback: {
+                                action: 'copy'
                             }
                         },
                         paste: {
                             name: 'Paste',
+                            visible: {
+                                action: 'paste',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                                // cb: async (data, treeCb) => {
+                                //     return await dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                // }
+                            },
                             callback: {
                                 action: 'paste',
                                 cb: (data, treeCb) => {
-                                    dti.navigatorv2.tree.pasteNode(data, treeCb);
+                                    dti.navigatorv2.tree.handlePasteRequest(data.config.action, data, treeCb);
+                                }
+                            }
+                        },
+                        pasteReference: {
+                            name: 'Paste reference',
+                            visible: {
+                                action: 'paste',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction('pastereference', data.node);
                                 }
                             },
-                            visible: {
-                                action: 'paste'
+                            callback: {
+                                action: 'paste',
+                                cb: (data, treeCb) => {
+                                    dti.navigatorv2.tree.handlePasteRequest('paste as reference', data, treeCb);
+                                }
                             }
                         },
                         delete: {
                             name: 'Delete',
+                            visible: {
+                                action: 'delete',
+                                cb: (data, treeCb) => {
+                                    return dti.navigatorv2.tree.helper.isValidMenuAction(data.config.action, data.node);
+                                }
+                            },
                             callback: {
+                                action: 'delete',
                                 cb: (data, treeCb) => {
                                     dti.navigatorv2.tree.deleteNode(data, treeCb);
                                 }
@@ -4235,74 +4477,244 @@ var dti = {
                 let self = dti.navigatorv2;
                 let selfBindings = dti.navigatorv2.bindings;
 
+                selfBindings.currNodeId(node.bindings._id());
                 selfBindings.currNodeDisplay(node.bindings.display());
                 selfBindings.currNodeType(node.bindings.nodeType());
                 selfBindings.currNodeSubType(node.bindings.nodeSubType());
+                selfBindings.currNodePointType(node.bindings["Point Type"].Value());
+                selfBindings.currNodeLocatedIn(node.bindings.locatedIn());
+                selfBindings.currNodeServedBy(node.bindings.servedBy());
                 selfBindings.currNodePath(node.bindings.path());
                 selfBindings.currNodeName(node.bindings.Name());
+                selfBindings.currRefNode(node.bindings.refNode());
             },
-            openNode: (data) => {
-                // data = {
-                //     node: node,
-                //     config: config,
-                //     configKey: configKey
-                // }
-                dti.windows.openWindow({
-                    upi: data.node.bindings._id()
-                });
+            openNode: (data, treeCb) => {
+                let id;
+
+                switch (data.node.bindings.nodeType()) {
+                    case "Application":
+                    case "Point":
+                        id = data.node.bindings._id();
+                        break;
+                    case "Reference":
+                        id = data.node.bindings.refNode();
+                        break;
+                    default:
+                        break;
+                }
+
+                if (!!id) {
+                    dti.windows.openWindow(id);
+                } else {
+                    dti.navigatorv2.tree.helper.showConfigureNodeModal('open', data, treeCb);
+                }
             },
-            pasteNode: (data, treeCb) => {
-                // data = {
-                //     node: node,
-                //     cutNode: cutNode
-                //     config: config,
-                //     configKey: configKey
-                // }
-                let self = dti.navigatorv2;
-                let reqData = {
-                    source: data.cutNode,
-                    target: data.node
-                };
-                let done = (err) => {
-                    if (!err) {
-                        treeCb('move', reqData);
-                        dti.navigatorv2.tree._cutNode = null;
-                        dti.toast('Success', 2000);
-                    }
-                    self.bindings.busy(false);
-                };
+            handlePasteRequest: (action, data, treeCb) => {
+                let self = dti.navigatorv2,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    reqData = {
+                        sourceNode: data.sourceNode,
+                        targetNode: data.node,
+                        config: data.config
+                    },
+                    validPaste = false,
+                    getParentID = (node) => {
+                        let answer = 0;
+
+                        if (node) {
+                            if (node &&
+                                node.bindings._isRoot &&
+                                node.bindings._isRoot()) {
+                                answer = 0;
+                            } else {
+                                answer = node.bindings._id();
+                            }
+                        }
+
+                        return answer;
+                    },
+                    done = (err) => {
+                        if (!err) {
+                            if (data.sourceNode.bindings.isCut()) {
+                                treeCb('move', reqData);
+                                data.sourceNode.bindings.isCut(false);
+                                validPaste = true;
+                            }
+
+                            if (validPaste) {
+                                dti.toast('Success', 2000);
+                            }
+                        } else {
+
+                        }
+                        self.bindings.busy(false);
+                    },
+                    uniquenessTestResult = (err) => {
+                        let $displayField = self.$configureNodeModal.find('.pointDisplayField');
+
+                        modalBindings.activeUniquenessCheck(false);
+                        modalBindings.pathIsValid(!err);
+
+                        if (data.sourceNode.bindings.isCut()) {
+                            if (err) {
+                                dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                                self.tree.serverOps.moveNode(reqData, done);
+                            }
+                        } else if (data.sourceNode.bindings.isCopy()) {
+                            dti.navigatorv2.tree.helper.showConfigureNodeModal(action, reqData, treeCb);
+                            if (err) {
+                                $displayField.find('input').addClass("invalid");
+                                $displayField.find('input').removeClass("valid");
+                                $displayField.find('label').attr("data-error", err);
+                            } else {
+                                $displayField.find('input').removeClass("invalid");
+                                $displayField.find('input').addClass("valid");
+                                $displayField.find('label').attr("data-error", "");
+                            }
+                        }
+                    };
 
                 self.bindings.busy(true);
-                self.tree.serverOps.moveNode(reqData, done);
+                modalBindings.activeUniquenessCheck(true);
+                dtiCommon.checkPathForUniqueness(getParentID(reqData.targetNode), reqData.sourceNode.bindings.display(), uniquenessTestResult);
             },
-            addNode: () => {
+            resetFields: () => {
+                let selfBindings = dti.navigatorv2.bindings;
+                selfBindings.busy(false);
+                selfBindings.currNodeId('');
+                selfBindings.searchString('');
+                selfBindings.currNodeDisplay('');
+                selfBindings.currNodeType('');
+                selfBindings.currNodeSubType('');
+                selfBindings.currNodePointType('');
+                selfBindings.currNodeLocatedIn(0);
+                selfBindings.currNodeServedBy([]);
+                selfBindings.currNodeDescriptors([]);
+                selfBindings.currNodePath('');
+                selfBindings.currNodeName('');
+                selfBindings.currRefNode('');
+            },
+            cutNode: (data) => {
+                let self = dti.navigatorv2,
+                    node = data.node;
+
+                if (!!node) {
+                    self.tree.clipboardNode = node;
+                }
+                self.bindings.busy(false);
+            },
+            copyNode: (data) => {
+                let self = dti.navigatorv2,
+                    node = data.node;
+
+                if (!!node) {
+                    self.tree.clipboardNode = node;
+                }
+                self.bindings.busy(false);
+            },
+            saveNode: () => {
+                let self = dti.navigatorv2,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    modalNodeData,
+                    configNodeData = self.tree._configureNodeData,
+                    sourceNode = configNodeData.sourceNode,
+                    reqData,
+                    handleAddNewNode = () => {
+                        if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
+                            let parentNode = (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node);
+                            self.tree.serverOps.createPoint(modalNodeData, parentNode, self.tree._configureNodeTreeCallback);
+                        } else {
+                            self.tree.addNode(modalNodeData);
+                        }
+                    },
+                    handleCopyAndPaste = () => {
+                        if (modalNodeData.pointType !== "") { // classic points  (AI, BV, etc)
+                            reqData = {
+                                sourceNode: configNodeData.sourceNode,
+                                targetNode: (configNodeData.targetNode ? configNodeData.targetNode : configNodeData.node),
+                                display: modalNodeData.display  // the changed point label from modal
+                            };
+                            self.tree.serverOps.copyNode(reqData, self.tree._configureNodeTreeCallback);
+                        }
+                    },
+                    handleCopyAndPasteAsReference = () => {
+                        self.tree.addNode(modalNodeData);
+                    },
+                    handleCutAndPaste = () => {
+                        reqData = {
+                            sourceNode: configNodeData.sourceNode,
+                            targetNode: configNodeData.targetNode,
+                            config: configNodeData.config
+                        };
+
+                        reqData.sourceNode.bindings.display(modalNodeData.display);  // the changed point label from modal
+                        self.tree.moveNode(reqData);
+                    };
+
+                dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, true);
+                modalBindings.activeSaveRequest(true);
+
+                modalNodeData = self.tree.helper.buildNodeFromModalOptions();
+
+                if (sourceNode && sourceNode.bindings.isCut()) {
+                    handleCutAndPaste();
+                } else if (sourceNode && sourceNode.bindings.isCopy()) {  // only classic points can be copied
+                    if (modalNodeData.nodeType === "Reference") {
+                        handleCopyAndPasteAsReference();
+                    } else {
+                        handleCopyAndPaste();
+                    }
+                } else if (modalNodeData.action === "add") {
+                    handleAddNewNode();
+                } else { // handles Open (edits) of hierarchy nodes (not classic points)
+                    self.tree.editNode(modalNodeData);
+                }
+            },
+            addNode: (data) => {
                 let self = dti.navigatorv2;
                 let selfBindings = self.bindings;
-                let modalBindings = dti.bindings.navigatorv2.addNodeModal;
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
 
-                let valid = self.tree.helper.validateNewNodeOptions();
-                let config = self.tree._addNodeData.config;
-                let parent = self.tree._addNodeData.node;
+                let valid = self.tree.helper.validateHierarchyNodeOptions();
+                let config = self.tree._configureNodeData.config;
+                let parent = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node;
                 let newNode;
+                let done = (err, returnedData) => {
+                        let nNode = returnedData.newNode || newNode,
+                            children = returnedData.points;
 
-                let done = (err, data) => {
-                    // data = {
-                    //     newNode: newNode // This is new node with properties such as _id that are set by the server
-                    //     children: children // only present if we called serverOps.importPoint
-                    // }
-                    if (!err) {
-                        self.tree._addNodeTreeCallback('add', $.extend(data, {
-                            node: newNode, // This is the new node with properties set by us (like a fake _id)
-                            parent: parent
-                        }));
-                        self.tree._addNodeTreeCallback = null; // Clear temp callback reference
-                        dti.toast('Success', 2000);
-                    }
+                        if (!err) {
+                            if (children && children.length) {
+                                children.splice(0, 1);  // slice off first index (the parent of new nodes)
+                            }
+                            self.tree._configureNodeTreeCallback('add', $.extend(returnedData, {
+                                node: nNode,
+                                newNode: nNode,
+                                parent: parent,
+                                children: children
+                            }));
 
-                    selfBindings.busy(false);
-                    modalBindings.modalOpen(false);
-                    self.$addNodeModal.closeModal();
-                };
+                            if (data.sourceNode && data.sourceNode.bindings.isCopy()) {
+                                data.sourceNode.bindings.isCopy(false);
+                            }
+
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
+                            dti.toast('Success', 2000);
+                        }
+                    };
 
                 if (valid !== true) {
                     modalBindings.error(valid);
@@ -4310,60 +4722,99 @@ var dti = {
                         modalBindings.error('');
                     }, 2000);
                 } else {
-                    newNode = self.tree.helper.buildNodeFromModalOptions();
+                    newNode = data;
                     selfBindings.busy(true);
 
-                    if (modalBindings.needsPoint() && config.nodeType !== 'Reference') {
-                        self.tree.serverOps.importPoint(newNode, parent, done);
+                    if (modalBindings.modalAction() === "Paste") {
+                        delete newNode.node;  // data.sourceNode.bindings.isCut()
+                        newNode.sourceNode = self.tree._configureNodeData.sourceNode;
+                        newNode.targetNode = self.tree._configureNodeData.targetNode;
+                        self.tree.serverOps.copyNode(newNode, done);
+                    } else if (modalBindings.needsPoint() && newNode.nodeType !== 'Reference') {
+                        self.tree.serverOps.createPoint(newNode, parent, self.tree._configureNodeTreeCallback);
                     } else {
+                        delete newNode.node;
                         self.tree.serverOps.addNode(newNode, parent, done);
                     }
                 }
             },
-            editNode: (obj) => {
-                // TODO
-                // var data = {
-                //     id: obj._id(),
-                //     display: obj.display(),
-                //     nodeType: obj.nodeType()
-                // };
+            editNode: (data) => {
+                let self = dti.navigatorv2,
+                    selfBindings = self.bindings,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    valid = self.tree.helper.validateHierarchyNodeOptions(),
+                    requestData = {
+                        id: data.id,
+                        display: (data.node.bindings.display() !== data.display ? data.display : undefined),
+                        nodeSubType: (data.node.bindings.nodeSubType() !== data.nodeSubType ? data.nodeSubType : undefined),
+                        pointType: data.node.bindings["Point Type"].Value()
+                        // meta: (data.node.bindings.meta() !== data.meta ? data.meta : undefined),
+                        // tags: (data.node.bindings.tags() !== data.tags ? data.tags : undefined)
+                    },
+                    done = (err, returnedData) => {
+                        if (!err) {
+                            self.tree._configureNodeTreeCallback('edit', data);
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+                            dti.toast('Success', 2000);
+                        } else {
+                            dti.toast('Error: ' + err, 4000);
+                        }
 
-                // this.ajax({
-                //     url: '/api/hierarchy/edit',
-                //     data: data
-                // }).done((response) => {
-                //     if (response.err) {
-                //         Materialize.toast('Error: ' + response.err, 2000);
-                //     } else {
-                //         dti.log(response);
-                //         Materialize.toast('Node edited', 1000);
-                //     }
-                // });
+                        selfBindings.busy(false);
+                        modalBindings.modalOpen(false);
+                        modalBindings.activeSaveRequest(false);
+                        dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                        self.$configureNodeModal.closeModal();
+                    };
+
+                if (valid !== true) {
+                    modalBindings.error(valid);
+                    setTimeout(() => {
+                        modalBindings.error('');
+                    }, 2000);
+                } else {
+                    self.tree.serverOps.editNode(requestData, done);
+                }
+            },
+            moveNode: (data) => {
+                let self = dti.navigatorv2,
+                    selfBindings = self.bindings,
+                    modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    done = (err, returnedData) => {
+                        if (!err) {
+                            self.tree._configureNodeTreeCallback('move', data);
+                            self.tree._configureNodeTreeCallback = null; // Clear temp callback reference
+                            dti.toast('Success', 2000);
+                        } else {
+                            dti.toast('Error: ' + err, 4000);
+                        }
+
+                        selfBindings.busy(false);
+                        modalBindings.modalOpen(false);
+                        modalBindings.activeSaveRequest(false);
+                        data.sourceNode.bindings.isCut(false);
+                        dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                        self.$configureNodeModal.closeModal();
+                    };
+
+                self.tree.serverOps.moveNode(data, done);
             },
             deleteNode: (data, treeCb) => {
-                // data = {
-                //     node: node,
-                //     config: config,
-                //     configKey: configKey
-                // }
-                mbox.alert('Delete server-side is not ready for prime time.');
-                // The below code should be ready to go once the server side is ready
+                let self = dti.navigatorv2;
+                let node = data.node;
+                let msg = 'Are you sure you want to delete ' + node.bindings.display() + '? <br /><br />WARNING: This will also delete all children of this node.';
+                let done = (err) => {
+                    if (!err) {
+                        treeCb('delete', data);
+                        dti.toast('Success', 2000);
+                    }
+                };
 
-                // let self = dti.navigatorv2;
-                // let node = data.node;
-                // let msg = 'Are you sure you want to delete ' + node.bindings.display() + '? <br /><br />WARNING: This will also delete all children of this node.';
-                // let done = (err) => {
-                //     if (!err) {
-                //         treeCb('delete', data);
-                //         dti.toast('Success', 2000);
-                //     }
-                // };
-                //
-                // mbox.confirm(msg, (yes) => {
-                //     if (yes) {
-                //         self.tree.serverOps.deleteNode(node, done);
-                //     }
-                // });
+                mbox.confirm(msg, (yes) => {
+                    if (yes) {
+                        self.tree.serverOps.deleteNode(node, done);
+                    }
+                });
             },
             helper: {
                 blockUI() {
@@ -4393,115 +4844,189 @@ var dti = {
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
+                        "Point Type.Value": (obj["Point Type"] ? obj["Point Type"].Value : undefined),
+                        locatedIn: (obj.locatedIn ? obj.locatedIn : 0),
+                        servedBy: (obj.servedBy ? obj.servedBy : []),
+                        descriptors: (obj.descriptors ? obj.descriptors : []),
                         tags: [],
                         meta: {},
                         refNode: obj.refNode || 0,
                         libraryId: 0
                     };
                 },
-                getImportData: (node, parent) => {
-                    var self = dti.navigatorv2;
-                    var obj = ko.toJS(node.bindings || node); //takes node or node.bindings
-
-                    return {
-                        upi: self.tree._addNodePoint._id,
-                        parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
-                        display: obj.display,
-                        nodeType: obj.nodeType,
-                        nodeSubType: self.tree._addNodePoint['Point Type'].Value
-                    };
-                },
-                isValidOpenAction: (data, treeCb) => {
-                    // let data = {
-                    //     node: node,
-                    //     configKey: configKey,
-                    //     config: config
-                    // };
-
-                    let answer = false,
-                        validNodetypesToOpen = ['Reference', 'Point', 'Application'];
-
-                    if (data.node) {
-                        if (validNodetypesToOpen.indexOf(data.node.bindings.nodeType()) !== -1) {
-                            answer = true;
-                        }
-                    }
-
-                    return answer;
-                },
-                validateNewNodeOptions: () => {
+                validateHierarchyNodeOptions: () => {
                     let self = dti.navigatorv2;
-                    let modalBindings = dti.bindings.navigatorv2.addNodeModal;
-                    let config = self.tree._addNodeConfig;
+                    let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
                     let messages = [];
 
-                    if (modalBindings.newNodeDisplay() === '') {
+                    if (modalBindings.modalNodeDisplay() === '') {
                         messages.push('Display must not be empty');
-                    }
-
-                    if (modalBindings.needsPoint() && modalBindings.newNodePointName() === '') {
-                        messages.push('Must choose a point');
                     }
 
                     return messages.length === 0 || messages.join('<br/>');
                 },
                 buildNodeFromModalOptions: () => {
-                    let self = dti.navigatorv2;
-                    let modalBindings = dti.bindings.navigatorv2.addNodeModal;
-                    let config = self.tree._addNodeData.config;
-                    let parentNode = self.tree._addNodeData.node;
-                    let point = self.tree._addNodePoint;
+                    let self = dti.navigatorv2,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        config = self.tree._configureNodeData.config,
+                        targetNode = self.tree._configureNodeData.targetNode || self.tree._configureNodeData.node,
+                        // for an "add" action the selected targetNode is the parent of newly requested targetNode
+                        parentNode = (modalBindings.generateNewNodeActions.indexOf(config.action) >= 0 ? targetNode : targetNode.parentNode),
+                        point = self.tree._configureNodePoint,
+                        pointSubType;
 
                     if (modalBindings.needsPoint()) {
-                        modalBindings.newNodeSubType(point.pointType);
+                        if (!!point) {
+                            modalBindings.modalNodePointType(point.pointType);
+                        }
+                        if (modalBindings.pointSubTypes().length) {
+                            for (let i = 0; i < modalBindings.pointSubTypes().length; i++) {
+                                if (modalBindings.modalPointSubType() == modalBindings.pointSubTypes()[i].enum) {
+                                    pointSubType = {};
+                                    pointSubType.Value = modalBindings.pointSubTypes()[i].text;
+                                    pointSubType.eValue = modalBindings.pointSubTypes()[i].enum;
+                                }
+                            }
+                        }
                     }
 
                     let ret = {
-                        display: modalBindings.newNodeDisplay(),
-                        nodeType: config.nodeType,
-                        nodeSubType: modalBindings.newNodeSubType(),
-                        parentNode: parentNode.bindings._id(),
-                        fetched: true
+                        display: dtiCommon.cleanLabelField(modalBindings.modalNodeDisplay()),  // remove leading & trailing spaces
+                        nodeType: modalBindings.modalNodeType(),
+                        nodeSubType: modalBindings.modalNodeSubType(),
+                        pointType: (modalBindings.selectedPointType() !== "" ? modalBindings.selectedPointType() : modalBindings.modalNodePointType()),
+                        pointSubType: pointSubType,
+                        id: targetNode.bindings._id(),
+                        refNode: (modalBindings.modalNodeType() === 'Reference' ? modalBindings.refID() : null),
+                        node: targetNode,
+                        parentNode: (!!parentNode ? parentNode.bindings._id() : null),
+                        fetched: true,
+                        action: config.action
                     };
-
-                    if (config.nodeType === 'Reference') {
-                        ret.refNode = self.tree._addNodePoint._id;
-                    }
 
                     return ret;
                 },
-                showAddNodeModal: (data, treeCb) => {
-                    // data = {
-                    //     node: node,
-                    //     config: config,
-                    //     configKey: configKey
-                    // }
-                    let self = dti.navigatorv2;
-                    let modalBindings = dti.bindings.navigatorv2.addNodeModal;
-                    let needsPoint = false;
-                    let typesNeedingPoint = ['Point', 'Application', 'Reference'];
+                showConfigureNodeModal: (action, data, treeCb) => {
+                    let self = dti.navigatorv2,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        getParentID = (node) => {
+                            let answer = 0;
 
+                            if (node) {
+                                if (node &&
+                                    node.bindings._isRoot &&
+                                    node.bindings._isRoot()) {
+                                    answer = 0;
+                                } else {
+                                    answer = node.bindings._id();
+                                }
+                            }
+
+                            return answer;
+                        };
+
+                    modalBindings.pointTypes(dti.navigatorv2.addMenusPointTypes);
+                    dti.bindings.navigatorv2.configureNodeModal.modalAction(action.charAt(0).toUpperCase() + action.slice(1));
                     modalBindings.error('');
-                    modalBindings.newNodeDisplay('');
-                    modalBindings.newNodePointName('');
-                    modalBindings.newNodeType('');
-                    modalBindings.newNodeSubType('');
+                    self.tree._configureNodeData = data;
+                    self.tree._configureNodeTreeCallback = treeCb; // Save a temp reference to the callback
 
-                    self.tree._addNodeData = data;
-                    self.tree._addNodeTreeCallback = treeCb; // Save a temp reference to the callback
-                    // this._addNodeParent = config.parent;
+                    modalBindings.modalNodeDisplay("");
+                    modalBindings.modalNodePointName("");
+                    modalBindings.modalNodeSubType("");
+                    modalBindings.modalNodePointType("");
+                    modalBindings.selectedPointType("");
+                    modalBindings.saveButtonText("Save");
 
-                    modalBindings.needsPoint(typesNeedingPoint.indexOf(data.config.nodeType) >= 0);
-                    modalBindings.newNodeType(data.config.nodeType);
+                    if (modalBindings.modalNodeType() === '') {
+                        modalBindings.modalNodeType(data.config.nodeType);
+                    }
 
-                    self.$addNodeModal.openModal();
-                    self.$addNodeModal.find('select').material_select();
-
+                    self.$configureNodeModal.openModal({
+                        dismissible: false
+                    });
+                    self.$configureNodeModal.removeClass("addingPoint");
                     modalBindings.modalOpen(true);
+
+                    switch (action) {
+                        case "add location":
+                            modalBindings.modalNodeType("Location");
+                            modalBindings.parentID(getParentID(data.node));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
+                            break;
+                        case "add equipment":
+                            modalBindings.modalNodeType("Equipment");
+                            modalBindings.parentID(getParentID(data.node));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
+                            break;
+                        case "add category":
+                            modalBindings.modalNodeType("Category");
+                            modalBindings.parentID(getParentID(data.node));
+                            self.$configureNodeModal.find('select').prop("disabled", false);
+                            break;
+                        case "add point":
+                            modalBindings.modalNodeType("Point");
+                            modalBindings.parentID(getParentID(data.node));
+                            self.$configureNodeModal.addClass("addingPoint");
+                            self.$configureNodeModal.find('select').prop("disabled", false);
+                            modalBindings.saveButtonText("Create");
+                            break;
+                        case "open":
+                            modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.modalSourceNodePath(data.node.bindings.path());
+                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
+                            modalBindings.modalNodeType(data.node.bindings.nodeType());
+                            modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
+                            self.$configureNodeModal.find('#nodeType').prop("disabled", true);
+                            // self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);  // TODO perhaps some logic around Location Type
+                            modalBindings.pathIsValid(true);
+                            break;
+                        case "rename":
+                            modalBindings.modalNodeDisplay(data.node.bindings.display());
+                            modalBindings.modalSourceNodePath(data.node.bindings.path());
+                            modalBindings.parentID((data.node.parentNode ? data.node.parentNode.bindings._id() : 0));
+                            modalBindings.modalNodeType(data.node.bindings.nodeType());
+                            modalBindings.modalNodeSubType(data.node.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.node.bindings["Point Type"].Value());
+                            self.$configureNodeModal.find('#nodeType').prop("disabled", true);
+                            self.$configureNodeModal.find('#nodeSubType').prop("disabled", false);
+                            modalBindings.pathIsValid(true);
+                            break;
+                        case "paste":
+                            modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
+                            modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
+                            modalBindings.parentID(data.targetNode.bindings._id());
+                            modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
+                            modalBindings.modalNodeType(data.sourceNode.bindings.nodeType());
+                            modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
+                            modalBindings.saveButtonText((modalBindings.modalNodePointType() ? "Create" : "Save"));
+                            self.$configureNodeModal.find('select').prop("disabled", true);
+                            break;
+                        case "paste as reference":
+                            modalBindings.modalNodeDisplay(data.sourceNode.bindings.display());
+                            modalBindings.refID(data.sourceNode.bindings._id());
+                            modalBindings.parentID(data.targetNode.bindings._id());
+                            modalBindings.modalTargetNodePath(dtiCommon.getPointName(data.targetNode.bindings.path()));
+                            modalBindings.modalNodeType("Reference");
+                            modalBindings.modalSourceNodePath(dtiCommon.getPointName(data.sourceNode.bindings.path()));
+                            modalBindings.modalNodeSubType(data.sourceNode.bindings.nodeSubType());
+                            modalBindings.modalNodePointType(data.sourceNode.bindings["Point Type"].Value());
+                            self.$configureNodeModal.find('select').prop("disabled", true);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    modalBindings.needsPoint(modalBindings.typesNeedingPoint.indexOf(modalBindings.modalNodeType()) >= 0);
+                    // self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
+                    // self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
+                    self.$configureNodeModal.find('select').material_select();
                 },
                 chooseNodePoint: () => {
                     let self = dti.navigatorv2;
-                    let config = self.tree._addNodeData.config;
+                    let config = self.tree._configureNodeData.config;
                     let pointTypes = [];
 
                     if (config.nodeType !== 'Reference') {
@@ -4521,46 +5046,158 @@ var dti = {
                         callback: self.tree.helper.handleChoosePoint,
                         disableNewPoint: true
                     });
+
+                    // let parameters = {
+                    //     terms: '',
+                    //     pointTypes: pointTypes,
+                    //     restrictPointTypes: false,
+                    //     disableNewPoint: true
+                    // };
+                    //
+                    // dtiUtility.showPointSelector(parameters);
+                    // dtiUtility.onPointSelect(self.tree.helper.handleChoosePoint);
+
+                    // dti.bindings.showPointSelector();
+                    // dti.bindings.onPointSelect(self.tree.helper.handleChoosePoint);
                 },
                 handleChoosePoint: (point) => {
                     let self = dti.navigatorv2;
-                    let modalBindings = dti.bindings.navigatorv2.addNodeModal;
+                    let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
 
-                    modalBindings.newNodePointName(point.name);
-                    self.tree._addNodePoint = point;
-                    self.tree._addNodeFilter = point.filter;
+                    modalBindings.modalNodePointName(point.name);
+                    self.tree._configureNodePoint = point;
+                    self.tree._configureNodeFilter = point.filter;
+                },
+                isValidMenuAction: (action, actionObject) => {  // strip out hierarchy bindings to test generic tree actions
+                    let sourceContainsTarget,
+                        pasteMode = action.indexOf("paste") >= 0,
+                        sourceNode = (pasteMode ? actionObject.manager.clipboardNode : actionObject),
+                        targetNode = (pasteMode ? actionObject : sourceNode),
+                        data = {
+                            targetNode: null,
+                            sourceNode: null
+                        },
+                        traverseTargetNode = (toNode, fromNodeID) => {
+                        let answer;
+
+                            while (toNode) {
+                                if (toNode.bindings._id() === fromNodeID) {
+                                    answer = true;
+                                    break;
+                                } else {
+                                    toNode = toNode.parentNode;
+                                }
+                            }
+
+                            return answer;
+                        };
+
+                    if (pasteMode && sourceNode) {
+                        sourceContainsTarget = traverseTargetNode(targetNode, sourceNode.bindings._id());
+                    }
+
+                    if (targetNode && targetNode.bindings) {
+                        data.targetNode = {
+                            _id: targetNode.bindings._id(),
+                            _isRoot: (targetNode.bindings._isRoot && targetNode.bindings._isRoot()),
+                            nodeType: targetNode.bindings.nodeType(),
+                            nodeSubType: targetNode.bindings.nodeSubType(),
+                            pointType: targetNode.bindings["Point Type"].Value(),
+                            parentNode: {
+                                _id: targetNode.parentNode ? targetNode.parentNode.bindings._id() : null,
+                                nodeType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeType() : null,
+                                nodeSubType: targetNode.parentNode ? targetNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: targetNode.parentNode ? targetNode.parentNode.bindings["Point Type"].Value() : null
+                            }
+                        };
+                    }
+
+                    if (sourceNode && sourceNode.bindings) {
+                        data.sourceNode = {
+                            _id: sourceNode.bindings._id(),
+                            _isRoot: (sourceNode.bindings._isRoot && sourceNode.bindings._isRoot()),
+                            isCut: sourceNode.bindings.isCut(),
+                            isCopy: sourceNode.bindings.isCopy(),
+                            display: sourceNode.bindings.display(),
+                            nodeType: sourceNode.bindings.nodeType(),
+                            nodeSubType: sourceNode.bindings.nodeSubType(),
+                            pointType: sourceNode.bindings["Point Type"].Value(),
+                            parentNode: {
+                                _id: sourceNode.parentNode ? sourceNode.parentNode.bindings._id() : null,
+                                nodeType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeType() : null,
+                                nodeSubType: sourceNode.parentNode ? sourceNode.parentNode.bindings.nodeSubType() : null,
+                                pointType: sourceNode.parentNode ? sourceNode.parentNode.bindings["Point Type"].Value() : null
+                            }
+                        };
+                    }
+
+                    return dtiCommon.isValidHierarchyAction(action, data, sourceContainsTarget);
+                },
+                closeModal: () => {
+                    let self = dti.navigatorv2,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal;
+
+                    self.$configureNodeModal.find('label').attr("data-error", "");  // clear all error messages
+                    self.$configureNodeModal.find('input').removeClass("invalid");  // clear all error messages
+                    self.$configureNodeModal.removeClass("addingPoint");
+                    self.$configureNodeModal.closeModal();
+
+                    modalBindings.modalOpen(false);
+                    self.bindings.busy(false);
                 }
             },
             serverOps: {
-                importPoint(node, parent, cb) {
-                    let self = dti.navigatorv2;
-                    let data = self.tree.helper.getImportData(node, parent);
-                    let err = false;
-                    let cbData = {};
+                createPoint(nodeData, parent, treeCb) {
+                    let self = dti.navigatorv2,
+                        selfBindings = self.bindings,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        err = false,
+                        cbData = {
+                            newNode: nodeData.node,
+                            parent: parent,
+                            action: "add"
+                        },
+                        data = {
+                            upi: 0,
+                            targetUpi: 0,
+                            id: 0,
+                            parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                            parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                            display: nodeData.display,
+                            nodeType: nodeData.nodeType,
+                            nodeSubType: nodeData.nodeSubType,
+                            pointType: nodeData.pointType,
+                            pointSubType: nodeData.pointSubType
+                        };
 
                     dti.post({
-                        url: '/api/points/addPointToHierarchy',
+                        url: '/api/points/create',
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
-                        let result = response[0];
+                        let result = response;
 
                         if (!result) {
-                            err = 'An unknown error occured';
+                            err = 'An unknown error occurred';
                         } else if (result.err) {
-                            err = 'Error adding node: ' + result.err.errmsg || result.err;
+                            err = 'Error creating point: ' + result.err;
                         } else {
-                            cbData.newNode = result;
-                            cbData.children = response.slice(1);
+                            cbData.newNode = result.newPoint;
                         }
                     }).fail(() => {
                         err = 'A network error occurred';
                     }).always(() => {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
                         }
-                        cb(!!err, cbData);
+                        dti.navigatorv2.handleNewPoint(!!err, cbData, treeCb);
                     });
                 },
                 addNode(node, parent, cb) {
@@ -4575,12 +5212,12 @@ var dti = {
                         url: '/api/hierarchy/add',
                         data: data
                     }).done((response) => {
-                        dti.log(response);
+                        // dti.log(response);
 
                         let result = response[0];
 
                         if (!result) {
-                            err = 'An unknown error occured';
+                            err = 'An unknown error occurred';
                         } else if (result.err) {
                             err = 'Error adding node: ' + result.err.errmsg || result.err;
                         } else {
@@ -4595,32 +5232,66 @@ var dti = {
                         cb(!!err, cbData);
                     });
                 },
-                editNode() {
-                    // TODO
+                editNode(data, cb) {
+                    let self = dti.navigatorv2,
+                        err = false,
+                        cbData = {};
+
+                    // TODO probably needs to be a socket call for large rename requests
+                    dti.post({
+                        url: '/api/hierarchy/edit',
+                        data: data
+                    }).done((response) => {
+                        // dti.log(response);
+
+                        let result = response;
+
+                        if (!result) {
+                            err = 'An unknown error occurred';
+                        } else if (result.err) {
+                            err = 'Error adding node: ' + result.err.errmsg || result.err;
+                        } else {
+                            cbData.newNode = result.newNode;
+                        }
+                    }).fail(() => {
+                        err = 'A network error occurred';
+                    }).always(() => {
+                        if (err) {
+                            dti.toast(err, 5000, 'errorToast');
+                        }
+                        cb(!!err, cbData);
+                    });
                 },
                 moveNode(data, cb) {
-                    // data: {
-                    //     source: source node
-                    //     target: target node to move the source node into
-                    // }
-                    let err = false;
+                    let err = false,
+                        getParentID = (node) => {
+                            let answer = 0;
+
+                            if (node) {
+                                if (node &&
+                                    node.bindings._isRoot &&
+                                    node.bindings._isRoot()) {
+                                    answer = 0;
+                                } else {
+                                    answer = node.bindings._id();
+                                }
+                            }
+
+                            return answer;
+                        };
 
                     dti.post({
                         url: '/api/hierarchy/move',
                         data: {
-                            id: data.source.bindings._id(),
-                            parentNode: data.target.bindings._id()
+                            id: data.sourceNode.bindings._id(),
+                            display: data.sourceNode.bindings.display(), // UI allows for a label change
+                            parentNode: getParentID(data.targetNode)
                         }
                     }).done((response) => {
-                        // reponse: {
-                        //     err: 'error message here',
-                        //     // OR
-                        //     message: 'success'
-                        // }
-                        dti.log(response);
+                        // dti.log(response);
 
                         if (!response) {
-                            err = 'An unknown error occured';
+                            err = 'An unknown error occurred';
                         } else if (response.err) {
                             err = 'Error moving node: ' + response.err;
                         }
@@ -4633,24 +5304,79 @@ var dti = {
                         cb(!!err);
                     });
                 },
-                deleteNode(node, cb) {
-                    let self = dti.navigatorv2;
-                    let data = {
-                        id: node.bindings._id(),
-                        deleteChildren: true
-                    };
-                    let err = false;
+                copyNode(data, cb) {
+                    let self = dti.navigatorv2,
+                        selfBindings = self.bindings,
+                        modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                        err = false,
+                        cbData = {},
+                        hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
+                        rawPoint = hierarchyNodeTypes[data.sourceNode.bindings.nodeType()] === undefined,
+                        parentNode = data.targetNode,
+                        url = rawPoint ? '/api/points/copy' : '/api/hierarchy/copy',
+                        copyRequestData = {
+                            newPoint: {
+                                targetUpi: data.sourceNode.bindings._id(),
+                                display: data.display,
+                                parentNode: parentNode.bindings._id()
+                            }
+                        };
 
                     dti.post({
-                        url: '/api/hierarchy/delete',
+                        url: url,
+                        data: copyRequestData
+                    }).done((response) => {
+                        // dti.log(response);
+
+                        let result = response;
+
+                        if (!result) {
+                            err = 'An unknown error occurred';
+                        } else if (result.err) {
+                            err = 'Error copying node: ' + result.err;
+                        } else {
+                            cbData.sourceNode = data.sourceNode;
+                            cbData.newNode = (!!result.points ? result.points[0] : null);
+                            cbData.newNode.newPoint.isCopiedPoint = true;
+                            cbData.points = (!!result.points ? result.points : []);
+                            cbData.parent = (!!parentNode ? parentNode : null);
+                            cbData.action = "copy";
+                        }
+                    }).fail(() => {
+                        err = 'A network error occurred';
+                    }).always(() => {
+                        if (err) {
+                            dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            selfBindings.busy(false);
+                            modalBindings.modalOpen(false);
+                            modalBindings.activeSaveRequest(false);
+                            dti.utility.blockControlUI(dti.navigatorv2.$configureNodeModal, false);
+                            self.$configureNodeModal.closeModal();
+                        }
+                        if (rawPoint) {
+                            dti.navigatorv2.handleNewPoint(!!err, cbData, cb);
+                        } else  {
+                            cb(!!err, cbData);
+                        }
+                    });
+                },
+                deleteNode(node, cb) {
+                    let self = dti.navigatorv2,
+                        data = {
+                            id: node.bindings._id(),
+                            deleteChildren: true
+                        },
+                        err = false,
+                        hierarchyNodeTypes = dti.utility.getConfig("Enums.Hierarchy Types"),
+                        rawPoint = hierarchyNodeTypes[node.bindings.nodeType()] === undefined,
+                        url = rawPoint ? '/api/points/delete' : '/api/hierarchy/delete';
+
+                    dti.post({
+                        url: url,
                         data: data
                     }).done((response) => {
-                        // reponse: {
-                        //     err: 'error message here',
-                        //     // OR
-                        //     message: 'success'
-                        // }
-                        dti.log(response);
+                        // dti.log(response);
 
                         if (!response) {
                             err = 'An unknown error occured';
@@ -4662,6 +5388,8 @@ var dti = {
                     }).always(() => {
                         if (err) {
                             dti.toast(err, 5000, 'errorToast');
+                        } else {
+                            dti.navigatorv2.tree.resetFields();
                         }
                         cb(!!err);
                     });
@@ -4689,17 +5417,24 @@ var dti = {
         initBindings: () => {
             dti.navigatorv2.bindings = $.extend(ko.viewmodel.fromModel({
                 busy: false,
+                currNodeId: '',
                 searchString: '',
                 currNodeDisplay: '',
                 currNodeType: '',
                 currNodeSubType: '',
+                currNodePointType: '',
+                currNodeLocatedIn: 0,
+                currNodeServedBy: [],
+                currNodeDescriptors: [],
                 currNodePath: '',
-                currNodeName: ''
+                currNodeName: '',
+                currRefNode: ''
             }), {
                 treeConfig: dti.navigatorv2.tree.config
             });
 
-            let selfBindings = dti.navigatorv2.bindings;
+            let selfBindings = dti.navigatorv2.bindings,
+                modalBindings = dti.bindings.navigatorv2.configureNodeModal;
 
             selfBindings.searchInput = ko.computed(selfBindings.searchString).extend({
                 throttle: 1000
@@ -4715,8 +5450,77 @@ var dti = {
                     } else {
                         dti.navigatorv2.tree.helper.unblockUI();
                     }
+                }),
+                modalBindings.selectedPointType.subscribe((val) => {
+                    let subTypes,
+                        arrayOfSubTypes = [];
+                    if (val !== "") {
+                        subTypes = dti.utility.getConfig("Enums." + val +" Types");
+                        if (subTypes) {
+                            arrayOfSubTypes = Object.keys(subTypes).map(function (subType) {
+                                return {
+                                    text: subType,
+                                    enum: subTypes[subType].enum
+                                };
+                            });
+                        }
+                    }
+                    dti.bindings.navigatorv2.configureNodeModal.pointSubTypes(arrayOfSubTypes);
+                    dti.navigatorv2.$configureNodeModal.find("#pointSubTypesDropdown").material_select();
                 })
             ];
+        },
+        resetPointTypesArray: () => {
+            let i,
+                len = dti.navigatorv2.addMenusPointTypes.length;
+            for (i = 0; i < len; i++) {
+                dti.navigatorv2.addMenusPointTypes[i].selected = false;
+                dti.navigatorv2.addMenusPointTypes[i].visible = true;
+            }
+        },
+        handleNewPoint: (err, data, treeCb) => {
+            if (err) {
+                dti.log(err);
+                dti.toast('Point Creation Error: ' + err, 3000);
+            } else {
+                let self = dti.navigatorv2,
+                    treeViewerCallback = treeCb,
+                    newNode = data.newNode,
+                    newPoint = (newNode.newPoint ? newNode.newPoint : newNode),
+                    pointType = (newPoint["Point Type"] ? newPoint["Point Type"].Value : null),
+                    endPoint = (pointType ? dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, newPoint._id) : null),
+                    handoffMode = (endPoint ? (endPoint.edit || endPoint.review) : null),
+                    handleAddNewPointToHierarchy = (returnData) => {
+                        if (treeViewerCallback) {
+                            treeViewerCallback(data.action, {
+                                node: returnData,
+                                sourceNode: data.sourceNode,
+                                parent: data.parent,
+                                target: data.parent,
+                                newNode: returnData
+                            });
+                            treeViewerCallback = null;
+                        }
+                    };
+
+                if (endPoint) {
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: dtiCommon.getPointName(newPoint.path),
+                        pointType: pointType,
+                        upi: newPoint.id,
+                        pointData: newPoint,
+                        afterSaveCallback: handleAddNewPointToHierarchy,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                    dti.navigatorv2.resetPointTypesArray();
+                } else {
+
+                }
+            }
         },
         destroy(config) {
             let self = dti.navigatorv2;
@@ -4734,6 +5538,21 @@ var dti = {
 
             dti.destroyObject(self.bindings);
         },
+        initPointTypes: (observablePointTypes) => {  // TODO this needs to be a shared method of dti
+            dti.navigatorv2.addMenusPointTypes = [];
+            dti.forEachArray(dti.utility.pointTypes, (type) => {
+                dti.navigatorv2.addMenusPointTypes.push({
+                    name: type.key,
+                    enum: type.enum,
+                    selected: false,
+                    visible: false
+                });
+            });
+
+            if (typeof observablePointTypes === "function") {
+                observablePointTypes(dti.navigatorv2.addMenusPointTypes);
+            }
+        },
         initNavigator: (config) => {
             let markup = dti.utility.getTemplate('#navigatorv2Template');
 
@@ -4741,7 +5560,10 @@ var dti = {
 
             dti.navigatorv2.initBindings();
 
+
             ko.applyBindings(dti.navigatorv2.bindings, config.$container[0]);
+
+            dti.navigatorv2.initPointTypes();
 
             config.getWindow().bindings.loading(false);
 
@@ -4753,6 +5575,22 @@ var dti = {
     utility: {
         systemEnums: {},
         systemEnumObjects: {},
+        blockControlUI: ($control, state) => {
+            if (state) {
+                $control.block({
+                    message: null,
+                    css: {
+                        border: 'none'
+                    },
+                    overlayCSS: {
+                        backgroundColor: 'transparent'
+                    }
+                });
+            } else {
+                $control.unblock();
+            }
+            $control.attr("disabled", state);
+        },
         getPointTypeFromUPI(upi) {
             return dti.utility.getConfig('Utility.getPointTypeNameFromId', upi);
         },
@@ -4791,7 +5629,13 @@ var dti = {
             return ret;
         },
         getTemplate: function (id) {
-            var markup = $(id).html();
+            var markup;
+
+            if (id[0] !== '#') {
+                id = '#' + id;
+            }
+
+            markup = $(id).html();
 
             return $(markup);
         },
@@ -4818,6 +5662,20 @@ var dti = {
             }
 
             return dti.utility.clone(result);
+        },
+        getBatchConfig: function (path, parameters) {
+            // ------ This function Calls the config function defined by the path for each parameter in the parameters array
+            // path: string path to the desired config.js function, i.e. 'Utility.getPointName',
+            // parameters: [param1, param2, param3, etc.] --> paramN is an array list of arguments; if a single argument is itself
+            //                                                an array, it must be wrapped because getConfig calls the 'path'
+            //                                                function with fn.apply, i.e. parameters = [[['4250', 'Mech Room']], ...]
+            var results = [];
+
+            dti.forEachArray(parameters, function (params) {
+                results.push(dti.utility.getConfig(path, params));
+            });
+
+            return results;
         },
         getEndpoint: function (type, id) {
             return dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(type, id);
@@ -5049,7 +5907,6 @@ var dti = {
                 this.initBindings();
             }
 
-
             defaultCallback(data) {
                 dti.windows.openWindow(data._id);
             }
@@ -5078,7 +5935,9 @@ var dti = {
                     focus: false,
                     mode: this.modes.DEFAULT,
                     pointTypesShown: false,
-                    pointTypes: this.pointTypes
+                    pointTypes: this.pointTypes,
+                    remoteUnitId: null,
+                    deviceId: null
                 });
 
                 this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
@@ -5096,12 +5955,10 @@ var dti = {
 
                     if (!selected) {
                         this.setPointTypes(type);
+                    } else if (numSelected === 1) {//only this one selected, select all
+                        this.setPointTypes(null);
                     } else {
-                        if (numSelected === 1) {//only this one selected, select all
-                            this.setPointTypes(null);
-                        } else {
-                            this.setPointTypes(type);
-                        }
+                        this.setPointTypes(type);
                     }
                 };
 
@@ -5230,14 +6087,15 @@ var dti = {
                     return false;
                 }
 
-                this._skipSearch = skipSearch;
-
                 this.bindings.busy(true);
+
                 dti.post({
                     url: '/api/points/getFilteredPoints',
                     data: {
-                        terms: this.bindings.searchString().split(' '),
-                        pointTypes: this.bindings.flatPointTypeList()
+                        terms: dtiCommon.buildSearchTerms(this.bindings.searchString().trim()),
+                        pointTypes: this.bindings.flatPointTypeList(),
+                        remoteUnitId: this.bindings.remoteUnitId(),
+                        deviceId: this.bindings.deviceId()
                     }
                 }).done((results) => {
                     this.handleSearchResults(results);
@@ -5349,6 +6207,8 @@ var dti = {
                     this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
                     this.bindings.searchString(config.terms || '');
                     this.bindings.mode(config.mode ? config.mode : this.modes.DEFAULT);
+                    this.bindings.deviceId(config.deviceId);
+                    this.bindings.remoteUnitId(config.remoteUnitId);
 
                     this.setPointTypes(config, true);
                 } else {
@@ -5364,7 +6224,6 @@ var dti = {
 
                     this.setPointTypes(this.pointTypes, true);
                 }
-
 
 
                 this.search();
@@ -5433,6 +6292,27 @@ var dti = {
                     '_safariPrivate_': true, //store2.js
                     'sessionId': true,
                     'debug': true
+                },
+                doGetConfig = function (utilityFn) {
+                    var path = config.path,
+                        parameters = config.parameters,
+                        id = config._getCfgID,
+                        ret,
+                        winId = config._windowId;
+
+                    ret = dti.utility[utilityFn](path, parameters);
+
+                    setTimeout(function sendConfigInfo() {
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: winId,
+                            value: {
+                                _getCfgID: id,
+                                message: utilityFn,
+                                value: ret
+                            }
+                        });
+                    }, 1000);
                 },
                 callbacks = {
                     showPointSelectorOld: function () {
@@ -5533,25 +6413,10 @@ var dti = {
                             dti.windows.closeWindow(windowId);
                     },
                     getConfig: function () {
-                        var path = config.path,
-                            parameters = config.parameters,
-                            id = config._getCfgID,
-                            ret,
-                            winId = config._windowId;
-
-                        ret = dti.utility.getConfig(path, parameters);
-
-                        setTimeout(function sendConfigInfo() {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    _getCfgID: id,
-                                    message: 'getConfig',
-                                    value: ret
-                                }
-                            });
-                        }, 1000);
+                        doGetConfig('getConfig');
+                    },
+                    getBatchConfig: function () {
+                        doGetConfig('getBatchConfig');
                     },
                     getUser: function () {
                         var winId = config._windowId,
@@ -5760,7 +6625,7 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
-        darkMode: ko.observable(true),
+        darkMode: ko.observable(false),
         hasAccess: function (obj) {
             var cfg = ko.toJS(obj.value);
 
@@ -5773,23 +6638,65 @@ var dti = {
         //     dti.navigator.showNavigator();
         // },
         navigatorv2: {
-            addNodeModal: $.extend(ko.viewmodel.fromModel({
+            configureNodeModal: $.extend(ko.viewmodel.fromModel({
                 modalOpen: false,
                 needsPoint: false,
+                activeSaveRequest: false,
+                activeUniquenessCheck: false, // needed for binding of unique test on Label field (display field)
+                pathIsValid: true,  // needed for binding of unique test on Label field (display field)
+                parentID: '',  // needed for binding of unique test on Label field (display field)
+                refID: '',
                 error: '&nbsp;',
-                availableTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
+                hierarchyTypes: ['', 'Location', 'Equipment', 'Category', 'Point', 'Reference'],
+                locationSubTypes: ['Site', 'Area', 'Building', 'Floor', 'Room'],
+                pointSubTypes: [],
+                typesNeedingPoint: ['Application', 'Point', 'Reference'],
+                generateNewNodeActions: ["add", "paste", "pastereference"],
                 //add node stuff
-                newNodeDisplay: '',
-                newNodeType: '',
-                newNodeSubType: '',
-                newNodePointName: ''
+                modalAction: '',
+                modalNodeDisplay: '',
+                modalTargetNodePath: '',
+                modalSourceNodePath: '',
+                modalNodeType: '',
+                modalNodeSubType: '',
+                modalNodePointName: '',
+                modalNodePointType: '',
+                modalPointSubType: '',
+                modalNodeLocatedIn: 0,
+                modalNodeServedBy: [],
+                modalNodeDescriptors: [],
+                pointTypesShown: false,
+                pointTypeText: 'Point Types',
+                selectedPointType: '',
+                pointTypes: [],
+                saveButtonText: 'Save'
             }), {
                 addNode() {
                     dti.navigatorv2.tree.addNode();
                 },
+                saveNode() {
+                    dti.navigatorv2.tree.saveNode();
+                },
                 chooseNodePoint() {
                     dti.navigatorv2.tree.helper.chooseNodePoint();
+                },
+                closeModal() {
+                    dti.navigatorv2.tree.helper.closeModal();
                 }
+            }),
+            okToSave: ko.pureComputed(() => {
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal,
+                    answer = (!modalBindings.activeSaveRequest() &&
+                        !modalBindings.activeUniquenessCheck() &&
+                        modalBindings.pathIsValid() &&
+                        modalBindings.modalNodeDisplay() !== '' &&
+                        (modalBindings.modalAction() !== "Add point" || modalBindings.selectedPointType() !== ''));
+
+                return answer;
+            }),
+            activatePointSubType: ko.pureComputed(() => {
+                let modalBindings = dti.bindings.navigatorv2.configureNodeModal;
+                return (modalBindings.selectedPointType() !== "" && modalBindings.pointSubTypes().length > 0);
             })
         },
         globalSearch: {
@@ -6080,7 +6987,17 @@ var dti = {
                         $menu,
                         menuId = dti.makeId(),
                         buttonId = $element.attr('id'),
-                        hoverMenu;
+                        hoverMenu,
+                        initMenu = () => {
+                            $menu.attr('id', menuId)
+                                .position({
+                                    of: $element,
+                                    my: 'left top',
+                                    at: 'left bottom'
+                                });
+
+                            hoverMenu = dti.events.hoverMenu('#' + buttonId, menuId);
+                        };
 
                     if (!buttonId) {
                         buttonId = dti.makeId();
@@ -6093,16 +7010,11 @@ var dti = {
 
                     ko.applyBindingsToDescendants(newContext, $menu[0]);
 
-                    setTimeout(function positionTaskbarMenu() {
-                        $menu.attr('id', menuId)
-                            .position({
-                                of: $element,
-                                my: 'center top-48',
-                                at: 'center bottom'
-                            });
-
-                        hoverMenu = dti.events.hoverMenu('#' + buttonId, menuId);
-                    }, 100);
+                    if (dti.loaded !== true) {
+                        dti.on('loaded', initMenu);
+                    } else {
+                        initMenu();
+                    }
 
                     ko.utils.domNodeDisposal.addDisposeCallback(element, function disposeTaskbarMenu() {
                         hoverMenu.destroy();
@@ -6517,6 +7429,12 @@ var dti = {
                         parentNode: 0,
                         nodeType: '',
                         nodeSubType: '',
+                        "Point Type" : {
+                            Value: ""
+                        },
+                        locatedIn: 0,
+                        servedBy: [],
+                        descriptors: [],
                         path: [],
                         Name: '',
                         refNode: 0,
@@ -6529,6 +7447,7 @@ var dti = {
                         fetched: false,
                         selected: false,
                         isCut: false,
+                        isCopy: false,
 
                         hasChildren: false
                     };
@@ -6539,6 +7458,13 @@ var dti = {
 
                     this.manager = config.manager;
                     this.defaultConfig = $.extend(true, this.defaultConfig, config);
+
+                    // ****   loss of purity here, but I do like the simplified field name backend is returning "Point Type.Value"
+                    // if (this.defaultConfig["Point Type"]) {
+                    //     this.defaultConfig.pointType = this.defaultConfig["Point Type"].Value;
+                    // }
+                    // ****
+
                     delete this.defaultConfig.manager;
 
                     this.bindings = ko.viewmodel.fromModel(this.defaultConfig);
@@ -6616,6 +7542,8 @@ var dti = {
 
                     this.nodeMatrix = {};
 
+                    this.clipboardNode = null;
+
                     this.collator = new Intl.Collator(undefined, {
                         numeric: true,
 
@@ -6625,7 +7553,10 @@ var dti = {
                     this.callbackActions = {
                         add: this.addNode,
                         delete: this.deleteNode,
-                        move: this.moveNode
+                        move: this.moveNode,
+                        copy: this.copyNode,
+                        edit: this.editNode,
+                        rename: this.editNode
                     };
 
                     this.initBindings(config);
@@ -6662,52 +7593,53 @@ var dti = {
                             dti.log('No node for highlightNode', options);
                         }
                     };
-                    let isValidPasteAction = (node) => {
-                        let cutNode = manager._cutNode;
-                        let cutNodeId = cutNode && cutNode.bindings._id();
-                        let isValid = !!manager._cutNode;
-
-                        // Make sure we don't show paste if right-clicking the cut node or inside the cut node
-                        while (isValid && node) {
-                            if (node.bindings._id() === cutNodeId) {
-                                isValid = false;
-                            } else {
-                                node = node.parentNode;
-                            }
-                        }
-
-                        return isValid;
-                    };
                     let preCallbackAction = (data) => {
-                        // data = {
-                        //     node: node,
-                        //     configKey: configKey,
-                        //     config: config
-                        // }
-                        let node = data.node;
-                        let configKey = data.configKey;
-                        let config = data.config;
-                        let runCb = true; // This routine's response determines if the context menu's callback is executed or not
+                        let node = data.node,
+                            configKey = data.configKey,
+                            config = data.config,
+                            runCb = true; // This routine's response determines if the context menu's callback is executed or not
 
-                        if (config.action === 'cut') {
-                            if (configKey === 'visible') {
-                                // Cut is always visible unless context menu is invoked on the fake root node
-                                runCb = !!!(node.bindings._isRoot && node.bindings._isRoot());
-                            } else { // configKey = 'callback'
-                                // User clicked the 'cut' option
-                                // If we already have a cut node
-                                if (manager._cutNode) {
-                                    manager._cutNode.bindings.isCut(false); // Clear cut indication
+                        if (node) {
+                            if (configKey === 'visible' && config.cb) {
+                                runCb = config.cb(data);
+                            } else {
+                                switch (config.action) {
+                                    case "add":
+                                        break;
+                                    case "copy":
+                                            // User clicked the 'copy' option
+                                            // If we already have a copy node
+                                            if (manager.clipboardNode) {
+                                                manager.clipboardNode.bindings.isCopy(false); // Clear copy indication
+                                                manager.clipboardNode.bindings.isCut(false); // Clear cut indication
+                                            }
+                                            manager.clipboardNode = node; // Update copy node
+
+                                            node.bindings.isCut(false);
+                                            node.bindings.isCopy(true);
+                                        break;
+                                    case "cut":
+                                            if (manager.clipboardNode) { // If we already have a cut node
+                                                manager.clipboardNode.bindings.isCopy(false); // Clear copy indication
+                                                manager.clipboardNode.bindings.isCut(false); // Clear cut indication
+                                            }
+                                            manager.clipboardNode = node; // Update cut node
+
+                                            node.bindings.isCut(true);
+                                            node.bindings.isCopy(false);
+                                        break;
+                                    case "delete":
+                                        break;
+                                    case "open":
+                                        break;
+                                    case "paste":
+                                        if (!!manager.clipboardNode) {
+                                            data.sourceNode = manager.clipboardNode;
+                                        }
+                                        break;
+                                    default:
+                                        break;
                                 }
-                                manager._cutNode = node; // Update cut node
-                                node.bindings.isCut(true);
-                            }
-                        } else if (config.action === 'paste') {
-                            if (configKey === 'visible') {
-                                runCb = isValidPasteAction(node);
-                            } else { // configKey = 'callback'
-                                // Add cut node to the data object
-                                data.cutNode = manager._cutNode;
                             }
                         }
 
@@ -6715,15 +7647,32 @@ var dti = {
                     };
                     let makeHandler = (configKey, config) => {
                         return (key, opt) => {
-                            let node = getNode(key, opt);
-                            let runCb = true;
-                            let data = {
-                                node: node,
-                                configKey: configKey,
-                                config: config
-                            };
+                            let node = getNode(key, opt),
+                                runCb = true,
+                                data = {
+                                    node: node,
+                                    configKey: configKey,
+                                    config: config
+                                };
 
                             if (node) {
+                                // if (config.action) {
+                                //     preCallbackAction(data).then(result => {
+                                //         runCb = result;
+                                //
+                                //         if (runCb && config.cb) {
+                                //             return config.cb(data, function () {
+                                //                 manager.handleCallback.apply(manager, arguments);
+                                //             });
+                                //         } else {
+                                //             return runCb;
+                                //         }
+                                //     });
+                                // } else {
+                                //     return runCb;
+                                // }
+
+                                // ** Original **
                                 if (config.action) {
                                     runCb = preCallbackAction(data);
                                 }
@@ -6869,7 +7818,7 @@ var dti = {
                 handleCallback(action, data) {
                     // This routine is always called with 'this' set to the TreeViewer class instance.
                     // We need to preserve 'this' when calling the action, hence the '.call' in the function invocation
-                    if (this.callbackActions[action]) {
+                    if (this.callbackActions && this.callbackActions[action]) {
                         this.callbackActions[action].call(this, data);
                     } else {
                         dti.log('treeAction "', action, '" not found');
@@ -6892,18 +7841,35 @@ var dti = {
                     return this.getNodeById(_id);
                 }
 
-                addRootNode() {
+                addRootNode(cb) {
                     let manager = this;
-                    var rootNode = manager.getNode({
-                        display: 'InfoScan',
-                        fetched: true,
-                        expanded: true,
-                        nodeType: 'Location',
-                        nodeSubType: 'Site',
-                        _isRoot: true
-                    });
+                    var rootNode,
+                        createRootNode = (siteName) => {
+                            rootNode = manager.getNode({
+                                display: siteName,
+                                fetched: true,
+                                expanded: true,
+                                nodeType: 'Location',
+                                nodeSubType: 'Site',
+                                _isRoot: true
+                            });
 
-                    manager.rootNode = manager.createNode(rootNode, null, true);
+                            manager.rootNode = manager.createNode(rootNode, null, true);
+                            if (cb) {
+                                cb();
+                            }
+                        }
+
+                    $.ajax({
+                        url: '/api/system/preferences'
+                    }).done(function (data) {
+                        if (!!data.err) {
+                            console.log(data);
+                            alert('There was an error getting preferences.');
+                        } else {
+                            createRootNode(data.siteName);
+                        }
+                    });
                 }
 
                 addNode(data) { // Callback action
@@ -6923,13 +7889,13 @@ var dti = {
 
                     manager.bindings.getBranch(parent, () => {
                         node = manager.createNode(node, parent);
-                        manager.markNodeSaved(node, node.bindings._id(), data.newNode);
+                        manager.markNodeSaved(node, node.bindings._id(), newNode);
 
                         if (children) {
                             let readyChildren = [];
 
                             dti.forEachArray(children, (child) => {
-                                readyChildren.push(child.newNode);
+                                readyChildren.push(child.newNode || child);
                             });
 
                             readyChildren = manager.normalize(readyChildren);
@@ -6938,33 +7904,75 @@ var dti = {
                     });
                 }
 
+                editNode(data) { // Callback action
+                    let manager = this,
+                        node = data.node,
+                        newPath = node.bindings.path(),
+                        rebuildChildrenPaths = (parentPath, children) => {
+                            dti.forEachArray(children, (child) => {
+                                let newPath = parentPath.concat([child.display()]);
+
+                                child.path(newPath);
+                                if (child.children().length) {
+                                    rebuildChildrenPaths(newPath, child.children());
+                                }
+                            });
+                        };
+
+                    newPath[newPath.length - 1] = data.display; // a rename
+                    node.bindings.display(data.display);
+                    node.bindings.nodeSubType(data.nodeSubType);
+                    node.bindings["Point Type"].Value(data["Point Type"] ? data["Point Type"].Value : data.pointType);
+                    node.bindings.path(newPath);
+                    rebuildChildrenPaths(node.bindings.path(), node.bindings.children());
+                }
+
                 deleteNode(data) { // Callback action
-                    // data = {
-                    //     node: node,
-                    //     config: config,
-                    //     configKey: configKey
-                    // }
-                    // This routine is called with 'this' set to the TreeViewer class instance.
                     let node = data.node;
                     let parent = node.parentNode;
+                    let clipboardNode = node.manager.clipboardNode;
+                    let anyOfMyChildrenOnClipboard = (theChildren) => {
+                        let foundNode = false,
+                            numberOfChildren = theChildren.length;
+
+                        if (numberOfChildren) {
+                            for (let i = 0; i < numberOfChildren; i++) {
+                                if (clipboardNode.defaultConfig._id === theChildren[i]._id()) {
+                                    foundNode = true;
+                                } else {
+                                    foundNode = anyOfMyChildrenOnClipboard(theChildren[i].children());
+                                }
+
+                                if (foundNode) {
+                                    return foundNode;
+                                }
+                            }
+                        }
+
+                        return foundNode;
+                    };
+
+                    if (clipboardNode) {
+                        if (clipboardNode.defaultConfig._id === node.defaultConfig._id) {
+                            node.manager.clipboardNode = null;
+                        } else if (anyOfMyChildrenOnClipboard(node.bindings.children())) {
+                            node.manager.clipboardNode = null;
+                        }
+                    }
 
                     if (parent) {
                         parent.deleteChild(node);
                     } else {
                         this.rootNode.bindings.children.remove(node.bindings);
                     }
+
                 }
 
                 moveNode(data) { // Callback action
-                    // This routine is called with 'this' set to the TreeViewer class instance.
-                    // data: {
-                    //     source: source node,
-                    //     target: target node to move the source node into
-                    // }
                     let manager = this;
-                    let source = data.source;
+                    let source = data.sourceNode;
                     let sourceParent = source.parentNode;
-                    let target = data.target;
+                    let target = data.targetNode;
                     let targetChildren = target.bindings.children;
                     let rebuildChildrenPaths = (parentPath, children) => {
                         dti.forEachArray(children, (child) => {
@@ -6972,14 +7980,14 @@ var dti = {
 
                             child.path(newPath);
 
-                            if (child.children.length) {
+                            if (child.children().length) {
                                 rebuildChildrenPaths(newPath, child.children());
                             }
                         });
                     };
 
                     source.bindings.isCut(false);
-                    manager._cutNode = null;
+                    manager.clipboardNode = null;
 
                     sourceParent.deleteChild(source);
                     target.addChild(source);
@@ -6990,6 +7998,18 @@ var dti = {
                     // Update path for source and all source's children
                     source.bindings.path(target.bindings.path().concat([source.bindings.display()]));
                     rebuildChildrenPaths(source.bindings.path(), source.bindings.children());
+                }
+
+                copyNode(data) {
+                    let manager = this,
+                        source = data.sourceNode;
+
+                    data.node = data.newNode;
+                    data.parent = data.target;
+                    this.addNode(data);
+
+                    source.bindings.isCopy(false);
+                    manager.clipboardNode = null;
                 }
 
                 addBranch(children, parent) {
@@ -7084,8 +8104,8 @@ var dti = {
                     node.bindings._id(newId);
                     node.bindings.path(newNode.path);
 
-                    this.nodeMatrix[newId] = node;
                     delete this.nodeMatrix[oldId];
+                    this.nodeMatrix[newId] = node;
                 }
 
                 normalize(arr, cfg) {
@@ -7144,27 +8164,30 @@ var dti = {
                 }
 
                 handleTreeResults(results, overwrite, cb) {
-                    var bindings = this.bindings;
+                    var rootNode,
+                        bindings = this.bindings,
+                        finishBuildingTree = () => {
+                            // if (results.length > 0) {
+                            rootNode = this.rootNode;
+                            this.tree = this.normalize(results, {
+                                expanded: false
+                            });
 
-                    this.addRootNode();
+                            this.sortRawNodes(this.tree);
 
-                    // if (results.length > 0) {
-                    this.tree = this.normalize(results, {
-                        expanded: false
-                    });
+                            dti.forEachArray(this.tree, (branch) => {
+                                this.createNode(branch, rootNode, true);
+                            });
+                            // } else {
+                            //     this.bindings.addRootNode();
+                            // }
 
-                    this.sortRawNodes(this.tree);
+                            if (cb) {
+                                cb();
+                            }
+                        };
 
-                    dti.forEachArray(this.tree, (branch) => {
-                        this.createNode(branch, null, true);
-                    });
-                    // } else {
-                    //     this.bindings.addRootNode();
-                    // }
-
-                    if (cb) {
-                        cb();
-                    }
+                    this.addRootNode(finishBuildingTree);
                 }
 
                 getDefaultTree(cb, overwrite) {
@@ -7267,11 +8290,14 @@ var dti = {
             },
             complete = function () {
                 setTimeout(function doLoginFadeout() {
-                    dti.fire('loaded');
-                    dti.animations.fadeOut($('#loading'), function afterLoadFadeOut() {
-                        dti.log('Load time:', (new Date() - dti.startLoad) / 1000, 'seconds');
+                    dti.animations.slideUp($('#loading'), function afterLoadFadeOut() {
+                        setTimeout(() => {
+                            dti.fire('loaded');
+                            dti.loaded = true;
+                            dti.log('Load time:', (new Date() - dti.startLoad) / 1000, 'seconds');
+                        }, 1);
                         // #223
-                        dti.toast('#223', 100, 'hiddenToast');
+                        // dti.toast('#223', 100, 'hiddenToast');
                     });
                 }, 1500);
             },
@@ -7331,7 +8357,7 @@ $(function initWorkspaceV2() {
         dti.animations.fadeIn($('#login'));
     }
 
-    // $('#grouping').openModal();
+    // $('#grouping').modal("open");
 
     // $('.groupingBody').jstree({
     //     core: {
@@ -7360,33 +8386,6 @@ $(function initWorkspaceV2() {
     //     ]
     // });
 });
-
-var Widget = function (config) {
-    var emptyFn = function () {
-            return;
-        },
-        utility = {
-
-        },
-        local = {
-            getConfig: emptyFn,
-            setConfig: emptyFn,
-
-            getPosition: emptyFn,
-            setPosition: emptyFn,
-
-            beforeRender: emptyFn,
-            afterRender: emptyFn,
-            render: emptyFn,
-
-            _init: emptyFn,
-            beforeInit: emptyFn,
-            afterInit: emptyFn,
-            init: emptyFn
-        };
-
-    return local;
-};
 
 
 /*
