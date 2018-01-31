@@ -7154,8 +7154,8 @@ gpl.BlockManager = function (manager) {
             saveCallback = function (results) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
                     block.setPointData(results, true);
-                    gpl.pointUpiMap[upi].Name = dtiCommon.getPointName(results.newPoint.path);
                     gpl.pointUpiMap[upi] = {
+                        Name: dtiCommon.getPointName(results.newPoint.path),
                         pointType: results.newPoint['Point Type'].Value,
                         valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
                     };
