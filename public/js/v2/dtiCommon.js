@@ -302,6 +302,17 @@ var dtiCommon = {
         });
     },
 
+    toLowerCasePath(node) {
+        node._path = [];
+        node.path.forEach((item) => {
+            let _item = item.toLowerCase();
+            node._path.push(_item);
+            if (_item.match(' ')) {
+                node._path.push(..._item.split(' '));
+            }
+        });
+    },
+
     knockout: {
         init: () => {
             ko.bindingHandlers.dtiHierarchyLabel = {
