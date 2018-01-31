@@ -104,15 +104,10 @@ const GPL = class GPL {
                 }
             }
 
-            point.getWithSecurity({
-                query: {
-                    _id: {
-                        $in: upis
-                    }
-                },
-                data: {
-                    user: data.user
-                }
+            point.getAllPointsById({
+                upis,
+                user: data.user,
+                resolvePointRefs: true
             }, cb);
         } else {
             cb(null, {});

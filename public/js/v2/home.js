@@ -1306,9 +1306,13 @@ var dti = {
         },
         sendMessage: function (e, cb) {
             var targetWindow,
-                winId = e.winId || e._windowId;
+                winId;
 
-            targetWindow = dti.windows.getWindowById(winId);
+            // TFS #549; search this file for #549 for more info
+            if (e) {
+                winId = e.winId || e._windowId;
+                targetWindow = dti.windows.getWindowById(winId);
+            }
 
             if (targetWindow) {
                 targetWindow.handleMessage(e, cb);
@@ -6245,9 +6249,9 @@ var dti = {
     },
     messaging: {
         _messageCallbacks: [],
+        logMessages: false,
         init: function () {
             window.addEventListener('storage', function (e) {
-                // console.log(e);
                 dti.messaging.processMessage(e);
             });
 
@@ -6404,11 +6408,9 @@ var dti = {
                         dti.workspaceManager.openWindow(config);
                     },
                     closeWindow: function () {
-                        if (config) {
                             var windowId = config._windowId;
 
                             dti.windows.closeWindow(windowId);
-                        }
                     },
                     getConfig: function () {
                         doGetConfig('getConfig');
@@ -6455,9 +6457,18 @@ var dti = {
                         // store previous call
                         messageID = config.messageID;
                         dti.navigator._prevMessage = config;
-                    }
 
-                    callbacks[e.key]();
+                        // TFS #549; storage re-fires events when the storage element is removed, causing a storage event 
+                        // to fire with null data ("config" in this case).
+                        // We've moved the callbacks function call to inside this conditional. If we ever have a callback 
+                        // that accepts a null argument, we'll have to move this outside our "if" and check for a valid 
+                        // config in each callback function
+                        if (dti.messaging.logMessages) {
+                            dti.log('home doProcessMessage', e.key, config);
+                        }
+
+                        callbacks[e.key]();
+                    }
                 }
             }
         },
@@ -6490,6 +6501,10 @@ var dti = {
 
             if (config.message) {
                 config.value.message = config.message;
+            }
+
+            if (dti.messaging.logMessages) {
+                dti.log('home sendMessage', config.key+';'+config.messageID, config.value);
             }
 
             store.set([config.key, ';', config.messageID].join(''), config.value);

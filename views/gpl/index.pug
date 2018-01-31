@@ -123,34 +123,6 @@ html
                 .modal-footer
                     .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: doCancel") Ok
 
-        #editPrecisionModal.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle Edit Precision
-            .modal-content
-                .row
-                    .col.s2.numericFormat
-                        label(for="numberOfCharactersPrecision") # of Characters
-                        input#numberOfCharactersPrecision.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
-                    .col.s2.numericFormat
-                        label(for="numberOfDecimalsPrecision") # of Decimals
-                        input#numberOfDecimalsPrecision.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
-            .modal-footer
-                    .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockPrecision") Save
-        #editLabelModal.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle Edit Label
-            .modal-content
-                .row
-                    .col.s8.blockLabel
-                        label(for="editLabel") Label
-                        input#editLabel(data-bind="value: editPointLabel")
-                .row
-                    .col.s4.labelFormat
-                        input#showTheLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
-                        label(for="showTheLabel") Show Label
-            .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateBlockLabel") Save
-
         #editTextModal.modal.dtiModal.modal-fixed-header.modal-fixed-footer.blue-grey-form.fade
             .modal-header
                 .modalTitle Edit Text
@@ -276,84 +248,84 @@ html
 
 
         #editInputOutput.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
-            .modal-header
-                .modalTitle(data-bind="text: (editPointType() === 'ConstantBlock' ? 'Edit Constant Block' : 'Edit Block')")
             .modal-content
-                .clearfix
-                    .row(data-bind="visible: editPointType() !== 'ConstantBlock'")
-                        //.row
-                        //    .col.s4.subtitle Reference
-                        .row.pointName
-                            .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
-                            .col.s9
-                                span(data-bind="text: editPointName")
-                    .row(data-bind="visible: editPointType() === 'ConstantBlock'")
-                        //.row
-                        //    .col.s4.subtitle Configuration
-                        .row
-                            // ko if: (editPointValueOptions().length > 0)
-                            .col.s3
-                                label Options
-                                select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
-                            // /ko
-                            // ko if: (editPointValueOptions().length === 0)
-                            .col.s3
-                                label(for="constantvalue") Value
-                                input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
-                            // /ko
+                .row(data-bind="visible: editBlockType() === 'MonitorBlock' || editBlockType() === 'ControlBlock'")
+                    //.row
+                    //    .col.s4.subtitle Reference
+                    .row.pointName
+                        .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
+                        .col.s9
+                            span(data-bind="text: editPointName")
+                .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
+                    //.row
+                    //    .col.s4.subtitle Configuration
                     .row
-                        .col.s6.blockLabel
-                            label(for="blocklabel") Block Label
-                            input#blocklabel(data-bind="value: editPointLabel")
-                    .row
-                        .col.s4 Numeric Format
-                        .col.s2
-                        .col.s4 Label Format
-                    .row
-                        .col.s2.numericFormat
-                            label(for="numberOfCharacters") # of Characters
-                            input#numberOfCharacters.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
-                        .col.s2.numericFormat
-                            label(for="numberOfDecimals") # of Decimals
-                            input#numberOfDecimals.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
-                        .col.s2
-                        .col.s5.labelFormat
-                            .checkbox
-                                input#showLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
-                                label(for="showLabel") Show Label
-                            .checkbox
-                                input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
-                                label(for="showPresentValue") Show Present Value
+                        // ko if: (editPointValueOptions().length > 0)
+                        .col.s3
+                            label Options
+                            select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
+                        // /ko
+                        // ko if: (editPointValueOptions().length === 0)
+                        .col.s3
+                            label(for="constantvalue") Value
+                            input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
+                        // /ko
+                .row
+                    .col.s6.input-field
+                        //- ch485 check for label validity & indicate invalid label
+                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }")
+                        label(for="blocklabel", data-error="Invalid (must be unique and not blank)") Block Label
+                .row
+                    .col.s4 Numeric Format
+                    .col.s2
+                    .col.s4 Label Format
+                .row
+                    .col.s2.numericFormat
+                        label(for="numberOfCharacters") # of Characters
+                        input#numberOfCharacters.pull-right(type="number", min="1", max="20", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                    .col.s2.numericFormat
+                        label(for="numberOfDecimals") # of Decimals
+                        input#numberOfDecimals.pull-right(type="number", min="0", max="20", data-bind="numeric: editPointDecimals, value: editPointDecimals")
+                    .col.s2
+                    .col.s5.labelFormat
+                        .checkbox
+                            input#showLabel.medium.filled-in(data-bind="checked: editPointShowLabel", type="checkbox")
+                            label(for="showLabel") Show Label
+                        .checkbox
+                            input#showPresentValue.medium.filled-in(data-bind="checked: editPointShowValue", type="checkbox")
+                            label(for="showPresentValue") Show Present Value
             .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
+                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updatePoint, css: {disabled: editBlock_saveDisabled }") Save
 
         #jqxMenu.contextMenu.hideLoading
+            //- ch281 (change href="" to href="#")
             ul.editSection
                 li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: editBlockLabel") Edit Label
-                li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: editBlockPrecision") Edit Precision
+                    a(href='#', data-bind="click: editBlock") Edit Block
                 li.block.nonPoint(data-ignoretheme="true")
-                    a(href="", data-bind="click: showPointEditor") Edit Point
+                    a(href="#", data-bind="click: showPointEditor") Edit Point
                 li.block(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteBlock") Delete Block
+                    a(href="#", data-bind="click: deleteBlock") Delete Block
                 li.line(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteLine") Delete Line
+                    a(href="#", data-bind="click: deleteLine") Delete Line
                 li.text(data-ignoretheme="true")
-                    a(href="", data-bind="click: deleteBlock") Delete Text
+                    a(href="#", data-bind="click: deleteBlock") Delete Text
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click:showUpdateSequenceModal") Sequence Properties
+                    a(href="#", data-bind="click:showUpdateSequenceModal") Sequence Properties
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: showDevicePoint") Edit Device Point
+                    a(href="#", data-bind="click: showDevicePoint") Edit Device Point
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewButton") Action Button
+                    //- ch473
+                    //- a(href="#", data-bind="click: addNewButton") Action Button
+                    a(href="#", data-bind="click: addNewActionButton") Add Action Button
                 //- li.default(data-ignoretheme="true")
-                //-     a(href="", data-bind="click: addNewDynamic") Dynamic
+                //-     a(href="#", data-bind="click: addNewDynamic") Dynamic
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewText") Add Text
+                    a(href="#", data-bind="click: addNewText") Add Text
             ul.viewSection
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: showDevicePoint") Edit Device Point
+                    a(href="#", data-bind="click: showDevicePoint") Edit Device Point
+            //- /ch
 
         script(src='/js/lib/jquery.min.js')
         script(src='/js/lib/jquery.blockUI.js')
@@ -369,6 +341,7 @@ html
         script(src='/js/lib/jqwidgets/jqxmenu.js')
         script(src='/js/util/components/colorpicker/diColorPicker.js')
         script(src='/js/lib/store2.min.js')
+        script(src='/js/v2/dtiCommon.js')
         script(src='/js/v2/dorsettUtility.js')
         //- script(src='/js/gpl/gpl.textblock.js')
         script(src='/js/gpl/gpl.js')
