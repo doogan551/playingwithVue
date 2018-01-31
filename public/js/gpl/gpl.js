@@ -6162,6 +6162,7 @@ gpl.BlockManager = function (manager) {
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
             labelIsValid: ko.observable(true), // ch485
+            labelError: ko.observable(''), // ch506
             updateText: function () {
                 var text = bmSelf.bindings.editText(),
                     fontSize = bmSelf.bindings.editTextFontSize(),
@@ -6332,8 +6333,24 @@ gpl.BlockManager = function (manager) {
 
                 if (label === '') {
                     isValid = false;
+                    bmSelf.bindings.labelError('Label must not be blank');
                 } else if (label !== originalLabel) {
                     isValid = gpl.labelIsUnique(label);
+                    
+                    if (!isValid) {
+                        bmSelf.bindings.labelError('Label already in use');
+                    } else {
+                        // Check if label contains invalid characters (ch506)
+                        isValid = dtiCommon.isPointDisplayStringValid(label);
+                        // isValid = {
+                        //     valid: boolean,
+                        //     errorMessage: string
+                        // }
+                        if (!isValid.valid) {
+                            bmSelf.bindings.labelError(isValid.errorMessage);
+                            isValid = false;
+                        }
+                    }
                 }
 
                 bmSelf.bindings.labelIsValid(isValid);
