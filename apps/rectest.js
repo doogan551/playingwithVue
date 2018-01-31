@@ -128,6 +128,31 @@ let fixToUUtil = () => {
     });
 };
 
+let compareDBs = () => {
+    let pointModel = new Point();
+    const mongo = require('mongodb');
+
+    mongo.connect('mongodb://localhost:27017', (err, conn) => {
+        conn.db('msfc').collection('points').findOne({
+            _id: 36700161
+        }, (err, result) => {
+            pointModel.getOne({query: {_id: 36700161}}, (err, point)=>{
+                for(var prop in point) {
+                    if(!result.hasOwnProperty(prop)) {
+                        console.log(1, prop);
+                    }
+                }
+                for(var key in result) {
+                    if(!point.hasOwnProperty(key)) {
+                        console.log(1, key);
+                    }
+                }
+                console.log('done');
+            });
+        });
+    });
+};
+
 db.connect(connectionString.join(''), function (err) {
-    fixToUUtil();
+    compareDBs();
 });
