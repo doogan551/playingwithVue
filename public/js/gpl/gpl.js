@@ -6309,6 +6309,8 @@ gpl.BlockManager = function (manager) {
                         editBlock._pointData._path.splice(-1, 1, label.toLowerCase());
                         editBlock._pointData.display = label;
                     }
+
+                    gpl.pointUpiMap[editBlock.upi].Name = dtiCommon.getPointName(editBlock._pointData.path);
                 }
 
                 if (editBlock.labelVisible !== showLabel) {
