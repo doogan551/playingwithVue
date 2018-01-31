@@ -220,6 +220,30 @@ a {
     opacity: 0;
 }
 
+.scalesRight {
+    transform-origin: top left;
+}
+
+.scalesLeft {
+    transform-origin: top right;
+}
+
+.scalesTop {
+    transform-origin: top;
+}
+
+.scalesLeft .fades,
+.scalesRight .fades {
+    opacity: 0;
+    transition: all ease .1s;
+    transition-delay: .05s;
+}
+
+.scalesLeft.active .fades,
+.scalesRight.active .fades {
+    opacity: 1;
+}
+
 .fades {
     transition: opacity 300ms ease-in;
 }
@@ -332,13 +356,47 @@ $modalHeaderHeight: 42px;
         }
     }
 
+    input:not([type]):focus:not([readonly]) + label,
+    input[type=text]:focus:not([readonly]) + label,
+    input[type=password]:focus:not([readonly]) + label,
+    input[type=email]:focus:not([readonly]) + label,
+    input[type=url]:focus:not([readonly]) + label,
+    input[type=time]:focus:not([readonly]) + label,
+    input[type=date]:focus:not([readonly]) + label,
+    input[type=datetime]:focus:not([readonly]) + label,
+    input[type=datetime-local]:focus:not([readonly]) + label,
+    input[type=tel]:focus:not([readonly]) + label,
+    input[type=number]:focus:not([readonly]) + label,
+    input[type=search]:focus:not([readonly]) + label,
+    textarea.materialize-textarea:focus:not([readonly]) + label {
+        color: $blue-grey;
+    }
+
+    input:not([type]):focus:not([readonly]),
+    input[type=text]:focus:not([readonly]),
+    input[type=password]:focus:not([readonly]),
+    input[type=email]:focus:not([readonly]),
+    input[type=url]:focus:not([readonly]),
+    input[type=time]:focus:not([readonly]),
+    input[type=date]:focus:not([readonly]),
+    input[type=datetime]:focus:not([readonly]),
+    input[type=datetime-local]:focus:not([readonly]),
+    input[type=tel]:focus:not([readonly]),
+    input[type=number]:focus:not([readonly]),
+    input[type=search]:focus:not([readonly]),
+    textarea.materialize-textarea:focus:not([readonly]) + label {
+        border-bottom-color: $blue-grey;
+        box-shadow: 0 1px 0 0 $blue-grey;
+    }
+
     .switch label input[type=checkbox]:checked + .lever,
     .switch label input[type=checkbox]:checked + .lever:after {
         background-color: $blue-grey !important;
     }
 
     [type="radio"]:not(:checked) + label::before,
-    [type="radio"]:not(:checked) + label::after {
+    [type="radio"]:not(:checked) + label::after,
+    [type="checkbox"].filled-in:not(:checked) + label::after {
         border-color: $blue-grey !important;
     }
 
@@ -346,10 +404,6 @@ $modalHeaderHeight: 42px;
     [type="radio"]:checked + label::after {
         border-color: $blue-grey !important;
         background-color: $blue-grey !important;
-    }
-
-    [type="checkbox"].filled-in:not(:checked) + label::after {
-        border-color: $blue-grey !important;
     }
 
     [type="checkbox"].filled-in:checked + label::after {
@@ -538,15 +592,20 @@ $startmenuWidth: 310px; //3 columns no recent
 $startmenuGutter: 15px;
 
 #startmenu {
-    width: $startmenuWidth + $startmenuGutter;
-    min-height: 200px;
     z-index: 102;
     position: absolute;
     top: 0;
     left: 0;
-    padding: 5px;
-    display: none;
-    opacity: 0;
+    overflow: hidden;
+    // padding: 5px;
+    // opacity: 0;
+    // display: none;
+
+    .menuContainer {
+        width: $startmenuWidth + $startmenuGutter;
+        height: 374px;
+        padding: 5px;
+    }
 }
 
 .startmenuBody {
@@ -931,16 +990,50 @@ footer {
 .slideDownMenu {
     z-index: 105;
     position: absolute;
+    overflow: hidden;
     // top: 0;
     // left: 60px;
     // display: flex;
-    display: none;
-    padding: 10px;
-    opacity: 0;
+    // display: none;
+    // opacity: 0;
+
+    .actions {
+        width: 85px;
+        padding-top: 20px;
+    }
+
+
+    .menuContainer {
+        padding: 5px 10px;
+        min-width: 50px;
+        height: auto;
+        left: 0;
+    }
+
+    table {
+        // margin-top: 20px;
+    }
+
+    td {
+        padding: 0;
+        vertical-align: top;
+    }
+
+    .openItem {
+        padding-top: 20px;
+    }
+
+    .itemList {
+        display: inline-block;
+    }
 
     .actionList {
-        float: left;
-        margin-right: 15px;
+        // display: inline-block;
+        // margin-right: 15px;
+        
+        > .flex {
+            width: 90px;
+        }
 
         .action {
             display: flex;
@@ -964,7 +1057,7 @@ footer {
     .itemsHeader {
         position: absolute;
         top: 0;
-        padding-left: 15px;
+        left: 115px;
     }
 }
 
@@ -1033,15 +1126,38 @@ footer {
     }
 }
 
+.menuContainer {
+    position: absolute;
+    // display: none;
+    // opacity: 0;
+    // transition: all ease .5s;
+}
+
+.active {
+    .menuContainer {
+        // display: block !important;
+        // opacity: 1 !important;
+    }
+}
+
 #alarmDropdown {
     position: absolute;
-    right: 175px;
+    right: 215px;
     top: 0;
     z-index: 105;
-    min-width: 900px;
-    max-width: 1000px;
-    opacity: 0;
-    display: none;
+    overflow: hidden;
+    // min-width: 700px;
+    // max-width: 800px;
+    // transform: scale(0);
+    // opacity: 0;
+    // display: none;
+
+    .menuContainer {
+        width: 900px;
+        max-height: 100vh;
+        min-height: 116px;
+        right: 0;
+    }
 
     .alarmHeader {
         font-size: 1.4em;
@@ -1054,6 +1170,7 @@ footer {
 
         i {
             font-size: 1.5em;
+            display: block;
         }
     }
 
@@ -1165,13 +1282,21 @@ footer {
 
 #systemErrorLogDropdown {
     position: absolute;
-    right: 240px;
+    right: 280px;
     top: 0;
     z-index: 105;
-    min-width: 500px;
-    max-width: 800px;
-    opacity: 0;
-    display: none;
+    overflow: hidden;
+    // min-width: 500px;
+    // max-width: 800px;
+    // opacity: 0;
+
+    .menuContainer {
+        min-width: 500px;
+        max-width: 700px;
+        max-height: 100vh;
+        min-height: 50px;
+        right: 0;
+    }
 
     .errorLogHeader {
         font-size: 1.4em;
@@ -1321,15 +1446,30 @@ $loaderSize: 128px;
 #loading {
     position: absolute;
     left: 0;
-    right: 0;
+    width: 100vw;
+    height: 100vh;
+    // right: 0;
     top: 0;
-    bottom: 0;
+    // bottom: 0;
     background-color: #fff;
     z-index: 999;
+    display: none;
 
     .loadingMask {
         position: relative;
         height: 100%;
+        overflow: hidden;
+    }
+
+    .cssload-container {
+        padding-top: $loaderSize;
+    }
+
+    .absCenter {
+        width: $loaderSize;
+        height: $loaderSize;
+        left: 50vw;
+        top: 50vh;
     }
 
     .preloader-wrapper {
@@ -1583,6 +1723,7 @@ $loaderSpeedScale: 1 / .75;
 
         i {
             margin: 0 .5rem;
+            font-size: 24px;
         }
 
         p {

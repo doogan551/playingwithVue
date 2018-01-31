@@ -131,58 +131,61 @@ html
                     //- label(for='searchPopup') Search
                     //- i.material-icons close
 
-            #alarmDropdown.white.z-depth-1
-                .alarmHeader
-                    span Unacknowledged Alarms
-                    .right
-                        a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
-                            i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
-                            i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
-                        //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
-                            i.material-icons notifications_active
-                    .alarmBody
-                .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
-                    .alarmList
-                        .row
-                            .date Date
-                            .messageContainer Alarm
-                            .type Class
-                            .ackContainer
-                        // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
-                        .row
-                            .date(data-bind="text: dateTime")
-                            .messageContainer
-                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
-                            .type(data-bind='text: almClassText, css: cssClass')
-                            .ackContainer
-                                a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
-                                .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
-                                    .progress
-                                        .indeterminate
-                        // /ko
-                        // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
-                        .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
-                        // /ko
-                .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
+            #alarmDropdown.white.z-depth-1.scalesLeft(data-scale-origin="right", data-scale-reposition="false")
+                .menuContainer
+                    .alarmHeader
+                        span Unacknowledged Alarms
+                        .right
+                            a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
+                                i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
+                                i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
+                            //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
+                                i.material-icons notifications_active
+                        .alarmBody
+                    .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
+                        .alarmList
+                            .row
+                                .date Date
+                                .messageContainer Alarm
+                                .type Class
+                                .ackContainer
+                            // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
+                            .row
+                                .date(data-bind="text: dateTime")
+                                .messageContainer
+                                    .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
+                                .type(data-bind='text: almClassText, css: cssClass')
+                                .ackContainer
+                                    a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
+                                    .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
+                                        .progress
+                                            .indeterminate
+                            // /ko
+                            // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
+                            .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
+                            // /ko
+                    .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
-            #systemErrorLogDropdown.white.z-depth-1
-                .errorLogHeader System Error Log
-                .errorLogBody(data-bind='foreach: system.eventLog.errors')
-                    .row
-                        .errorDate(data-bind='text: dateTime')
-                        .errorMessageContainer
-                            .errorMessage(data-bind='text: message')
+            #systemErrorLogDropdown.white.z-depth-1.scalesLeft(data-scale-origin="right", data-scale-reposition="false")
+                .menuContainer
+                    .errorLogHeader System Error Log
+                    .errorLogBody(data-bind='foreach: system.eventLog.errors')
+                        .row
+                            .errorDate(data-bind='text: dateTime')
+                            .errorMessageContainer
+                                .errorMessage(data-bind='text: message')
 
-            #startmenu.z-depth-3.white.lighten-3.white-text
-                .startmenuBody
-                    .tileList(data-bind="foreachprop: startMenuItems, sort: true")
-                        // ko if: $root.hasAccess($data)
-                        // ko with: value
-                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
-                            i.center-align(data-bind="css: iconClass, text: iconText")
-                            span(data-bind="text: title")
-                        // /ko
-                        // /ko
+            #startmenu.z-depth-3.white.lighten-3.white-text.scalesRight(data-scale-origin="left", data-scale-reposition="false")
+                .menuContainer
+                    .startmenuBody
+                        .tileList(data-bind="foreachprop: startMenuItems, sort: true")
+                            // ko if: $root.hasAccess($data)
+                            // ko with: value
+                            a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
+                                i.center-align(data-bind="css: iconClass, text: iconText")
+                                span(data-bind="text: title")
+                            // /ko
+                            // /ko
 
                     //- .recentItems
                         .col.s12.blue-grey-text Recent Items
@@ -373,7 +376,7 @@ html
                         form#loginForm
                             .row
                                 .input-field.col.s12
-                                    input#username(type='text', name='username', autocomplete='off')
+                                    input#username(type='text', name='username', autocomplete='off', autofocus)
                                     label(for='username') Username
                             .row
                                 .input-field.col.s12
@@ -401,7 +404,7 @@ html
                                 .row
                                     button#resetPasswordBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_resetPassword') Continue
 
-        #loading.animates
+        #loading.scalesTop(data-scale-origin="top", data-scale-reposition="false")
             .loadingMask
                 .absCenter
                     .cssload-container
@@ -427,7 +430,7 @@ html
             .treeTrunk
 
 
-                //- // k0o if: children().length !== 0
+                //- // ko if: children().length !== 0
                 #tree.pane.style3(data-bind="treeView: treeConfig, diResizable: true")
 
 
@@ -670,44 +673,96 @@ html
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem(data-bind="taskbarMenu: $data, css: { active: $root.openWindows[group()]().length > 0 }")
-            //- div
             a.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-bind="click: $root.taskbarButtonClick")
                 i(data-bind="text: iconText, css: iconClass")
                 span(data-bind="text: title")
 
     script#taskbarMenuTemplate(type='text/html')
         // ko stopBindings: true
-        .slideDownMenu.white.z-depth-1
-            // ko if: singleton() === false
-            .actionList
-                .blue-grey-text Actions
-                // ko if: standalone() === false
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
-                    i.material-icons folder_open
-                    span Open
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
-                    i.material-icons add
-                    span New
-                // /ko
-                // ko if: standalone() === true
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
-                    i.material-icons add
-                    span New
-                // /ko
-                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
-                    i.material-icons close
-                    span Close All
-            // /ko
-
-            // ko if: singleton() === true && $root.openWindows[group()]().length === 0
-            .actionList
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
-            // /ko
-
-            .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
+        .slideDownMenu.white.z-depth-1.scalesTop(data-scale-origin="top")
+            .menuContainer
+                // ko if: $root.openWindows[group()]().length > 0
                 .itemsHeader.blue-grey-text Open Items
-                // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                 // /ko
+
+                table
+                    tr
+
+                        // ko if: singleton() === false
+                        td.actionList.blue-grey-text
+                            .flex.flex-column 
+                                span Actions
+                                // ko if: standalone() === false
+                                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                                    i.material-icons folder_open
+                                    span Open
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
+                                    i.material-icons add
+                                    span New
+                                // /ko
+                                // ko if: standalone() === true
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                                    i.material-icons add
+                                    span New
+                                // /ko
+                                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
+                                    i.material-icons close
+                                    span Close All
+                        // /ko
+
+
+                        // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+                        td
+                            .actionList
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+                        // /ko
+
+                        // ko if: $root.openWindows[group()]().length > 0
+                        
+                        // ko foreach: $root.openWindows[group()]
+                        td.openItem
+                            // ko template: { name: 'miniWindowTemplate', data: $data }
+                            
+                            // /ko
+
+                        // /ko
+
+                        // /ko
+
+
+
+
+
+                //- // ko if: singleton() === false
+                //- .actionList
+                //-     .blue-grey-text Actions
+                //-     // ko if: standalone() === false
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                //-         i.material-icons folder_open
+                //-         span Open
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
+                //-         i.material-icons add
+                //-         span New
+                //-     // /ko
+                //-     // ko if: standalone() === true
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                //-         i.material-icons add
+                //-         span New
+                //-     // /ko
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
+                //-         i.material-icons close
+                //-         span Close All
+                //- // /ko
+
+                //- // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+                //- .actionList
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+                //- // /ko
+
+                //- .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
+                //-     .itemsHeader.blue-grey-text Open Items
+                //-     // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                //-     // /ko                    
         // /ko
 
     script#autosuggestTemplate(type='text/html')
