@@ -2942,7 +2942,8 @@ let reportsViewModel = function () {
                     $dataTablesScrollBody.css("height", adjustHeight);
                     //   $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);   *****  this call seems to kick off recursive loop ***
                     //   $dataTablePlaceHolder.DataTable().draw("current");  *****  this call seems to kick off recursive loop ***
-                    $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
+                    // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
+                    $dataTablePlaceHolder.DataTable().columns.adjust().draw();
                     $dataTablePlaceHolder.DataTable().fixedColumns().update();
                 }
             },

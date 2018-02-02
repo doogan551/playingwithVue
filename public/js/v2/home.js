@@ -503,7 +503,7 @@ var dti = {
             let animType;
             let destScale;
             let startScale;
-            
+
             $el.velocity('stop');
 
             if (type === 'in') {
@@ -547,7 +547,7 @@ var dti = {
             let startWidth;
             let duration = 150;
             let smallDuration = 100;
-            
+
             $el.velocity('stop');
 
             if (type === 'in') {
@@ -567,7 +567,7 @@ var dti = {
             let max = Math.max(Math.max(destWidth, startWidth), Math.max(destHeight, startHeight));
 
             // dti.log('duration', max < duration ? smallDuration: duration);
-            
+
             let opts = [{
                 width: [destWidth, startWidth],
                 height: [destHeight, startHeight]
@@ -691,7 +691,7 @@ var dti = {
                     if (!id || id !== menuID) {
                         closeMenu();
                     }
-                },                
+                },
                 setOpen = function() {
                     menuShown = true;
                 },
@@ -6458,10 +6458,10 @@ var dti = {
                         messageID = config.messageID;
                         dti.navigator._prevMessage = config;
 
-                        // TFS #549; storage re-fires events when the storage element is removed, causing a storage event 
+                        // TFS #549; storage re-fires events when the storage element is removed, causing a storage event
                         // to fire with null data ("config" in this case).
-                        // We've moved the callbacks function call to inside this conditional. If we ever have a callback 
-                        // that accepts a null argument, we'll have to move this outside our "if" and check for a valid 
+                        // We've moved the callbacks function call to inside this conditional. If we ever have a callback
+                        // that accepts a null argument, we'll have to move this outside our "if" and check for a valid
                         // config in each callback function
                         if (dti.messaging.logMessages) {
                             dti.log('home doProcessMessage', e.key, config);
@@ -8301,8 +8301,19 @@ var dti = {
                     });
                 }, 1500);
             },
+            checkDtiCommonReadiness = () => {
+                if (window.dtiCommon && dtiCommon.init.isComplete) {
+                    window.setTimeout(function () {
+                        runInits()
+                    }, 10);
+                } else {
+                    window.setTimeout(function () {
+                        checkDtiCommonReadiness()
+                    }, 800);
+                }
+            },
             showLoading = function () {
-                dti.animations.fadeIn($('#loading'), runInits);
+                dti.animations.fadeIn($('#loading'), checkDtiCommonReadiness);
             };
 
         dti.socket.initSocket();

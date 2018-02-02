@@ -3155,6 +3155,18 @@ const Point = class Point extends Common {
         });
     }
 
+    assignParentRefs(nodes) {
+        for (var p = 0; p < nodes.length; p++) {
+            let parent = nodes[p];
+            for (var c = 0; c < nodes.length; c++) {
+                let child = nodes[c];
+                if (child.parentNode === parent.id) {
+                    child.parentNode = parent._id;
+                }
+            }
+        }
+    }
+
     updateIds(points, callback) {
         let counterModel = new Counter();
         async.eachSeries(points, (point, seriesCallback) => {

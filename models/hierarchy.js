@@ -223,6 +223,18 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
+    assignParentRefs(nodes) {
+        for (var p = 0; p < nodes.length; p++) {
+            let parent = nodes[p];
+            for (var c = 0; c < nodes.length; c++) {
+                let child = nodes[c];
+                if (child.parentNode === parent.id) {
+                    child.parentNode = parent._id;
+                }
+            }
+        }
+    }
+
     search(data, cb) {
         let terms = this.getDefault(data.terms, []);
         let pipeline = [];
