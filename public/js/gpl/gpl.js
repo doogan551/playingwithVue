@@ -71,6 +71,10 @@ var gpl = {
         39: 'right',
         40: 'down'
     },
+    collator: new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base'
+    }),
     // selectedGroup: new fabric.Group(),
     destroyObject: function (o) {
         var keys = Object.keys(o),
@@ -407,6 +411,21 @@ var gpl = {
 
         return errorFree;
     },
+    forEachArrayRev: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
     timedEach: function (config) {
         var idx = 0,
             iterateFn = config.iteratorFn,
@@ -445,6 +464,20 @@ var gpl = {
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
         gpl.eventHandlers[event].push(handler);
+    },
+    off: function (event, handler) {
+        var handlers = gpl.eventHandlers[event] || [];
+
+        if (handlers.length && !handler) {
+            return delete gpl.eventHandlers[event];
+        }
+
+        gpl.forEachArray(handlers, function processOffHandler (fn, idx) {
+            if (fn === handler) {
+                gpl.eventHandlers[event].splice(idx, 1);
+                return false;
+            }
+        });
     },
     fire: function (event, obj1, obj2) {
         var c,
@@ -1360,9 +1393,9 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
 
         this.attachFn(this, line);
 
-        // if (gpl.rendered === true) {
-        this.adjustRelatedBlocks();
-        // }
+        if (gpl.rendered === true) {
+            this.adjustRelatedBlocks();
+        }
     },
 
     detach: function (line) {
@@ -6138,6 +6171,12 @@ gpl.BlockManager = function (manager) {
             editPointValue: ko.observable(),
             editPointValueOptions: ko.observableArray([]),
             editPointLabel: ko.observable(),
+            editPointLabelLocked: ko.observable(), // ch900
+            editPointReferenceType: ko.observable(), // ch900
+            editInputReferences: ko.observableArray([]), // ch900
+            editOutputReferences: ko.observableArray([]), // ch900
+            editFnBlkReferences: ko.observableArray([]), // ch900 (functional block references, i.e. Add block, PI block, etc.)
+            editSelectedReference: ko.observable(), //ch900
             editPointShowValue: ko.observable(),
             editPointShowLabel: ko.observable(),
             editText: ko.observable(),
@@ -6158,7 +6197,6 @@ gpl.BlockManager = function (manager) {
             reportToDate: ko.observable(''),
             reportToTime: ko.observable(''),
             actionButtonReportDuration: ko.observable(),
-            selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
             labelIsValid: ko.observable(true), // ch485
@@ -6248,7 +6286,8 @@ gpl.BlockManager = function (manager) {
 
                         if (currReferences.length === 1) {
                             tmpBlock = currReferences[0];
-                            if (tmpBlock.block.setReferenceType) {
+                            // Check for "tmpBlock.block.hasReferenceType" (this should only target input/output blocks; was seeing gpl blocks w/ hasReferenceType incorrectly set true)
+                            if (tmpBlock.block.hasReferenceType && tmpBlock.block.setReferenceType) {
                                 tmpBlock.block.setReferenceType('External');
                             }
                         }
@@ -6301,26 +6340,22 @@ gpl.BlockManager = function (manager) {
 
                 if (editBlock.label !== label) {
                     editBlock.setLabel(label);
-                    gpl.manager.bindings.hasEdits(true);
 
                     // ch334 Update point name
                     if (!editBlock.isNonPoint) {
                         editBlock._pointData.path.splice(-1, 1, label);
                         editBlock._pointData._path.splice(-1, 1, label.toLowerCase());
                         editBlock._pointData.display = label;
+                        gpl.pointUpiMap[editBlock.upi].Name = dtiCommon.getPointName(editBlock._pointData.path);
                     }
-
-                    gpl.pointUpiMap[editBlock.upi].Name = dtiCommon.getPointName(editBlock._pointData.path);
                 }
 
                 if (editBlock.labelVisible !== showLabel) {
                     editBlock.setShowLabel(showLabel);
-                    gpl.manager.bindings.hasEdits(true);
                 }
 
                 if (editBlock.presentValueVisible !== showValue) {
                     editBlock.setShowValue(showValue);
-                    gpl.manager.bindings.hasEdits(true);
                 }
 
                 gpl.unblockUI();
@@ -6329,7 +6364,7 @@ gpl.BlockManager = function (manager) {
                 gpl.fire('editedblock', bmSelf.editBlock);
             },
             validateLabel: function (data, e) { // ch485 (added function)
-                var label = bmSelf.bindings.editPointLabel().toString().trim(),
+                var label = bmSelf.bindings.editPointLabel().toString(),
                     originalLabel = bmSelf.editBlock.label,
                     isValid = true;
 
@@ -6337,7 +6372,9 @@ gpl.BlockManager = function (manager) {
                     isValid = false;
                     bmSelf.bindings.labelError('Label must not be blank');
                 } else if (label !== originalLabel) {
-                    isValid = gpl.labelIsUnique(label);
+                    if (!bmSelf.editBlock.hasReferenceType) {
+                        isValid = gpl.labelIsUnique(label);
+                    }
                     
                     if (!isValid) {
                         bmSelf.bindings.labelError('Label already in use');
@@ -6360,6 +6397,20 @@ gpl.BlockManager = function (manager) {
                 gpl.log('isValid', isValid);
 
                 return true;
+            },
+            selectInternalReference: function (event, block) { // ch900; added function
+                var devinst = block._pointData['Point Refs'][0].Value,
+                    pRef = gpl.makePointRef({upi: block.upi, name: block.name, pointType: block.pointType}, devinst, 'GPLBlock', 439),
+                    rootBlock = gpl.blockManager.getBlockByUpi(block.upi);
+
+                bmSelf.handleSelectedPoint({
+                    name: block.pointName,
+                    label: block.label,
+                    upi: block.upi,
+                    pointType: block.pointType,
+                    block: rootBlock,
+                    pRefAppIndex: pRef.AppIndex
+                });
             }
         },
 
@@ -6511,17 +6562,43 @@ gpl.BlockManager = function (manager) {
                     upi = selectedPoint._id,
                     name = dtiCommon.getPointName(selectedPoint.path),
                     pointType = selectedPoint['Point Type'].Value,
-                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.deviceId);
+                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.deviceId),
+                    rootBlock = gpl.blockManager.getGplBlockByUpi(upi);
 
                 gpl.pointData[selectedPoint._id] = selectedPoint;
-                bmSelf.bindings.editPointName(name);
-                bmSelf.bindings.editPointLabel(selectedPoint.path[selectedPoint.path.length - 1]);
-                bmSelf.editBlockUpi = upi;
-                bmSelf.editBlockPointType = pointType;
                 pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, 'GPLBlock', 439);
-                bmSelf.editBlock.pointRefIndex = pRef.AppIndex;
+
+                bmSelf.handleSelectedPoint({
+                    name: name,
+                    label: selectedPoint.path[selectedPoint.path.length - 1],
+                    upi: upi,
+                    pointType: pointType,
+                    block: rootBlock,
+                    pRefAppIndex: pRef.AppIndex
+                });
+
                 gpl.log(upi, name);
             }, 'Sequence', property);
+        },
+
+        handleSelectedPoint: function (data) { // ch900; added function
+            // data = {
+            //     name: string,
+            //     label: string,
+            //     upi: int,
+            //     pointType: string,
+            //     block: gpl block on the sequence or undefined,
+            //     pRefAppIndex: integer
+            // }
+
+            bmSelf.bindings.editSelectedReference(data.block);
+            bmSelf.bindings.editPointName(data.name);
+            bmSelf.bindings.editPointLabel(data.label);
+            bmSelf.bindings.editPointLabelLocked(data.block && !data.block.hasReferenceType && !data.block.isNonPoint && bmSelf.editBlock.isNonPoint);
+
+            bmSelf.editBlockUpi = data.upi;
+            bmSelf.editBlockPointType = data.pointType;
+            bmSelf.editBlock.pointRefIndex = data.pRefAppIndex;
         },
 
         openLabelEditor: function (block) {
@@ -6537,7 +6614,9 @@ gpl.BlockManager = function (manager) {
                 numDecimals = parseInt(block.precision.decimals, 10),
                 value = block.value,
                 valueOptions = (!!block.valueOptions ? block.valueOptions : []),
-                label = block.label;
+                label = block.label,
+                allRefs = [],
+                rootBlock = gpl.blockManager.getGplBlockByUpi(block.upi);
                 // editableTypes = {
                 //     'ControlBlock': true,
                 //     'MonitorBlock': true,
@@ -6557,7 +6636,37 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointLabel(label);
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
+            bmSelf.bindings.editPointReferenceType(block.referenceType); // ch900
+            bmSelf.bindings.editPointLabelLocked(rootBlock && !rootBlock.isNonPoint && !rootBlock.hasReferenceType && block.isNonPoint); // ch900
             bmSelf.bindings.labelIsValid(true); // ch485
+            
+            // ch900 Build available references lists (we rebuild every time because the block list may have changed)
+            bmSelf.bindings.editSelectedReference(block);
+            bmSelf.bindings.editInputReferences([]);
+            bmSelf.bindings.editOutputReferences([]);
+            bmSelf.bindings.editFnBlkReferences([]);
+            bmSelf.forEachBlock((_block) => {
+                if (_block.targetCanvas === "main") { // Filter out the toolbar blocks
+                    allRefs.push(_block);
+                }
+            });
+            allRefs.sort(function(a,b) {
+                return gpl.collator.compare(a.label.toLowerCase(), b.label.toLowerCase());
+            });
+            gpl.forEachArray(allRefs, function (_block) {
+                if (_block.hasReferenceType) {
+                    if (_block.blockType === 'Input') {
+                        // The input block can reference other gpl blocks, input blocks, or output blocks
+                        if (_block.referenceType === 'External' || ((_block === block) && !bmSelf.getOutputBlockByUpi(block.upi) && !rootBlock)) {
+                            bmSelf.bindings.editInputReferences.push(_block);
+                        }
+                    } else {
+                        bmSelf.bindings.editOutputReferences.push(_block);
+                    }
+                } else if (!_block.isNonPoint) { // make sure it's not a constant or static text _block
+                    bmSelf.bindings.editFnBlkReferences.push(_block);
+                }
+            });
 
             // gpl.blockUI();
             gpl.openModal(gpl.$editInputOutputModal);
@@ -6644,6 +6753,38 @@ gpl.BlockManager = function (manager) {
                 var data = block.getPointData && block.getPointData();
                 if (data && (data._id === upi || data.id === upi)) {
                     ret = block;
+                }
+            });
+
+            return ret;
+        },
+
+        getGplBlockByUpi: function (upi) { // ch900; added function
+            var ret = null;
+
+            gpl.forEach(bmSelf.blocks, function (block) {
+                if (!block.isNonPoint) {
+                    var data = block.getPointData && block.getPointData();
+                    if (data && (data._id === upi || data.id === upi)) {
+                        ret = block;
+                        return false; // Break the forEach
+                    }
+                }
+            });
+
+            return ret;
+        },
+
+        getOutputBlockByUpi: function (upi) { // ch900; added function
+            var ret = null;
+
+            gpl.forEach(bmSelf.blocks, function (block) {
+                if (block.blockType === 'Output') {
+                    var data = block.getPointData && block.getPointData();
+                    if (data && (data._id === upi || data.id === upi)) {
+                        ret = block;
+                        return false; // Break the forEach
+                    }
                 }
             });
 
@@ -6773,9 +6914,23 @@ gpl.BlockManager = function (manager) {
     bmSelf.bindings.editBlock_saveDisabled = ko.pureComputed(function () {
         var editPointValue = bmSelf.bindings.editPointValue(),
             editPointName = bmSelf.bindings.editPointName(),
-            labelIsValid = bmSelf.bindings.labelIsValid();
+            labelIsValid = bmSelf.bindings.labelIsValid(),
+            editBlockType = bmSelf.bindings.editBlockType(),
+            editPointReferenceType = bmSelf.bindings.editPointReferenceType(),
+            editSelectedReference = bmSelf.bindings.editSelectedReference(),
+            isDisabled = false;
 
-        return ($.isNumeric(editPointValue) === false && editPointName === undefined) || !labelIsValid;
+            if ((editBlockType === 'MonitorBlock') && (editPointReferenceType === 'Internal') && !editSelectedReference) {
+                isDisabled = true;
+            } else if ($.isNumeric(editPointValue) === false && editPointName === undefined) {
+                isDisabled = true;
+            }
+
+            if (!isDisabled && !labelIsValid) {
+                isDisabled = true;
+            }
+
+        return isDisabled;
     });
 
     bmSelf.bindings.gridSize.subscribe(function (val) {
@@ -7206,7 +7361,9 @@ gpl.BlockManager = function (manager) {
                         bmSelf.openBlockEditor(block);
                     }
                 }
-            } else { //open device point
+            } else if (block.blockType !== 'TextBlock') { // ch533
+                // Open device point
+                // FYI this was called with block=true
                 upi = gpl.devicePoint._id;
                 pointType = 'Device';
                 doOpenWindow();
@@ -8222,8 +8379,10 @@ gpl.Manager = function () {
     managerSelf.addNewPoint = function (block) {
         let parameters = {
                 pointType: block.pointType,
-                parentUpi: gpl.point._id
+                parentUpi: gpl.point._id,
+                display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
+        console.log(parameters.display);
         let handleError = function (err) {
             window.alert('An unexpected error occurred: ' + err);
             gpl.fire('deleteblock', block, true);
@@ -8743,22 +8902,26 @@ gpl.Manager = function () {
             getter,
             gplObj;
 
-        if (gpl.isEdit && managerSelf.state !== 'DrawingLine' && !gpl.modalIsOpen && !managerSelf.hasPanned) {
+        if (managerSelf.state !== 'DrawingLine' && !gpl.modalIsOpen && !managerSelf.hasPanned) { // ch899; allow openContextMneu in gpl view mode
             managerSelf.$contextMenuList.removeClass('block line default nonPoint text');
 
-            if (obj) {
-                getter = getters[obj.gplType];
-                if (getter) {
-                    managerSelf.$contextMenuList.addClass(obj.gplType);
+            if (gpl.isEdit) {
+                if (obj) {
+                    getter = getters[obj.gplType];
+                    if (getter) {
+                        managerSelf.$contextMenuList.addClass(obj.gplType);
+                    } else {
+                        managerSelf.$contextMenuList.addClass('block');
+                        getter = getters.block;
+                    }
+                    if (obj.blockType === 'Constant') {
+                        managerSelf.$contextMenuList.addClass('nonPoint');
+                    }
+                    gplObj = getter(obj.gplId);
                 } else {
-                    managerSelf.$contextMenuList.addClass('block');
-                    getter = getters.block;
+                    managerSelf.$contextMenuList.addClass('default');
                 }
-                if (obj.blockType === 'Constant') {
-                    managerSelf.$contextMenuList.addClass('nonPoint');
-                }
-                gplObj = getter(obj.gplId);
-            } else {
+            } else { // ch899 - show context menu in view mode
                 managerSelf.$contextMenuList.addClass('default');
             }
 
@@ -9178,6 +9341,7 @@ gpl.Manager = function () {
                     }
                 });
                 gpl.blockManager.openTextEditor(newBlock);
+                gpl.manager.bindings.hasEdits(true); // ch511
             },
 
             // ch473 (added)
@@ -9376,6 +9540,386 @@ gpl.Manager = function () {
                 } else {
                     $(element).val(value);
                 }
+            }
+        };
+
+        ko.bindingHandlers.dropdown = { // ch900; added binding
+            // :: DROPDOWN USE & NOTES ::
+            // (1)  The actual dropdown is expected to be a child of 'element', or the next immediate sibling, and it must contain the '.dtiDropdown' class
+            // (2)  The dropdown respects CSS max and min width/height rules if present.
+            // (3)  This dropdown can be used as-is without any values, i.e. <div data-bind="dropdown"> for the default behavior (see defaults below). Options can be
+            //      provided through the valueAccessor, data-* attributes on the DOM element, or both. data-* attributes take priority over valueAccessor attributes.
+            //      data-* DOM attributes translate to JS attributes as follows:
+            //      <div data-drop-up="true"> translates to { dropUp: true }
+            //      <div data-keep-in-viewport="true"> translates to { keepInViewport: true }, etc. etc.
+            init(element, valueAccessor, allBindingsAccessor, viewModel) {
+                let $element = $(element);      // Source element
+                let $parent = $element.parent();// Source element's parent
+                let $posParent = $(window);     // This is the parent element the drop down is referenced to for positioning purposes
+                let offsetFn = 'offset';        // This is the dropdown function to use to get the dropdown's coordinates relative to posParent
+                let defaults = {
+                    dropUp: false,              // <optional - boolean - set true to drop up; drops down otherwise>
+                    alignment: 'left',          // <optional - string - drop position: 'left', 'center', or 'right'
+                    width: 'auto',              // <optional - string - drop width 'auto' or 'element' (if element, dropdown width matches width of the source element)
+                    keepInViewport: false,      // <optional - boolean - sacrifice alignment to keep the the dropdown in the viewport (applies to left/right & top/bottom)>
+                    openOnClick: true,          // <optional - boolean - open the dropdown when the user clicks on the source element>
+                    closeOnClick: true,         // <optional - boolean - close the dropdown when the user clicks on the source element>
+                    closeOnDropdownClick: true, // <optional - boolean - close the dropdown when the user clicks anywhere inside the dropdown>
+                    closeOnBodyClick: true,     // <optional - boolean - close the dropdown when the user clicks anywhere outside the dropdown>
+                    origin: 'element',          // <optional - string - dropdown x,y origin is based on the 'element' (i.e. source element), 'cursor' (x,y cursor coords), or 'target'
+                    offsetOrigin: true,         // <optional - boolean - position dropdown above or below the origin, depending on if dropping up or down, respectively (versus cover the origin); ignored if origin='click'>
+                    animationSpeed: 200,        // <optional - integer - dropdown open/close animation speed; this must match the '.dtiDropdown' CSS transition setting>
+                    vOffset: 0,                 // <optional - integer - vertical offset from the origin by this amount>
+                    hOffset: 0,                 // <optional - integer - horizontal offset from the origin by this amount>
+                    activeClass: 'active'       // <optional - string - class applied to the source element when the dropdown is active>
+                };
+                let options = ko.utils.unwrapObservable(valueAccessor()) || {};
+                let config = $.extend(true, defaults, ko.toJS(options), $element.data()); // data-* attributes in the view take priority
+                let $dropdown = $element.find('.dtiDropdown').first();
+                let constraints = {                                             // These are contraining widths/heights the user has set. Save these before we touch the css values in showing/hiding the dropdown
+                    maxWidth: parseInt($dropdown.css('maxWidth'), 10) || 9999,  // Maximums yield 'none' if unset; if unset we push the max out to an unrealistic value
+                    maxHeight: parseInt($dropdown.css('maxHeight'), 10) || 9999,
+                    minWidth: parseInt($dropdown.css('minWidth'), 10),          // Minimums yield '0px' if unset
+                    minHeight: parseInt($dropdown.css('minHeight'), 10)
+                };
+                let id = gpl.makeId();
+                let timerId = 0;
+                let isShown = false;
+                let getOrigin = (event) => {
+                    if (config.origin === 'element') {
+                        return $element;
+                    } else if (config.origin === 'cursor') {
+                        return {
+                            offset() {
+                                return {
+                                    left: event.pageX,
+                                    top: event.pageY
+                                };
+                            },
+                            position() {
+                                return {
+                                    left: event.pageX,
+                                    top: event.pageY
+                                };
+                            },
+                            outerHeight() {
+                                return 0;
+                            },
+                            outerWidth() {
+                                return 0;
+                            }
+                        };
+                    } else { // 'target'
+                        return $(event.target);
+                    }
+                };
+                let positionDropdown = (action, event = {}) => {
+                    let $origin = getOrigin(event);
+                    let originOffset = $origin && $origin[offsetFn]();
+
+                    if (!originOffset) {
+                        return gpl.log("Cannot", action, "dropdown because the origin is not on screen. Event data is", event);
+                    }
+
+                    let hideDropdown = (setDisplayNone) => {
+                        let cssCfg = {
+                            minWidth: '0px',
+                            minHeight: '0px',
+                            height: '0px',
+                            width: '0px',
+                            opacity: 0
+                        };
+
+                        // If we're center aligned
+                        if (config.alignment === 'center') {
+                            // Do a vertical-only collapse
+                            delete cssCfg.width;
+                        }
+
+                        $dropdown.css(cssCfg);
+                        $element.removeClass(config.activeClass);
+
+                        if (setDisplayNone) {
+                            timerId = setTimeout(() => {
+                                $dropdown.css('display', 'none');
+                            }, config.animationSpeed);
+                        }
+                    };
+                    let showDropdown = (requestConfig) => {
+                        let cfg = {
+                            transition: '',
+                            display: 'flex',
+                            opacity: 1,
+                            minWidth: '',
+                            minHeight: ''
+                        };
+
+                        // For some reason the dropdown wouldn't animate open after just previously updating the css without a small delay (it was instantly opening)
+                        timerId = setTimeout(() => {
+                            $dropdown.css($.extend(cfg, requestConfig));
+                            $dropdown.scrollTop(0);
+                            $element.addClass(config.activeClass);
+                        }, 50);
+                    };
+                    let getPositioning = () => {
+                        let parentWidth = $posParent.width();
+                        let parentHeight = $posParent.height();
+
+                        // Source size and position (save before we mess with it - we'll get positioning just below)
+                        let source = {
+                            width: $dropdown.css('width'),
+                            height: $dropdown.css('height'),
+                        };
+                        // Target size & position
+                        let target = {};
+
+                        // Get source positioning
+                        if (config.dropUp) {
+                            source.bottom = $dropdown.css('bottom');
+                        } else {
+                            source.top = $dropdown.css('top');
+                        }
+                        if (config.alignment === 'right') {
+                            source.right = $dropdown.css('right');
+                        } else { // alignment is 'left' or 'center'
+                            source.left = $dropdown.css('left');
+                        }
+
+                        // Make the dropdown visible so we can get positioning & sizing
+                        $dropdown.css({
+                            transition: 'inherit',
+                            display: 'flex',
+                            opacity: 1,
+                            width: 'auto',
+                            height: 'auto'
+                        });
+
+                        // Get the dropdown sizing & positioning; its initial position is the origin's position
+                        let width = config.width === 'auto' ? $dropdown.outerWidth() : $element.outerWidth();
+                        let height = $dropdown.outerHeight();
+
+                        // Get the origin sizing & positioning
+                        let originWidth = $origin.outerWidth();
+                        let originHeight = $origin.outerHeight();
+                        let originLeft = originOffset.left;
+                        let originTop = originOffset.top;
+
+                        // Check constraints
+                        if (height > constraints.maxHeight) {
+                            height = constraints.maxHeight;
+                        } else if (height < constraints.minHeight) {
+                            height = constraints.minHeight;
+                        }
+                        if (width > constraints.maxWidth) {
+                            width = constraints.maxWidth;
+                        } else if (width < constraints.minWidth) {
+                            width = constraints.minWidth;
+                        }
+                        target.height = height;
+                        target.width = width;
+
+                        // Get target positioning
+                        if (config.alignment === 'right') {
+                            target.right = parentWidth - originLeft - originWidth + config.hOffset;
+                        } else if (config.alignment === 'center') {
+                            target.left = originLeft - (width/2) + (originWidth/2) + config.hOffset;
+                        } else { // 'left'
+                            target.left = originLeft + config.hOffset;
+                        }
+
+                        if (config.dropUp) {
+                            target.bottom = parentHeight - originTop + config.vOffset;
+
+                            if (!config.offsetOrigin) {
+                                target.bottom -= originHeight;
+                            }
+                        } else {
+                            target.top = originTop + config.vOffset;
+
+                            if (config.offsetOrigin) {
+                                target.top += originHeight;
+                            }
+                        }
+
+                        // Relocate dropdown if it's overflowing the viewport - this overrides dropdown alignment
+                        if (config.keepInViewport) {
+                            // Check left/right
+                            let hOverflow = ((target.right || target.left) + width) - parentWidth;
+                            if (hOverflow > 0) {
+                                if (target.right) {
+                                    target.right -= hOverflow;
+                                } else {
+                                    target.left -= hOverflow;
+                                }
+                            }
+                            // Check top/bottom
+                            let vOverflow = ((target.top || target.bottom) + height) - parentHeight;
+                            if (vOverflow > 0) {
+                                if (target.top) {
+                                    target.top -= vOverflow;
+                                } else {
+                                    target.bottom -= vOverflow;
+                                }
+                            }
+                        }
+
+                        // Append 'px' to all target key values
+                        gpl.forEach(target, (val, key) => {
+                            target[key] = val + 'px';
+                        });
+
+                        return {
+                            source: source,
+                            target: target
+                        };
+                    };
+
+                    if (action === 'hide') {
+                        hideDropdown(true);
+                    } else if (action === 'show') {
+                        // Get the target positioning
+                        let cfg = getPositioning();
+                        // Position the dropdown where it will be shown
+                        $dropdown.css(cfg.target);
+                        // Hide the dropdown
+                        hideDropdown();
+                        // Animate to the target position
+                        showDropdown(cfg.target);
+                    } else { // update
+                        // Get positioning
+                        let cfg = getPositioning();
+                        // Reset the positioning
+                        $dropdown.css(cfg.source);
+                        // Animate to the target position
+                        showDropdown(cfg.target);
+                    }
+                };
+                let handlers = {
+                    show(event) {
+                        positionDropdown('show', event);
+                        isShown = true;
+                    },
+                    hide(event) {
+                        positionDropdown('hide', event);
+                        isShown = false;
+                    },
+                    update(event) {
+                        if (!isShown) {
+                            handlers.show(event);
+                        } else {
+                            positionDropdown('update', event);
+                        }
+                    }
+                };
+                let handleEventMessage = (data) => {
+                    // data = {
+                    //     id: int,             // <required - target dropdown instance id>
+                    //     method: function,    // <required - target dropdown function>
+                    //     data: *              // <optional - object, int, string, whatever>
+                    // }
+                    if (data && (data.id === id)) {
+                        if (handlers[data.method]) {
+                            handlers[data.method](data.data);
+                        } else {
+                            gpl.log('Dropdown binding', id, 'has no method', data.method);
+                        }
+                    }
+                };
+                let handleBodyClick = (event) => {
+                    let $target = $(event.target);
+
+                    if (!isShown) {
+                        if (config.openOnClick && $target.closest($element).length) {
+                            handlers.show(event);
+                        }
+                    } else {
+                        if ($target.closest($dropdown).length) {
+                            if (config.closeOnDropdownClick) {
+                                handlers.hide(event);
+                            }
+                        } else if ($target.closest($element).length) {
+                            if (config.closeOnClick) {
+                                handlers.hide(event);
+                            }
+                        } else if (config.closeOnBodyClick) {
+                            handlers.hide(event);
+                        }
+                    }
+                };
+
+                // If the dropdown wasn't found inside our binding element
+                if (!$dropdown.length) {
+                    // See if it's the next sibling
+                    $dropdown = $element.next();
+
+                    if (!$dropdown.length || ($dropdown[0].className.indexOf('dtiDropdown') < 0)) {
+                        return gpl.log('ko.bindingHandlers.dropdown:', '.dtiDropdown not found within or after $element', $element);
+                    }
+                }
+
+                // See if the parent element should be something besides the default (window). The dropdown uses 'fixed'
+                // positioning, so if we have a parent with 'fixed' position, we have to reference that element when
+                // positioning the dropdown
+                gpl.forEachArray($element.parents(), function (el) {
+                    let $el = $(el);
+                    
+                    if ($el.css('position') === 'fixed') { // If the parent is fixed position
+                        $posParent = $el;
+                        offsetFn = 'position';
+                        return false;
+                    }
+                });
+
+                // This is the only modification to the received options object! Install our unique id on the options object.
+                // The author needs this id to call one of our handler methods via dti event messaging
+                options.id = id;
+
+                // Setup event listeners
+                if (config.openOnClick || config.closeOnClick || config.closeOnDropdownClick || config.closeOnBodyClick) {
+                    gpl.manager.registerHandler({
+                        event: 'click',
+                        handler: handleBodyClick,
+                        type: 'DOM',
+                        window: true
+                    });
+                }
+                gpl.on('callDropdownMethod', handleEventMessage);
+
+                // Cleanup
+                ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                    clearTimeout(timerId);
+                    gpl.off('callDropdownMethod', handleEventMessage);
+                    // TODO unregister body click handler
+                    $element = null;
+                    $dropdown = null;
+                    options = null;
+                });
+            }
+        };
+
+        ko.bindingHandlers.delegate = {
+            init: (element, valueAccessor) => {
+                let $element = $(element);
+                let delegations = ko.utils.unwrapObservable(valueAccessor());
+                let handlers = [];
+                let makeHandler = (fn, cfg) => {
+                        return (e) => {
+                            fn(e, ko.dataFor(e[cfg.eventTargetKey] || e.target));
+                            // e.preventDefault(); temporary comment
+                        };
+                    };
+
+                gpl.forEachArray(delegations, (cfg) => {
+                    let handler = makeHandler(cfg.handler, cfg);
+                    handlers.push(handler);
+                    $element.on(cfg.event, cfg.selector, handler);
+                });
+
+                ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                    gpl.forEachArray(delegations, (cfg, idx) => {
+                        $element.off(cfg.event, cfg.selector, handlers[idx]);
+                    });
+                });
             }
         };
 
@@ -9702,6 +10246,7 @@ gpl.Manager = function () {
                 });
             }
 
+            // TODO - Found this commented out. Verify it should still be so
             // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
             newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
             managerSelf.shapes.push(newLine);

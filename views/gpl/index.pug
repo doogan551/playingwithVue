@@ -249,13 +249,50 @@ html
 
         #editInputOutput.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
             .modal-content
-                .row(data-bind="visible: editBlockType() === 'MonitorBlock' || editBlockType() === 'ControlBlock'")
-                    //.row
-                    //    .col.s4.subtitle Reference
-                    .row.pointName
-                        .col.s3.btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
+                .row(data-bind="visible: editBlockType() === 'ControlBlock'")
+                    .row.pointName.valign-wrapper
+                        .col.s3
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
                         .col.s9
                             span(data-bind="text: editPointName")
+                    .row &nbsp;
+
+                .row(data-bind="visible: editBlockType() === 'MonitorBlock'")
+                    .row
+                        .col.s4
+                            input#externalRef.with-gap(name="external" type="radio", value="External", data-bind="checked: editPointReferenceType")
+                            label(for="externalRef") External Reference
+                        .col.s4
+                            input#internalRef.with-gap(name="external" type="radio", value="Internal", data-bind="checked: editPointReferenceType")
+                            label(for="internalRef") Internal Reference
+                    .row &nbsp;
+                    .row.pointName.valign-wrapper(data-bind="visible: editPointReferenceType() === 'External' ")
+                        .col.s3
+                            .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
+                        .col.s9
+                            span(data-bind="text: editPointName")
+                    .row.internalRef(data-bind="visible: editPointReferenceType() === 'Internal' ")
+                        .col.s12
+                            a.valign-wrapper.select(href="#", data-bind="dropdown", data-alignment="center", data-width="element")
+                                span(data-bind="text: (editSelectedReference() && editSelectedReference().label) || 'Select Reference...' ")
+                                .icon.mdi.mdi-chevron-down
+                            .dtiDropdown.thinScroll(data-bind="delegate: [{event: 'click', selector: '.reference', handler: selectInternalReference}]")
+                                // ko foreach: [{title: 'Inputs', src: editInputReferences, showPointName: true}, {title: 'Outputs', src: editOutputReferences, showPointName: true}, {title: 'GPL Blocks', src: editFnBlkReferences, showPointName: false}]
+                                .title(data-bind="text: title")
+                                // ko foreach: src
+                                .reference(data-bind="css: { 'selected' : ($parents[1].editSelectedReference() && $parents[1].editSelectedReference().upi === $data.upi) }")
+                                    .label(data-bind="text: label")
+                                    // ko if: $data.pointName
+                                    .pointName.valign-wrapper(data-bind="text: pointName, visible: $parent.showPointName")
+                                    // /ko
+                                // /ko
+                                // ko if: !src().length
+                                .reference
+                                    .label None found
+                                // /ko
+                                // /ko
+                    .row &nbsp;
+                
                 .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
                     //.row
                     //    .col.s4.subtitle Configuration
@@ -273,7 +310,7 @@ html
                 .row
                     .col.s6.input-field
                         //- ch485 check for label validity & indicate invalid label
-                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }")
+                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }, attr: { disabled: editPointLabelLocked }")
                         label(for="blocklabel", data-bind="attr: { 'data-error': labelError }") Block Label
                 .row
                     .col.s4 Numeric Format

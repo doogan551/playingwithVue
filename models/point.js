@@ -3150,7 +3150,6 @@ const Point = class Point extends Common {
     changeNewIds(points, cb) {
         this.updateIds(points, (err) => {
             this.reassignRefs(points);
-            this.assignParentRefs(points);
             cb(null, points);
         });
     }

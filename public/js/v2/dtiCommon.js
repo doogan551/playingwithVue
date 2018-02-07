@@ -302,15 +302,23 @@ var dtiCommon = {
         });
     },
 
-    toLowerCasePath(node) {
-        node._path = [];
-        node.path.forEach((item) => {
+    toLowerCasePath(data) {
+        // data = {
+        //     path: []
+        // } OR
+        // data = [] // path
+        let path = data.path || data;
+        let _path = [];
+
+        path.forEach((item) => {
             let _item = item.toLowerCase();
-            node._path.push(_item);
+            _path.push(_item);
             if (_item.match(' ')) {
-                node._path.push(..._item.split(' '));
+                _path.push(..._item.split(' '));
             }
         });
+
+        return _path;
     },
 
     knockout: {
