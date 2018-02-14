@@ -1587,8 +1587,19 @@ const History = class History extends Common {
         ranges.push(range);
     }
     doBackUp(upis, cb) {
-        let criteria = {
-            query: [{
+        const loopHistory = (skip, callback) => {
+            let limit = 1000;
+            let pipeline = [];
+
+            if (skip !== 0) {
+                pipeline.push({
+                    $skip: skip
+                });
+            }
+
+            pipeline.push({
+                $limit: limit
+            }, {
                 $project: {
                     _id: 0,
                     value: '$Value',
@@ -1597,12 +1608,22 @@ const History = class History extends Common {
                     timestamp: 1,
                     upi: 1
                 }
-            }]
-        };
+            });
 
-        this.aggregate(criteria, (err, points) => {
-            this.addToSQLite(points, cb);
-        });
+            this.aggregate({
+                pipeline
+            }, (err, points) => {
+                if (!!err || !points.length) {
+                    return callback(err);
+                }
+                skip += limit;
+                this.addToSQLite(points, (err) => {
+                    loopHistory(skip, callback);
+                });
+            });
+        };
+        let skip = 0;
+        loopHistory(skip, cb);
     }
     // buildOps: buildOps,
     // unbuildOps: unbuildOps,

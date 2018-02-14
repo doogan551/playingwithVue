@@ -21,6 +21,13 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "backupHistory",
+            "program": "${workspaceRoot}/apps/backupHistory.js",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "rectest",
             "program": "${workspaceRoot}/apps/rectest.js",
             "cwd": "${workspaceRoot}"

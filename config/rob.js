@@ -2,7 +2,7 @@ var rob = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost',
-            'dbName': 'msfc'
+            'dbName': 'av'
         },
         'zmqConfig': {
             'server': 'localhost'

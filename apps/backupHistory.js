@@ -283,7 +283,9 @@ let backUp = () => {
 let newBackup = () => {
     let historyModel = new History();
     db.connect(connectionString.join(''), (err) => {
+        console.time('test');
         historyModel.doBackUp(upis.all, (err) => {
+            console.timeEnd('test');
             if (err) {
                 console.log('doBackUp Error: ' + JSON.stringify(err));
             }
