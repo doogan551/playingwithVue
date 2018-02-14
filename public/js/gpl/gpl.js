@@ -99,30 +99,27 @@ var gpl = {
     waitForSocketMessage: function (fn) {
         gpl.socketWaitFn = fn;
     },
-    saveSequence: function (saveObj) {
-        let data;
+    saveSequence: function (saveObj, cb) { // ch918; simplify this function's logic & add callback option
+        let data = $.extend({
+                updates: [],
+                deletes: []
+            }, saveObj);
+
+        cb = cb || gpl.emptyFn;
+
         gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
         gpl.point.SequenceData.sequence = gpl.json;
 
-        if (saveObj === undefined) {
-            saveObj = {};
-            saveObj.updates = [];
-        } else if (saveObj.updates === undefined) {
-            saveObj.updates = [];
-        }
-
-        saveObj.updates.push({
+        data.updates.push({
             oldPoint: gpl.originalSequence,
             newPoint: gpl.point
         });
 
-        data = {
-            deletes: (!!saveObj.deletes ? saveObj.deletes : []),
-            updates: (!!saveObj.updates ? saveObj.updates : [])
-        };
-
+        console.log('doPointPackage', data);
         gpl.socket.emit('doPointPackage', data);
+
+        cb();
     },
     isCyclic: function (obj) {
         var seenObjects = [];
@@ -1645,7 +1642,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
             if (idx) {
                 // TFS #569 - check path instead of name
-                if (path && path.length && gpl.rendered) {
+                // ch922; remove check for gpl.rendered - it was added to gpl.on('editedBlock')
+                if (path && path.length) {
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1776,6 +1774,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                                     tmpData = formatPoint(args);
                                 } catch (ex) {
                                     gpl.log('error formatting point', ex.message);
+                                    tmpData = {
+                                        err: ex.message
+                                    };
                                 }
                                 if (tmpData.err) {
                                     gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
@@ -6327,6 +6328,14 @@ gpl.BlockManager = function (manager) {
                     }
                 } else if (editBlock.type === 'ConstantBlock') { //constant
                     editBlock.setValue(bmSelf.bindings.editPointValue());
+                } else if (!editBlock.isNonPoint) { // ch917; update reference labels if edit block label changes
+                    if (editBlock.label !== label) {
+                        gpl.forEachArray(currReferences, function (ref, c) {
+                            if (ref.block.hasReferenceType) {
+                                ref.block.setLabel(label);
+                            }
+                        });
+                    }
                 }
 
                 editBlock.setPlaceholderText();
@@ -6467,48 +6476,35 @@ gpl.BlockManager = function (manager) {
             };
         },
 
-        getSaveObject: function (isCancel) {
+        getSaveObject: function () { // Removed 'isCancel' argument because it's not used by callers; optimized as part of ch918
             var saveObj = {
-                adds: [],
                 updates: [],
                 deletes: []
             };
 
             gpl.forEach(bmSelf.newBlocks, function (block) {
-                var data;
                 if (!block.isNonPoint) {
-                    data = block.getPointData();
-                    if (isCancel) {
-                        saveObj.deletes.push(block.upi);
-                    } else {
-                        data = {
-                            oldPoint: block._origPointData,
-                            newPoint: block.getPointData()
-                        };
-                        saveObj.updates.push(data);
-                    }
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
                 }
             });
 
-            if (!isCancel) {
-                gpl.forEach(bmSelf.editedBlocks, function (block) {
-                    var data;
+            gpl.forEach(bmSelf.editedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
+                }
+            });
 
-                    if (!block.isNonPoint) {
-                        data = {
-                            oldPoint: block._origPointData,
-                            newPoint: block.getPointData()
-                        };
-                        saveObj.updates.push(data);
-                    }
-                });
-
-                gpl.forEach(bmSelf.deletedBlocks, function (block) {
-                    if (!block.isNonPoint) {
-                        saveObj.deletes.push(block.upi);
-                    }
-                });
-            }
+            gpl.forEach(bmSelf.deletedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.deletes.push(block.upi);
+                }
+            });
 
             return saveObj;
         },
@@ -6860,8 +6856,13 @@ gpl.BlockManager = function (manager) {
                 };
 
             for (c = 0; c < references.length; c++) {
-                upi = references[c]._id;
-                upiMap[upi] = cleanup(references[c], c);
+                // ch918; use a try catch; this shouldn't happen any longer but leaving JIC
+                try {
+                    upi = references[c]._id;
+                    upiMap[upi] = cleanup(references[c], c);
+                } catch (ex) {
+                    console.log('references[c]._id undefined', 'c', c, 'references[c]', references[c], 'error', ex);
+                }
             }
 
             gpl.pointUpiMap = upiMap;
@@ -7028,10 +7029,11 @@ gpl.BlockManager = function (manager) {
     gpl.on('editedblock', function (block) {
         if (gpl.rendered) {
             bmSelf.manager.bindings.hasEdits(true);
-            // gpl.hasEdits = true;
-        }
-        if (!!block.upi && !isNaN(block.upi)) {
-            bmSelf.editedBlocks[block.upi] = block;
+
+            // ch922; moved this conditional block inside if(gpl.rendered) because sometimes existing block(s) were getting added to editBlocks on load
+            if (!!block.upi && !isNaN(block.upi)) {
+                bmSelf.editedBlocks[block.upi] = block;
+            }
         }
     });
 
@@ -7065,10 +7067,21 @@ gpl.BlockManager = function (manager) {
             });
         }
 
+        // ch921; clean point refs array; search ch921 in this file for more info
+        if (!oldBlock.isNonPoint) {
+            gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
+                if (pointRef.PointInst === oldBlock.upi) {
+                    gpl.point['Point Refs'].splice(i, 1);
+                    return false; // break the loop
+                }
+            });
+        }
+
         delete bmSelf.blocks[oldBlock.gplId];
         oldBlock.delete();
 
         delete bmSelf.editedBlocks[oldBlock.upi];
+        delete bmSelf.newBlocks[oldBlock.upi]; // added as part of ch921
 
         bmSelf.renderAll();
         gpl.log('block deleted');
@@ -8404,7 +8417,11 @@ gpl.Manager = function () {
                     return handleError(data.err);
                 }
 
-                block.upi = dtiUtility.generateFauxPointID(gpl.currentUser.username);
+                // ch918; Add a dependable prefix to the fake id - this is the hacky method of allowing the server to know 
+                // that the Point Refs array entry with this upi is referencing a temporary point (i.e. the referenced point
+                // will not be found in the points collection)
+                block.upi = dtiUtility.generateFauxPointID('tempId_' + gpl.currentUser.username); 
+
                 point.id = block.upi;
                 point.path = $.extend([], gpl.point.path);
                 point.path.push(block.label);
@@ -8492,7 +8509,10 @@ gpl.Manager = function () {
             continueEditingCb = function () {
                 gpl.hideMessage();
                 gpl.unblockUI();
-                gpl.openModal(gpl.$saveForLaterConfirmModal);
+
+                // ch919; skip the modal and call doCancel directly since the modal wouldn't let you cancel out anyway
+                // gpl.openModal(gpl.$saveForLaterConfirmModal);
+                managerSelf.doCancel();
             };
 
         gpl.blockUI();
