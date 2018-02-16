@@ -1,11 +1,49 @@
-var kodt = function () {
-    return ko.dataFor(window.$0);
+let __el = function (el) {
+    return el instanceof $ ? el[0] : el instanceof HTMLElement ? el : null;
 };
-var kojs = function () {
-    return ko.toJS(kodt());
+let kodt = function (obj = window.$0) {
+    return ko.dataFor(__el(obj));
 };
-var koct = function () {
-    return ko.contextFor(window.$0);
+let kojs = function (obj = window.$0) {
+    let el = __el(obj);
+
+    let data = el ? kodt(obj) : obj;
+
+    let cycle = function (item) {
+        let ret = {};
+
+        dti.forEach(item, (val, prop) => {
+            if (val instanceof $) {
+                ret[prop] = val;
+            } else {
+                if (Array.isArray(val)) {
+                    let tmpArr = [];
+                    ret[prop] = tmpArr;
+                    dti.forEachArray(val, (innerVal) => {
+                        tmpArr.push(cycle(innerVal));
+                    });
+                } else if (typeof val === 'object') {
+                    let tmpObj = {};
+                    ret[prop] = tmpObj;
+                    dti.forEach(val, (innerVal, innerProp) => {
+                        tmpObj[innerProp] = cycle(innerVal);
+                    });
+                } else {
+                    ret[prop] = koUnwrap(val);
+                }
+            }
+        });
+
+        return ret;
+    };
+
+    return cycle(data);
+};
+let koct = function (obj = window.$0) {
+    return ko.contextFor(__el(obj));
+};
+let koUnwrap = function (value) {
+    return ko.utils.unwrapObservable(value);
 };
 var dti = {
     $loginBtn: $('#loginBtn'),
