@@ -99,30 +99,27 @@ var gpl = {
     waitForSocketMessage: function (fn) {
         gpl.socketWaitFn = fn;
     },
-    saveSequence: function (saveObj) {
-        let data;
+    saveSequence: function (saveObj, cb) { // ch918; simplify this function's logic & add callback option
+        let data = $.extend({
+                updates: [],
+                deletes: []
+            }, saveObj);
+
+        cb = cb || gpl.emptyFn;
+
         gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
         gpl.point.SequenceData.sequence = gpl.json;
 
-        if (saveObj === undefined) {
-            saveObj = {};
-            saveObj.updates = [];
-        } else if (saveObj.updates === undefined) {
-            saveObj.updates = [];
-        }
-
-        saveObj.updates.push({
+        data.updates.push({
             oldPoint: gpl.originalSequence,
             newPoint: gpl.point
         });
 
-        data = {
-            deletes: (!!saveObj.deletes ? saveObj.deletes : []),
-            updates: (!!saveObj.updates ? saveObj.updates : [])
-        };
-
+        console.log('doPointPackage', data);
         gpl.socket.emit('doPointPackage', data);
+
+        cb();
     },
     isCyclic: function (obj) {
         var seenObjects = [];
@@ -569,7 +566,7 @@ var gpl = {
                 block.pointRefIndex = pRef.AppIndex;
             }
 
-            if (block.type === 'MonitorBlock') {
+            if (block.type === 'Input') {
                 // pRef.DevInst = refs[this._pointRefs['Device Point']].DevInst;
             } else {
                 pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
@@ -852,7 +849,7 @@ var gpl = {
             setVars();
 
             if (pointType1 && pointType2) {
-                if (block2.type === 'ControlBlock') {
+                if (block2.type === 'Output') {
                     // gpl.log('swapped vars');
                     swapAnchors();
                     setVars();
@@ -1645,7 +1642,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
             if (idx) {
                 // TFS #569 - check path instead of name
-                if (path && path.length && gpl.rendered) {
+                // ch922; remove check for gpl.rendered - it was added to gpl.on('editedBlock')
+                if (path && path.length) {
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1756,6 +1754,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     cc,
                     gplId,
                     upi,
+                    property,
                     setDataVars = function () {
                         var args;
                         if (!upi) {
@@ -1763,24 +1762,29 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             // gpl.log('no upi');
                         } else if (block.upi === anchor.myBlock().upi && block.valueType === anchor.inputType) {
                                 console.log(' - - - - - anchor.inputType = ' + anchor.inputType + "  anchor.myBlock().upi = " + anchor.myBlock().upi);
-                            } else if (gpl.pointData[upi]) {
-                                // if(newData && data) {
+                        } else if (gpl.pointData[upi]) {
+                            // if(newData && data) {
+                            property = (type === 'input') ? anchor.anchorType : otherEnd.anchorType;
+
                                 try {
                                     args = {
                                         point: newData,
                                         oldPoint: data,
-                                        property: type === 'input' ? anchor.anchorType : otherEnd.anchorType,
+                                        property: property,
                                         refPoint: gpl.pointData[upi]
                                     };
 
                                     tmpData = formatPoint(args);
                                 } catch (ex) {
                                     gpl.log('error formatting point', ex.message);
+                                    tmpData = {
+                                        err: ex.message
+                                    };
                                 }
                                 if (tmpData.err) {
                                     gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
                                     gpl.isValid = false;
-                                    gpl.validationMessage.push('Error with block "' + self.pointType + ' - \'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
+                                    gpl.validationMessage.push('Error with block "' + self.pointType + ' - \'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + property + ')');
                                     self.setInvalid();
                                 } else {
                                     self._origPointData = newData;
@@ -1809,7 +1813,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                             if (block) {
                                 if (block.blockType !== 'Constant') {
-                                    if (type !== 'output' || block.blockType === 'ControlBlock') {
+                                    if (type !== 'output' || block.blockType === 'Output') {
                                         setDataVars();
                                     // } else {
                                     //     gpl.log('skipping', self.label, block.label, type === 'input' ? anchor.anchorType : otherEnd.anchorType);
@@ -2190,7 +2194,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                 // console.log("  this.type = " + this.type);
                 // console.log("      prop = " + prop + "    idx = " + idx + "    name = " + PointName);
-                if (this.type === 'MonitorBlock') {
+                if (this.type === 'Input') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
                     ref.DevInst = (ref.DevInst === 0 ? gpl.deviceId : ref.DevInst);
@@ -2270,7 +2274,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     }
                 } else if (anchor.required === true) {
                         ret = false;
-                        gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
+                        gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block, ' + self.label);
                         gpl.log('no lines associated', anchor.anchorType, 'on', self.label + ' ' + self.type);
                     }
 
@@ -2288,6 +2292,13 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         for (c = 0; c < len && valid; c++) {
             anchor = list[c];
             isValid(anchor);
+        }
+
+        if (valid && self.blockType === 'Constant') { // ch354 check constant value
+            if (isNaN(parseInt(self.value))) { // This passes for decimal values as well
+                valid = false;
+                gpl.validationMessage.push("Constant block, " + self.label + ", has an invalid value (" + self.value + ")");
+            }
         }
 
         if (!valid) {
@@ -2933,7 +2944,7 @@ gpl.Block.fromObject = function (object) {
     return new gpl.Block(object);
 };
 
-gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -2946,7 +2957,7 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
     isNonPoint: true,
     hasReferenceType: true,
 
-    type: 'MonitorBlock',
+    type: 'Input',
     pointType: 'Input',
 
     shapes: {
@@ -2974,6 +2985,11 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
 
     syncAnchorPoints: gpl.emptyFn,
 
+    rightAnchor: { // ch354 require anchor wired up
+        anchorType: '',
+        required: true
+    },
+
     postInit: function () {
         this.callSuper('postInit');
 
@@ -2986,7 +3002,7 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -2998,7 +3014,7 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
     numInputs: 0,
     isNonPoint: true,
 
-    type: 'ConstantBlock',
+    type: 'Constant',
     pointType: 'Constant',
 
     shapes: {
@@ -3012,6 +3028,11 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
     },
 
     syncAnchorPoints: gpl.emptyFn,
+
+    rightAnchor: { // ch354 require anchor wired up
+        anchorType: '',
+        required: true
+    },
 
     postInit: function () {
         if (this.value !== undefined) {
@@ -3053,7 +3074,7 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -3069,7 +3090,7 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
     numInputs: 1,
     hasOutput: false,
 
-    type: 'ControlBlock',
+    type: 'Output',
     pointType: 'Output',
 
     shapes: {
@@ -3088,6 +3109,11 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
             }
         }
     },
+
+    leftAnchors: [{ // ch354 require anchor wired up
+        anchorType: '',
+        required: true
+    }],
 
     syncAnchorPoints: gpl.emptyFn,
 
@@ -6240,7 +6266,7 @@ gpl.BlockManager = function (manager) {
             },
             editPointReference: function () {
                 var editBlock = bmSelf.editBlock,
-                    isControl = editBlock.type === 'ControlBlock',
+                    isControl = editBlock.type === 'Output',
                     property = isControl ? 'Control Point' : 'Monitor Point';
 
                 bmSelf.doOpenPointSelector(property);
@@ -6325,8 +6351,16 @@ gpl.BlockManager = function (manager) {
                         }
                         anchor.adjustRelatedBlocks(true);
                     }
-                } else if (editBlock.type === 'ConstantBlock') { //constant
+                } else if (editBlock.type === 'Constant') { //constant
                     editBlock.setValue(bmSelf.bindings.editPointValue());
+                } else if (!editBlock.isNonPoint) { // ch917; update reference labels if edit block label changes
+                    if (editBlock.label !== label) {
+                        gpl.forEachArray(currReferences, function (ref, c) {
+                            if (ref.block.hasReferenceType) {
+                                ref.block.setLabel(label);
+                            }
+                        });
+                    }
                 }
 
                 editBlock.setPlaceholderText();
@@ -6387,8 +6421,9 @@ gpl.BlockManager = function (manager) {
                         // }
                         if (!isValid.valid) {
                             bmSelf.bindings.labelError(isValid.errorMessage);
-                            isValid = false;
                         }
+
+                        isValid = isValid.valid;
                     }
                 }
 
@@ -6467,48 +6502,35 @@ gpl.BlockManager = function (manager) {
             };
         },
 
-        getSaveObject: function (isCancel) {
+        getSaveObject: function () { // Removed 'isCancel' argument because it's not used by callers; optimized as part of ch918
             var saveObj = {
-                adds: [],
                 updates: [],
                 deletes: []
             };
 
             gpl.forEach(bmSelf.newBlocks, function (block) {
-                var data;
                 if (!block.isNonPoint) {
-                    data = block.getPointData();
-                    if (isCancel) {
-                        saveObj.deletes.push(block.upi);
-                    } else {
-                        data = {
-                            oldPoint: block._origPointData,
-                            newPoint: block.getPointData()
-                        };
-                        saveObj.updates.push(data);
-                    }
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
                 }
             });
 
-            if (!isCancel) {
-                gpl.forEach(bmSelf.editedBlocks, function (block) {
-                    var data;
+            gpl.forEach(bmSelf.editedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
+                }
+            });
 
-                    if (!block.isNonPoint) {
-                        data = {
-                            oldPoint: block._origPointData,
-                            newPoint: block.getPointData()
-                        };
-                        saveObj.updates.push(data);
-                    }
-                });
-
-                gpl.forEach(bmSelf.deletedBlocks, function (block) {
-                    if (!block.isNonPoint) {
-                        saveObj.deletes.push(block.upi);
-                    }
-                });
-            }
+            gpl.forEach(bmSelf.deletedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.deletes.push(block.upi);
+                }
+            });
 
             return saveObj;
         },
@@ -6860,8 +6882,13 @@ gpl.BlockManager = function (manager) {
                 };
 
             for (c = 0; c < references.length; c++) {
-                upi = references[c]._id;
-                upiMap[upi] = cleanup(references[c], c);
+                // ch918; use a try catch; this shouldn't happen any longer but leaving JIC
+                try {
+                    upi = references[c]._id;
+                    upiMap[upi] = cleanup(references[c], c);
+                } catch (ex) {
+                    console.log('references[c]._id undefined', 'c', c, 'references[c]', references[c], 'error', ex);
+                }
             }
 
             gpl.pointUpiMap = upiMap;
@@ -7028,10 +7055,11 @@ gpl.BlockManager = function (manager) {
     gpl.on('editedblock', function (block) {
         if (gpl.rendered) {
             bmSelf.manager.bindings.hasEdits(true);
-            // gpl.hasEdits = true;
-        }
-        if (!!block.upi && !isNaN(block.upi)) {
-            bmSelf.editedBlocks[block.upi] = block;
+
+            // ch922; moved this conditional block inside if(gpl.rendered) because sometimes existing block(s) were getting added to editBlocks on load
+            if (!!block.upi && !isNaN(block.upi)) {
+                bmSelf.editedBlocks[block.upi] = block;
+            }
         }
     });
 
@@ -7065,10 +7093,21 @@ gpl.BlockManager = function (manager) {
             });
         }
 
+        // ch921; clean point refs array; search ch921 in this file for more info
+        if (!oldBlock.isNonPoint) {
+            gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
+                if (pointRef.PointInst === oldBlock.upi) {
+                    gpl.point['Point Refs'].splice(i, 1);
+                    return false; // break the loop
+                }
+            });
+        }
+
         delete bmSelf.blocks[oldBlock.gplId];
         oldBlock.delete();
 
         delete bmSelf.editedBlocks[oldBlock.upi];
+        delete bmSelf.newBlocks[oldBlock.upi]; // added as part of ch921
 
         bmSelf.renderAll();
         gpl.log('block deleted');
@@ -7357,7 +7396,7 @@ gpl.BlockManager = function (manager) {
                     doOpenWindow();
                 } else {
                     //is constant/monitor/etc
-                    if (block.type === 'ConstantBlock') {
+                    if (block.type === 'Constant') {
                         bmSelf.openBlockEditor(block);
                     }
                 }
@@ -7389,7 +7428,7 @@ gpl.BlockManager = function (manager) {
                     movingBlock = bmSelf.getBlock(target.gplId);
                 }
             }
-            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.ConstantBlock) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
+            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.Constant) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
                 bmSelf.openPointEditor(movingBlock);
                 bmSelf.deselect();
             }
@@ -7823,13 +7862,13 @@ gpl.Manager = function () {
                 managerSelf.blockTypes = {
                     //icon: cls
                     Constant: {
-                        blockType: 'ConstantBlock'
+                        blockType: 'Constant'
                     },
                     Output: {
-                        blockType: 'ControlBlock'
+                        blockType: 'Output'
                     },
                     Input: {
-                        blockType: 'MonitorBlock'
+                        blockType: 'Input'
                     },
                     AlarmStat: {
                         blockType: 'AlarmStatus'
@@ -8404,7 +8443,11 @@ gpl.Manager = function () {
                     return handleError(data.err);
                 }
 
-                block.upi = dtiUtility.generateFauxPointID(gpl.currentUser.username);
+                // ch918; Add a dependable prefix to the fake id - this is the hacky method of allowing the server to know 
+                // that the Point Refs array entry with this upi is referencing a temporary point (i.e. the referenced point
+                // will not be found in the points collection)
+                block.upi = dtiUtility.generateFauxPointID('tempId_' + gpl.currentUser.username); 
+
                 point.id = block.upi;
                 point.path = $.extend([], gpl.point.path);
                 point.path.push(block.label);
@@ -8492,7 +8535,10 @@ gpl.Manager = function () {
             continueEditingCb = function () {
                 gpl.hideMessage();
                 gpl.unblockUI();
-                gpl.openModal(gpl.$saveForLaterConfirmModal);
+
+                // ch919; skip the modal and call doCancel directly since the modal wouldn't let you cancel out anyway
+                // gpl.openModal(gpl.$saveForLaterConfirmModal);
+                managerSelf.doCancel();
             };
 
         gpl.blockUI();
@@ -10218,7 +10264,7 @@ gpl.Manager = function () {
                             cfg: config
                         });
 
-                        if (referencedPoint && newBlock.type !== 'ControlBlock' && newBlock.type !== 'MonitorBlock') {
+                        if (referencedPoint && newBlock.type !== 'Output' && newBlock.type !== 'Input') {
                             newBlock.setIconType(calcType, reverseAction);  // this handles 'calculation type' changes outside GPL
                         }
                         block.gplId = newBlock.gplId;

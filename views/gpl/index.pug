@@ -249,7 +249,7 @@ html
 
         #editInputOutput.modal.dtiModal.modal-fixed-header.blue-grey-form.fade
             .modal-content
-                .row(data-bind="visible: editBlockType() === 'ControlBlock'")
+                .row(data-bind="visible: editBlockType() === 'Output'")
                     .row.pointName.valign-wrapper
                         .col.s3
                             .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: editPointReference") Data Point
@@ -257,7 +257,7 @@ html
                             span(data-bind="text: editPointName")
                     .row &nbsp;
 
-                .row(data-bind="visible: editBlockType() === 'MonitorBlock'")
+                .row(data-bind="visible: editBlockType() === 'Input'")
                     .row
                         .col.s4
                             input#externalRef.with-gap(name="external" type="radio", value="External", data-bind="checked: editPointReferenceType")
@@ -293,7 +293,7 @@ html
                                 // /ko
                     .row &nbsp;
                 
-                .row(data-bind="visible: editBlockType() === 'ConstantBlock'")
+                .row(data-bind="visible: editBlockType() === 'Constant'")
                     //.row
                     //    .col.s4.subtitle Configuration
                     .row
