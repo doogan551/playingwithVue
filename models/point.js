@@ -29,28 +29,28 @@ const Point = class Point extends Common {
                     }
                 }, {
                     '$lookup': {
-                        'from': 'points',
-                        'localField': 'Point Refs.Value',
-                        'foreignField': '_id',
-                        'as': 'refNames'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$refNames'
-                    }
-                }, {
-                    '$addFields': {
-                        'Point Refs.PointPath': '$refNames.path',
-                        'Point Refs.PointType': '$refNames.Point Type.eValue'
-                    }
-                }, {
-                    '$group': {
-                        '_id': '$_id',
-                        'Point Refs': {
-                            '$push': '$Point Refs'
+                            'from': 'points',
+                            'localField': 'Point Refs.Value',
+                            'foreignField': '_id',
+                            'as': 'refNames'
                         }
-                    }
-                }],
+                }, {
+                        '$unwind': {
+                            'path': '$refNames'
+                        }
+                    }, {
+                        '$addFields': {
+                            'Point Refs.PointPath': '$refNames.path',
+                            'Point Refs.PointType': '$refNames.Point Type.eValue'
+                        }
+                    }, {
+                        '$group': {
+                            '_id': '$_id',
+                            'Point Refs': {
+                                '$push': '$Point Refs'
+                            }
+                        }
+                    }],
                 'Point': [{
                     '$sort': {
                         '_id': 1
@@ -59,14 +59,14 @@ const Point = class Point extends Common {
                 'Points': [{
                     '$project': {
                         'Point Refs': {
-                            '$filter': {
-                                'input': '$Point Refs',
-                                'as': 'ref',
-                                'cond': {
-                                    '$eq': ['$$ref.Value', 0]
+                                '$filter': {
+                                    'input': '$Point Refs',
+                                    'as': 'ref',
+                                    'cond': {
+                                        '$eq': ['$$ref.Value', 0]
+                                    }
                                 }
                             }
-                        }
                     }
                 }]
             }
@@ -155,6 +155,22 @@ const Point = class Point extends Common {
                 });
             });
             return cb(null, points);
+        });
+    }
+
+    getAllPointsById(data, cb) {
+        let results = [];
+        async.eachSeries(data.upis, (upi, nextUpi) => {
+            this.getPointById({
+                id: upi,
+                user: data.user,
+                resolvePointRefs: data.resolvePointRefs
+            }, (err, message, point) => {
+                results.push(point);
+                nextUpi(err);
+            });
+        }, (err) => {
+            return cb(err, results);
         });
     }
 
@@ -3138,6 +3154,18 @@ const Point = class Point extends Common {
         });
     }
 
+    assignParentRefs(nodes) {
+        for (var p = 0; p < nodes.length; p++) {
+            let parent = nodes[p];
+            for (var c = 0; c < nodes.length; c++) {
+                let child = nodes[c];
+                if (child.parentNode === parent.id) {
+                    child.parentNode = parent._id;
+                }
+            }
+        }
+    }
+
     updateIds(points, callback) {
         let counterModel = new Counter();
         async.eachSeries(points, (point, seriesCallback) => {
@@ -3404,28 +3432,41 @@ const Point = class Point extends Common {
             from: 'ui'
         };
         async.waterfall([(callback) => {
-            this.changeNewIds(data.updates, (err, points) => {
-                async.mapSeries(points, (point, mapCallback) => {
-                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
-                        this.addPoint(point, user, null, (err, result) => {
-                            mapCallback(err.err, result);
-                        });
-                    } else {
-                        this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
-                            mapCallback(response.err, updatedPoint);
-                        });
-                    }
-                }, (err, newPoints) => {
-                    callback(err, newPoints);
-                });
-            });
-        }, (returnPoints, callback) => {
             async.mapSeries(data.deletes, (upi, mapCallback) => {
                 this.deletePoint(upi, 'hard', user, null, (response) => {
                     mapCallback(response.err);
                 });
             }, (err, newPoints) => {
-                callback(err, returnPoints);
+                callback(err);
+            });
+        }, (callback) => {
+            this.changeNewIds(data.updates, (err, points) => {
+                let adds = [];
+                let updates = [];
+                points.forEach((point) => {
+                    if (point.newPoint._pStatus === Config.Enums['Point Statuses'].Inactive.enum) {
+                        adds.push(point);
+                    } else {
+                        updates.push(point);
+                    }
+                });
+                callback(null, updates, adds);
+            });
+        }, (updates, adds, callback) => {
+            async.mapSeries(updates, (point, mapCallback) => {
+                this.newUpdate(point.oldPoint, point.newPoint, _options, user, (response, updatedPoint) => {
+                    mapCallback(response.err, updatedPoint);
+                });
+            }, (err, newPoints) => {
+                callback(err, adds, newPoints);
+            });
+        }, (adds, newPoints, callback) => {
+            async.mapSeries(adds, (point, mapCallback) => {
+                this.addPoint(point, user, null, (err, result) => {
+                    mapCallback(err.err, result);
+                });
+            }, (err, _newPoints) => {
+                callback(err, _newPoints.concat(newPoints));
             });
         }], (err, returnPoints) => {
             if (err) {

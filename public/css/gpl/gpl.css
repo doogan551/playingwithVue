@@ -78,10 +78,6 @@ body {
     margin-bottom: 0;
 }
 
-.blockLabel {
-    width: 200px;
-}
-
 #editInputOutput .row {
     margin-bottom: 5px !important;
 }
@@ -356,6 +352,78 @@ body {
     box-shadow: 0 1px 0 0 var(--dtiBaseBlueGrey);
 }
 
+/* Added w/ ch485; Some css clashing causing screwy label presentation on screen. This rule addresses that */
+.dtiModal .input-field label {
+    font-size: 0.8rem;
+    top: -0.8rem;
+}
+
+/* Added w/ ch900 */
+.dtiModal .select {
+    display: flex;
+    flex-grow: 1;
+    text-align: left;
+    background: inherit;
+    color: #333;
+    box-shadow: none;
+    border: 1px solid #AAA;
+    text-transform: none;
+    padding: 5px;
+}
+.dtiModal .select.active {
+    background: #FFF;
+}
+.dtiModal .select span {
+    flex-grow: 1;
+}
+.dtiModal .select .icon {
+    transition: all 200ms linear;
+}
+.dtiModal .select.active .icon {
+    transform: rotate(180deg);
+}
+.dtiModal .dtiDropdown {
+    z-index: 99;
+    flex-direction: column;
+    overflow-y: scroll;
+    padding: 5px 0;
+    max-height: 280px;
+}
+.dtiModal .dtiDropdown .title {
+    font-weight: 500;
+    border-bottom: 1px solid #CCC;
+    color: #333;
+    margin: 2px 5px;
+}
+.dtiModal .dtiDropdown .title:not(:first-child) {
+    margin-top: 10px;
+}
+.dtiModal .dtiDropdown .reference {
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+.dtiModal .dtiDropdown .reference:hover, .dtiModal .dtiDropdown .reference.selected {
+    color: #FFF;
+    background-color: #607d8b;
+    display: flex;
+    flex-direction: row;
+}
+.dtiModal .dtiDropdown .label {
+    flex-grow: 1;
+    white-space: nowrap;
+}
+.dtiModal .dtiDropdown .pointName {
+    text-align: right;
+    white-space: nowrap;
+    font-size: smaller;
+    padding-left: 10px;
+    color: #CCC;
+}
+/* end ch900 additions */
+
 .filled-in[type="checkbox"].filled-in:checked + label:after {
     border: 2px solid var(--dtiBaseBlueGrey);
     background-color: var(--dtiBaseBlueGrey);
@@ -367,4 +435,28 @@ body {
 
 [type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
     border: 2px solid var(--dtiBaseBlueGrey) !important;
+}
+
+.dtiDropdown {
+    position: fixed;
+    display: none;
+    overflow: hidden;
+    background: #FFF;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+    will-change: width, height, top, left, opacity;
+    transition: all 200ms ease-out;
+}
+
+.thinScroll::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.thinScroll::-webkit-scrollbar-track {
+    background-color: #eee;
+}
+
+.thinScroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #9e9e9e;
 }

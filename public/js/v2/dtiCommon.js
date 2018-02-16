@@ -302,6 +302,25 @@ var dtiCommon = {
         });
     },
 
+    toLowerCasePath(data) {
+        // data = {
+        //     path: []
+        // } OR
+        // data = [] // path
+        let path = data.path || data;
+        let _path = [];
+
+        path.forEach((item) => {
+            let _item = item.toLowerCase();
+            _path.push(_item);
+            if (_item.match(' ')) {
+                _path.push(..._item.split(' '));
+            }
+        });
+
+        return _path;
+    },
+
     knockout: {
         init: () => {
             ko.bindingHandlers.dtiHierarchyLabel = {
@@ -365,6 +384,7 @@ var dtiCommon = {
 
             if (window.dti && dti.utility) {
                 dtiCommon._private.pointNameSeparator = dti.utility.getConfig('Enums.Point Name Separator').Value;
+                dtiCommon.init.isComplete = true;
             } else {
                 dtiUtility.getConfig('Enums.Point Name Separator', null, function (result) {
                     // result = {
