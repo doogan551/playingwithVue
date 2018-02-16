@@ -72,7 +72,8 @@ const History = class History extends Common {
             },
             oldUpi: {
                 type: ArchiveUtility.INTEGER,
-                defaultValue: 0
+                defaultValue: 0,
+                primaryKey: true
             }
         });
     }
@@ -1588,7 +1589,7 @@ const History = class History extends Common {
     }
     doBackUp(upis, cb) {
         const loopHistory = (skip, callback) => {
-            let limit = 1000;
+            let limit = 10000;
             let pipeline = [];
 
             if (skip !== 0) {
@@ -1643,6 +1644,7 @@ const History = class History extends Common {
         }).then((result) => {
             return cb(null, result);
         }).catch((err) => {
+            console.log(JSON.stringify(updateObj), JSON.stringify(where));
             return cb(err);
         });
     }

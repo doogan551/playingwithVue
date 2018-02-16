@@ -69,20 +69,20 @@ let Import = class Import extends Common {
                     logger.info('before changeUpis', err, new Date());
                     this.changeUpis((err) => {
                         console.log('changeUpis err', err);
-                        this.updateHistory((err) => {
-                            logger.info('finished updateHistory', err);
-                            this.cleanupDB((err) => {
-                                hierarchy.createHierarchy((err) => {
-                                    this.fixToUUtil((err) => {
-                                        if (err) {
-                                            logger.info('updateGPLReferences err:', err);
-                                        }
-                                        logger.info('done', err, new Date());
-                                        process.exit(0);
-                                    });
-                                });
+                        // this.updateHistory((err) => {
+                        logger.info('finished updateHistory', err);
+                        this.cleanupDB((err) => {
+                            // hierarchy.createHierarchy((err) => {
+                            this.fixToUUtil((err) => {
+                                if (err) {
+                                    logger.info('updateGPLReferences err:', err);
+                                }
+                                logger.info('done', err, new Date());
+                                process.exit(0);
                             });
+                            // });
                         });
+                        // });
                     });
                 });
             });
@@ -2848,7 +2848,8 @@ let Import = class Import extends Common {
                     upi: doc._id,
                     oldUpi: doc._oldUpi
                 }, {
-                    upi: doc._oldUpi
+                    upi: doc._oldUpi,
+                    oldUpi: 0
                 }, callback);
             }, (err) => {
                 cb(err);
