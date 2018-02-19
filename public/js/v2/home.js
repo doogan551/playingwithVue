@@ -4030,7 +4030,7 @@ var dti = {
                         self._request.abort();
                     }
 
-                    self._request = $.ajax(ajaxParameters);
+                    // self._request = $.ajax(ajaxParameters);
 
                     self._request.done(self.handleDataReturn);
                 }
