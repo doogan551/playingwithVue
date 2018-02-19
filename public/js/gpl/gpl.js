@@ -3852,7 +3852,7 @@ gpl.blocks.Comparator = fabric.util.createClass(gpl.Block, {
         '<=': 'LTEqual',
         '>=': 'GTEqual',
         '=': 'Equal',
-        '<>': 'NEqual'
+        '<>': 'NotEqual'
     },
 
     leftAnchors: [{
@@ -7993,7 +7993,7 @@ gpl.Manager = function () {
                     Equal: {
                         blockType: 'Comparator'
                     },
-                    NEqual: {
+                    NotEqual: {
                         blockType: 'Comparator'
                     },
                     Logic: {
