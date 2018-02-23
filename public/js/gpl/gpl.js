@@ -164,7 +164,7 @@ var gpl = {
             newPoint: gpl.point
         });
 
-        console.log('doPointPackage', data);
+        gpl.log('doPointPackage', data);
         gpl.socket.emit('doPointPackage', data);
 
         cb();
@@ -2145,6 +2145,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     setReferenceType: function (type) {
         this.referenceType = type;
         this.setVisibleShape(type);
+        this.processPointRef(); // ch287; show/hide the '*' character, depending if reference point has the same device as the sequence
     },
 
     setVisibleShape: function (type) {
@@ -2262,6 +2263,41 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             }
         // } else {
         //     gpl.log('no point data', this.type, this.gplId);
+        }
+    },
+
+    // ch287 (added); show/hide the '*' character, depending if reference point has the same device as the sequence
+    processPointRef: function () {
+        var self = this;
+        var _pointData = self.getPointData();
+        var blockDevId = _pointData && _pointData['Point Refs'][0].PointInst;
+        var gplDevId = gpl.point['Point Refs'][0].PointInst;
+        var visible = false;
+        var leftAdjust = 0;
+
+        if (self.backgroundImage) {
+            if ((self.targetCanvas === 'main') && gplDevId && blockDevId && (gplDevId !== blockDevId)) {
+                visible = true;
+
+                if (self.referenceType === 'External') {
+                    if (self.blockType === 'Input') {
+                        leftAdjust = -2;
+                    } else { // Output
+                        leftAdjust = +2;
+                    }
+                }
+
+                if (self.backgroundImage.leftAdjust !== leftAdjust) {
+                    self.backgroundImage.set({
+                        left: self.backgroundImage._originalLeft + leftAdjust
+                    });
+                    
+                    self.backgroundImage.leftAdjust = leftAdjust;
+                }
+            }
+
+            self.backgroundImage.setVisible(visible);
+            self.renderAll();
         }
     },
 
@@ -2886,6 +2922,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setIcon: function (icon) {
         var self = this;
+        var finish = function () { // ch287 (added)
+            if (self.setIconCallback) {
+                self.setIconCallback();
+            }
+        };
 
         if (icon) {
             self.icon = icon;
@@ -2929,6 +2970,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                     self.add(img, true);
                     self.renderAll();
+
+                    finish();
                 });
             } else {
                 if (self.backgroundImage) {
@@ -2937,6 +2980,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 self.backgroundImage = self._icons[self.icon];
                 self.backgroundImage.setVisible(true);
                 self.renderAll();
+
+                finish();
             }
         } else {
             gpl.log('no icon for', self.config.iconType);
@@ -3004,7 +3049,6 @@ gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     toolbarOffsetLeft: 5,
     proxyOffsetLeft: -5,
     hasShutdownBlock: false,
-    noIcon: true,
     numInputs: 0,
     isNonPoint: true,
     hasReferenceType: true,
@@ -3040,6 +3084,10 @@ gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     rightAnchor: { // ch354 require anchor wired up
         anchorType: '',
         required: true
+    },
+
+    setIconCallback: function () { // ch287 (added)
+        this.processPointRef();
     },
 
     postInit: function () {
@@ -3135,7 +3183,6 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
     proxyOffsetLeft: -5,
     hasShutdownBlock: false,
     valueAnchor: 'input',
-    noIcon: true,
     isNonPoint: true,
     hasReferenceType: true,
 
@@ -3173,6 +3220,10 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
         this.callSuper('initialize', config);
 
         this.getReferencePoint();
+    },
+
+    setIconCallback: function () { // ch287 (added)
+        this.processPointRef();
     },
 
     postInit: function () {
@@ -5931,6 +5982,13 @@ gpl.Toolbar = function (manager) {
             activeProxy.nextShape = clone;
 
             shapes[id] = clone;
+
+            // ch287; hide background image and extra shapes for input/output block types
+            if (gplItem.blockType === 'Input' || gplItem.blockType === 'Output') {
+                item.gplShape.backgroundImage.setVisible(false);
+                item.gplShape.fabricShapes.Internal.setVisible(false);
+            }
+
             item.on('mouseup', handleDrop);
 
             bringProxiesToFront();
@@ -6340,9 +6398,15 @@ gpl.BlockManager = function (manager) {
                     tmpBlock,
                     editBlock = bmSelf.editBlock,
                     currReferences = bmSelf.upis[editBlock.upi] || [],
-                    newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
+                    newReferences = bmSelf.upis[bmSelf.editBlockUpi],
                     anchor,
                     prop;
+
+                // ch937; if undefined, create a upis entry for this block
+                if (!newReferences) {
+                    bmSelf.upis[bmSelf.editBlockUpi] = [];
+                    newReferences = bmSelf.upis[bmSelf.editBlockUpi];
+                }
 
                 editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
                 editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
@@ -6376,6 +6440,7 @@ gpl.BlockManager = function (manager) {
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
                         editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
+                        editBlock.setPointData(gpl.pointData[editBlock.upi]); // ch287; this must be executed before we setReferenceType or processPointRef otherwise the '*' in the block isn't correctly shown or hidden
 
                         newReferences.push({
                             block: editBlock,
@@ -6389,11 +6454,11 @@ gpl.BlockManager = function (manager) {
                                     refBlock.setReferenceType('Internal');
                                 }
                             });
-                        } else {
+                        } else if (editBlock.referenceType === 'Internal') {
                             editBlock.setReferenceType('External');
+                        } else {
+                            editBlock.processPointRef(); // ch287; show/hide the '*' character, depending if reference point has the same device as the sequence
                         }
-
-                        editBlock.setPointData(gpl.pointData[editBlock.upi]);
 
                         // configure references (all connected lines)
                         if (prop === 'Monitor Point') {
@@ -8481,12 +8546,13 @@ gpl.Manager = function () {
                 parentUpi: gpl.point._id,
                 display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
-        console.log(parameters.display);
         let handleError = function (err) {
             window.alert('An unexpected error occurred: ' + err);
             gpl.fire('deleteblock', block, true);
             gpl.labelCounters[block.type]--;
         };
+
+        gpl.log(parameters.display);
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
             // ch355 Create point workflow change
