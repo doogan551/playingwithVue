@@ -7275,10 +7275,15 @@ gpl.BlockManager = function (manager) {
 
     bmSelf.applyController = function (name, value) {
         gpl.forEach(bmSelf.blocks, function (obj) {
-            if (obj._pointData) {
-                gpl.fire('editedblock', obj);
-                obj._pointData.Controller.Value = name;
-                obj._pointData.Controller.eValue = value;
+            // ch939; make sure this block has a Controller property
+            if (obj._pointData && obj._pointData.Controller) {
+                var controller = obj._pointData.Controller;
+
+                if ((controller.Value !== name) || (controller.eValue !== value)) {
+                    gpl.fire('editedblock', obj);
+                    controller.Value  = name;
+                    controller.eValue = value;
+                }
             }
         });
     };
