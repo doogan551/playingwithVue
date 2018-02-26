@@ -3210,7 +3210,7 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
     },
 
     leftAnchors: [{ // ch354 require anchor wired up
-        anchorType: '',
+        anchorType: 'Control Point',
         required: true
     }],
 
