@@ -61,7 +61,8 @@ html
                 .row
                     .col.s5.blue-grey-text.controllerDropdown
                         label(for="controllerDropdown") Controller
-                        select#controllerDropdown(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
+                        //- ch939; use browser default select element
+                        select#controllerDropdown.browser-default(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
                 .row(style="margin-top: 30px;margin-bottom: 3px")
                     .col.s6
@@ -287,7 +288,7 @@ html
                                     // /ko
                                 // /ko
                                 // ko if: !src().length
-                                .reference
+                                .reference.disabled
                                     .label None found
                                 // /ko
                                 // /ko
@@ -305,7 +306,8 @@ html
                         // ko if: (editPointValueOptions().length === 0)
                         .col.s3
                             label(for="constantvalue") Value
-                            input#constantvalue.form-control.input-sm(type="number", data-bind="value: editPointValue")
+                            //- Use of the textInput binding provides instant updates when the input value changes (before onBlur), enabling the 'save' button as soon a valid value is supplied
+                            input#constantvalue.form-control.input-sm(type="number", data-bind="textInput: editPointValue")
                         // /ko
                 .row
                     .col.s6.input-field

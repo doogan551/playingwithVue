@@ -405,7 +405,10 @@ body {
     padding: 2px 5px;
     flex-shrink: 0;
 }
-.dtiModal .dtiDropdown .reference:hover, .dtiModal .dtiDropdown .reference.selected {
+.dtiModal .dtiDropdown .reference.disabled {
+    cursor: default;
+}
+.dtiModal .dtiDropdown .reference:not(.disabled):hover, .dtiModal .dtiDropdown .reference.selected {
     color: #FFF;
     background-color: #607d8b;
     display: flex;
