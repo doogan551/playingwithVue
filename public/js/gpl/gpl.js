@@ -7479,7 +7479,10 @@ gpl.BlockManager = function (manager) {
             pointData,
             saveCallback = function (results) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
-                    block.setPointData(results, true);
+                    if (block.setPointData) { // ch947
+                        block.setPointData(results, true);
+                    }
+                    
                     gpl.pointUpiMap[upi] = {
                         Name: dtiCommon.getPointName(results.newPoint.path),
                         pointType: results.newPoint['Point Type'].Value,
@@ -8585,6 +8588,8 @@ gpl.Manager = function () {
                 // Setup the device point
                 point['Point Refs'][0].Value = gpl.deviceId;
                 point['Point Refs'][0].PointInst = gpl.deviceId;
+                point['Point Refs'][0].DevInst = gpl.deviceId; // ch945
+                point._devModel = gpl.devicePoint._devModel; // ch949
 
                 if (point['Calculation Type']) {
                     calcType = block.getIconKey();
