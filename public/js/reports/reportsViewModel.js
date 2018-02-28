@@ -2285,7 +2285,16 @@ let reportsViewModel = function () {
                     $reportEndDate,
                     precisionEventsSet = false,
                     includeInChartEventsSet = false,
-                    calculateEventsSet = false;
+                    calculateEventsSet = false,
+                    chartTypeSort = (a, b) => {
+                        let answer = 0;
+                        if(a.value < b.value) {
+                            answer = -1;
+                        } else if(a.value > b.value) {
+                            answer = 1;
+                        }
+                        return answer;
+                    };
 
                 $(window).resize(function () {
                     ui.handleResize();
@@ -2822,6 +2831,14 @@ let reportsViewModel = function () {
                         self.intervalValue.subscribe(() => {
                             self.unSavedDesignChange(true && !self.unpersistedReport());
                         });
+
+                        self.displayGridFilters.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
+
+                        self.displayGridCalculations.subscribe(() => {
+                            self.unSavedDesignChange(true && !self.unpersistedReport());
+                        });
                     }
                 }, 200);
 
@@ -2919,7 +2936,7 @@ let reportsViewModel = function () {
                 self.listOfIntervals(intervals);
                 self.listOfCalculations(calculations);
                 self.listOfEntriesPerPage(entriesPerPage);
-                self.listOfChartTypes(chartTypes);
+                self.listOfChartTypes(chartTypes.sort(chartTypeSort));
                 self.listOfReportTypes(reportTypes);
             },
             adjustViewReportTabHeightWidth: () => {
@@ -2940,10 +2957,10 @@ let reportsViewModel = function () {
                     ui.setCustomDatatableInfo();
                     adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
                     $dataTablesScrollBody.css("height", adjustHeight);
-                    //   $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);   *****  this call seems to kick off recursive loop ***
-                    //   $dataTablePlaceHolder.DataTable().draw("current");  *****  this call seems to kick off recursive loop ***
-                    // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
-                    $dataTablePlaceHolder.DataTable().columns.adjust().draw();
+                    // $dataTablePlaceHolder.DataTable().page(currentPageNumber).draw(false);   ***** kicks off recursive loop ***
+                    // $dataTablePlaceHolder.DataTable().draw("current"); // ***** kicks off recursive loop ***
+                    // $dataTablePlaceHolder.DataTable().columns.adjust().draw();  // ***** kicks off recursive loop ***
+                    $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
                     $dataTablePlaceHolder.DataTable().fixedColumns().update();
                 }
             },
@@ -4036,8 +4053,10 @@ let reportsViewModel = function () {
                                                 break;
                                             default:
                                                 columnData.push({
-                                                    timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                                    value: fieldValue,
+                                                    // timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
+                                                    // value: fieldValue,
+                                                    x: moment.unix(data[i].Date.rawValue).toDate(),
+                                                    y: fieldValue,
                                                     enumText: (!!columnConfig.valueOptions ? reportUtil.getKeyBasedOnValue(columnConfig.valueOptions, fieldValue) : "")
                                                 });
                                                 break;
@@ -4108,6 +4127,7 @@ let reportsViewModel = function () {
                                 case "Pie":
                                     columnData.push({
                                         name: columnConfig.colName,
+                                        upi: (!!columnConfig.upi ? columnConfig.upi : undefined),
                                         y: parseFloat(columnSum)
                                     });
                                     totalAmount += parseFloat(columnSum);
@@ -4116,6 +4136,7 @@ let reportsViewModel = function () {
                                     if (columnData.length > 0) {
                                         result.push({
                                             data: columnData,
+                                            upi: columnConfig.upi,
                                             name: columnConfig.colName,
                                             // marker: (self.selectedChartType() !== "Timeslot") ? undefined : {
                                             //     // symbol: "circle",
@@ -4141,6 +4162,7 @@ let reportsViewModel = function () {
                                     result.push({
                                         name: columnConfig.colName,
                                         data: columnData,
+                                        upi: columnConfig.upi,
                                         pointInterval: (24 * 3600 * 1000) // one day (in milisec.)
                                     });
 
@@ -4150,6 +4172,7 @@ let reportsViewModel = function () {
                                         result.push({
                                             data: columnData,
                                             name: columnConfig.colName,
+                                            upi: columnConfig.upi,
                                             yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
                                         });
                                     }
@@ -4739,6 +4762,7 @@ let reportsViewModel = function () {
                                                         }
                                                     }
                                                 },
+                                                upi: "upi",
                                                 data: chunkOfChartData
                                             };
 
@@ -4793,9 +4817,19 @@ let reportsViewModel = function () {
                                                     }
                                                 },
                                                 series: {
-                                                    turboThreshold: maxDataRowsForChart
+                                                    turboThreshold: maxDataRowsForChart,
+                                                    cursor: 'pointer',
+                                                    allowPointSelect: false,
+                                                    point: {
+                                                        events: {
+                                                            click: (e) => {
+                                                                dtiUtility.openWindow({upi: e.point.series.userOptions.upi});
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             },
+                                            upi: "upi",
                                             series: reportChartData
                                         };
 
@@ -4842,9 +4876,19 @@ let reportsViewModel = function () {
                                             },
                                             plotOptions: {
                                                 series: {
-                                                    turboThreshold: maxDataRowsForChart
+                                                    turboThreshold: maxDataRowsForChart,
+                                                    cursor: 'pointer',
+                                                    allowPointSelect: false,
+                                                    point: {
+                                                        events: {
+                                                            click: (e) => {
+                                                                dtiUtility.openWindow({upi: e.point.series.userOptions.upi});
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             },
+                                            upi: "upi",
                                             tooltip: {
                                                 formatter: function() {
                                                     return this.series.name + ': <b>' + reportUtil.toFixedComma(this.y, 2) + '</b><br/>';
@@ -4858,66 +4902,151 @@ let reportsViewModel = function () {
                                     default:
                                         if (self.selectedChartType() !== "Column") {
                                             toolTip = {
+                                                useHTML: true,
                                                 formatter: function () {
-                                                    return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                                    // var tooltipHTML = '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br/>' + '<span style="color:' + this.point.color + '">●</span><a class="openPointDude" href="#" data-upi="' + this.series.userOptions.upi + '">' + this.series.name + '</a>: <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                                    var tooltipHTML = '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br/>' + '<span style="color:' + this.point.color + '">●</span>' + this.series.name + ': <b>' + reportUtil.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                                    return tooltipHTML;
                                                 }
                                             };
                                         }
 
-                                        chartConfig = {
-                                            turboThreshold: maxDataRowsForChart,
-                                            width: chartWidth,
-                                            height: chartHeight,
-                                            target: $reportChartDiv,
-                                            title: chartTitle,
-                                            subtitle: subTitle,
-                                            y: "value",
-                                            x: "timeStamp",
-                                            enumText: "enumText",
-                                            //highlightMax: true,
-                                            data: reportChartData,
-                                            type: chartType,
-                                            chart: {
-                                                zoomType: (self.selectedChartType() === "Timeslot") ? "xy" : "x"
-                                            },
-                                            tooltip: toolTip,
-                                            plotOptions: plotOptions,
-                                            //plotOptions: {
-                                            //    series: {
-                                            //        cursor: "pointer",
-                                            //        point: {
-                                            //            events: {
-                                            //                click: () => {
-                                            //                    alert("x: " + this.x + ", y: " + this.y);
-                                            //                }
-                                            //            }
-                                            //        }
-                                            //    }
-                                            //},
-                                            navigator: {
-                                                enabled: (!scheduledReport && !formatForPrint)
-                                            },
-                                            events: {
-                                                redraw: function (event) {
-                                                    this.setTitle(null, {text: buildSubTitle(moment(event.target.xAxis[0].min), moment(event.target.xAxis[0].max))}); // sets subtitle
+                                        plotOptions = {
+                                            series: {
+                                                turboThreshold: maxDataRowsForChart,
+                                                cursor: 'pointer',
+                                                allowPointSelect: false,
+                                                point: {
+                                                    events: {
+                                                        click: (e) => {
+                                                            dtiUtility.openWindow({upi: e.point.series.userOptions.upi});
+                                                        }
+                                                    }
                                                 }
+                                            }
+                                        };
+
+                                        // chartConfig = {
+                                        //     turboThreshold: maxDataRowsForChart,
+                                        //     width: chartWidth,
+                                        //     height: chartHeight,
+                                        //     target: $reportChartDiv,
+                                        //     title: chartTitle,
+                                        //     subtitle: subTitle,
+                                        //     y: "y",
+                                        //     x: "x",
+                                        //     upi: "upi",
+                                        //     enumText: "enumText",
+                                        //     //highlightMax: true,
+                                        //     data: reportChartData,
+                                        //     type: chartType,
+                                        //     chart: {
+                                        //         zoomType: (self.selectedChartType() === "Timeslot") ? "xy" : "x"
+                                        //     },
+                                        //     tooltip: toolTip,
+                                        //     plotOptions: plotOptions,
+                                        //     navigator: {
+                                        //         enabled: (!scheduledReport && !formatForPrint)
+                                        //     },
+                                        //     events: {
+                                        //         redraw: function (event) {
+                                        //             this.setTitle(null, {text: buildSubTitle(moment(event.target.xAxis[0].min), moment(event.target.xAxis[0].max))}); // sets subtitle
+                                        //         }
+                                        //     },
+                                        //     xAxis: {
+                                        //         allowDecimals: false,
+                                        //         events: {
+                                        //             setExtremes: xAxisExtremes
+                                        //         }
+                                        //     },
+                                        //     exporting: {
+                                        //         chartOptions: { // specific options for the exported image
+                                        //             plotOptions: {
+                                        //                 series: {
+                                        //                     dataLabels: {
+                                        //                         enabled: true
+                                        //                     }
+                                        //                 }
+                                        //             }
+                                        //         },
+                                        //         fallbackToExportServer: false
+                                        //     },
+                                        //     legend: {
+                                        //         layout: "horizontal",
+                                        //         align: "center",
+                                        //         verticalAlign: "bottom",
+                                        //         borderWidth: 0
+                                        //     },
+                                        //     yAxisTitle: yAxisTitle
+                                        // };
+
+                                        // trendPlotChart = new TrendPlot(chartConfig);
+
+                                        let rawChartConfig = {
+                                            turboThreshold: maxDataRowsForChart,
+                                            chart: {
+                                                type: chartType,
+                                                renderTo: $reportChartDiv[0],
+                                                width: chartWidth,
+                                                height: chartHeight,
+                                                zoomType: "x"
+                                            },
+                                            credits: {
+                                                enabled: false
+                                            },
+                                            title: {
+                                                text: chartTitle
+                                            },
+                                            subtitle: {
+                                                text: subTitle
                                             },
                                             xAxis: {
+                                                title: {
+                                                    enabled: true,
+                                                    text: 'Date'
+                                                },
+                                                type: "datetime",
                                                 allowDecimals: false,
                                                 events: {
                                                     setExtremes: xAxisExtremes
                                                 }
                                             },
+                                            yAxis: {
+                                                title: {
+                                                    text: yAxisTitle
+                                                }
+                                            },
+                                            plotOptions: plotOptions,
+                                            upi: "upi",
+                                            navigator: {
+                                                enabled: (!scheduledReport && !formatForPrint)
+                                            },
                                             legend: {
-                                                layout: "vertical",
-                                                align: "right",
-                                                verticalAlign: "middle",
+                                                layout: "horizontal",
+                                                align: "center",
+                                                verticalAlign: "bottom",
                                                 borderWidth: 0
                                             },
-                                            yAxisTitle: yAxisTitle
+                                            exporting: {
+                                                allowHTML: true,
+                                                filename: chartTitle,
+                                                buttons: {
+                                                    contextButton: {
+                                                        menuItems: [
+                                                            'printChart',
+                                                            'separator',
+                                                            'downloadPNG',
+                                                            'downloadJPEG',
+                                                            'downloadPDF',
+                                                            'downloadSVG'
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            series: reportChartData
                                         };
 
-                                        trendPlotChart = new TrendPlot(chartConfig);
+                                        trendPlotChart = Highcharts.chart(rawChartConfig);
                                         break;
                                 }
                                 self.activeRequestForChart(false);
@@ -5003,6 +5132,7 @@ let reportsViewModel = function () {
                 columnConfig,
                 validatedFilters,
                 filterConfig,
+                unSavedDesignChangeStatus = self.unSavedDesignChange(), // store status before calculating everything
                 $reportStartDate = $additionalFilters.find("#reportStartDate"),
                 $reportEndDate = $additionalFilters.find("#reportEndDate"),
                 activeError = false,
@@ -5136,6 +5266,7 @@ let reportsViewModel = function () {
                 }
 
             }
+            self.unSavedDesignChange(unSavedDesignChangeStatus);  // set it to status before calculations
             return result;
         },
         getDurationText = (duration, precision, hoursOnly) => {

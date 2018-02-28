@@ -1,3 +1,5 @@
+@import "/css/lib/highcharts.css";
+
 .leftBar {
     z-index: 5;
     padding: 0px 0px 10px 5px;
@@ -291,7 +293,7 @@ ul.calculations {
     font-size: 0.8rem;
 }
 .chartTab .chartTypes.dropdown-content {
-    text-indent: -13px;
+    text-indent: -6px;
 }
 .chartTypes.dropdown-content {
     width: 65px;
@@ -1330,6 +1332,7 @@ tbody.sortablecolumns .select-wrapper span.caret {
     padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
     height: 36px;
+    width: 125px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
