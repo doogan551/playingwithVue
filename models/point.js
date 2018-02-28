@@ -29,28 +29,28 @@ const Point = class Point extends Common {
                     }
                 }, {
                     '$lookup': {
-                            'from': 'points',
-                            'localField': 'Point Refs.Value',
-                            'foreignField': '_id',
-                            'as': 'refNames'
-                        }
+                        'from': 'points',
+                        'localField': 'Point Refs.Value',
+                        'foreignField': '_id',
+                        'as': 'refNames'
+                    }
                 }, {
-                        '$unwind': {
-                            'path': '$refNames'
+                    '$unwind': {
+                        'path': '$refNames'
+                    }
+                }, {
+                    '$addFields': {
+                        'Point Refs.PointPath': '$refNames.path',
+                        'Point Refs.PointType': '$refNames.Point Type.eValue'
+                    }
+                }, {
+                    '$group': {
+                        '_id': '$_id',
+                        'Point Refs': {
+                            '$push': '$Point Refs'
                         }
-                    }, {
-                        '$addFields': {
-                            'Point Refs.PointPath': '$refNames.path',
-                            'Point Refs.PointType': '$refNames.Point Type.eValue'
-                        }
-                    }, {
-                        '$group': {
-                            '_id': '$_id',
-                            'Point Refs': {
-                                '$push': '$Point Refs'
-                            }
-                        }
-                    }],
+                    }
+                }],
                 'Point': [{
                     '$sort': {
                         '_id': 1
@@ -59,81 +59,81 @@ const Point = class Point extends Common {
                 'Points': [{
                     '$project': {
                         'Point Refs': {
-                                '$filter': {
-                                    'input': '$Point Refs',
-                                    'as': 'ref',
-                                    'cond': {
-                                        '$eq': ['$$ref.Value', 0]
-                                    }
+                            '$filter': {
+                                'input': '$Point Refs',
+                                'as': 'ref',
+                                'cond': {
+                                    '$eq': ['$$ref.Value', 0]
                                 }
                             }
+                        }
                     }
                 }]
             }
         },
         {
             '$unwind': {
-                    'path': '$Point'
-                }
+                'path': '$Point'
+            }
         }, {
-                '$project': {
-                    'Ref': {
-                        '$filter': {
-                            'input': '$Ref',
-                            'as': 'ref',
-                            'cond': {
-                                '$eq': ['$$ref._id', '$Point._id']
-                            }
+            '$project': {
+                'Ref': {
+                    '$filter': {
+                        'input': '$Ref',
+                        'as': 'ref',
+                        'cond': {
+                            '$eq': ['$$ref._id', '$Point._id']
                         }
-                    },
-                    'Point': 1,
-                    'Points': 1
-                }
-            },
+                    }
+                },
+                'Point': 1,
+                'Points': 1
+            }
+        },
         {
             '$unwind': {
-                    'path': '$Ref',
-                    'preserveNullAndEmptyArrays': true
-                }
+                'path': '$Ref',
+                'preserveNullAndEmptyArrays': true
+            }
         }, {
-                '$unwind': {
-                    'path': '$Points',
-                    'preserveNullAndEmptyArrays': true
-                }
-            },
+            '$unwind': {
+                'path': '$Points',
+                'preserveNullAndEmptyArrays': true
+            }
+        },
         {
             '$group': {
-                    '_id': '$Point._id',
-                    'Point': {
-                        '$first': '$Point'
-                    },
-                    'Points': {
-                        '$first': '$Points'
-                    },
-                    'refs': {
-                        '$first': '$Ref'
-                    }
+                '_id': '$Point._id',
+                'Point': {
+                    '$first': '$Point'
+                },
+                'Points': {
+                    '$first': '$Points'
+                },
+                'refs': {
+                    '$first': '$Ref'
                 }
+            }
         },
         {
             '$addFields': {
-                    'Point.Point Refs': {
-                        '$concatArrays': [{
-                            '$cond': {
-                                'if': {
-                                    '$ne': ['$refs', null]
-                                },
-                                'then': '$refs.Point Refs',
-                                'else': []
-                            }
-                        }, '$Points.Point Refs']
-                    }
-                }
-        }, {
-                '$replaceRoot': {
-                    'newRoot': '$Point'
+                'Point.Point Refs': {
+                    '$concatArrays': [{
+                        '$cond': {
+                            'if': {
+                                '$ne': ['$refs', null]
+                            },
+                            'then': '$refs.Point Refs',
+                            'else': []
+                        }
+                    }, '$Points.Point Refs']
                 }
             }
+        }, {
+            '$replaceRoot': {
+                'newRoot': '$Point'
+            }
+        }
         ];
         let pipeline = [matchStage, ...stages];
 
@@ -2691,14 +2691,15 @@ const Point = class Point extends Common {
                 this.getOne({
                     query: query
                 }, (err, point) => {
+                    if(err) {
+                        return cb(err);
+                    }
                     // Save point reference
                     _point = point;
                     // STOP PROCESSING if the the point wasn't found
-                    if (!err && !point) {
+                    if (!point) {
                         err = 'Point not found';
-                    }
-
-                    if (_point._pStatus === 2) { //status already equals "Deleted"
+                    }else if (_point._pStatus === 2) { //status already equals "Deleted"
                         _method = 'hard';
                     }
                     cb(err);
@@ -3073,8 +3074,8 @@ const Point = class Point extends Common {
                         newPoint: validatedPoint
                     }],
                     reportCallback = (err, report) => {
-                    callback(err, points);
-                };
+                        callback(err, points);
+                    };
                 switch (validatedPoint['Point Type'].Value) {
                     case 'Schedule':
                     case 'Sequence':
@@ -3111,8 +3112,7 @@ const Point = class Point extends Common {
                             if (err) {
                                 return callback(err);
                             }
-                                report.getReportColumnInfo(validatedPoint, null, null, reportCallback);
-
+                            report.getReportColumnInfo(validatedPoint, null, null, reportCallback);
                         });
                         break;
                     default:
