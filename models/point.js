@@ -3433,7 +3433,7 @@ const Point = class Point extends Common {
         };
         async.waterfall([(callback) => {
             async.mapSeries(data.deletes, (upi, mapCallback) => {
-                this.deletePoint(upi, 'hard', user, null, (response) => {
+                this.deletePoint(upi, user, null, (response) => { // Changed calling arguments per Rob (gpl was throwing error when saving a sequence with deleted blocks)
                     mapCallback(response.err);
                 });
             }, (err, newPoints) => {
