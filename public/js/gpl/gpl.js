@@ -6495,7 +6495,7 @@ gpl.BlockManager = function (manager) {
                     // ch334 Update point name
                     if (!editBlock.isNonPoint) {
                         editBlock._pointData.path.splice(-1, 1, label);
-                        editBlock._pointData._path.splice(-1, 1, label.toLowerCase());
+                        editBlock._pointData._path = dtiCommon.toLowerCasePath(editBlock._pointData.path); // ch952
                         editBlock._pointData.display = label;
                         gpl.pointUpiMap[editBlock.upi].Name = dtiCommon.getPointName(editBlock._pointData.path);
                     }
@@ -7194,7 +7194,9 @@ gpl.BlockManager = function (manager) {
         if (!isCancel) {
             bmSelf.manager.bindings.hasEdits(true);
             // gpl.hasEdits = true;
-            bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
+            if (typeof oldBlock.upi !== 'string') { // ch987 (new blocks that need no delete have a upi type of string and begin with "tempId_")
+                bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
+            }
         }
 
         delete bmSelf.newBlocks[oldBlock.upi];
@@ -8585,6 +8587,8 @@ gpl.Manager = function () {
                 point.id = block.upi;
                 point.path = $.extend([], gpl.point.path);
                 point.path.push(block.label);
+                point._path = dtiCommon.toLowerCasePath(point.path); // ch952
+
                 // Setup the device point
                 point['Point Refs'][0].Value = gpl.deviceId;
                 point['Point Refs'][0].PointInst = gpl.deviceId;
@@ -8605,8 +8609,9 @@ gpl.Manager = function () {
             }).always(function () {
                 gpl.unblockUI();
             });
-        } else {
-            gpl.fire('newblock', block);
+        }
+        else {
+            // gpl.fire('newblock', block); // ch990 commented out this line
         }
     };
 
