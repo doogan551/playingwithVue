@@ -2198,26 +2198,26 @@ let reportsViewModel = function () {
                     $tablePagination = $tabViewReport.find(".dataTables_paginate"),
                     $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
                     $pagination = $tablePagination.find(".pagination"),
-                    $paginate_buttons = $pagination.find("button"),
-                    numberOfButtons = $paginate_buttons.length,
+                    $paginateButtons = $pagination.find("button"),
+                    numberOfButtons = $paginateButtons.length,
                     $datatablesLength = $tabViewReport.find(".dataTables_length"),
                     $datatablesLengthSelect = $datatablesLength.find("select");
 
                 $pagination.hide();
                 if (numberOfPages <= 1) {
-                    $paginate_buttons = $paginate_buttons.not("li.active");
-                    $paginate_buttons.hide();
+                    $paginateButtons = $paginateButtons.not("li.active");
+                    $paginateButtons.hide();
                 } else {
-                    $paginate_buttons.hide();
-                    $paginate_buttons.removeClass("mdl-button");
-                    $paginate_buttons.addClass("btn blue-grey");
+                    $paginateButtons.hide();
+                    $paginateButtons.removeClass("mdl-button");
+                    $paginateButtons.addClass("btn blue-grey");
                     for (let i = 0; i < numberOfButtons; i++) {
-                        if ($paginate_buttons[i].classList.contains("mdl-button--raised")) {
-                            $paginate_buttons[i].classList.add("lighten-2");
-                            $paginate_buttons[i].classList.remove("mdl-button--raised")
+                        if ($paginateButtons[i].classList.contains("mdl-button--raised")) {
+                            $paginateButtons[i].classList.add("lighten-2");
+                            $paginateButtons[i].classList.remove("mdl-button--raised")
                         }
                     }
-                    $paginate_buttons.show();
+                    $paginateButtons.show();
                     $pagination.show();
                 }
 
@@ -2235,6 +2235,8 @@ let reportsViewModel = function () {
                 ui.setCustomLineDensityOption();
 
                 $datatablesLengthSelect.show();
+                $datatablesLength.find("select").material_select();
+                $datatablesLength.find("select").hide();
             },
             getScreenFields: () => {
                 $direports = $(document).find(".direports");
@@ -5659,10 +5661,13 @@ let reportsViewModel = function () {
                             extend: "collection",
                             text: "Export",
                             className: "btn blue-grey dropdown-button",
+                            attr:  {
+                                title: 'Export actions'
+                            },
                             buttons: [
                                 {
                                     extend: "copyHtml5",
-                                    className: "white blue-grey-text center",
+                                    className: "btn white blue-grey-text center",
                                     text: '<div>Copy</div>',
                                     footer: false,
                                     filename: function () {
@@ -5675,7 +5680,7 @@ let reportsViewModel = function () {
                                 },
                                 {
                                     extend: "csvHtml5",
-                                    className: "white blue-grey-text center",
+                                    className: "btn white blue-grey-text center",
                                     text: '<div>CSV</div>',
                                     footer: false,
                                     filename: function () {
@@ -5688,7 +5693,7 @@ let reportsViewModel = function () {
                                 },
                                 {
                                     extend: "excelHtml5",
-                                    className: "white blue-grey-text center",
+                                    className: "btn white blue-grey-text center",
                                     text: '<div>Excel</div>',
                                     footer: false,
                                     filename: function () {
@@ -5701,7 +5706,7 @@ let reportsViewModel = function () {
                                 },
                                 {
                                     extend: "pdfHtml5",
-                                    className: "white blue-grey-text center",
+                                    className: "btn white blue-grey-text center",
                                     text: '<div>PDF</div>',
                                     footer: false,
                                     filename: function () {
@@ -5713,14 +5718,10 @@ let reportsViewModel = function () {
                                         key: "4"
                                     },
                                     customize: function (doc, thisButton) {
-                                        // could insert TrendPlots here
+                                        // console.log($(thisButton));
                                     }
                                 }
-                            ],
-                            customize: function (doc, thisButton) {
-                                $(thisButton).attr("data-activates", "dtButtonActions");
-                                // could insert TrendPlots here
-                            }
+                            ]
                         },
                         {
                             extend: "print",

@@ -632,7 +632,7 @@ div.dt-button-collection a div:hover {
     background-color: #d5e1f2 !important;
 }
 .tabViewReport .dataTables_length {
-    margin-left: 40%;
+    margin-left: 35%;
     margin-top: -30px;
     font-weight: bold;
     display: -webkit-box;
@@ -649,7 +649,7 @@ div.dt-button-collection a div:hover {
     outline: 1px solid #607d8b !important;
 }
 .tabViewReport .dataTables_length label {
-    padding-right: 20px;
+    /*padding-right: 20px;*/
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
@@ -1434,6 +1434,26 @@ button {
 .reportButtons .btn.btn-primary {
     margin: 1px;
 }
+.dtExportButton ul li {
+    list-style-type: none;
+}
+div.dt-button-collection .dt-button.btn {
+    width: 100%;
+}
+div.dt-button-collection .dt-button.btn:hover {
+    background-color: #eee !important;
+}
+.dataTables_length .select-wrapper.form-control {
+    width: 50px !important;
+}
+.dataTables_length .dropdown-content.select-dropdown {
+    min-width: 60px !important;
+    width: 60px !important;
+}
+/*.dataTables_length .dropdown-content li {*/
+    /*min-width: 30px !important;*/
+    /*!*width: 40px !important;*!*/
+/*}*/
 .btn.btn-sm.btn-success {
     background-color: #08c;
 }
