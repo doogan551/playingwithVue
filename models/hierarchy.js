@@ -114,28 +114,35 @@ const Hierarchy = class Hierarchy extends Common {
 
         pointModel.buildPath(node.parentNode, node.display, (err, newPath) => {
             node.path = newPath;
-            this.toLowerCasePath(node);
-            this.recreateTags(node);
-            try {
-                let result = Config.Templates.checkAgainstTemplate(node);
-            } catch (e) {
-                logger.error(e);
-                return cb(e.message || e);
-            }
-            this.insert({
-                insertObj: node
-            }, (err, result) => {
-                if (err) {
-                    return cb(err);
-                } else if (!!result) {
-                    return cb(null, result.ops[0]);
+
+            this.addHierarchyProperty(node, (err, hierarchy) => {
+                node.hierarchy = hierarchy.hierarchy;
+                this.toLowerCasePath(node);
+                this.recreateTags(node);
+                try {
+                    let result = Config.Templates.checkAgainstTemplate(node);
+                } catch (e) {
+                    logger.error(e);
+                    return cb(e.message || e);
                 }
-                return cb(null, null);
+                this.insert({
+                    insertObj: node
+                }, (err, result) => {
+                    if (err) {
+                        return cb(err);
+                    } else if (!!result) {
+                        return cb(null, result.ops[0]);
+                    }
+                    return cb(null, null);
+                });
             });
         });
     }
 
     getNewId(type, cb) {
+        if (type === '') {
+            return cb('no type');
+        }
         let counterModel = new Counter();
         let typeEnum = Config.Enums['Hierarchy Types'][type].enum;
         counterModel.getNextSequence(type, (err, count) => {
@@ -847,41 +854,49 @@ const Hierarchy = class Hierarchy extends Common {
 
     getFullAncestory(data, cb) {
         const id = data.id;
-        let ancestory = [];
-        let parentNode = 0;
-        let i = 0;
+        let ancestory = [],
+            parentNode = 0,
+            i = 0,
+            handleAncestory = (node) => {
+                ancestory.unshift(node);
+                parentNode = node.parentNode;
+                async.whilst(() => {
+                    return i >= node.path.length * 2 || parentNode !== 0;
+                }, (callback) => {
+                    this.getOne({
+                        query: {
+                            _id: parentNode
+                        }
+                    }, (err, parent) => {
+                        if (!!err || !parent) {
+                            return callback(err);
+                        }
+                        parentNode = parent.parentNode;
+                        ancestory.unshift(parent);
+                        callback();
+                    });
+                }, (err, n) => {
+                    cb(err, ancestory);
+                });
+            };
 
         this.getOne({
             query: {
                 _id: id
             }
         }, (err, node) => {
-            ancestory.unshift(node);
-            parentNode = node.parentNode;
-            async.whilst(() => {
-                return i >= node.path.length * 2 || parentNode !== 0;
-            }, (callback) => {
-                this.getOne({
-                    query: {
-                        _id: parentNode
-                    }
-                }, (err, parent) => {
-                    if (!!err || !parent) {
-                        return callback(err);
-                    }
-                    parentNode = parent.parentNode;
-                    ancestory.unshift(parent);
-                    callback();
-                });
-            }, (err, n) => {
-                cb(err, ancestory);
-            });
+            if (!!node) {
+                handleAncestory(node);
+            } else if (!!data.node) {
+                handleAncestory(data.node);
+            }
         });
     }
 
     addHierarchyProperty(node, cb) {
         this.getFullAncestory({
-            id: node._id || node.upi
+            id: node._id || node.upi,
+            node: node
         }, (err, results) => {
             node.hierarchy = [];
             results.forEach((ctx) => {
