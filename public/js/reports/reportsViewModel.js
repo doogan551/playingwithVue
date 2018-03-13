@@ -2201,8 +2201,11 @@ let reportsViewModel = function () {
                     $paginateButtons = $pagination.find("button"),
                     numberOfButtons = $paginateButtons.length,
                     $datatablesLength = $tabViewReport.find(".dataTables_length"),
-                    $datatablesLengthSelect = $datatablesLength.find("select");
+                    $datatablesLengthLabel = $datatablesLength.find("label"),
+                    $datatablesLengthSelect = $datatablesLengthLabel.find("select");
 
+                $datatablesLengthLabel.hide();
+                $datatablesLength.prepend($datatablesLengthSelect);
                 $pagination.hide();
                 if (numberOfPages <= 1) {
                     $paginateButtons = $paginateButtons.not("li.active");
