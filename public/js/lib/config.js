@@ -4862,10 +4862,12 @@ var Config = (function (obj) {
 
         applyMathDevModel: function (data) {
             var point = data.point,
+                rmuTypes = enumsTemplatesJson.Enums['Remote Unit Model Types'],
+                ms3Types = [rmuTypes['MS3 RT'].enum, rmuTypes['MS 3 EEPROM'].enum, rmuTypes['MS 3 Flash'].enum],
                 displayable;
 
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if (point._rmuModel !== enumsTemplatesJson.Enums['Remote Unit Model Types'].Unknown.enum) {
+            if (!!~ms3Types.indexOf(point._rmuModel)) { // ch971; If point is on an MS3 card...
                 displayable = true;
             } else {
                 displayable = false;

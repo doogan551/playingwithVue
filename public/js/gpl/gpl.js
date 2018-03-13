@@ -266,8 +266,11 @@ var gpl = {
         // ch295 Apparently calling .closeModal doesn't trigger the 'complete' callback. Manually clear the 'modalIsOpen' flag
         gpl.modalIsOpen = false;
     },
-    openPointSelector: function (callback, pointType, property, pointAttribsFilter) {
-        // TODO cleanup pointAttribsFilter logic and add functionality around terms
+    openPointSelector: function (callback, pointType, property, deviceId) { // ch974 & ch1017; cleaned up this function a bit and added support for deviceId
+        //  callback: fn    <required>
+        //  pointType: str, <required>
+        //  property: str,  <required>
+        //  deviceId: int   <optional>
         var pointSelectedCallback = function (pointInfo) {
                 if (!!pointInfo) {
                     $.ajax({
@@ -277,24 +280,21 @@ var gpl = {
                     });
                 }
             },
-            parameters = pointAttribsFilter ? pointAttribsFilter : {
+            parameters = {
                 terms: '',
                 path: gpl.point.path,
                 pointType: pointType,
+                pointTypes: [],
                 restrictPointTypes: false,
-                // callback: pointSelectedCallback,
-                property: property
+                property: property,
+                deviceId: deviceId
             };
-
-        if (parameters.pointTypes === undefined) {
-            parameters.pointTypes = [];
-        }
 
         if (pointType) {
             if (property) {
                 parameters.pointTypes = gpl.getPointTypes(property, pointType);
                 parameters.restrictPointTypes = true;
-            } else if (parameters.pointTypes.indexOf(pointType) === -1) {
+            } else {
                 parameters.pointTypes.push(pointType);
             }
         }
@@ -872,7 +872,7 @@ var gpl = {
                     }
 
                     if (!ret) {
-                        // gpl.validationMessage = 'Invalid connection for point type ' + pointType;
+                        gpl.validationMessage.push('Invalid connection for point type ' + pointType); // ch975
                         if (!skipErrorPrint) {
                             gpl.log('invalid', pointType, allowedPoints);
                         }
@@ -915,13 +915,13 @@ var gpl = {
                         allowedPoints2 = gpl.getPointTypes(property2, pointType2);
 
                         if (allowedPoints2.error) {
-                            // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
+                            gpl.validationMessage.push(['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ')); // ch975
                             if (!skipErrorPrint) {
                                 gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
                             }
                         } else if (isPointValid(pointType1, allowedPoints2)) {
-                                isValid = true;
-                            }
+                            isValid = true;
+                        }
                     }
                 }
             }
@@ -2436,7 +2436,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         // gpl.log('Deleted block', this.gplId);
-
+        canvas.remove(this); // ch993 (thanks Stephen!)
         this.renderAll();
     },
 
@@ -3306,6 +3306,11 @@ gpl.blocks.Delay = fabric.util.createClass(gpl.Block, {
     pointType: 'Delay',
     valueType: 'enum',
 
+    icons: { // ch988
+        'Delay': 'Delay',
+        'Pulsed': 'OneShot'
+    },
+
     iconScale: 0.9,
     iconOffsetLeft: 2,
 
@@ -3333,21 +3338,36 @@ gpl.blocks.Delay = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    setIconName: function () { // ch988
+        var data = this._pointData,
+            calcType,
+            icon;
+
+        if (data) {
+            calcType = data['Calculation Type'].Value;
+
+            icon = this.icons[calcType];
+
+            this.icon = icon + this.iconExtension;
+            this.setIcon();
+        }
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
 });
 
-gpl.blocks.BinarySetPoint = fabric.util.createClass(gpl.Block, {
+// ch981 rename this block
+gpl.blocks.BinarySingleSetPoint = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
 
     icons: {
-        'Single Setpoint': 'BINMSingleSP',
-        'Dual Setpoint': 'BINMDualSP'
+        'Single Setpoint': 'BINMSingleSP'
     },
 
-    type: 'BinarySetPoint',
+    type: 'BinarySingleSetPoint',
     pointType: 'Binary Selector',
     valueType: 'enum',
 
@@ -3393,27 +3413,23 @@ gpl.blocks.BinarySetPoint = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.AnalogSetPoint = fabric.util.createClass(gpl.Block, {
+// ch981 rename block
+gpl.blocks.BinaryDualSetPoint = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
 
     icons: {
-        'Single Setpoint': 'AnalogSingleSetPoint',
-        'Dual Setpoint': 'AnalogDualSetPoint'
+        'Setback': 'BINMDualSP', // ch995
+        'Dual Setpoint': 'BINMDualSP'
     },
 
-    type: 'AnalogSetPoint',
-    pointType: 'Analog Selector',
-    valueType: 'float',
+    type: 'BinaryDualSetPoint',
+    pointType: 'Binary Selector',
+    valueType: 'enum',
 
-    leftAnchors: [{
+    leftAnchors: [{ // ch984 (dual setpoint has only one left anchor)
         anchorType: 'Monitor Point',
         required: true
-    }, {
-        anchorType: 'Setpoint Input',
-        required: true,
-        takesConstant: true,
-        constantProp: 'Setpoint Value'
     }],
 
     shapes: {
@@ -3448,6 +3464,96 @@ gpl.blocks.AnalogSetPoint = fabric.util.createClass(gpl.Block, {
     }
 });
 
+// ch981 add this block
+gpl.blocks.AnalogSingleSetPoint = fabric.util.createClass(gpl.Block, {
+    width: 30,
+    height: 40,
+
+    type: 'AnalogSingleSetPoint',
+    pointType: 'Analog Selector',
+    valueType: 'float',
+
+    icons: {
+        'Single Setpoint': 'AnalogSingleSetPoint'
+    },
+
+    leftAnchors: [{
+        anchorType: 'Monitor Point',
+        required: true
+    }, {
+        anchorType: 'Setpoint Input',
+        required: true,
+        takesConstant: true,
+        constantProp: 'Setpoint Value'
+    }],
+
+    shapes: {
+        'Rect': {
+            cls: fabric.Rect,
+            cfg: {
+                fill: '#fffcb8',
+                stroke: 'black',
+                width: 30,
+                height: 40
+            }
+        }
+    },
+
+    initialize: function (config) {
+        this.callSuper('initialize', config);
+    },
+
+    setIconName: function () {
+        this.icon = this.type + this.iconExtension;
+        this.setIcon();
+    }
+});
+
+// ch981 renmae this block
+gpl.blocks.AnalogDualSetPoint = fabric.util.createClass(gpl.Block, {
+    width: 30,
+    height: 40,
+
+    icons: {
+        'Setback': 'AnalogDualSetPoint', // ch995
+        'Dual Setpoint': 'AnalogDualSetPoint'
+    },
+
+    type: 'AnalogDualSetPoint',
+    pointType: 'Analog Selector',
+    valueType: 'float',
+
+    leftAnchors: [{ // ch984 (dual setpoint has only one left anchor)
+        anchorType: 'Monitor Point',
+        required: true
+    }],
+
+    shapes: {
+        'Rect': {
+            cls: fabric.Rect,
+            cfg: {
+                fill: '#fffcb8',
+                stroke: 'black',
+                width: 30,
+                height: 40
+            }
+        }
+    },
+
+    initialize: function (config) {
+        this.callSuper('initialize', config);
+    },
+
+    setIconName: function () {
+        var data = this._pointData,
+            calcType = data['Calculation Type'].Value,
+            icon = this.icons[calcType]; // ch992
+
+        this.icon = icon + this.iconExtension;
+        this.setIcon();
+    }
+});
+
 gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
@@ -3456,8 +3562,12 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     pointType: 'Proportional',
     valueType: 'float',
 
-    _icon: 'PI',
-    icon: 'PI.png',
+    icons: { // ch992
+        'P Only': 'PI',
+        'PI': 'PID',
+        'PID': 'PID',
+    },
+
     iconOffsetTop: 0,
     iconOffsetLeft: 1,
 
@@ -3493,7 +3603,8 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     setIconName: function () {
         var data = this._pointData,
             reverseActing = data['Reverse Action'].Value,
-            icon = data['Calculation Type'].Value;
+            calcType = data['Calculation Type'].Value,
+            icon = this.icons[calcType]; // ch992
         // icon = this._icon;
 
         if (reverseActing) {
@@ -3600,6 +3711,11 @@ gpl.blocks.Enthalpy = fabric.util.createClass(gpl.Block, {
     pointType: 'Enthalpy',
     valueType: 'float',
 
+    icons: { // ch996 (add object)
+        'Dew Point': 'DewPoint',
+        'Wet Bulb': 'WetBulb',
+    },
+
     leftAnchors: [{
         anchorType: 'Humidity Point',
         required: true
@@ -3669,6 +3785,18 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
     pointType: 'Logic',
     valueType: 'enum',
 
+    leftAnchors: [{ // ch998; disallow constant block as inputs
+        anchorType: 'Input Point 1'
+    }, {
+        anchorType: 'Input Point 2'
+    }, {
+        anchorType: 'Input Point 3'
+    }, {
+        anchorType: 'Input Point 4'
+    }, {
+        anchorType: 'Input Point 5'
+    }],
+
     shapes: {
         'Rect': {
             cls: fabric.Rect,
@@ -3715,6 +3843,25 @@ gpl.blocks.Math = fabric.util.createClass(gpl.Block, {
                 width: 30,
                 height: 40
             }
+        }
+    },
+
+    setIconName: function () { // ch968 (added function)
+        var data = this._pointData,
+            calcType,
+            icon;
+
+        if (data) {
+            calcType = data['Calculation Type'].Value;
+
+            icon = calcType;
+
+            if (data['Square Root'].Value === true) {
+                icon += 'Sqrt';
+            }
+
+            this.icon = icon + this.iconExtension;
+            this.setIcon();
         }
     },
 
@@ -5969,6 +6116,7 @@ gpl.Toolbar = function (manager) {
             cloneConfig.gplId = id;
             cloneConfig.isToolbar = true;
             cloneConfig.targetCanvas = 'toolbar';
+            cloneConfig.toolbarText = gplItem.toolbarText; // ch1000
             // cloneConfig.scaleValue = gpl.scaleValue;
 
             if (gplItem.setActive) {
@@ -6010,6 +6158,7 @@ gpl.Toolbar = function (manager) {
                     top: currY,
                     isToolbar: true,
                     targetCanvas: 'toolbar',
+                    toolbarText: cfg.toolbarText, // ch1000
                     // hasControls: false,
                     gplId: id,
                     inactive: true,
@@ -6374,12 +6523,41 @@ gpl.BlockManager = function (manager) {
 
                 gpl.blockManager.openPointEditor(block, true);
             },
-            editPointReference: function () {
+            editPointReference: function () { // ch974 & ch1017; reworked this function significantly
                 var editBlock = bmSelf.editBlock,
-                    isControl = editBlock.type === 'Output',
-                    property = isControl ? 'Control Point' : 'Monitor Point';
+                    anchor,
+                    line,
+                    block,
+                    pointType,
+                    property,
+                    deviceId;
 
-                bmSelf.doOpenPointSelector(property);
+                if (editBlock.type === 'Output') {
+                    anchor = editBlock.inputAnchors[0]; // This could be connected to multiple blocks, but we'll only use one for simplicity sake
+                    property = 'Control Point';
+                    deviceId = gpl.deviceId;
+                } else {
+                    anchor = editBlock.outputAnchor;
+                    property = 'Monitor Point';
+                }
+
+                // If this Monitor/Control block is attached to a GPL block, we need to get the block type and update our 'property' with the 
+                // connected point on that block so we limit the point types to the supported types
+                if (anchor.attachedLineCount > 0) {
+                    line = anchor.attachedLines[Object.keys(anchor.attachedLines)[0]];
+                    anchor = line.getOtherAnchor(anchor); // Get the anchor attached to the other end of the line
+                }
+
+                if (anchor) {
+                    block = bmSelf.getBlock(anchor.gplId);
+
+                    if (block && block._pointData) {
+                        pointType = block._pointData['Point Type'].Value;
+                        property = anchor.anchorType; // ex: 'Input Point 1'
+                    }
+                }
+
+                bmSelf.doOpenPointSelector(property, pointType, deviceId);
             },
             updatePoint: function () {
                 // ch485 Do not allow save operation if the save is disabled (user needs to fix a problem)
@@ -6693,7 +6871,11 @@ gpl.BlockManager = function (manager) {
             bmSelf.deletedBlocks = {};
         },
 
-        doOpenPointSelector: function (property) {
+        doOpenPointSelector: function (property, pointType, deviceId) {
+            if (!pointType) { // ch974
+                pointType = 'Sequence';
+            }
+
             gpl.openPointSelector(function (selectedPoint) {
                 var pRef,
                     upi = selectedPoint._id,
@@ -6715,7 +6897,7 @@ gpl.BlockManager = function (manager) {
                 });
 
                 gpl.log(upi, name);
-            }, 'Sequence', property);
+            }, pointType, property, deviceId); // ch974 & ch1017
         },
 
         handleSelectedPoint: function (data) { // ch900; added function
@@ -8009,40 +8191,51 @@ gpl.Manager = function () {
                         blockType: 'AlarmStatus'
                     },
                     BINMDualSP: {
-                        blockType: 'BinarySetPoint'
+                        blockType: 'BinaryDualSetPoint', // ch981
+                        toolbarText: 'Dual Setpoint Binary Selector' // ch1000, typical
                     },
                     BINMSingleSP: {
-                        blockType: 'BinarySetPoint'
+                        blockType: 'BinarySingleSetPoint', // ch981
+                        toolbarText: 'Single Setpoint Binary Selector'
                     },
                     Delay: {
                         blockType: 'Delay'
                     },
                     OneShot: {
-                        blockType: 'Delay'
+                        blockType: 'Delay',
+                        toolbarText: 'Pulsed' // This matches the Calculation Type Value
                     },
                     FindLargest: {
-                        blockType: 'SelectValue'
+                        blockType: 'SelectValue',
+                        toolbarText: 'Find Largest'
                     },
                     FindSmallest: {
-                        blockType: 'SelectValue'
+                        blockType: 'SelectValue',
+                        toolbarText: 'Find Smallest'
                     },
                     Average: {
-                        blockType: 'Average'
+                        blockType: 'Average',
+                        toolbarText: 'Average'
                     },
                     Sum: {
-                        blockType: 'Average'
+                        blockType: 'Average',
+                        toolbarText: 'Summation'
                     },
                     Add: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Add'
                     },
                     Divide: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Divide'
                     },
                     Multiply: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Multiply'
                     },
                     Subtract: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Subtract'
                     },
                     AddSqrt: {
                         blockType: 'Math',
@@ -8064,7 +8257,8 @@ gpl.Manager = function () {
                         blockType: 'MUX'
                     },
                     PI: {
-                        blockType: 'PI'
+                        blockType: 'PI',
+                        toolbarText: 'Proportional/Integral'
                     },
                     Proportional: {
                         blockType: 'PI',
@@ -8088,17 +8282,19 @@ gpl.Manager = function () {
                         skipToolbar: true
                     },
                     AnalogDualSetPoint: {
-                        blockType: 'AnalogSetPoint'
+                        blockType: 'AnalogDualSetPoint', // ch981
+                        toolbarText: 'Dual Setpoint Analog Selector'
                     },
                     AnalogSingleSetPoint: {
-                        blockType: 'AnalogSetPoint'
+                        blockType: 'AnalogSingleSetPoint', // ch981
+                        toolbarText: 'Single Setpoint Analog Selector'
                     },
                     SUMWSingleSP: {
-                        blockType: 'AnalogSetPoint',
+                        blockType: 'AnalogSingleSetPoint', // ch981
                         skipToolbar: true
                     },
                     SUMWDualSP: {
-                        blockType: 'AnalogSetPoint',
+                        blockType: 'AnalogDualSetPoint', // ch981
                         skipToolbar: true
                     },
                     Econ: {
@@ -8108,40 +8304,51 @@ gpl.Manager = function () {
                         blockType: 'Enthalpy'
                     },
                     DewPoint: {
-                        blockType: 'Enthalpy'
+                        blockType: 'Enthalpy',
+                        toolbarText: 'Dew Point',
                     },
                     WetBulb: {
-                        blockType: 'Enthalpy'
+                        blockType: 'Enthalpy',
+                        toolbarText: 'Web Bulb'
                     },
                     GT: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Greater Than'
                     },
                     GTEqual: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Greater Than or Equal'
                     },
                     LT: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Less Than'
                     },
                     LTEqual: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Less Than or Equal'
                     },
                     Equal: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Equal'
                     },
                     NotEqual: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Not Equal'
                     },
                     Logic: {
                         blockType: 'Logic'
                     },
                     DigLogicAnd: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'And'
                     },
                     DigLogicOr: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'Or'
                     },
                     DigLogicXOr: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'XOr'
                     }
                 };
 
@@ -8591,15 +8798,46 @@ gpl.Manager = function () {
 
                 // Setup the device point
                 point['Point Refs'][0].Value = gpl.deviceId;
-                point['Point Refs'][0].PointInst = gpl.deviceId;
-                point['Point Refs'][0].DevInst = gpl.deviceId; // ch945
-                point._devModel = gpl.devicePoint._devModel; // ch949
+                point['Point Refs'][0].PointName = dtiCommon.getPointName(gpl.devicePoint.path); // ch989
+
+                gpl.formatPoint({ // ch971; call formatPoint to update other props based on the device point
+                    point: point,
+                    oldPoint: point,
+                    property: 'Device Point',
+                    refPoint: gpl.devicePoint
+                });
 
                 if (point['Calculation Type']) {
                     calcType = block.getIconKey();
                     point['Calculation Type'].Value = calcType;
                     point['Calculation Type'].eValue = point['Calculation Type'].ValueOptions[calcType];
+
+                    gpl.formatPoint({ // ch978; call formatPoint to update other props based on the calc type
+                        point: point,
+                        oldPoint: point,
+                        property: 'Calculation Type'
+                    });
                 }
+
+                // ch981 start
+                if (block.type === 'AnalogSingleSetPoint' || block.type === 'BinarySingleSetPoint') {
+                    point['Calculation Type'].isReadOnly = true;
+                } else if (block.type === 'AnalogDualSetPoint' || block.type === 'BinaryDualSetPoint') {
+                    delete point['Calculation Type'].ValueOptions['Single Setpoint'];
+                }
+                // ch981 end
+
+                // ch970, ch977 start
+                if (point['Input 1 Constant']) {
+                    point['Input 1 Constant'].isReadOnly = true;
+                }
+                if (point['Input 2 Constant']) {
+                    point['Input 2 Constant'].isReadOnly = true;
+                }
+                if (point['Setpoint Value']) {
+                    point['Setpoint Value'].isReadOnly = true;
+                }
+                // ch970, ch977 end
 
                 block.setPointData(point, true);
 
@@ -8772,10 +9010,9 @@ gpl.Manager = function () {
             c,
             len = objects.length,
             obj,
-            ret = [],
-            found = false;
+            ret = [];
 
-        for (c = 0; c < len && !found; c++) {
+        for (c = 0; c < len; c++) {
             obj = objects[c];
             if (!gplType || (gplType === obj.gplType)) {
                 if (obj.gplType === 'line') {
@@ -8793,17 +9030,21 @@ gpl.Manager = function () {
                         }
                     }
                     if ((left >= x1 && left <= x2) && (top >= y1 && top <= y2)) {
-                        ret.push(obj);
+                        // ch999; always search through all objects for matches to make sure we pick the one on the top
                         if (!multiple) {
-                            found = true;
+                            ret = [obj];
+                        } else {
+                            ret.push(obj);
                         }
                     }
                 } else if (left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft <= (obj.left + obj.width) && top - managerSelf.panTop >= obj.top && top - managerSelf.panTop <= (obj.top + obj.height)) {
+                    // ch999; always search through all objects for matches to make sure we pick the one on the top
+                    if (!multiple) {
+                        ret = [obj];
+                    } else {
                         ret.push(obj);
-                        if (!multiple) {
-                            found = true;
-                        }
                     }
+                }
             }
         }
 
@@ -9502,7 +9743,7 @@ gpl.Manager = function () {
                         gpl.log('Set device point Successfully');
                         gpl._newDevicePoint = selectedPoint;
                     }
-                }, 'Device', 'Device Point', {});
+                }, 'Device', 'Device Point');
             },
 
             addNewButton: function () {
@@ -10576,17 +10817,21 @@ gpl.Manager = function () {
                             managerSelf.clearTooltip();
                         }
                     } else if (gpl.isEdit) {
-                            obj = managerSelf.toolbarCanvas.findTarget(event);
-                            gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
-                            if (gplObj) {
-                                text = gplObj.pointType;
-                                managerSelf.updateTooltip(text, x, y);
+                        obj = managerSelf.toolbarCanvas.findTarget(event);
+                        gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
+                        if (gplObj) {
+                            if (gplObj.toolbarText) { // ch1000
+                                text = gplObj.toolbarText;
                             } else {
-                                managerSelf.clearTooltip();
+                                text = gplObj.pointType;
                             }
+                            managerSelf.updateTooltip(text, x, y);
                         } else {
                             managerSelf.clearTooltip();
                         }
+                    } else {
+                        managerSelf.clearTooltip();
+                    }
                 }
             }
         // }, {
