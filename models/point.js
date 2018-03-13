@@ -2089,6 +2089,7 @@ const Point = class Point extends Common {
                         updateObject['Point Refs'].forEach((ref) => {
                             delete ref.PointName;
                             delete ref.PointType;
+                            delete ref.PointPath;
                         });
                     }
 
