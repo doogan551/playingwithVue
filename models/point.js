@@ -70,8 +70,7 @@ const Point = class Point extends Common {
                     }
                 }]
             }
-        },
-        {
+        }, {
             '$unwind': {
                 'path': '$Point'
             }
@@ -89,8 +88,7 @@ const Point = class Point extends Common {
                 'Point': 1,
                 'Points': 1
             }
-        },
-        {
+        }, {
             '$unwind': {
                 'path': '$Ref',
                 'preserveNullAndEmptyArrays': true
@@ -100,8 +98,7 @@ const Point = class Point extends Common {
                 'path': '$Points',
                 'preserveNullAndEmptyArrays': true
             }
-        },
-        {
+        }, {
             '$group': {
                 '_id': '$Point._id',
                 'Point': {
@@ -114,8 +111,7 @@ const Point = class Point extends Common {
                     '$first': '$Ref'
                 }
             }
-        },
-        {
+        }, {
             '$addFields': {
                 'Point.Point Refs': {
                     '$concatArrays': [{
@@ -133,8 +129,7 @@ const Point = class Point extends Common {
             '$replaceRoot': {
                 'newRoot': '$Point'
             }
-        }
-        ];
+        }];
         let pipeline = [matchStage, ...stages];
 
         this.aggregate({
@@ -969,13 +964,13 @@ const Point = class Point extends Common {
 
             switch (pointType) {
                 case 'Report':
-                    if (subType.eValue === undefined) {  // subType passed in from initPoint
+                    if (subType.eValue === undefined) { // subType passed in from initPoint
                         subType.Value = template['Report Type'].Value;
                         subType.eValue = template['Report Type'].eValue;
                     }
                     break;
                 case 'Sensor':
-                    if (subType.eValue === undefined) {  // subType passed in from initPoint
+                    if (subType.eValue === undefined) { // subType passed in from initPoint
                         subType.Value = template['Sensor Type'].Value;
                         subType.eValue = template['Sensor Type'].eValue;
                     }
@@ -2691,7 +2686,7 @@ const Point = class Point extends Common {
                 this.getOne({
                     query: query
                 }, (err, point) => {
-                    if(err) {
+                    if (err) {
                         return cb(err);
                     }
                     // Save point reference
@@ -2699,7 +2694,7 @@ const Point = class Point extends Common {
                     // STOP PROCESSING if the the point wasn't found
                     if (!point) {
                         err = 'Point not found';
-                    }else if (_point._pStatus === 2) { //status already equals "Deleted"
+                    } else if (_point._pStatus === 2) { //status already equals "Deleted"
                         _method = 'hard';
                     }
                     cb(err);
@@ -3531,7 +3526,7 @@ const Point = class Point extends Common {
         let nodeSubType = this.getDefault(data.nodeSubType, '');
         let upi = this.getNumber(data.upi);
 
-        this.addPointToHierarchy(data, (err, addedPoints)=>{
+        this.addPointToHierarchy(data, (err, addedPoints) => {
             if (nodeSubType === 'Sequence') {
                 this.setHierarchyParentUpi(upi, (err, addedNodes) => {
                     addedPoints.push(...addedNodes);
