@@ -2571,6 +2571,7 @@ let reportsViewModel = function () {
                             if (self.canEdit()) {
                                 parentEvent.stopPropagation();
                                 if (moment().diff(longClickStart) > longClickTimer) {
+                                    $columnsTbody.find(".dropdown-button").dropdown("close");
                                     $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
                                     $globalCalculate = $columnsGrid.find("th .globalCalculate");
 
@@ -7217,6 +7218,9 @@ let reportsViewModel = function () {
                 }
                 Materialize.updateTextFields();
                 ui.saveButtonTooltipChange();
+                setTimeout(() => {
+                    $columnsTbody.find(".dropdown-button").dropdown();
+                }, 1000);
                 // too late  initKnockout();
             },
             setCurrentUser = function (results) {
