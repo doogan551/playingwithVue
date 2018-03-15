@@ -943,16 +943,18 @@ let initKnockout = () => {
                 minNumber = ($element.attr("min") === undefined ? 0 : $element.attr("min")),
                 viewModelField = $element.attr("viewModelField"),
                 incrementNumber = function (incrementUnit, value) {
-                    var newValue = parseInt(value + incrementUnit, 10);
+                    let newValue = parseInt(value + incrementUnit, 10),
+                        answer;
 
                     if (newValue <= maxNumber && newValue >= minNumber) {
-                        return newValue;
+                        answer = newValue;
                     } else {
-                        return parseInt(value, 10);
+                        answer = parseInt(value, 10);
                     }
+                    return answer;
                 },
                 characterAllowedInPrecisionField = function (event, value) {
-                    var keyCode = (!!event.which ? event.which : event.keyCode),
+                    let keyCode = (!!event.which ? event.which : event.keyCode),
                         shiftKey = event.shiftKey,
                         appendedValue = value.toString();
                     if (keyCode === 16 || keyCode === 17) {
@@ -1220,7 +1222,7 @@ let reportsViewModel = function () {
         ENUMSTEMPLATESENUMS,
         reportCalc = {
             getVariance: (columnData) => {
-                var i,
+                let i,
                     meanCalc = reportCalc.getColumnMean(columnData),
                     squaredTotalResults = [],
                     squaredTotal = 0,
@@ -1243,7 +1245,7 @@ let reportsViewModel = function () {
                 return Math.sqrt(reportCalc.getVariance(columnData));
             },
             getColumnMean: (columnData) => {
-                var i,
+                let i,
                     theMean = 0,
                     sumOfData = 0;
 
@@ -1256,7 +1258,7 @@ let reportsViewModel = function () {
                 return theMean;
             },
             getColumnSum: (columnData) => {
-                var i,
+                let i,
                     theSum = 0;
 
                 for (i = 0; i < columnData.length; i++) {
@@ -1265,7 +1267,7 @@ let reportsViewModel = function () {
                 return theSum;
             },
             columnCalculable: (column) => { // TODO needs investigation
-                var result = false;
+                let result = false;
                 if (self.reportType() === "Totalizer" || self.reportType() === "History") {
                     result = true;
                 } else {
@@ -1281,7 +1283,7 @@ let reportsViewModel = function () {
                 return result;
             },
             columnChartable: (column) => {
-                var result = false,
+                let result = false,
                     enumsSet;
 
                 if (column.canCalculate) {
@@ -1295,7 +1297,7 @@ let reportsViewModel = function () {
             },
             calculateBitStringValue: (filter) => {
                 if (filter.valueType === "BitString") {
-                    var total = 0,
+                    let total = 0,
                         key,
                         bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
 
@@ -1308,7 +1310,7 @@ let reportsViewModel = function () {
                     }
 
                     filter.value = 0;
-                    for (var j = 0; j < filter.bitStringEnumsArray.length; j++) { // TODO  waiting for cleanup
+                    for (let j = 0; j < filter.bitStringEnumsArray.length; j++) { // TODO  waiting for cleanup
                         key = filter.bitStringEnumsArray[j].name;
                         if (bitStringEnums.hasOwnProperty(key)) {
                             if (filter.bitStringEnumsArray[j].checked) {
@@ -1324,7 +1326,7 @@ let reportsViewModel = function () {
                 }
             },
             checkForColumnCalculations: () => {
-                var i,
+                let i,
                     column,
                     canCalculate = false;
 
@@ -1338,11 +1340,11 @@ let reportsViewModel = function () {
                 self.calculatable(canCalculate);
             },
             checkForIncludeInChart: () => {
-                var displayChartingHeader = false,
+                let displayChartingHeader = false,
                     activateCharting = false,
                     allChecked = true;
 
-                for (var i = 1; i < self.listOfColumns().length; i++) {
+                for (let i = 1; i < self.listOfColumns().length; i++) {
                     if (reportCalc.columnChartable(self.listOfColumns()[i])) {
                         displayChartingHeader = true;
                         if (!activateCharting && self.listOfColumns()[i].includeInChart) {
@@ -1368,7 +1370,7 @@ let reportsViewModel = function () {
         },
         reportUtil = {
             generateUUID: () => {
-                var d = new Date().getTime(),
+                let d = new Date().getTime(),
                     uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
                         var r = (d + Math.random() * 16) % 16 | 0;
                         d = Math.floor(d / 16);
@@ -1377,13 +1379,14 @@ let reportsViewModel = function () {
                 return uuid;
             },
             noExponents: (theNumber) => {
-                var data = String(theNumber).split(/[eE]/);
+                let data = String(theNumber).split(/[eE]/);
 
                 if (data.length === 1) {
                     return data[0];
                 }
 
-                var z = "", sign = theNumber < 0 ? "-" : "",
+                let z = "",
+                    sign = theNumber < 0 ? "-" : "",
                     str = data[0].replace(".", ""),
                     mag = Number(data[1]) + 1;
 
@@ -1402,7 +1405,7 @@ let reportsViewModel = function () {
                 return str + z;
             },
             toFixed: (number, p) => {
-                var precision = parseInt(p, 10),
+                let precision = parseInt(p, 10),
                     abs = Math.abs(parseFloat(number)),
                     str = reportUtil.noExponents(abs),
                     digits = str.split(".")[1],
@@ -1427,14 +1430,15 @@ let reportsViewModel = function () {
                 return (negative ? "-" : "") + str;
             },
             toFixedComma: (number, precision) => {
-                var fixedNum = reportUtil.toFixed(number, (precision === undefined) ? 128 : precision);
+                let fixedNum = reportUtil.toFixed(number, (precision === undefined) ? 128 : precision);
                 return reportUtil.numberWithCommas(fixedNum);
             },
             numberWithCommas: (theNumber) => {
-                var result = "";
+                let result = "",
+                    arr;
                 if (theNumber !== null && theNumber !== undefined) {
                     if (theNumber.toString().indexOf(".") > 0) {
-                        var arr = theNumber.toString().split(".");
+                        arr = theNumber.toString().split(".");
                         result = arr[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + arr[1];
                     } else {
                         result = theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -1473,7 +1477,7 @@ let reportsViewModel = function () {
                 return reportUtil.getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
             },
             getAdjustedDatetimeMoment: (date, time) => {
-                var result = date,
+                let result = date,
                     timestamp,
                     hour,
                     min;
@@ -1490,7 +1494,7 @@ let reportsViewModel = function () {
                 return result;
             },
             getAdjustedDatetimeUnix: (date, time) => {
-                var result,
+                let result,
                     validatedDate = (moment.isMoment(date) ? date : moment.unix(date));
 
                 result = reportUtil.getAdjustedDatetimeMoment(validatedDate, time.toString());
@@ -1500,7 +1504,7 @@ let reportsViewModel = function () {
                 return new Date(reportUtil.getAdjustedDatetimeUnix(date, time) * 1000);
             },
             getKeyBasedOnEnum: (obj, enumValue) => {
-                for (var key in obj) {
+                for (let key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         if (obj[key].enum === parseInt(enumValue, 10)) {
                             return key;
@@ -1509,7 +1513,7 @@ let reportsViewModel = function () {
                 }
             },
             getKeyBasedOnValue: (obj, value) => {
-                for (var key in obj) {
+                for (let key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         if (obj[key] === parseInt(value, 10)) {
                             return key;
@@ -1518,8 +1522,8 @@ let reportsViewModel = function () {
                 }
             },
             getValueBasedOnText: (array, text) => {
-                var answer;
-                for (var i = 0; i < array.length; i++) {
+                let answer;
+                for (let i = 0; i < array.length; i++) {
                     if (array[i].text === text) {
                         answer = array[i].value;
                         break;
@@ -1569,7 +1573,7 @@ let reportsViewModel = function () {
                 self.selectedDuration.valueHasMutated();
             },
             getValueType: (valuetype) => {
-                var answer = "";
+                let answer = "";
 
                 if (!!ENUMSTEMPLATESENUMS) {
                     answer = reportUtil.getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Value Types"], valuetype);
@@ -1578,7 +1582,7 @@ let reportsViewModel = function () {
                 return answer;
             },
             formatPoint: (cb, selectedPoint, pRef) => {
-                var params = {
+                let params = {
                         point: reportPoint,
                         oldPoint: originalPoint,
                         refPoint: selectedPoint,
@@ -1597,7 +1601,7 @@ let reportsViewModel = function () {
                 dtiUtility.getConfig("Update.formatPoint", [params], callback);
             },
             getTotalizerValueList: (pointType) => {
-                var result = [];
+                let result = [];
 
                 if (pointType) {
                     switch (pointType) {
@@ -1616,8 +1620,8 @@ let reportsViewModel = function () {
                 return result;
             },
             getBitStringEnumsArray: (bitString) => {
-                var enumsArray = [];
-                for (var key in bitString) {
+                let enumsArray = [];
+                for (let key in bitString) {
                     if (bitString.hasOwnProperty(key)) {
                         if (key !== "All") {
                             enumsArray.push({
@@ -1630,7 +1634,7 @@ let reportsViewModel = function () {
                 return enumsArray;
             },
             parseNumberValue: (theValue, rawValue, eValue) => {
-                var result;
+                let result;
                 result = (theValue !== null && theValue !== undefined ? parseFloat(theValue.toString().replace(",", "")) : theValue);
                 if (isNaN(result)) {
                     result = (eValue !== undefined ? parseFloat(eValue) : parseFloat(rawValue));
@@ -1743,8 +1747,8 @@ let reportsViewModel = function () {
                 let answer;
                 for (let i = 0; i < self.listOfIntervals().length; i++) {
                     if (self.intervalPeriod() === self.listOfIntervals()[i].text) {
-                        if (i+1 < self.listOfIntervals().length) {
-                            answer = self.listOfIntervals()[i+1];
+                        if (i + 1 < self.listOfIntervals().length) {
+                            answer = self.listOfIntervals()[i + 1];
                         } else {
                             answer = self.listOfIntervals()[i];
                         }
@@ -1756,7 +1760,7 @@ let reportsViewModel = function () {
         },
         pointSelector = {
             openForModalColumn: () => {
-                var tempObject = columnLogic.getNewColumnTemplate(),
+                let tempObject = columnLogic.getNewColumnTemplate(),
                     setColumnPoint = function (selectedPoint) {
                         newlyReferencedPoints.push(selectedPoint);
                         if (!!tempObject.AppIndex) {
@@ -1810,7 +1814,7 @@ let reportsViewModel = function () {
                 dtiUtility.onPointSelect(pointSelectedCallback);
             },
             openForColumn: (selectObjectIndex) => {
-                var updatedList = $.extend(true, [], self.listOfColumns()),
+                let updatedList = $.extend(true, [], self.listOfColumns()),
                     tempObject = updatedList[selectObjectIndex],
                     setColumnPoint = function (selectedPoint) {
                         newlyReferencedPoints.push(selectedPoint);
@@ -1868,7 +1872,7 @@ let reportsViewModel = function () {
                 dtiUtility.onPointSelect(pointSelectedCallback);
             },
             openForFilter: (selectObjectIndex) => {
-                var updatedList = $.extend(true, [], self.listOfFilters()),
+                let updatedList = $.extend(true, [], self.listOfFilters()),
                     tempObject = updatedList[selectObjectIndex],
                     callShowPointSelector = function (availablePointTypes) {
                         numberPointTypes = availablePointTypes.length;
@@ -1941,14 +1945,14 @@ let reportsViewModel = function () {
         pointRefUtil = {
             setNewReference: (refPointUPI, property) => {  // possible async call (if new pointref needed)
                 // console.log("- - - - pointRefUtil.setNewReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
-                var refPoint,
+                let refPoint,
                     appIndex = pointRefUtil.getMaxAppIndexUsed(),
                     tempRef,
                     pushNewReferencedPoint = function (selectedPoint) {
                         newlyReferencedPoints.push(selectedPoint);
                     },
                     getNewPoint = function (upi) {
-                        var result;
+                        let result;
                         result = newlyReferencedPoints.filter(function (newPoint) {
                             return (newPoint._id === upi);
                         });
@@ -1957,7 +1961,7 @@ let reportsViewModel = function () {
 
                 refPoint = getNewPoint(refPointUPI);
                 if (!!refPoint) {
-                    var pointType = refPoint["Point Type"].Value;
+                    let pointType = refPoint["Point Type"].Value;
                     tempRef = {};
                     tempRef.PropertyEnum = (!!ENUMSTEMPLATESENUMS.Properties ? ENUMSTEMPLATESENUMS.Properties[property].enum : "");
                     tempRef.PropertyName = property;
@@ -1978,10 +1982,10 @@ let reportsViewModel = function () {
                 }
             },
             cleanArray: () => {
-                var i,
+                let i,
                     pointRef,
                     pointRefUsed = function (pRef) {
-                        var answer = false,
+                        let answer = false,
                             columnReference,
                             filterReference;
 
@@ -2026,9 +2030,10 @@ let reportsViewModel = function () {
             },
             getPointRef: (item, referenceType, lastTry) => {
                 //console.log("- - - - pointRefUtil.getPointRef() called....   item.upi = " + item.upi + " item.AppIndex = " + item.AppIndex);
-                var result,
+                let result,
                     upi = item.upi,
-                    appIndex = item.AppIndex;
+                    appIndex = item.AppIndex,
+                    answer;
 
                 if (!!appIndex || !!upi) {
                     result = reportPoint["Point Refs"].filter(function (pointRef) {
@@ -2037,21 +2042,21 @@ let reportsViewModel = function () {
 
                     if (result.length === 0) {
                         if (!!lastTry) {
-                            return null;
+                            answer = null;
+                        } else if (!!upi) {
+                            pointRefUtil.setNewReference(upi, referenceType);
+                            answer = pointRefUtil.getPointRef(item, referenceType, true);
                         } else {
-                            if (!!upi) {
-                                pointRefUtil.setNewReference(upi, referenceType);
-                                return pointRefUtil.getPointRef(item, referenceType, true);
-                            } else {
-                                return null;
-                            }
+                            answer = null;
                         }
                     } else {
-                        return result[0];
+                        answer = result[0];
                     }
                 } else {
-                    return null;
+                    answer = null;
                 }
+
+                return answer;
             },
             isSoftDeleted: (item, referenceType) => {
                 var answer = false,
@@ -2194,7 +2199,7 @@ let reportsViewModel = function () {
                 }
             },
             setCustomDatatableInfo: () => {
-                var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
+                let numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
                     $tablePagination = $tabViewReport.find(".dataTables_paginate"),
                     $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
                     $pagination = $tablePagination.find(".pagination"),
@@ -2279,7 +2284,7 @@ let reportsViewModel = function () {
                 dtiReporting.toast(errorMessage, 6000, 'errorToast');
             },
             registerEvents: () => {
-                var intervals,
+                let intervals,
                     calculations,
                     entriesPerPage,
                     reportTypes,
@@ -2313,7 +2318,7 @@ let reportsViewModel = function () {
                         $reportEndDate = $additionalFilters.find("#reportEndDate");
 
                         $direports.find(".addColumnButton").on("click", function (e) {
-                            var rowTemplate = columnLogic.getNewColumnTemplate(),
+                            let rowTemplate = columnLogic.getNewColumnTemplate(),
                                 $newRow;
                             e.preventDefault();
                             e.stopPropagation();
@@ -2334,7 +2339,7 @@ let reportsViewModel = function () {
                         });
 
                         $direports.find(".addFilterbutton").on("click", function (e) {
-                            var rowTemplate = {
+                            let rowTemplate = {
                                 filterName: "",
                                 condition: "$and",
                                 childLogic: false,
@@ -2361,7 +2366,7 @@ let reportsViewModel = function () {
                         if (self.reportType() !== "Property") {
                             let tempDuration;
                             $reportRangeDropdown.on('change', function (e) {
-                                var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
+                                let selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
                                     dateRange,
                                     tempDuration = $.extend(true, {}, self.selectedDuration());
 
@@ -2421,7 +2426,7 @@ let reportsViewModel = function () {
                         });
 
                         $dataTablePlaceHolder.on("click", ".pointInstance", function () {
-                            var $this = $(this),
+                            let $this = $(this),
                                 data = {
                                     upi: $this.attr("upi"),
                                     pointType: $this.attr("pointType"),
@@ -2488,7 +2493,7 @@ let reportsViewModel = function () {
                         });
 
                         $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
-                            var columnsArray = $.extend(true, [], self.listOfColumns()),
+                            let columnsArray = $.extend(true, [], self.listOfColumns()),
                                 swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]), // clone from field
                                 currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page;
                             columnsArray.splice(details.iFrom, 1);
@@ -2538,9 +2543,9 @@ let reportsViewModel = function () {
                         });
 
                         $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
-                            var $calculateColumnDiv = $(this),
+                            let $calculateColumnDiv = $(this),
                                 toggleField = function (displayGlobalButton) {
-                                    var forElementId = $globalCalculate.find("a").attr("data-activates"),
+                                    let forElementId = $globalCalculate.find("a").attr("data-activates"),
                                         $forElement = $globalCalculate.find("#" + forElementId);
 
                                     if (displayGlobalButton) {
@@ -2601,7 +2606,7 @@ let reportsViewModel = function () {
                         });
 
                         $columnsGrid.find("th .precisionColumn").on("click", function (e) {
-                            var $precisionColumnDiv = $(this),
+                            let $precisionColumnDiv = $(this),
                                 $precisionInputField = $precisionColumnDiv.find("input"),
                                 toggleField = function (displayInput) {
                                     if (displayInput) {
@@ -2658,7 +2663,7 @@ let reportsViewModel = function () {
                         });
 
                         $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
-                            var $includeInChartColumnDiv = $(this),
+                            let $includeInChartColumnDiv = $(this),
                                 $includeInChartInputField = $includeInChartColumnDiv.find("input"),
                                 toggleField = function (displayInput) {
                                     if (displayInput) {
@@ -2714,7 +2719,7 @@ let reportsViewModel = function () {
                             forceHelperSize: true,
                             helper: "original",
                             change(event, ui) {
-                                var item = ko.dataFor(ui.item[0]),
+                                let item = ko.dataFor(ui.item[0]),
                                     placeholderRowIndex = ui.placeholder[0].rowIndex;
 
                                 if (item.condition === "$or" && placeholderRowIndex === 0) {  // don't allow OR condition in first slot
@@ -2724,7 +2729,7 @@ let reportsViewModel = function () {
                                 }
                             },
                             stop: function (event, ui) {
-                                var tempArray,
+                                let tempArray,
                                     item = ko.dataFor(ui.item[0]),
                                     newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
                                 if (newIndex >= self.listOfFilters().length) {
@@ -2755,7 +2760,7 @@ let reportsViewModel = function () {
                             forceHelperSize: true,
                             helper: "original",
                             stop: function (event, ui) {
-                                var tempArray,
+                                let tempArray,
                                     item = ko.dataFor(ui.item[0]),
                                     newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
                                 if (newIndex >= self.listOfColumns().length) {
@@ -2782,7 +2787,7 @@ let reportsViewModel = function () {
                             forceHelperSize: true,
                             helper: "original",
                             stop: function (event, ui) {
-                                var tempArray,
+                                let tempArray,
                                     item = ko.dataFor(ui.item[0]),
                                     newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
                                 if (newIndex > 0) {
@@ -3013,9 +3018,9 @@ let reportsViewModel = function () {
                 }
             },
             buildBitStringHtml: (config, rawValue, disabled) => {
-                var htmlString = '<div class="bitstringReporting">',
+                let htmlString = '<div class="bitstringReporting">',
                     enumValue;
-                for (var key in config.bitstringEnums) {
+                for (let key in config.bitstringEnums) {
                     if (config.bitstringEnums.hasOwnProperty(key)) {
                         if (key !== "All") {
                             enumValue = rawValue & config.bitstringEnums[key].enum;
@@ -3038,7 +3043,7 @@ let reportsViewModel = function () {
         },
         filterLogic = {
             setValueList: (filterData, activeRequest, cb) => {
-                var result = [],
+                let result = [],
                     currentFilter = filterData.filter,
                     prop = ENUMSTEMPLATESENUMS.Properties[filterData.property],
                     maxWidth = 0,
@@ -3097,11 +3102,11 @@ let reportsViewModel = function () {
                 self.refreshData(true);
             },
             setFiltersParentChildLogic: (array) => {
-                var filters = array,
+                let filters = array,
                     i,
                     orConditionFound = false,
                     calcEndGroup = function (index) {
-                        var answer = false,
+                        let answer = false,
                             nextCondition = ((index + 1) < filters.length) ? filters[index + 1] : undefined;
                         if ((!!nextCondition && nextCondition.condition === "$or") || (index === (filters.length - 1))) {
                             answer = true;
@@ -3115,15 +3120,11 @@ let reportsViewModel = function () {
 
                     if (i === 0) {
                         filters[i].condition = "$and";
-                    } else {
-                        if (filters[i].condition === "$or") {
-                            orConditionFound = true;
-                            filters[i].beginGroup = true;
-                        } else {
-                            if (orConditionFound) {
-                                filters[i].childLogic = true;
-                            }
-                        }
+                    } else if (filters[i].condition === "$or") {
+                        orConditionFound = true;
+                        filters[i].beginGroup = true;
+                    } else if (orConditionFound) {
+                        filters[i].childLogic = true;
                     }
                     filters[i].endGroup = calcEndGroup(i);
                 }
@@ -3177,7 +3178,7 @@ let reportsViewModel = function () {
                 filterLogic.setValueList(filterData, self.activePropertyFilterRequest, finish);
             },
             setDefaultFilterValue: (valueType) => {
-                var result;
+                let result;
                 switch (valueType) {
                     case "Bool":
                     case "BitString":
@@ -3211,7 +3212,7 @@ let reportsViewModel = function () {
                 return result;
             },
             initFilters: (theFilters, callback) => {
-                var result = [],
+                let result = [],
                     i,
                     currentFilter,
                     len = theFilters.length,
@@ -3261,14 +3262,14 @@ let reportsViewModel = function () {
                 }
             },
             validateFilters: (cleanup) => {
-                var results = {},
+                let results = {},
                     pointRef,
                     filters,
                     filter,
                     i,
                     index,
                     validEnumEvalue = function (currentFilter) {
-                        var answer = false,
+                        let answer = false,
                             foundValues;
 
                         if (currentFilter.evalue !== -1) {
@@ -3388,7 +3389,7 @@ let reportsViewModel = function () {
                 return results;
             },
             getProperties: () => {
-                var props,
+                let props,
                     listOfKeysToSkip = [],
                     prop,
                     key;
@@ -3407,7 +3408,7 @@ let reportsViewModel = function () {
                 self.listOfFilterPropertiesLength = filtersPropertyFields.length;
             },
             updateFilterFromPointRefs: (filter) => {
-                var existingPointRef = pointRefUtil.getPointRef(filter, "Qualifier Point");
+                let existingPointRef = pointRefUtil.getPointRef(filter, "Qualifier Point");
 
                 if (!!existingPointRef) {
                     filter.AppIndex = existingPointRef.AppIndex;
@@ -3429,7 +3430,7 @@ let reportsViewModel = function () {
                 self.refreshData(true);
             },
             validColumn: (column, colIndex) => {
-                var answer = {},
+                let answer = {},
                     pointRef;
 
                 if (column.colName === "Choose Point") {
@@ -3451,13 +3452,13 @@ let reportsViewModel = function () {
                 return answer;
             },
             validateColumns: (cleanup) => {
-                var results = {},
+                let results = {},
                     localArray,
                     i,
                     validation,
                     index,
                     checkColumnsForPointRefs = () => {
-                        var column;
+                        let column;
 
                         for (i = 0; i < self.listOfColumns().length; i++) {
                             column = self.listOfColumns()[i];
@@ -3504,7 +3505,7 @@ let reportsViewModel = function () {
                 return results;
             },
             initColumns: (theColumns, callback) => {
-                var result = [],
+                let result = [],
                     i,
                     len = theColumns.length,
                     currentColumn,
@@ -3570,7 +3571,7 @@ let reportsViewModel = function () {
                 callback(result);
             },
             getProperties: () => {
-                var listOfKeysToRemove = ["path"];
+                let listOfKeysToRemove = ["path"];
 
                 columnsPropertyFields = filtersPropertyFields.filter(function (enumProp) {
                     return ($.inArray(enumProp.name, listOfKeysToRemove) === -1);
@@ -3584,7 +3585,7 @@ let reportsViewModel = function () {
                 columnLogic.updateListOfColumns(self.listOfColumns());
             },
             updateColumnFromPointRefs: (column) => {
-                var existingPointRef = pointRefUtil.getPointRef(column, "Column Point");
+                let existingPointRef = pointRefUtil.getPointRef(column, "Column Point");
 
                 if (!!existingPointRef) {
                     column.AppIndex = existingPointRef.AppIndex;
@@ -3595,14 +3596,14 @@ let reportsViewModel = function () {
                 }
             },
             getColumnConfigByOperatorAndUPI: (op, upi) => {
-                var result;
+                let result;
                 result = self.listOfColumns().filter(function (col) {
                     return (col.operator.toLowerCase() === op.toLowerCase() && col.upi === upi);
                 });
                 return result[0];
             },
             getColumnConfigByUPI: (upi) => {
-                var result;
+                let result;
                 result = self.listOfColumns().filter(function (col) {
                     return (col.upi === upi);
                 });
@@ -3632,7 +3633,7 @@ let reportsViewModel = function () {
         },
         dataParse = {
             formatDataField: (dataField, columnConfig) => {
-                var keyBasedValue,
+                let keyBasedValue,
                     htmlString = "",
                     $customField,
                     rawValue,
@@ -3765,7 +3766,7 @@ let reportsViewModel = function () {
                 return result;
             },
             pivotHistoryData: (historyData) => {
-                var columnConfig,
+                let columnConfig,
                     columnUPI,
                     columnKey,
                     pivotedData = [],
@@ -3803,7 +3804,7 @@ let reportsViewModel = function () {
                 return pivotedData;
             },
             pivotTotalizerData: (totalizerData) => {
-                var columnConfig,
+                let columnConfig,
                     columnKey,
                     pivotedData = [],
                     tempPivot,
@@ -3845,7 +3846,7 @@ let reportsViewModel = function () {
                 return pivotedData;
             },
             cleanResultData: (data) => {
-                var columnArray = $.extend(true, [], self.listOfColumns()),
+                let columnArray = $.extend(true, [], self.listOfColumns()),
                     columnConfig,
                     i,
                     j,
@@ -3871,7 +3872,7 @@ let reportsViewModel = function () {
                 return data;
             },
             setYaxisValues: (chartData) => {
-                var i,
+                let i,
                     foundValues = [];
 
                 for (i = 0; i < chartData.length; i++) {
@@ -3891,7 +3892,7 @@ let reportsViewModel = function () {
             getOnlyChartData: (data) => {
                 self.activeRequestForChart(true);
                 self.chartSpinnerTitle("Formatting Data for Chart");
-                var columnArray = $.extend(true, [], self.listOfColumns()),
+                let columnArray = $.extend(true, [], self.listOfColumns()),
                     columnConfig,
                     i,
                     len = data.length,
@@ -4095,7 +4096,7 @@ let reportsViewModel = function () {
                             if (sumsForProperties.hasOwnProperty(fieldName)) {
                                 columnData = [];
                                 columnDrillDownData = [];
-                                for (var enumName in sumsForProperties[fieldName]) {
+                                for (let enumName in sumsForProperties[fieldName]) {
                                     if (sumsForProperties[fieldName].hasOwnProperty(enumName)) {
                                         columnData.push({
                                             name: enumName,
@@ -4203,7 +4204,7 @@ let reportsViewModel = function () {
         },
         formatForPDF = {
             getColumnConfigWidthAndHeight: (dataField, columnConfig) => {
-                var result = {
+                let result = {
                         width: 0,
                         height: 0
                     },
@@ -4225,7 +4226,7 @@ let reportsViewModel = function () {
                             break;
                         case "BitString":
                             result.width++;  // checkbox
-                            for (var key in columnConfig.bitstringEnums) {
+                            for (let key in columnConfig.bitstringEnums) {
                                 if (columnConfig.bitstringEnums.hasOwnProperty(key)) {
                                     if (result.width < key.length) {
                                         result.width = key.length;
@@ -4257,7 +4258,7 @@ let reportsViewModel = function () {
                 // widthOfA4Portrait300PPI = 2480,
                 // heightOfA4Portrait300PPI = 3508,
                 // maxNumberOfCharsPerRow = (self.reportType() === "Property" ? 150 : 146),
-                var maxNumberOfCharsPerRow = 146,
+                let maxNumberOfCharsPerRow = 146,
                     dataIndex = {
                         columnStartIdx: 0,
                         columnStopIdx: 0,
@@ -4273,7 +4274,7 @@ let reportsViewModel = function () {
                     reportDataPages = [],
                     columnsArray = $.extend(true, [], self.listOfColumns()),
                     maxRowsOnPDFPage = () => {
-                        var answer;
+                        let answer;
 
                         if (self.reportType() === "Property") {
                             answer = 24;
@@ -4285,7 +4286,7 @@ let reportsViewModel = function () {
                     },
                     sortPropertyReportDataForExport = () => {
                         reportData.sort(function (a, b) {
-                            var result,
+                            let result,
                                 aName = a.Name.Value.toLowerCase(),
                                 bName = b.Name.Value.toLowerCase();
 
@@ -4301,7 +4302,7 @@ let reportsViewModel = function () {
 
                     },
                     buildPageData = () => {
-                        var row,
+                        let row,
                             currentPage = [],
                             headerArray = [],
                             rowArray = [],
@@ -4373,7 +4374,7 @@ let reportsViewModel = function () {
                         dataIndex.rowStopIdx = (reportData.length - 1);
                     },
                     nextPageHasData = () => {
-                        var nextPageFound = false,
+                        let nextPageFound = false,
                             maxRowsFound = false,
                             maxColumnsFound = false,
                             columnIndex,
@@ -4390,7 +4391,7 @@ let reportsViewModel = function () {
                             currentPageHeight = 0,
                             rowIndex = dataIndex.rowStartIdx,
                             getCurrentCellWidthAndHeight = function (cellData, colIndex) {
-                                var answer = {
+                                let answer = {
                                         width: 0,
                                         height: 1
                                     },
@@ -4422,7 +4423,7 @@ let reportsViewModel = function () {
                                 return answer;
                             },
                             getColumnHeaderWidthAndHeight = function (colIndex) {
-                                var fieldDimensions = {
+                                let fieldDimensions = {
                                     width: 0,
                                     height: 0
                                 };
@@ -4433,7 +4434,7 @@ let reportsViewModel = function () {
                                 return fieldDimensions;
                             },
                             getColumnDataWidthAndHeight = function (rowIndex, colIndex) {
-                                var row = reportData[rowIndex],
+                                let row = reportData[rowIndex],
                                     dataValue,
                                     fieldDimensions = {
                                         width: 0,
@@ -4655,7 +4656,7 @@ let reportsViewModel = function () {
                         return "by " + self.intervalPeriod() + " <br/> " + startDate.format(datetimeFormat) + " - " + endDate.format(datetimeFormat);
                     },
                     getChartWidth = () => {
-                        var answer;
+                        let answer;
 
                         if (!!formatForPrint) {
                             answer = 950;
@@ -4668,7 +4669,7 @@ let reportsViewModel = function () {
                         return answer;
                     },
                     getChartHeight = () => {
-                        var answer;
+                        let answer;
 
                         if (!!formatForPrint) {
                             answer = 650;
@@ -5105,7 +5106,7 @@ let reportsViewModel = function () {
             return (!!(data._pAccess & requestedAccessLevel) || data._id === 0);
         },
         ajaxCall = (type, input, url, callback) => {
-            var errorRaised = false;
+            let errorRaised = false;
 
             $.ajax({
                 url: url,
@@ -5145,7 +5146,7 @@ let reportsViewModel = function () {
                 upis = [],
                 uuid,
                 cleanUpReportConfig = function (reportConfig) {  // shrinking size of request object
-                    var results = $.extend(true, {}, reportConfig),
+                    let results = $.extend(true, {}, reportConfig),
                         i;
 
                     for (i = 0; i < results.columns.length; i++) {
@@ -5276,7 +5277,7 @@ let reportsViewModel = function () {
             return result;
         },
         getDurationText = (duration, precision, hoursOnly) => {
-            var answer = "",
+            let answer = "",
                 hour,
                 min,
                 sec;
@@ -5297,7 +5298,7 @@ let reportsViewModel = function () {
             return (answer !== "" ? answer : 0);
         },
         setReportConfig = (cb) => {
-            var i,
+            let i,
                 validatedColumns,
                 validatedFilters;
 
@@ -5382,13 +5383,13 @@ let reportsViewModel = function () {
             }
         },
         configureDataTable = (destroy, clearData) => {
-            var aoColumns = [],
+            let aoColumns = [],
                 i,
                 columnsArray = $.extend(true, [], self.listOfColumns()),
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
 
                     if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
-                        var pointType = reportUtil.getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Point Types"], data[columnConfig.colName].PointType);
+                        let pointType = reportUtil.getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Point Types"], data[columnConfig.colName].PointType);
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr("upi", data[columnConfig.colName].PointInst);
                         $(tdField).attr("pointType", pointType);
@@ -5427,7 +5428,7 @@ let reportsViewModel = function () {
                     }
                 },
                 setColumnClasses = function (columnConfig, columnIndex) {
-                    var result = "";
+                    let result = "";
                     if (columnConfig.colName === "path") {
                         switch (self.reportType()) {
                             case "History":
@@ -5565,7 +5566,7 @@ let reportsViewModel = function () {
                     return result;
                 },
                 getCalcForColumn = function (currentPageData, allData, columnDesign) {
-                    var i,
+                    let i,
                         value,
                         allRawValues,
                         currentPageRawValues = [],
@@ -5577,7 +5578,7 @@ let reportsViewModel = function () {
                         },
                         sameDataSet = (currentPageData.length === allData.length),
                         getRawData = function (dataSet) {
-                            var tempDataSet = [];
+                            let tempDataSet = [];
                             for (var i = 0; i < dataSet.length; i++) {
                                 value = dataSet[i].rawValue;
                                 value = (typeof value === "object" ? value.Value : value);
@@ -5635,7 +5636,7 @@ let reportsViewModel = function () {
 
             // if the design of the data collected has changed then we need to adjust the design of the DataTable.
             if ($.fn.DataTable.isDataTable($dataTablePlaceHolder)) {
-                var buttons = [];
+                let buttons = [];
                 $.each($dataTablePlaceHolder.DataTable().buttons()[0].inst.s.buttons,
                     function () {
                         buttons.push(this);
@@ -5736,7 +5737,7 @@ let reportsViewModel = function () {
                                 key: "5"
                             },
                             customize: function (win) {
-                                var $documentBody = $(win.document.body),
+                                let $documentBody = $(win.document.body),
                                     $documentHead = $(win.document.head),
                                     $table = $documentBody.find("table"),
                                     classes,
@@ -5758,7 +5759,7 @@ let reportsViewModel = function () {
                         ui.setCustomDatatableInfo();
                     },
                     headerCallback: function (thead, data, start, end, display) {
-                        var reportColumns = $.extend(true, [], self.listOfColumns()),
+                        let reportColumns = $.extend(true, [], self.listOfColumns()),
                             i,
                             $theads = $(thead).find("th"),
                             $firstThead;
@@ -5821,11 +5822,12 @@ let reportsViewModel = function () {
                             buildFilterSelect = (column, columnIndex, columnData, $element) => {
                                 let searchFilterValue = self.listOfColumns()[columnIndex].searchFilter,
                                     getUnique = (theArray) => {
-                                        var n = {},
+                                        let n = {},
                                             result = [],
                                             value,
-                                            v;
-                                        for (var i = 0; i < theArray.length; i++) {
+                                            v,
+                                            answer;
+                                        for (let i = 0; i < theArray.length; i++) {
                                             value = theArray[i].Value;
                                             // console.log("---- theArray[" + i + "].Value = " + theArray[i].Value);
                                             // console.log("-------- theArray[" + i + "].rawValue = " + theArray[i].rawValue);
@@ -5843,12 +5845,14 @@ let reportsViewModel = function () {
                                             }
                                         }
                                         if (self.listOfColumns()[columnIndex].canCalculate === true) {
-                                            return result.sort(function(a, b) {
+                                            answer = result.sort(function(a, b) {
                                                 return a - b;
                                             });
                                         } else {
-                                            return result.sort();
+                                            answer = result.sort();
                                         }
+
+                                        return answer;
                                     },
                                     uniqueData = getUnique(columnData);
 
@@ -5874,7 +5878,7 @@ let reportsViewModel = function () {
                                     $selectFilter.material_select();
 
                                     $selectFilter.on('change', function (e) {
-                                        var val = $.fn.dataTable.util.escapeRegex($(this).val()),
+                                        let val = $.fn.dataTable.util.escapeRegex($(this).val()),
                                             // regExVal = val ? "^" + val + "$" : "",
                                             regExVal = val ? "\\b" + val + "\\b" : "",
                                             plainText = $(this).val();
@@ -6050,7 +6054,7 @@ let reportsViewModel = function () {
             self.designChanged(false);
         },
         saveManager = (function () {
-            var remainingResponses = 0,
+            let remainingResponses = 0,
                 errList = [],
                 reportpStatusBeforeSave,
                 $activeSidePane,
@@ -6090,7 +6094,7 @@ let reportsViewModel = function () {
                     }
                 },
                 saveReportCallback = function (result) { // This routine called after Report Saved
-                    var err = result.err;
+                    let err = result.err;
 
                     if (reportpStatusBeforeSave === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
@@ -6101,7 +6105,7 @@ let reportsViewModel = function () {
                     itemFinished(err);
                 },
                 itemFinished = function (err) {
-                    var msg,
+                    let msg,
                         duration = 3000;
 
                     if (remainingResponses) {
@@ -7551,7 +7555,7 @@ let reportsViewModel = function () {
     self.requestReportData = () => {
         if (!self.durationError()) {
             // TODO to Materialize  $(".tableFooter > td").popover("destroy");
-            var requestObj = buildReportDataRequest();
+            let requestObj = buildReportDataRequest();
             if (!!requestObj) {
                 if (self.currentTab() !== 2) {
                     ui.tabSwitch(2);
