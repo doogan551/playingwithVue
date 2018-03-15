@@ -349,7 +349,7 @@ var gpl = {
     labelIsUnique: function (label, editBlock) { // ch297; add 'editBlock' argument
         // Returns true if label is unique to all blocks; false otherwise
         let result = gpl.forEach(gpl.blockManager.blocks, function isUnique (block) {
-            if (block.label === label) {
+            if (!block.isToolbar && block.label === label) { // ch1038; add check if toolbar block
                 if (editBlock && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
                     return true;
                 } else {
@@ -2185,8 +2185,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setPointData: function (point, processChanges) {
+        if (!point) { // ch1029
+            debugger
+            return;
+        }
+
         var newPoint = point.newPoint || point,
-            oldPoint = point.oldPoint || point;
+            oldPoint = point.oldPoint || point,
+            obj = {};
+
 
         if (!this._origPointData) {
             this._origPointData = $.extend(true, {}, oldPoint);
@@ -2211,6 +2218,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.pointName = dtiCommon.getPointName(this._pointData.path);
 
         this.mapPointRefs();
+
+        if (!gpl.pointUpiMap[this.upi]) { // ch1029
+            if (this._pointData) {
+                obj.Name = dtiCommon.getPointName(this._pointData.path);
+                obj.pointType = this._pointData['Point Type'].Value;
+                obj.valueType = (this._pointData.Value && this._pointData.Value.ValueType === 5) ? 'enum' : 'float';
+            }
+            gpl.pointUpiMap[this.upi] = obj;
+        }
     },
 
     getPointData: function () {
@@ -2315,11 +2331,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         // TFS #587 Check existance of props before updating values
         if (ptUpdateInterval) {
-            ptUpdateInterval.Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
+            ptUpdateInterval.Value = gpl.point['Update Interval'].Value; // ch1026; get the value from the sequence prop
         }
         if (ptController) {
-            ptController.Value = bindings.deviceControllerName;
-            ptController.eValue = bindings.deviceControllerValue;
+            ptController.Value = gpl.point.Controller.Value;    // ch1026; get the value from the sequence prop
+            ptController.eValue = gpl.point.Controller.eValue;  // ch1026; get the value from the sequence prop
         }
         point._parentUpi = gpl.point._id;
     },
@@ -3235,6 +3251,32 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
             this.referenceType = 'External';
         }
         this.setReferenceType(this.referenceType);
+    },
+
+    validate: function () { // ch1012 & ch1017 (added fn)
+        var isValid = this.validateThis();
+
+        if (isValid) {
+            isValid = this.callSuper('validate');
+        }
+
+        return isValid;
+    },
+
+    validateThis: function () { // ch1012 & ch1017 (added fn)
+        // This function only validates this block
+        var pointData = this.getPointData();
+        var isValid = true;
+
+        if (pointData && (pointData['Point Refs'][0].PointInst !== gpl.deviceId)) {
+            this.setInvalid();
+            gpl.validationMessage.push('Output block "' + this.label + '" is invalid because its associated point is assigned to a different device. All outputs must reside on the same device as this sequence (' + dtiCommon.getPointName(gpl.devicePoint.path) + ')');
+            isValid = false;
+        } else {
+            this.setValid();
+        }
+
+        return isValid;
     }
 });
 
@@ -6058,7 +6100,8 @@ gpl.Toolbar = function (manager) {
                 newConfig.top = newShape.top - gpl.manager.panTop;
                 newConfig.top /= gpl.scaleValue;
                 newConfig.calcType = newShape.calcType;
-                newConfig.labelVisible = gpl.json.Show_Label;
+                newConfig.labelVisible = gpl.point['Show Label'].Value; // ch1036; pull setting from sequence property
+                newConfig.presentValueVisible = gpl.point['Show Value'].Value; // ch1036; pull setting from sequence property
                 delete newConfig.inactive;
 
                 clone = new Cls(newConfig);
@@ -8761,6 +8804,7 @@ gpl.Manager = function () {
         let parameters = {
                 pointType: block.pointType,
                 parentUpi: gpl.point._id,
+                parentNode: gpl.point.parentNode, // ch1031; added this property
                 display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
         let handleError = function (err) {
@@ -9476,9 +9520,15 @@ gpl.Manager = function () {
                 }
             },
             updateUpdateInterval = function (newValue) {
-                let val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
+                // This function is called anytime the update interval (mins or secs) is updated via the sequence properties modal
+                let mins = +managerSelf.bindings.deviceUpdateIntervalMinutes() || 0;
+                let secs = +managerSelf.bindings.deviceUpdateIntervalSeconds() || 0;
+                let val = (mins*60) + secs;
 
+                gpl.point['Update Interval'].Value = val; // ch1026; update this sequence property immediately after changes made
                 formatSequencePoint('Update Interval', val);
+
+                gpl.manager.bindings.hasEdits(true);
             },
             setNames = () => {
                 managerSelf.bindings.sequenceName(dtiCommon.getPointName(gpl.point.path));
@@ -9620,14 +9670,14 @@ gpl.Manager = function () {
             },
 
             applyShowLabel: function () {
-                var bool = managerSelf.bindings.deviceShowLabel();
+                var bool = gpl.point['Show Label'].Value; // ch1026; get the value from the sequence prop
                 managerSelf.pauseRender();
                 gpl.blockManager.applyShowLabel(bool);
                 managerSelf.resumeRender();
             },
 
             applyShowValue: function () {
-                var bool = managerSelf.bindings.deviceShowValue();
+                var bool = gpl.point['Show Value'].Value; // ch1026; get the value from the sequence prop
                 managerSelf.pauseRender();
                 gpl.blockManager.applyShowValue(bool);
                 managerSelf.resumeRender();
@@ -9660,62 +9710,8 @@ gpl.Manager = function () {
             deviceUpdateIntervalSeconds: ko.observable(+gpl.point['Update Interval'].Value % 60),
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
-            updateSequenceProperties: function () {
-                let props = kojs(managerSelf.bindings), // ch928
-                    setBlockDevicePointRef = function (block) {
-                        let idx,
-                            dataPoint = (!!block.getPointData ? block.getPointData() : null),
-                            blockDeviceID;
-
-                        if (!!dataPoint) {
-                            idx = block._pointRefs['Control Point'];
-                            blockDeviceID = dataPoint['Point Refs'][0].Value;
-                            if (blockDeviceID === 0) {
-                                dataPoint['Point Refs'][0] = gpl.point['Point Refs'][0];
-                            }
-
-                            if (idx !== undefined && dataPoint['Point Refs'][idx].DevInst === 0) {
-                                dataPoint['Point Refs'][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
-                            }
-                        }
-                    };
-
-                gpl.point['Update Interval'].Value = (+props.deviceUpdateIntervalMinutes || 0) * 60 + (+props.deviceUpdateIntervalSeconds || 0);
-                gpl.point['Show Label'].Value = props.deviceShowLabel;
-                gpl.point['Show Value'].Value = props.deviceShowValue;
-                gpl.point.Description.Value = props.deviceDescription;
-                gpl.point.Controller.Value = props.deviceControllerName;
-                gpl.point.Controller.eValue = props.deviceControllerValue;
-                managerSelf.bindings.updateBackgroundColor();
-
-                if (gpl._newDevicePoint && gpl.devicePoint._id !== gpl._newDevicePoint._id) {
-                    gpl.devicePoint = gpl._newDevicePoint;
-                    gpl.deviceId = gpl._newDevicePoint._id;
-
-                    gpl.point['Point Refs'][0].Value = gpl.deviceId;
-                    gpl.point['Point Refs'][0].PointInst = gpl.deviceId;
-                    gpl.point['Point Refs'][0].DevInst = gpl.deviceId;
-                    gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
-                    gpl.point['Point Refs'][0].PointType = gpl.devicePoint['Point Type'].eValue;
-
-                    gpl.blockManager.forEachBlock(function (block) {
-                        gpl.log('processing block', block.gplId);
-                        setBlockDevicePointRef(block);
-                        if (block.isNonPoint !== true) {
-                            block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
-                        }
-                        gpl.fire('editedblock', block);
-                    });
-                }
-
-                delete gpl._newDevicePoint;
-
-                // console.log('update', props);
-                gpl.closeModal(gpl.$sequencePropertiesModal);
-            },
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
-                    delete gpl._newDevicePoint;
                     gpl.openModal(gpl.$sequencePropertiesModal);
                     gpl.$sequencePropertiesModal.find('select').material_select();
                 }
@@ -9741,7 +9737,55 @@ gpl.Manager = function () {
                         managerSelf.bindings.deviceUpi(upi);
 
                         gpl.log('Set device point Successfully');
-                        gpl._newDevicePoint = selectedPoint;
+
+                        // ch1026; cleaned up this logic and moved from the old function which was deleted w/ ch1026 (updateSequenceProperties)
+                        if (gpl.devicePoint._id !== selectedPoint._id) {
+                            gpl.devicePoint = selectedPoint;
+                            gpl.deviceId = selectedPoint._id;
+
+                            // Update the sequence's device point; calling formatPoint instead of setting values directly as part of ch1012
+                            gpl.point['Point Refs'][0].Value = gpl.deviceId;
+                            gpl.point['Point Refs'][0].PointName = dtiCommon.getPointName(gpl.devicePoint.path); // ch989
+                            gpl.formatPoint({
+                                point: gpl.point,
+                                oldPoint: gpl.point,
+                                property: 'Device Point',
+                                refPoint: gpl.devicePoint
+                            });
+
+                            // Update all blocks' device point; modifying this heavily as part of ch1012
+                            gpl.blockManager.forEachBlock(function (block) {
+                                gpl.log('processing block', block.gplId);
+
+                                if (!block.isToolbar) {
+                                    if (block.isNonPoint !== true) {
+                                        block._pointData['Point Refs'][0].Value = gpl.deviceId;
+                                        block._pointData['Point Refs'][0].PointName = gpl.point['Point Refs'][0].PointName;
+                                        gpl.formatPoint({
+                                            point: block._pointData,
+                                            oldPoint: block._pointData,
+                                            property: 'Device Point',
+                                            refPoint: gpl.devicePoint
+                                        });
+
+                                        gpl.fire('editedblock', block);
+                                    } else if (block.hasReferenceType) {
+                                        block.processPointRef(); // ch1012; Show/hide star icon based on if input block is on a different device
+
+                                        // ch1012 & ch1017; Check if output block on a different device (outputs must reside on the same device)
+                                        if (block.blockType === 'Output') {
+                                            if (block._pointData && (block._pointData['Point Refs'][0].PointInst !== gpl.deviceId)) {
+                                                block.setInvalid();
+                                            } else {
+                                                block.setValid();
+                                            }
+                                        }
+                                        
+                                        gpl.fire('editedblock', block);
+                                    }
+                                }
+                            });
+                        }                    
                     }
                 }, 'Device', 'Device Point');
             },
@@ -9792,10 +9836,19 @@ gpl.Manager = function () {
         managerSelf.bindings.deviceUpdateIntervalMinutes.subscribe(updateUpdateInterval);
         managerSelf.bindings.deviceUpdateIntervalSeconds.subscribe(updateUpdateInterval);
         managerSelf.bindings.deviceShowValue.subscribe(function (newValue) {
+            gpl.point['Show Value'].Value = newValue; // ch1026; update this sequence property immediately after changes made
             formatSequencePoint('Show Value', newValue);
+        });
+        managerSelf.bindings.deviceDescription.subscribe(function (newDescription) {
+            gpl.point.Description.Value = newDescription;
+        });
+        managerSelf.bindings.deviceControllerValue.subscribe(function (eValue) {
+            gpl.point.Controller.eValue = eValue;
+            gpl.point.Controller.Value = gpl.controllers[eValue].name;
         });
 
         managerSelf.bindings.deviceShowLabel.subscribe(function (newValue) {
+            gpl.point['Show Label'].Value = newValue; // ch1026; update this sequence property immediately after changes made
             formatSequencePoint('Show Label', newValue);
         });
 
