@@ -901,7 +901,7 @@ var gpl = {
             setVars();
 
             if (pointType1 && pointType2) {
-                if (block2.type === 'Output') {
+                if (block2.type === 'Output' || block2.type === 'Input') { // ch991; also swap if block2 is an Input
                     // gpl.log('swapped vars');
                     swapAnchors();
                     setVars();
@@ -2146,6 +2146,13 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.referenceType = type;
         this.setVisibleShape(type);
         this.processPointRef(); // ch287; show/hide the '*' character, depending if reference point has the same device as the sequence
+    },
+
+    resetReference: function () { // ch1044; added fn to clean up references
+        delete this.pointName;
+        delete this.valueType;
+        delete this._pointData;
+        this.upi = NaN;
     },
 
     setVisibleShape: function (type) {
@@ -5640,6 +5647,9 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
             return ret;
         },
         selectAllSegments = function () {
+            if (gpl.blockManager.highlightedObject) { // ch1011
+                gpl.blockManager.deselect();
+            }
             // gpl.log(clSelf);
             gpl.lineManager.setSelected(clSelf);
             clSelf.setSelected();
@@ -7108,6 +7118,18 @@ gpl.BlockManager = function (manager) {
             return ret;
         },
 
+        getMainBlocks: function () { // just a helper function I use from the console
+            var mainBlocks = [];
+
+            bmSelf.forEachBlock(function (block) {
+                if (!block.isToolbar) {
+                    mainBlocks.push(block);
+                }
+            });
+
+            return mainBlocks;
+        },
+
         getBlock: function (gplId) {
             var ret = null,
                 id = gplId;
@@ -7358,6 +7380,11 @@ gpl.BlockManager = function (manager) {
                 bmSelf.deselect();
             }
 
+            if (gpl.lineManager.selectedLine) { // ch1011
+                gpl.lineManager.selectedLine.deselect();
+                gpl.lineManager.selectedLine = null;
+            }
+
             bmSelf.highlightedObject = shape;
 
             if (!shape._deselectedState) {
@@ -7442,6 +7469,14 @@ gpl.BlockManager = function (manager) {
                 if (refBlock.hasReferenceType) {
                     refBlock.setReferenceType('External');
                 }
+            });
+        }
+
+        if (!oldBlock.isNonPoint) { // ch1044; clean up references
+            delete gpl.pointUpiMap[oldBlock.upi];
+
+            gpl.forEachArray(references, function (ref) {
+                ref.block.resetReference();
             });
         }
 
@@ -8882,6 +8917,12 @@ gpl.Manager = function () {
                     point['Setpoint Value'].isReadOnly = true;
                 }
                 // ch970, ch977 end
+
+                // ch1016
+                gpl.blockManager.upis[block.upi] = [{
+                    block: block,
+                    valueText: block.valueText
+                }];
 
                 block.setPointData(point, true);
 
@@ -10864,7 +10905,11 @@ gpl.Manager = function () {
                         gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
 
                         if (gplObj && !gplObj.isToolbar && gplObj.blockType !== 'Constant') {
-                            text = (gpl.pointUpiMap[gplObj.upi] || {}).Name;
+                            if (!gplObj.hasReferenceType) { // If it's a block, show the block label (no point in full point name because it's on the sequence)
+                                text = gplObj.label;
+                            } else { // It's an input/output block - show the referenced point name
+                                text = ((gpl.pointUpiMap[gplObj.upi] || {}).Name) || 'No point assigned';
+                            }
                             managerSelf.updateTooltip(text, x, y);
                         } else {
                             managerSelf.clearTooltip();
