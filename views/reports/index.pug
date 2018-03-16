@@ -2,7 +2,7 @@ doctype html
 html.direports
     head
         meta(charset="utf-8")
-        link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        //link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.16/ColReorder/css/colReorder.semanticui.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.16/Buttons/css/buttons.semanticui.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.16/FixedColumns/css/fixedColumns.semanticui.min.css')
@@ -12,7 +12,6 @@ html.direports
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.16/dataTables.material.min.css')
-        link(rel='stylesheet', href='/css/trendPlots/highcharts.css')
         link(rel='stylesheet', href='/sass/v2/common')
         link(rel='stylesheet', href='/css/reports/reporting.css')
     body.blue-grey.lighten-5
@@ -146,7 +145,7 @@ html.direports
                                         .footerSettings Footer Settings
                                             .displayColumnFilters
                                                 input#displayColumnFilters.form-control.filled-in(data-bind="checked: $root.displayGridFilters, enable: $root.canEdit()", type="checkbox")
-                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnFilters'") Display Filters
+                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'displayColumnFilters' }") Display Filters
                                             // ko if: (reportType() !== 'Property')
                                             .displayColumnCalculations
                                                 input#displayColumnCalculations.form-control.filled-in(data-bind="checked: $root.displayGridCalculations, enable: $root.canEdit()", type="checkbox")
@@ -713,11 +712,16 @@ html.direports
     script(type="text/javascript" src='/js/lib/pdfmake.min.js')
     script(type="text/javascript" src='/js/lib/vfs_fonts.js')
     script(type="text/javascript" src='/js/lib/highstock.src.js')
+    script(type="text/javascript" src='/js/lib/highcharts-more.js')
+    //script(type="text/javascript" src='/js/lib/highcharts.src.js')
+    script(type="text/javascript" src='/js/lib/highcharts-exporting.js')
+    //script(type="text/javascript" src='/js/lib/highcharts-offline-exporting.js')
     //script(type="text/javascript" src='/js/lib/modules/boost.js')
     script(type="text/javascript" src='/js/trendPlots/trendplot.js')
     script(type="text/javascript" src='/js/lib/jquery.printarea.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.html5.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.print.min.js')
+    script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.colVis.min.js')
     script(type="text/javascript" src='/js/lib/materialize.js')
     script(type="text/javascript" src='/js/lib/materialize.clockpicker.js')
 
