@@ -2925,16 +2925,16 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.setIconName) {
             self.setIconName();
-        } else if (calculationType) {
-                self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
+        } else if (calculationType && !self.hasReferenceType) { // ch1023; add "&& !self.hasReferenceType"
+            self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
 
-                if (self.iconPrefix) {
-                    self.config.iconType = self.iconPrefix + calculationType;
-                }
-
-                self.icon = self.config.iconType + self.iconExtension;
-                self.iconType = self.config.iconType;
+            if (self.iconPrefix) {
+                self.config.iconType = self.iconPrefix + calculationType;
             }
+
+            self.icon = self.config.iconType + self.iconExtension;
+            self.iconType = self.config.iconType;
+        }
 
         self.setIcon();
 
@@ -6599,14 +6599,14 @@ gpl.BlockManager = function (manager) {
                 if (anchor.attachedLineCount > 0) {
                     line = anchor.attachedLines[Object.keys(anchor.attachedLines)[0]];
                     anchor = line.getOtherAnchor(anchor); // Get the anchor attached to the other end of the line
-                }
+                    
+                    if (anchor) { // ch1045; move this conditional block - it was previously outside our parent conditional "if (anchor.attachedLineCount > 0)"
+                        block = bmSelf.getBlock(anchor.gplId);
 
-                if (anchor) {
-                    block = bmSelf.getBlock(anchor.gplId);
-
-                    if (block && block._pointData) {
-                        pointType = block._pointData['Point Type'].Value;
-                        property = anchor.anchorType; // ex: 'Input Point 1'
+                        if (block && block._pointData) {
+                            pointType = block._pointData['Point Type'].Value;
+                            property = anchor.anchorType; // ex: 'Input Point 1'
+                        }
                     }
                 }
 
