@@ -96,7 +96,9 @@ html
                     .col.s3.right
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
             .modal-footer
-                .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: updateSequenceProperties") Save
+                //- ch1026; removed save button (all changes effective immediately)
+                .row
+                    .col All changes are automatically applied. Click off this modal to close it and return to the gpl sequence.
 
         // TODO - doesn't look like this is used any longer
         //#colorpickerModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")

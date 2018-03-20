@@ -720,6 +720,7 @@ var trendPlots = {
                         type: type,
                         data: data,
                         name: series.name,
+                        upi: series.upi,
                         color: series.color,
                         turboThreshold: cfg.turboThreshold
                     }, tmpSeries);

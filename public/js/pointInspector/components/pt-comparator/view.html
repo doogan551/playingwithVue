@@ -160,10 +160,13 @@
                     <!-- /ko -->
                     <!-- ko if: $parent.isInEditMode -->
                         <!-- ko if: ValueType() == 1 -->
+                        <!-- ko if: console.log($parent); -->
+                        <!-- /ko -->
                             <div class="col col-xs-3 col-sm-6">
                                 <div class="dataField">
                                     <label>Input 2 Constant</label>
-                                        <input type="text" data-bind="propertyName: 'Input 2 Constant', numeric: Value, valueType: ValueType, disable: $parent.data.isReadOnly" class="form-control input-sm">
+                                        <!-- ch1041; isReadOnly property was not correctly referenced -->
+                                        <input type="text" data-bind="propertyName: 'Input 2 Constant', numeric: Value, valueType: ValueType, disable: isReadOnly" class="form-control input-sm">
                                 </div>
                             </div>
                         <!-- /ko -->
