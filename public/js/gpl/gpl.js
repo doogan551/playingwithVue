@@ -156,7 +156,6 @@ var gpl = {
         cb = cb || gpl.emptyFn;
 
         gpl.point._parentUpi = 0;
-        gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
         gpl.point.SequenceData.sequence = gpl.json;
 
         data.updates.push({
@@ -321,11 +320,34 @@ var gpl = {
         gpl.point = gpl.convertBooleanStrings(gpl.point);
         window.point = gpl.point;
         window.pointType = gpl.point['Point Type'].Value;
-        gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
+
+        // ch1043
+        // This object will hold all working sequence property values; if settings are changed, they are saved to this
+        // object instead of gpl.point; if the sequence is saved for later, this object is pushed into the editVersion object.
+        // If the sequence is Saved (really, activated), values are manually pushed back to gpl.point before the save.
+        // These are our default values; in a sec, we'll update from editVersion.seqProps if we're in edit mode.
+        gpl.seqProps = {
+            backgroundColor: gpl.point.SequenceData.sequence.backgroundColor,
+            showValue: gpl.point['Show Value'].Value,
+            showLabel: gpl.point['Show Label'].Value,
+            controller: gpl.point.Controller.eValue,
+            description: gpl.point.Description.Value,
+            updateInterval: gpl.point['Update Interval'].Value,
+            deviceId: gpl.point['Point Refs'][0].PointInst
+        };
+
+        if (gpl.isEdit) {
+            if (!gpl.point.SequenceData.sequence.editVersion) {
+                gpl.point.SequenceData.sequence.editVersion = {};
+            }
+
+            $.extend(true, gpl.seqProps, gpl.point.SequenceData.sequence.editVersion.seqProps);
+        }
+        // end ch1043
 
         addFn(function (cb) {
             $.ajax({
-                url: gpl.pointApiPath + gpl.devicePointRef.PointInst
+                url: gpl.pointApiPath + gpl.seqProps.deviceId
             }).done(function (data) {
                 gpl.devicePoint = data;
                 cb();
@@ -605,7 +627,7 @@ var gpl = {
                 dynamic.pointRefIndex = pRef.AppIndex;
             }
 
-            pRef.DevInst = gpl.deviceId;
+            pRef.DevInst = gpl.seqProps.deviceId;
         }
     },
     getDynamicPointRef: function (dynamic) {
@@ -621,7 +643,7 @@ var gpl = {
             if (block.type === 'Input') {
                 // pRef.DevInst = refs[this._pointRefs['Device Point']].DevInst;
             } else {
-                pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
+                pRef.DevInst = gpl.seqProps.deviceId;  // just in case the "Device Point" changed
             }
         }
     },
@@ -652,7 +674,7 @@ var gpl = {
                 if (!!referencedObj && gplobject.blockType === 'Input') {
                     devInst = referencedObj['Point Refs'][0].DevInst;
                 } else {
-                    devInst = gpl.deviceId;
+                    devInst = gpl.seqProps.deviceId;
                 }
 
                 if (!!referencedObj) {
@@ -2193,7 +2215,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setPointData: function (point, processChanges) {
         if (!point) { // ch1029
-            debugger
+            console.log('setPointData cannot process point because "point" is undefined.');
             return;
         }
 
@@ -2273,7 +2295,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 if (this.type === 'Input') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
-                    ref.DevInst = (ref.DevInst === 0 ? gpl.deviceId : ref.DevInst);
+                    ref.DevInst = (ref.DevInst === 0 ? gpl.seqProps.deviceId : ref.DevInst);
                 }
 
                 if (!!refPointType && !!gpl.pointTypes[refPointType]) {
@@ -2294,7 +2316,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this;
         var _pointData = self.getPointData();
         var blockDevId = _pointData && _pointData['Point Refs'][0].PointInst;
-        var gplDevId = gpl.point['Point Refs'][0].PointInst;
+        var gplDevId = gpl.seqProps.deviceId;
         var visible = false;
         var leftAdjust = 0;
 
@@ -2682,7 +2704,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         // ch#311 Remove this part of the if statement: || this.labelVisible === false
         if (this.labelVisible === 0 || this.labelVisible === undefined) {
-            this.labelVisible = gpl.json.Show_Label;  // use global sequence option for Show Label
+            this.labelVisible = gpl.seqProps.showLabel;  // use global sequence option for Show Label
         }
 
         if (this.labelVisible === false) {
@@ -2736,7 +2758,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         // ch#311 Remove this part of it statement: || this.presentValueVisible === false
         if (this.presentValueVisible === 0 || this.presentValueVisible === undefined) {
-            this.presentValueVisible = gpl.json.Show_Value;
+            this.presentValueVisible = gpl.seqProps.showValue;
         }
 
         if (this.presentValueVisible === false || this.config.showValue === false) {
@@ -2867,7 +2889,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setActive: function () {
         // this.targetCanvas = 'main';
-        this.labelVisible = gpl.point['Show Label'].Value;
+        this.labelVisible = gpl.seqProps.showLabel;
 
         this.bypassSave = false;
         this.showShapes();
@@ -3275,7 +3297,7 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
         var pointData = this.getPointData();
         var isValid = true;
 
-        if (pointData && (pointData['Point Refs'][0].PointInst !== gpl.deviceId)) {
+        if (pointData && (pointData['Point Refs'][0].PointInst !== gpl.seqProps.deviceId)) {
             this.setInvalid();
             gpl.validationMessage.push('Output block "' + this.label + '" is invalid because its associated point is assigned to a different device. All outputs must reside on the same device as this sequence (' + dtiCommon.getPointName(gpl.devicePoint.path) + ')');
             isValid = false;
@@ -6110,8 +6132,8 @@ gpl.Toolbar = function (manager) {
                 newConfig.top = newShape.top - gpl.manager.panTop;
                 newConfig.top /= gpl.scaleValue;
                 newConfig.calcType = newShape.calcType;
-                newConfig.labelVisible = gpl.point['Show Label'].Value; // ch1036; pull setting from sequence property
-                newConfig.presentValueVisible = gpl.point['Show Value'].Value; // ch1036; pull setting from sequence property
+                newConfig.labelVisible = gpl.seqProps.showLabel; // ch1036; pull setting from sequence property
+                newConfig.presentValueVisible = gpl.seqProps.showValue; // ch1036; pull setting from sequence property
                 delete newConfig.inactive;
 
                 clone = new Cls(newConfig);
@@ -6588,7 +6610,7 @@ gpl.BlockManager = function (manager) {
                 if (editBlock.type === 'Output') {
                     anchor = editBlock.inputAnchors[0]; // This could be connected to multiple blocks, but we'll only use one for simplicity sake
                     property = 'Control Point';
-                    deviceId = gpl.deviceId;
+                    deviceId = gpl.seqProps.deviceId;
                 } else {
                     anchor = editBlock.outputAnchor;
                     property = 'Monitor Point';
@@ -6934,7 +6956,7 @@ gpl.BlockManager = function (manager) {
                     upi = selectedPoint._id,
                     name = dtiCommon.getPointName(selectedPoint.path),
                     pointType = selectedPoint['Point Type'].Value,
-                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.deviceId),
+                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.seqProps.deviceId),
                     rootBlock = gpl.blockManager.getGplBlockByUpi(upi);
 
                 gpl.pointData[selectedPoint._id] = selectedPoint;
@@ -8201,17 +8223,13 @@ gpl.Manager = function () {
                 if (!gpl.json._convertedBG) {
                     //if existing, it's old system and needs converting
                     if (gpl.json.backgroundColor) {
-                        gpl.json.backgroundColor = gpl.convertColor(gpl.json.backgroundColor);
+                        gpl.seqProps.backgroundColor = gpl.convertColor(gpl.json.backgroundColor);
                     } else { //doesn't exist, assign default
-                        gpl.json.backgroundColor = gpl.defaultBackground;
+                        gpl.seqProps.backgroundColor = gpl.defaultBackground;
                     }
 
                     gpl.json._convertedBG = true;
                 }
-
-                gpl.deviceId = gpl.point['Point Refs'][0].DevInst;
-
-                managerSelf.backgroundColor = gpl.json.backgroundColor;
 
                 managerSelf.state = null;
                 managerSelf.editMode = false;
@@ -8876,8 +8894,8 @@ gpl.Manager = function () {
                 point._path = dtiCommon.toLowerCasePath(point.path); // ch952
 
                 // Setup the device point
-                point['Point Refs'][0].Value = gpl.deviceId;
-                point['Point Refs'][0].PointName = dtiCommon.getPointName(gpl.devicePoint.path); // ch989
+                point['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                point['Point Refs'][0].PointName = gpl.manager.bindings.deviceName(); // ch989
 
                 gpl.formatPoint({ // ch971; call formatPoint to update other props based on the device point
                     point: point,
@@ -8982,6 +9000,26 @@ gpl.Manager = function () {
                     delete gpl.json.editVersion;
                 }
 
+                // ch1043
+                if (gpl.point['Point Refs'][0].Value !== gpl.seqProps.deviceId) { // If the device point changed
+                    // Update the sequence's device point
+                    gpl.point['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                    gpl.formatPoint({
+                        point: gpl.point,
+                        oldPoint: gpl.point,
+                        property: 'Device Point',
+                        refPoint: gpl.devicePoint
+                    });
+                }
+                gpl.point['Show Value'].Value = gpl.seqProps.showValue;
+                gpl.point['Show Label'].Value = gpl.seqProps.showLabel;
+                gpl.point.Controller.eValue = gpl.seqProps.controller;
+                gpl.point.Controller.Value = gpl.controllers[gpl.seqProps.controller].name;
+                gpl.point.Description.Value = gpl.seqProps.description;
+                gpl.point['Update Interval'].Value = gpl.seqProps.updateInterval;
+                gpl.json.backgroundColor = gpl.seqProps.backgroundColor;
+                // end ch1043
+
                 gpl.saveSequence(saveObj);
 
                 managerSelf.embedActionButtons();
@@ -9015,6 +9053,8 @@ gpl.Manager = function () {
         offsetPositions(true);
 
         currentChanges = $.extend(true, {}, gpl.json.editVersion);
+        currentChanges.seqProps = gpl.seqProps; // ch1043
+
         gpl.json = $.extend(true, {}, gpl.originalSequenceData);
         gpl.json.editVersion = currentChanges;
 
@@ -9542,51 +9582,15 @@ gpl.Manager = function () {
     };
 
     managerSelf.initBindings = function () {
-        var formatSequencePoint = function (property, value) {
-                let newPoint = $.extend(true, {}, gpl.point),
-                    tmpData;
-
-                newPoint[property].Value = value;
-                tmpData = gpl.formatPoint({
-                    point: newPoint,
-                    oldPoint: gpl.point,
-                    property: property
-                });
-
-                if (tmpData.err) {
-                    gpl.log('Error with sequence point data:', property, 'error:', tmpData.err);
-                } else {
-                    gpl.log('Successfully updated sequence point property', property);
-                    gpl.point = tmpData;
-                }
-            },
-            updateUpdateInterval = function (newValue) {
+        var updateUpdateInterval = function (newValue) {
                 // This function is called anytime the update interval (mins or secs) is updated via the sequence properties modal
                 let mins = +managerSelf.bindings.deviceUpdateIntervalMinutes() || 0;
                 let secs = +managerSelf.bindings.deviceUpdateIntervalSeconds() || 0;
                 let val = (mins*60) + secs;
 
-                gpl.point['Update Interval'].Value = val; // ch1026; update this sequence property immediately after changes made
-                formatSequencePoint('Update Interval', val);
+                gpl.seqProps.updateInterval = val;
 
                 gpl.manager.bindings.hasEdits(true);
-            },
-            setNames = () => {
-                managerSelf.bindings.sequenceName(dtiCommon.getPointName(gpl.point.path));
-                managerSelf.bindings.deviceName(dtiCommon.getPointName(gpl.devicePoint.path));
-            },
-            handlers = {
-                deviceDescription: function (val) {
-                    gpl.point.Description.Value = val; //validate?
-                }
-            },
-            syncDeviceProperties = function () {
-                let props = ko.toJS(managerSelf.bindings),
-                    devicePoint = gpl.devicePointRef;
-
-                gpl.point.Description.Value = props.deviceDescription;
-                devicePoint.pointName = props.deviceName;
-                devicePoint.DevInst = devicePoint.PointInst = devicePoint.Value = props.deviceUpi;
             };
 
         managerSelf.addToBindings({
@@ -9595,9 +9599,6 @@ gpl.Manager = function () {
             hasEditVersion: ko.observable(false),
             loaded: managerSelf.sequenceLoaded,
             editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
-
-            backgroundColor: ko.observable(managerSelf.backgroundColor),
-            deviceBackgroundColor: ko.observable(managerSelf.backgroundColor),
 
             controllers: gpl.controllers,
 
@@ -9687,69 +9688,55 @@ gpl.Manager = function () {
                     managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
-                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.deviceId, 'GPLDynamic', 440);
+                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.seqProps.deviceId, 'GPLDynamic', 440);
                 });
             },
 
-            // TODO - doesn't look like this is used any longer
-            // showBackgroundColorModal: function () {
-            //     gpl.openModal(gpl.$colorpickerModal);
-            // },
-            //
-            // hideBackgroundColorModal: function () {
-            //     managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
-            //     gpl.closeModal(gpl.$colorpickerModal);
-            // },
-
-            updateBackgroundColor: function () {
-                var val = managerSelf.bindings.deviceBackgroundColor();
-                managerSelf.bindings.backgroundColor(val);
-                managerSelf.canvas.backgroundColor = '#' + val;
-                // managerSelf.bindings.hideBackgroundColorModal();
-                gpl.json.backgroundColor = val;
-                managerSelf.renderAll();
-            },
-
             applyShowLabel: function () {
-                var bool = gpl.point['Show Label'].Value; // ch1026; get the value from the sequence prop
                 managerSelf.pauseRender();
-                gpl.blockManager.applyShowLabel(bool);
+                gpl.blockManager.applyShowLabel(gpl.seqProps.showLabel);
                 managerSelf.resumeRender();
+
+                gpl.toast('New setting applied to all blocks', 1000);
             },
 
             applyShowValue: function () {
-                var bool = gpl.point['Show Value'].Value; // ch1026; get the value from the sequence prop
                 managerSelf.pauseRender();
-                gpl.blockManager.applyShowValue(bool);
+                gpl.blockManager.applyShowValue(gpl.seqProps.showValue);
                 managerSelf.resumeRender();
+
+                gpl.toast('New setting applied to all blocks', 1000);
             },
 
             applyUpdateInterval: function () {
                 var interval = managerSelf.bindings.deviceUpdateIntervalMinutes() * 60 + managerSelf.bindings.deviceUpdateIntervalSeconds();
 
                 gpl.blockManager.applyUpdateInterval(interval);
+
+                gpl.toast('New update interval applied to all blocks', 1000);
             },
 
             applyController: function () {
-                var controllerValue = managerSelf.bindings.deviceControllerValue(),
+                var controllerValue = gpl.seqProps.controller,
                     controllerName = gpl.controllers[controllerValue].name;
 
                 gpl.blockManager.applyController(controllerName, controllerValue);
+
+                gpl.toast('New controller applied to all blocks', 1000);
             },
 
-            sequenceName: ko.observable(),
-            deviceName: ko.observable(),
-            deviceUpi: ko.observable(gpl.devicePointRef.PointInst),
-            deviceDescription: ko.observable(gpl.point.Description.Value),
+            sequenceName: ko.observable(dtiCommon.getPointName(gpl.point.path)),
+            deviceName: ko.observable(dtiCommon.getPointName(gpl.devicePoint.path)),
+            deviceDescription: ko.observable(gpl.seqProps.description),
 
-            deviceControllerName: ko.observable(gpl.point.Controller.Value),
-            deviceControllerValue: ko.observable(gpl.point.Controller.eValue),
+            deviceControllerName: ko.observable(gpl.controllers[gpl.seqProps.controller].name),
+            deviceControllerValue: ko.observable(gpl.seqProps.controller),
 
-            deviceShowLabel: ko.observable(gpl.point['Show Label'].Value),
-            deviceShowValue: ko.observable(gpl.point['Show Value'].Value),
+            deviceShowLabel: ko.observable(gpl.seqProps.showLabel),
+            deviceShowValue: ko.observable(gpl.seqProps.showValue),
 
-            deviceUpdateIntervalSeconds: ko.observable(+gpl.point['Update Interval'].Value % 60),
-            deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
+            deviceUpdateIntervalSeconds: ko.observable(+gpl.seqProps.updateInterval % 60),
+            deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.seqProps.updateInterval / 60)),
 
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
@@ -9774,25 +9761,14 @@ gpl.Manager = function () {
                         gpl.log('Error setting device point:', tmpData.err);
                         gpl.showMessage('Error setting device point: ' + tmpData.err);
                     } else {
-                        managerSelf.bindings.deviceName(dtiCommon.getPointName(selectedPoint.path));
-                        managerSelf.bindings.deviceUpi(upi);
-
-                        gpl.log('Set device point Successfully');
-
                         // ch1026; cleaned up this logic and moved from the old function which was deleted w/ ch1026 (updateSequenceProperties)
                         if (gpl.devicePoint._id !== selectedPoint._id) {
-                            gpl.devicePoint = selectedPoint;
-                            gpl.deviceId = selectedPoint._id;
+                            gpl.log('Set device point Successfully');
 
-                            // Update the sequence's device point; calling formatPoint instead of setting values directly as part of ch1012
-                            gpl.point['Point Refs'][0].Value = gpl.deviceId;
-                            gpl.point['Point Refs'][0].PointName = dtiCommon.getPointName(gpl.devicePoint.path); // ch989
-                            gpl.formatPoint({
-                                point: gpl.point,
-                                oldPoint: gpl.point,
-                                property: 'Device Point',
-                                refPoint: gpl.devicePoint
-                            });
+                            managerSelf.bindings.deviceName(dtiCommon.getPointName(selectedPoint.path));
+
+                            gpl.devicePoint = selectedPoint;
+                            gpl.seqProps.deviceId = selectedPoint._id;
 
                             // Update all blocks' device point; modifying this heavily as part of ch1012
                             gpl.blockManager.forEachBlock(function (block) {
@@ -9800,8 +9776,8 @@ gpl.Manager = function () {
 
                                 if (!block.isToolbar) {
                                     if (block.isNonPoint !== true) {
-                                        block._pointData['Point Refs'][0].Value = gpl.deviceId;
-                                        block._pointData['Point Refs'][0].PointName = gpl.point['Point Refs'][0].PointName;
+                                        block._pointData['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                                        block._pointData['Point Refs'][0].PointName = managerSelf.bindings.deviceName();
                                         gpl.formatPoint({
                                             point: block._pointData,
                                             oldPoint: block._pointData,
@@ -9815,7 +9791,7 @@ gpl.Manager = function () {
 
                                         // ch1012 & ch1017; Check if output block on a different device (outputs must reside on the same device)
                                         if (block.blockType === 'Output') {
-                                            if (block._pointData && (block._pointData['Point Refs'][0].PointInst !== gpl.deviceId)) {
+                                            if (block._pointData && (block._pointData['Point Refs'][0].PointInst !== gpl.seqProps.deviceId)) {
                                                 block.setInvalid();
                                             } else {
                                                 block.setValid();
@@ -9876,31 +9852,25 @@ gpl.Manager = function () {
 
         managerSelf.bindings.deviceUpdateIntervalMinutes.subscribe(updateUpdateInterval);
         managerSelf.bindings.deviceUpdateIntervalSeconds.subscribe(updateUpdateInterval);
+
         managerSelf.bindings.deviceShowValue.subscribe(function (newValue) {
-            gpl.point['Show Value'].Value = newValue; // ch1026; update this sequence property immediately after changes made
-            formatSequencePoint('Show Value', newValue);
+            gpl.seqProps.showValue = newValue;
+            managerSelf.bindings.hasEdits(true);
         });
+
         managerSelf.bindings.deviceDescription.subscribe(function (newDescription) {
-            gpl.point.Description.Value = newDescription;
+            gpl.seqProps.description = newDescription;
+            managerSelf.bindings.hasEdits(true);
         });
+
         managerSelf.bindings.deviceControllerValue.subscribe(function (eValue) {
-            gpl.point.Controller.eValue = eValue;
-            gpl.point.Controller.Value = gpl.controllers[eValue].name;
+            gpl.seqProps.controller = eValue;
+            managerSelf.bindings.hasEdits(true);
         });
 
         managerSelf.bindings.deviceShowLabel.subscribe(function (newValue) {
-            gpl.point['Show Label'].Value = newValue; // ch1026; update this sequence property immediately after changes made
-            formatSequencePoint('Show Label', newValue);
-        });
-
-        managerSelf.bindings.backgroundColorHex = ko.computed(function () {
-            var color = '#' + managerSelf.bindings.backgroundColor();
-
-            if (!gpl.isEdit) {
-                gpl.$body.css('background-color', color);
-            }
-
-            return color;
+            gpl.seqProps.showLabel = newValue;
+            managerSelf.bindings.hasEdits(true);
         });
 
         managerSelf.$saveButton.click(function () {
@@ -10444,8 +10414,6 @@ gpl.Manager = function () {
                 });
             }
         };
-
-        setNames();
     };
 
     managerSelf.initCanvas = function () {
@@ -10454,7 +10422,7 @@ gpl.Manager = function () {
                 imageSmoothingEnabled: false,
                 selection: false, //group selection
                 // selection: true, //group selection
-                backgroundColor: '#' + managerSelf.backgroundColor,
+                backgroundColor: '#' + gpl.seqProps.backgroundColor,
                 hasControls: false,
                 preserveObjectStacking: true,
                 hoverCursor: 'default'
@@ -10470,7 +10438,7 @@ gpl.Manager = function () {
             viewConfig = {
                 renderOnAddRemove: false,
                 imageSmoothingEnabled: false,
-                backgroundColor: '#' + managerSelf.backgroundColor,
+                backgroundColor: '#' + gpl.seqProps.backgroundColor,
                 hasControls: false,
                 selection: false,
                 draggable: false,
@@ -11177,11 +11145,17 @@ gpl.Manager = function () {
             managerSelf.contextMenu.jqxMenu('close');
         });
 
-        managerSelf.handleColorChange = function (newColor) {
-            managerSelf.bindings.deviceBackgroundColor(newColor);
+        managerSelf.handleColorChange = function (color) {
+            gpl.seqProps.backgroundColor = color;
+
+            managerSelf.canvas.backgroundColor = '#' + color;
+            
+            managerSelf.renderAll();
+
+            managerSelf.bindings.hasEdits(true);
         };
 
-        managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, managerSelf.backgroundColor);
+        managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, gpl.seqProps.backgroundColor);
         managerSelf.bgColorPicker.render();
     };
 

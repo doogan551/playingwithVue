@@ -82,20 +82,23 @@ body {
     margin-bottom: 5px !important;
 }
 
-#gplSequenceProperties .row {
+#gplSequenceProperties .row.valign-center {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 #gplSequenceProperties .controllerDropdown {
-    margin-top: -119px;
+    /*margin-top: -119px;*/
 }
 
 #gplSequenceProperties .gplUpdateIntervalMins {
-    width: 10%;
+    /*width: 10%;*/
 }
 
 #gplSequenceProperties .gplUpdateIntervalSecs {
-    width: 10%;
+    /*width: 10%;*/
 }
 
 .spacedControls > .form-group {
@@ -231,11 +234,11 @@ body {
 
 
 .colorpicker span {
-    color: #ccc;
+    /*color: #ccc;*/
 }
 
 .colorpicker {
-    margin-bottom: 5px;
+    /*margin-bottom: 5px;*/
 }
 
 .contextMenu {
@@ -355,7 +358,7 @@ body {
 /* Added w/ ch485; Some css clashing causing screwy label presentation on screen. This rule addresses that */
 .dtiModal .input-field label {
     font-size: 0.8rem;
-    top: -0.8rem;
+    /*top: -0.8rem;*/
 }
 
 /* Added w/ ch900 */

@@ -46,56 +46,58 @@ html
             .modal-header
                 .modalTitle Sequence Properties
             .modal-content
-                .row
-                    .col.s12
+                .row.valign-center
+                    .col.s3 Device Point
+                    .col.s6.pointName(data-bind="text: deviceName")
+                    .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: selectDevicePoint") Select Device
-                        span.pointName(data-bind="text: deviceName")
-                .row
-                    .col.s6
-                        .input-field
-                            label(for="gplDescription") Sequence Description
-                            input#gplDescription(type="text", data-bind="textInput: deviceDescription")
-                    .col.s6.colorPicker
-                        div Background Color
-                        div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
-                .row
-                    .col.s5.blue-grey-text.controllerDropdown
-                        label(for="controllerDropdown") Controller
+                .row.valign-center
+                    .col.s3 Description
+                    .col.s9
+                        input(type="text", data-bind="textInput: deviceDescription")
+                .row.valign-center
+                    .col.s3 Controller
+                    .col.s6.blue-grey-text.controllerDropdown
                         //- ch939; use browser default select element
                         select#controllerDropdown.browser-default(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
+                    .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyController") Apply All
-                .row(style="margin-top: 30px;margin-bottom: 3px")
-                    .col.s6
-                        span Update Interval
-                    .col.s6
-                        span Block Attributes
-                .row(style="margin-bottom: 3px;")
-                    .col.s2.gplUpdateIntervalMins
+                .row.valign-center
+                    .col.s3 Update Interval
+                    .col.s3.gplUpdateIntervalMins
                         .input-field
                             label(for="deviceUpdateIntMins") Mins
                             input#deviceUpdateIntMins(type="number", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
-                    .col.s2.gplUpdateIntervalSecs
+                    .col.s3.gplUpdateIntervalSecs
                         .input-field
                             label(for="deviceUpdateIntSecs") Secs
                             input#deviceUpdateIntSecs(type="number", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
-                    .col.s2
-                        .blankColumn
-                    .col.s3.right
-                        .input-field
-                            input#checkboxShowValue.medium.filled-in(type="checkbox", data-bind="checked: deviceShowValue")
-                            label(for="checkboxShowValue") Show Value
-                    .col.s3.right
-                        .input-field
-                            input#checkboxShowLabel.medium.filled-in(type="checkbox", data-bind="checked: deviceShowLabel")
-                            label(for="checkboxShowLabel") Show Label
-                .row.applyButtons
-                    .col.s4
+                    .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyUpdateInterval") Apply All
-                    .col.s3.right
+                .row
+                    .col.s3 Block Attributes
+                    .col.s6
+                        input#checkboxShowValue.medium.filled-in(type="checkbox", data-bind="checked: deviceShowValue")
+                        label(for="checkboxShowValue") Show Value
+                    .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyShowValue") Apply All
-                    .col.s3.right
+                .row
+                    .col.s3 &nbsp;
+                    .col.s6
+                        input#checkboxShowLabel.medium.filled-in(type="checkbox", data-bind="checked: deviceShowLabel")
+                        label(for="checkboxShowLabel") Show Label
+                    .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: applyShowLabel") Apply All
-            .modal-footer
+                .row(style="margin-top: 20px;")
+                    .col.s3 Background Color
+                    .col.s9
+                        #bgColorPicker(data-dropdown="false", data-sm-palette="false", data-vertical="true", data-insertpalette="false")
+                //- .row.applyButtons
+                    .col.s4
+                        
+                    .col.s3.right
+                        
+            //- .modal-footer
                 //- ch1026; removed save button (all changes effective immediately)
                 .row
                     .col All changes are automatically applied. Click off this modal to close it and return to the gpl sequence.
