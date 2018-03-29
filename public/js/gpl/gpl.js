@@ -2105,31 +2105,34 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     processValue: gpl.emptyFn,
 
     syncAnchorValue: function (anchor, val) {
-        var getKeyBasedOnValue = function (obj, value) {
+        var valueOption;
+        var ret = val;
+        var prop = this._pointData[anchor.constantProp];
+        var getKeyBasedOnValue = function (obj) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
-                    if (obj[key] === parseInt(value, 10)) {
+                    if (obj[key] === parseInt(val, 10)) {
                         return key;
                     }
                 }
             }
         };
 
-        if (anchor.constantProp && val !== undefined) {
-            let valueOption;
-            if (!!this._pointData[anchor.constantProp].ValueOptions) {
-                valueOption = getKeyBasedOnValue(this._pointData[anchor.constantProp].ValueOptions, val);
-            }
-
-            if (!!valueOption) {
-                this._pointData[anchor.constantProp].eValue = val;
-                this._pointData[anchor.constantProp].Value = valueOption;
+        if (prop && val !== undefined) {
+            if (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) { // ch997; make sure ValueType is enum (previously just relied on presence of ValueOptions key)
+                valueOption = getKeyBasedOnValue(prop.ValueOptions);
+                
+                if (!!valueOption) {
+                    prop.eValue = val;
+                    prop.Value = valueOption;
+                    ret = valueOption;
+                }
             } else {
-                this._pointData[anchor.constantProp].Value = val;
+                prop.Value = val;
             }
         }
         gpl.fire('editedblock', this);
-        // this._pointData[type].Value = val;
+        return ret;
     },
 
     getReferencePoint: function (isNew) {
