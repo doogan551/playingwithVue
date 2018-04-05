@@ -8147,13 +8147,49 @@
                     "msgId": 0,
                     "ack": false,
                     "notify": false
+                }, {
+                    "msgType": 5,
+                    "msgId": 0,
+                    "ack": false,
+                    "notify": false
                 }],
-                "Alarm State": {
+                "Alarm Class": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Normal",
+                    "eValue": 0
+                },
+                "Alarm Delay Time": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 0
+                },
+                "Alarm Repeat Enable": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Alarm Repeat Time": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 17,
+                    "Value": 0
+                },
+               "Alarm State": {
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
                     "Value": "Normal",
                     "eValue": 0
+                },
+                "Alarms Off": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Broadcast Enable": {
                     "isDisplayable": true,
@@ -8193,11 +8229,37 @@
                     "ValueType": 7,
                     "Value": true
                 },
+                "Default Value": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0
+                },
+                "Demand Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Demand Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
+                },
                 "Description": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
+                },
+                "Fail Action": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Fail",
+                    "eValue": 2
                 },
                 "Input Type": {
                     "isDisplayable": false,
@@ -8216,6 +8278,17 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
+                },
+                "Interlock State": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Off": 0,
+                        "On": 1
+                    }
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -8249,6 +8322,42 @@
                 }, {
                     "PropertyName": "Remote Unit Point",
                     "PropertyEnum": 152,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Alarm Display Point",
+                    "PropertyEnum": 137,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Interlock Point",
+                    "PropertyEnum": 148,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Monitor Point",
+                    "PropertyEnum": 150,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Feedback Point",
+                    "PropertyEnum": 141,
                     "AppIndex": 0,
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -8310,7 +8419,8 @@
                     "ValueOptions": {
                         "Off": 0,
                         "On": 1
-                    }
+                    },
+                    "AlarmValues": [1]
                 },
                 "Status Flags": {
                     "isDisplayable": true,
