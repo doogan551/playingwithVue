@@ -4714,7 +4714,6 @@ var Config = (function (obj) {
             obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = monitorPoint;
             return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
-
         applyAccumulatorDevModel: function (data) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
