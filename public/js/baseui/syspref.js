@@ -117,8 +117,8 @@ var sysPrefsViewModel = (function() {
     });
 
     $(window).on('hashchange', function() {
-        var displayName = location.hash.substring(1);
-        self.section(decodeURI(displayName));
+        var displayName = decodeURIComponent(location.hash.substring(1));
+        self.section(displayName);
     });
 
     return self;
