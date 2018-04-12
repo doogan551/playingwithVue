@@ -118,7 +118,7 @@ var sysPrefsViewModel = (function() {
 
     $(window).on('hashchange', function() {
         var displayName = location.hash.substring(1);
-        self.section(displayName);
+        self.section(decodeURI(displayName));
     });
 
     return self;
