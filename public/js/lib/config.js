@@ -4672,7 +4672,8 @@ var Config = (function (obj) {
         applyMultiStateValueDevModel: function (data) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
-                setDisplayable = obj.Utility.setDisplayable;
+                setDisplayable = obj.Utility.setDisplayable,
+                monitorPoint = false;
 
             setDisplayable(point, ['Instance', 'Read Only', 'Input Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
@@ -4706,12 +4707,13 @@ var Config = (function (obj) {
                         break;
 
                     default: // Unknown, no RMU
-                        break;
+                        monitorPoint = true;
+                    break;
                 }
             }
-            return point;
+            obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = monitorPoint;
+            return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
-
         applyAccumulatorDevModel: function (data) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],

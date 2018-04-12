@@ -8,7 +8,7 @@ const rtdTables = require('../lib/rtdTables');
 const CurveFit = class CurveFit {
     doFit(_data, cb) {
         let type = _data.type;
-        let data = _data;
+        let data = _data.data;
 
         if (type === 'Cubic') {
             this.polyFit(data, cb);
