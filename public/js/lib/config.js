@@ -4632,7 +4632,7 @@ var Config = (function (obj) {
         applyAnalogValueDevModel: function (data) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
-                monitorPoint = false;
+                isMonitorPointDisp = false;
 
             obj.Utility.setDisplayable(point, ['Instance', 'Read Only'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
@@ -4654,14 +4654,14 @@ var Config = (function (obj) {
                     case rmuEnums['MS3 RT'].enum:
                     case rmuEnums['MS 3 EEPROM'].enum:
                     case rmuEnums['MS 3 Flash'].enum:
-                        monitorPoint = true;
+                        isMonitorPointDisp = true;
                         break;
 
                     default:
                         break;
                 }
             }
-            obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = monitorPoint;
+            obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = isMonitorPointDisp;
             return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
 
