@@ -897,7 +897,7 @@ const Point = class Point extends Common {
                 }
 
                 if (pointType === 'Schedule Entry') {
-                    display = `${pointType} ${uuid}`;
+                    display = `${pointType}_${uuid}`;
                 }
 
                 if (targetUpi && targetUpi !== 0) {
