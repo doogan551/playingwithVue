@@ -8,6 +8,7 @@
     "globals": {
         "dti": true,
         "moment": true,
+        "alert": true,
         "ko": true,
         "store": true,
         "Materialize": true,
@@ -20,6 +21,7 @@
         "define": true,
         "CustomColorsPicker": true,
         "checkValues": true,
-        "mbox": true
+        "mbox": true,
+        "dtiCommon": true
     }
 }

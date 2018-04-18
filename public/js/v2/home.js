@@ -1230,10 +1230,10 @@ var dti = {
             scroll: false,
             handle: '.card-toolbar',
             start: function () {
-                dti.windows.dragStart();
+                dti.windows.dragStart.apply(this, arguments);
             },
             stop: function () {
-                dti.windows.dragStop();
+                dti.windows.dragStop.apply(this, arguments);
             }
         },
         resizableConfig: {
@@ -1294,13 +1294,28 @@ var dti = {
                 bindings = win.bindings;
                 bindings.width(obj.size.width + 'px');
                 bindings.height(obj.size.height + 'px');
+                bindings.left(obj.position.left + 'px');
+                bindings.top(obj.position.top + 'px');
             }
             dti.windows._setInteractingFlag(false);
         },
         dragStart: function () {
             dti.windows._setInteractingFlag(true);
         },
-        dragStop: function () {
+        dragStop: function (event, obj) {
+            var $el = $(obj.element),
+                win = dti.windows.getWindowById($el.attr('id')),
+                bindings;
+
+            // shouldn't ever be null
+            if (win) {
+                bindings = win.bindings;
+                bindings.width(obj.size.width + 'px');
+                bindings.height(obj.size.height + 'px');
+                bindings.left(obj.position.left + 'px');
+                bindings.top(obj.position.top + 'px');
+            }
+
             dti.windows._setInteractingFlag(false);
         },
         init: function () {
@@ -4030,7 +4045,7 @@ var dti = {
                         self._request.abort();
                     }
 
-                    // self._request = $.ajax(ajaxParameters);
+                    self._request = $.ajax(ajaxParameters);
 
                     self._request.done(self.handleDataReturn);
                 }
@@ -4300,7 +4315,8 @@ var dti = {
             //     callback: dti.navigator.handleContextMenuClick
             // });
 
-            dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
+            // disabling the old navigator
+            // dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
     navigatorv2: {
@@ -7896,7 +7912,7 @@ var dti = {
                             if (cb) {
                                 cb();
                             }
-                        }
+                        };
 
                     $.ajax({
                         url: '/api/system/preferences'
@@ -8342,11 +8358,11 @@ var dti = {
             checkDtiCommonReadiness = () => {
                 if (window.dtiCommon && dtiCommon.init.isComplete) {
                     window.setTimeout(function () {
-                        runInits()
+                        runInits();
                     }, 10);
                 } else {
                     window.setTimeout(function () {
-                        checkDtiCommonReadiness()
+                        checkDtiCommonReadiness();
                     }, 800);
                 }
             },
