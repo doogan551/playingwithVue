@@ -2659,7 +2659,7 @@ const Point = class Point extends Common {
     }
 
     //updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
-    deletePoint(upi, user, options, callback) {
+    deletePoint(upi, method, user, options, callback) {
         const activityLog = new ActivityLog();
         const history = new History();
         const schedule = new Schedule();
@@ -2671,7 +2671,7 @@ const Point = class Point extends Common {
                 user: user,
                 timestamp: Date.now()
             },
-            _method = 'soft',
+            _method = method || 'soft',
             _warning = '',
             _buildWarning = (msg) => {
                 if (_warning.length) {
@@ -3429,7 +3429,7 @@ const Point = class Point extends Common {
         };
         async.waterfall([(callback) => {
             async.mapSeries(data.deletes, (upi, mapCallback) => {
-                this.deletePoint(upi, user, null, (response) => { // Changed calling arguments per Rob (gpl was throwing error when saving a sequence with deleted blocks)
+                this.deletePoint(upi, '', user, null, (response) => { // Changed calling arguments per Rob (gpl was throwing error when saving a sequence with deleted blocks)
                     mapCallback(response.err);
                 });
             }, (err, newPoints) => {
