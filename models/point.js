@@ -883,6 +883,7 @@ const Point = class Point extends Common {
         let subType = (data.pointSubType ? data.pointSubType : {});
 
         let display = data.display;
+        let uuid = this.getUuid();
         let parentNode = this.getDefault(data.parentNode, 0);
         let pointType = data.pointType;
         let targetUpi = this.getDefault(data.targetUpi, 0);
@@ -895,10 +896,9 @@ const Point = class Point extends Common {
                     return callback(err);
                 }
 
-                // if (pointType === 'Schedule Entry') {
-                //     name2 = '0';
-                //     buildName(name1, name2, name3, name4);
-                // }
+                if (pointType === 'Schedule Entry') {
+                    display = `${pointType} ${uuid}`;
+                }
 
                 if (targetUpi && targetUpi !== 0) {
                     criteria = {
@@ -955,7 +955,7 @@ const Point = class Point extends Common {
         };
 
         let fixPoint = (template, isClone, sysInfo, callback) => {
-            template.id = display.toString() + this.getUuid();
+            template.id = display.toString() + uuid;
             template.display = display;
             template._pStatus = Config.Enums['Point Statuses'].Inactive.enum;
             template._actvAlmId = ObjectID('000000000000000000000000');
