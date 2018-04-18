@@ -837,7 +837,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
 
                 self.updateSaveButton();
 
-                item.ValueOptions = (data.hasOwnProperty('Value') && data.Value.hasOwnProperty('ValueOptions')) ? enumToArray(data.Value.ValueOptions) : [];
+                item.ValueOptions((data.hasOwnProperty('Value') && data.Value.hasOwnProperty('ValueOptions')) ? enumToArray(data.Value.ValueOptions) : []);
 
                 var newIndiv = config.EditChanges.applyUniquePIDLogic({
                     point: ko.viewmodel.toModel(indiv),
@@ -886,19 +886,20 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
 
             if (valueTypeInt === 5) {
                 if (property === 'Program Change Request') {
-                    item.ValueOptions = config.Utility.pointTypes.getEnums(property, property);
+                    item.ValueOptions(config.Utility.pointTypes.getEnums(property, property));
                     //indiv["Control Value"].eValue = ko.observable(item.ValueOptions[1].value);
                     //indiv["Control Value"].Value = ko.observable(item.ValueOptions[1].name);
                 } else {
-                    item.ValueOptions = enumToArray(item.refPoint.Value.ValueOptions);
+                    item.ValueOptions(enumToArray(item.refPoint.Value.ValueOptions));
                     //indiv["Control Value"].eValue = ko.observable(pointtypePropertyTemplate.eValue);
                 }
-                item.ValueOptions = ko.viewmodel.toModel(item.ValueOptions);
+                item.ValueOptions(ko.viewmodel.toModel(item.ValueOptions));
                 for (var i = 0; i < item.ValueOptions.length; i++) {
                     if (indiv['Control Value'].Value() === item.ValueOptions[i].name) {
                         indiv['Control Value'].eValue(item.ValueOptions[i].value);
                     }
                 }
+                item.ValueOptions.valueHasMutated();
             } else if (valueTypeInt === 1) {
                 if (item.lastValueType() !== 1) {
                     item.lastValueType(valueTypeInt);
@@ -913,9 +914,9 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         });
         indiv['Control Value'].eValue = ko.observable();
         indiv['Control Value'].eValue.subscribe(function (evalue) {
-            for (var i = 0; i < item.ValueOptions.length; i++) {
-                if (evalue === item.ValueOptions[i].value) {
-                    indiv['Control Value'].Value(item.ValueOptions[i].name);
+            for (var i = 0; i < item.ValueOptions().length; i++) {
+                if (evalue === item.ValueOptions()[i].value) {
+                    indiv['Control Value'].Value(item.ValueOptions()[i].name);
                 }
             }
         });
@@ -1044,7 +1045,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
     function sortArray(prop, dir) {
         var opp = ~dir + 1; // Get opposite direction (-1 to 1 or 1 to -1)
         return this.sort(function (obj1, obj2) {
-            console.log(prop, obj1, obj1[prop]);
+            // console.log(prop, obj1, obj1[prop]);
             if (prop === 'scheduleName') {
                 return (obj1[prop]() === obj2[prop]()) ? 0 : (obj1[prop]() < obj2[prop]()) ? opp : dir;
             } else if (prop === 'refPoint') {
