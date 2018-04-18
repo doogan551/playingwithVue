@@ -1228,6 +1228,7 @@ var dti = {
         draggableConfig: {
             containment: 'main',
             scroll: false,
+            stack: '.dti-card-panel',
             handle: '.card-toolbar',
             start: function () {
                 dti.windows.dragStart.apply(this, arguments);
