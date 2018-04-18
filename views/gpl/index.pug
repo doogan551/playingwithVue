@@ -47,14 +47,14 @@ html
                 .modalTitle Sequence Properties
             .modal-content
                 .row.valign-center
+                    .col.s3 Description
+                    .col.s9
+                        input(type="text", data-bind="textInput: deviceDescription")
+                .row.valign-center
                     .col.s3 Device Point
                     .col.s6.pointName(data-bind="text: deviceName")
                     .col.s3
                         .btn.btn-small.waves-effect.waves-light.blue-grey(data-bind="click: selectDevicePoint") Select Device
-                .row.valign-center
-                    .col.s3 Description
-                    .col.s9
-                        input(type="text", data-bind="textInput: deviceDescription")
                 .row.valign-center
                     .col.s3 Controller
                     .col.s6.blue-grey-text.controllerDropdown
@@ -299,25 +299,21 @@ html
                     .row &nbsp;
                 
                 .row(data-bind="visible: editBlockType() === 'Constant'")
-                    //.row
-                    //    .col.s4.subtitle Configuration
-                    .row
+                    .col.s3
+                        label Value
                         // ko if: (editPointValueOptions().length > 0)
-                        .col.s3
-                            label Options
-                            select.form-control.input-sm(data-bind="options: editPointValueOptions, optionsText: 'name', optionsValue: 'value', value: editPointValue")
+                        select.browser-default(style="height: inherit;", data-bind="options: editPointValueOptions, optionsText: 'value', optionsValue: 'eValue', value: editPointValue")
                         // /ko
                         // ko if: (editPointValueOptions().length === 0)
-                        .col.s3
-                            label(for="constantvalue") Value
-                            //- Use of the textInput binding provides instant updates when the input value changes (before onBlur), enabling the 'save' button as soon a valid value is supplied
-                            input#constantvalue.form-control.input-sm(type="number", data-bind="textInput: editPointValue")
+                        //- Use of the textInput binding provides instant updates when the input value changes (before onBlur), enabling the 'save' button as soon a valid value is supplied
+                        input.form-control.input-sm(type="number", data-bind="textInput: editPointValue")
                         // /ko
                 .row
-                    .col.s6.input-field
-                        //- ch485 check for label validity & indicate invalid label
-                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }, attr: { disabled: editPointLabelLocked }")
-                        label(for="blocklabel", data-bind="attr: { 'data-error': labelError }") Block Label
+                    .col.s6
+                        .input-field
+                            //- ch485 check for label validity & indicate invalid label
+                            label.active(for="blocklabel", data-bind="attr: { 'data-error': labelError }") Block Label
+                            input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }, attr: { disabled: editPointLabelLocked }")
                 .row
                     .col.s4 Numeric Format
                     .col.s2

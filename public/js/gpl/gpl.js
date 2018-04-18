@@ -86,7 +86,7 @@ var gpl = {
     pointApiPath: '/api/points/',
     defaultBackground: 'C8BEAA',
     jqxTheme: 'flat',
-    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value', 'valueOptions'],
+    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value'], // ch1083; don't save constant block valueOptions
     $body: $('body'),
     $tooltip: $('.gplTooltip'),
     $fontColorPicker: $('#fontColorPicker'),
@@ -680,8 +680,7 @@ var gpl = {
                 if (!!referencedObj) {
                     objRef = {
                         upi: referencedObj._id || referencedObj.id,
-                        name: referencedObj.Name,
-                        pointType: referencedObj['Point Type'].Value
+                        name: referencedObj.Name
                     };
                     answer = gpl.makePointRef(objRef, devInst, refType, refEnum);
                 }
@@ -713,7 +712,6 @@ var gpl = {
             'PointName': referencedPoint.name,
             'PointInst': referencedPoint.upi,
             'DevInst': devInst,   // TODO   what about external references?
-            'PointType': gpl.pointTypes[referencedPoint.pointType].enum
         };
 
         gpl.point['Point Refs'].push(pointRef);
@@ -923,7 +921,7 @@ var gpl = {
             setVars();
 
             if (pointType1 && pointType2) {
-                if (block2.type === 'Output' || block2.type === 'Input') { // ch991; also swap if block2 is an Input
+                if (block2.type === 'Output' || block2.type === 'Input' || block2.type === 'Constant') { // ch991; also swap if block2 is an Input; ch1083; also if block2 is a Constant
                     // gpl.log('swapped vars');
                     swapAnchors();
                     setVars();
@@ -931,7 +929,10 @@ var gpl = {
 
                 if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
                     if (pointType1 === 'Constant' && obj2.takesConstant === true) {
-                        isValid = true;
+                        isValid = block1.validateSelf({ // ch1083
+                            proposedAnchor: obj2,
+                            connectionAttempt: connectionAttempt
+                        });
                     } else {
                         property2 = anchorType2;
                         allowedPoints2 = gpl.getPointTypes(property2, pointType2);
@@ -1346,6 +1347,21 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         return ret;
     },
 
+    // ch 1083; added fn
+    getLine: function (otherAnchor) {
+        var self = this;
+        var ret;
+
+        gpl.forEachArray(this.getLines(), function (line) {
+            if (line.startAnchor === otherAnchor || line.endAnchor === otherAnchor) {
+                ret = line;
+                return false; // Break the forEachArray
+            }
+        });
+
+        return ret;
+    },
+
     redrawLine: function () {
         var self = this;
         gpl.forEach(self.attachedLines, function (line) {
@@ -1356,74 +1372,53 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         });
     },
 
-    adjustRelatedBlocks: function (adjustPointRefs) {
-        var self = this,
-            anchorType,
-            otherAnchor,
-            attachedBlock = self.myBlock(),
-            otherBlock,
-            currentLine,
-            i,
-            otherBlockFound = false,
-            numberOfLines;
-
-        numberOfLines = self.getLines().length;
-        // console.log('  adjustRelatedBlocks() ----------------------------------------------------------------------------------------------');
-        for (i = 0; i < numberOfLines; i++) {
-            otherBlock = undefined;
-            currentLine = self.getLines()[i];
-            if (!!currentLine) {
-                anchorType = self.anchorType;
-                otherAnchor = currentLine.getOtherAnchor(self);
-                otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId);
-            }
-
-            if (!!otherBlock) {
-                otherBlockFound = true;
-                if (anchorType) {
-                    if (adjustPointRefs) {
-                        // TFS #569 - send path instead of name
-                        otherBlock.setPointRef(otherAnchor.anchorType, attachedBlock.upi, attachedBlock.path, attachedBlock.pointType);
-                    }
-                    // console.log('  adjustRelatedBlocks() line  = [' + self.myBlock().label + '](' + self.gplId + ') ' + self.anchorType + ' <------------> ' + otherAnchor.anchorType + ' [' + otherAnchor.myBlock().label + '](' + otherAnchor.gplId + ') ');
-                    if (otherBlock.type === 'Comparator' && otherAnchor.anchorType !== 'Control Point') {
-                        if (otherBlock.inputAnchors.length === 2) {
-                            let siblingAnchor = (otherBlock.inputAnchors[0].anchorType === otherAnchor.anchorType ? otherBlock.inputAnchors[1] : otherBlock.inputAnchors[0]),
-                                comparatorLines = siblingAnchor.getLines(),
-                                j = 0,
-                                otherBlockLine,
-                                otherBlockInputBlock;
-
-                            for (j = 0; j < comparatorLines.length; j++) {
-                                otherBlockLine = comparatorLines[j];
-                                if (otherAnchor.anchorType !== otherBlockLine.endAnchor.anchorType) {
-                                    otherBlockInputBlock = gpl.blockManager.getBlock(otherBlockLine.startAnchor.gplId);
-                                    if (otherBlockInputBlock.blockType === 'Constant' && attachedBlock.getPointData()) {
-                                        otherBlockInputBlock.valueOptions = gpl.getArrayFromJSON(attachedBlock.getPointData().Value.ValueOptions);
-                                        otherBlockInputBlock.setPlaceholderText();
-                                        // console.log('  adjustRelatedBlocks() adjusting valueOptions on otherBlockInputBlock.label = ' + otherBlockInputBlock.label + '   ' + JSON.stringify(otherBlockInputBlock.valueOptions));
-                                    } else if (attachedBlock.blockType === 'Constant' && !!otherBlockInputBlock.getPointData() && !!otherBlockInputBlock.getPointData().Value) {
-                                        attachedBlock.valueOptions = gpl.getArrayFromJSON(otherBlockInputBlock.getPointData().Value.ValueOptions);
-                                        attachedBlock.setPlaceholderText();
-                                        // console.log('  adjustRelatedBlocks() adjusting valueOptions on attachedBlock.label = ' + attachedBlock.label + '   ' + JSON.stringify(attachedBlock.valueOptions));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (gpl.isEdit) {
-                    gpl.fire('editedblock', otherBlock);
-                }
-            } else if (!otherBlockFound && adjustPointRefs) {
-                // TFS #569 - send path instead of name
-                attachedBlock.setPointRef(self.anchorType, attachedBlock.upi, attachedBlock.path);
-            }
-        }
-    },
-
     myBlock: function () {
         return gpl.blockManager.getBlock(this.gplId);
+    },
+
+    // ch 1083; added fn
+    getConnectedAnchor: function () {
+        var self = this,
+            ret,
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret = anchor;
+                return false; // Break the forEach
+            }
+        });
+
+        return ret;
+    },
+
+    // ch 1083; added fn
+    getConnectedAnchors: function () {
+        var self = this,
+            ret = [],
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            anchor = null;
+
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret.push(anchor);
+            }
+        });
+
+        return ret;
     },
 
     getConnectedBlock: function () {
@@ -1449,6 +1444,27 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         return ret;
     },
 
+    // ch 1083; added fn
+    getConnectedBlocks: function () {
+        var self = this,
+            ret = [],
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret.push(gpl.blockManager.getBlock(anchor.gplId));
+            }
+        });
+
+        return ret;
+    },
+
     onAttach: function (fn) {
         this.attachFn = fn;
     },
@@ -1463,10 +1479,6 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.attachedLineCount++;
 
         this.attachFn(this, line);
-
-        if (gpl.rendered === true) {
-            this.adjustRelatedBlocks();
-        }
     },
 
     detach: function (line) {
@@ -1570,10 +1582,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             fn(self.outputAnchor);
         }
 
-        if (self.inputAnchor) {
-            fn(self.inputAnchor);
-        }
-
         if (self.shutdownAnchor) {
             fn(self.shutdownAnchor);
         }
@@ -1675,6 +1683,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
+            found = false,
+            otherPointData,
+            prop,
             path,
             upi,
             idx;
@@ -1701,7 +1712,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                     if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output')) {
                         // TFS #569 - send path instead of name
-                        self.setPointRef(anchor.anchorType, upi, path, otherBlock.pointType);
+                        self.setPointRef(anchor.anchorType, upi, path);
                     }
                     if (otherBlock.blockType === 'Constant') {
                         self.syncAnchorValue(anchor, otherBlock.value);
@@ -1719,6 +1730,46 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 // ch922; remove check for gpl.rendered - it was added to gpl.on('editedBlock')
                 if (path && path.length) {
                     gpl.fire('editedblock', self);
+                }
+            }
+        } else if (self.blockType === 'Constant') { // ch1083; add branch
+            // We'll just make sure we're connected to a block's anchor that supports a constant (this is pure CYB)
+            if (otherAnchor.constantProp) {
+                otherPointData = otherBlock.getPointData();
+                prop = otherPointData && otherPointData[otherAnchor.constantProp];
+
+                // The block's value takes on the connected block anchor's property
+                if (prop) {
+                    if (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                        gpl.forEach(prop.ValueOptions, function (val, key) {
+                            if (self.hasOwnProperty('value')) {
+                                if (val === self.value) {
+                                    self.valueText.setText(key);
+                                    found = true;
+                                    return false;
+                                }
+                            } else {
+                                self.value = val;
+                                self.valueText.setText(key);
+                                found = true;
+                                return false;
+                            }
+                        });
+
+                        if (!found) {
+                            self.valueText.setText(Object.keys(prop.ValueOptions)[0]);
+                            self.value = prop.ValueOptions[self.valueText.text];
+                        }
+                    } else { // It must be a float or integer type
+                        if (!self.hasOwnProperty('value')) {
+                            self.value = prop.Value;
+                            self.valueText.setText(prop.Value.toString());
+                        } else {
+                            // Update the other block's point data with the constant value
+                            otherBlock.syncAnchorValue(otherAnchor, self.value);
+                            self.valueText.setText(self.value.toString());
+                        }
+                    }
                 }
             }
         }
@@ -2104,35 +2155,27 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     processValue: gpl.emptyFn,
 
-    syncAnchorValue: function (anchor, val) {
-        var valueOption;
-        var ret = val;
+    syncAnchorValue: function (anchor, value) {
+        var ret = value;
+        var parsedValue = parseInt(value, 10);
         var prop = this._pointData[anchor.constantProp];
-        var getKeyBasedOnValue = function (obj) {
-            for (var key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    if (obj[key] === parseInt(val, 10)) {
-                        return key;
-                    }
-                }
-            }
-        };
 
-        if (prop && val !== undefined) {
+        if (prop && value !== undefined) {
             if (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) { // ch997; make sure ValueType is enum (previously just relied on presence of ValueOptions key)
-                valueOption = getKeyBasedOnValue(prop.ValueOptions);
-                
-                if (!!valueOption) {
-                    prop.eValue = val;
-                    prop.Value = valueOption;
-                    ret = valueOption;
-                }
+                gpl.forEach(prop.ValueOptions, function (val, key) {
+                    if (val === parsedValue) {
+                        prop.eValue = val;
+                        prop.Value = key;
+                        ret = key;
+                        return false; // Break the forEach
+                    }
+                });
             } else {
-                prop.Value = val;
+                prop.Value = value;
             }
         }
         gpl.fire('editedblock', this);
-        return ret;
+        return ret; // ch1083; return sync'd value
     },
 
     getReferencePoint: function (isNew) {
@@ -2278,7 +2321,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     // TFS #569 - accept 'path' argument instead of 'name' argument, and build PointName from given path
-    setPointRef: function (prop, upi, path, refPointType) {
+    setPointRef: function (prop, upi, path) {
         var data = this._pointData,
             refs,
             ref,
@@ -2299,12 +2342,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
                     ref.DevInst = (ref.DevInst === 0 ? gpl.seqProps.deviceId : ref.DevInst);
-                }
-
-                if (!!refPointType && !!gpl.pointTypes[refPointType]) {
-                    ref.PointType = gpl.pointTypes[refPointType].enum;
-                } else {
-                    ref.PointType = 0;
                 }
             // } else {
             //     gpl.log("setPointRef()  idx is undefined for property '" + prop + "'");
@@ -2430,13 +2467,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             isValid(anchor);
         }
 
-        if (valid && self.blockType === 'Constant') { // ch354 check constant value
-            if (isNaN(parseInt(self.value))) { // This passes for decimal values as well
-                valid = false;
-                gpl.validationMessage.push("Constant block, " + self.label + ", has an invalid value (" + self.value + ")");
-            }
-        }
-
         if (!valid) {
             self.setInvalid();
         } else {
@@ -2543,22 +2573,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var text,
             value;
 
-        if (this.valueText) {
-            if (this.blockType === 'Constant') {
-                value = this.value;
-                if (!!this.valueOptions && this.valueOptions.length > 0) {
-                    let result = this.valueOptions.filter(function (option) {
-                        return option.value === value;
-                    });
-                    this.valueText.setText(!!result[0] ? result[0].name : gpl.formatValue(this, value + ''));
-                } else {
-                    this.valueText.setText(gpl.formatValue(this, value + ''));
-                }
-            } else {
-                text = this.getPlaceholderText();
-                this.valueText.setText(text);
-            }
-
+        if (this.valueText && this.blockType !== 'Constant') {
+            text = this.getPlaceholderText();
+            this.valueText.setText(text);
             this.renderAll();
         }
     },
@@ -3183,38 +3200,249 @@ gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
     },
 
     postInit: function () {
-        if (this.value !== undefined) {
-            if (!!this.valueOptions) {
-                this.valueText.setText(gpl.formatValue(this, gpl.getNameBasedOnValue(this.valueOptions, this.value)));
-            } else {
-                this.valueText.setText(gpl.formatValue(this, this.value.toString()));
-            }
+        var self = this;
+        var valueOptions;
+
+        if (this.value) {
+            this.valueText.setText(gpl.formatValue(this, this.value.toString()));
         }
+
+        // This function updates the constant block's value shown on screen for all enum type constants
+        // We only save the constant's eValue, so that's why we need to look it up on load
+        gpl.on('rendered', function updateValueText() {
+            var found = false;
+
+            if (!self.isToolbar) {
+                valueOptions = self.getValueOptions();
+
+                if (valueOptions) {
+                    gpl.forEach(valueOptions, function (val, key) {
+                        if (val === self.value) {
+                            self.valueText.setText(key);
+                            found = true;
+                            return false;
+                        }
+                    });
+
+                    if (!found) {
+                        // TODO toast a message about this condition. Most likely, the connected block Input Point 1 was a multi-state value, and the states 
+                        // were changed
+                    }
+                }
+            }
+        });
 
         this.callSuper('postInit');
     },
 
-    setValue: function (val) { // for constant block
-        var lines,
-            anchor,
-            block,
-            c,
-            len,
-            numericValue = parseFloat(val);
+    getValueOptions: function () {
+        let ret;
+        let connAnchor = this.outputAnchor.getConnectedAnchor();
+        let connBlock = this.outputAnchor.getConnectedBlock();
 
-        this.valueText.setText(gpl.formatValue(this, numericValue));
+        if (connBlock) {
+            let pointData = connBlock.getPointData();
+            let prop = pointData && pointData[connAnchor.constantProp];
 
-        if (!isNaN(numericValue) && this.value !== numericValue) {
-            this.value = numericValue;
-
-            lines = this.outputAnchor.getLines();
-            len = lines.length;
-
-            for (c = 0; c < len; c++) {
-                anchor = lines[c].getOtherAnchor(this.outputAnchor);
-                block = gpl.blockManager.getBlock(anchor.gplId);
-                block.syncAnchorValue(anchor, numericValue);
+            if (prop && (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum)) {
+                ret = prop.ValueOptions;
             }
+        }
+
+        return ret;
+    },
+
+    validate: function () {
+        var isValid = this.validateSelf({
+            invalidateBlock: true
+        });
+
+        if (isValid) {
+            isValid = this.callSuper('validate');
+        }
+
+        return isValid;
+    },
+
+    // ch1083; added fn
+    validateSelf: function (_options) {
+        // options = {
+        //     connectionAttempt: boolean,      <optional - indicates the user is in the process of wiring the block up>
+        //     proposedAnchor: anchor object,   <optional - this is the proposed connection anchor that the user wants to make; it's not wired up yet>
+        // }
+        var self = this;
+        var isValid = true;
+        var defaultOptions = {
+                proposedAnchor: null,
+                connectionAttempt: false
+            };
+        var options = $.extend(defaultOptions, _options);
+        var pointData = this.getPointData();
+        var connectedAnchors = this.outputAnchor.getConnectedAnchors();
+        var isError = {
+                ValueType: false,
+                ValueOptions: false
+            };
+        var isBlockValid;
+        var block;
+        var prop;
+        var ValueOptions;
+        var ValueType;
+        var setInvalid = function (block, anchor) {
+                isBlockValid = false;
+                isValid = false;
+
+                if (!options.connectionAttempt) {
+                    block.setInvalid();
+                    self.outputAnchor.getLine(anchor).setInvalid();
+                }
+
+                return true;
+            };
+        var setValid = function (block, anchor) {
+                if (!options.connectionAttempt) {
+                    block.setValid();
+                    self.outputAnchor.getLine(anchor).setValid();
+                }
+            };
+
+        // Allow constants to be wired up before their value is set
+        if (!options.connectionAttempt && isNaN(parseInt(self.value))) { // This passes for decimal values as well
+            // This would be a really abnormal thing to happen because the constant's value is initially set when it is connected to a block,
+            // and validity checks are performed on the value before it is updated. Soooo, this is really just CYB
+            isValid = false;
+            gpl.validationMessage.push(self.label + " has an invalid value (" + self.value + ")");
+        }
+
+        if (options.proposedAnchor) {
+            connectedAnchors.push(options.proposedAnchor);
+        }
+
+        // Constant blocks can represent an enum or a float value, but they can't be both at the same time. Also, if representing an enum,
+        // then every block the constant is connected to must have the same enum set (ValueOptions); otherwise, how would you know what list 
+        // of values to show the user when they are selecting the constant's value?
+        gpl.forEachArray(connectedAnchors, function (anchor) {
+            isBlockValid = true;
+
+            block = anchor.myBlock();
+            prop = block.getPointData()[anchor.constantProp];
+
+            // The property not existing would be a really abnormal case, and probably won't happen unless/until we allow the user to wire up whatever they want
+            // despite errors (sometimes this is preferred for someone who knows what they're doing)
+            if (!prop) {
+                gpl.validationMessage.push(['Block', block.label, anchor.anchorType, 'does not accept constant inputs']);
+                return setInvalid(block, anchor);
+            }
+
+            // We need a base ValueType and ValueOptions to test everything else against. The first one is as good as any, don't you think?
+            if (ValueType === undefined) {
+                ValueType = prop.ValueType;
+                ValueOptions = prop.ValueOptions || {}; // The "|| {}" part is just CYB so "Object.keys(ValueOptions)", a few statements later, can't throw an error
+            }
+
+            // Make sure the value types are the same
+            if (prop.ValueType !== ValueType) {
+                isError.ValueType = true;
+                return setInvalid(block, anchor);
+            }
+            
+            // Make sure the enum sets are the same
+            if (ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                if (Object.keys(prop.ValueOptions).length !== Object.keys(ValueOptions).length) {
+                    isError.ValueOptions = true;
+                    return setInvalid(block, anchor);
+                }
+
+                gpl.forEachArray(Object.keys(ValueOptions), function (key) {
+                    if (!prop.ValueOptions.hasOwnProperty(key) || (prop.ValueOptions[key] !== ValueOptions[key])) {
+                        isError.ValueOptions = true;
+                        setInvalid(block, anchor);
+                        return false; // Break this forEach
+                    }
+                });
+            }
+
+            if (isBlockValid) {
+                setValid(block, anchor);
+            }
+        });
+
+        if (isError.ValueType) {
+            gpl.validationMessage.push([self.label, 'is connected to blocks that do not accept the same constant value type'].join(' '));
+        }
+        if (isError.ValueOptions) {
+            gpl.validationMessage.push([self.label, 'is connected to blocks that have different value options'].join(' '));
+        }
+
+        if (!options.connectionAttempt) {
+            if (isValid) {
+                self.setValid();
+            } else {
+                self.setInvalid();
+            }
+        }
+
+        return isValid;
+    },
+
+    // ch1083; added fn
+    // This function sets the constant's value by pulling from the block it is connected to
+    pullValue: function (connectedAnchor) {
+        var self = this;
+        var connectedBlock;
+        var connectedData;
+        var connectedProp;
+        var text;
+
+        // Normally, the connected anchor is supplied by the caller, mainly because this block could be connected to multiple things
+        // Get the first connected anchor if caller did not supply it
+        if (!connectedAnchor) {
+            connectedAnchor = self.outputAnchor.getConnectedAnchor();
+        }
+
+        // Gets the constant block's value from an anchor it's connected to
+        if (connectedAnchor && connectedAnchor.constantProp) {
+            connectedBlock = connectedAnchor.myBlock();
+            connectedData = connectedBlock.getPointData();
+            connectedProp = connectedData[connectedAnchor.constantProp];
+
+            if (connectedProp.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                if (self.value !== connectedProp.eValue) {
+                    gpl.forEach(connectedProp.ValueOptions, function (val, key) {
+                        if (self.value === val) {
+                            connectedProp.Value = key;
+                            connectedProp.eValue = val;
+                            return false; // Break the forEach
+                        }
+                    });
+                }
+                self.value = connectedProp.eValue;
+            } else {
+                self.value = connectedProp.Value;
+            }
+
+            self.valueText.setText(connectedProp.Value.toString());
+            self.renderAll();
+        }
+    },
+
+    setValue: function (value) { // for constant block
+        var self = this,
+            numericValue = parseFloat(value),
+            block;
+
+        if (!isNaN(numericValue)) {
+            if (this.value !== numericValue) {
+                self.value = numericValue;
+
+                gpl.forEachArray(self.outputAnchor.getConnectedAnchors(), function (anchor) {
+                    block = anchor.myBlock();
+                    value = block.syncAnchorValue(anchor, numericValue); // ch1083; save returned value; this may come back as a number or string
+                });
+            }
+
+            // ch1053; always update the text in case the precision was changed
+            this.valueText.setText(gpl.formatValue(this, value));
 
             this.renderAll();
             gpl.manager.bindings.hasEdits(true);
@@ -3286,7 +3514,7 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
     },
 
     validate: function () { // ch1012 & ch1017 (added fn)
-        var isValid = this.validateThis();
+        var isValid = this.validateSelf();
 
         if (isValid) {
             isValid = this.callSuper('validate');
@@ -3295,7 +3523,7 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
         return isValid;
     },
 
-    validateThis: function () { // ch1012 & ch1017 (added fn)
+    validateSelf: function () { // ch1012 & ch1017 (added fn)
         // This function only validates this block
         var pointData = this.getPointData();
         var isValid = true;
@@ -6656,7 +6884,43 @@ gpl.BlockManager = function (manager) {
                     currReferences = bmSelf.upis[editBlock.upi] || [],
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi],
                     anchor,
-                    prop;
+                    prop,
+                    // bringing a modified form of this function back from old commit, https://github.com/Dorsett-Tech/infoscanjs/blame/ba2e4cbb9b5ba2fb5945beb1fbdc292147b65674/public/js/gpl/gpl.js
+                    adjustAnchoredPoints = function () {
+                        gpl.forEachArray(anchor.getConnectedAnchors(), function (otherAnchor) {
+                            var otherBlock = otherAnchor.myBlock();
+                            var otherData = otherBlock.getPointData();
+                            var inputAnchor1;
+                            var otherBlock2;
+
+                            if (otherBlock) {
+                                otherBlock.setPointRef(otherAnchor.anchorType, bmSelf.editBlockUpi, editBlock._pointData.path);
+
+                                if (otherData) {
+                                    gpl.formatPoint({
+                                        point: otherData,
+                                        oldPoint: otherData,
+                                        property: otherAnchor.anchorType,
+                                        refPoint: editBlock.getPointData()
+                                    });
+                                }
+
+                                inputAnchor1 = otherBlock.inputAnchors[1];
+
+                                if (inputAnchor1 && (otherAnchor !== inputAnchor1)) {
+                                    gpl.forEachArray(inputAnchor1.getConnectedAnchors(), function (otherAnchor2) {
+                                        otherBlock2 = otherAnchor2.myBlock();
+
+                                        if (otherBlock2 && (otherBlock2.blockType === 'Constant')) {
+                                            otherBlock2.pullValue(inputAnchor1);
+                                        }
+                                    });
+                                }
+
+                                gpl.fire('editedblock', otherBlock);
+                            }
+                        });
+                    };
 
                 // ch937; if undefined, create a upis entry for this block
                 if (!newReferences) {
@@ -6719,13 +6983,19 @@ gpl.BlockManager = function (manager) {
                         // configure references (all connected lines)
                         if (prop === 'Monitor Point') {
                             anchor = editBlock.outputAnchor;
+                            adjustAnchoredPoints();
                         } else {
-                            anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
+                            anchor = editBlock.inputAnchors[0];
+                            adjustAnchoredPoints();
                         }
-                        anchor.adjustRelatedBlocks(true);
+
+                        editBlock.setPointRef(prop, editBlock.upi, editBlock._pointData.path);
                     }
+                    editBlock.setPlaceholderText();
                 } else if (editBlock.type === 'Constant') { //constant
+                    // TODO - if choosing from value options update the connected block
                     editBlock.setValue(bmSelf.bindings.editPointValue());
+                    // Otherwise
                 } else if (!editBlock.isNonPoint) { // ch917; update reference labels if edit block label changes
                     if (editBlock.label !== label) {
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -6735,8 +7005,6 @@ gpl.BlockManager = function (manager) {
                         });
                     }
                 }
-
-                editBlock.setPlaceholderText();
 
                 if (!!props[editBlock.blockType.toLowerCase()]) {
                     gpl.forEachArray(newReferences, function (ref, c) {
@@ -6768,7 +7036,7 @@ gpl.BlockManager = function (manager) {
                 gpl.unblockUI();
                 gpl.closeModal(gpl.$editInputOutputModal);
 
-                gpl.fire('editedblock', bmSelf.editBlock);
+                gpl.fire('editedblock', editBlock);
             },
             validateLabel: function (data, e) { // ch485 (added function)
                 var label = bmSelf.bindings.editPointLabel().toString(),
@@ -6806,7 +7074,7 @@ gpl.BlockManager = function (manager) {
             },
             selectInternalReference: function (event, block) { // ch900; added function
                 var devinst = block._pointData['Point Refs'][0].Value,
-                    pRef = gpl.makePointRef({upi: block.upi, name: block.name, pointType: block.pointType}, devinst, 'GPLBlock', 439),
+                    pRef = gpl.makePointRef({upi: block.upi, name: block.name}, devinst, 'GPLBlock', 439),
                     rootBlock = gpl.blockManager.getBlockByUpi(block.upi);
 
                 bmSelf.handleSelectedPoint({
@@ -6963,7 +7231,7 @@ gpl.BlockManager = function (manager) {
                     rootBlock = gpl.blockManager.getGplBlockByUpi(upi);
 
                 gpl.pointData[selectedPoint._id] = selectedPoint;
-                pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, 'GPLBlock', 439);
+                pRef = gpl.makePointRef({upi: upi, name: name}, devinst, 'GPLBlock', 439);
 
                 bmSelf.handleSelectedPoint({
                     name: name,
@@ -7030,7 +7298,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editPointCharacters(chars);
             bmSelf.bindings.editPointDecimals(numDecimals);
             bmSelf.bindings.editPointValue(value);
-            bmSelf.bindings.editPointValueOptions(valueOptions);
+            bmSelf.bindings.editPointValueOptions.removeAll();
             bmSelf.bindings.editPointLabel(label);
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
@@ -7043,43 +7311,61 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editInputReferences([]);
             bmSelf.bindings.editOutputReferences([]);
             bmSelf.bindings.editFnBlkReferences([]);
-            bmSelf.forEachBlock((_block) => {
-                if (_block.targetCanvas === "main") { // Filter out the toolbar blocks
-                    allRefs.push(_block);
-                }
-            });
-            allRefs.sort(function(a,b) {
-                return gpl.collator.compare(a.label.toLowerCase(), b.label.toLowerCase());
-            });
-            gpl.forEachArray(allRefs, function (_block) {
-                if (_block.hasReferenceType && _block.upi) {
-                    if (_block.blockType === 'Input') { // ch927; this if-block reworked
-                        let addRef = true;
 
-                        if (_block.referenceType === 'Internal') {          // If input is linked to another input, gpl, or output block on this sequence
-                            if (bmSelf.getOutputBlockByUpi(_block.upi)) {   // If we're linked to an output block
-                                addRef = false;                             // Don't show it here because it's shown in the output blocks list
-                            } else if (_block === block) {                  // If this block is ourself
-                                addRef = false;                             // Don't show it; this keeps the block from appearing twice
-                            }
-                        } else if (!_block.upi) {   // If this is an unassigned input block
-                            addRef = false;         // Don't show unassigned input blocks - main reason is because they can't actually be selected
-                        }
-
-                        if (addRef && !inputRefsMap[_block.upi]) {
-                            bmSelf.bindings.editInputReferences.push(_block);
-                            inputRefsMap[_block.upi] = true;
-                        }
-                    } else {
-                        bmSelf.bindings.editOutputReferences.push(_block);
+            if (block.hasReferenceType) {
+                bmSelf.forEachBlock((_block) => {
+                    if (_block.targetCanvas === "main") { // Filter out the toolbar blocks
+                        allRefs.push(_block);
                     }
-                } else if (!_block.isNonPoint) { // make sure it's not a constant or static text _block
-                    bmSelf.bindings.editFnBlkReferences.push(_block);
-                }
-            });
+                });
+                allRefs.sort(function(a,b) {
+                    return gpl.collator.compare(a.label.toLowerCase(), b.label.toLowerCase());
+                });
+                gpl.forEachArray(allRefs, function (_block) {
+                    if (_block.hasReferenceType && _block.upi) {
+                        if (_block.blockType === 'Input') { // ch927; this if-block reworked
+                            let addRef = true;
 
-            if (block.hasReferenceType && block.referenceType === 'Internal') { // ch927; update selected ref if it's internal
-                bmSelf.bindings.editSelectedReference(block);
+                            if (_block.referenceType === 'Internal') {          // If input is linked to another input, gpl, or output block on this sequence
+                                if (bmSelf.getOutputBlockByUpi(_block.upi)) {   // If we're linked to an output block
+                                    addRef = false;                             // Don't show it here because it's shown in the output blocks list
+                                } else if (_block === block) {                  // If this block is ourself
+                                    addRef = false;                             // Don't show it; this keeps the block from appearing twice
+                                }
+                            } else if (!_block.upi) {   // If this is an unassigned input block
+                                addRef = false;         // Don't show unassigned input blocks - main reason is because they can't actually be selected
+                            }
+
+                            if (addRef && !inputRefsMap[_block.upi]) {
+                                bmSelf.bindings.editInputReferences.push(_block);
+                                inputRefsMap[_block.upi] = true;
+                            }
+                        } else {
+                            bmSelf.bindings.editOutputReferences.push(_block);
+                        }
+                    } else if (!_block.isNonPoint) { // make sure it's not a constant or static text _block
+                        bmSelf.bindings.editFnBlkReferences.push(_block);
+                    }
+                });
+
+                if (block.referenceType === 'Internal') { // ch927; update selected ref if it's internal
+                    bmSelf.bindings.editSelectedReference(block);
+                }
+            } else if (block.blockType === 'Constant') { // Get value options if wired to an input point 2 with value options; this check for constant type may not be necessary but jic
+                let valueOptions = block.getValueOptions();
+
+                if (valueOptions) {
+                    gpl.forEach(valueOptions, function (val, key) {
+                        bmSelf.bindings.editPointValueOptions.push({
+                            value: key,
+                            eValue: val
+                        });
+                    });
+
+                    // For some reason this observable was getting reset to 0 after the above forEach call. I think it has to do
+                    // with the view's select element bindings
+                    bmSelf.bindings.editPointValue(value);
+                }
             }
 
             // gpl.blockUI();
@@ -9691,7 +9977,7 @@ gpl.Manager = function () {
                     managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
-                    gpl.makePointRef({upi: upi, name: pointName, pointType: pointType}, gpl.seqProps.deviceId, 'GPLDynamic', 440);
+                    gpl.makePointRef({upi: upi, name: pointName}, gpl.seqProps.deviceId, 'GPLDynamic', 440);
                 });
             },
 
