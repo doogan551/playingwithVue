@@ -188,7 +188,13 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function (ko, bannerJS, vie
                             endPoint = self.utility.config.Utility.pointTypes.getUIEndpoint(pointType, id);
                             self.refPoint = data;
                             self.refPointType = self.getPointTypeName(parseInt(self.refPoint.PointType, 10));
+                            if(!point.hasOwnProperty('PointName')){
+                                point.PointName = ko.observable('');
+                            }
                             point.PointName(self.utility.config.Utility.getPointName(data.path));
+                            if(!point.hasOwnProperty('PointType')){
+                                point.PointType = ko.observable('');
+                            }
                             point.PointType(data['Point Type'].eValue);
                             point.Value(id);
                             self.url(endPoint.review.url);
