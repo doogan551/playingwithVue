@@ -447,9 +447,9 @@ $modalHeaderHeight: 42px;
     background-color: map-get($deep-orange, darken-1);
 }
 
-.activeCard {
-    z-index: 101 !important;
-}
+// .activeCard {
+//     z-index: 101 !important;
+// }
 
 $cardTitleBorder: rgba(160, 160, 160, .2);
 

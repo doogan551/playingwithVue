@@ -995,6 +995,26 @@ var dti = {
                     dti.windows.activate(null);
                 }
             },
+            // the below added to fix jqueryUI's draggable stack and tie into activate
+            // draggable doesn't stack on init, only on drag.  so we manually stack on creation and activation
+            stackWindows = function () {
+                let min;
+                let instance = self.$windowEl.draggable('instance');
+                let o = instance.options;
+                let group = $.makeArray($(o.stack)).sort(function (a, b) {
+                    return (parseInt($(a).css("zIndex"), 10) || 0) - (parseInt($(b).css("zIndex"), 10) || 0);
+                });
+
+                if (!group.length) {
+                    return;
+                }
+
+                min = parseInt($(group[0]).css("zIndex"), 10) || 0;
+                $(group).each(function (i) {
+                    $(this).css("zIndex", min + i);
+                });
+                self.$windowEl.css("zIndex", (min + group.length));
+            },
             deactivate = function (event) {
                 active = false;
                 self.bindings.active(false);
@@ -1011,6 +1031,8 @@ var dti = {
                     self.bindings.minimized(false);
                     self.bindings.active(true);
                 }
+
+                stackWindows();
 
                 return true;
             },
@@ -1172,6 +1194,8 @@ var dti = {
 
         self.$windowEl.draggable(dti.windows.draggableConfig);
         self.$windowEl.resizable(dti.windows.resizableConfig);
+
+        stackWindows();
 
         //detect clicks inside iframe
         // setInterval(function detectIframeClick () {
