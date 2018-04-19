@@ -341,6 +341,7 @@ var Config = (function (obj) {
                                 case 'Alarm Status':
                                     return filterPointTypes('value');
                                 case 'Binary Value':
+                                case 'MultiState Value':
                                 case 'Delay':
                                     return filterPointTypes('enum');
                                 case 'Analog Selector':
