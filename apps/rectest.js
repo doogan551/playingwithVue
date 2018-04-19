@@ -136,14 +136,18 @@ let compareDBs = () => {
         conn.db('msfc').collection('points').findOne({
             _id: 36700161
         }, (err, result) => {
-            pointModel.getOne({query: {_id: 36700161}}, (err, point)=>{
-                for(var prop in point) {
-                    if(!result.hasOwnProperty(prop)) {
+            pointModel.getOne({
+                query: {
+                    _id: 36700161
+                }
+            }, (err, point) => {
+                for (var prop in point) {
+                    if (!result.hasOwnProperty(prop)) {
                         console.log(1, prop);
                     }
                 }
-                for(var key in result) {
-                    if(!point.hasOwnProperty(key)) {
+                for (var key in result) {
+                    if (!point.hasOwnProperty(key)) {
                         console.log(1, key);
                     }
                 }
@@ -153,6 +157,45 @@ let compareDBs = () => {
     });
 };
 
+let updateMSV = () => {
+    let pointModel = new Point();
+    let pointType = 'MultiState Value';
+    let properties = ['Alarm Class', 'Alarm Delay Time', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Alarms Off', 'Default Value',
+        'Demand Enable', 'Demand Interval', 'Fail Action', 'Interlock State'
+    ];
+    let pointRefs = ['Alarm Display Point', 'Interlock Point', 'Monitor Point', 'Feedback Point'];
+
+    pointModel.iterateCursor({
+        query: {
+            'Point Type.Value': pointType
+        }
+    }, (err, doc, nextDoc) => {
+        properties.forEach((prop) => {
+            doc[prop] = Config.Templates.getTemplate(pointType)[prop];
+        });
+        doc['Point Refs'] = [doc['Point Refs'][0], doc['Point Refs'][1]];
+        pointRefs.forEach((ref) => {
+            doc['Point Refs'].push(Config.Utility.getPropertyObject(ref, Config.Templates.getTemplate(pointType)));
+        });
+
+        for (var option in doc.States.ValueOptions) {
+            doc.States.AlarmValues = [doc.States.ValueOptions[option]];
+            break;
+        }
+
+        pointModel.update({
+            query: {
+                _id: doc._id
+            },
+            updateObj: doc
+        }, (err, result) => {
+            return nextDoc(err);
+        });
+    }, (err, count) => {
+        console.log('done', err, count);
+    });
+};
+
 db.connect(connectionString.join(''), function (err) {
-    compareDBs();
+    updateMSV();
 });

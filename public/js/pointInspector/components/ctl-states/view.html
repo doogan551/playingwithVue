@@ -5,9 +5,13 @@
             <label>States</label>
             <div class="row" data-bind="foreach: states">
                 <div class="col col-xs-3">
-                    <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler, focusin:$parent.setOriginalEnum }" class="form-control input-sm">
+                    <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: function() {$parent.triggerHandler; $parent.replaceAlarmStates(value)}, focusin:$parent.setOriginalEnum }" class="form-control input-sm">
                 </div>
-                <div class="col col-xs-8">
+                <div class="col col-xs-2">
+                    <input class="switch" type="checkbox" data-bind="checked: $parent.alarmForIndex(value)">
+                    <label class="qualityLabel">Alarm State</label>
+                </div>
+                <div class="col col-xs-6">
                     <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler, focusin:$parent.setOriginalText }" class="_stateName form-control input-sm">
                 </div>
                 <div class="col col-xs-1">
