@@ -523,7 +523,7 @@ define([
         var _newPoint = (new Point(_configPoint)).data;
         var props = ['Value', 'ValueOptions', 'isDisplayable', 'isReadOnly', 'eValue', 'ValueType', 'PropertyName', 'PropertyEnum', 'AppIndex', 'PointName', 'PointType', 'PointInst', 'DevInst', 'name', 'value'];
         var checkForProp = function (prop) {
-            return !!pointInspector.utility.config.Templates.commonProperties.hasOwnProperty(prop) || !!~props.indexOf(prop);
+            return !!pointInspector.utility.config.Templates.commonProperties.hasOwnProperty(prop) || !!pointInspector.utility.config.Templates.hierarchyProperties.hasOwnProperty(prop) || !!~props.indexOf(prop);
         };
         var updateValues = function (current, updated) {
             var changeProperty = function (currentProp, updatedProp) {
