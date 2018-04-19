@@ -1052,6 +1052,7 @@ const Point = class Point extends Common {
                     template.Name = '';
                     template._Name = '';
                     template._oldUpi = 0;
+                    template._id = 0;
 
                     if (!!template.name1) {
                         template.name1 = '';
