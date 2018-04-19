@@ -183,6 +183,8 @@ let updateMSV = () => {
             break;
         }
 
+        doc['Alarm Messages'].push(Config.Templates.getTemplate(pointType)['Alarm Messages'][2]);
+
         pointModel.update({
             query: {
                 _id: doc._id
