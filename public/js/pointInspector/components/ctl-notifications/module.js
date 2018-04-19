@@ -38,6 +38,17 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.checkNotify = function(data){
             return self.isInEditMode() && !data.notify();
         };
+
+        self.getTypeString = function(data){
+            const types = this.Enums["Alarm Types"];
+            let string = "Unknown"
+            for(let prop in types){
+                if(data.msgType() === types[prop].enum){
+                    string = prop;
+                }
+            }
+            return string;
+        }
     }
 
     function getAlarmMessages(id) {
