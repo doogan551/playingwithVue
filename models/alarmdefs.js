@@ -58,7 +58,7 @@ const AlarmDefs = class AlarmDefs extends Common {
     deleteAlarmTemplate(data, cb) {
         const alarmDefs = new AlarmDefs();
         const activityLog = new ActivityLog();
-        const point = new Point();
+        const pointModel = new Point();
         let logData = {
             user: data.user,
             timestamp: Date.now()
@@ -79,7 +79,7 @@ const AlarmDefs = class AlarmDefs extends Common {
                 }
             };
             alarmDefs.get({}, (err, alarmDefs) => {
-                point.iterateCursor({
+                pointModel.iterateCursor({
                     query: {
                         'Alarm Messages.msgId': id
                     }
@@ -89,7 +89,7 @@ const AlarmDefs = class AlarmDefs extends Common {
                             msg.msgId = findAlarmDef(msg.msgType, alarmDefs);
                         }
                     });
-                    point.update({
+                    pointModel.update({
                         query: {
                             _id: point._id
                         },
