@@ -368,11 +368,11 @@ var gpl = {
     getBlock: function (arg) {
         return gpl.blockManager.getBlock(arg);
     },
-    labelIsUnique: function (label, editBlock) { // ch297; add 'editBlock' argument
+    labelIsUnique: function (label, editBlock) { // ch927; add 'editBlock' argument
         // Returns true if label is unique to all blocks; false otherwise
         let result = gpl.forEach(gpl.blockManager.blocks, function isUnique (block) {
             if (!block.isToolbar && block.label === label) { // ch1038; add check if toolbar block
-                if (editBlock && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
+                if (editBlock && (editBlock.type !== 'Constant') && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
                     return true;
                 } else {
                     return false;
@@ -4014,6 +4014,7 @@ gpl.blocks.Enthalpy = fabric.util.createClass(gpl.Block, {
     valueType: 'float',
 
     icons: { // ch996 (add object)
+        'Enthalpy': 'Enthalpy',
         'Dew Point': 'DewPoint',
         'Wet Bulb': 'WetBulb',
     },
@@ -7331,6 +7332,8 @@ gpl.BlockManager = function (manager) {
                                     addRef = false;                             // Don't show it here because it's shown in the output blocks list
                                 } else if (_block === block) {                  // If this block is ourself
                                     addRef = false;                             // Don't show it; this keeps the block from appearing twice
+                                } else if (bmSelf.getGplBlockByUpi(_block.upi)) { // Don't show it because it's in the gpl block list
+                                    addRef = false;
                                 }
                             } else if (!_block.upi) {   // If this is an unassigned input block
                                 addRef = false;         // Don't show unassigned input blocks - main reason is because they can't actually be selected
@@ -9146,7 +9149,7 @@ gpl.Manager = function () {
         let parameters = {
                 pointType: block.pointType,
                 parentUpi: gpl.point._id,
-                parentNode: gpl.point.parentNode, // ch1031; added this property
+                parentNode: gpl.point._id, // ch1031; added this property
                 display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
         let handleError = function (err) {

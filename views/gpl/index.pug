@@ -309,11 +309,10 @@ html
                         input.form-control.input-sm(type="number", data-bind="textInput: editPointValue")
                         // /ko
                 .row
-                    .col.s6
-                        .input-field
-                            //- ch485 check for label validity & indicate invalid label
-                            label.active(for="blocklabel", data-bind="attr: { 'data-error': labelError }") Block Label
-                            input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }, attr: { disabled: editPointLabelLocked }")
+                    .col.s6.input-field
+                        //- ch485 check for label validity & indicate invalid label
+                        input#blocklabel.validate(data-bind="textInput: editPointLabel, event: { keyup: validateLabel }, css: { invalid: !labelIsValid() }, attr: { disabled: editPointLabelLocked }")
+                        label.active(for="blocklabel", data-bind="attr: { 'data-error': labelError }") Block Label
                 .row
                     .col.s4 Numeric Format
                     .col.s2
