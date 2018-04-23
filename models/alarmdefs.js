@@ -48,11 +48,33 @@ const AlarmDefs = class AlarmDefs extends Common {
 
             alarmDefs.save(criteria, (err) => {
                 logData.activity = 'Alarm Message Edit';
-                logData.log = 'Alarm Message with text "' + data.newObject.msgFormat + '" updated.';
+                logData.log = 'Alarm Message with text "' + data.newObject.msgFormat + '" added.';
                 activityLog.create(logData, () => {
                     return cb(err);
                 });
             });
+        } else if (!!data.updatedObject) {
+            data.updatedObject._id = ObjectId(data.updatedObject._id);
+            data.updatedObject.msgType = this.getNumber(data.updatedObject.msgType);
+            data.updatedObject.msgCat = this.getNumber(data.updatedObject.msgCat);
+            data.updatedObject.isSystemMessage = false;
+
+            let query = {
+                _id: data.updatedObject._id
+            };
+
+            alarmDefs.update({
+                query,
+                updateObj: data.updatedObject
+            }, (err, result) => {
+                logData.activity = 'Alarm Message Edit';
+                logData.log = 'Alarm Message with text "' + data.updatedObject.msgFormat + '" updated.';
+                activityLog.create(logData, () => {
+                    return cb(err);
+                });
+            });
+        } else {
+            return cb('Incorrect property sent for save.');
         }
     }
     deleteAlarmTemplate(data, cb) {
