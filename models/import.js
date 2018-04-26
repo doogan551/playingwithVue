@@ -72,15 +72,15 @@ let Import = class Import extends Common {
                         // this.updateHistory((err) => {
                         logger.info('finished updateHistory', err);
                         this.cleanupDB((err) => {
-                            // hierarchy.createHierarchy((err) => {
-                            this.fixToUUtil((err) => {
+                            hierarchy.createHierarchy(importconfig.rootName, (err) => {
+                                // this.fixToUUtil((err) => {
                                 if (err) {
                                     logger.info('updateGPLReferences err:', err);
                                 }
                                 logger.info('done', err, new Date());
                                 process.exit(0);
+                                // });
                             });
-                            // });
                         });
                         // });
                     });

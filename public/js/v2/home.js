@@ -5490,7 +5490,7 @@ var dti = {
             //         manager.bindings.busy(false);
             //     });
             // } else {
-            //     manager.getDefaultTree(null, true);
+            //     manager.getDefaultTree(true, null, null);
             // }
         },
         initBindings: () => {
@@ -7641,10 +7641,17 @@ var dti = {
                     this.initBindings(config);
                     this.initDOM(config);
 
-                    this.getDefaultTree(() => {
-                        // config.getWindow().bindings.loading(false);
-                        // this.bindings.busy(false);
+                    this.addRootNode((err, rootNode)=>{
+                        this.getDefaultTree(false, rootNode, () => {
+                            // config.getWindow().bindings.loading(false);
+                            // this.bindings.busy(false);
+                        });
                     });
+
+                    // this.getDefaultTree(null, null, () => {
+                    //     // config.getWindow().bindings.loading(false);
+                    //     // this.bindings.busy(false);
+                    // });
                 }
 
                 initDOM(config) {
@@ -7923,32 +7930,36 @@ var dti = {
                 addRootNode(cb) {
                     let manager = this;
                     var rootNode,
-                        createRootNode = (siteName) => {
-                            rootNode = manager.getNode({
-                                display: siteName,
-                                fetched: true,
-                                expanded: true,
-                                nodeType: 'Location',
-                                nodeSubType: 'Site',
-                                _isRoot: true
-                            });
+                        createRootNode = (node) => {
+                            // rootNode = manager.getNode({
+                            //     display: siteName,
+                            //     fetched: true,
+                            //     expanded: true,
+                            //     nodeType: 'Location',
+                            //     nodeSubType: 'Site',
+                            //     _isRoot: true
+                            // });
+                            node._isRoot = true;
+                            node.fetched = true;
+                            node.expanded = true;
 
-                            manager.rootNode = manager.createNode(rootNode, null, true);
-                            if (cb) {
-                                cb();
-                            }
+                            manager.rootNode = manager.createNode(node, null, true);
+                            cb(null, node);
                         };
 
-                    $.ajax({
-                        url: '/api/system/preferences'
+                    dti.post({
+                        url: '/api/hierarchy/locations/getChildren',
+                        data: {
+                            id: 0
+                        }
                     }).done(function (data) {
                         if (!!data.err) {
                             console.log(data);
-                            alert('There was an error getting preferences.');
                         } else {
-                            createRootNode(data.siteName);
+                            createRootNode(manager.normalize(data[0]));
                         }
                     });
+
                 }
 
                 addNode(data) { // Callback action
@@ -8266,16 +8277,16 @@ var dti = {
                             }
                         };
 
-                    this.addRootNode(finishBuildingTree);
+                    finishBuildingTree();
                 }
 
-                getDefaultTree(cb, overwrite) {
+                getDefaultTree(overwrite, root, cb) {
                     // this.bindings.busy(true);
 
                     dti.post({
                         url: '/api/hierarchy/locations/getChildren',
                         data: {
-                            id: 0
+                            id: root._id || 0
                         }
                     }).done((results) => {
                         this.handleTreeResults(results, overwrite, cb);

@@ -914,7 +914,7 @@ const Hierarchy = class Hierarchy extends Common {
         });
     }
 
-    createHierarchy(cb) {
+    createHierarchy(rootName, cb) {
         const pointModel = new Point();
         const firstNode = 'IS2k';
         const nameSegments = ['name1', 'name2', 'name3', 'name4'];
@@ -1005,7 +1005,11 @@ const Hierarchy = class Hierarchy extends Common {
         const createRoot = (callback) => {
             createFolder({
                 _id: 0
-            }, firstNode, callback);
+            }, rootName, (err, result) => {
+                createFolder({
+                    _id: result._id
+                }, firstNode, callback);
+            });
         };
         const addFolders = (segment, parent, names, callback) => {
             // for each folder, add points then add folders for next segment (recursively)
