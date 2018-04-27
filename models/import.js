@@ -72,7 +72,7 @@ let Import = class Import extends Common {
                         // this.updateHistory((err) => {
                         logger.info('finished updateHistory', err);
                         this.cleanupDB((err) => {
-                            hierarchy.createHierarchy(importconfig.rootName, (err) => {
+                            hierarchy.createHierarchy(importconfig.rootName || 'InfoScan', (err) => {
                                 // this.fixToUUtil((err) => {
                                 if (err) {
                                     logger.info('updateGPLReferences err:', err);

@@ -4919,7 +4919,7 @@ var dti = {
 
                     return {
                         id: obj._id,
-                        parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                        parentNode: parent.bindings._id(),
                         display: obj.display,
                         nodeType: obj.nodeType,
                         nodeSubType: obj.nodeSubType,
@@ -5240,8 +5240,8 @@ var dti = {
                             upi: 0,
                             targetUpi: 0,
                             id: 0,
-                            parentNodeId: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
-                            parentNode: parent.defaultConfig._isRoot ? 0 : parent.bindings._id(),
+                            parentNodeId: parent.bindings._id(),
+                            parentNode: parent.bindings._id(),
                             display: nodeData.display,
                             nodeType: nodeData.nodeType,
                             nodeSubType: nodeData.nodeSubType,
@@ -7669,7 +7669,7 @@ var dti = {
                             }
                         }
 
-                        dti.log('no node found', key, opt);
+                        // dti.log('no node found', key, opt);
                     };
                     let highlightNode = (options, show) => {
                         let node = getNode(null, options);
@@ -7931,14 +7931,6 @@ var dti = {
                     let manager = this;
                     var rootNode,
                         createRootNode = (node) => {
-                            // rootNode = manager.getNode({
-                            //     display: siteName,
-                            //     fetched: true,
-                            //     expanded: true,
-                            //     nodeType: 'Location',
-                            //     nodeSubType: 'Site',
-                            //     _isRoot: true
-                            // });
                             node._isRoot = true;
                             node.fetched = true;
                             node.expanded = true;
