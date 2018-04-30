@@ -7924,7 +7924,13 @@ gpl.BlockManager = function (manager) {
             // ch279 Increment label only if we're registering existing blocks as part of GPL initialization. After the
             // sequence is initialized, the label is incremented before this function is called.
             if (!gpl.manager.initDone()) {
-                gpl.labelCounters[block.type]++;
+                // ch1213; try to get the largest label count out of the block's label before blindly incrementing 
+                let count = +(block.label.split(' ').pop());
+                if (!isNaN(count) && count > gpl.labelCounters[block.type]) {
+                    gpl.labelCounters[block.type] = count;
+                } else {
+                    gpl.labelCounters[block.type]++;
+                }
             }
         }
 
@@ -9144,7 +9150,7 @@ gpl.Manager = function () {
         let handleError = function (err) {
             window.alert('An unexpected error occurred: ' + err);
             gpl.fire('deleteblock', block, true);
-            gpl.labelCounters[block.type]--;
+            gpl.labelCounters[block.type]; // ch1213 - don't decrement the label counter if an error was encountered
         };
 
         gpl.log(parameters.display);
