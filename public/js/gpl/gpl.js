@@ -7552,7 +7552,8 @@ gpl.BlockManager = function (manager) {
             //     ret.push(bmSelf.convertBlock(obj));
             // });
 
-            gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray(saveForLater);
+            // ch1052; comment out line below; the 'rebuildPointRefArray' was causing the problem as described in the ch story
+            // gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray(saveForLater);
 
             saveObject.block = ret;
         },
@@ -7760,9 +7761,7 @@ gpl.BlockManager = function (manager) {
         if (!isCancel) {
             bmSelf.manager.bindings.hasEdits(true);
             // gpl.hasEdits = true;
-            if (typeof oldBlock.upi !== 'string') { // ch987 (new blocks that need no delete have a upi type of string and begin with "tempId_")
-                bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
-            }
+            bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
         }
 
         delete bmSelf.newBlocks[oldBlock.upi];
@@ -7791,16 +7790,6 @@ gpl.BlockManager = function (manager) {
 
             gpl.forEachArray(references, function (ref) {
                 ref.block.resetReference();
-            });
-        }
-
-        // ch921; clean point refs array; search ch921 in this file for more info
-        if (!oldBlock.isNonPoint) {
-            gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
-                if (pointRef.PointInst === oldBlock.upi) {
-                    gpl.point['Point Refs'].splice(i, 1);
-                    return false; // break the loop
-                }
             });
         }
 
@@ -9311,6 +9300,23 @@ gpl.Manager = function () {
                 gpl.point['Update Interval'].Value = gpl.seqProps.updateInterval;
                 gpl.json.backgroundColor = gpl.seqProps.backgroundColor;
                 // end ch1043
+
+                // ch1052; added gpl.forEachArrayRev below
+                gpl.forEachArrayRev(saveObj.deletes, function (upi, i) {
+                    let removeRef = false;
+
+                    // ch921 and ch987 were moved here, combined, and updated
+                    if (typeof(upi) === 'string') {     // If this point hasn't actually been created yet
+                        saveObj.deletes.splice(i, 1);   // Remove this from the deletes array because there's no db point to delete
+                    }
+
+                    gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
+                        if (pointRef.PointInst === upi) {
+                            gpl.point['Point Refs'].splice(i, 1);
+                            return false; // break the loop
+                        }
+                    });
+                });
 
                 gpl.saveSequence(saveObj);
 
