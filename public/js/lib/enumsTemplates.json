@@ -2525,6 +2525,11 @@
                 "valueType": "MinSec",
                 "reportEnable": false
             },
+            "Enable Network COV": {
+                "enum": 276,
+                "valueType": "Bool",
+                "reportEnable": true
+            },
             "Enable Schedule": {
                 "enum": 235,
                 "valueType": "Bool",
@@ -4529,6 +4534,12 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
+                },
+                "Enable Network COV": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Ethernet Address": {
                     "isDisplayable": true,
