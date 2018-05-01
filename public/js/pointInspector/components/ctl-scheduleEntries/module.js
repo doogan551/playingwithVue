@@ -235,7 +235,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 checkTermInArray = function (testArray, searchTerm) {
                     var doesMatch = false;
                     testArray.forEach(function (elem) {
-                        if(elem.match(searchTerm)) {
+                        if (elem.match(searchTerm)) {
                             doesMatch = true;
                         }
                     });
@@ -369,41 +369,40 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 dataType: 'json',
                 type: 'post',
                 data: params
-            })
-                .done(function (data) {
-                    var oldPoint = _.cloneDeep(data);
-                    data['Enable Schedule'].Value = self.hostSchedule();
-                    data['Host Schedule'].Value = self.enableAll();
-                    data['Heating Season'].Value = self.heating();
-                    data['Cooling Season'].Value = self.cooling();
-                    data['Control Time'].Value = self.emptyEntry['Control Time'].Value();
+            }).done(function (data) {
+                var oldPoint = _.cloneDeep(data);
+                data['Enable Schedule'].Value = self.hostSchedule();
+                data['Host Schedule'].Value = self.enableAll();
+                data['Heating Season'].Value = self.heating();
+                data['Cooling Season'].Value = self.cooling();
+                data['Control Time'].Value = self.emptyEntry['Control Time'].Value();
 
-                    if (self.pointType !== 'Schedule') {
-                        var propertyObject = config.Utility.getPropertyObject('Control Point', data),
-                            refPoint = ko.viewmodel.toModel(self.point);
+                if (self.pointType !== 'Schedule') {
+                    var propertyObject = config.Utility.getPropertyObject('Control Point', data),
+                        refPoint = ko.viewmodel.toModel(self.point);
 
-                        propertyObject.Value = refPoint._id;
-                        data = config.EditChanges.applyUniquePIDLogic({
-                            point: data,
-                            refPoint: refPoint,
-                            propertyObject: propertyObject
-                        });
-
-                        data._parentUpi = 0;
-                    }
-
-                    var newPoint = ko.viewmodel.fromModel(data);
-                    self.oldPoints.push(oldPoint);
-                    var item = self.buildObservable({
-                        point: newPoint,
-                        oldPoint: oldPoint
+                    propertyObject.Value = refPoint._id;
+                    data = config.EditChanges.applyUniquePIDLogic({
+                        point: data,
+                        refPoint: refPoint,
+                        propertyObject: propertyObject
                     });
-                    item.isNew(true);
-                    self.entries.push(item);
-                    /*self.filteredEntries(self.entries());
-                    self.searchTerm.valueHasMutated();*/
-                    self.updateSaveButton();
+
+                    data._parentUpi = 0;
+                }
+
+                var newPoint = ko.viewmodel.fromModel(data);
+                self.oldPoints.push(oldPoint);
+                var item = self.buildObservable({
+                    point: newPoint,
+                    oldPoint: oldPoint
                 });
+                item.isNew(true);
+                self.entries.push(item);
+                /*self.filteredEntries(self.entries());
+                self.searchTerm.valueHasMutated();*/
+                self.updateSaveButton();
+            });
         };
 
 
@@ -479,11 +478,11 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 };
             //deepKOClone(data, newRow);
             $.ajax({
-                url: '/api/points/initpoint',
-                dataType: 'json',
-                type: 'post',
-                data: params
-            })
+                    url: '/api/points/initpoint',
+                    dataType: 'json',
+                    type: 'post',
+                    data: params
+                })
                 .done(function (response) {
                     var newPoint = _.cloneDeep(ko.viewmodel.toModel(data.point));
                     newPoint._id = response._id;

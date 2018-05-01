@@ -1555,13 +1555,13 @@ div.scheduleBox {
 
 /*Notifications and Policies*/
 
-.notifications-table th:first-child,
-.notifications-table th:nth-child(2) {
-    width: 7%;
+.notifications-table th:first-child {
+    width: 20%;
 }
 
+.notifications-table th:nth-child(2),
 .notifications-table th:nth-child(3) {
-    width: 20%;
+    width: 15%;
 }
 
 .notifications-table thead tr th {

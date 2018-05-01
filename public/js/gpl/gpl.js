@@ -368,11 +368,11 @@ var gpl = {
     getBlock: function (arg) {
         return gpl.blockManager.getBlock(arg);
     },
-    labelIsUnique: function (label, editBlock) { // ch297; add 'editBlock' argument
+    labelIsUnique: function (label, editBlock) { // ch927; add 'editBlock' argument
         // Returns true if label is unique to all blocks; false otherwise
         let result = gpl.forEach(gpl.blockManager.blocks, function isUnique (block) {
             if (!block.isToolbar && block.label === label) { // ch1038; add check if toolbar block
-                if (editBlock && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
+                if (editBlock && (editBlock.type !== 'Constant') && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
                     return true;
                 } else {
                     return false;
@@ -4014,6 +4014,7 @@ gpl.blocks.Enthalpy = fabric.util.createClass(gpl.Block, {
     valueType: 'float',
 
     icons: { // ch996 (add object)
+        'Enthalpy': 'Enthalpy',
         'Dew Point': 'DewPoint',
         'Wet Bulb': 'WetBulb',
     },
@@ -7331,6 +7332,8 @@ gpl.BlockManager = function (manager) {
                                     addRef = false;                             // Don't show it here because it's shown in the output blocks list
                                 } else if (_block === block) {                  // If this block is ourself
                                     addRef = false;                             // Don't show it; this keeps the block from appearing twice
+                                } else if (bmSelf.getGplBlockByUpi(_block.upi)) { // Don't show it because it's in the gpl block list
+                                    addRef = false;
                                 }
                             } else if (!_block.upi) {   // If this is an unassigned input block
                                 addRef = false;         // Don't show unassigned input blocks - main reason is because they can't actually be selected
@@ -7549,7 +7552,8 @@ gpl.BlockManager = function (manager) {
             //     ret.push(bmSelf.convertBlock(obj));
             // });
 
-            gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray(saveForLater);
+            // ch1052; comment out line below; the 'rebuildPointRefArray' was causing the problem as described in the ch story
+            // gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray(saveForLater);
 
             saveObject.block = ret;
         },
@@ -7757,9 +7761,7 @@ gpl.BlockManager = function (manager) {
         if (!isCancel) {
             bmSelf.manager.bindings.hasEdits(true);
             // gpl.hasEdits = true;
-            if (typeof oldBlock.upi !== 'string') { // ch987 (new blocks that need no delete have a upi type of string and begin with "tempId_")
-                bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
-            }
+            bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
         }
 
         delete bmSelf.newBlocks[oldBlock.upi];
@@ -7788,16 +7790,6 @@ gpl.BlockManager = function (manager) {
 
             gpl.forEachArray(references, function (ref) {
                 ref.block.resetReference();
-            });
-        }
-
-        // ch921; clean point refs array; search ch921 in this file for more info
-        if (!oldBlock.isNonPoint) {
-            gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
-                if (pointRef.PointInst === oldBlock.upi) {
-                    gpl.point['Point Refs'].splice(i, 1);
-                    return false; // break the loop
-                }
             });
         }
 
@@ -7932,7 +7924,13 @@ gpl.BlockManager = function (manager) {
             // ch279 Increment label only if we're registering existing blocks as part of GPL initialization. After the
             // sequence is initialized, the label is incremented before this function is called.
             if (!gpl.manager.initDone()) {
-                gpl.labelCounters[block.type]++;
+                // ch1213; try to get the largest label count out of the block's label before blindly incrementing 
+                let count = +(block.label.split(' ').pop());
+                if (!isNaN(count) && count > gpl.labelCounters[block.type]) {
+                    gpl.labelCounters[block.type] = count;
+                } else {
+                    gpl.labelCounters[block.type]++;
+                }
             }
         }
 
@@ -9146,13 +9144,13 @@ gpl.Manager = function () {
         let parameters = {
                 pointType: block.pointType,
                 parentUpi: gpl.point._id,
-                parentNode: gpl.point.parentNode, // ch1031; added this property
+                parentNode: gpl.point._id, // ch1031; added this property
                 display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
         let handleError = function (err) {
             window.alert('An unexpected error occurred: ' + err);
             gpl.fire('deleteblock', block, true);
-            gpl.labelCounters[block.type]--;
+            gpl.labelCounters[block.type]; // ch1213 - don't decrement the label counter if an error was encountered
         };
 
         gpl.log(parameters.display);
@@ -9308,6 +9306,23 @@ gpl.Manager = function () {
                 gpl.point['Update Interval'].Value = gpl.seqProps.updateInterval;
                 gpl.json.backgroundColor = gpl.seqProps.backgroundColor;
                 // end ch1043
+
+                // ch1052; added gpl.forEachArrayRev below
+                gpl.forEachArrayRev(saveObj.deletes, function (upi, i) {
+                    let removeRef = false;
+
+                    // ch921 and ch987 were moved here, combined, and updated
+                    if (typeof(upi) === 'string') {     // If this point hasn't actually been created yet
+                        saveObj.deletes.splice(i, 1);   // Remove this from the deletes array because there's no db point to delete
+                    }
+
+                    gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
+                        if (pointRef.PointInst === upi) {
+                            gpl.point['Point Refs'].splice(i, 1);
+                            return false; // break the loop
+                        }
+                    });
+                });
 
                 gpl.saveSequence(saveObj);
 

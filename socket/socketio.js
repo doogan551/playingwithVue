@@ -761,6 +761,13 @@ function updateSchedules(data, callback) {
                 }
 
                 if (!_.isEmpty(updateObj.$set)) {
+                    if (updateObj.$set['Point Refs']) {
+                        updateObj.$set['Point Refs'].forEach((ref) => {
+                            delete ref.PointName;
+                            delete ref.PointType;
+                            delete ref.PointPath;
+                        });
+                    }
                     point.updateOne({
                         query: {
                             _id: updateSched._id

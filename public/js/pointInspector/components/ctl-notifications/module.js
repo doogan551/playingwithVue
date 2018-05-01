@@ -1,4 +1,4 @@
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'text!./view.html'], function (ko, view) {
     var apiEndpoint = '';
 
     function ViewModel(params) {
@@ -18,26 +18,37 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.ackAll = ko.observable(false);
         this.notifyAll = ko.observable(false);
 
-        this.ackAll.subscribe(function(val) {
-            self.returnData().forEach(function(returnMsg) {
+        this.ackAll.subscribe(function (val) {
+            self.returnData().forEach(function (returnMsg) {
                 returnMsg.ack(val);
             });
         });
-        this.notifyAll.subscribe(function(val) {
-            self.returnData().forEach(function(returnMsg) {
+        this.notifyAll.subscribe(function (val) {
+            self.returnData().forEach(function (returnMsg) {
                 returnMsg.notify(val);
             });
         });
 
-        this.isInEditMode.subscribe(function(val) {
+        this.isInEditMode.subscribe(function (val) {
             if (!val) {
                 self.buildAlarmArrays();
             }
         });
 
-        self.checkNotify = function(data){
+        self.checkNotify = function (data) {
             return self.isInEditMode() && !data.notify();
         };
+
+        self.getTypeString = function (data) {
+            const types = this.Enums["Alarm Types"];
+            let string = "Unknown"
+            for (let prop in types) {
+                if (data.msgType() === types[prop].enum) {
+                    string = prop;
+                }
+            }
+            return string;
+        }
     }
 
     function getAlarmMessages(id) {
@@ -50,22 +61,34 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.render = function() {
+    ViewModel.prototype.render = function () {
         var self = this;
-        getAlarmMessages().done(function(data) {
+        getAlarmMessages().done(function (data) {
             self.gettingData(false);
 
             self.alarmMessages(data);
             self.buildAlarmArrays();
         });
     };
-    ViewModel.prototype.getAlarmMessagesByType = function(type) {
+    ViewModel.prototype.getAlarmMessagesByType = function (type) {
         var self = this;
-        return self.alarmMessages.filter(function(item) {
+        let none = {
+            isSystemMessage: true,
+            msgBackColor: "",
+            msgCat: 0,
+            msgFormat: "None",
+            msgName: "None",
+            msgTextColor: "",
+            msgType: type,
+            _id: 0
+        };
+        let messages = self.alarmMessages.filter(function (item) {
             return item.msgType == type;
         });
+        messages().unshift(none);
+        return messages;
     };
-    ViewModel.prototype.getMessageById = function(id) {
+    ViewModel.prototype.getMessageById = function (id) {
         var self = this,
             messages = self.alarmMessages(),
             message = {
@@ -80,13 +103,15 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         }
         return message;
     };
-    ViewModel.prototype.buildAlarmArrays = function() {
+    ViewModel.prototype.buildAlarmArrays = function () {
         var self = this;
         self.returnData([]);
         self.alarmData([]);
-        self.alarmMessages().forEach(function(msg) {
-            self.data().forEach(function(alarm) {
+        self.data().forEach(function (alarm) {
+            let hasAlarmMessage = false;
+            self.alarmMessages().forEach(function (msg) {
                 if (alarm.msgId() === msg._id) {
+                    hasAlarmMessage = true;
                     if (msg.msgCat === self.Enums['Alarm Categories'].Return.enum) {
                         // in case db is not fixed, this defaults ack/notify all to first return message's properties
                         if (!self.returnData().length) {
@@ -97,8 +122,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         alarm.ack(self.ackAll());
                         self.returnData.push(alarm);
                     } else {
-                        alarm.notify.subscribe(function(val){
-                            if(!!val){
+                        alarm.notify.subscribe(function (val) {
+                            if (!!val) {
                                 alarm.ack(true);
                             }
                         });
@@ -106,13 +131,33 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     }
                 }
             });
+            if (!hasAlarmMessage) {
+                let alarmCat = self.alarmMessages().filter((msg) => msg.msgType === alarm.msgType())[0].msgCat;
+                if (alarmCat === self.Enums['Alarm Categories'].Return.enum) {
+                    // in case db is not fixed, this defaults ack/notify all to first return message's properties
+                    if (!self.returnData().length) {
+                        self.notifyAll(alarm.notify());
+                        self.ackAll(alarm.ack());
+                    }
+                    alarm.notify(self.notifyAll());
+                    alarm.ack(self.ackAll());
+                    self.returnData.push(alarm);
+                } else {
+                    alarm.notify.subscribe(function (val) {
+                        if (!!val) {
+                            alarm.ack(true);
+                        }
+                    });
+                    self.alarmData.push(alarm);
+                }
+            }
         });
     };
 
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {};
+    ViewModel.prototype.dispose = function () {};
 
     // Return component definition
     return {
