@@ -1720,8 +1720,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 }
                 self.formatPoint(anchor, line, otherBlock);
                 if (gpl.rendered) {
-                    self.validate();
-                    otherBlock.validate();
+                    self.validate(line, anchor); // ch991; send line and anchor
+                    otherBlock.validate(line, otherAnchor); // ch991; send line and anchor
                 }
             }
 
@@ -2427,16 +2427,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         shape.strokeWidth = 1;
     },
 
-    validate: function () {
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
         var self = this,
             c,
             list = self.inputAnchors || [],
             len = list.length,
-            anchor,
             valid = true,
             isValid = function (anchor) {
                 var ret = true,
-                    lines = anchor.getLines(),
+                    lines = line ? [line] : anchor.getLines(),
                     cc;
 
                 if (lines.length > 0) {
@@ -2454,17 +2453,22 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 valid = ret;
             };
 
-        if (self.shutdownAnchor) {
-            isValid(self.shutdownAnchor);
-        }
-
-        if (self.outputAnchor && valid) {
-            isValid(self.outputAnchor);
-        }
-
-        for (c = 0; c < len && valid; c++) {
-            anchor = list[c];
+        if (line && anchor) {
             isValid(anchor);
+        } else {
+            if (self.shutdownAnchor) {
+                isValid(self.shutdownAnchor);
+            }
+
+            if (self.outputAnchor && valid) {
+                isValid(self.outputAnchor);
+            }
+
+            for (c = 0; c < len && valid; c++) {
+                anchor = list[c];
+                isValid(anchor);
+            }
+
         }
 
         if (!valid) {
@@ -3252,13 +3256,13 @@ gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
         return ret;
     },
 
-    validate: function () {
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
         var isValid = this.validateSelf({
             invalidateBlock: true
         });
 
         if (isValid) {
-            isValid = this.callSuper('validate');
+            isValid = this.callSuper('validate', line, anchor);
         }
 
         return isValid;
@@ -3300,9 +3304,15 @@ gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
                 return true;
             };
         var setValid = function (block, anchor) {
+                var line;
+
                 if (!options.connectionAttempt) {
                     block.setValid();
-                    self.outputAnchor.getLine(anchor).setValid();
+                    // ch991; make sure line exists before operating on it
+                    line = self.outputAnchor.getLine(anchor);
+                    if (line) {
+                        line.setValid();
+                    }
                 }
             };
 
@@ -3513,11 +3523,11 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
         this.setReferenceType(this.referenceType);
     },
 
-    validate: function () { // ch1012 & ch1017 (added fn)
+    validate: function (line, anchor) { // ch1012 & ch1017 (added fn); ch991; add optional line and anchor arguments
         var isValid = this.validateSelf();
 
         if (isValid) {
-            isValid = this.callSuper('validate');
+            isValid = this.callSuper('validate', line, anchor);
         }
 
         return isValid;
