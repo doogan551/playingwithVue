@@ -1598,6 +1598,7 @@ const Point = class Point extends Common {
                                 case 'Demand Interval':
                                 case 'Disable Limit Fault':
                                 case 'Downlink Broadcast':
+                                case 'Enable Network COV':
                                 case 'Enable Warning Alarms':
                                 case 'Fail Action':
                                 case 'Fan Off CFM Setpoint':
