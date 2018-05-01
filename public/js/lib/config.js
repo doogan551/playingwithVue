@@ -4993,6 +4993,7 @@ var Config = (function (obj) {
             return templateClone(template);
         },
         commonProperties: enumsTemplatesJson.Templates._common,
+        hierarchyProperties: enumsTemplatesJson.Templates.Hierarchy,
         checkAgainstTemplate: function (node) {
             let template;
             if (enumsTemplatesJson.Enums['Hierarchy Types'].hasOwnProperty(node.nodeType)) {

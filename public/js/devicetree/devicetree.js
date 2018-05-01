@@ -86,6 +86,8 @@ function TreeViewModel() {
     self.modelType = ko.observable('');
     self.firmwareRevision = ko.observable('');
 
+    self.shownDeviceId = ko.observable('');
+
     self.searchValue.subscribe(function (value) {
         searchIndex = 0;
         if (!!value) {
@@ -105,13 +107,18 @@ function TreeViewModel() {
         return ['(', data.deviceAddress(), ')'].join('');
     };
 
-    self.showDevice = function (item, e, t) {
+    self.toggleDevice = function (item, e, t) {
         var rightSide = $(e.target).offset().left + $(e.target).context.offsetWidth;
-
+        if (self.shownDeviceId() === item.upi()) {
+            $('.overlay').css('display', 'none');
+            self.shownDeviceId('')
+            return;
+        }
         $.getJSON('/api/points/' + item.upi(), function (response) {
             if (response.err) {
                 console.log('api/points/:upi error', response.err);
             } else {
+                self.shownDeviceId(item.upi());
                 $('.overlay').css({
                     'top': mouseY,
                     'left': rightSide,

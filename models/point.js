@@ -1052,6 +1052,7 @@ const Point = class Point extends Common {
                     template.Name = '';
                     template._Name = '';
                     template._oldUpi = 0;
+                    template._id = 0;
 
                     if (!!template.name1) {
                         template.name1 = '';
@@ -3002,6 +3003,15 @@ const Point = class Point extends Common {
                 }
 
                 delete point.id;
+
+                if (point['Point Refs']) {
+                    point['Point Refs'].forEach((ref) => {
+                        delete ref.PointName;
+                        delete ref.PointType;
+                        delete ref.PointPath;
+                    });
+                }
+
                 point._pStatus = 0;
                 point.Security = [];
                 point._actvAlmId = ObjectID(point._actvAlmId);

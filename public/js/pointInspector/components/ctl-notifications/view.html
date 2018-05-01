@@ -10,6 +10,7 @@
         <table class="grid table table-condensed notifications-table">
             <thead>
                 <tr>
+                    <th>Type</th>
                     <th>Ack</th>
                     <th>Notify</th>
                     <th>Message</th>
@@ -18,6 +19,9 @@
 
             <tbody data-bind="foreach: alarmData">
             <tr>
+                <td>
+                    <span data-bind="text: $parent.getTypeString($data)"></span>
+                </td>
                 <td>
                     <input type="checkbox" data-bind="checked: ack, enable: $parent.checkNotify($data)">
                 </td>
@@ -39,6 +43,7 @@
         <table class="grid table table-condensed notifications-table">
             <thead>
                 <tr>
+                    <th>Type</th>
                     <th title='Auto-Acknowledge the alarm on return-to-normal'>
                         <input id="autoAckR2nInput" type="checkbox" data-bind="checked: ackAll, enable: $parent.isInEditMode">
                         <label for="autoAckR2nInput">Auto-Ack</label>
@@ -52,6 +57,9 @@
             </thead>
             <tbody data-bind="foreach: returnData">
             <tr>
+                <td>
+                    <span data-bind="text: $parent.getTypeString($data)"></span>
+                </td>
                 <td>
                     <input type="checkbox" data-bind="checked: ack, enable: false">
                 </td>
