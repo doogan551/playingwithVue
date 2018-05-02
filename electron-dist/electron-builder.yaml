@@ -1,0 +1,14 @@
+directories:
+  output: dist
+  buildResources: build
+appId: infoscanjs.electron.id
+win:
+  target:
+    - nsis
+icon: icon.ico
+publish:
+  - provider: github
+    owner: Dorsett-Tech
+    repo: infoscanjs-electron
+    private: true
+electronVersion: 2.0.0

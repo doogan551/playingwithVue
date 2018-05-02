@@ -1,0 +1,9 @@
+version: 0.2.2
+files:
+  - url: infoscanjs-setup-0.2.2.exe
+    sha512: U5y13gpeti3AyPekAy+QLX6P219sPcwS+TNC4bMECl2D+DNjOHmlvUIeKLWQYzSOArP9OzgX/LAEpobUiKS/Qw==
+    size: 38508119
+path: infoscanjs-setup-0.2.2.exe
+sha512: U5y13gpeti3AyPekAy+QLX6P219sPcwS+TNC4bMECl2D+DNjOHmlvUIeKLWQYzSOArP9OzgX/LAEpobUiKS/Qw==
+sha2: 40d250e22ee50cdc60b145bc580fadcdf227dde49fd40bc84ba77cdde673c425
+releaseDate: '2018-05-02T19:17:36.117Z'
