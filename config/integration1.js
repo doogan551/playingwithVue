@@ -1,4 +1,4 @@
-var integration = {
+var int1 = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost',
@@ -11,7 +11,7 @@ var integration = {
             'driveLetter': 'D'
         },
         'location': {
-            'site': 'engineering integration'
+            'site': 'int1'
         },
         'email': {
             'onError': {
@@ -20,15 +20,16 @@ var integration = {
             }
         },
         'letsencrypt': {
-            'enabled': false
-        }
+            'enabled': true
+        },
+        'domains': ['int1.dtscada.com']
     },
     runNotifications: false,
     minifyFiles: false
 };
 
-integration.redisConfig = {
-    host: integration.Infoscan.dbConfig.host
+int1.redisConfig = {
+    host: int1.Infoscan.dbConfig.host
 };
 
-module.exports = integration;
+module.exports = int1;
