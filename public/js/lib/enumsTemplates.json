@@ -4455,14 +4455,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Normal",
                     "eValue": 1
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
@@ -4885,14 +4885,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Failed",
                     "eValue": 0
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
