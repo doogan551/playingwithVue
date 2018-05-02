@@ -3589,6 +3589,18 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
         this.callSuper('postInit');
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon;
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon; // Purposefully return undefined if we're not on the toolbar
+    },
+
     setIconName: function () {
         var data = this._pointData,
             reverseActing,
@@ -3912,6 +3924,18 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
         this.callSuper('initialize', config);
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon;
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon; // Purposefully return undefined if we're not on the toolbar
+    },
+
     setIconName: function () {
         var data = this._pointData,
             reverseActing = data['Reverse Action'].Value,
@@ -4178,6 +4202,18 @@ gpl.blocks.Math = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon;
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon; // Purposefully return undefined if we're not on the toolbar
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
@@ -4352,13 +4388,27 @@ gpl.blocks.AlarmStatus = fabric.util.createClass(gpl.Block, {
     },
 
     initialize: function (config) {
-        this.setAlarmIcon('1111');
+        if (config.isToolbar) { // ch946; only set the icon if the block is in the toolbar
+            this.setAlarmIcon('1111');
+        }
         this.callSuper('initialize', config);
     },
 
     postInit: function () {
         this.setIconName();
         this.callSuper('postInit');
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon;
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon; // Purposefully return undefined if we're not on the toolbar
     },
 
     setAlarmIcon: function (total) {
@@ -5614,6 +5664,12 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     slSelf.handleMouseUp = function (event) {
         slSelf.mouseDown = false;
         if (event.e.which === 3) {
+            // ch938; clear anchor hovers when line draw operation is cancelled via right-click
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
+
             slSelf.delete();
         }
     };
@@ -7997,7 +8053,7 @@ gpl.BlockManager = function (manager) {
                 });
 
                 if (unpersistedPoint.length > 0) {
-                    console.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
+                    gpl.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
                     block.setPointData(unpersistedPoint[0], true);
                 }
             } else if (block.upi && !isNaN(block.upi)) {
