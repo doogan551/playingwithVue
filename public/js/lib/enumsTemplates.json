@@ -12433,7 +12433,7 @@
                     "Value": 40.0
                 },
                 "High Deadband": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -12463,7 +12463,7 @@
                     "Value": 0.0
                 },
                 "Input Deadband": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -12475,7 +12475,7 @@
                     "Value": 0
                 },
                 "Low Deadband": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -13074,7 +13074,7 @@
                     "Value": 40.0
                 },
                 "High Deadband": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -13105,7 +13105,7 @@
                     "eValue": 0
                 },
                 "Input Deadband": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -13117,7 +13117,7 @@
                     "Value": 0
                 },
                 "Low Deadband": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
