@@ -21,3 +21,4 @@ debug.log
 *.bak
 
 format\.js
+electron-dist/
