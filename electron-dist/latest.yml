@@ -1,9 +1,9 @@
-version: 0.2.9
+version: 0.2.10
 files:
-  - url: infoscanjs Setup 0.2.9.exe
-    sha512: X1qeukS1GWoCxz2Y1H4syWvlUKSTwbuaL8lZYPxeOdiwQDP+2ToOFa+MDiG73QAIrc0v71OnZpc5henlaF6ykg==
-    size: 38721975
-path: infoscanjs Setup 0.2.9.exe
-sha512: X1qeukS1GWoCxz2Y1H4syWvlUKSTwbuaL8lZYPxeOdiwQDP+2ToOFa+MDiG73QAIrc0v71OnZpc5henlaF6ykg==
-sha2: 26c32d7036edd7693b644cd848a9de918e1422114543760c73ffc9debfffec50
-releaseDate: '2018-05-03T15:54:25.077Z'
+  - url: infoscanjs Setup 0.2.10.exe
+    sha512: NZqudfJwUs3S0JjDgT8iCZRqYhyxuTq0UpklJsYm9lMqFgyKARIS0DDBPhI+n1tI05nbJZXc7+RyLzBOJiFdsQ==
+    size: 38722265
+path: infoscanjs Setup 0.2.10.exe
+sha512: NZqudfJwUs3S0JjDgT8iCZRqYhyxuTq0UpklJsYm9lMqFgyKARIS0DDBPhI+n1tI05nbJZXc7+RyLzBOJiFdsQ==
+sha2: 39dd064499514404fd7956a3beefa84196e921a31c2f7e409f93603bb7d7edc9
+releaseDate: '2018-05-03T16:00:54.844Z'
