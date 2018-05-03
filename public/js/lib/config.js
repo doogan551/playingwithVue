@@ -2629,16 +2629,16 @@ var Config = (function (obj) {
             if ((point['Point Type'].Value === 'Analog Selector') || (point['Point Type'].Value === 'Binary Selector')) {
                 if (val === 'Single Setpoint') {
                     obj.Utility.getPropertyObject('Setpoint Input', point).isDisplayable = true;
-                    setDisplayable(point, ['Setpoint Value', 'Input Deadband'], true);
-                    setDisplayable(point, ['High Deadband', 'Low Deadband', 'High Setpoint', 'Low Setpoint', 'Cooling Setpoint', 'Heating Setpoint'], false);
+                    setDisplayable(point, ['Setpoint Value', 'High Deadband', 'Low Deadband'], true);
+                    setDisplayable(point, ['Input Deadband', 'High Setpoint', 'Low Setpoint', 'Cooling Setpoint', 'Heating Setpoint'], false);
                 } else if (val === 'Dual Setpoint') {
                     obj.Utility.getPropertyObject('Setpoint Input', point).isDisplayable = false;
-                    setDisplayable(point, ['Setpoint Value', 'Input Deadband', 'Cooling Setpoint', 'Heating Setpoint'], false);
-                    setDisplayable(point, ['High Deadband', 'Low Deadband', 'High Setpoint', 'Low Setpoint'], true);
+                    setDisplayable(point, ['Setpoint Value', 'High Deadband', 'Low Deadband', 'Cooling Setpoint', 'Heating Setpoint'], false);
+                    setDisplayable(point, ['Input Deadband', 'High Setpoint', 'Low Setpoint'], true);
                 } else {
                     obj.Utility.getPropertyObject('Setpoint Input', point).isDisplayable = false;
-                    setDisplayable(point, ['Setpoint Value', 'Input Deadband', 'High Setpoint', 'Low Setpoint'], false);
-                    setDisplayable(point, ['High Deadband', 'Low Deadband', 'Cooling Setpoint', 'Heating Setpoint'], true);
+                    setDisplayable(point, ['Setpoint Value', 'High Deadband', 'Low Deadband', 'High Setpoint', 'Low Setpoint'], false);
+                    setDisplayable(point, ['Input Deadband', 'Cooling Setpoint', 'Heating Setpoint'], true);
                 }
             } else if (val === 'PID') {
                 setValueOptions(point['Input Range'], {
