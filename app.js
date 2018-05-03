@@ -39,6 +39,7 @@ if (config.minifyFiles !== false) {
 }
 
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/electron-dist'));
 
 app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
     stream: loggerStream.stream

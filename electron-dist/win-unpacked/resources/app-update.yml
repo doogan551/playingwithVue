@@ -1,4 +1,3 @@
-owner: Dorsett-Tech
-repo: infoscanjs-electron
-provider: github
-private: true
+provider: generic
+url: 'http://info-int'
+channel: latest

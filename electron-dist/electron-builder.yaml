@@ -7,8 +7,7 @@ win:
     - nsis
 icon: icon.ico
 publish:
-  - provider: github
-    owner: Dorsett-Tech
-    repo: infoscanjs-electron
-    private: true
+  - provider: generic
+    url: 'http://info-int'
+    channel: latest
 electronVersion: 2.0.0
