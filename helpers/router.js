@@ -26,6 +26,11 @@ module.exports = function (controllers) {
     router.use('/sass', controllers.sass);
     router.use('/scheduleloader/report', controllers.reports);
 
+    router.get('/download', function (req, res) {
+        res.render('electronDownload/index.pug');
+    });
+    router.use('/api/electrondownload', controllers.electrondownload);
+
     // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
     router.use(function (req, res, next) {
         if (req.isAuthenticated()) {
