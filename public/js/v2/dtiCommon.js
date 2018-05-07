@@ -30,7 +30,7 @@ var dtiCommon = {
         let result = '';
 
         if (Array.isArray(path)) {
-            result = path.join(dtiCommon._private.pointNameSeparator);
+            result = path.slice(1).join(dtiCommon._private.pointNameSeparator);
         }
 
         return result;
