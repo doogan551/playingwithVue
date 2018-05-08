@@ -4,6 +4,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
     function ViewModel(params) {
         var self = this;
         this.propertyName = params.propertyName;
+        this.point = params.data;
         this.data = params.data[this.propertyName];
         this.states = this.data.ValueOptions;
         this.isInEditMode = params.rootContext.isInEditMode;
