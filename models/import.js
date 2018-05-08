@@ -1454,6 +1454,18 @@ let Import = class Import extends Common {
         var parentUpi = point._parentUpi;
         var pointTypes = ['Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer'];
         if (pointTypes.includes(point['Point Type'].Value)) {
+            if (parentUpi !== 0) {
+                if (['Analog Selector', 'Binary Selector'].includes(point['Point Type'].Value)) {
+                    if (point['Calculation Type'].Value === 'Single Setpoint') {
+                        point['Calculation Type'].isReadOnly = true;
+                        point['Setpoint Value'].isReadOnly = true;
+                    }
+
+                    if (['Dual Setpoint', 'Setback'].includes(point['Calculation Type'].Value)) {
+                        delete point['Calculation Type'].ValueOptions['Single Setpoint'];
+                    }
+                }
+            }
             for (var prop in point) {
                 if (point[prop].ValueType === 8) {
                     if (parentUpi !== 0) {
