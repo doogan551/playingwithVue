@@ -22,7 +22,7 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function 
             self.showValidation(false);
             var val = self.controlValue();
             if (!focused) {
-                if (['Analog Input', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) {
+                if (['Analog Value', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) { // ch1297; change 'Analog Input' to 'Analog Value'
                     self.min = self.data['Minimum Value'].Value();
                     self.max = self.data['Maximum Value'].Value();
                     if (val > self.max) {
