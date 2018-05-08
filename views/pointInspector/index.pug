@@ -15,6 +15,7 @@ html(lang="en")
 
         script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
         script(src='/js/lib/store2.min.js')
+        script(src='/js/v2/dtiCommon.js')            
         script(src='/js/v2/dorsettUtility.js')
 
         script(src="/js/pointInspector/app/require.config.js")
@@ -44,7 +45,7 @@ html(lang="en")
                     span.pointType(data-bind="text: point.data['Point Type'].Value")
                     div.hiddenPointData.text-center
                         span(data-bind="text: point.data._id")
-                        |  > 
+                        |  &gt; 
                         span(data-bind="text: point.data.Name")
                 .actions
                     // ko ifnot: isInEditMode

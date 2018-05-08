@@ -61,13 +61,13 @@ module.exports = function (controllers) {
     router.use('/api/trendplots', controllers.trendplots);
     router.use('/api/schedules', controllers.schedules);
 
-    router.use('/dashboard', controllers.dashboard);
-    router.use('/displays', controllers.display);
-    router.use('/gpl', controllers.gpl);
-    router.use('/pointlookup', controllers.pointlookup);
-    router.use('/report', controllers.reports);
-    router.use('/thumbnail', controllers.thumbnails);
-    router.use('/toolbag', controllers.toolbag);
+  router.use('/dashboard', controllers.dashboard);
+  router.use('/displays', controllers.display);
+  router.use('/gpl', controllers.gpl);
+  router.use('/pointlookup', controllers.pointlookup);
+  router.use('/report', controllers.reports);
+  router.use('/thumbnail', controllers.thumbnails);
+  router.use('/toolbag', controllers.toolbag);
 
     return router;
 };

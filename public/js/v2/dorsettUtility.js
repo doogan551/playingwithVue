@@ -32,6 +32,51 @@ var dtiUtility = {
         idxPrefix: 'dti_',
         logLinePrefix: true
     },
+    forEach: function (obj, fn) {
+        var keys = Object.keys(obj),
+            c,
+            len = keys.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArray: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArrayRev: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
     formatDate: function(date, addSuffix) {
         var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
             lengths = [2, 2, 2, 3],
@@ -101,20 +146,48 @@ var dtiUtility = {
     },
     store: window.store,
     getConfigCallbacks: {},
+    getSystemEnumCallbacks: {},
     openWindowCallbacks: {},
+    updateWindowCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
     },
 
     init: function () {
-        if (dtiUtility.store === undefined) {
+        let storeLoaded = false;
+        let storeLoadFns = [];
+        let onStoreLoad = function (fn) {
+            if (storeLoaded) {
+                fn();
+            } else {
+                storeLoadFns.push(fn);
+            }
+        };
+        let afterStoreLoad = function () {
+            dtiUtility.forEachArray(storeLoadFns, (fn) => {
+                fn();
+            });
+        };
+
+        dtiUtility.initEventListener();
+
+        if (window.store === undefined) {
             $.getScript('/js/lib/store2.min.js', function handleGetStore() {
-                var storeInterval = setInterval(function testStore() {
+                let storeInterval;
+                let checkStore = function () {
                     if (window.store) {
                         dtiUtility.store = window.store;
                         clearInterval(storeInterval);
+                        afterStoreLoad();
                     }
-                }, 100);
+                };
+
+                if (!window.store) {
+                    storeInterval = setInterval(checkStore, 1);
+                } else {
+                    afterStoreLoad();
+                }
+                
             });
         }
         // If dtiCommon.js isn't already included, get it
@@ -123,12 +196,11 @@ var dtiUtility = {
                 // When dtiCommon is included by the view, it inits itself by listening 
                 // to the DOM load event, but that event has already come and gone so we 
                 // manually call init
-                window.dtiCommon.init.clientSide();
+                onStoreLoad(window.dtiCommon.init.clientSide);
             });
         }
 
         dtiUtility.initKnockout();
-        dtiUtility.initEventListener();
     },
 
     initKnockout: () => {
@@ -180,7 +252,7 @@ var dtiUtility = {
     },
 
     defaultHandler: function (e) {
-        console.log('Default handler:', e);
+        dtiUtility.log('Default handler:', e);
     },
 
     processMessage: function (newValue) {
@@ -202,6 +274,15 @@ var dtiUtility = {
                     if (cb) {
                         cb(newValue.value);
                     }
+                },
+                getSystemEnum() {
+                    var cb = dtiUtility.getSystemEnumCallbacks[newValue.getEnumID];
+
+                    if (cb) {
+                        cb(newValue.value);
+                    }
+
+                    delete dtiUtility.getConfigCallbacks[newValue.getEnumID];
                 },
                 getConfig: function () {
                     var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID];
@@ -240,6 +321,13 @@ var dtiUtility = {
                     if (dtiUtility._pointFilterSelectCb) {
                         dtiUtility._pointFilterSelectCb(newValue);
                     }
+                },
+                windowUpdated: function () {
+                    var cb = dtiUtility.updateWindowCallbacks[newValue._updateWindowID];
+
+                    if (cb) {
+                        cb(newValue.result);
+                    }
                 }
             };
 
@@ -251,10 +339,9 @@ var dtiUtility = {
     },
 
     handleMessage: function (e) {
-        var config;
+        let config = e.newValue || {};
+
         if (e.key.split(';')[0] === window.windowId) {
-            
-            config = e.newValue;
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
@@ -266,14 +353,8 @@ var dtiUtility = {
                 
                 dtiUtility.processMessage(config);
             }
+            store.remove(e.key);
         }
-
-        store.remove(e.key); // memory cleanup
-        // console.log({
-        //     'Storage Key': e.key,
-        //     'Old Value': e.oldValue,
-        //     'New Value': e.newValue
-        // });
     },
 
 
@@ -312,8 +393,32 @@ var dtiUtility = {
         dtiUtility._pointFilterSelectCb = cb;
     },
 
+    getTemplates: function (ids) {
+        dtiUtility.sendMessage('getTemplates', {
+            ids: ids
+        });
+    },
+
+    getTemplate: function (id) {
+        dtiUtility.sendMessage('getTemplate', {
+            id: id
+        });
+    },
+
+    onGetTemplate: function (cb) {
+        dtiUtility._getTemplateCb = cb;
+    },
+
+    onGetTemplates: function (cb) {
+        dtiUtility._getTemplatesCb = cb;
+    },
+
+    getWidgetTemplates: function () {
+        return store.get('dti_widgetTemplates');
+    },
+
     sendMessage: function (target, cfg) {
-        var data = cfg || {};
+        let data = cfg || {};
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
@@ -323,7 +428,9 @@ var dtiUtility = {
             dtiUtility.log('utility sendMessage,', 'target is:', target, ',data is:', data);
         }
 
-        store.set(target, data);
+        let title = ['dti', data._windowId, target].join(';');
+        store.set(title, data);
+
     },
 
     onMessage: function (cb) {
@@ -356,11 +463,21 @@ var dtiUtility = {
         dtiUtility.sendMessage('openWindow', config);
     },
 
-    updateWindow: function (action, parameters) {
+    updateWindow: function (action, parameters, cb) {
+        var updateWindowID = dtiUtility.makeId();
+
+        if (cb) {
+            dtiUtility.updateWindowCallbacks[updateWindowID] = cb;
+        }
+
         dtiUtility.sendMessage('windowMessage', {
+            messageID: updateWindowID,
             action: action,
-            parameters: parameters
+            parameters: parameters,
+            _updateWindowID: cb ? updateWindowID : null
         });
+
+
     },
 
     updateUPI: function (upi) {
@@ -372,6 +489,18 @@ var dtiUtility = {
 
     closeWindow: function () {
         dtiUtility.sendMessage('closeWindow');
+    },
+
+    getSystemEnum(enumType, cb) {
+        let getEnumID = dtiUtility.makeId();
+
+        dtiUtility.getSystemEnumCallbacks[getEnumID] = cb;
+
+        dtiUtility.sendMessage('getSystemEnum', {
+            messageID: getEnumID,
+            enumType,
+            getEnumID
+        });        
     },
 
     getConfig: function (path, parameters, cb) {
@@ -417,6 +546,7 @@ var dtiUtility = {
 };
 
 // $(dtiUtility.init);
-document.addEventListener('DOMContentLoaded', function loaddtiUtility(event) {
-    setTimeout(dtiUtility.init, 1000);
-});
+document.addEventListener('DOMContentLoaded', dtiUtility.init);
+//  function loaddtiUtility(event) {
+//     setTimeout(dtiUtility.init, 10);
+// });

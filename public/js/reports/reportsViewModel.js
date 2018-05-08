@@ -15,6 +15,26 @@ var dtiReporting = {
             return $(markup);
         }
     },
+    onLoadFn (cb = () => {return;}) {
+        if (window.onLoadFn) {
+            dtiReporting.onLoadFnCalled = true;
+            window.onLoadFn();
+            setTimeout(() => {
+                cb();
+            });
+        } else {
+            let interval = setInterval(() => {
+                if (window.onLoadFn) {
+                    dtiReporting.onLoadFnCalled = true;
+                    window.onLoadFn();
+                    setTimeout(() => {
+                        cb();
+                    });
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+    },
     itemIdx: 0,
     formatDate: function (date, addSuffix) {
         var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
@@ -7310,6 +7330,8 @@ let reportsViewModel = function () {
                             }
 
                             initializeForMaterialize();
+
+                            window.onLoadFn();
                         };
 
                     self.parentID(reportPoint.parentNode);
@@ -8178,7 +8200,15 @@ function applyBindings(extConfig) {
 }
 
 $(function () {
-    if (!window.location.href.match("pause")) {
-        applyBindings();
-    }
+    setTimeout(() => {
+        let parameters = window.getWindowParameters() || {};
+
+        // dtiReporting.log(parameters);
+
+        // instead of doing pause, parameters are now passed to openWindow
+        // Reports checks for reportConfig for the external config, no need to delay
+        // if (!window.location.href.match("pause")) {
+            applyBindings(parameters.reportConfig);
+        // }
+    });
 });
