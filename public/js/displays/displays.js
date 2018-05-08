@@ -1220,7 +1220,6 @@ let BaseWidget = class Widget {
         let api = displays.tooltipAPI;
 
         if (api.reposition) {
-            dti.log('repositioning');
             api.reposition();
         }
     }

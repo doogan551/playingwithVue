@@ -491,6 +491,7 @@ $widgetShadow: 0 0 18px 5px rgba(0, 0, 0, .5);
 
 .dti-widget-text {
     white-space: pre-wrap;
+    cursor: default;
 }
 
 .dti-widget-button {
@@ -758,6 +759,10 @@ $displaySettingsWidth: 250px;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+    }
+
+    .dti-widget-text {
+        cursor: pointer;
     }
 
     // .dti-widget-content {
