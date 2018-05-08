@@ -1434,7 +1434,7 @@ var widgets = {
                 }
             }
 
-            handlePoint(data) {
+            handlePoint(data, skipButtonType = false) {
                 if (data) {
                     super.handlePoint(data);
 
@@ -1456,7 +1456,9 @@ var widgets = {
                             this.isReport(true);
                             this.reportType(reportType);
                         }
-                        this.buttonType('Action');
+                        if (!skipButtonType) {
+                            this.buttonType('Action');
+                        }
                         // this.complexWidget(true);
                     } else {
                         this.buttonType('Link');
@@ -1557,7 +1559,7 @@ var widgets = {
                     base: {
                         width: 60,
                         height: 16,
-                        text: 'Text',
+                        text: '',
                         fontSize: 12,
                         bold: false,
                         editMode: false,
@@ -1747,7 +1749,7 @@ var widgets = {
 
                 // dti.timeGap('button point info');
                 let point = this.getPointInfo();
-                this.handlePoint(point);
+                this.handlePoint(point, true);
                 // dti.timeGapPause('button point info');
                 // dti.timeGapPause('button postinit');
             }
@@ -1767,7 +1769,7 @@ var widgets = {
                     width: this.config.width,
                     idx: this.config.idx,
                     id: this.id,
-                    text: this.config.text,
+                    text: this.config.text || '',
                     editMode: this.config.editMode,
                     type: this.config.widgetType,
                     buttonType: this.config.buttonType,
