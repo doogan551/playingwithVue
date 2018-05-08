@@ -386,13 +386,18 @@ var dtiCommon = {
                 dtiCommon._private.pointNameSeparator = dti.utility.getConfig('Enums.Point Name Separator').Value;
                 dtiCommon.init.isComplete = true;
             } else {
-                dtiUtility.getConfig('Enums.Point Name Separator', null, function (result) {
-                    // result = {
-                    //  Value: ' ► ' // or whatever the char is
-                    // }
-                    dtiCommon._private.pointNameSeparator = result.Value;
+                if (window.getConfig) {
+                    dtiCommon._private.pointNameSeparator = window.getConfig('Enums.Point Name Separator').Value;
                     dtiCommon.init.isComplete = true;
-                });
+                } else {
+                    dtiUtility.getConfig('Enums.Point Name Separator', null, function (result) {
+                        // result = {
+                        //  Value: ' ► ' // or whatever the char is
+                        // }
+                        dtiCommon._private.pointNameSeparator = result.Value;
+                        dtiCommon.init.isComplete = true;
+                    });
+                }
             }
         },
         serverSide: () => {

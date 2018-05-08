@@ -5,6 +5,7 @@ html
             | Infoscan by Dorsett Technologies
         //- link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/sass/v2/home')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
         //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
         link(rel='stylesheet', href='/css/lib/jstree.themes/default/style.min.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.css')
@@ -78,7 +79,7 @@ html
                         .taskbarItem
                             i.material-icons.tooltipped(data-bind='click: globalSearch.hide', data-position='left', data-tooltip='Close Search', data-delay='10') close
 
-        main.animates
+        main.animates(data-bind="css: {darkMode: darkMode()}")
             #globalSearchResults.animates
                 .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
                     .row.center
@@ -519,8 +520,8 @@ html
         // /ko
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading(), darkMode: dti.bindings.darkMode }')
-            .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { desktop: isDesktop, hide: minimized() || windowsHidden(), activeCard: active(), loading: loading(), darkMode: dti.bindings.darkMode }')
+            .card-toolbar.blue-grey(data-bind="visible: !isDesktop(), css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
                     a.white-text(href="javascript://")
                         i.material-icons.popInOutIcon call_made
@@ -610,12 +611,9 @@ html
                         input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
                         label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }, visible: name4() !== '' ")
-                            i.material-icons.suffix clear
-                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
+                            i.material-icons.suffix clear                                                                                                                                       
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
-
-                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }, css: { disabled: restrictCreate }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         .dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }, style: { 'column-count': dropdownColumnCount }")
@@ -643,11 +641,7 @@ html
                             // /ko
                             // /ko
                             // /ko
-                        //- select(data-beloworigin="true")
-                            //- // ko foreach: pointTypes
-                            //- option(data-bind="value: key, text: key")
-                            //- // /ko
-                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
+
 
                 .selectorList(data-bind="click: handleNavigatorRowClick")
                     .fetching(data-bind="visible: fetchingPoints")
@@ -773,10 +767,10 @@ html
                 .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
             // /ko
 
-
     script.
         var isAuthenticated = !{isAuthenticated};
         var userData = !{user};
+        var systemEnums = !{systemEnums};
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')

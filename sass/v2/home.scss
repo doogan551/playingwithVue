@@ -271,6 +271,10 @@ main {
     // padding: 5px;
 }
 
+main.darkMode {
+    background-color: $blue-grey;
+}
+
 header {
     z-index: 2;
 }
@@ -452,6 +456,7 @@ $modalHeaderHeight: 42px;
 // }
 
 $cardTitleBorder: rgba(160, 160, 160, .2);
+$transitionDuration: 150ms;
 
 .dti-card-panel {
     // min-width: 300px;
@@ -464,7 +469,22 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     flex-direction: column;
     position: absolute !important;
     margin: 0;
-    z-index: 90;
+
+    &:not(.ui-resizable-resizing):not(.desktop) {
+        transition: width $transitionDuration, height $transitionDuration;
+    }
+    // z-index: 90;
+
+    &.desktop {
+        .windowMask {
+            top: 0;
+        }
+        
+        z-index: 0 !important;
+        .card-body {
+            height: 100%;
+        }
+    }
 
     .progress {
         margin: 0;
@@ -475,6 +495,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         line-height: 1;
         font-size: 24px;
         border-bottom: 1px solid $cardTitleBorder;
+        z-index: 1;
 
         .card-title {
             font-size: 16px;
@@ -504,6 +525,10 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         padding-right: 0;
         text-align: right;
     }
+}
+
+.dti-card-panel:not(.activeCard) .ui-icon {
+    display: none !important;
 }
 
 .windowMask {
@@ -1940,6 +1965,10 @@ input:focus {
 #pointSelectorModal {
     .modal-header {
         background-color: $blue-grey-darken-2;
+    }
+
+    .modal-content {
+        position: relative;
     }
 
     .content-header {

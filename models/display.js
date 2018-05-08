@@ -4,6 +4,9 @@ const ce = require('cloneextend');
 const gm = require('gm');
 const glob = require('glob');
 const ObjectID = require('mongodb').ObjectID;
+const Point = require('./point');
+var utils = require('../helpers/utils');
+var activityLogCollection = utils.CONSTANTS("activityLogCollection");
 
 const Config = require('../public/js/lib/config.js');
 // TODO Remove utility occurences when converted to class.
@@ -13,16 +16,13 @@ const actLogsEnums = Config.Enums['Activity Logs'];
 const pointsCollection = 'points';
 const versionsCollection = 'versions';
 
-module.exports = {
 
-    getDisplayInfo: function (data, cb) {
+const Display = class Display {
+    getDisplayInfo(upiList, cb) {
         let dbUtility = new Utility();
-        let upi = +data.upi;
-        let upiList = data.upiList || [];
         let idx;
         let returnObj = {};
         let getUpiNames = function (callback) {
-            // console.log('getting display info', upiList);
             dbUtility.get({
                 collection: pointsCollection,
                 query: {
@@ -32,23 +32,37 @@ module.exports = {
                 },
                 fields: {
                     _id: 1,
-                    Name: 1,
-                    'Point Type.Value': 1
+                    // Name: 1,
+                    path: 1,
+                    Value: 1,
+                    'Point Type.Value': 1,
+                    'Point Type.eValue': 1,
+                    'Report Type.Value': 1,
+                    'Maximum Value': 1,
+                    'Minimum Value': 1
                 }
             }, function (err, docs) {
                 let names = {},
                     pointTypes = {},
+                    reportTypes = {},
                     c,
+                    row,
                     len = docs.length;
 
                 for (c = 0; c < len; c++) {
-                    names[docs[c]._id] = docs[c].Name;
-                    pointTypes[docs[c]._id] = docs[c]['Point Type'].Value;
+                    row = docs[c];
+                    names[row._id] = Config.Utility.getPointName(row.path);
+                    pointTypes[row._id] = row['Point Type'].Value;
+                    if (row['Point Type'].Value === 'Report') {
+                        reportTypes[row._id] = row['Report Type'].Value;
+                    }
                 }
 
                 return callback({
-                    names: names,
-                    pointTypes: pointTypes
+                    upiNames: names,
+                    pointTypes: pointTypes,
+                    reportTypes: reportTypes,
+                    points: docs
                 });
             });
         };
@@ -57,26 +71,47 @@ module.exports = {
             upiList[idx] = +upiList[idx];
         }
 
-        dbUtility.get({
-            collection: versionsCollection,
-            query: {
-                vid: upi
-            },
-            sort: {
-                eDate: -1
-            }
-        }, function (err, versions) {
-            let callback = function (ret) {
-                returnObj.upiNames = ret.names;
-                returnObj.pointTypes = ret.pointTypes;
-                return cb(null, returnObj);
-            };
-            returnObj.versions = versions;
-            getUpiNames(callback);
+        getUpiNames((ret) => {
+            cb(null, ret);
         });
-    },
+    }
 
-    displayGif: function (data, cb) {
+    viewDisplay(data, cb) {
+        const point = new Point();
+        let upi = +data.upoint;
+        let user = data.user;
+        point.getOne({
+            query: {
+                _id: upi
+            }
+        }, (err, display) => {
+            if (!!display) {
+                let upiList = display['Screen Objects'].map((obj) => {
+                    return obj.upi;
+                });
+
+                this.getDisplayInfo(upiList, (err, ret) => {
+                    ret.pointData = display;
+                    ret.upi = upi;
+                    ret.user = user;
+                    cb(ret);
+                });
+            } else {
+                let ret = {
+                    pointData: {},
+                    upiNames: {},
+                    user: user,
+                    reportTypes: {},
+                    pointTypes: {},
+                    points: []
+                };
+
+                cb(ret);
+            }
+        });
+    }
+
+    displayGif(data, cb) {
         let filename = data.fname + '.gif';
         let frame = parseInt(data.frame, 10);
         let dirname = __dirname.replace(/\\/g, '/');
@@ -160,101 +195,9 @@ module.exports = {
                 getFiles();
             }
         });
-    },
-    editDisplay: function (data, cb) {
-        let dbUtility = new Utility();
-        dbUtility.get({
-            collection: versionsCollection,
-            query: {
-                vid: +data.upoint
-            },
-            sort: {
-                version: -1,
-                eDate: -1
-            }
-        }, function (err, versions) {
-            console.log('err', err);
-            console.log('# of display versions for ', data.upoint, ': ', versions.length);
-
-
-            dbUtility.get({
-                collection: pointsCollection,
-                query: {
-                    '_id': +data.upoint
-                }
-            }, function (err, production) {
-                let disp;
-
-                production[0].version = 'Production';
-
-                if (versions.length < 1) { //if no staging versions
-                    disp = ce.clone(production[0]);
-                    disp.version = 'Staging';
-                    disp.vid = +disp._id;
-                    versions.push(disp);
-
-                    disp._actvAlmId = 0;
-                    disp.vid = disp._id;
-                    delete disp._id;
-                    disp.eDate = Math.round(+new Date() / 1000);
-
-                    console.log('saving staging version', disp.version);
-                    dbUtility.save({
-                        collection: versionsCollection,
-                        saveObj: disp
-                    }, function (err, result) {
-                        console.log('save version error', err);
-                        renderDisplay(data, versions.slice(-1)[0], versions, cb);
-                    });
-                } else {
-                    versions.unshift(production[0]);
-                    renderDisplay(data, versions[1], versions, cb);
-                }
-            });
-        });
-    },
-    previewDisplay: function (data, cb) {
-        let dbUtility = new Utility();
-        dbUtility.get({
-            collection: pointsCollection,
-            query: {
-                '_id': +data.upoint,
-                'Screen Objects': {
-                    $exists: true
-                }
-            }
-        }, function (err, docs) {
-            //if it's found in the points collection
-            if (docs.length > 0) {
-                return cb(null, {
-                    upi: data.upoint,
-                    displayJson: docs[0]
-                });
-            }
-
-            if (data.upoint !== '{{tab.upi}}') {
-                dbUtility.get({
-                    collection: versionsCollection,
-                    query: {
-                        '_id': new ObjectID(data.upoint)
-                    }
-                }, function (err, docs) {
-                    if (docs.length > 0) {
-                        return cb(null, {
-                            upi: docs[0].vid,
-                            displayJson: docs[0]
-                        });
-                    }
-                    return cb('Display not found');
-                });
-            } else {
-                return cb('tab.upi sent');
-            }
-        });
-    },
-    getName: function (data, cb) {
-        let dbUtility = new Utility();
-        dbUtility.get({
+    }
+    getName(data, cb) {
+        Utility.get({
             collection: pointsCollection,
             query: {
                 '_id': +data.upi
@@ -265,276 +208,144 @@ module.exports = {
             }
             return cb('#' + data.upi + ' not found');
         });
-    },
+    }
 
-    save: function (data, cb) {
+    save(data, cb) {
         console.log('saving display');
         return cb('saved');
-    },
+    }
 
-    publish: function (data, cb) {
-        let dbUtility = new Utility();
-        const activityLog = new ActivityLog();
-        let dId,
+    publish(data, cb) {
+        var dId,
             c,
             displayObject = JSON.parse(data.display),
             oldVersion,
             obj,
             rootPath = __dirname + '/../public/display_assets/assets/',
             makeHandler = function (name) {
-                return function () {
+                return function (err) {
+                    if (err) {
+                        console.log('DISPLAYS:Error moving', name);
+                    }
                     console.log('DISPLAYS: saved uploaded file:', name);
                 };
             },
             uploadedFiles = data.files,
-            list = Object.keys(uploadedFiles);
+            list = Object.keys(uploadedFiles || {});
+
+        let dbUtility = new Utility();
 
         for (c = 0; c < list.length; c++) {
             obj = uploadedFiles[list[c]];
-            fs.writeFile(rootPath + obj.originalname, obj.buffer, makeHandler(obj.originalname));
-        }
-
-        displayObject.eDate = Math.round(+new Date() / 1000);
-        dId = +displayObject._id;
-        displayObject._id = +displayObject._id;
-        displayObject.vid = +displayObject.vid;
-        displayObject._actvAlmId = ObjectID(displayObject._actvAlmId);
-        delete displayObject.version;
-
-        console.log('displays: finding display-', displayObject._id);
-        dbUtility.get({
-            collection: pointsCollection,
-            query: {
-                '_id': displayObject._id
-            }
-        }, function (e, d) {
-            console.log('publish find err:', e);
-            console.log('displays: found ', d.length, ' docs');
-            oldVersion = ce.clone(d[0]);
-            delete oldVersion._id;
-
-            displayObject._pStatus = 1;
-
-            dbUtility.update({
-                collection: pointsCollection,
-                query: { //update the display
-                    '_id': displayObject._id
-                },
-                updateObj: displayObject
-            }, function (err, docs) {
-                let logData = {
-                    user: data.user,
-                    timestamp: Date.now(),
-                    point: displayObject,
-                    activity: actLogsEnums['Display Edit'].enum,
-                    log: 'Display edited.'
-                };
-
-                activityLog.create(logData, function (err, result) {});
-
-                console.log('display publish err', err);
-                console.log('displays: updated display');
-                console.log('displays: removing display');
-
-                displayObject.vid = dId;
-                displayObject.version = 'Staging';
-                oldVersion.vid = dId;
-
-                //set version in previous production version
-                console.log('displays: updating staging version');
-                delete displayObject._id;
-
-                dbUtility.update({
-                    collection: pointsCollection,
-                    query: {
-                        vid: dId,
-                        version: 'Staging'
-                    },
-                    updateObj: displayObject
-                }, function (saveOldErr, saveOldRes) {
-                    console.log('displays saveOld err:', saveOldErr);
-                    if (saveOldErr) {
-                        return cb(saveOldErr);
-                    }
-                    console.log('displays: saving display in versions');
-                    delete oldVersion._id;
-                    delete oldVersion.version;
-                    dbUtility.save({
-                        collection: versionsCollection,
-                        saveObj: oldVersion
-                    }, function (saveNewErr, saveNewRes) {
-                        if (saveNewErr) {
-                            return cb(saveNewErr);
-                        }
-                        return cb(null, 'Saved and Published');
-                    });
-                });
-            });
-        });
-    },
-
-    saveLater: function (data, cb) {
-        let dbUtility = new Utility();
-        let displayObject,
-            upi;
-
-        displayObject = JSON.parse(data.display);
-
-        upi = +displayObject.vid;
-
-        displayObject.vid = upi;
-
-        displayObject.eDate = Math.round(+new Date() / 1000);
-        delete displayObject._id;
-        displayObject.version = 'Staging';
-
-        // console.log('displays savelater', displayObject);
-
-        dbUtility.update({
-            collection: versionsCollection,
-            query: {
-                vid: upi,
-                version: 'Staging'
-            },
-            updateObj: displayObject
-        }, function (err, docs) {
-            // console.log('displays savelater docs', docs);
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, 'Saved for later');
-        });
-    },
-    browse: function (data, cb) { //bmp
-        let files,
-            flist = [],
-            j,
-            ext;
-
-        files = fs.readdirSync(path.join(__dirname, '..', 'public', 'display_assets', 'assets'));
-        for (j = 0; j < files.length; j++) {
-            ext = files[j].split('.');
-
-            if (ext[1] !== 'gif') {
-                flist.push(files[j]);
-            }
+            obj.mv(rootPath + obj.name, makeHandler(obj.name));
+            // fs.writeFile(rootPath + obj.name, obj.data, makeHandler(obj.name));
         }
 
         return cb(null, {
-            files: flist
+            msg: 'Success'
         });
-    },
 
-    browse2: function (req, res, next) {
-        let files, flist, j, ext;
+        // displayObject.eDate = Math.round(+new Date() / 1000);
+        // dId = +displayObject._id;
+        // displayObject._id = +displayObject._id;
+        // displayObject.vid = +displayObject.vid;
+        // displayObject._actvAlmId = ObjectID(displayObject._actvAlmId);
+        // delete displayObject.version;
 
-        files = fs.readdirSync(path.join(__dirname, '..', 'public', 'display_assets', 'assets'));
-        flist = [];
-        for (j = 0; j < files.length; j++) {
-            ext = files[j].split('.');
+        // console.log('displays: finding display-', displayObject._id);
+        // dbUtility.get({
+        //     collection: pointsCollection,
+        //     query: {
+        //         '_id': displayObject._id
+        //     }
+        // }, function (e, d) {
+        //     if (e) {
+        //         console.log('publish find err:', e);
+        //     }
 
-            if (ext[1] === 'gif') {
-                flist.push(files[j]);
-            }
-        }
+        //     console.log('displays: found ', d.length, ' docs');
 
-        return next(null, {
-            files: flist
-        });
-    },
-    listAssets: function (data, cb) {
-        console.log(' - - - -  listassets()  called  - - - - - ');
-        let filetype = data.imagetype,
-            ext,
-            files,
-            flist = [],
-            fileStats,
-            assetsDir = path.join(__dirname, '..', 'public', 'display_assets', 'assets'),
-            j;
+        //     displayObject._pStatus = 0;
 
-        console.log(' - - -  listassets()  assetsDir = %s', assetsDir);
-        files = fs.readdirSync(assetsDir);
-        console.log(' - - -  listassets()  readdirSync() files.length = %s', files.length);
-        for (j = 0; j < files.length; j++) {
-            fileStats = fs.statSync(assetsDir + '\\' + files[j]);
-            if (fileStats && !fileStats.isDirectory()) {
-                if (filetype && filetype !== '*') { // list all files when "*"
-                    ext = path.extname(files[j]);
-                    if (('.' + filetype.toLowerCase()) === ext.toLowerCase()) {
-                        flist.push({
-                            file: {
-                                filename: files[j],
-                                filesize: fileStats.size,
-                                modifieddate: fileStats.mtime
-                            }
-                        });
-                    }
-                } else {
-                    flist.push({
-                        file: {
-                            filename: files[j],
-                            filesize: fileStats.size,
-                            modifieddate: fileStats.mtime
-                        }
-                    });
-                }
-            }
-        }
-        console.log(' - - -  flist.length = ', flist.length);
-        return cb(null, {
-            path: '/display_assets/assets/',
-            files: flist,
-            folders: ''
-        });
+        //     dbUtility.update({
+        //             collection: pointsCollection,
+        //             query: { //update the display
+        //                 '_id': displayObject._id
+        //             },
+        //             updateObj: displayObject
+        //         },
+        //         function (err, docs) {
+        //             var logData = {
+        //                 user: data.user,
+        //                 timestamp: Date.now(),
+        //                 point: displayObject,
+        //                 activity: actLogsEnums["Display Edit"].enum,
+        //                 log: "Display edited."
+        //             };
+
+        //             if (err) {
+        //                 return cb({
+        //                     err: err
+        //                 });
+        //             }
+
+        //             return cb(null, {
+        //                 msg: 'Success'
+        //             });
+        //         }
+        //     );
+        // });
     }
 };
 
-let renderDisplay = function (data, currDisp, versions, cb) {
-    let dbUtility = new Utility();
-    let c, len,
-        upiList = [],
-        getUpiNames = function (callback) {
-            dbUtility.get({
-                collection: pointsCollection,
-                query: {
-                    '_id': {
-                        $in: upiList
-                    }
-                },
-                fields: {
-                    _id: 1,
-                    Name: 1
-                }
-            }, function (err, docs) {
-                let ret = {},
-                    cc,
-                    lenn = docs.length;
+module.exports = Display;
 
-                for (cc = 0; cc < lenn; cc++) {
-                    ret[docs[cc]._id] = docs[cc].Name;
-                }
+// let renderDisplay = function (data, currDisp, versions, cb) {
+//     let dbUtility = new Utility();
+//     let c, len,
+//         upiList = [],
+//         getUpiNames = function (callback) {
+//             dbUtility.get({
+//                 collection: pointsCollection,
+//                 query: {
+//                     '_id': {
+//                         $in: upiList
+//                     }
+//                 },
+//                 fields: {
+//                     _id: 1,
+//                     Name: 1
+//                 }
+//             }, function (err, docs) {
+//                 let ret = {},
+//                     cc,
+//                     lenn = docs.length;
 
-                callback(err, ret);
-            });
-        };
+//                 for (cc = 0; cc < lenn; cc++) {
+//                     ret[docs[cc]._id] = docs[cc].Name;
+//                 }
 
-    len = currDisp['Screen Objects'].length;
-    for (c = 0; c < len; c++) {
-        upiList.push(currDisp['Screen Objects'][c].upi);
-    }
+//                 callback(err, ret);
+//             });
+//         };
 
-    getUpiNames(function (err, upiNames) {
-        // currDisp.upiNames = upiNames;
-        currDisp._id = data.upoint;
+//     len = currDisp['Screen Objects'].length;
+//     for (c = 0; c < len; c++) {
+//         upiList.push(currDisp['Screen Objects'][c].upi);
+//     }
 
-        return cb(err, {
-            upi: data.upoint,
-            displayJson: currDisp,
-            upiNames: upiNames,
-            versions: versions
-        });
-    });
-};
+//     getUpiNames(function (err, upiNames) {
+//         // currDisp.upiNames = upiNames;
+//         currDisp._id = data.upoint;
+
+//         return cb(err, {
+//             upi: data.upoint,
+//             displayJson: currDisp,
+//             upiNames: upiNames,
+//             versions: versions
+//         });
+//     });
+// };
 
 
 const ActivityLog = require('./activitylog');

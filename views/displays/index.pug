@@ -1,34 +1,605 @@
-extends layout
+doctype html
+html
+    head
+        title Display
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/css/lib/jquery-ui.css')
+        link(rel='stylesheet', href='/css/lib/jquery.qtip.css')
+        link(rel='stylesheet', href='/css/lib/jquery.contextMenu.min.css')
+        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/spectrum.css')
+        link(rel='stylesheet', href='/css/lib/mbox-0.0.1.min.css')
+        link(rel='stylesheet', href='/sass/displays/displays')
 
-block content
-  script(src='/js/lib/angular.js')
+    body(data-bind="style: {'background-color': !editMode() ? backgroundColor : '#cccccc' }, css: { editMode: editMode, viewMode: !editMode(), editingPreviewWidget: editingPreviewWidget, editingComplexWidget: editingComplexWidget }, delegate: [{event: 'click', selector: '.dti-widget', handler: widgetClickHandler }]")
 
-  link(rel='stylesheet', href='/css/displays/main.css')
-  .ui-bar.ui-bar-b(style='position: relative; padding: 0px; padding-top: 4px; padding-bottom: 4px;')
-      div(style='float: right;')
-        .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
-          a(href='#moreMenu', data-rel='popup', data-role='button', data-inline='true', data-transition='fade', data-icon='arrow-d', data-theme='b') Open Displays ({{tabs.length}})
-          a#addDisplay( data-mini='true', data-role='button', data-icon='d-open', data-theme='b', data-inline='true', data-iconpos='notext') Load Display
-          a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-burst', data-theme='b', data-inline='true', data-iconpos='notext') Create Display
-          a#importDisplay(href='/displays/import', data-mini='true', data-role='button', data-icon='d-import', data-theme='b', data-inline='true', data-iconpos='notext') Import Displays
-      div(style='overflow:hidden;margin-right:290px;height:32px;')
-          ul#track
-            li.displayTab(ng-repeat='tab in tabs',class='pinned{{tab.pinned}}')
-              .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
-                  a.displayTitle(ng-click="viewTab(tab)", data-role='button', data-theme='{{tab.theme}}') {{tab.title}}
-                  a.displayPin(ng-click="pinTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='pinned-{{tab.pinned}}') Pin Display
-                  a.displayPop(ng-click="popTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='d-pop') Pop-Out Display
-                  a.displayClose(ng-click="closeTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='delete') Close Display
+        //- #mask(data-bind="visible: editingWidget")
+        .widgetToolbarMask(data-bind="visible: editingPreviewWidget")
+            
+        main(data-bind="css: {desktop: desktop}")
+            .displayContainer(data-bind="style: {'background-color': backgroundColor, height: cheight() + 'px', width: cwidth() + 'px', left: left() + 'px', top: top() + 'px'}, css: {transition: transitioning}")
+                // ko if: (backgroundImageData() !== '' || backgroundImage() !== '')
+                img.bg(data-bind="style: { width: backgroundImageData() ? bgWidth() : '', height: backgroundImageData() ? bgHeight() : '', 'zoom': (zoom() / 100) }, attr: { 'src': backgroundImageData() || (backgroundPath() + backgroundImage()) }")
+                // /ko
+
+                // ko foreach: screenObjects.Button
+                display-button(params="config: cfg")
+                // /ko
+
+                // ko foreach: screenObjects.Dynamic
+                display-dynamic(params="config: cfg")
+                // /ko
+
+                // ko foreach: screenObjects.Text
+                display-text(params="config: cfg")
+                // /ko                   
+
+                // ko foreach: screenObjects.Animation
+                display-animation(params="config: cfg")
+                // /ko                                     
+
+        .bottom-bar.flex.flex-row
+            .left-controls.blue-grey-form
+                a.autoZoom.white-text(href="javascript://", data-bind="click: autoZoom")
+                    i.material-icons center_focus_weak
+                span.range-field
+                    input(type='range', min='40', max='400', data-bind="value: zoom, valueUpdate: 'input'")
+                span.zoom.white-text(data-bind='text: Math.round(zoom()) + "%"')
+            .right-controls
+                // ko if: !editMode()
+                a.btn.btn-blue-grey.barBtn.waves-effect.white-text(href="javascript://", data-bind="click: toggleEditMode") Edit
+                // /ko
+
+                // ko if: editMode
+                a.btn.btn-blue-grey.barBtn.btn-flat.waves-effect.white-text(href="javascript://", data-bind="click: cancelEdit") Cancel
+
+                //- a.btn.btn-green.barBtn.waves-effect.white-text(href="javascript://", data-bind="click: saveForLater") Save For Later
+
+                a.btn.btn-green.barBtn.waves-effect.white-text(href="javascript://", data-bind="click: save") Save
+                // /ko
+
+        ul#widgetToolbar.z-depth-2.blue-grey-form
+            li.no-padding.center-align.blue-grey.white-text Widgets
+            li.no-padding
+                .widgetPreview
+                    display-text(params="config: {}, isPreview: true")
+
+            li.no-padding
+                .widgetPreview
+                    display-dynamic(params="config: {}, isPreview: true")
+
+            li.no-padding
+                .widgetPreview
+                    display-button(params="config: {}, isPreview: true")
+
+            li.no-padding
+                .widgetPreview
+                    display-animation(params="config: {}, isPreview: true")
+
+            //- li.no-padding.center-align.blue-grey.white-text Display Properties
+            li.center-align.displaySettings
+                a.waves-effect.black-text.flex(href="#", data-bind="style: { backgroundColor: showDisplaySettings() ? '#e8e8e8' : '#fff' },click: toggleDisplayProperties")
+                    //- i.material-icons settings
+                    span Display Settings
+                    span(data-bind="html: showDisplaySettings() ? '&nbsp;<<' : '&nbsp;>>'")
+
+            ul#displaySettings.z-depth-2.blue-grey-form(data-bind="css: { showPanel: showDisplaySettings }")
+                li.no-padding.dimensions
+                    .input-field
+                        input(type="number", data-bind="labelID: 'sibling', textInput: width")
+                        label Width
+                    .input-field
+                        input(type="number", data-bind="labelID: 'sibling', textInput: height")
+                        label Height
+
+                li.no-padding.displayBackground
+                    .center-align Background Color
+                    input(type="text", data-bind="spectrum: backgroundColor")                    
+
+                li.no-padding.dimensions
+                    .input-field.file-field
+                        .btn.blue-grey
+                            span Background
+                            input(type="file", accept="image/jpeg,image/jpg,image/png", data-bind="fileUpload: { onImgLoad: backgroundImageLoad, onLoad: handleBackgroundImageUpload }")
+                        .file-path-wrapper
+                            input.file-path(type="text", data-bind="value: backgroundImage")
 
 
-    #framebox(style='border: none; position: fixed; top: 42px; left: 0px; right: 0px; bottom:0px;')
-      iframe(ng-repeat='tab in tabs',class='iframe theme{{tab.theme}} disp_{{tab.upi}}', frameborder='0', src='/displays/view/{{tab.upi}}')
 
-block panels
-  #popSelector(data-role='popup', data-overlay-theme='a', data-theme='a', data-corners='false', data-tolerance='15,15')
-    a.ui-btn-right(class='closePop', data-rel='back', data-role='button', data-theme='a', data-icon='delete', data-iconpos='notext') Close
-    iframe(id='popFrame', src='', width='800', height='600', seamless='seamless')
-  #moreMenu(data-role='popup',data-mini='true', data-theme='c')
-    div(data-role='controlgroup', data-mini='true')
-      a(ng-repeat='tab in tabs',ng-click="viewTabFront(tab)", data-role='button', data-icon='arrow-l', data-theme='c', data-mini='true', data-iconpos='left') {{tab.title}}
+            //- li.no-padding.backgroundDimensions.dimensions
+            //-     .input-field
+            //-         input(type="number", data-bind="labelID: 'sibling', textInput: bgWidth")
+            //-         label Width
+            //-     .input-field
+            //-         input(type="number", data-bind="labelID: 'sibling', textInput: bgHeight")
+            //-         label Height
 
+
+
+
+
+
+            //- li.no-padding.center-align.blue-grey.white-text
+            //-     div Display Settings
+
+            //- li.no-padding
+            //-     .input-field.file-field
+            //-         .btn.blue-grey
+            //-             span Background
+            //-             input(type="file", data-bind="fileUpload: { onImgLoad: backgroundImageLoad, onLoad: handleBackgroundImageUpload }")
+            //-         .file-path-wrapper
+            //-             input.file-path(type="text")
+
+        .selectionBox(data-bind="visible: selection.dragging, style: { left: selection.left() + 'px', top: selection.top() + 'px', width: selection.width() + 'px', height: selection.height() + 'px' }")
+
+        .menuContainer(data-bind="stopBindings: true")
+            .tooltipMenu
+                .widgetTooltip.blue-grey-form(data-bind="")
+
+                    .row
+                        .simple.col(data-bind="css: {'s6': complexWidget() && type() !== 'Animation', 's12': !complexWidget() || type() === 'Animation' }")
+                            //- (data-bind="css: {'col s6': complexWidget}")
+                            // ko if: type() === 'Animation'
+                            .row
+                                .col.s12 Animation Type
+                            .row
+                                .col.s12.animationTypeSelection
+                                    input(name='animationType', type='radio', value='onoff', data-bind="checked: animationType, labelID: 'sibling'")
+                                    label On/Off
+
+                                    input(name='animationType', type='radio', value='frame', data-bind="checked: animationType, labelID: 'sibling'")
+                                    label Frame Selection
+
+                                    input(name='animationType', type='radio', value='multifile', data-bind="checked: animationType, labelID: 'sibling'")
+                                    label Multi-File
+
+                            // /ko
+
+                            //- // ko if: type() === 'Button'
+                            //- .row
+                            //-     .col.s12 Button Type
+                            //- .row
+                            //-     .col.s12.buttonTypeSelection
+                            //-         input(name='buttonType', type='radio', value='Link', data-bind="checked: buttonType, labelID: 'sibling'")
+                            //-         label Link
+
+                            //-         input(name='buttonType', type='radio', value='Action', data-bind="checked: buttonType, labelID: 'sibling'")
+                            //-         label Action
+
+                            //- // /ko
+
+                            //- .row
+                            //-     .input-field.col
+                            //-         input(type="number", min="0", data-bind="textInput: width, labelID: 'sibling'")
+                            //-         label Width
+                            //-     .input-field.col
+                            //-         input(type="number", min="0", data-bind="textInput: height, labelID: 'sibling'")
+                            //-         label Height                            
+
+
+
+                            // ko if: text() !== undefined && type() !== 'Dynamic'
+                            .row
+                                .input-field.col.s12
+                                    textarea.materialize-textarea(data-bind="textInput: text, labelID: 'sibling'")
+                                    label Text
+                            // /ko                          
+                            
+                            .row
+                                // ko if: fontSize() !== undefined
+                                .input-field.col
+                                    input(type="number", step="1", min="8", max="48", data-bind="textInput: fontSize, labelID: 'sibling'")
+                                    label Font Size
+                                // /ko
+
+                                // ko if: precision() !== undefined
+                                .input-field.col
+                                    input(type="number", min="0", data-bind="textInput: precision, labelID: 'sibling'")
+                                    // ko if: type() === 'Animation'
+                                    label(data-bind="text: animationType() === 'frame' ? 'Divisor/Step' : '\"On\" Threshold'")
+                                    // /ko
+
+                                    // ko if: type() !== 'Animation'
+                                    label Threshold/Divisor
+                                    // /ko
+
+                                // /ko
+
+                            .row
+                                // ko if: bold() !== undefined
+                                .col.s6
+                                    input(type="checkbox", data-bind="checked: bold, labelID: 'sibling'")
+                                    label Bold
+                                // /ko
+
+                                // ko if: underline() !== undefined
+                                .col.s6
+                                    input(type="checkbox", data-bind="checked: underline, labelID: 'sibling'")
+                                    label Underline
+                                // /ko
+
+                                // ko if: italic() !== undefined    
+                                .col.s6
+                                    input(type="checkbox", data-bind="checked: italic, labelID: 'sibling'")
+                                    label Italic
+                                // /ko
+
+                                // ko if: transparent() !== undefined   
+                                .col.s6
+                                    input(type="checkbox", data-bind="checked: transparent, labelID: 'sibling'")
+                                    label Transparent
+                                // /ko
+
+                            // ko if: color() !== undefined && type() !== 'Animation'
+                            .row
+                                .col.s12
+                                    input.spectrum(data-bind="spectrum: color, appendTo: '.widgetTooltip'")
+                                    span Color
+                            // /ko
+
+
+                            // ko if: isControllable()
+                            .row
+                                .col.s12
+                                    input(type="checkbox", data-bind="checked: confirmCommand, labelID: 'sibling'")
+                                    label Require Confirmation
+                            // /ko
+
+
+                            // ko if: type() === 'Animation'
+
+                            // ko if: animationType() === 'multifile'
+                            .row
+                                .col.s12 Files:
+
+                            // ko foreach: Object.keys(animationFiles)
+                            .input-field.file-field
+                                .btn.blue-grey
+                                    span(data-bind="text: $data")
+                                    input(type="file", accept=".gif", data-bind="fileUpload: { onImgLoad: $parent.imageLoaded, onLoad: $parent.handleImageLoaded, option: $data, context: $parent }")
+                                .file-path-wrapper
+                                    input.file-path(type="text", data-bind="value: $parent.animationFiles[$data]")
+
+                            //- end each animation file
+                            // /ko
+
+                            //- end multifile
+                            // /ko
+
+                            // ko if: animationType() !== 'multifile'
+                            .input-field.file-field
+                                .btn.blue-grey
+                                    span File
+                                    input(type="file", accept=".gif", data-bind="fileUpload: { onImgLoad: imageLoaded, onLoad: handleImageLoaded, context: $data }")
+                                .file-path-wrapper
+                                    input.file-path(type="text", data-bind="value: animationFile")
+
+
+                            //- end non multifile
+                            // /ko
+
+                            // ko if: animationType() === 'onoff'
+
+                            // /ko
+
+
+                            //- end animation --------------------------------------
+                            // /ko
+
+                        .complex.col.s6(data-bind="visible: complexWidget()")
+                            // ko if: type() === 'Button'
+
+                            // ko if: isControllable() && pointType() !== 'MultiState Value'
+                            .row.dateRanges
+                                .col.s12
+                                    label Control Priority
+                                    a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                                        span(data-bind="text: displays.bindings.controlPriorities()[priority()].name()")
+                                        i.material-icons arrow_drop_down
+                                    .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handlePriorityClick}] ")
+                                        ul
+                                            // ko foreach: displays.bindings.controlPriorities
+                                            li.option(data-bind="text: name")
+                                            // /ko
+
+                            //- end if not report
+                            // /ko
+
+                            //- // ko if: pointType().match('Binary') || pointType().match('MultiState')
+                            //- (data-bind="visible: pointType().match('Binary') || pointType().match('MultiState')")
+
+                            .row.dateRanges(data-bind="visible: pointType().match('Binary') || pointType().match('MultiState')")
+                                .col.s12
+                                    label Value
+                                    a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                                        span(data-bind="text: commandName")
+                                        i.material-icons arrow_drop_down
+                                    .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleValueClick}] ")
+                                        ul
+                                            // ko foreach: valueOptions
+                                            li.option(data-bind="text: name")
+                                            // /ko
+                            //- end of binary || multi
+                            //- // /ko
+
+
+
+
+
+                            // ko if: pointType().match('Report') && reportType() === 'History'
+                            .confirmReportRange
+                                input(type="checkbox", data-bind="checked: confirmReportRange, labelID: 'sibling'")
+                                label Ask for range on click
+
+                            .dateRanges.row
+                                .col.s12
+                                    label Date Range
+                                    a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                                        span(data-bind="text: range")
+                                        i.material-icons arrow_drop_down
+                                    .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleRangeClick}] ")
+                                        ul
+                                            // ko foreach: displays.dateTime.dateRanges
+                                            li.option(data-bind="text: range")
+                                            // /ko
+
+                            .dateRanges.row
+                                .col.s6
+                                    label Start Date
+                                    input.datepicker(data-bind="labelID: 'sibling', dtiDatePicker: startDate, dtiDatePickerContainer: '.activeTooltip', onClose: handleDatePick", type="date")
+                                    
+                                .col.s6
+                                    label End Date
+                                    input.datepicker(data-bind="labelID: 'sibling', dtiDatePicker: endDate, dtiDatePickerContainer: '.activeTooltip', onClose: handleDatePick", type="date")
+                                    
+                                        
+                            .timeRanges.row
+                                .col.s6
+                                    label Start Time
+                                    input.timepicker(data-bind="labelID: 'sibling', value: startTime, dtiTimePicker: '.activeTooltip', onClose: handleTimePick")
+                                    
+                                //- .endTime
+                                .col.s6
+                                    label End Time
+                                    input.timepicker(data-bind="labelID: 'sibling', value: endTime, dtiTimePicker: '.activeTooltip', onClose: handleTimePick")
+                                    
+
+
+                            .intervalRanges.row
+                                .col.s4
+                                    label Interval
+                                    input(data-bind="labelID: 'sibling', value: intervalNum", type="number", min="1", max="9999")
+                                    
+                                .col.s8
+                                    label Interval Range
+                                    a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                                        span(data-bind="text: intervalType")
+                                        i.material-icons arrow_drop_down
+                                    .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleIntervalClick }] ")
+                                        ul
+                                            // ko foreach: displays.dateTime.intervals
+                                            li.option(data-bind="text: $data, visible: $index() <= displays.dateTime.intervals.indexOf($parent.maxInterval())")
+                                            // /ko
+
+                                    //- select(data-bind="labelID: 'sibling', options: intervalList, value: intervalType")
+                                    //- label Interval Range
+
+                            //- end of if history report
+                            // /ko
+
+                            //- end of button
+                            // /ko
+
+                            //- ----------------------------------------------------------
+                            
+
+                        //- end complex widget
+                        //- // /ko
+
+                    .row
+                        // ko if: !isPreview()
+                        // if 0, it requires one
+                        //- .row
+                            .col.s12
+                        .pointLinks
+                            a.btn.btn-flat.btn-small.removePoint(href="#")
+                                i.material-icons delete
+                            a.btn.btn-flat.btn-small.changePoint(href="#", data-bind="click: displays.bindings.chooseWidgetPoint")
+                                i.material-icons mode_edit
+                            a.btn.btn-flat.btn-small.pointLink.truncate(href="#", data-bind="text: dtiCommon.getPointName(name()), attr: {title: dtiCommon.getPointName(name())}")
+                        // /ko   
+                    .tooltipFooter            
+                        .right-align
+                            a.btn-small.btn-flat.red-text.text-darken-4(href='javascript://', data-bind="click: displays.currWidget.delete")
+                                i.material-icons.left clear
+                                |Delete
+
+
+        // ko with: currWidget
+        // ko if: $root.widgetsReady
+        #actionButtonModal.modal.modal-sm
+            .modal-content.blue-grey-form
+                // ko if: pointType().match('Report')
+                h4 Report Options
+
+                .dateRanges.row
+                    .col.s12
+                        label Date Range
+                        a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                            span(data-bind="text: range")
+                            i.material-icons arrow_drop_down
+                        .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleRangeClick}] ")
+                            ul
+                                // ko foreach: displays.dateTime.dateRanges
+                                li.option(data-bind="text: range")
+                                // /ko
+
+                .dateRanges.row
+                    .col.s6
+                        label Start Date
+                        input.datepicker(data-bind="labelID: 'sibling', dtiDatePicker: startDate, dtiDatePickerContainer: 'body', onClose: handleDatePick", type="date")
+                        
+                    .col.s6
+                        label End Date
+                        input.datepicker(data-bind="labelID: 'sibling', dtiDatePicker: endDate, dtiDatePickerContainer: 'body', onClose: handleDatePick", type="date")
+                        
+                            
+                .timeRanges.row
+                    .col.s6
+                        label Start Time
+                        input.timepicker(data-bind="labelID: 'sibling', value: startTime, dtiTimePicker: 'body', onClose: handleTimePick")
+                        
+                    //- .endTime
+                    .col.s6
+                        label End Time
+                        input.timepicker(data-bind="labelID: 'sibling', value: endTime, dtiTimePicker: 'body', onClose: handleTimePick")
+                        
+
+
+                .intervalRanges.row
+                    .col.s4
+                        label Interval
+                        input(data-bind="labelID: 'sibling', value: intervalNum", type="number", min="1", max="9999")
+                        
+                    .col.s8
+                        label Interval Range
+                        a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                            span(data-bind="text: intervalType")
+                            i.material-icons arrow_drop_down
+                        .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleIntervalClick }] ")
+                            ul
+                                // ko foreach: displays.dateTime.intervals
+                                li.option(data-bind="text: $data, visible: $index() <= displays.dateTime.intervals.indexOf($parent.maxInterval())")
+                                // /ko
+
+                // end of report form
+                // /ko
+
+                // ko if: isControllable()
+                h4 Command Value
+                // /ko
+
+                // ko if: isControllable() && pointType() !== 'MultiState Value'
+                .row
+                    .col.s12
+                        label Control Priority
+                        a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.modalDropdownConfig")
+                            span(data-bind="text: displays.bindings.controlPriorities()[priority()].name()")
+                            i.material-icons arrow_drop_down
+                        .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handlePriorityClick}] ")
+                            ul
+                                // ko foreach: displays.bindings.controlPriorities
+                                li.option(data-bind="text: name")
+                                // /ko
+                // /ko
+
+
+                // ko if: pointType().match('Binary') || pointType().match('MultiState')
+                .row
+                    .col.s12
+                        label Value
+                        a.dropdownLink.black-text(href="#", data-bind="dropdown: displays.settings.actionButton.dropdownConfig")
+                            span(data-bind="text: commandName")
+                            i.material-icons arrow_drop_down
+                        .dtiDropdown(data-bind="delegate: [{ event: 'click', selector: 'li', handler: handleValueClick}] ")
+                            ul
+                                // ko foreach: valueOptions
+                                li.option(data-bind="text: name")
+                                // /ko
+                // end of binary
+                // /ko
+
+
+                // ko if: pointType().match('Analog')
+                .row
+                    .col.s3
+                        .input-field
+                            input(type='number', data-bind="value: commandValue, attr: { min: minValue, max: maxValue }")
+
+                .row
+                    .col.s6
+                        .range-field
+                            input(type='range', data-bind="value: commandValue, valueUpdate: 'input', attr: { min: minValue, max: maxValue }")
+                // end of analog
+                // /ko
+
+
+            .modal-footer
+                a.modal-action.modal-close.btn.btn-green.barBtn.waves-effect.white-text(href="javascript://", data-bind="click: handleModalConfirm, text: pointType() === 'Report' ? 'Open' : 'Send'")
+                a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel   
+
+        // /ko
+        // /ko
+
+
+        //- #analogValueModal.modal.modal-bordered(tabindex="-1", role="dialog", aria-hidden="true")
+        //-     .modal-dialog
+        //-         .modal-content
+        //-             .modal-header
+        //-                 h3.panel-title Enter Value
+        //-             .modal-body.clearfix
+        //-                 .row.bm10px
+        //-                     .form-group
+        //-                         .col-sm-1.noBoldControls
+        //-                             label(for="actionButtonValue") Value:
+        //-                         .col-sm-11
+        //-                             input#actionButtonValue.form-control.input-sm.input-xs(type="text", data-bind="numeric: actionButtonValue, value: actionButtonValue")
+
+        //-             .modal-footer
+        //-                 button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+        //-                 button.btn.btn-primary.btn-sm(data-bind="click: sendActionButtonValue") Send Command
+
+    script#display-text-template.widgetTemplate(type='text/html')
+        .dti-widget(data-bind="style: { left: cleft() + 'px', top: ctop() + 'px', width: cwidth() + 'px', height: cheight() + 'px' }, attr: { 'data-dti-id': id }, css: {editingWidget: editing, selectedWidget: selected}")
+            a.dti-widget-content.dti-widget-text(href="javascript://", data-bind="style: { color: color, 'line-height': cfontSize() + 'px', 'font-size': cfontSize() + 'px', 'font-weight': bold() ? 'bold' : 'normal', 'text-decoration': underline() ? 'underline' : 'none', 'font-style': italic() ? 'italic' : '' }, html: text")
+
+    script#display-dynamic-template.widgetTemplate(type='text/html')
+        .dti-widget(data-bind="style: { left: cleft() + 'px', top: ctop() + 'px', width: cwidth() + 'px', height: cheight() + 'px' }, attr: { 'data-dti-id': id }, css: {editingWidget: editing, selectedWidget: selected}")
+            a.dti-widget-content.dti-widget-dynamic(href="javascript://", data-bind="style: { color: cColor, 'font-size': cfontSize() + 'px', 'font-weight': bold() ? 'bold' : 'normal', 'text-decoration': underline() ? 'underline' : 'none' }, text: text() + qualityCode(), dtiTooltip: path, dtiTooltipDisable: isPreview")
+
+    script#display-animation-template.widgetTemplate(type='text/html')
+        .dti-widget(data-bind="style: { left: cleft() + 'px', top: ctop() + 'px', width: cwidth() + 'px', height: cheight() + 'px' }, attr: { 'data-dti-id': id }, css: {editingWidget: editing, selectedWidget: selected}")
+            a.dti-widget-content.dti-widget-animation(href="javascript://", data-bind="dtiTooltip: path, dtiTooltipDisable: isPreview, css: { loaded: loaded }")
+                img(data-bind="attr: { src: imageData() || (baseUrl() + src()) }")
+                span Animation
+
+    script#display-button-template.widgetTemplate(type='text/html')
+        .dti-widget(data-bind="style: { left: cleft() + 'px', top: ctop() + 'px', width: cwidth() + 'px', height: cheight() + 'px' }, attr: { 'data-dti-id': id }, css: {editingWidget: editing, selectedWidget: selected}")
+            a.dti-widget-button.dti-widget-content(href="javascript://", data-bind="css: { 'transparent': transparent() }, html: text, style: { color: color, 'font-size': cfontSize() + 'px', 'font-weight': bold() ? 'bold' : 'normal', 'line-height': (cheight() - 2) + 'px'}, dtiTooltip: path, dtiTooltipDisable: isPreview")
+
+    script.
+        var delayLoad = true;
+        var point = !{pointData};
+
+        var displayInfo = {
+            upiNames: !{upiNames},
+            user: !{user},
+            pointTypes: !{pointTypes},
+            reportTypes: !{reportTypes},
+            points: !{points}
+        };
+
+    script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
+    script(type='text/javascript', src='/js/lib/jquery-ui.js')
+    script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
+    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    script(type='text/javascript', src='/js/lib/jquery.mousewheel.js')
+
+    //- script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    //- script(type='text/javascript', src='/js/lib/lodash.min.js')
+    //- script(type='text/javascript', src='/js/lib/config.js')
+    script(type='text/javascript', src='/js/lib/moment.js')
+    script(type='text/javascript', src='/js/lib/store.min.js')
+    script(type='text/javascript', src='/js/lib/knockout-3.5.0rc.js')
+    script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
+    //- script(type='text/javascript', src='/js/lib/knockout-postbox.js')
+    script(type='text/javascript', src='/js/lib/socket.io.js')
+    script(type='text/javascript', src='/js/lib/materialize.js')
+    script(type='text/javascript', src='/js/lib/materialize.clockpicker.js')
+    script(type='text/javascript', src='/js/lib/spectrum.js')
+    script(type='text/javascript', src='/js/lib/jquery.qtip.js')
+    //- script(type='text/javascript', src='/js/lib/mbox-0.0.1.min.js')
+    script(type='text/javascript', src='/js/v2/dtiCommon.js')
+    script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+    script(type='text/javascript', src='/js/displays/displays.js')

@@ -14,9 +14,11 @@ let sockets = require('./helpers/sockets');
 let config = require('config');
 let passport = require('passport');
 let morgan = require('morgan');
+let fileUpload = require('express-fileupload');
 let loggerStream = require('./helpers/loggerStream');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
+
 let session = require('express-session');
 let favicon = require('serve-favicon');
 let RedisStore = require('connect-redis')(session);
@@ -53,12 +55,9 @@ app.use(bodyParser.urlencoded({
     extended: true,
     parameterLimit: 45000
 }));
-// var storage = multer.memoryStorage();
-// var upload = multer({
-//   storage: storage
-// });
 
-// app.use(upload.array());
+// for form-data uploads
+app.use(fileUpload());
 
 app.engine('pug', require('pug').__express);
 app.set('view engine', 'pug');
