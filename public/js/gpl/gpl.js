@@ -2951,7 +2951,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     answer = key;
                 }
             }
-        } else if (self.icons) {
+        } else if (self.icons && currIconName) { // ch946; add "&& currIconName" so PI block doesn't throw an error when it is dropped on canvas
             for (key in self.icons) {
                 if (self.icons[key] === currIconName) {
                     answer = key;
@@ -3592,13 +3592,13 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
     // ch946; add this function; it is called by the base class initIcon function
     getIcon: function () {
         var self = this;
-        var icon;
+        var icon = '';
 
         // Don't get the default icon if this block is on the main canvas
         if (self.isToolbar) {
             icon = self.iconType + self.iconExtension;
         }
-        return icon; // Purposefully return undefined if we're not on the toolbar
+        return icon;
     },
 
     setIconName: function () {
@@ -3927,13 +3927,13 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     // ch946; add this function; it is called by the base class initIcon function
     getIcon: function () {
         var self = this;
-        var icon;
+        var icon = '';
 
         // Don't get the default icon if this block is on the main canvas
         if (self.isToolbar) {
             icon = self.iconType + self.iconExtension;
         }
-        return icon; // Purposefully return undefined if we're not on the toolbar
+        return icon;
     },
 
     setIconName: function () {
@@ -4205,13 +4205,13 @@ gpl.blocks.Math = fabric.util.createClass(gpl.Block, {
     // ch946; add this function; it is called by the base class initIcon function
     getIcon: function () {
         var self = this;
-        var icon;
+        var icon = '';
 
         // Don't get the default icon if this block is on the main canvas
         if (self.isToolbar) {
             icon = self.iconType + self.iconExtension;
         }
-        return icon; // Purposefully return undefined if we're not on the toolbar
+        return icon;
     },
 
     initialize: function (config) {
@@ -4402,13 +4402,13 @@ gpl.blocks.AlarmStatus = fabric.util.createClass(gpl.Block, {
     // ch946; add this function; it is called by the base class initIcon function
     getIcon: function () {
         var self = this;
-        var icon;
+        var icon = '';
 
         // Don't get the default icon if this block is on the main canvas
         if (self.isToolbar) {
             icon = self.iconType + self.iconExtension;
         }
-        return icon; // Purposefully return undefined if we're not on the toolbar
+        return icon;
     },
 
     setAlarmIcon: function (total) {
