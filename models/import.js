@@ -2463,6 +2463,8 @@ let Import = class Import extends Common {
     updateSequences(point, callback) {
         if (point['Point Type'].Value === 'Sequence') {
             point._parentUpi = 0;
+            point['Show Label'] = Config.Templates.getTemplate('Sequence')['Show Label'];
+            point['Show Value'] = Config.Templates.getTemplate('Sequence')['Show Value'];
         }
         callback();
     }
