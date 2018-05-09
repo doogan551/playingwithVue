@@ -928,7 +928,9 @@ var gpl = {
                 }
 
                 if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
-                    if (pointType1 === 'Constant' && obj2.takesConstant === true) {
+                    if ((obj2.anchorType === 'Shutdown Point' && obj1.anchorType !== 'InputBlockOutputAnchor') || (obj1.anchorType === 'Shutdown Point' && obj2.anchorType !== 'InputBlockOutputAnchor')){ // ch1379 (add this if)
+                        // isValid already false; nothing to do
+                    } else if (pointType1 === 'Constant' && obj2.takesConstant === true) {
                         isValid = block1.validateSelf({ // ch1083
                             proposedAnchor: obj2,
                             connectionAttempt: connectionAttempt
@@ -1992,6 +1994,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.left = left;
         this.top = top;
+        this.setCoords(); // ch1330
 
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
@@ -3151,7 +3154,7 @@ gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     syncAnchorPoints: gpl.emptyFn,
 
     rightAnchor: { // ch354 require anchor wired up
-        anchorType: '',
+        anchorType: 'InputBlockOutputAnchor', // ch1379 (name it 'InputBlockOutputAnchor')
         required: true
     },
 
@@ -3965,24 +3968,7 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
     pointType: 'Average',
     valueType: 'float',
 
-    leftAnchors: [{
-        anchorType: 'Input Point 1',
-        required: true,
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 2',
-        required: true,
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 3',
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 4',
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 5',
-        takesConstant: false
-    }],
+    // ch1323; remove leftAnchors array (it's not needed since Input Point 1 and Input Point 2 are not required inputs)
 
     shapes: {
         'Rect': {
@@ -3994,6 +3980,39 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -4106,6 +4125,39 @@ gpl.blocks.SelectValue = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
@@ -4122,17 +4174,8 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
     pointType: 'Logic',
     valueType: 'enum',
 
-    leftAnchors: [{ // ch998; disallow constant block as inputs
-        anchorType: 'Input Point 1'
-    }, {
-        anchorType: 'Input Point 2'
-    }, {
-        anchorType: 'Input Point 3'
-    }, {
-        anchorType: 'Input Point 4'
-    }, {
-        anchorType: 'Input Point 5'
-    }],
+    // ch998; disallow constant block as inputs in leftAnchors array
+    // ch1375; realized we can remove the leftAnchors array altogether now
 
     shapes: {
         'Rect': {
@@ -4144,6 +4187,39 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -4781,6 +4857,7 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
 
         this.left = left;
         this.top = top;
+        this.setCoords(); // ch1330
 
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
