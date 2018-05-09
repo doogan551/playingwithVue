@@ -82,7 +82,7 @@ var gpl = {
     rendered: false,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
-    iconPath: '/img/icons/',
+    iconPath: '/img/dti/gpl/blockIcons/', // ch1365 (change icon path)
     pointApiPath: '/api/points/',
     defaultBackground: 'C8BEAA',
     jqxTheme: 'flat',
@@ -1260,7 +1260,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     lockMovementY: true,
     anchorRadius: 2.5,
     hoverRadius: 5,
-    hoverCursor: gpl.isEdit ? 'url("/img/pencil.cur") 0 0, pointer' : 'default',
+    hoverCursor: gpl.isEdit ? 'url("/img/dti/gpl/pencil.cur") 0 0, pointer' : 'default', // ch1365 (change path to pencil.cur)
 
 
     initialize: function (config) {
