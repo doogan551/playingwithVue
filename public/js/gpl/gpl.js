@@ -8071,8 +8071,6 @@ gpl.BlockManager = function (manager) {
                 let count = +(block.label.split(' ').pop());
                 if (!isNaN(count) && count > gpl.labelCounters[block.type]) {
                     gpl.labelCounters[block.type] = count;
-                } else {
-                    gpl.labelCounters[block.type]++;
                 }
             }
         }
@@ -8440,9 +8438,15 @@ gpl.Manager = function () {
         initLabels = function () {
             var type,
                 types = managerSelf.blockTypes;
-            for (type in types) {
-                if (types.hasOwnProperty(type)) {
-                    gpl.labelCounters[types[type].blockType] = 0;
+
+            // ch1314; get labelCounters from editVersion if available
+            if (gpl.json.editVersion && gpl.json.editVersion.labelCounters) {
+                gpl.labelCounters = gpl.json.editVersion.labelCounters;
+            } else {
+                for (type in types) {
+                    if (types.hasOwnProperty(type)) {
+                        gpl.labelCounters[types[type].blockType] = 0;
+                    }
                 }
             }
         },
@@ -9501,6 +9505,7 @@ gpl.Manager = function () {
 
         currentChanges = $.extend(true, {}, gpl.json.editVersion);
         currentChanges.seqProps = gpl.seqProps; // ch1043
+        currentChanges.labelCounters = gpl.labelCounters; // ch1314
 
         gpl.json = $.extend(true, {}, gpl.originalSequenceData);
         gpl.json.editVersion = currentChanges;
