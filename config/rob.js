@@ -5,7 +5,7 @@ var rob = {
             'dbName': 'pre'
         },
         'zmqConfig': {
-            'server': 'localhost'
+            'server': 'info-int'
         },
         'files': {
             'driveLetter': 'C'

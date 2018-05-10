@@ -6830,6 +6830,23 @@ var dti = {
                 }
                 return 'ok';
             });
+            dti.bindings.system.statusBarColor = ko.computed(function () {
+                if(dti.bindings.socketStatus() === 'connect'){
+                    if((dti.bindings.serverProcessesStatus() === 'serverup')){
+                        return 'blue-grey';
+                    }
+                    if (dti.bindings.serverProcessesStatus() === 'maintenance') {
+                        return 'yellow accent-4';
+                    }
+                }
+                return 'red lighten-2';
+            });
+
+            dti.bindings.socketStatus.subscribe(function(status){
+                if(status === 'connect'){
+                    dti.socket.emit('getStatus');
+                }
+            });
 
             dti.bindings.system.eventLog.errors = ko.computed(function () {
                 return ko.utils.arrayFilter(dti.bindings.system.eventLog.allLogs(), function (log) {
@@ -6865,6 +6882,12 @@ var dti = {
                 }
             });
             dti.socket.emit('getStatus');
+
+            dti.socket.on('maintenance', function handleStatusUpdate(data) {
+                let msg = data;
+                dti.toast(data.msg);
+                dti.bindings.serverProcessesStatus('maintenance');
+            });
         },
         eventLog: {
             options: {

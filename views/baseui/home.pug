@@ -19,7 +19,7 @@ html
 
         header.animates
             .navbar-fixed.taskbar(data-bind='visible: taskbarShown')
-                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                nav(data-bind='css: system.statusBarColor()')
                     .nav-wrapper
                         ul.left
                             li.taskbarItem
@@ -64,7 +64,7 @@ html
                                     span.userName.valign #[span(data-bind='text: user().firstName')]&nbsp;#[span(data-bind='text: user().lastName')]
 
             #searchNavbar.navbar-fixed.taskbar.animates
-                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                nav(data-bind='css: system.status()')
                     .nav-wrapper
                         .taskbarItem
                             i.material-icons search
