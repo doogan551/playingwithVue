@@ -1029,8 +1029,8 @@ var Config = (function (obj) {
         updDevModel: function (data) {
             //applyAnalogInputDevModel
             var fxName = 'apply' + data.point['Point Type'].Value.split(' ').join('') + 'DevModel';
+            data.point._cfgRequired = true;
             if (!!obj.EditChanges.hasOwnProperty(fxName)) {
-                data.point._cfgRequired = true;
                 obj.EditChanges[fxName](data);
             }
         },
