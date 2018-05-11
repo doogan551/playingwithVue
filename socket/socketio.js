@@ -827,7 +827,7 @@ function updateSchedules(data, callback) {
                     oldPoint: oldPoint
                 }], user, options, function (returnData) {
                     if (returnData.err) {
-                        feCB(returnData.err);
+                        return feCB(returnData.err);
                     }
 
                     ctrlPoint = Config.Utility.getPropertyObject('Control Point', newSched);
@@ -840,12 +840,12 @@ function updateSchedules(data, callback) {
                         logData.activity = 'Schedule Entry Add';
                         logData.log = 'Schedule entry added';
                         activityLog.create(logData, function (err, result) {
-                            feCB(err);
+                            return feCB(err);
                         });
                     });
                 });
             }, function (err) {
-                wfCB(err);
+                return wfCB(err);
             });
         },
         function (wfCB) {
