@@ -8640,7 +8640,7 @@ gpl.Manager = function () {
 
             //fix for IE not showing window.top when first loaded
             gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl.workspaceManager = window.top && window.top.workspaceManager || window.opener && window.opener.workspaceManager;
             gpl._openWindow = dtiUtility.openWindow;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
