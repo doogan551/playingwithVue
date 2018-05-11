@@ -382,6 +382,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                         refPoint = ko.viewmodel.toModel(self.point);
 
                     propertyObject.Value = refPoint._id;
+                    propertyObject.PointType = config.Enums['Point Types'][self.pointType].enum;
                     data = config.EditChanges.applyUniquePIDLogic({
                         point: data,
                         refPoint: refPoint,
@@ -860,7 +861,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 }
 
                 item.properties(props);
-                //indiv["Control Property"].Value(props[0]);
+                indiv["Control Property"].Value(props[0]);
                 indiv['Control Property'].Value.valueHasMutated();
             });
         });
@@ -892,10 +893,9 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                     item.ValueOptions(enumToArray(item.refPoint.Value.ValueOptions));
                     //indiv["Control Value"].eValue = ko.observable(pointtypePropertyTemplate.eValue);
                 }
-                item.ValueOptions(ko.viewmodel.toModel(item.ValueOptions));
-                for (var i = 0; i < item.ValueOptions.length; i++) {
-                    if (indiv['Control Value'].Value() === item.ValueOptions[i].name) {
-                        indiv['Control Value'].eValue(item.ValueOptions[i].value);
+                for (var i = 0; i < item.ValueOptions().length; i++) {
+                    if (indiv['Control Value'].Value() === item.ValueOptions()[i].name) {
+                        indiv['Control Value'].eValue(item.ValueOptions()[i].value);
                     }
                 }
                 item.ValueOptions.valueHasMutated();
