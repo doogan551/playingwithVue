@@ -1768,7 +1768,7 @@ var widgets = {
                     width: this.config.width,
                     idx: this.config.idx,
                     id: this.id,
-                    text: this.config.text || '',
+                    text: this.config.text || (!!this.config.isNew ? 'Text' : ''),
                     editMode: this.config.editMode,
                     type: this.config.widgetType,
                     buttonType: this.config.buttonType,
@@ -3422,6 +3422,16 @@ var displays = {
             // dtiUtility.getWindowParameters(displays.point._id, displays.loadComplete);
         });
 
+        dtiUtility.getSystemEnum('controlpriorities', (priorities) => {
+            displays.system.controlPriorities = priorities;
+
+            if (displays.settings.bindingsLoaded === true) {
+                ko.viewmodel.updateFromModel(displays.bindings.controlPriorities, priorities);
+            } else {
+                displays.bindings.controlPriorities = priorities;
+            }
+        });
+
         //// dti.time('events');
         dti.events.init();
         //// dti.timeEnd('events');
@@ -3445,16 +3455,6 @@ var displays = {
         //// dti.time('bindings');
         displays.initBindings();
         //// dti.timeEnd('bindings');
-
-        dtiUtility.getSystemEnum('controlpriorities', (priorities) => {
-            displays.system.controlPriorities = priorities;
-
-            if (displays.settings.bindingsLoaded === true) {
-                ko.viewmodel.updateFromModel(displays.bindings.controlPriorities, priorities);
-            } else {
-                displays.bindings.controlPriorities = priorities;
-            }
-        });
 
         // set delay due to getWindowParameters not always showing up
         let interval = setInterval(() => {
