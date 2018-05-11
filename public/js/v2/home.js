@@ -56,6 +56,7 @@ var dti = {
     _applyTime: 0,
     settings: {
         logLinePrefix: true,
+        logLevel: 'debug',
         webEndpoint: window.location.origin,
         socketEndPoint: window.location.origin,
         apiEndpoint: window.location.origin + '/api/',
