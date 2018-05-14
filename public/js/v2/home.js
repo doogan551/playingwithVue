@@ -1065,13 +1065,38 @@ var dti = {
             },
             close = function (event) {
                 dti.off('thumbnailCaptured', self.handleThumbnail);
-                self.bindings.minimize();
+                
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
-                self.$windowEl.draggable('destroy');
+                if (!config.popout){
+                    self.bindings.minimize();
+                    self.$windowEl.draggable('destroy');
 
-                if (!config.desktop) {
-                    self.$windowEl.resizable('destroy');
+                    if (!config.desktop) {
+                        self.$windowEl.resizable('destroy');
+                    }
+
+                    if (self.$iframe && self.$iframe[0].contentWindow) {
+                        if (self.$iframe[0].contentWindow.destroy) {
+                            self.$iframe[0].contentWindow.destroy();
+                        }
+                    }
+
+                    setTimeout(function closeWindow() {
+                        if (self.$iframe) {
+                            self.$iframe.attr('src', 'about:blank');
+                            ko.cleanNode(self.$windowEl[0]);
+                            $(self.$iframe[0].contentDocument).off('mousedown');
+                        }
+                        self.$windowEl.remove();
+                        // dti.destroyObject(self.bindings);
+                        dti.destroyObject(self, true);
+                    }, 1000);
+                } else {
+                    dti.windows.closePopup(self.popupID);
+                    setTimeout(() => {
+                        dti.destroyObject(self, true);
+                    }, 1000);
                 }
 
                 dti.fire('closeWindow', self);
@@ -1079,23 +1104,6 @@ var dti = {
                 if (self.onCloseFn) {
                     self.onCloseFn();
                 }
-
-                if (self.$iframe && self.$iframe[0].contentWindow) {
-                    if (self.$iframe[0].contentWindow.destroy) {
-                        self.$iframe[0].contentWindow.destroy();
-                    }
-                }
-
-                setTimeout(function closeWindow() {
-                    if (self.$iframe) {
-                        self.$iframe.attr('src', 'about:blank');
-                        ko.cleanNode(self.$windowEl[0]);
-                        $(self.$iframe[0].contentDocument).off('mousedown');
-                    }
-                    self.$windowEl.remove();
-                    // dti.destroyObject(self.bindings);
-                    dti.destroyObject(self, true);
-                }, 1000);
             },
             minimize = function (event, skipActivate) {
                 active = false;
@@ -1104,25 +1112,39 @@ var dti = {
                     dti.windows.activate(null);
                 }
             },
+            popout = function (e) {
+                let upi = this.upi();
+
+                setTimeout(() => {
+                    dti.windows.openWindow({
+                        upi,
+                        popout: true
+                    });
+                });
+
+                this.close();
+            },
             // the below added to fix jqueryUI's draggable stack and tie into activate
             // draggable doesn't stack on init, only on drag.  so we manually stack on creation and activation
             stackWindows = function () {
-                let min;
-                let instance = self.$windowEl.draggable('instance');
-                let o = instance.options;
-                let group = $.makeArray($(o.stack)).sort(function (a, b) {
-                    return (parseInt($(a).css("zIndex"), 10) || 0) - (parseInt($(b).css("zIndex"), 10) || 0);
-                });
+                if (!config.popout) {
+                    let min;
+                    let instance = self.$windowEl.draggable('instance');
+                    let o = instance.options;
+                    let group = $.makeArray($(o.stack)).sort(function (a, b) {
+                        return (parseInt($(a).css("zIndex"), 10) || 0) - (parseInt($(b).css("zIndex"), 10) || 0);
+                    });
 
-                if (!group.length) {
-                    return;
+                    if (!group.length) {
+                        return;
+                    }
+
+                    min = parseInt($(group[0]).css("zIndex"), 10) || 0;
+                    $(group).each(function (i) {
+                        $(this).css("zIndex", min + i);
+                    });
+                    self.$windowEl.css("zIndex", (min + group.length));
                 }
-
-                min = parseInt($(group[0]).css("zIndex"), 10) || 0;
-                $(group).each(function (i) {
-                    $(this).css("zIndex", min + i);
-                });
-                self.$windowEl.css("zIndex", (min + group.length));
             },
             deactivate = function (event) {
                 active = false;
@@ -1141,6 +1163,10 @@ var dti = {
                     self.bindings.active(true);
 
                     stackWindows();
+                }
+
+                if (!!self.popupID) {
+                    dti.windows.focusPopup(self.popupID);
                 }
 
                 return true;
@@ -1162,6 +1188,26 @@ var dti = {
                     let pointName = dti.utility.getConfig('Utility.getPointName', [pt.path]);
 
                     self.bindings.title(pointName);
+
+                    if (config.popout) {
+                        if (!self.winLoaded) {
+                            self.win.onload = () => {
+                                dti.log('win onload gettitle', pointName);
+                                if (self.win.document.title !== pointName) {
+                                    self.win.document.title = pointName;
+                                }
+
+                                self.win.window.onbeforeunload = () => {
+                                    self.bindings.close();
+                                };
+                            };
+                        } else {
+                            setTimeout(() => {
+                                dti.log('gettitle', pointName);
+                                self.win.document.title = pointName;
+                            }, 100);
+                        }
+                    }
                 };
 
                 $.getJSON('/api/points/' + upi).done(handlePointData);
@@ -1183,6 +1229,7 @@ var dti = {
                     refresh: refresh,
                     activate: activate,
                     minimize: minimize,
+                    popout: popout,
                     minimized: ko.observable(false),
                     loading: ko.observable(true),
                     windowsHidden: dti.bindings.windowsHidden,
@@ -1209,8 +1256,13 @@ var dti = {
                         },
                         callbacks = {
                             updateTitle: function () { 
-                                self.bindings.title(message.parameters); 
-                                finish(true); 
+                                if (config.popout) {
+                                    dti.log('updatetitle', message.parameters);
+                                    self.win.document.title = message.parameters;
+                                } else {
+                                    self.bindings.title(message.parameters); 
+                                    finish(true); 
+                                }
                             }, 
                             updateWindowUPI: function () {
                                 let oldUPI = self.bindings.upi();
@@ -1227,19 +1279,24 @@ var dti = {
                                 }
                             },
                             resize: function () {
-                                var measurements = prepMeasurements(message.parameters, self.bindings);
-
-                                if (self.bindings.isDesktop() === false) {
-                                    measurements = prepMeasurements(message.parameters, self.bindings, true);
-
-                                    ko.viewmodel.updateFromModel(self.bindings, measurements);
-
-                                    //timeout for animation to complete
-                                    setTimeout(() => {
-                                        finish(true);
-                                    }, 300);
+                                if (config.popout) {
+                                    self.win.resizeTo(message.parameters.width, message.parameters.height + 50);
+                                    finish(true);
                                 } else {
-                                    finish(false);
+                                    var measurements = prepMeasurements(message.parameters, self.bindings);
+
+                                    if (self.bindings.isDesktop() === false) {
+                                        measurements = prepMeasurements(message.parameters, self.bindings, true);
+
+                                        ko.viewmodel.updateFromModel(self.bindings, measurements);
+
+                                        //timeout for animation to complete
+                                        setTimeout(() => {
+                                            finish(true);
+                                        }, 300);
+                                    } else {
+                                        finish(false);
+                                    }
                                 }
                             }
                         };
@@ -1307,16 +1364,6 @@ var dti = {
 
         self.bindings = $.extend(self.bindings, finishedMeasurements);
 
-        $('main').append(self.$windowEl);
-        self.$windowEl.attr('id', windowId);
-
-        if (config.url) {
-            self.$iframe = self.$windowEl.children('iframe');
-            self.$iframe.attr('id', iframeId);
-
-            dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
-        }
-
         dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
@@ -1332,23 +1379,51 @@ var dti = {
         self.bindings.iconText(group.iconText);
         self.bindings.thumbnail(group.thumbnail || false);
 
-        self.$windowEl.draggable(dti.windows.draggableConfig);
+        if (!config.popout) {
+            $('main').append(self.$windowEl);
+            self.$windowEl.attr('id', windowId);
 
-        if (!config.desktop) {
-            self.$windowEl.resizable(dti.windows.resizableConfig);
+            if (config.url) {
+                self.$iframe = self.$windowEl.children('iframe');
+                self.$iframe.attr('id', iframeId);
+
+                dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+            }
+            self.$windowEl.draggable(dti.windows.draggableConfig);
+
+            if (!config.desktop) {
+                self.$windowEl.resizable(dti.windows.resizableConfig);
+            }
+
+            stackWindows();
+
+            ko.applyBindings(self.bindings, self.$windowEl[0]);
+        } else {
+            let win = self.win = window.open(config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
+            let id = dti.windows.getPopupID();
+
+            self.popupID = id;
+            dti.trace('window id: ', id);
+
+            win.window.onload = () => {
+                dti.log('window loaded');
+                win.window.onbeforeunload = () => {
+                    dti.trace('closing window');
+                    self.bindings.close();
+                };
+            };
+
+            win.getConfig = dti.utility.getConfig;
+
+            win.windowId = windowId;
+
+            win.getWindowParameters = function () {
+                return $.extend(true, {}, config);
+            };
+            // self.win.onload = () => {
+            //     self.win.windowId = windowId;
+            // };
         }
-
-        stackWindows();
-
-        //detect clicks inside iframe
-        // setInterval(function detectIframeClick () {
-        //     var elem = document.activeElement;
-        //     if (elem && elem.id === iframeId) {
-        //         self.bindings.activate();
-        //     }
-        // }, 100);
-
-        ko.applyBindings(self.bindings, self.$windowEl[0]);
 
         if (!config.url) {
             self.initFn = dti.utility.getPathFromObject(config.initFn, dti);
@@ -1385,6 +1460,8 @@ var dti = {
             bindings: self.bindings,
             handleMessage: self.handleMessage,
             settings: self.settings,
+            win: self.win,
+            popupID: self.popupID,
             getWindowParameters () {
                 return $.extend(true, {}, config);
             }
@@ -1426,6 +1503,27 @@ var dti = {
             } else {
                 $('body').removeClass('interacting');
             }
+        },
+        focusPopup (id) {
+            window.focusWindow(id);
+        },
+        getPopupID () {
+            return window.getPopupID();
+        },
+        closePopup (id) {
+            window.closePopup(id);
+        },
+        getWindowByPopupID (id) {
+            var targetWindow;
+
+            dti.forEachArray(dti.windows.windowList, function checkForTargetWindow(win) {
+                if (win.popupID === id) {
+                    targetWindow = win;
+                    return false;
+                }
+            });
+
+            return targetWindow;
         },
         getWindowById: function (id) {
             var targetWindow;
@@ -1505,6 +1603,13 @@ var dti = {
             dti.windows._setInteractingFlag(false);
         },
         init: function () {
+            window.onBlur = (id) => {
+                let win = dti.windows.getWindowByPopupID(id);
+
+                if (win) {
+                    win.deactivate();
+                }
+            };
 
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var windowId = win.bindings.windowId();
@@ -1544,11 +1649,17 @@ var dti = {
             // TFS #549; search this file for #549 for more info
             if (e) {
                 winId = e.winId || e._windowId;
-                targetWindow = dti.windows.getWindowById(winId);
+                if (winId) {
+                    targetWindow = dti.windows.getWindowById(winId);
+                }
             }
 
             if (targetWindow) {
-                targetWindow.handleMessage(e, cb);
+                if (targetWindow.dtiUtility) {
+                    return;
+                } else {
+                    targetWindow.handleMessage(e, cb);
+                }
             }
         },
         create: function (config) {
@@ -1583,7 +1694,7 @@ var dti = {
 
                         dti.windows.windowList.push(newWindow);
 
-                        if (!config.isHidden) {
+                        if (!config.isHidden && !config.popout) {
                             dti.windows.activate(newWindow.windowId);
                         }
                     } else {
@@ -1646,11 +1757,73 @@ var dti = {
                 finishProcessingParameters();
             }
         },
+        injectWindow (win, config) {
+            if (win) {
+                win.getConfig = dti.utility.getConfig;
+
+                win.windowId = config.id || dti.makeId();
+
+                win.getWindowParameters = function () {
+                    return $.extend(true, {}, config);
+                };
+            }
+
+            // win.onWindowResize = function (fn) {
+            //     self.settings.onWindowResize = fn;
+            // };
+
+            // if (config.onLoad) {
+            //     dti.log('calling config.onload');
+            //     config.onLoad.call(self);
+            // }
+
+            // if (win.point) {
+            //     if (self.bindings.upi() === undefined) {
+            //         self.bindings.upi(win.point._id);
+            //     }
+            // }
+
+            // $(this.contentDocument).on('mousedown', handleIframeClick);
+
+            // win.windowId = self.bindings.windowId();
+            // win.close = function () {
+            //     self.bindings.close();
+            // };
+
+            //if (win.onLoad) {
+            // if (win.delayLoad) {
+            //     win.onLoadFn = function customCloseLoading() {
+            //         self.bindings.loading(false);
+            //     };
+            // } else {
+            //     self.bindings.loading(false);
+            // }
+        },
         openWindow: function (url, title, type, target, upi, options) {
             var config,
                 doCreateWindow = function (cfg) {
                     dti.navigator.hideNavigator();
+
+                    if (!cfg.options || cfg.options.desktop !== true && !!cfg.url) {
+                        // cfg.popout = true;
+                    }
+
                     dti.windows.create(cfg);
+                        
+                    // } else {
+                    //     let win = window.open(cfg.url, null, 'width=' + cfg.options.width + ',height=' + cfg.options.height + ',menubar=no');
+                    //     dti.windows.windowList.push(win);
+                    //     dti.windows.injectWindow(win, cfg);
+
+                        // setTimeout(() => {
+                        //     win.document.addEventListener("keydown", function (e) {
+                        //         if (e.which === 123) {
+                        //             require('electron').remote.getCurrentWindow().toggleDevTools();
+                        //         }
+                        //     });
+                        // }, 3000);
+                    // }
+                    // dti.windows.create(cfg);
                 };
 
             if (typeof url === 'object') {
@@ -6535,11 +6708,25 @@ var dti = {
     },
     messaging: {
         _messageCallbacks: [],
-        logMessages: false,
         init: function () {
             window.addEventListener('storage', function (e) {
+                // console.log(e);
                 dti.messaging.processMessage(e);
             });
+
+            window.dtiMessage = (title, data) => {
+                let ret;
+                dti.messaging.processMessage({
+                    key: title,
+                    newValue: data,
+                    sync: true,
+                    cb (data) {
+                        ret = data;
+                    }
+                });
+
+                return ret;
+            };
 
             store.set('sessionId', dti.settings.sessionId);
 
@@ -6564,7 +6751,7 @@ var dti = {
                         height: '100%'
                     });
 
-                    store.remove('startupCommands');
+                    store.set('startupCommands', null);
                 }
             });
 
@@ -6601,53 +6788,9 @@ var dti = {
                     }, 1000);
                 },
                 callbacks = {
-                    getTemplate: function () {
-                        var sourceWindowId = config._windowId,
-                            callback = function (data) {
-                                setTimeout(function doSendTemplate () {
-                                    dti.log('sending template', sourceWindowId, data, config.id);
-                                    dti.messaging.sendMessage({
-                                        key: sourceWindowId, 
-                                        message: 'gotTemplate',
-                                        value: {
-                                            template: data,
-                                            id: config.id
-                                        }
-                                    });
-                                }, 1000);
-                            },
-                            template = dti.utility.getTemplate(config.id);
-
-                        callback(template[0].outerHTML);
-                    },
-                    getTemplates: function () {
-                        var sourceWindowId = config._windowId,
-                            callback = function (data) {
-                                setTimeout(function doSendTemplate () {
-                                    dti.log('sending template', sourceWindowId, data, config.id);
-                                    dti.messaging.sendMessage({
-                                        key: sourceWindowId, 
-                                        message: 'gotTemplates',
-                                        value: {
-                                            templates: data
-                                        }
-                                    });
-                                }, 1000);
-                            },
-                            templates = [];
-
-                        dti.forEachArray(config.ids.ids, function getTemplateById (id) {
-                            templates.push({
-                                id: id,
-                                template: dti.utility.getTemplate(id)[0].outerHTML
-                            });
-                        });
-
-                        callback(templates);
-                    },
                     showPointSelectorOld: function () {
                         var sourceWindowId = config._windowId,
-                            callback = function(data) {
+                            callback = function (data) {
                                 dti.messaging.sendMessage({
                                     messageID: messageID,
                                     key: sourceWindowId,
@@ -6666,6 +6809,7 @@ var dti = {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
                                 dti.messaging.sendMessage({
+                    
                                     messageID: messageID,
                                     key: sourceWindowId,
                                     message: 'pointSelected',
@@ -6751,27 +6895,24 @@ var dti = {
                         dti.workspaceManager.openWindow(config);
                     },
                     closeWindow: function () {
+                        if (config) {
                             var windowId = config._windowId;
 
                             dti.windows.closeWindow(windowId);
+                        }
                     },
-                    getSystemEnum() {
-                        let enumType = config.enumType;
-                        let getEnumID = config.getEnumID;
-                        let winId = config._windowId;
-                        let ret = dti.utility.systemEnums[enumType];
+                    getNewWindowId() {
+                        let ret = dti.makeId();
 
-                        setTimeout(function sendSystemConfig() {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    getEnumID,
-                                    message: 'getSystemEnum',
-                                    value: ret
-                                }
-                            });
-                        }, 1000);
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: config._windowId,
+                            value: {
+                                message: 'getNewWindowId',
+                                getWinID: config.getWinID,
+                                value: ret
+                            }
+                        });
                     },
                     getConfig: function () {
                         doGetConfig('getConfig');
@@ -6785,7 +6926,7 @@ var dti = {
                         let winId = config._windowId; 
                         let ret = dti.utility.systemEnums[enumType];
 
-                        setTimeout(function sendSystemConfig() { 
+                        // setTimeout(function sendSystemConfig() { 
                             dti.messaging.sendMessage({ 
                                 messageID: messageID, 
                                 key: winId, 
@@ -6795,7 +6936,7 @@ var dti = {
                                     value: ret 
                                 } 
                             }); 
-                        }, 1000); 
+                        // }, 1000); 
                     }, 
                     getUser: function () {
                         var winId = config._windowId,
@@ -6836,16 +6977,11 @@ var dti = {
                         // store previous call
                         messageID = config.messageID;
                         dti.navigator._prevMessage = config;
+                    }
 
-                        // TFS #549; storage re-fires events when the storage element is removed, causing a storage event
-                        // to fire with null data ("config" in this case).
-                        // We've moved the callbacks function call to inside this conditional. If we ever have a callback
-                        // that accepts a null argument, we'll have to move this outside our "if" and check for a valid
-                        // config in each callback function
-                        if (dti.messaging.logMessages) {
-                            dti.log('home doProcessMessage', e.key, config);
-                        }
+                    dti.trace('home got', e.key, config);
 
+                    if(config){
                         callbacks[e.key]();
                     }
                 }
@@ -6872,6 +7008,7 @@ var dti = {
 
                 dti.messaging.doProcessMessage(message);
 
+                dti.trace('home removing', e.key);
                 store.remove(e.key); //memory cleanup
                 // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
                 //     cb(message);

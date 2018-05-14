@@ -387,6 +387,13 @@ var dtiUtility = {
         let title = ['dti', data._windowId, target].join(';'); 
 
         dtiUtility.trace('dtiUtility sending message', title , data);
+
+        // if (window.dtiMessage) {
+        //     window.dtiMessage(title, data);
+        // } else {
+            (window.opener || window.top).dtiMessage(title, data);
+        // }
+
         store.set(title, data); 
     },
 

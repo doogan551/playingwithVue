@@ -12,7 +12,7 @@ html
         link(rel='stylesheet', href='/css/lib/mbox-0.0.1.min.css')
         link(rel='stylesheet', href='/sass/displays/displays')
 
-    body(data-bind="style: {'background-color': !editMode() ? backgroundColor : '#cccccc' }, css: { editMode: editMode, viewMode: !editMode(), editingPreviewWidget: editingPreviewWidget, editingComplexWidget: editingComplexWidget }, delegate: [{event: 'click', selector: '.dti-widget', handler: widgetClickHandler }]")
+    body(data-bind="style: {'background-color': !editMode() ? backgroundColor : '#cccccc' }, css: { editMode: editMode, viewMode: !editMode(), editingPreviewWidget: editingPreviewWidget, editingComplexWidget: editingComplexWidget }, delegate: [{event: 'click', selector: '.dti-widget', handler: widgetClickHandler}, {event: 'mousedown', selector: '.dti-widget', handler: widgetClickHandler }]")
 
         //- #mask(data-bind="visible: editingWidget")
         .widgetToolbarMask(data-bind="visible: editingPreviewWidget")
