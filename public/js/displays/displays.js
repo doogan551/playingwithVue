@@ -2786,7 +2786,7 @@ var displays = {
             let isRightClick = e.which === 3;
             let isMiddleClick = e.which === 2;
 
-            if (!isMiddleClick && e.type === 'mousedown') {
+            if (!isMiddleClick && !isRightClick && e.type === 'mousedown') {
                 return;
             }
 

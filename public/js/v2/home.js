@@ -45,6 +45,19 @@ let koct = function (obj = window.$0) {
 let koUnwrap = function (value) {
     return ko.utils.unwrapObservable(value);
 };
+
+window.dtiMessage = (title, data, cb) => {
+    let ret;
+    dti.messaging.doProcessMessage({
+        key: title,
+        newValue: data,
+        sync: true
+    });
+
+    dti.once('returnMessage', (data) => {
+        cb(data);
+    });
+};
 var dti = {
     $loginBtn: $('#loginBtn'),
     $resetPasswordBtn: $('#resetPasswordBtn'),
@@ -6714,20 +6727,6 @@ var dti = {
                 dti.messaging.processMessage(e);
             });
 
-            window.dtiMessage = (title, data) => {
-                let ret;
-                dti.messaging.processMessage({
-                    key: title,
-                    newValue: data,
-                    sync: true,
-                    cb (data) {
-                        ret = data;
-                    }
-                });
-
-                return ret;
-            };
-
             store.set('sessionId', dti.settings.sessionId);
 
             $('#testLink').on('click', function clickTestLink(event) {
@@ -6775,17 +6774,21 @@ var dti = {
 
                     ret = dti.utility[utilityFn](path, parameters);
 
-                    setTimeout(function sendConfigInfo() {
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                _getCfgID: id,
-                                message: utilityFn,
-                                value: ret
-                            }
-                        });
-                    }, 1000);
+                    if (!e.sync) {
+                        setTimeout(function sendConfigInfo() {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: utilityFn,
+                                    value: ret
+                                }
+                            });
+                        }, 1000);
+                    } else {
+                        dti.fire('returnMessage', ret);
+                    }
                 },
                 callbacks = {
                     showPointSelectorOld: function () {
@@ -6859,15 +6862,19 @@ var dti = {
                     windowMessage: function () {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
-                                dti.messaging.sendMessage({
-                                    messageID: messageID,
-                                    key: sourceWindowId,
-                                    message: 'windowUpdated',
-                                    value: {
-                                        _updateWindowID: messageID,
-                                        result: data
-                                    }
-                                });
+                                if (!e.sync) {
+                                    dti.messaging.sendMessage({
+                                        messageID: messageID,
+                                        key: sourceWindowId,
+                                        message: 'windowUpdated',
+                                        value: {
+                                            _updateWindowID: messageID,
+                                            result: data
+                                        }
+                                    });
+                                } else {
+                                    dti.fire('returnMessage', data);
+                                }
                             };
 
                         dti.windows.sendMessage(config, callback);
@@ -6927,6 +6934,7 @@ var dti = {
                         let ret = dti.utility.systemEnums[enumType];
 
                         // setTimeout(function sendSystemConfig() { 
+                        if (!e.sync) {
                             dti.messaging.sendMessage({ 
                                 messageID: messageID, 
                                 key: winId, 
@@ -6936,22 +6944,29 @@ var dti = {
                                     value: ret 
                                 } 
                             }); 
+                        } else {
+                            dti.fire('returnMessage', ret);
+                        }
                         // }, 1000); 
                     }, 
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
 
-                        setTimeout(function sendUserInfo() {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    user: user,
-                                    message: 'getUser'
-                                }
-                            });
-                        }, 1000);
+                        if (!e.sync) {                            
+                            setTimeout(function sendUserInfo() {
+                                dti.messaging.sendMessage({
+                                    messageID: messageID,
+                                    key: winId,
+                                    value: {
+                                        user: user,
+                                        message: 'getUser'
+                                    }
+                                });
+                            }, 1000);
+                        } else {
+                            dti.fire('returnMessage', user);
+                        }
                     },
                     pointSelected: function () {
 

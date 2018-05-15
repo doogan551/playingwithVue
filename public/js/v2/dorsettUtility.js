@@ -56,41 +56,154 @@ var dtiUtility = {
 
         return out;
     },
-    trace() {
-        if (dtiUtility.settings.logLevel === 'trace') {
-            dtiUtility.log.apply(this, arguments);
-        }
-    },
-    log: function() {
-        var stack,
-            steps,
-            lineNumber,
-            err,
-            now = new Date(),
-            args = [].splice.call(arguments, 0),
-            pad = function(num) {
-                return ('    ' + num).slice(-4);
-            },
-            formattedtime = dtiUtility.formatDate(new Date(), true);
+    forEach: function (obj, fn) {
+        var keys = Object.keys(obj),
+            c,
+            len = keys.length,
+            errorFree = true;
 
-        if (dtiUtility.settings.logLinePrefix === true) {
-            err = new Error();
-            if (Error.captureStackTrace) {
-                Error.captureStackTrace(err);
-
-                stack = err.stack.split('\n')[2];
-
-                steps = stack.split(':');
-
-                lineNumber = steps[2];
-
-                args.unshift('line:' + pad(lineNumber), formattedtime);
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
             }
         }
-        // args.unshift(formattedtime);
-        if (!dtiUtility.noLog) {
-            console.log.apply(console, args);
+
+        return errorFree;
+    },
+    forEachArray: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
         }
+
+        return errorFree;
+    },
+    forEachArrayRev: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },    
+    logging: {
+        logHistory: [],
+        logLevels: {
+            none: 0,
+            debug: 1,
+            trace: 2
+        },
+        addLog(message, level) {
+            let safe = true;
+            let output = [];
+            dtiUtility.forEachArray(message, (entry) => {
+                if (typeof entry === 'object') {
+                    if (dtiUtility.settings.logObjects === true) {
+                        let clean = dtiUtility.deCycleObject(entry);
+                        output.push(clean);
+                    }
+                } else {
+                    output.push(entry);
+                }
+            });
+
+            let stringMessage = JSON.stringify(output);
+            dtiUtility.logging.logHistory.push({
+                message: stringMessage,
+                level
+            });
+        },
+        showLogs(level) {
+            let pad = (num) => {
+                return ('     ' + num).slice(-5);
+            };
+            dtiUtility.forEachArray(dtiUtility.logging.logHistory, (log) => {
+                if (!!level) {
+                    if (log.level !== level) {
+                        return;
+                    }
+                }
+
+                let logLevel = '(' + pad(log.level) + ')';
+                let args = [logLevel].concat(log.message);
+
+                console.log.apply(console, args);
+            });
+        },
+        getLogMessage(args) {
+            var stack,
+                steps,
+                lineNumber,
+                err,
+                now = new Date(),
+                message = [].splice.call(args, 0),
+                pad = function (num) {
+                    return ('    ' + num).slice(-4);
+                },
+                formattedtiUtilityme = dtiUtility.formatDate(new Date(), true);
+
+            if (dtiUtility.settings.logLinePrefix === true) {
+                err = new Error();
+                if (Error.captureStackTrace) {
+                    Error.captureStackTrace(err);
+
+                    //entry 5 in the stack
+                    stack = err.stack.split('\n')[4];
+
+                    steps = stack.split(':');
+
+                    lineNumber = steps[2];
+
+                    // args.unshift('gap:' + pad(now - dtiUtility._lastLog));
+
+                    message.unshift('line:' + pad(lineNumber), formattedtiUtilityme);
+                }
+            }
+
+            return message;
+        },
+        isValidLog(level) {
+            let logLevel = dtiUtility.logging.logLevels[level.toLowerCase()] || 1;
+            let appLogLevel = dtiUtility.logging.logLevels[dtiUtility.settings.logLevel.toLowerCase()] || 1;
+
+            if (logLevel <= appLogLevel) {
+                return true;
+            }
+
+            return false;
+        },
+        log (args, level) {
+            let message = dtiUtility.logging.getLogMessage(args);
+
+            if (dtiUtility.logging.isValidLog(level)) {
+                console.log.apply(console, message);
+            }
+
+            dtiUtility.logging.addLog(message, level);
+
+            dtiUtility.logging._lastLog = new Date().getTime();
+        }
+    },
+    trace() {
+        dtiUtility.logging.log(arguments, 'trace');
+    },
+    log() {
+        dtiUtility.logging.log(arguments, 'debug');
     },
     makeId: function () {
         dtiUtility.itemIdx++;
@@ -391,10 +504,15 @@ var dtiUtility = {
         // if (window.dtiMessage) {
         //     window.dtiMessage(title, data);
         // } else {
-            (window.opener || window.top).dtiMessage(title, data);
+            (window.opener || window.top).dtiMessage(target, data, function () {
+                if (cfg.cb) {
+                    cfg.cb.apply(null, arguments);
+                }
+                dtiUtility.trace(target, 'return', arguments);
+            });
         // }
 
-        store.set(title, data); 
+        // store.set(title, data); 
     },
 
     onMessage: function (cb) {
@@ -438,7 +556,8 @@ var dtiUtility = {
             messageID: updateWindowID,
             action: action,
             parameters: parameters,
-            _updateWindowID: cb ? updateWindowID : null
+            _updateWindowID: cb ? updateWindowID : null,
+            cb
         });
 
 
@@ -463,7 +582,8 @@ var dtiUtility = {
         dtiUtility.sendMessage('getSystemEnum', {
             messageID: getEnumID,
             enumType,
-            getEnumID
+            getEnumID,
+            cb
         });        
     },
 
@@ -474,7 +594,8 @@ var dtiUtility = {
 
         dtiUtility.sendMessage('getNewWindowId', {
             messageID: getWinID,
-            getWinID: getWinID
+            getWinID: getWinID,
+            cb
         });
     },
 
@@ -487,7 +608,8 @@ var dtiUtility = {
             messageID: getCfgID,
             path: path,
             parameters: parameters,
-            _getCfgID: getCfgID
+            _getCfgID: getCfgID,
+            cb
         });
     },
     getBatchConfig: function (path, parameters, cb) { 
@@ -502,13 +624,16 @@ var dtiUtility = {
             messageID: getCfgID, 
             path: path, 
             parameters: parameters, 
-            _getCfgID: getCfgID 
+            _getCfgID: getCfgID,
+            cb 
         }); 
     },
     getUser: function (cb) {
         dtiUtility._getUserCb = cb;
 
-        dtiUtility.sendMessage('getUser');
+        dtiUtility.sendMessage('getUser', {
+            cb
+        });
     },
 
     toast: function (parameters) {
