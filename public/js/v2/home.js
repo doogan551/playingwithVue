@@ -1106,7 +1106,7 @@ var dti = {
                         dti.destroyObject(self, true);
                     }, 1000);
                 } else {
-                    dti.windows.closePopup(self.popupID);
+                    dti.windows.closePopup(self.popupID, dti.settings.webEndpoint + self.bindings.url());
                     setTimeout(() => {
                         dti.destroyObject(self, true);
                     }, 1000);
@@ -1210,7 +1210,8 @@ var dti = {
                                     self.win.document.title = pointName;
                                 }
 
-                                self.win.window.onbeforeunload = () => {
+                                self.win.window.onunload = () => {
+                                    dti.log('closing window');
                                     self.bindings.close();
                                 };
                             };
@@ -1413,18 +1414,21 @@ var dti = {
             ko.applyBindings(self.bindings, self.$windowEl[0]);
         } else {
             let win = self.win = window.open(config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
-            let id = dti.windows.getPopupID();
+            win.addEventListener('load', () => {
+                dti.log('window loaded');
+                win.onunload = () => {
+                    dti.log('closing window');
+                    self.bindings.close();
+                };
+            });
+
+            dti.log('getPopupID', dti.settings.webEndpoint + '/' + config.url);
+            let id = dti.windows.getPopupID(dti.settings.webEndpoint + config.url);
 
             self.popupID = id;
             dti.trace('window id: ', id);
 
-            win.window.onload = () => {
-                dti.log('window loaded');
-                win.window.onbeforeunload = () => {
-                    dti.trace('closing window');
-                    self.bindings.close();
-                };
-            };
+           
 
             win.getConfig = dti.utility.getConfig;
 
@@ -1520,11 +1524,12 @@ var dti = {
         focusPopup (id) {
             window.focusWindow(id);
         },
-        getPopupID () {
-            return window.getPopupID();
+        getPopupID (url) {
+            return window.getPopupID(url);
         },
-        closePopup (id) {
-            window.closePopup(id);
+        closePopup (id, url) {
+            dti.log('close popup', id, url);
+            window.closePopup(id, url);
         },
         getWindowByPopupID (id) {
             var targetWindow;
