@@ -1479,6 +1479,7 @@ var dti = {
             settings: self.settings,
             win: self.win,
             popupID: self.popupID,
+            _config: config,
             getWindowParameters () {
                 return $.extend(true, {}, config);
             }
@@ -1689,7 +1690,7 @@ var dti = {
             } else {
                 newWindow = dti.windows.getWindowByUpi(config.upi);
 
-                if (newWindow) {
+                if (newWindow && newWindow._config.desktop !== true) {
                     dti.windows.activate(newWindow.windowId);
                 } else {
                     $.extend(config, config.options);
