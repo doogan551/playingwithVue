@@ -840,7 +840,8 @@ const Point = class Point extends Common {
                     _pStatus: 0
                 },
                 fields: {
-                    Name: 1
+                    Name: 1,
+                    path: 1
                 }
             };
             this.getOne(criteria, callback);
@@ -1598,6 +1599,7 @@ const Point = class Point extends Common {
                                 case 'Demand Interval':
                                 case 'Disable Limit Fault':
                                 case 'Downlink Broadcast':
+                                case 'Enable Network COV':
                                 case 'Enable Warning Alarms':
                                 case 'Fail Action':
                                 case 'Fan Off CFM Setpoint':
@@ -3709,9 +3711,11 @@ const Point = class Point extends Common {
             $project: {
                 _id: 1,
                 pointType: '$Point Type.Value',
+                reportType: '$Report Type.Value',
                 path: 1,
                 display: 1,
-                parentNode: 1
+                parentNode: 1,
+                Value: 1
             }
         });
 

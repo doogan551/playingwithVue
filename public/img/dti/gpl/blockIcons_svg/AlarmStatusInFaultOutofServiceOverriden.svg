@@ -1,0 +1,3010 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   width="72px"
+   height="72px"
+   viewBox="0 0 72 72"
+   enable-background="new 0 0 72 72"
+   xml:space="preserve"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="AlarmStatusInFaultOutofSOverridenTrue.svg"><metadata
+   id="metadata845"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+   id="defs843"><linearGradient
+     id="SVGID_1_-0"
+     gradientUnits="userSpaceOnUse"
+     x1="46.622101"
+     y1="41.127899"
+     x2="41.182999"
+     y2="39.771801"><stop
+       offset="0"
+       style="stop-color:#FFFFFF"
+       id="stop36" /><stop
+       offset="1"
+       style="stop-color:#FCB244"
+       id="stop38" /></linearGradient><linearGradient
+     id="SVGID_2_-9"
+     gradientUnits="userSpaceOnUse"
+     x1="45.750999"
+     y1="47.434601"
+     x2="40.5867"
+     y2="46.0508"><stop
+       offset="0"
+       style="stop-color:#F59396"
+       id="stop45" /><stop
+       offset="1"
+       style="stop-color:#FFFFFF"
+       id="stop47" /></linearGradient></defs><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="640"
+   inkscape:window-height="480"
+   id="namedview841"
+   showgrid="false"
+   inkscape:zoom="3.2777778"
+   inkscape:cx="36"
+   inkscape:cy="36"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="g3" />
+<g
+   id="g3">
+	
+	<g
+   id="g7">
+		<g
+   id="g9">
+			<g
+   id="g11">
+				<defs
+   id="defs13">
+					<circle
+   id="SVGID_1_"
+   cx="42.008"
+   cy="31.297"
+   r="2.406" />
+				</defs>
+				<clipPath
+   id="SVGID_2_">
+					<use
+   xlink:href="#SVGID_1_"
+   overflow="visible"
+   id="use17" />
+				</clipPath>
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#FFFFFF"
+   points="42.008,31.297       44.346,33.791 44.501,33.636     "
+   id="polygon19" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#160B0C"
+   points="42.008,31.297       39.669,28.804 39.515,28.959     "
+   id="polygon21" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="42.008,31.297       44.501,33.636 44.646,33.471     "
+   id="polygon23" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="42.008,31.297       39.515,28.959 39.37,29.124     "
+   id="polygon25" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="42.008,31.297       44.646,33.471 44.779,33.297     "
+   id="polygon27" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="42.008,31.297       39.37,29.124 39.236,29.297     "
+   id="polygon29" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="42.008,31.297       44.779,33.297 44.901,33.116     "
+   id="polygon31" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="42.008,31.297       39.236,29.297 39.113,29.479     "
+   id="polygon33" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="42.008,31.297       44.901,33.116 45.013,32.927     "
+   id="polygon35" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="42.008,31.297       39.113,29.479 39.003,29.668     "
+   id="polygon37" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="42.008,31.297       45.013,32.927 45.11,32.73     "
+   id="polygon39" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="42.008,31.297       39.003,29.668 38.904,29.864     "
+   id="polygon41" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="42.008,31.297       45.11,32.73 45.196,32.529     "
+   id="polygon43" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="42.008,31.297       38.904,29.864 38.819,30.065     "
+   id="polygon45" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="42.008,31.297       45.196,32.529 45.269,32.322     "
+   id="polygon47" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="42.008,31.297       38.819,30.065 38.746,30.272     "
+   id="polygon49" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="42.008,31.297       45.269,32.322 45.327,32.111     "
+   id="polygon51" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="42.008,31.297       38.746,30.272 38.688,30.483     "
+   id="polygon53" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="42.008,31.297       45.327,32.111 45.373,31.897     "
+   id="polygon55" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="42.008,31.297       38.688,30.483 38.643,30.698     "
+   id="polygon57" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="42.008,31.297       45.373,31.897 45.404,31.68     "
+   id="polygon59" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="42.008,31.297       38.643,30.698 38.611,30.915     "
+   id="polygon61" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="42.008,31.297       45.404,31.68 45.422,31.461     "
+   id="polygon63" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="42.008,31.297       38.611,30.915 38.594,31.133     "
+   id="polygon65" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="42.008,31.297       45.422,31.461 45.426,31.243     "
+   id="polygon67" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="42.008,31.297       38.594,31.133 38.59,31.352     "
+   id="polygon69" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="42.008,31.297       45.426,31.243 45.415,31.023     "
+   id="polygon71" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="42.008,31.297       38.59,31.352 38.601,31.571     "
+   id="polygon73" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="42.008,31.297       45.415,31.023 45.391,30.806     "
+   id="polygon75" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="42.008,31.297       38.601,31.571 38.625,31.789     "
+   id="polygon77" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="42.008,31.297       45.391,30.806 45.352,30.59     "
+   id="polygon79" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="42.008,31.297       38.625,31.789 38.663,32.004     "
+   id="polygon81" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="42.008,31.297       45.352,30.59 45.3,30.377     "
+   id="polygon83" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="42.008,31.297       38.663,32.004 38.716,32.217     "
+   id="polygon85" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="42.008,31.297       45.3,30.377 45.234,30.168     "
+   id="polygon87" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="42.008,31.297       38.716,32.217 38.781,32.426     "
+   id="polygon89" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="42.008,31.297       45.234,30.168 45.155,29.964     "
+   id="polygon91" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="42.008,31.297       38.781,32.426 38.86,32.63     "
+   id="polygon93" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="42.008,31.297       45.155,29.964 45.063,29.765     "
+   id="polygon95" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="42.008,31.297       38.86,32.63 38.952,32.83     "
+   id="polygon97" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="42.008,31.297       45.063,29.765 44.959,29.572     "
+   id="polygon99" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="42.008,31.297       38.952,32.83 39.057,33.022     "
+   id="polygon101" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="42.008,31.297       44.959,29.572 44.842,29.387     "
+   id="polygon103" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="42.008,31.297       39.057,33.022 39.173,33.208     "
+   id="polygon105" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="42.008,31.297       44.842,29.387 44.714,29.209     "
+   id="polygon107" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="42.008,31.297       39.173,33.208 39.302,33.385     "
+   id="polygon109" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="42.008,31.297       44.714,29.209 44.574,29.04     "
+   id="polygon111" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="42.008,31.297       39.302,33.385 39.44,33.555     "
+   id="polygon113" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="42.008,31.297       44.574,29.04 44.425,28.88     "
+   id="polygon115" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="42.008,31.297       39.44,33.555 39.591,33.714     "
+   id="polygon117" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="42.008,31.297       44.425,28.88 44.265,28.73     "
+   id="polygon119" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="42.008,31.297       39.591,33.714 39.75,33.864     "
+   id="polygon121" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="42.008,31.297       44.265,28.73 44.096,28.591     "
+   id="polygon123" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="42.008,31.297       39.75,33.864 39.92,34.003     "
+   id="polygon125" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="42.008,31.297       44.096,28.591 43.918,28.463     "
+   id="polygon127" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="42.008,31.297       39.92,34.003 40.098,34.132     "
+   id="polygon129" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="42.008,31.297       43.918,28.463 43.732,28.346     "
+   id="polygon131" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="42.008,31.297       40.098,34.132 40.282,34.249     "
+   id="polygon133" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="42.008,31.297       43.732,28.346 43.54,28.242     "
+   id="polygon135" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="42.008,31.297       40.282,34.249 40.476,34.353     "
+   id="polygon137" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="42.008,31.297       43.54,28.242 43.341,28.15     "
+   id="polygon139" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="42.008,31.297       40.476,34.353 40.675,34.444     "
+   id="polygon141" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="42.008,31.297       43.341,28.15 43.137,28.071     "
+   id="polygon143" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="42.008,31.297       40.675,34.444 40.879,34.523     "
+   id="polygon145" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="42.008,31.297       43.137,28.071 42.928,28.005     "
+   id="polygon147" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="42.008,31.297       40.879,34.523 41.088,34.589     "
+   id="polygon149" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="42.008,31.297       42.928,28.005 42.715,27.953     "
+   id="polygon151" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="42.008,31.297       41.088,34.589 41.301,34.642     "
+   id="polygon153" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="42.008,31.297       42.715,27.953 42.499,27.915     "
+   id="polygon155" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="42.008,31.297       41.301,34.642 41.517,34.68     "
+   id="polygon157" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="42.008,31.297       42.499,27.915 42.281,27.89     "
+   id="polygon159" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="42.008,31.297       41.517,34.68 41.734,34.705     "
+   id="polygon161" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="42.008,31.297       42.281,27.89 42.063,27.879     "
+   id="polygon163" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="42.008,31.297       41.734,34.705 41.953,34.715     "
+   id="polygon165" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="42.008,31.297       42.063,27.879 41.844,27.883     "
+   id="polygon167" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="42.008,31.297       41.953,34.715 42.172,34.711     "
+   id="polygon169" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="42.008,31.297       41.844,27.883 41.625,27.9     "
+   id="polygon171" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="42.008,31.297       42.172,34.711 42.391,34.694     "
+   id="polygon173" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="42.008,31.297       41.625,27.9 41.408,27.932     "
+   id="polygon175" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="42.008,31.297       42.391,34.694 42.607,34.663     "
+   id="polygon177" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="42.008,31.297       41.408,27.932 41.193,27.978     "
+   id="polygon179" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="42.008,31.297       42.607,34.663 42.821,34.617     "
+   id="polygon181" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="42.008,31.297       41.193,27.978 40.982,28.036     "
+   id="polygon183" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="42.008,31.297       42.821,34.617 43.032,34.558     "
+   id="polygon185" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="42.008,31.297       40.982,28.036 40.776,28.109     "
+   id="polygon187" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="42.008,31.297       43.032,34.558 43.239,34.486     "
+   id="polygon189" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="42.008,31.297       40.776,28.109 40.574,28.194     "
+   id="polygon191" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="42.008,31.297       43.239,34.486 43.441,34.4     "
+   id="polygon193" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="42.008,31.297       40.574,28.194 40.378,28.292     "
+   id="polygon195" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="42.008,31.297       43.441,34.4 43.637,34.302     "
+   id="polygon197" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="42.008,31.297       40.378,28.292 40.189,28.403     "
+   id="polygon199" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="42.008,31.297       43.637,34.302 43.826,34.191     "
+   id="polygon201" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="42.008,31.297       40.189,28.403 40.008,28.525     "
+   id="polygon203" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="42.008,31.297       43.826,34.191 44.008,34.069     "
+   id="polygon205" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="42.008,31.297       40.008,28.525 39.834,28.659     "
+   id="polygon207" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="42.008,31.297       44.008,34.069 44.182,33.935     "
+   id="polygon209" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="42.008,31.297       39.834,28.659 39.669,28.804     "
+   id="polygon211" />
+				<polygon
+   clip-path="url(#SVGID_2_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="42.008,31.297       44.182,33.935 44.346,33.791     "
+   id="polygon213" />
+			</g>
+		</g>
+		<g
+   id="g215">
+			<g
+   id="g217">
+				<defs
+   id="defs219">
+					<circle
+   id="SVGID_3_"
+   cx="30.914"
+   cy="31.297"
+   r="2.406" />
+				</defs>
+				<clipPath
+   id="SVGID_4_">
+					<use
+   xlink:href="#SVGID_3_"
+   overflow="visible"
+   id="use223" />
+				</clipPath>
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#FFFFFF"
+   points="30.914,31.297       33.252,33.791 33.407,33.636     "
+   id="polygon225" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#160B0C"
+   points="30.914,31.297       28.575,28.804 28.42,28.959     "
+   id="polygon227" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="30.914,31.297       33.407,33.636 33.552,33.471     "
+   id="polygon229" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="30.914,31.297       28.42,28.959 28.275,29.124     "
+   id="polygon231" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="30.914,31.297       33.552,33.471 33.686,33.297     "
+   id="polygon233" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="30.914,31.297       28.275,29.124 28.142,29.297     "
+   id="polygon235" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="30.914,31.297       33.686,33.297 33.808,33.116     "
+   id="polygon237" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="30.914,31.297       28.142,29.297 28.02,29.479     "
+   id="polygon239" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="30.914,31.297       33.808,33.116 33.918,32.927     "
+   id="polygon241" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="30.914,31.297       28.02,29.479 27.909,29.668     "
+   id="polygon243" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="30.914,31.297       33.918,32.927 34.017,32.73     "
+   id="polygon245" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="30.914,31.297       27.909,29.668 27.811,29.864     "
+   id="polygon247" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="30.914,31.297       34.017,32.73 34.103,32.529     "
+   id="polygon249" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="30.914,31.297       27.811,29.864 27.726,30.065     "
+   id="polygon251" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="30.914,31.297       34.103,32.529 34.175,32.322     "
+   id="polygon253" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="30.914,31.297       27.726,30.065 27.652,30.272     "
+   id="polygon255" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="30.914,31.297       34.175,32.322 34.233,32.111     "
+   id="polygon257" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="30.914,31.297       27.652,30.272 27.594,30.483     "
+   id="polygon259" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="30.914,31.297       34.233,32.111 34.279,31.897     "
+   id="polygon261" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="30.914,31.297       27.594,30.483 27.549,30.698     "
+   id="polygon263" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="30.914,31.297       34.279,31.897 34.311,31.68     "
+   id="polygon265" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="30.914,31.297       27.549,30.698 27.517,30.915     "
+   id="polygon267" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="30.914,31.297       34.311,31.68 34.328,31.461     "
+   id="polygon269" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="30.914,31.297       27.517,30.915 27.499,31.133     "
+   id="polygon271" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="30.914,31.297       34.328,31.461 34.331,31.243     "
+   id="polygon273" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="30.914,31.297       27.499,31.133 27.496,31.352     "
+   id="polygon275" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="30.914,31.297       34.331,31.243 34.321,31.023     "
+   id="polygon277" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="30.914,31.297       27.496,31.352 27.507,31.571     "
+   id="polygon279" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="30.914,31.297       34.321,31.023 34.296,30.806     "
+   id="polygon281" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="30.914,31.297       27.507,31.571 27.531,31.789     "
+   id="polygon283" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="30.914,31.297       34.296,30.806 34.258,30.59     "
+   id="polygon285" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="30.914,31.297       27.531,31.789 27.569,32.004     "
+   id="polygon287" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="30.914,31.297       34.258,30.59 34.206,30.377     "
+   id="polygon289" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="30.914,31.297       27.569,32.004 27.621,32.217     "
+   id="polygon291" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="30.914,31.297       34.206,30.377 34.14,30.168     "
+   id="polygon293" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="30.914,31.297       27.621,32.217 27.688,32.426     "
+   id="polygon295" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="30.914,31.297       34.14,30.168 34.061,29.964     "
+   id="polygon297" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="30.914,31.297       27.688,32.426 27.767,32.63     "
+   id="polygon299" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="30.914,31.297       34.061,29.964 33.969,29.765     "
+   id="polygon301" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="30.914,31.297       27.767,32.63 27.858,32.83     "
+   id="polygon303" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="30.914,31.297       33.969,29.765 33.865,29.572     "
+   id="polygon305" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="30.914,31.297       27.858,32.83 27.963,33.022     "
+   id="polygon307" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="30.914,31.297       33.865,29.572 33.748,29.387     "
+   id="polygon309" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="30.914,31.297       27.963,33.022 28.079,33.208     "
+   id="polygon311" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="30.914,31.297       33.748,29.387 33.62,29.209     "
+   id="polygon313" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="30.914,31.297       28.079,33.208 28.207,33.385     "
+   id="polygon315" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="30.914,31.297       33.62,29.209 33.48,29.04     "
+   id="polygon317" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="30.914,31.297       28.207,33.385 28.347,33.555     "
+   id="polygon319" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="30.914,31.297       33.48,29.04 33.331,28.88     "
+   id="polygon321" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="30.914,31.297       28.347,33.555 28.496,33.714     "
+   id="polygon323" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="30.914,31.297       33.331,28.88 33.171,28.73     "
+   id="polygon325" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="30.914,31.297       28.496,33.714 28.656,33.864     "
+   id="polygon327" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="30.914,31.297       33.171,28.73 33.002,28.591     "
+   id="polygon329" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="30.914,31.297       28.656,33.864 28.826,34.003     "
+   id="polygon331" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="30.914,31.297       33.002,28.591 32.824,28.463     "
+   id="polygon333" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="30.914,31.297       28.826,34.003 29.003,34.132     "
+   id="polygon335" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="30.914,31.297       32.824,28.463 32.639,28.346     "
+   id="polygon337" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="30.914,31.297       29.003,34.132 29.188,34.249     "
+   id="polygon339" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="30.914,31.297       32.639,28.346 32.445,28.242     "
+   id="polygon341" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="30.914,31.297       29.188,34.249 29.382,34.353     "
+   id="polygon343" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="30.914,31.297       32.445,28.242 32.247,28.15     "
+   id="polygon345" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="30.914,31.297       29.382,34.353 29.58,34.444     "
+   id="polygon347" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="30.914,31.297       32.247,28.15 32.042,28.071     "
+   id="polygon349" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="30.914,31.297       29.58,34.444 29.785,34.523     "
+   id="polygon351" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="30.914,31.297       32.042,28.071 31.834,28.005     "
+   id="polygon353" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="30.914,31.297       29.785,34.523 29.994,34.589     "
+   id="polygon355" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="30.914,31.297       31.834,28.005 31.621,27.953     "
+   id="polygon357" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="30.914,31.297       29.994,34.589 30.207,34.642     "
+   id="polygon359" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="30.914,31.297       31.621,27.953 31.405,27.915     "
+   id="polygon361" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="30.914,31.297       30.207,34.642 30.423,34.68     "
+   id="polygon363" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="30.914,31.297       31.405,27.915 31.188,27.89     "
+   id="polygon365" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="30.914,31.297       30.423,34.68 30.64,34.705     "
+   id="polygon367" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="30.914,31.297       31.188,27.89 30.969,27.879     "
+   id="polygon369" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="30.914,31.297       30.64,34.705 30.859,34.715     "
+   id="polygon371" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="30.914,31.297       30.969,27.879 30.749,27.883     "
+   id="polygon373" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="30.914,31.297       30.859,34.715 31.078,34.711     "
+   id="polygon375" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="30.914,31.297       30.749,27.883 30.531,27.9     "
+   id="polygon377" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="30.914,31.297       31.078,34.711 31.296,34.694     "
+   id="polygon379" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="30.914,31.297       30.531,27.9 30.314,27.932     "
+   id="polygon381" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="30.914,31.297       31.296,34.694 31.514,34.663     "
+   id="polygon383" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="30.914,31.297       30.314,27.932 30.1,27.978     "
+   id="polygon385" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="30.914,31.297       31.514,34.663 31.728,34.617     "
+   id="polygon387" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="30.914,31.297       30.1,27.978 29.889,28.036     "
+   id="polygon389" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="30.914,31.297       31.728,34.617 31.938,34.558     "
+   id="polygon391" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="30.914,31.297       29.889,28.036 29.682,28.109     "
+   id="polygon393" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="30.914,31.297       31.938,34.558 32.146,34.486     "
+   id="polygon395" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="30.914,31.297       29.682,28.109 29.48,28.194     "
+   id="polygon397" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="30.914,31.297       32.146,34.486 32.347,34.4     "
+   id="polygon399" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="30.914,31.297       29.48,28.194 29.284,28.292     "
+   id="polygon401" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="30.914,31.297       32.347,34.4 32.543,34.302     "
+   id="polygon403" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="30.914,31.297       29.284,28.292 29.095,28.403     "
+   id="polygon405" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="30.914,31.297       32.543,34.302 32.732,34.191     "
+   id="polygon407" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="30.914,31.297       29.095,28.403 28.913,28.525     "
+   id="polygon409" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="30.914,31.297       32.732,34.191 32.914,34.069     "
+   id="polygon411" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="30.914,31.297       28.913,28.525 28.74,28.659     "
+   id="polygon413" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="30.914,31.297       32.914,34.069 33.087,33.935     "
+   id="polygon415" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="30.914,31.297       28.74,28.659 28.575,28.804     "
+   id="polygon417" />
+				<polygon
+   clip-path="url(#SVGID_4_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="30.914,31.297       33.087,33.935 33.252,33.791     "
+   id="polygon419" />
+			</g>
+		</g>
+		<g
+   id="g421">
+			<g
+   id="g423">
+				<defs
+   id="defs425">
+					<circle
+   id="SVGID_5_"
+   cx="30.914"
+   cy="42.703"
+   r="2.406" />
+				</defs>
+				<clipPath
+   id="SVGID_6_">
+					<use
+   xlink:href="#SVGID_5_"
+   overflow="visible"
+   id="use429" />
+				</clipPath>
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#FFFFFF"
+   points="30.914,42.703       33.252,45.196 33.407,45.041     "
+   id="polygon431" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#160B0C"
+   points="30.914,42.703       28.575,40.21 28.42,40.364     "
+   id="polygon433" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="30.914,42.703       33.407,45.041 33.552,44.877     "
+   id="polygon435" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="30.914,42.703       28.42,40.364 28.275,40.529     "
+   id="polygon437" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="30.914,42.703       33.552,44.877 33.686,44.703     "
+   id="polygon439" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="30.914,42.703       28.275,40.529 28.142,40.703     "
+   id="polygon441" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="30.914,42.703       33.686,44.703 33.808,44.521     "
+   id="polygon443" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="30.914,42.703       28.142,40.703 28.02,40.885     "
+   id="polygon445" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="30.914,42.703       33.808,44.521 33.918,44.332     "
+   id="polygon447" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="30.914,42.703       28.02,40.885 27.909,41.073     "
+   id="polygon449" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="30.914,42.703       33.918,44.332 34.017,44.137     "
+   id="polygon451" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="30.914,42.703       27.909,41.073 27.811,41.27     "
+   id="polygon453" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="30.914,42.703       34.017,44.137 34.103,43.935     "
+   id="polygon455" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="30.914,42.703       27.811,41.27 27.726,41.472     "
+   id="polygon457" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="30.914,42.703       34.103,43.935 34.175,43.728     "
+   id="polygon459" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="30.914,42.703       27.726,41.472 27.652,41.678     "
+   id="polygon461" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="30.914,42.703       34.175,43.728 34.233,43.517     "
+   id="polygon463" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="30.914,42.703       27.652,41.678 27.594,41.89     "
+   id="polygon465" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="30.914,42.703       34.233,43.517 34.279,43.303     "
+   id="polygon467" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="30.914,42.703       27.594,41.89 27.549,42.104     "
+   id="polygon469" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="30.914,42.703       34.279,43.303 34.311,43.086     "
+   id="polygon471" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="30.914,42.703       27.549,42.104 27.517,42.32     "
+   id="polygon473" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="30.914,42.703       34.311,43.086 34.328,42.867     "
+   id="polygon475" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="30.914,42.703       27.517,42.32 27.499,42.539     "
+   id="polygon477" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="30.914,42.703       34.328,42.867 34.331,42.648     "
+   id="polygon479" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="30.914,42.703       27.499,42.539 27.496,42.758     "
+   id="polygon481" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="30.914,42.703       34.331,42.648 34.321,42.43     "
+   id="polygon483" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="30.914,42.703       27.496,42.758 27.507,42.977     "
+   id="polygon485" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="30.914,42.703       34.321,42.43 34.296,42.212     "
+   id="polygon487" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="30.914,42.703       27.507,42.977 27.531,43.194     "
+   id="polygon489" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="30.914,42.703       34.296,42.212 34.258,41.996     "
+   id="polygon491" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="30.914,42.703       27.531,43.194 27.569,43.41     "
+   id="polygon493" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="30.914,42.703       34.258,41.996 34.206,41.783     "
+   id="polygon495" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="30.914,42.703       27.569,43.41 27.621,43.623     "
+   id="polygon497" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="30.914,42.703       34.206,41.783 34.14,41.574     "
+   id="polygon499" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="30.914,42.703       27.621,43.623 27.688,43.832     "
+   id="polygon501" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="30.914,42.703       34.14,41.574 34.061,41.37     "
+   id="polygon503" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="30.914,42.703       27.688,43.832 27.767,44.036     "
+   id="polygon505" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="30.914,42.703       34.061,41.37 33.969,41.171     "
+   id="polygon507" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="30.914,42.703       27.767,44.036 27.858,44.235     "
+   id="polygon509" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="30.914,42.703       33.969,41.171 33.865,40.979     "
+   id="polygon511" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="30.914,42.703       27.858,44.235 27.963,44.428     "
+   id="polygon513" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="30.914,42.703       33.865,40.979 33.748,40.793     "
+   id="polygon515" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="30.914,42.703       27.963,44.428 28.079,44.613     "
+   id="polygon517" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="30.914,42.703       33.748,40.793 33.62,40.615     "
+   id="polygon519" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="30.914,42.703       28.079,44.613 28.207,44.791     "
+   id="polygon521" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="30.914,42.703       33.62,40.615 33.48,40.445     "
+   id="polygon523" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="30.914,42.703       28.207,44.791 28.347,44.96     "
+   id="polygon525" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="30.914,42.703       33.48,40.445 33.331,40.286     "
+   id="polygon527" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="30.914,42.703       28.347,44.96 28.496,45.12     "
+   id="polygon529" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="30.914,42.703       33.331,40.286 33.171,40.137     "
+   id="polygon531" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="30.914,42.703       28.496,45.12 28.656,45.27     "
+   id="polygon533" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="30.914,42.703       33.171,40.137 33.002,39.997     "
+   id="polygon535" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="30.914,42.703       28.656,45.27 28.826,45.409     "
+   id="polygon537" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="30.914,42.703       33.002,39.997 32.824,39.869     "
+   id="polygon539" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="30.914,42.703       28.826,45.409 29.003,45.537     "
+   id="polygon541" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="30.914,42.703       32.824,39.869 32.639,39.752     "
+   id="polygon543" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="30.914,42.703       29.003,45.537 29.188,45.654     "
+   id="polygon545" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="30.914,42.703       32.639,39.752 32.445,39.647     "
+   id="polygon547" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="30.914,42.703       29.188,45.654 29.382,45.759     "
+   id="polygon549" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="30.914,42.703       32.445,39.647 32.247,39.556     "
+   id="polygon551" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="30.914,42.703       29.382,45.759 29.58,45.851     "
+   id="polygon553" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="30.914,42.703       32.247,39.556 32.042,39.477     "
+   id="polygon555" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="30.914,42.703       29.58,45.851 29.785,45.93     "
+   id="polygon557" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="30.914,42.703       32.042,39.477 31.834,39.411     "
+   id="polygon559" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="30.914,42.703       29.785,45.93 29.994,45.995     "
+   id="polygon561" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="30.914,42.703       31.834,39.411 31.621,39.358     "
+   id="polygon563" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="30.914,42.703       29.994,45.995 30.207,46.047     "
+   id="polygon565" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="30.914,42.703       31.621,39.358 31.405,39.32     "
+   id="polygon567" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="30.914,42.703       30.207,46.047 30.423,46.086     "
+   id="polygon569" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="30.914,42.703       31.405,39.32 31.188,39.296     "
+   id="polygon571" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="30.914,42.703       30.423,46.086 30.64,46.11     "
+   id="polygon573" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="30.914,42.703       31.188,39.296 30.969,39.285     "
+   id="polygon575" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="30.914,42.703       30.64,46.11 30.859,46.121     "
+   id="polygon577" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="30.914,42.703       30.969,39.285 30.749,39.289     "
+   id="polygon579" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="30.914,42.703       30.859,46.121 31.078,46.117     "
+   id="polygon581" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="30.914,42.703       30.749,39.289 30.531,39.307     "
+   id="polygon583" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="30.914,42.703       31.078,46.117 31.296,46.1     "
+   id="polygon585" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="30.914,42.703       30.531,39.307 30.314,39.338     "
+   id="polygon587" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="30.914,42.703       31.296,46.1 31.514,46.068     "
+   id="polygon589" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="30.914,42.703       30.314,39.338 30.1,39.383     "
+   id="polygon591" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="30.914,42.703       31.514,46.068 31.728,46.023     "
+   id="polygon593" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="30.914,42.703       30.1,39.383 29.889,39.442     "
+   id="polygon595" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="30.914,42.703       31.728,46.023 31.938,45.964     "
+   id="polygon597" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="30.914,42.703       29.889,39.442 29.682,39.515     "
+   id="polygon599" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="30.914,42.703       31.938,45.964 32.146,45.892     "
+   id="polygon601" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="30.914,42.703       29.682,39.515 29.48,39.6     "
+   id="polygon603" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="30.914,42.703       32.146,45.892 32.347,45.806     "
+   id="polygon605" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="30.914,42.703 29.48,39.6       29.284,39.698     "
+   id="polygon607" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="30.914,42.703       32.347,45.806 32.543,45.708     "
+   id="polygon609" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="30.914,42.703       29.284,39.698 29.095,39.809     "
+   id="polygon611" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="30.914,42.703       32.543,45.708 32.732,45.598     "
+   id="polygon613" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="30.914,42.703       29.095,39.809 28.913,39.932     "
+   id="polygon615" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="30.914,42.703       32.732,45.598 32.914,45.475     "
+   id="polygon617" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="30.914,42.703       28.913,39.932 28.74,40.065     "
+   id="polygon619" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="30.914,42.703       32.914,45.475 33.087,45.341     "
+   id="polygon621" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="30.914,42.703       28.74,40.065 28.575,40.21     "
+   id="polygon623" />
+				<polygon
+   clip-path="url(#SVGID_6_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="30.914,42.703       33.087,45.341 33.252,45.196     "
+   id="polygon625" />
+			</g>
+		</g>
+		<g
+   id="g627">
+			<g
+   id="g629">
+				<defs
+   id="defs631">
+					<circle
+   id="SVGID_7_"
+   cx="42.008"
+   cy="42.703"
+   r="2.406" />
+				</defs>
+				<clipPath
+   id="SVGID_8_">
+					<use
+   xlink:href="#SVGID_7_"
+   overflow="visible"
+   id="use635" />
+				</clipPath>
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#FFFFFF"
+   points="42.008,42.703       44.346,45.196 44.501,45.041     "
+   id="polygon637" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#160B0C"
+   points="42.008,42.703       39.669,40.21 39.515,40.364     "
+   id="polygon639" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="42.008,42.703       44.501,45.041 44.646,44.877     "
+   id="polygon641" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="42.008,42.703       39.515,40.364 39.37,40.529     "
+   id="polygon643" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="42.008,42.703       44.646,44.877 44.779,44.703     "
+   id="polygon645" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="42.008,42.703       39.37,40.529 39.236,40.703     "
+   id="polygon647" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="42.008,42.703       44.779,44.703 44.901,44.521     "
+   id="polygon649" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="42.008,42.703       39.236,40.703 39.113,40.885     "
+   id="polygon651" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="42.008,42.703       44.901,44.521 45.013,44.332     "
+   id="polygon653" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="42.008,42.703       39.113,40.885 39.003,41.073     "
+   id="polygon655" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="42.008,42.703       45.013,44.332 45.11,44.137     "
+   id="polygon657" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="42.008,42.703       39.003,41.073 38.904,41.27     "
+   id="polygon659" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="42.008,42.703       45.11,44.137 45.196,43.935     "
+   id="polygon661" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="42.008,42.703       38.904,41.27 38.819,41.472     "
+   id="polygon663" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="42.008,42.703       45.196,43.935 45.269,43.728     "
+   id="polygon665" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="42.008,42.703       38.819,41.472 38.746,41.678     "
+   id="polygon667" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="42.008,42.703       45.269,43.728 45.327,43.517     "
+   id="polygon669" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="42.008,42.703       38.746,41.678 38.688,41.89     "
+   id="polygon671" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="42.008,42.703       45.327,43.517 45.373,43.303     "
+   id="polygon673" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="42.008,42.703       38.688,41.89 38.643,42.104     "
+   id="polygon675" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="42.008,42.703       45.373,43.303 45.404,43.086     "
+   id="polygon677" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="42.008,42.703       38.643,42.104 38.611,42.32     "
+   id="polygon679" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="42.008,42.703       45.404,43.086 45.422,42.867     "
+   id="polygon681" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="42.008,42.703       38.611,42.32 38.594,42.539     "
+   id="polygon683" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="42.008,42.703       45.422,42.867 45.426,42.648     "
+   id="polygon685" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="42.008,42.703       38.594,42.539 38.59,42.758     "
+   id="polygon687" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="42.008,42.703       45.426,42.648 45.415,42.43     "
+   id="polygon689" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="42.008,42.703       38.59,42.758 38.601,42.977     "
+   id="polygon691" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="42.008,42.703       45.415,42.43 45.391,42.212     "
+   id="polygon693" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="42.008,42.703       38.601,42.977 38.625,43.194     "
+   id="polygon695" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="42.008,42.703       45.391,42.212 45.352,41.996     "
+   id="polygon697" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="42.008,42.703       38.625,43.194 38.663,43.41     "
+   id="polygon699" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="42.008,42.703       45.352,41.996 45.3,41.783     "
+   id="polygon701" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="42.008,42.703       38.663,43.41 38.716,43.623     "
+   id="polygon703" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="42.008,42.703       45.3,41.783 45.234,41.574     "
+   id="polygon705" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="42.008,42.703       38.716,43.623 38.781,43.832     "
+   id="polygon707" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="42.008,42.703       45.234,41.574 45.155,41.37     "
+   id="polygon709" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="42.008,42.703       38.781,43.832 38.86,44.036     "
+   id="polygon711" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="42.008,42.703       45.155,41.37 45.063,41.171     "
+   id="polygon713" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="42.008,42.703       38.86,44.036 38.952,44.235     "
+   id="polygon715" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="42.008,42.703       45.063,41.171 44.959,40.979     "
+   id="polygon717" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="42.008,42.703       38.952,44.235 39.057,44.428     "
+   id="polygon719" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="42.008,42.703       44.959,40.979 44.842,40.793     "
+   id="polygon721" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="42.008,42.703       39.057,44.428 39.173,44.613     "
+   id="polygon723" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="42.008,42.703       44.842,40.793 44.714,40.615     "
+   id="polygon725" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="42.008,42.703       39.173,44.613 39.302,44.791     "
+   id="polygon727" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="42.008,42.703       44.714,40.615 44.574,40.445     "
+   id="polygon729" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="42.008,42.703       39.302,44.791 39.44,44.96     "
+   id="polygon731" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="42.008,42.703       44.574,40.445 44.425,40.286     "
+   id="polygon733" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="42.008,42.703       39.44,44.96 39.591,45.12     "
+   id="polygon735" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A11E21"
+   points="42.008,42.703       44.425,40.286 44.265,40.137     "
+   id="polygon737" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A61E22"
+   points="42.008,42.703       39.591,45.12 39.75,45.27     "
+   id="polygon739" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#9B1C1F"
+   points="42.008,42.703       44.265,40.137 44.096,39.997     "
+   id="polygon741" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#AC1F24"
+   points="42.008,42.703       39.75,45.27 39.92,45.409     "
+   id="polygon743" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#951B1E"
+   points="42.008,42.703       44.096,39.997 43.918,39.869     "
+   id="polygon745" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B22024"
+   points="42.008,42.703       39.92,45.409 40.098,45.537     "
+   id="polygon747" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#8F1A1C"
+   points="42.008,42.703       43.918,39.869 43.732,39.752     "
+   id="polygon749" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#B82025"
+   points="42.008,42.703       40.098,45.537 40.282,45.654     "
+   id="polygon751" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#89181A"
+   points="42.008,42.703       43.732,39.752 43.54,39.647     "
+   id="polygon753" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BB2827"
+   points="42.008,42.703       40.282,45.654 40.476,45.759     "
+   id="polygon755" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#831618"
+   points="42.008,42.703       43.54,39.647 43.341,39.556     "
+   id="polygon757" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#BF312F"
+   points="42.008,42.703       40.476,45.759 40.675,45.851     "
+   id="polygon759" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#7E1416"
+   points="42.008,42.703       43.341,39.556 43.137,39.477     "
+   id="polygon761" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C13C3B"
+   points="42.008,42.703       40.675,45.851 40.879,45.93     "
+   id="polygon763" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#781214"
+   points="42.008,42.703       43.137,39.477 42.928,39.411     "
+   id="polygon765" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C64544"
+   points="42.008,42.703       40.879,45.93 41.088,45.995     "
+   id="polygon767" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#721011"
+   points="42.008,42.703       42.928,39.411 42.715,39.358     "
+   id="polygon769" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#C94F4F"
+   points="42.008,42.703       41.088,45.995 41.301,46.047     "
+   id="polygon771" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6C1110"
+   points="42.008,42.703       42.715,39.358 42.499,39.32     "
+   id="polygon773" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CB595A"
+   points="42.008,42.703       41.301,46.047 41.517,46.086     "
+   id="polygon775" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#661111"
+   points="42.008,42.703       42.499,39.32 42.281,39.296     "
+   id="polygon777" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#CE6463"
+   points="42.008,42.703       41.517,46.086 41.734,46.11     "
+   id="polygon779" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#600E0E"
+   points="42.008,42.703       42.281,39.296 42.063,39.285     "
+   id="polygon781" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D26E6E"
+   points="42.008,42.703       41.734,46.11 41.953,46.121     "
+   id="polygon783" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#591110"
+   points="42.008,42.703       42.063,39.285 41.844,39.289     "
+   id="polygon785" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D47777"
+   points="42.008,42.703       41.953,46.121 42.172,46.117     "
+   id="polygon787" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#521413"
+   points="42.008,42.703       41.844,39.289 41.625,39.307     "
+   id="polygon789" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#D78182"
+   points="42.008,42.703       42.172,46.117 42.391,46.1     "
+   id="polygon791" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#4B1413"
+   points="42.008,42.703       41.625,39.307 41.408,39.338     "
+   id="polygon793" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DA8B8B"
+   points="42.008,42.703       42.391,46.1 42.607,46.068     "
+   id="polygon795" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#451212"
+   points="42.008,42.703       41.408,39.338 41.193,39.383     "
+   id="polygon797" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#DE9696"
+   points="42.008,42.703       42.607,46.068 42.821,46.023     "
+   id="polygon799" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#3E1313"
+   points="42.008,42.703       41.193,39.383 40.982,39.442     "
+   id="polygon801" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E1A1A1"
+   points="42.008,42.703       42.821,46.023 43.032,45.964     "
+   id="polygon803" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#381312"
+   points="42.008,42.703       40.982,39.442 40.776,39.515     "
+   id="polygon805" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E4AAAA"
+   points="42.008,42.703       43.032,45.964 43.239,45.892     "
+   id="polygon807" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#331212"
+   points="42.008,42.703       40.776,39.515 40.574,39.6     "
+   id="polygon809" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#E6B4B4"
+   points="42.008,42.703       43.239,45.892 43.441,45.806     "
+   id="polygon811" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2E1111"
+   points="42.008,42.703       40.574,39.6 40.378,39.698     "
+   id="polygon813" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EABFBF"
+   points="42.008,42.703       43.441,45.806 43.637,45.708     "
+   id="polygon815" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#2A0F10"
+   points="42.008,42.703       40.378,39.698 40.189,39.809     "
+   id="polygon817" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#EECAC9"
+   points="42.008,42.703       43.637,45.708 43.826,45.598     "
+   id="polygon819" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#250E0E"
+   points="42.008,42.703       40.189,39.809 40.008,39.932     "
+   id="polygon821" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F0D3D3"
+   points="42.008,42.703       43.826,45.598 44.008,45.475     "
+   id="polygon823" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#200E0E"
+   points="42.008,42.703       40.008,39.932 39.834,40.065     "
+   id="polygon825" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F2DEDE"
+   points="42.008,42.703       44.008,45.475 44.182,45.341     "
+   id="polygon827" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#1C0D0D"
+   points="42.008,42.703       39.834,40.065 39.669,40.21     "
+   id="polygon829" />
+				<polygon
+   clip-path="url(#SVGID_8_)"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#F5E8E7"
+   points="42.008,42.703       44.182,45.341 44.346,45.196     "
+   id="polygon831" />
+			</g>
+		</g>
+		<circle
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6ABD45"
+   cx="42.008"
+   cy="31.297"
+   r="0.875"
+   id="circle833" />
+		<circle
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6ABD45"
+   cx="30.914"
+   cy="31.297"
+   r="0.875"
+   id="circle835" />
+		<circle
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6ABD45"
+   cx="30.914"
+   cy="42.703"
+   r="0.875"
+   id="circle837" />
+		<circle
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#6ABD45"
+   cx="42.008"
+   cy="42.703"
+   r="0.875"
+   id="circle839" />
+	</g>
+</g>
+<path
+   style="fill:#992523"
+   inkscape:connector-curvature="0"
+   d="m 41.338629,25.046907 c 1.333862,0 2.542208,0.575206 3.417266,1.505486 l 7.09e-4,7.54e-4 7.1e-4,7.54e-4 c 0.875057,0.93028 1.416119,2.214881 1.416119,3.632163 0,1.417282 -0.541062,2.702637 -1.416119,3.632917 l -7.1e-4,7.54e-4 -7.09e-4,7.54e-4 c -0.875058,0.93028 -2.083404,1.505486 -3.417266,1.505486 -1.333152,0 -2.541498,-0.575206 -3.416557,-1.505486 l -7.09e-4,-7.54e-4 -7.09e-4,-7.54e-4 c -0.875059,-0.93028 -1.41612,-2.215635 -1.41612,-3.632917 0,-1.417282 0.541061,-2.701883 1.41612,-3.632163 l 7.09e-4,-7.54e-4 7.09e-4,-7.54e-4 c 0.875059,-0.93028 2.083405,-1.505486 3.416557,-1.505486 l 0,0 z m 2.948535,2.003797 c -0.753798,-0.801368 -1.796209,-1.297417 -2.948535,-1.297417 -1.151616,0 -2.194737,0.496049 -2.947826,1.297417 l -0.0014,0.0015 c -0.753798,0.801368 -1.220401,1.909562 -1.220401,3.133853 0,1.22429 0.466603,2.333993 1.220401,3.133853 l 0.0014,0.0015 c 0.753798,0.801368 1.79621,1.297416 2.947826,1.297416 1.152326,0 2.195446,-0.496048 2.948535,-1.297416 l 0.0014,-0.0015 c 0.753799,-0.800614 1.219693,-1.909563 1.219693,-3.133853 0,-1.224291 -0.465894,-2.333239 -1.219693,-3.133853 l -0.0014,-0.0015 z"
+   id="path9" /><path
+   style="fill:#ffffff"
+   inkscape:connector-curvature="0"
+   d="m 43.700132,28.714952 c 0.09447,0.09606 0.07818,0.199444 -0.03583,0.310969 L 42.31326,30.376438 43.656158,31.718 c 0.113198,0.11234 0.1303,0.216539 0.0342,0.311783 l -0.952814,0.952445 c -0.09365,0.09524 -0.197892,0.07734 -0.31109,-0.03419 l -1.342083,-1.341562 -1.34127,1.341562 c -0.113197,0.11234 -0.217437,0.129435 -0.312718,0.03419 l -0.952814,-0.952445 c -0.09365,-0.09443 -0.07818,-0.199443 0.03583,-0.310968 l 1.342084,-1.341563 -1.351042,-1.350517 c -0.113197,-0.111525 -0.129485,-0.215724 -0.03502,-0.310969 l 0.952814,-0.951629 c 0.09447,-0.09524 0.198707,-0.07815 0.311904,0.03419 l 1.350228,1.349702 1.351855,-1.349702 c 0.112384,-0.113153 0.215809,-0.130248 0.311905,-0.03419 l 0.951999,0.950815 z"
+   id="path11" /><g
+   transform="matrix(0.77861784,0,0,0.7736928,8.874233,6.5555892)"
+   id="g13"><polygon
+     style="fill:#ffffff;fill-rule:evenodd"
+     clip-rule="evenodd"
+     points="23.163,49.851 26.553,43.822 29.94,37.794 33.329,43.822 36.718,49.851 29.94,49.851 "
+     id="polygon15" /><path
+     style="fill:#c43b3e"
+     inkscape:connector-curvature="0"
+     d="m 30.349,37.564 3.389,6.029 3.389,6.027 0.393,0.698 H 36.719 29.94 23.163 22.361 l 0.394,-0.698 3.389,-6.027 3.389,-6.029 0.408,-0.727 0.408,0.727 0,0 z m 2.571,6.488 -2.98,-5.302 -2.979,5.302 -2.997,5.329 h 5.977 5.977 L 32.92,44.052 z"
+     id="path17" /><path
+     style="fill:#010101"
+     inkscape:connector-curvature="0"
+     d="m 30.457,45.98 h -1.085 l -0.251,-4.705 c 0.091,-0.074 0.205,-0.137 0.342,-0.189 0.136,-0.053 0.296,-0.08 0.478,-0.08 0.182,0 0.342,0.027 0.479,0.08 0.137,0.053 0.25,0.115 0.341,0.189 l -0.304,4.705 0,0 z m -1.274,1.25 c 0,-0.105 0.021,-0.205 0.062,-0.295 0.041,-0.091 0.096,-0.171 0.167,-0.237 0.071,-0.067 0.152,-0.122 0.244,-0.159 0.09,-0.038 0.186,-0.057 0.285,-0.057 0.099,0 0.195,0.019 0.286,0.06 0.092,0.04 0.171,0.093 0.24,0.163 0.069,0.068 0.125,0.148 0.166,0.236 0.041,0.092 0.062,0.188 0.062,0.289 0,0.103 -0.02,0.2 -0.061,0.294 -0.04,0.092 -0.093,0.173 -0.159,0.242 -0.067,0.069 -0.148,0.122 -0.24,0.162 -0.094,0.04 -0.191,0.061 -0.294,0.061 -0.105,0 -0.204,-0.021 -0.295,-0.061 -0.091,-0.04 -0.172,-0.093 -0.24,-0.159 -0.069,-0.068 -0.123,-0.149 -0.162,-0.24 -0.041,-0.093 -0.061,-0.193 -0.061,-0.299 z"
+     id="path19" /></g><g
+   transform="matrix(0.75198379,0,0,0.83769621,8.5901178,4.0533587)"
+   id="g29"><path
+     style="fill:#ffffff;fill-rule:evenodd;stroke:#c43b3e;stroke-width:0.5;stroke-miterlimit:2.61310005"
+     inkscape:connector-curvature="0"
+     clip-rule="evenodd"
+     stroke-miterlimit="2.6131"
+     d="m 37.892,49.023 1.548,-1.547 c 1.036,1.098 2.505,1.783 4.133,1.783 3.137,0 5.681,-2.544 5.681,-5.681 l 0,0 c 0,1.726 -1.8,3.124 -4.019,3.124 -1.48,0 -2.773,-0.623 -3.472,-1.551 l 1.574,-1.573 h -2.119 -3.326 v 5.445 z"
+     id="path31" /><path
+     style="fill:#f99f20"
+     inkscape:connector-curvature="0"
+     d="M 47.701,39.021 48.922,37.801 49.723,37 v 1.133 5.445 0.469 h -0.47 -3.326 -2.118 -1.131 l 0.799,-0.799 1.266,-1.267 c -0.279,-0.275 -0.627,-0.51 -1.025,-0.688 -0.528,-0.235 -1.146,-0.371 -1.807,-0.371 -1.003,0 -1.905,0.313 -2.554,0.816 -0.477,0.37 -0.812,0.846 -0.938,1.37 H 37.44 c 0.114,-1.511 0.775,-2.87 1.784,-3.879 1.112,-1.113 2.651,-1.802 4.349,-1.802 0.859,0 1.684,0.18 2.433,0.503 l 10e-4,-0.002 c 0.623,0.271 1.196,0.642 1.694,1.093 z"
+     id="path33" /><linearGradient
+     id="linearGradient3123"
+     gradientUnits="userSpaceOnUse"
+     x1="46.622101"
+     y1="41.127899"
+     x2="41.182999"
+     y2="39.771801"><stop
+       offset="0"
+       style="stop-color:#FFFFFF"
+       id="stop3125" /><stop
+       offset="1"
+       style="stop-color:#FCB244"
+       id="stop3127" /></linearGradient><path
+     style="fill:url(#SVGID_1_-0);fill-rule:evenodd"
+     inkscape:connector-curvature="0"
+     clip-rule="evenodd"
+     d="m 48.784,39.266 -0.747,0.748 -0.341,0.34 -0.332,-0.352 C 46.882,39.49 46.293,39.075 45.635,38.791 v -0.002 c -0.629,-0.271 -1.327,-0.422 -2.063,-0.422 -1.438,0 -2.742,0.584 -3.685,1.526 -0.243,0.243 -0.463,0.511 -0.654,0.798 0.746,-0.443 1.675,-0.707 2.677,-0.707 0.791,0 1.54,0.166 2.188,0.455 0.681,0.306 1.255,0.75 1.657,1.285 l 0.244,0.324 -0.286,0.286 -0.774,0.774 h 0.988 2.857 v -3.842 z"
+     id="path40" /><path
+     style="fill:#c43b3e"
+     inkscape:connector-curvature="0"
+     d="m 39.444,48.136 -1.221,1.221 -0.801,0.801 V 49.025 43.58 43.11 h 0.469 3.327 2.118 1.131 l -0.799,0.799 -1.266,1.268 c 0.278,0.275 0.627,0.51 1.025,0.688 0.527,0.236 1.145,0.371 1.807,0.371 1.002,0 1.905,-0.313 2.553,-0.816 0.477,-0.37 0.813,-0.845 0.939,-1.37 h 0.978 c -0.114,1.512 -0.774,2.87 -1.783,3.88 -1.113,1.112 -2.651,1.802 -4.35,1.802 -0.859,0 -1.683,-0.18 -2.433,-0.503 v 0.002 c -0.623,-0.272 -1.196,-0.643 -1.694,-1.095 z"
+     id="path42" /><linearGradient
+     id="linearGradient3131"
+     gradientUnits="userSpaceOnUse"
+     x1="45.750999"
+     y1="47.434601"
+     x2="40.5867"
+     y2="46.0508"><stop
+       offset="0"
+       style="stop-color:#F59396"
+       id="stop3133" /><stop
+       offset="1"
+       style="stop-color:#FFFFFF"
+       id="stop3135" /></linearGradient><path
+     style="fill:url(#SVGID_2_-9);fill-rule:evenodd"
+     inkscape:connector-curvature="0"
+     clip-rule="evenodd"
+     d="m 38.361,47.892 0.746,-0.747 0.341,-0.341 0.332,0.353 c 0.483,0.512 1.072,0.927 1.729,1.21 v 0.002 c 0.628,0.271 1.326,0.423 2.063,0.423 1.439,0 2.743,-0.584 3.686,-1.527 0.243,-0.242 0.462,-0.51 0.654,-0.797 -0.746,0.442 -1.675,0.706 -2.677,0.706 -0.792,0 -1.54,-0.166 -2.188,-0.455 -0.681,-0.305 -1.255,-0.749 -1.658,-1.284 l -0.243,-0.324 0.285,-0.286 0.775,-0.775 h -0.988 -2.857 v 3.842 z"
+     id="path49" /></g></svg>

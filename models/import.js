@@ -72,15 +72,15 @@ let Import = class Import extends Common {
                         // this.updateHistory((err) => {
                         logger.info('finished updateHistory', err);
                         this.cleanupDB((err) => {
-                            // hierarchy.createHierarchy((err) => {
-                            this.fixToUUtil((err) => {
-                                if (err) {
-                                    logger.info('updateGPLReferences err:', err);
-                                }
-                                logger.info('done', err, new Date());
-                                process.exit(0);
+                            hierarchy.createHierarchy(importconfig.rootName || 'InfoScan', (err) => {
+                                this.fixToUUtil((err) => {
+                                    if (err) {
+                                        logger.info('updateGPLReferences err:', err);
+                                    }
+                                    logger.info('done', err, new Date());
+                                    process.exit(0);
+                                });
                             });
-                            // });
                         });
                         // });
                     });
@@ -1454,6 +1454,18 @@ let Import = class Import extends Common {
         var parentUpi = point._parentUpi;
         var pointTypes = ['Alarm Status', 'Analog Selector', 'Average', 'Binary Selector', 'Comparator', 'Delay', 'Digital Logic', 'Economizer', 'Enthalpy', 'Logic', 'Math', 'Multiplexer', 'Proportional', 'Ramp', 'Select Value', 'Setpoint Adjust', 'Totalizer'];
         if (pointTypes.includes(point['Point Type'].Value)) {
+            if (parentUpi !== 0) {
+                if (['Analog Selector', 'Binary Selector'].includes(point['Point Type'].Value)) {
+                    if (point['Calculation Type'].Value === 'Single Setpoint') {
+                        point['Calculation Type'].isReadOnly = true;
+                        point['Setpoint Value'].isReadOnly = true;
+                    }
+
+                    if (['Dual Setpoint', 'Setback'].includes(point['Calculation Type'].Value)) {
+                        delete point['Calculation Type'].ValueOptions['Single Setpoint'];
+                    }
+                }
+            }
             for (var prop in point) {
                 if (point[prop].ValueType === 8) {
                     if (parentUpi !== 0) {
@@ -2451,6 +2463,8 @@ let Import = class Import extends Common {
     updateSequences(point, callback) {
         if (point['Point Type'].Value === 'Sequence') {
             point._parentUpi = 0;
+            point['Show Label'] = Config.Templates.getTemplate('Sequence')['Show Label'];
+            point['Show Value'] = Config.Templates.getTemplate('Sequence')['Show Value'];
         }
         callback();
     }

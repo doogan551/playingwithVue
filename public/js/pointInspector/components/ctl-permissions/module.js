@@ -6,7 +6,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
         apiEndpoint = params.rootContext.apiEndpoint;
 
-        this.actingUser = window.top.workspaceManager.user();
+        this.actingUser = (window.opener || window.top).workspaceManager.user();
         this.root = params.rootContext;
         this.security = this.root.point.data.Security;
         this.isSystemAdmin = this.root.isSystemAdmin();

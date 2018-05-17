@@ -263,7 +263,7 @@ const Common = class Common extends Utility {
             }
             term = '^' + term;
 
-            if(term.match(/\*/)) {
+            if (term.match(/\*/)) {
                 term += '$';
                 return new RegExp(term.replace(/\*/g, '.*'));
             }
@@ -297,7 +297,15 @@ const Common = class Common extends Utility {
     }
 
     toLowerCasePath(node) {
-        node._path = node.path.map((item) => item.toLowerCase());
+        const splitRegex = new RegExp(/( |_)/);
+        node._path = [];
+        node.path.forEach((item) => {
+            let _item = item.toLowerCase();
+            node._path.push(_item);
+            if (_item.match(splitRegex)) {
+                node._path.push(..._item.split(splitRegex).filter(i => !i.match(splitRegex)));
+            }
+        });
     }
 
     getUuid() {

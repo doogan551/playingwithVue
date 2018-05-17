@@ -1,24 +1,55 @@
 let express = require('express');
 let router = express.Router();
 let _ = require('lodash');
+const async = require('async');
 let passport = require('passport');
 let utils = require('../helpers/utils');
 let Workspace = new(require('../models/workspace'))();
 let ActivityLog = require('../models/activitylog');
+let System = require('../models/system');
 let actLogsEnums = require('../public/js/lib/config').Enums['Activity Logs'];
 let logger = require('../helpers/logger')(module);
 // Checked
 router.get('/', function (req, res) {
     let _user = req.user;
+    const system = new System();
 
     if (!_user) {
         _user = {};
     }
 
-    res.render('baseui/home', {
-        title: 'You are home',
-        user: JSON.stringify(_user),
-        isAuthenticated: req.isAuthenticated()
+    async.parallel({
+        controlpriorities(pcb) {
+            system.getSystemInfoByName('Control Priorities', (err, priorities)  => {
+                pcb(null, priorities.Entries);
+            });
+        },
+        qualityCodes(pcb) {
+            system.getQualityCodes({}, (err, codes) => {
+                pcb(null, codes);
+            });
+        },
+        controllers(pcb) {
+            system.getSystemInfoByName('Controllers', (err, controllers) => {
+                pcb(null, controllers.Entries);
+            });
+        },
+        telemetry(pcb) {
+            system.getSystemInfoByName('Preferences', (err, telemetry) => {
+                pcb(null, telemetry);
+            });
+        }
+    }, (err, results) => {
+        let ret = {
+            title: 'You are home',
+            user: JSON.stringify(_user),
+
+            isAuthenticated: req.isAuthenticated(),
+
+            systemEnums: JSON.stringify(results)
+        };
+
+        res.render('baseui/home', ret);
     });
 });
 // NOT CHECKED

@@ -82,7 +82,7 @@ var gpl = {
     rendered: false,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
-    iconPath: '/img/icons/',
+    iconPath: '/img/dti/gpl/blockIcons/', // ch1365 (change icon path)
     pointApiPath: '/api/points/',
     defaultBackground: 'C8BEAA',
     jqxTheme: 'flat',
@@ -928,7 +928,9 @@ var gpl = {
                 }
 
                 if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
-                    if (pointType1 === 'Constant' && obj2.takesConstant === true) {
+                    if ((obj2.anchorType === 'Shutdown Point' && obj1.anchorType !== 'InputBlockOutputAnchor') || (obj1.anchorType === 'Shutdown Point' && obj2.anchorType !== 'InputBlockOutputAnchor')){ // ch1379 (add this if)
+                        // isValid already false; nothing to do
+                    } else if (pointType1 === 'Constant' && obj2.takesConstant === true) {
                         isValid = block1.validateSelf({ // ch1083
                             proposedAnchor: obj2,
                             connectionAttempt: connectionAttempt
@@ -1258,7 +1260,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     lockMovementY: true,
     anchorRadius: 2.5,
     hoverRadius: 5,
-    hoverCursor: gpl.isEdit ? 'url("/img/pencil.cur") 0 0, pointer' : 'default',
+    hoverCursor: gpl.isEdit ? 'url("/img/dti/gpl/pencil.cur") 0 0, pointer' : 'default', // ch1365 (change path to pencil.cur)
 
 
     initialize: function (config) {
@@ -1720,8 +1722,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 }
                 self.formatPoint(anchor, line, otherBlock);
                 if (gpl.rendered) {
-                    self.validate();
-                    otherBlock.validate();
+                    self.validate(line, anchor); // ch991; send line and anchor
+                    otherBlock.validate(line, otherAnchor); // ch991; send line and anchor
                 }
             }
 
@@ -1992,6 +1994,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.left = left;
         this.top = top;
+        this.setCoords(); // ch1330
 
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
@@ -2427,16 +2430,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         shape.strokeWidth = 1;
     },
 
-    validate: function () {
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
         var self = this,
             c,
             list = self.inputAnchors || [],
             len = list.length,
-            anchor,
             valid = true,
             isValid = function (anchor) {
                 var ret = true,
-                    lines = anchor.getLines(),
+                    lines = line ? [line] : anchor.getLines(),
                     cc;
 
                 if (lines.length > 0) {
@@ -2454,17 +2456,22 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 valid = ret;
             };
 
-        if (self.shutdownAnchor) {
-            isValid(self.shutdownAnchor);
-        }
-
-        if (self.outputAnchor && valid) {
-            isValid(self.outputAnchor);
-        }
-
-        for (c = 0; c < len && valid; c++) {
-            anchor = list[c];
+        if (line && anchor) {
             isValid(anchor);
+        } else {
+            if (self.shutdownAnchor) {
+                isValid(self.shutdownAnchor);
+            }
+
+            if (self.outputAnchor && valid) {
+                isValid(self.outputAnchor);
+            }
+
+            for (c = 0; c < len && valid; c++) {
+                anchor = list[c];
+                isValid(anchor);
+            }
+
         }
 
         if (!valid) {
@@ -2947,7 +2954,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     answer = key;
                 }
             }
-        } else if (self.icons) {
+        } else if (self.icons && currIconName) { // ch946; add "&& currIconName" so PI block doesn't throw an error when it is dropped on canvas
             for (key in self.icons) {
                 if (self.icons[key] === currIconName) {
                     answer = key;
@@ -3147,7 +3154,7 @@ gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     syncAnchorPoints: gpl.emptyFn,
 
     rightAnchor: { // ch354 require anchor wired up
-        anchorType: '',
+        anchorType: 'InputBlockOutputAnchor', // ch1379 (name it 'InputBlockOutputAnchor')
         required: true
     },
 
@@ -3252,13 +3259,13 @@ gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
         return ret;
     },
 
-    validate: function () {
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
         var isValid = this.validateSelf({
             invalidateBlock: true
         });
 
         if (isValid) {
-            isValid = this.callSuper('validate');
+            isValid = this.callSuper('validate', line, anchor);
         }
 
         return isValid;
@@ -3300,9 +3307,15 @@ gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
                 return true;
             };
         var setValid = function (block, anchor) {
+                var line;
+
                 if (!options.connectionAttempt) {
                     block.setValid();
-                    self.outputAnchor.getLine(anchor).setValid();
+                    // ch991; make sure line exists before operating on it
+                    line = self.outputAnchor.getLine(anchor);
+                    if (line) {
+                        line.setValid();
+                    }
                 }
             };
 
@@ -3513,11 +3526,11 @@ gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
         this.setReferenceType(this.referenceType);
     },
 
-    validate: function () { // ch1012 & ch1017 (added fn)
+    validate: function (line, anchor) { // ch1012 & ch1017 (added fn); ch991; add optional line and anchor arguments
         var isValid = this.validateSelf();
 
         if (isValid) {
-            isValid = this.callSuper('validate');
+            isValid = this.callSuper('validate', line, anchor);
         }
 
         return isValid;
@@ -3577,6 +3590,18 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
     postInit: function () {
         this.setIconName();
         this.callSuper('postInit');
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
     },
 
     setIconName: function () {
@@ -3902,6 +3927,18 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
         this.callSuper('initialize', config);
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
+    },
+
     setIconName: function () {
         var data = this._pointData,
             reverseActing = data['Reverse Action'].Value,
@@ -3931,24 +3968,7 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
     pointType: 'Average',
     valueType: 'float',
 
-    leftAnchors: [{
-        anchorType: 'Input Point 1',
-        required: true,
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 2',
-        required: true,
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 3',
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 4',
-        takesConstant: false
-    }, {
-        anchorType: 'Input Point 5',
-        takesConstant: false
-    }],
+    // ch1323; remove leftAnchors array (it's not needed since Input Point 1 and Input Point 2 are not required inputs)
 
     shapes: {
         'Rect': {
@@ -3960,6 +3980,39 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -4072,6 +4125,39 @@ gpl.blocks.SelectValue = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
@@ -4088,17 +4174,8 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
     pointType: 'Logic',
     valueType: 'enum',
 
-    leftAnchors: [{ // ch998; disallow constant block as inputs
-        anchorType: 'Input Point 1'
-    }, {
-        anchorType: 'Input Point 2'
-    }, {
-        anchorType: 'Input Point 3'
-    }, {
-        anchorType: 'Input Point 4'
-    }, {
-        anchorType: 'Input Point 5'
-    }],
+    // ch998; disallow constant block as inputs in leftAnchors array
+    // ch1375; realized we can remove the leftAnchors array altogether now
 
     shapes: {
         'Rect': {
@@ -4110,6 +4187,39 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -4166,6 +4276,18 @@ gpl.blocks.Math = fabric.util.createClass(gpl.Block, {
             this.icon = icon + this.iconExtension;
             this.setIcon();
         }
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
     },
 
     initialize: function (config) {
@@ -4342,13 +4464,27 @@ gpl.blocks.AlarmStatus = fabric.util.createClass(gpl.Block, {
     },
 
     initialize: function (config) {
-        this.setAlarmIcon('1111');
+        if (config.isToolbar) { // ch946; only set the icon if the block is in the toolbar
+            this.setAlarmIcon('1111');
+        }
         this.callSuper('initialize', config);
     },
 
     postInit: function () {
         this.setIconName();
         this.callSuper('postInit');
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
     },
 
     setAlarmIcon: function (total) {
@@ -4721,6 +4857,7 @@ fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.R
 
         this.left = left;
         this.top = top;
+        this.setCoords(); // ch1330
 
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
@@ -5604,6 +5741,12 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     slSelf.handleMouseUp = function (event) {
         slSelf.mouseDown = false;
         if (event.e.which === 3) {
+            // ch938; clear anchor hovers when line draw operation is cancelled via right-click
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
+
             slSelf.delete();
         }
     };
@@ -7928,8 +8071,6 @@ gpl.BlockManager = function (manager) {
                 let count = +(block.label.split(' ').pop());
                 if (!isNaN(count) && count > gpl.labelCounters[block.type]) {
                     gpl.labelCounters[block.type] = count;
-                } else {
-                    gpl.labelCounters[block.type]++;
                 }
             }
         }
@@ -7987,7 +8128,7 @@ gpl.BlockManager = function (manager) {
                 });
 
                 if (unpersistedPoint.length > 0) {
-                    console.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
+                    gpl.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
                     block.setPointData(unpersistedPoint[0], true);
                 }
             } else if (block.upi && !isNaN(block.upi)) {
@@ -8297,9 +8438,15 @@ gpl.Manager = function () {
         initLabels = function () {
             var type,
                 types = managerSelf.blockTypes;
-            for (type in types) {
-                if (types.hasOwnProperty(type)) {
-                    gpl.labelCounters[types[type].blockType] = 0;
+
+            // ch1314; get labelCounters from editVersion if available
+            if (gpl.json.editVersion && gpl.json.editVersion.labelCounters) {
+                gpl.labelCounters = gpl.json.editVersion.labelCounters;
+            } else {
+                for (type in types) {
+                    if (types.hasOwnProperty(type)) {
+                        gpl.labelCounters[types[type].blockType] = 0;
+                    }
                 }
             }
         },
@@ -8493,7 +8640,7 @@ gpl.Manager = function () {
 
             //fix for IE not showing window.top when first loaded
             gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl.workspaceManager = window.top && window.top.workspaceManager || window.opener && window.opener.workspaceManager;
             gpl._openWindow = dtiUtility.openWindow;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
@@ -9358,6 +9505,7 @@ gpl.Manager = function () {
 
         currentChanges = $.extend(true, {}, gpl.json.editVersion);
         currentChanges.seqProps = gpl.seqProps; // ch1043
+        currentChanges.labelCounters = gpl.labelCounters; // ch1314
 
         gpl.json = $.extend(true, {}, gpl.originalSequenceData);
         gpl.json.editVersion = currentChanges;

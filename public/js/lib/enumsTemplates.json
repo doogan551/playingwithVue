@@ -1639,7 +1639,7 @@
                     "target": "mainWindow"
                 },
                 "edit": {
-                    "url": "/displays/edit/{id}",
+                    "url": "/displays/view/{id}",
                     "target": "mainWindow"
                 }
             },
@@ -4362,11 +4362,10 @@
                 "Font Underline": 0,
                 "Grid X": 0,
                 "Grid Y": 0,
-                "Height": 0,
+                "Height": 600,
                 "Point Refs": [],
                 "Screen Objects": [],
-                "Width": 0,
-                "vid": 0
+                "Width": 800
             },
 
             "Device": {

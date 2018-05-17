@@ -1,0 +1,27 @@
+.dti-widget {
+    position: absolute;
+    font-family: fixedsys, consolas, monospace;
+}
+
+.dti-widget::after {
+    content: '';
+    display: block;
+}
+
+body {
+    height: 100vh;
+}
+
+main {
+    height: 100%;
+    position: relative;
+}
+
+.bg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-repeat: no-repeat;
+}

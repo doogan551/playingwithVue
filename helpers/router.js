@@ -26,6 +26,11 @@ module.exports = function (controllers) {
     router.use('/sass', controllers.sass);
     router.use('/scheduleloader/report', controllers.reports);
 
+    router.get('/download', function (req, res) {
+        res.render('electronDownload/index.pug');
+    });
+    router.use('/api/electrondownload', controllers.electrondownload);
+
     // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
     router.use(function (req, res, next) {
         if (req.isAuthenticated()) {
@@ -56,13 +61,13 @@ module.exports = function (controllers) {
     router.use('/api/trendplots', controllers.trendplots);
     router.use('/api/schedules', controllers.schedules);
 
-    router.use('/dashboard', controllers.dashboard);
-    router.use('/displays', controllers.display);
-    router.use('/gpl', controllers.gpl);
-    router.use('/pointlookup', controllers.pointlookup);
-    router.use('/report', controllers.reports);
-    router.use('/thumbnail', controllers.thumbnails);
-    router.use('/toolbag', controllers.toolbag);
+  router.use('/dashboard', controllers.dashboard);
+  router.use('/displays', controllers.display);
+  router.use('/gpl', controllers.gpl);
+  router.use('/pointlookup', controllers.pointlookup);
+  router.use('/report', controllers.reports);
+  router.use('/thumbnail', controllers.thumbnails);
+  router.use('/toolbag', controllers.toolbag);
 
     return router;
 };

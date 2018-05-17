@@ -26,10 +26,10 @@ dtiMessaging.openWindow(arguments);
 
 var dtiUtility = {
     itemIdx: 0,
-    logMessages: false,
     lastIdNumber: 0,
     settings: {
         idxPrefix: 'dti_',
+        logLevel: 'debug',
         logLinePrefix: true
     },
     formatDate: function(date, addSuffix) {
@@ -55,6 +55,11 @@ var dtiUtility = {
         }
 
         return out;
+    },
+    trace() {
+        if (dtiUtility.settings.logLevel === 'trace') {
+            dtiUtility.log.apply(this, arguments);
+        }
     },
     log: function() {
         var stack,
@@ -102,19 +107,48 @@ var dtiUtility = {
     store: window.store,
     getConfigCallbacks: {},
     openWindowCallbacks: {},
+    getSystemEnumCallbacks: {},
+    updateWindowCallbacks: {}, 
+    windowIdCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
     },
 
     init: function () {
-        if (dtiUtility.store === undefined) {
+        let storeLoaded = false;
+        let storeLoadFns = [];
+        let onStoreLoad = function (fn) {
+            if (storeLoaded) {
+                fn();
+            } else {
+                storeLoadFns.push(fn);
+            }
+        };
+        let afterStoreLoad = function () {
+            dtiUtility.forEachArray(storeLoadFns, (fn) => {
+                fn();
+            });
+        };
+
+        dtiUtility.initEventListener();
+
+        if (window.store === undefined) {
             $.getScript('/js/lib/store2.min.js', function handleGetStore() {
-                var storeInterval = setInterval(function testStore() {
+                let storeInterval;
+                let checkStore = function () {
                     if (window.store) {
                         dtiUtility.store = window.store;
                         clearInterval(storeInterval);
+                        afterStoreLoad();
                     }
-                }, 100);
+                };
+
+                if (!window.store) {
+                    storeInterval = setInterval(checkStore, 1);
+                } else {
+                    afterStoreLoad();
+                }
+                
             });
         }
         // If dtiCommon.js isn't already included, get it
@@ -123,12 +157,23 @@ var dtiUtility = {
                 // When dtiCommon is included by the view, it inits itself by listening 
                 // to the DOM load event, but that event has already come and gone so we 
                 // manually call init
-                window.dtiCommon.init.clientSide();
+                onStoreLoad(window.dtiCommon.init.clientSide);
             });
         }
 
         dtiUtility.initKnockout();
-        dtiUtility.initEventListener();
+
+        setTimeout(() => {
+            if (!window.windowId) {
+                window.windowId = new Date().getTime().toString();
+                dtiUtility.trace('no window id, asking for:', window.windowId);
+                
+                dtiUtility.getNewWindowId((ret) => {
+                    dtiUtility.trace('got window id', ret);
+                    window.windowId = ret;
+                });
+            }
+        }, 100);
     },
 
     initKnockout: () => {
@@ -153,7 +198,7 @@ var dtiUtility = {
                 setPointNameField: (element, valueAccessor) => {
                     var pointPathArray = ko.unwrap(valueAccessor()),
                         $element = $(element),
-                        pointName = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [pointPathArray]) : window.getConfig("Utility.getPointName", [pointPathArray]));
+                        pointName = dtiCommon ? dtiCommon.getPointName(pointPathArray) : (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [pointPathArray]) : window.getConfig("Utility.getPointName", [pointPathArray]));
 
                     $element.text(pointName);
                 }
@@ -180,7 +225,7 @@ var dtiUtility = {
     },
 
     defaultHandler: function (e) {
-        console.log('Default handler:', e);
+        dtiUtility.log('Default handler:', e);
     },
 
     processMessage: function (newValue) {
@@ -203,6 +248,15 @@ var dtiUtility = {
                         cb(newValue.value);
                     }
                 },
+                getSystemEnum() {
+                    var cb = dtiUtility.getSystemEnumCallbacks[newValue.getEnumID];
+
+                    if (cb) {
+                        cb(newValue.value);
+                    }
+
+                    delete dtiUtility.getConfigCallbacks[newValue.getEnumID];
+                },
                 getConfig: function () {
                     var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID];
 
@@ -211,6 +265,15 @@ var dtiUtility = {
                     }
 
                     delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
+                },
+                getNewWindowId() {
+                    let cb = dtiUtility.windowIdCallbacks[newValue.getWinID];
+
+                    if (cb) {
+                        cb(newValue.value);
+                    }
+
+                    delete dtiUtility.windowIdCallbacks[newValue.getWinID];
                 },
                 getBatchConfig: function () { 
                     var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
@@ -240,6 +303,13 @@ var dtiUtility = {
                     if (dtiUtility._pointFilterSelectCb) {
                         dtiUtility._pointFilterSelectCb(newValue);
                     }
+                },
+                windowUpdated: function () {
+                    var cb = dtiUtility.updateWindowCallbacks[newValue._updateWindowID];
+
+                    if (cb) {
+                        cb(newValue.result);
+                    }
                 }
             };
 
@@ -252,18 +322,13 @@ var dtiUtility = {
 
     handleMessage: function (e) {
         var config;
+        //if it's directed at this window
         if (e.key.split(';')[0] === window.windowId) {
-            
             config = e.newValue;
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
-
             if (config) {
-                if (dtiUtility.logMessages) {
-                    dtiUtility.log('utility handleMessage', e.key, 'config:', config);
-                }
-                
                 dtiUtility.processMessage(config);
             }
         }
@@ -313,17 +378,16 @@ var dtiUtility = {
     },
 
     sendMessage: function (target, cfg) {
-        var data = cfg || {};
+        let data = cfg || {};
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
         data.messageID = data.messageID || dtiUtility.makeId();
 
-        if (dtiUtility.logMessages) {
-            dtiUtility.log('utility sendMessage,', 'target is:', target, ',data is:', data);
-        }
+        let title = ['dti', data._windowId, target].join(';'); 
 
-        store.set(target, data);
+        dtiUtility.trace('dtiUtility sending message', title , data);
+        store.set(title, data); 
     },
 
     onMessage: function (cb) {
@@ -356,11 +420,21 @@ var dtiUtility = {
         dtiUtility.sendMessage('openWindow', config);
     },
 
-    updateWindow: function (action, parameters) {
+    updateWindow: function (action, parameters, cb) {
+        var updateWindowID = dtiUtility.makeId();
+
+        if (cb) {
+            dtiUtility.updateWindowCallbacks[updateWindowID] = cb;
+        }
+
         dtiUtility.sendMessage('windowMessage', {
+            messageID: updateWindowID,
             action: action,
-            parameters: parameters
+            parameters: parameters,
+            _updateWindowID: cb ? updateWindowID : null
         });
+
+
     },
 
     updateUPI: function (upi) {
@@ -372,6 +446,29 @@ var dtiUtility = {
 
     closeWindow: function () {
         dtiUtility.sendMessage('closeWindow');
+    },
+
+    getSystemEnum(enumType, cb) {
+        let getEnumID = dtiUtility.makeId();
+
+        dtiUtility.getSystemEnumCallbacks[getEnumID] = cb;
+
+        dtiUtility.sendMessage('getSystemEnum', {
+            messageID: getEnumID,
+            enumType,
+            getEnumID
+        });        
+    },
+
+    getNewWindowId(cb) {
+        var getWinID = dtiUtility.makeId();
+
+        dtiUtility.windowIdCallbacks[getWinID] = cb;
+
+        dtiUtility.sendMessage('getNewWindowId', {
+            messageID: getWinID,
+            getWinID: getWinID
+        });
     },
 
     getConfig: function (path, parameters, cb) {
