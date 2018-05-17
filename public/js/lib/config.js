@@ -4672,6 +4672,7 @@ var Config = (function (obj) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
                 setDisplayable = obj.Utility.setDisplayable,
+                ms5Dev = obj.Utility.checkMicroScan5Device(point),
                 monitorPoint = false;
 
             setDisplayable(point, ['Instance', 'Read Only', 'Input Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register'], false);
@@ -4706,10 +4707,17 @@ var Config = (function (obj) {
                         break;
 
                     default: // Unknown, no RMU
-                        monitorPoint = true;
+                        if (ms5Dev) {
+                            monitorPoint = true;
+                        }
                     break;
                 }
             }
+            obj.Utility.getPropertyObject('Interlock Point', point).isDisplayable = ms5Dev;
+            obj.Utility.getPropertyObject('Alarm Display Point', point).isDisplayable = ms5Dev;
+            obj.Utility.getPropertyObject('Feedback Point', point).isDisplayable = ms5Dev;
+            setDisplayable(point, ['Alarm Class', 'Alarm Delay Time', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Alarms Off', 'Interlock State'], ms5Dev);
+            point['Default Value'].isDisplayable = monitorPoint;
             obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = monitorPoint;
             return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
