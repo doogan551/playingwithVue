@@ -7,7 +7,7 @@
                 <div class="col col-xs-3">
                     <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: function() {$parent.triggerHandler; $parent.replaceAlarmStates(value)}, focusin:$parent.setOriginalEnum }" class="form-control input-sm">
                 </div>
-                <!-- ko if: $parent.point['Point Type'].Value === 'MultiState Value' -->
+                <!-- ko if: $parent.point['Point Type'].Value() === 'MultiState Value' -->
                 <div class="col col-xs-2">
                     <input class="switch" type="checkbox" data-bind="checked: $parent.alarmForIndex(value)">
                     <label class="qualityLabel">Alarm State</label>
