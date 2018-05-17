@@ -56,6 +56,7 @@ var dti = {
     _applyTime: 0,
     settings: {
         logLinePrefix: true,
+        logLevel: 'debug',
         webEndpoint: window.location.origin,
         socketEndPoint: window.location.origin,
         apiEndpoint: window.location.origin + '/api/',
@@ -258,7 +259,9 @@ var dti = {
             val = o[keys[c]];
 
             if (val && typeof val === 'object' && recursive) {
-                dti.destroyObject(val, true);
+                if (!!__el(val)) {
+                    dti.destroyObject(val, true);
+                }
                 delete o[keys[c]];
             } else {
                 delete o[keys[c]];
@@ -385,36 +388,109 @@ var dti = {
 
         return out;
     },
-    log: function () {
-        var stack,
-            steps,
-            lineNumber,
-            err,
-            now = new Date(),
-            args = [].splice.call(arguments, 0),
-            pad = function (num) {
-                return ('    ' + num).slice(-4);
-            },
-            formattedtime = dti.formatDate(new Date(), true);
+    logging: {
+        logHistory: [],
+        logLevels: {
+            none: 0,
+            debug: 1,
+            trace: 2
+        },
+        addLog(message, level) {
+            let safe = true;
+            let output = [];
+            dti.forEachArray(message, (entry) => {
+                if (typeof entry === 'object') {
+                    if (dti.settings.logObjects === true) {
+                        let clean = dti.deCycleObject(entry);
+                        output.push(clean);
+                    }
+                } else {
+                    output.push(entry);
+                }
+            });
 
-        if (dti.settings.logLinePrefix === true) {
-            err = new Error();
-            if (Error.captureStackTrace) {
-                Error.captureStackTrace(err);
+            let stringMessage = JSON.stringify(output);
+            dti.logging.logHistory.push({
+                message: stringMessage,
+                level
+            });
+        },
+        showLogs(level) {
+            let pad = (num) => {
+                return ('     ' + num).slice(-5);
+            };
+            dti.forEachArray(dti.logging.logHistory, (log) => {
+                if (!!level) {
+                    if (log.level !== level) {
+                        return;
+                    }
+                }
 
-                stack = err.stack.split('\n')[2];
+                let logLevel = '(' + pad(log.level) + ')';
+                let args = [logLevel].concat(log.message);
 
-                steps = stack.split(':');
+                console.log.apply(console, args);
+            });
+        },
+        getLogMessage(args) {
+            var stack,
+                steps,
+                lineNumber,
+                err,
+                now = new Date(),
+                message = [].splice.call(args, 0),
+                pad = function (num) {
+                    return ('    ' + num).slice(-4);
+                },
+                formattedtime = dti.formatDate(new Date(), true);
 
-                lineNumber = steps[2];
+            if (dti.settings.logLinePrefix === true) {
+                err = new Error();
+                if (Error.captureStackTrace) {
+                    Error.captureStackTrace(err);
 
-                args.unshift('line:' + pad(lineNumber), formattedtime);
+                    //entry 5 in the stack
+                    stack = err.stack.split('\n')[4];
+
+                    steps = stack.split(':');
+
+                    lineNumber = steps[2];
+
+                    // args.unshift('gap:' + pad(now - dti._lastLog));
+
+                    message.unshift('line:' + pad(lineNumber), formattedtime);
+                }
             }
+
+            return message;
+        },
+        isValidLog(level) {
+            let logLevel = dti.logging.logLevels[level.toLowerCase()] || 1;
+            let appLogLevel = dti.logging.logLevels[dti.settings.logLevel.toLowerCase()] || 1;
+
+            if (logLevel <= appLogLevel) {
+                return true;
+            }
+
+            return false;
+        },
+        log (args, level) {
+            let message = dti.logging.getLogMessage(args);
+
+            if (dti.logging.isValidLog(level)) {
+                console.log.apply(console, message);
+            }
+
+            dti.logging.addLog(message, level);
+
+            dti.logging._lastLog = new Date().getTime();
         }
-        // args.unshift(formattedtime);
-        if (!dti.noLog) {
-            console.log.apply(console, args);
-        }
+    },
+    trace() {
+        dti.logging.log(arguments, 'trace');
+    },
+    log() {
+        dti.logging.log(arguments, 'debug');
     },
     _events: {},
     _onceEvents: {},
@@ -6034,24 +6110,6 @@ var dti = {
                 cb(_array);
             }
         },
-        getSystemEnum: function (enumType, callback) {
-            return $.ajax({
-                url: dti.settings.apiEndpoint + 'system/' + enumType,
-                contentType: 'application/json',
-                dataType: 'json',
-                type: 'get'
-            }).done(
-                
-            ).fail(
-                function getSystemEnumFail(jqXHR, textStatus) {
-                    dti.log('Get system enum (' + enumType + ') failed', jqXHR, textStatus);
-                    // Set an empty array/object for code looking @ systemEnums[enumType]
-                    // TODO Try again or alert the user and stop
-                    dti.utility.systemEnums[enumType] = [];
-                    dti.utility.systemEnumObjects[enumType] = {};
-                }
-            );
-        },
         refreshUserCtlr: function (data) {
             // This routine adds the user's controller ID to the user object
             // Parms: data is the received array of controllers
@@ -6721,6 +6779,24 @@ var dti = {
                     getBatchConfig: function () {
                         doGetConfig('getBatchConfig');
                     },
+                    getSystemEnum() { 
+                        let enumType = config.enumType; 
+                        let getEnumID = config.getEnumID; 
+                        let winId = config._windowId; 
+                        let ret = dti.utility.systemEnums[enumType];
+
+                        setTimeout(function sendSystemConfig() { 
+                            dti.messaging.sendMessage({ 
+                                messageID: messageID, 
+                                key: winId, 
+                                value: { 
+                                    getEnumID, 
+                                    message: 'getSystemEnum', 
+                                    value: ret 
+                                } 
+                            }); 
+                        }, 1000); 
+                    }, 
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
@@ -6812,11 +6888,9 @@ var dti = {
                 config.value.message = config.message;
             }
 
-            if (dti.messaging.logMessages) {
-                dti.log('home sendMessage', config.key+';'+config.messageID, config.value);
-            }
+            dti.trace('home sending message', config.key, config.value);
 
-            store.set([config.key, config.messageID].join(';'), config.value); 
+            store.set([config.key, ';', config.messageID].join(''), config.value);
         },
         onMessage: function (cb) {
             dti.messaging._messageCallbacks.push(cb);

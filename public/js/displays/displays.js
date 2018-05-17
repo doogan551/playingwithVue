@@ -80,7 +80,7 @@ let dti = {
         pauseDatePick: false,
         delayLoad: true,
         logLinePrefix: true,
-        logLevel: 'debug',
+        logLevel: 'trace',
         webEndpoint: window.location.origin,
         socketEndPoint: window.location.origin,
         apiEndpoint: window.location.origin + '/api/',
@@ -817,12 +817,14 @@ let BaseWidget = class Widget {
         return pointInfo;
     }
 
-    handleClick() {
+    handleClick(isMiddleClick) {
         let upi = this.upi();
+        dti.log('handleclick', isMiddleClick);
 
         if (!!upi) {
             dtiUtility.openWindow({
-                upi
+                upi,
+                popout: isMiddleClick || displays.windowCfg.popout
             });
         }
     }
@@ -1367,7 +1369,7 @@ var widgets = {
                 let start = range.stamps[0];
                 let end = range.stamps[1];
 
-                dti.trace(start.toString(), end.toString());
+                // dti.trace(start.toString(), end.toString());
 
                 this.startDate(start.unix() * 1000);
                 this.endDate(end.unix() * 1000);
@@ -1602,7 +1604,7 @@ var widgets = {
                 displays.socket.socket.emit('fieldCommand', JSON.stringify(this.getCommandArguments()));
             }
 
-            openReport () {
+            openReport (isMiddleClick) {
                 let reportConfig = {
                     duration: {
                         startDate: this.startDate(), //mothisnt || ms,
@@ -1619,7 +1621,8 @@ var widgets = {
 
                 dtiUtility.openWindow({
                     upi: this.upi(),
-                    reportConfig
+                    reportConfig,
+                    popout: isMiddleClick || displays.windowCfg.popout
                 });
             }
 
@@ -1648,7 +1651,7 @@ var widgets = {
                 }, 100);
             }
 
-            processActionButtonClick () {
+            processActionButtonClick (isMiddleClick) {
                 let me = this;
                 let sendCommand = function (pointType) {
                     me.sendCommand(pointType);
@@ -1665,11 +1668,12 @@ var widgets = {
                                     me.openModal();
                                     
                                 } else {
-                                    me.openReport();
+                                    me.openReport(isMiddleClick);
                                 }
                             } else {
                                 dtiUtility.openWindow({
-                                    upi
+                                    upi,
+                                    popout: isMiddleClick || displays.windowCfg.popout
                                 });
                             }
                         },
@@ -1700,21 +1704,23 @@ var widgets = {
                 }
             }
 
-            processClick () {
+            processClick (isMiddleClick) {
+                dti.log('button click', isMiddleClick);
                 displays.currWidget = this;
                 if (this.buttonType() === 'Link') {
                     if (this.upi() !== 0) {
                         dtiUtility.openWindow({
-                            upi: this.upi()
+                            upi: this.upi(),
+                            popout: isMiddleClick || displays.windowCfg.popout
                         });
                     }
                 } else {
-                    this.processActionButtonClick();
+                    this.processActionButtonClick(isMiddleClick);
                 }
             }
 
-            handleClick () {
-                this.processClick();
+            handleClick (isMiddleClick) {
+                this.processClick(isMiddleClick);
                 // dti.log('handle click', arguments);
             }
 
@@ -1768,7 +1774,7 @@ var widgets = {
                     width: this.config.width,
                     idx: this.config.idx,
                     id: this.id,
-                    text: this.config.text || '',
+                    text: this.config.text || (!!this.config.isNew ? 'Text' : ''),
                     editMode: this.config.editMode,
                     type: this.config.widgetType,
                     buttonType: this.config.buttonType,
@@ -2780,6 +2786,10 @@ var displays = {
             let isRightClick = e.which === 3;
             let isMiddleClick = e.which === 2;
 
+            if (!isMiddleClick && e.type === 'mousedown') {
+                return;
+            }
+
             if (isRightClick) {
                 displays.events.mouseDown = 'right';
             } else if (isMiddleClick) {
@@ -3403,15 +3413,34 @@ var displays = {
                         width += displays.editModeOffset;
                     }
 
-                    dtiUtility.updateWindow('resize', {
-                        width,
-                        height
-                    }, () => {
-                        displays.zoomToFitWindow();
-                        if (!displays.settings.isNew) {
-                            displays.centerDisplay();
-                        }
-                    });
+                    if (cfg.popout) {
+                        dti.log('popout resizing window');
+                        dtiUtility.updateWindow('resize', {
+                            width,
+                            height
+                        }, () => {
+                            dti.log('Resizing window cb');
+                            setTimeout(() => {
+                                dti.log('Resizing window');
+                                displays.zoomToFitWindow();
+                                if (!displays.settings.isNew) {
+                                    displays.centerDisplay();
+                                }
+                            }, 10000);
+                        });
+                    } else {
+                        dtiUtility.updateWindow('resize', {
+                            width,
+                            height
+                        }, () => {
+                            displays.zoomToFitWindow();
+                            if (!displays.settings.isNew) {
+                                displays.centerDisplay();
+                            }
+                        });
+                    }
+
+                    
                 }
             // });
             setTimeout(() => {
@@ -3420,6 +3449,16 @@ var displays = {
 
             // dti.log('windowid', window.windowId);
             // dtiUtility.getWindowParameters(displays.point._id, displays.loadComplete);
+        });
+
+        dtiUtility.getSystemEnum('controlpriorities', (priorities) => {
+            displays.system.controlPriorities = priorities;
+
+            if (displays.settings.bindingsLoaded === true) {
+                ko.viewmodel.updateFromModel(displays.bindings.controlPriorities, priorities);
+            } else {
+                displays.bindings.controlPriorities = priorities;
+            }
         });
 
         //// dti.time('events');
@@ -3445,16 +3484,6 @@ var displays = {
         //// dti.time('bindings');
         displays.initBindings();
         //// dti.timeEnd('bindings');
-
-        dtiUtility.getSystemEnum('controlpriorities', (priorities) => {
-            displays.system.controlPriorities = priorities;
-
-            if (displays.settings.bindingsLoaded === true) {
-                ko.viewmodel.updateFromModel(displays.bindings.controlPriorities, priorities);
-            } else {
-                displays.bindings.controlPriorities = priorities;
-            }
-        });
 
         // set delay due to getWindowParameters not always showing up
         let interval = setInterval(() => {
@@ -4428,6 +4457,11 @@ var displays = {
             widgetClickHandler (event) {
                 let widget = kodt(event.target);
                 let $el = $(event.target);
+                let isMiddleClick = event.which === 2;
+
+                if (!isMiddleClick && event.type === 'mousedown') {
+                    return;
+                }
 
                 if (displays.bindings.editMode()) {
                     //// dti.time('clone');
@@ -4540,7 +4574,7 @@ var displays = {
                     }, event);
                     //// dti.timeEnd('qtip');
                 } else {
-                    widget.handleClick();
+                    widget.handleClick(isMiddleClick);
                 }
             },
 

@@ -1446,13 +1446,11 @@ var Config = (function (obj) {
         },
 
         'Cooling Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                min = point['Heating Setpoint'].Value + (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val <= min) {
+            if (data.propertyObject.Value <= point['Heating Setpoint'].Value) {
                 data.ok = false;
-                data.result = 'Cooling Setpoint must be greater than the Heating Setpoint plus 2*Input Deadband (' + min + ').';
+                data.result = data.property + ' must be greater than Heating Setpoint.';
             }
             return data;
         },
@@ -1601,13 +1599,11 @@ var Config = (function (obj) {
         },
 
         'Heating Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                max = point['Cooling Setpoint'].Value - (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val >= max) {
+            if (data.propertyObject.Value >= point['Cooling Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be less than the Cooling Setpoint minus 2*Input Deadband (' + max + ').';
+                data.result = data.property + ' must be less than Cooling Setpoint.';
             }
             return data;
         },
@@ -1623,13 +1619,11 @@ var Config = (function (obj) {
         },
 
         'High Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                min = point['Low Setpoint'].Value + (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val <= min) {
+            if (data.propertyObject.Value <= point['Low Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be greater than the Low Setpoint plus twice the Input Deadband (' + min + ').';
+                data.result = data.property + ' must be greater than the Low Setpoint.';
             }
             return data;
         },
@@ -1737,18 +1731,22 @@ var Config = (function (obj) {
         },
 
         'Low Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                max = point['High Setpoint'].Value - (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val >= max) {
+            if (data.propertyObject.Value >= point['High Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be less than the High Setpoint minus twice the Input Deadband (' + max + ').';
+                data.result = data.property + ' must be less than the High Setpoint.';
             }
             return data;
         },
 
         'Maximum Change': function (data) {
+            var val = data.propertyObject.Value; // Property value
+
+            if (val < 0) {
+                data.ok = false;
+                data.result = data.property + ' cannot be less than 0.';
+            }
             return data;
         },
 
@@ -1833,7 +1831,7 @@ var Config = (function (obj) {
         },
 
         'Off Control Value': function (data) {
-            return this.validateUsingTheseLimits(data, 0, 65535);
+            return this.validateUsingTheseLimits(data, 0, 255);
         },
 
         'On Channel': function (data) {
@@ -1847,7 +1845,7 @@ var Config = (function (obj) {
         },
 
         'On Control Value': function (data) {
-            return this.validateUsingTheseLimits(data, 0, 65535);
+            return this.validateUsingTheseLimits(data, 0, 255);
         },
 
         'Open Channel': function (data) {

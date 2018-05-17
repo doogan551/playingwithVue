@@ -26,56 +26,11 @@ dtiMessaging.openWindow(arguments);
 
 var dtiUtility = {
     itemIdx: 0,
-    logMessages: false,
     lastIdNumber: 0,
     settings: {
         idxPrefix: 'dti_',
+        logLevel: 'debug',
         logLinePrefix: true
-    },
-    forEach: function (obj, fn) {
-        var keys = Object.keys(obj),
-            c,
-            len = keys.length,
-            errorFree = true;
-
-        for (c = 0; c < len && errorFree; c++) {
-            errorFree = fn(obj[keys[c]], keys[c], c);
-            if (errorFree === undefined) {
-                errorFree = true;
-            }
-        }
-
-        return errorFree;
-    },
-    forEachArray: function (arr, fn) {
-        var c,
-            list = arr || [],
-            len = list.length,
-            errorFree = true;
-
-        for (c = 0; c < len && errorFree; c++) {
-            errorFree = fn(list[c], c);
-            if (errorFree === undefined) {
-                errorFree = true;
-            }
-        }
-
-        return errorFree;
-    },
-    forEachArrayRev: function (arr, fn) {
-        var c,
-            list = arr || [],
-            len = list.length,
-            errorFree = true;
-
-        for (c = len - 1; c >= 0 && errorFree; c--) {
-            errorFree = fn(list[c], c);
-            if (errorFree === undefined) {
-                errorFree = true;
-            }
-        }
-
-        return errorFree;
     },
     formatDate: function(date, addSuffix) {
         var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
@@ -100,6 +55,11 @@ var dtiUtility = {
         }
 
         return out;
+    },
+    trace() {
+        if (dtiUtility.settings.logLevel === 'trace') {
+            dtiUtility.log.apply(this, arguments);
+        }
     },
     log: function() {
         var stack,
@@ -146,9 +106,10 @@ var dtiUtility = {
     },
     store: window.store,
     getConfigCallbacks: {},
-    getSystemEnumCallbacks: {},
     openWindowCallbacks: {},
-    updateWindowCallbacks: {},
+    getSystemEnumCallbacks: {},
+    updateWindowCallbacks: {}, 
+    windowIdCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
     },
@@ -201,6 +162,18 @@ var dtiUtility = {
         }
 
         dtiUtility.initKnockout();
+
+        setTimeout(() => {
+            if (!window.windowId) {
+                window.windowId = new Date().getTime().toString();
+                dtiUtility.trace('no window id, asking for:', window.windowId);
+                
+                dtiUtility.getNewWindowId((ret) => {
+                    dtiUtility.trace('got window id', ret);
+                    window.windowId = ret;
+                });
+            }
+        }, 100);
     },
 
     initKnockout: () => {
@@ -225,7 +198,7 @@ var dtiUtility = {
                 setPointNameField: (element, valueAccessor) => {
                     var pointPathArray = ko.unwrap(valueAccessor()),
                         $element = $(element),
-                        pointName = (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [pointPathArray]) : window.getConfig("Utility.getPointName", [pointPathArray]));
+                        pointName = dtiCommon ? dtiCommon.getPointName(pointPathArray) : (dti && dti.utility ? dti.utility.getConfig("Utility.getPointName", [pointPathArray]) : window.getConfig("Utility.getPointName", [pointPathArray]));
 
                     $element.text(pointName);
                 }
@@ -293,6 +266,15 @@ var dtiUtility = {
 
                     delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
                 },
+                getNewWindowId() {
+                    let cb = dtiUtility.windowIdCallbacks[newValue.getWinID];
+
+                    if (cb) {
+                        cb(newValue.value);
+                    }
+
+                    delete dtiUtility.windowIdCallbacks[newValue.getWinID];
+                },
                 getBatchConfig: function () { 
                     var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID]; 
  
@@ -339,22 +321,24 @@ var dtiUtility = {
     },
 
     handleMessage: function (e) {
-        let config = e.newValue || {};
-
+        var config;
+        //if it's directed at this window
         if (e.key.split(';')[0] === window.windowId) {
+            config = e.newValue;
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
-
             if (config) {
-                if (dtiUtility.logMessages) {
-                    dtiUtility.log('utility handleMessage', e.key, 'config:', config);
-                }
-                
                 dtiUtility.processMessage(config);
             }
-            store.remove(e.key);
         }
+
+        store.remove(e.key); // memory cleanup
+        // console.log({
+        //     'Storage Key': e.key,
+        //     'Old Value': e.oldValue,
+        //     'New Value': e.newValue
+        // });
     },
 
 
@@ -393,30 +377,6 @@ var dtiUtility = {
         dtiUtility._pointFilterSelectCb = cb;
     },
 
-    getTemplates: function (ids) {
-        dtiUtility.sendMessage('getTemplates', {
-            ids: ids
-        });
-    },
-
-    getTemplate: function (id) {
-        dtiUtility.sendMessage('getTemplate', {
-            id: id
-        });
-    },
-
-    onGetTemplate: function (cb) {
-        dtiUtility._getTemplateCb = cb;
-    },
-
-    onGetTemplates: function (cb) {
-        dtiUtility._getTemplatesCb = cb;
-    },
-
-    getWidgetTemplates: function () {
-        return store.get('dti_widgetTemplates');
-    },
-
     sendMessage: function (target, cfg) {
         let data = cfg || {};
         //add timestamp to guarantee changes
@@ -424,13 +384,10 @@ var dtiUtility = {
         data._windowId = window.windowId;
         data.messageID = data.messageID || dtiUtility.makeId();
 
-        if (dtiUtility.logMessages) {
-            dtiUtility.log('utility sendMessage,', 'target is:', target, ',data is:', data);
-        }
+        let title = ['dti', data._windowId, target].join(';'); 
 
-        let title = ['dti', data._windowId, target].join(';');
-        store.set(title, data);
-
+        dtiUtility.trace('dtiUtility sending message', title , data);
+        store.set(title, data); 
     },
 
     onMessage: function (cb) {
@@ -503,6 +460,17 @@ var dtiUtility = {
         });        
     },
 
+    getNewWindowId(cb) {
+        var getWinID = dtiUtility.makeId();
+
+        dtiUtility.windowIdCallbacks[getWinID] = cb;
+
+        dtiUtility.sendMessage('getNewWindowId', {
+            messageID: getWinID,
+            getWinID: getWinID
+        });
+    },
+
     getConfig: function (path, parameters, cb) {
         var getCfgID = dtiUtility.makeId();
 
@@ -546,7 +514,6 @@ var dtiUtility = {
 };
 
 // $(dtiUtility.init);
-document.addEventListener('DOMContentLoaded', dtiUtility.init);
-//  function loaddtiUtility(event) {
-//     setTimeout(dtiUtility.init, 10);
-// });
+document.addEventListener('DOMContentLoaded', function loaddtiUtility(event) {
+    setTimeout(dtiUtility.init, 1000);
+});
