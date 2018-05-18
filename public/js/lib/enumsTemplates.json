@@ -1823,7 +1823,7 @@
                 "enum": 142,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Optimum Start": {
