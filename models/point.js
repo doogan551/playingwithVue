@@ -1747,6 +1747,12 @@ const Point = class Point extends Common {
                                     downloadPoint = true;
                                     break;
 
+                                case 'States':
+                                    if (newPoint['Point Type'].eValue === Config.Enums['Point Types']['MultiState Value'].enum) {
+                                        downloadPoint = true;
+                                    }
+                                    break;
+
                                 case 'Channel':
                                 case 'Close Channel':
                                 case 'Device Address':
