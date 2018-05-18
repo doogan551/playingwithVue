@@ -2048,26 +2048,50 @@ var Config = (function (obj) {
         },
 
         'States': function (data) {
-            // check for blank enums/texts
-            // set data.ok during validation w/err then check before applyStates
-            var enums = [];
-            var texts = [];
+            var valueOptions = data.point.States.ValueOptions;
+            var stateList = Object.keys(valueOptions);
+            var i;
+            var len = stateList.length;
+            var usedStates = {};
+            var usedEnums = {};
+            var val;
+            var stateText;
 
-            for (var prop in data.point.States.ValueOptions) {
-                if (texts.indexOf(prop) < 0) {
-                    texts.push(prop);
-                } else {
-                    data.ok = false;
-                    data.result = data.property + ' must contain unique texts.';
-                    break;
+            if (len === 0) {
+                data.ok = false;
+                data.result = data.property + ' must contain at least one state.';
+            } else {
+                for (i = 0; i < len && data.ok; i++) {
+                    stateText = stateList[i];
+
+                    if (stateText.trim() === '') {
+                        data.ok = false;
+                        data.result = data.property + ' text cannot be empty.';
+                    } else if (usedStates.hasOwnProperty(stateText)) {
+                        data.ok = false;
+                        data.result = data.property + ' must contain unique text.';
+                    } else {
+                        usedStates[stateText] = 'used'; // Assign a dummy value just to get the state text on the used states object
+                    }
                 }
 
-                if (enums.indexOf(data.point.States.ValueOptions[prop]) < 0) {
-                    enums.push(data.point.States.ValueOptions[prop]);
-                } else {
-                    data.ok = false;
-                    data.result = data.property + ' must contain unique enums.';
-                    break;
+                for (i = 0; i < len && data.ok; i++) {
+                    stateText = stateList[i];
+                    val = valueOptions[stateText];
+
+                    if (isNaN(val)) { // This checks against an enum value of '' (empty string)
+                        data.ok = false;
+                        data.result = data.property + ' value must be defined.';
+                    } else if ((val < 0) || (val > 65535)) {
+                        data.ok = false;
+                        data.result = data.property + ' value must be between 0 and 65535.';
+                    } else if (usedEnums.hasOwnProperty(val)) {
+                        data.ok = false;
+                        data.result = data.property + ' values must be unique.';
+                    } else {
+                        usedEnums[val] = 'used'; // Assign a dummy value just to get the state text on the used states object
+                    }
+
                 }
             }
 

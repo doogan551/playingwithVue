@@ -30,28 +30,27 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         };
         self.triggerHandler = function (item, event) {
             var allTexts = [];
+            var ok = true;
+
+            // Duplicate states is validated here because when it gets to config.js, States.ValueOptions only has one entry
+            // per unique state text (because it's an object at that point instead of an array). When relying on config.js to 
+            // do all the validation, when a state was duplicated, config.js would remove last one without an error message.
             for (var i = 0; i < self.states().length; i++) {
                 if (allTexts.indexOf(self.states()[i].name()) < 0) {
                     allTexts.push(self.states()[i].name());
                 } else {
+                    ok = false;
                     item.name(self.originalText);
                     bannerJS.showBanner('Cannot have duplicate States texts. The States has been set back to its original value.', 'Dismiss');
                 }
             }
 
-            var allEnums = [];
-            for (var j = 0; j < self.states().length; j++) {
-                if (allEnums.indexOf(self.states()[j].value()) < 0) {
-                    allEnums.push(self.states()[j].value());
-                } else {
-                    item.value(self.originalEnum);
-                    bannerJS.showBanner('Cannot have duplicate States enums. The States has been set back to its original value.', 'Dismiss');
-                }
+            // If we found duplicate states, do not call the trigger handler, i.e. config.js
+            if (ok) {
+                _triggerHandler($(event.target));
             }
 
             self.updateEnumOrder();
-
-            _triggerHandler($(event.target));
         };
         self.updateEnumOrder = function () {
             var compare = function (a, b) {

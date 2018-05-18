@@ -5,7 +5,7 @@
             <label>States</label>
             <div class="row" data-bind="foreach: states">
                 <div class="col col-xs-3">
-                    <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: function() {$parent.triggerHandler; $parent.replaceAlarmStates(value)}, focusin:$parent.setOriginalEnum }" class="form-control input-sm">
+                    <input type="text" data-bind="numeric: value, valueType: 4, disable: $parent.data.isReadOnly, event: { focusout: function(data, event) {$parent.triggerHandler(data, event); $parent.replaceAlarmStates(value)}, focusin:$parent.setOriginalEnum }" class="form-control input-sm">
                 </div>
                 <!-- ko if: $parent.point['Point Type'].Value() === 'MultiState Value' -->
                 <div class="col col-xs-2">
@@ -17,7 +17,7 @@
                     <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler, focusin:$parent.setOriginalText }" class="_stateName form-control input-sm">
                 </div>
                 <div class="col col-xs-1">
-                    <span data-bind="click: function() { $parent.remove($data) }" class="lh30 removeRow"><i class="fa fa-times"></i></span>
+                    <span data-bind="click: function() { $parent.remove($data) }, visible: $parent.states().length > 1" class="lh30 removeRow"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="row">
