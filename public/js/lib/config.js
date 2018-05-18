@@ -2444,7 +2444,7 @@ var Config = (function (obj) {
 
             if (type === 'Delay') {
                 point = obj.EditChanges.applyDelayMointorPoint(data);
-            } else if ((type === 'Analog Value') || (type === 'Binary Value')) {
+            } else if ((type === 'Analog Value') || (type === 'Binary Value') || (type === 'MultiState Value')) {
                 point = obj.EditChanges.applyAnalogValueMonitorPoint(data);
             }
             return data;
