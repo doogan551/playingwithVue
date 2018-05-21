@@ -3656,7 +3656,7 @@ var Config = (function (obj) {
             point._devModel = point['Model Type'].eValue;
             point._relPoint = enums.Reliabilities['No Fault'].enum;
             point['Time Zone'].isReadOnly = true;
-            setDisplayable(point, ['Alarms Off', 'Alarm Value', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Firmware 2 Version', 'Serial Number', 'Trend Interval'], false);
+            setDisplayable(point, ['Alarms Off', 'Alarm Value', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Firmware 2 Version', 'Serial Number', 'Trend Interval', 'Enable Network COV'], false);
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point['Time Zone'].isReadOnly = false;
@@ -3668,7 +3668,7 @@ var Config = (function (obj) {
                     'Port 3': enums['Device Ports']['Port 3'].enum,
                     'Port 4': enums['Device Ports']['Port 4'].enum
                 });
-                setDisplayable(point, ['Ethernet Protocol', 'Port 1 Protocol', 'Port 2 Protocol', 'Port 3 Protocol', 'Port 4 Protocol', 'Serial Number', 'Trend Interval'], true);
+                setDisplayable(point, ['Ethernet Protocol', 'Port 1 Protocol', 'Port 2 Protocol', 'Port 3 Protocol', 'Port 4 Protocol', 'Serial Number', 'Trend Interval', 'Enable Network COV'], true);
             } else if (obj.Utility.checkMicroScan4Device(point)) {
                 setValueOptions(upPort, {
                     'Ethernet': enums['Device Ports'].Ethernet.enum,
