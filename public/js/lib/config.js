@@ -1446,13 +1446,11 @@ var Config = (function (obj) {
         },
 
         'Cooling Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                min = point['Heating Setpoint'].Value + (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val <= min) {
+            if (data.propertyObject.Value <= point['Heating Setpoint'].Value) {
                 data.ok = false;
-                data.result = 'Cooling Setpoint must be greater than the Heating Setpoint plus 2*Input Deadband (' + min + ').';
+                data.result = data.property + ' must be greater than Heating Setpoint.';
             }
             return data;
         },
@@ -1601,13 +1599,11 @@ var Config = (function (obj) {
         },
 
         'Heating Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                max = point['Cooling Setpoint'].Value - (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val >= max) {
+            if (data.propertyObject.Value >= point['Cooling Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be less than the Cooling Setpoint minus 2*Input Deadband (' + max + ').';
+                data.result = data.property + ' must be less than Cooling Setpoint.';
             }
             return data;
         },
@@ -1623,13 +1619,11 @@ var Config = (function (obj) {
         },
 
         'High Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                min = point['Low Setpoint'].Value + (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val <= min) {
+            if (data.propertyObject.Value <= point['Low Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be greater than the Low Setpoint plus twice the Input Deadband (' + min + ').';
+                data.result = data.property + ' must be greater than the Low Setpoint.';
             }
             return data;
         },
@@ -1737,18 +1731,22 @@ var Config = (function (obj) {
         },
 
         'Low Setpoint': function (data) {
-            var point = data.point,
-                val = data.propertyObject.Value, // Property Value
-                max = point['High Setpoint'].Value - (2 * point['Input Deadband'].Value);
+            var point = data.point;
 
-            if (val >= max) {
+            if (data.propertyObject.Value >= point['High Setpoint'].Value) {
                 data.ok = false;
-                data.result = data.property + ' must be less than the High Setpoint minus twice the Input Deadband (' + max + ').';
+                data.result = data.property + ' must be less than the High Setpoint.';
             }
             return data;
         },
 
         'Maximum Change': function (data) {
+            var val = data.propertyObject.Value; // Property value
+
+            if (val < 0) {
+                data.ok = false;
+                data.result = data.property + ' cannot be less than 0.';
+            }
             return data;
         },
 
@@ -1833,7 +1831,7 @@ var Config = (function (obj) {
         },
 
         'Off Control Value': function (data) {
-            return this.validateUsingTheseLimits(data, 0, 65535);
+            return this.validateUsingTheseLimits(data, 0, 255);
         },
 
         'On Channel': function (data) {
@@ -1847,7 +1845,7 @@ var Config = (function (obj) {
         },
 
         'On Control Value': function (data) {
-            return this.validateUsingTheseLimits(data, 0, 65535);
+            return this.validateUsingTheseLimits(data, 0, 255);
         },
 
         'Open Channel': function (data) {
@@ -2050,26 +2048,50 @@ var Config = (function (obj) {
         },
 
         'States': function (data) {
-            // check for blank enums/texts
-            // set data.ok during validation w/err then check before applyStates
-            var enums = [];
-            var texts = [];
+            var valueOptions = data.point.States.ValueOptions;
+            var stateList = Object.keys(valueOptions);
+            var i;
+            var len = stateList.length;
+            var usedStates = {};
+            var usedEnums = {};
+            var val;
+            var stateText;
 
-            for (var prop in data.point.States.ValueOptions) {
-                if (texts.indexOf(prop) < 0) {
-                    texts.push(prop);
-                } else {
-                    data.ok = false;
-                    data.result = data.property + ' must contain unique texts.';
-                    break;
+            if (len === 0) {
+                data.ok = false;
+                data.result = data.property + ' must contain at least one state.';
+            } else {
+                for (i = 0; i < len && data.ok; i++) {
+                    stateText = stateList[i];
+
+                    if (stateText.trim() === '') {
+                        data.ok = false;
+                        data.result = data.property + ' text cannot be empty.';
+                    } else if (usedStates.hasOwnProperty(stateText)) {
+                        data.ok = false;
+                        data.result = data.property + ' must contain unique text.';
+                    } else {
+                        usedStates[stateText] = 'used'; // Assign a dummy value just to get the state text on the used states object
+                    }
                 }
 
-                if (enums.indexOf(data.point.States.ValueOptions[prop]) < 0) {
-                    enums.push(data.point.States.ValueOptions[prop]);
-                } else {
-                    data.ok = false;
-                    data.result = data.property + ' must contain unique enums.';
-                    break;
+                for (i = 0; i < len && data.ok; i++) {
+                    stateText = stateList[i];
+                    val = valueOptions[stateText];
+
+                    if (isNaN(val)) { // This checks against an enum value of '' (empty string)
+                        data.ok = false;
+                        data.result = data.property + ' value must be defined.';
+                    } else if ((val < 0) || (val > 65535)) {
+                        data.ok = false;
+                        data.result = data.property + ' value must be between 0 and 65535.';
+                    } else if (usedEnums.hasOwnProperty(val)) {
+                        data.ok = false;
+                        data.result = data.property + ' values must be unique.';
+                    } else {
+                        usedEnums[val] = 'used'; // Assign a dummy value just to get the state text on the used states object
+                    }
+
                 }
             }
 
@@ -2446,7 +2468,7 @@ var Config = (function (obj) {
 
             if (type === 'Delay') {
                 point = obj.EditChanges.applyDelayMointorPoint(data);
-            } else if ((type === 'Analog Value') || (type === 'Binary Value')) {
+            } else if ((type === 'Analog Value') || (type === 'Binary Value') || (type === 'MultiState Value')) {
                 point = obj.EditChanges.applyAnalogValueMonitorPoint(data);
             }
             return data;
@@ -3634,7 +3656,7 @@ var Config = (function (obj) {
             point._devModel = point['Model Type'].eValue;
             point._relPoint = enums.Reliabilities['No Fault'].enum;
             point['Time Zone'].isReadOnly = true;
-            setDisplayable(point, ['Firmware 2 Version', 'Serial Number', 'Trend Interval'], false);
+            setDisplayable(point, ['Alarms Off', 'Alarm Value', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Firmware 2 Version', 'Serial Number', 'Trend Interval', 'Enable Network COV'], false);
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point['Time Zone'].isReadOnly = false;
@@ -3646,7 +3668,7 @@ var Config = (function (obj) {
                     'Port 3': enums['Device Ports']['Port 3'].enum,
                     'Port 4': enums['Device Ports']['Port 4'].enum
                 });
-                setDisplayable(point, ['Ethernet Protocol', 'Port 1 Protocol', 'Port 2 Protocol', 'Port 3 Protocol', 'Port 4 Protocol', 'Serial Number', 'Trend Interval'], true);
+                setDisplayable(point, ['Ethernet Protocol', 'Port 1 Protocol', 'Port 2 Protocol', 'Port 3 Protocol', 'Port 4 Protocol', 'Serial Number', 'Trend Interval', 'Enable Network COV'], true);
             } else if (obj.Utility.checkMicroScan4Device(point)) {
                 setValueOptions(upPort, {
                     'Ethernet': enums['Device Ports'].Ethernet.enum,
@@ -3751,7 +3773,7 @@ var Config = (function (obj) {
             point['Model Type'].eValue = enums['Remote Unit Model Types'][modelType].enum;
             point._rmuModel = point['Model Type'].eValue;
 
-            setDisplayable(point, ['Configure Device', 'Firmware Version', 'Device Port', 'Poll Function', 'Poll Register', 'Instance', 'Network Type', 'Gateway'], false);
+            setDisplayable(point, ['Alarms Off', 'Alarm Value', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Configure Device', 'Firmware Version', 'Device Port', 'Poll Function', 'Poll Register', 'Instance', 'Network Type', 'Gateway'], false);
             rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
 
             if ((point._devModel === enums['Device Model Types']['Central Device'].enum) || (point._devModel === enums['Device Model Types'].Unknown.enum)) {
@@ -3878,7 +3900,7 @@ var Config = (function (obj) {
                 channel = point.Channel,
                 sensorPoint = obj.Utility.getPropertyObject('Sensor Point', point);
 
-            setDisplayable(point, ['Input Type', 'Channel', 'Instance', 'Read Only', 'Modbus Order', 'Poll Register', 'Poll Data Type', 'Poll Function'], false);
+            setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Input Type', 'Channel', 'Instance', 'Read Only', 'Modbus Order', 'Poll Register', 'Poll Data Type', 'Poll Function'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {
@@ -4007,7 +4029,9 @@ var Config = (function (obj) {
                         break;
                 }
             }
-
+            if (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0) {
+                point['Interlock State'].isDisplayable = true;
+            }
             if (!!point.Instance.isDisplayable) {
                 sensorPoint.isDisplayable = false;
                 point['Conversion Type'].isDisplayable = false;
@@ -4050,7 +4074,7 @@ var Config = (function (obj) {
                 channel = point.Channel,
                 type = point['Input Type'];
 
-            setDisplayable(point, ['Input Type', 'Channel', 'Instance', 'Read Only', 'Modbus Order', 'Poll Register', 'Poll Data Type', 'Poll Function', 'Supervised Input'], false);
+            setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Input Type', 'Channel', 'Instance', 'Read Only', 'Modbus Order', 'Poll Register', 'Poll Data Type', 'Poll Function', 'Supervised Input'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {
@@ -4136,6 +4160,9 @@ var Config = (function (obj) {
                         }
                         break;
                 }
+            }
+            if (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0) {
+                point['Interlock State'].isDisplayable = true;
             }
             return obj.EditChanges.applyBinaryInputInputType(data);
         },
@@ -4278,7 +4305,7 @@ var Config = (function (obj) {
                 outputType = point['Output Type'],
                 sensorPoint = obj.Utility.getPropertyObject('Sensor Point', point);
 
-            setDisplayable(point, ['Instance', 'Read Only', 'Output Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register', 'Open Channel', 'Channel', 'Close Channel', 'Polarity'], false);
+            setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Instance', 'Read Only', 'Output Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register', 'Open Channel', 'Channel', 'Close Channel', 'Polarity'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {
@@ -4364,6 +4391,9 @@ var Config = (function (obj) {
                                 break;
                         }
                         break;
+                }
+                if (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0) {
+                    point['Interlock State'].isDisplayable = true;
                 }
                 if (point.Instance.isDisplayable) {
                     sensorPoint.isDisplayable = false;
@@ -4472,7 +4502,7 @@ var Config = (function (obj) {
                 feedbackType = point['Feedback Type'],
                 outputType = point['Output Type'];
 
-            setDisplayable(point, ['Output Type', 'Momentary Delay', 'Feedback Type', 'Instance', 'Read Only', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register',
+            setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Output Type', 'Momentary Delay', 'Feedback Type', 'Instance', 'Read Only', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register',
                 'On Control Data Type', 'On Control Function', 'On Control Register', 'On Control Value', 'Off Control Data Type', 'Off Control Function', 'Off Control Register',
                 'Off Control Value', 'Channel', 'On Channel', 'Off Channel', 'Polarity', 'Same State Test'
             ], false);
@@ -4597,6 +4627,9 @@ var Config = (function (obj) {
                         }
                         break;
                 }
+                if (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0) {
+                    point['Interlock State'].isDisplayable = true;
+                }
                 if (outputType.isDisplayable) {
                     point.Polarity.isDisplayable = true;
                     if (channelMax >= 0) {
@@ -4635,7 +4668,7 @@ var Config = (function (obj) {
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
                 isMonitorPointDisp = false;
 
-            obj.Utility.setDisplayable(point, ['Instance', 'Read Only'], false);
+            obj.Utility.setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Instance', 'Read Only'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {
@@ -4662,6 +4695,9 @@ var Config = (function (obj) {
                         break;
                 }
             }
+            if (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0) {
+                point['Interlock State'].isDisplayable = true;
+            }
             obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = isMonitorPointDisp;
             return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },
@@ -4674,9 +4710,10 @@ var Config = (function (obj) {
             var point = data.point,
                 rmuEnums = enumsTemplatesJson.Enums['Remote Unit Model Types'],
                 setDisplayable = obj.Utility.setDisplayable,
+                ms5Dev = obj.Utility.checkMicroScan5Device(point),
                 monitorPoint = false;
 
-            setDisplayable(point, ['Instance', 'Read Only', 'Input Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register'], false);
+            setDisplayable(point, ['Alarm Repeat Enable', 'Alarm Repeat Time', 'Interlock State', 'Instance', 'Read Only', 'Input Type', 'Modbus Order', 'Poll Data Type', 'Poll Function', 'Poll Register', 'Control Data Type', 'Control Function', 'Control Register'], false);
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
             if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities['No Fault'].enum) {
                 switch (point._rmuModel) {
@@ -4708,10 +4745,20 @@ var Config = (function (obj) {
                         break;
 
                     default: // Unknown, no RMU
-                        monitorPoint = true;
+                        if (ms5Dev) {
+                            monitorPoint = true;
+                        }
                     break;
                 }
             }
+            if (ms5Dev && (obj.Utility.getPropertyObject('Interlock Point', point).PointInst !== 0)) {
+                point['Interlock State'].isDisplayable = true;
+            }
+            obj.Utility.getPropertyObject('Interlock Point', point).isDisplayable = ms5Dev;
+            obj.Utility.getPropertyObject('Alarm Display Point', point).isDisplayable = ms5Dev;
+            obj.Utility.getPropertyObject('Feedback Point', point).isDisplayable = ms5Dev;
+            setDisplayable(point, ['Alarm Class', 'Alarm Delay Time', 'Alarms Off'], ms5Dev);
+            point['Default Value'].isDisplayable = monitorPoint;
             obj.Utility.getPropertyObject('Monitor Point', point).isDisplayable = monitorPoint;
             return obj.EditChanges.applyAnalogValueMonitorPoint(data);
         },

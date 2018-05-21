@@ -1823,7 +1823,7 @@
                 "enum": 142,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Optimum Start": {
@@ -4454,14 +4454,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Normal",
                     "eValue": 1
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
@@ -4884,14 +4884,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Failed",
                     "eValue": 0
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
