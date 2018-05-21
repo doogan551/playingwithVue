@@ -1,5 +1,5 @@
 "use strict";
-var dti = {
+$.extend(dti, {
     $: function (fn) {
         $(function delayFn() {
             setTimeout(function runInit() {
@@ -7,7 +7,7 @@ var dti = {
             }, 1);
         });
     }
-};
+});
 
 var initKnockout = function () {
     let datePickerDefaultOptions = {

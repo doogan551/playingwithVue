@@ -18,6 +18,7 @@ let fileUpload = require('express-fileupload');
 let loggerStream = require('./helpers/loggerStream');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
+let path = require('path');
 
 let session = require('express-session');
 let favicon = require('serve-favicon');
@@ -25,6 +26,7 @@ let RedisStore = require('connect-redis')(session);
 let dbConfig = config.get('Infoscan.dbConfig');
 let connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 app.use(favicon(__dirname + '/public/favicon.ico'));
+app.locals.basedir = path.join(__dirname, 'views');
 
 let _controllers = require('./helpers/controllers')(app, {});
 let sessionStore = new RedisStore(config.get('redisConfig'));

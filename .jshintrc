@@ -23,6 +23,9 @@
         "checkValues": true,
         "mbox": true,
         "interact": true,
-        "dtiCommon": true
+        "dtiCommon": true,
+        "kojs": true,
+        "kodt": true,
+        "koUnwrap": true
     }
 }

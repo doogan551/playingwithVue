@@ -215,48 +215,7 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            #pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="with: pointSelector, css: { 'modal-fixed-footer' : (pointSelector.mode() === 'filter'), 'filterMode' : (pointSelector.mode() === 'filter') }")
-                .modal-header
-                    .modalTitle(data-bind="text: modalText")
-                .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick}]")
-                    .fetching
-                        .progress
-                            .indeterminate
-                    .content-header
-                        .pointSearch.input-field
-                            i.material-icons.prefix search
-                            input#pointSearchInput(type='search', data-bind="textInput: searchString, hasFocus: focus ")
-                        .pointTypeButton
-                            a.btn-flat.waves-effect.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeList, css: { active: pointTypesShown}")
-                                span(data-bind="text: pointTypeText")
-                                i.material-icons.dropdownCaret arrow_drop_down
-                        .pointTypeList.z-depth-1(data-bind="foreach: pointTypes, fadeVisible: pointTypesShown")
-                            // ko if: visible
-                            span
-                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id: 'spt-' + $index() }")
-                                label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
-                            // /ko
-
-                    //- // ko if: results().length > 0
-                    //- .pointList(data-bind="visible: results().length > 0")
-                        //- .pointHeaders
-                    table.pointList.striped.fixedHeader
-                        thead
-                            tr.white-text.blue-grey
-                                th Point Type
-                                th Name
-                        tbody
-                            // ko foreach: results
-                            tr
-                                td(data-bind="text: pointType")
-                                td(data-bind="text: path")
-                            // /ko
-                // ko if: mode() === 'filter'
-                .modal-footer
-                    .btn.blue-grey.waves-effect.filterModeAccept(data-bind="delegate: [{event: 'click', handler: handleAcceptFilterClick}]") Accept
-                    .btn-flat.modal-action.modal-close.waves-effect.filterModeCancel Cancel
-                // /ko
-
+            
             #configureNodeModal.modal.dtiModal.modal-fixed-footer.blue-grey-form.fade(data-bind="with: navigatorv2.configureNodeModal")
                 .modal-content
                     .row.center
@@ -771,27 +730,14 @@ html
         var isAuthenticated = !{isAuthenticated};
         var userData = !{user};
         var systemEnums = !{systemEnums};
-    script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
-    script(type='text/javascript', src='/js/lib/jquery-ui.js')
-    script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
-    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
-    script(type='text/javascript', src='/js/lib/lodash.min.js')
-    script(type='text/javascript', src='/js/lib/moment.js')
+
+    include /baseui/dti.pug
+
     script(type='text/javascript', src='/js/lib/store2.min.js')
-    script(type='text/javascript', src='/js/lib/jstree.js')
     script(type='text/javascript', src='/js/lib/jquery.hotkeys.js')
     //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
-    script(type='text/javascript', src='/js/lib/knockout-3.2.0.debug.js')
-    script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
-    script(type='text/javascript', src='/js/lib/socket.io.js')
-    script(type='text/javascript', src='/js/lib/materialize.js')
+    
     script(type='text/javascript', src='/js/lib/mbox.js')
-    script.
-        // The following files are order dependent:
-        // dtiCommon.js must precede dorsettUtility.js
-        // dorsettUtility.js must precede config.js
-        // config.js must precede home.js
-    script(type='text/javascript', src='/js/v2/dtiCommon.js')
-    script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/v2/home.js')

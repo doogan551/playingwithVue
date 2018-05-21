@@ -48,17 +48,19 @@ let koUnwrap = function (value) {
 
 window.dtiMessage = (title, data, cb) => {
     let ret;
+    // dti.once('returnMessage', (data) => {
+    //     cb(data);
+    // });
+
     dti.messaging.doProcessMessage({
         key: title,
         newValue: data,
-        sync: true
-    });
-
-    dti.once('returnMessage', (data) => {
-        cb(data);
+        sync: true,
+        cb
     });
 };
-var dti = {
+
+$.extend(dti, {
     $loginBtn: $('#loginBtn'),
     $resetPasswordBtn: $('#resetPasswordBtn'),
     loggingOut: false,
@@ -505,40 +507,6 @@ var dti = {
     log() {
         dti.logging.log(arguments, 'debug');
     },
-    _events: {},
-    _onceEvents: {},
-    on: function (event, handler) {
-        dti._events[event] = dti._events[event] || [];
-        dti._events[event].push(handler);
-    },
-    once: function (event, handler) {
-        dti._onceEvents[event] = dti._onceEvents[event] || [];
-        dti._onceEvents[event].push(handler);
-    },
-    off: function (event, handler) {
-        var handlers = dti._events[event] || [];
-
-        dti.forEachArray(handlers, function processOffHandler(fn, idx) {
-            if (fn === handler) {
-                dti._events[event].splice(idx, 1);
-                return false;
-            }
-        });
-    },
-    fire: function (event, obj1, obj2) {
-        var handlers = dti._events[event] || [],
-            onceHandlers = dti._onceEvents[event] || [];
-
-        dti.forEachArray(handlers, function fireEventHandlers (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti.forEachArray(onceHandlers, function fireOnceEvent (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti._onceEvents[event] = [];
-    },
     thumbs: {},
     thumbnails: {
         $window: $('#thumbnailGen'),
@@ -756,23 +724,6 @@ var dti = {
                 $('.modal.open').closeModal();
             });
 
-            // Setup listener for body clicks
-            $('body').mousedown(function handleBodyMouseDown(event) {
-                let start = new Date();
-                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
-                    var $target = $(event.target);
-
-                    handler(event, $target);
-                });
-                dti.events._bodyClickCount++;
-                dti.events._bodyClickTime += new Date() - start;
-            });
-        },
-        _bodyClickHandlers: [],
-        _bodyClickCount: 0,
-        _bodyClickTime: 0,
-        bodyClick: function (fn) {
-            dti.events._bodyClickHandlers.push(fn);
         },
         clickMenu: function (clickEl, menuEl, callbacks) {
             var isOpen = false,
@@ -789,7 +740,7 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function checkOpenMenu(event, $target) {
+            dti.bodyClick(function checkOpenMenu(event, $target) {
                 if (isOpen && $target.parents(menuEl).length === 0) {
                     isOpen = false;
                     dti.animations.fadeOut($menuEl);
@@ -915,7 +866,7 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function closeHoverMenus(event, $target) {
+            dti.bodyClick(function closeHoverMenus(event, $target) {
                 var notMenuClick = !$target.closest('#' + menuID).length,
                     notButtonClick = !$target.closest(button).length;
 
@@ -1294,7 +1245,10 @@ var dti = {
                             },
                             resize: function () {
                                 if (config.popout) {
-                                    self.win.resizeTo(message.parameters.width, message.parameters.height + 50);
+                                    let width = message.parameters.width || self.win.outerWidth;
+                                    let height = (message.parameters.height && message.parameters.height + 50) || self.win.outerHeight;
+                                    dti.log('home resizing to:', width, 'x', height);
+                                    self.win.resizeTo(width, height);
                                     finish(true);
                                 } else {
                                     var measurements = prepMeasurements(message.parameters, self.bindings);
@@ -2061,19 +2015,32 @@ var dti = {
             var obj = ko.toJS(koIconObj),
                 id = dti.makeId(),
                 openWindows,
-                doOpenWindow = function () {
+                doOpenWindow = function (data, popout) {
                     if (obj.url) {
                         obj.url += '?' + id;
                     }
 
                     obj.pointType = obj.group;
 
-                    dti.windows.openWindow(obj);
+                    obj.popout = !!popout;
+
+                    if (data && data._id) {
+                        dti.windows.openWindow({
+                            upi: data._id,
+                            popout
+                        });
+                    } else {
+                        dti.windows.openWindow(obj);
+                    }
                 };
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.pointSelector.show(obj.group);
+                dti.fire('showPointSelector', {
+                    pointTypes: [obj.group],
+                    callback: doOpenWindow
+                });
+                // dti.pointSelector.show(obj.group);
                 // dti.bindings.showNavigator({
                 //     pointType: obj.group
                 // });
@@ -4663,7 +4630,7 @@ var dti = {
                 });
             };
 
-            dti.events.bodyClick(function checkNavigatorOpenMenu(event, $target) {
+            dti.bodyClick(function checkNavigatorOpenMenu(event, $target) {
                 var buttonClass = 'pointTypeDropdownButton';
 
                 if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.closest('.' + buttonClass).length === 0) {
@@ -6294,10 +6261,10 @@ var dti = {
 
             dti.utility.systemEnums[enumType] = _array;
             dti.utility.systemEnumObjects[enumType] = _object;
-            store.set('dti-systemenum-' + enumType, {
-                arr: _array,
-                obj: _object
-            });
+            // store.set('dti-systemenum-' + enumType, {
+            //     arr: _array,
+            //     obj: _object
+            // });
             if (cb) {
                 cb(_array);
             }
@@ -6362,367 +6329,10 @@ var dti = {
         }
     },
     pointSelector: {
-        Selector: class PointSelector {
-            constructor(config) {
-                this.exposedMethods = ['handleChoosePoint', 'show'];
-
-                dti.forEachArray(this.exposedMethods, (method) => {
-                    dti.pointSelector[method] = this[method].bind(this);
-                    // function callMethod() {
-                    //     this[method].apply(this, arguments);
-                    // };
-                });
-
-                this.$modal = $('#pointSelectorModal');
-
-                this.modes = {
-                    CREATE: 'create',
-                    FILTER: 'filter',
-                    DEFAULT: 'default'
-                };
-
-                this.initPointTypes();
-                this.initBindings();
-            }
-
-            defaultCallback(data) {
-                dti.windows.openWindow(data._id);
-            }
-
-            initPointTypes() {
-                let pointTypes = [];
-                dti.forEachArray(dti.utility.pointTypes, (type) => {
-                    pointTypes.push({
-                        name: type.key,
-                        enum: type.enum,
-                        selected: false,
-                        visible: false
-                    });
-                });
-
-                this.pointTypes = pointTypes;
-                this.pointTypeListClass = 'pointTypeList';
-            }
-
-            initBindings() {
-                let self = this;
-                this.bindings = ko.viewmodel.fromModel({
-                    searchString: '',
-                    results: [],
-                    busy: false,
-                    focus: false,
-                    mode: this.modes.DEFAULT,
-                    pointTypesShown: false,
-                    pointTypes: this.pointTypes,
-                    remoteUnitId: null,
-                    deviceId: null
-                });
-
-                this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
-                this.bindings.handleRowClick = this.handleRowClick.bind(this);
-                this.bindings.handleAcceptFilterClick = this.handleAcceptFilterClick.bind(this);
-                this.bindings.togglePointTypeList = () => {
-                    this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
-                };
-
-                this.bindings.handleRightClick = (obj, event) => {
-                    let pointType = ko.dataFor(obj.target);
-                    let type = pointType.name();
-                    let selected = pointType.selected();
-                    let numSelected = this.bindings.numberOfPointTypesSelected();
-
-                    if (!selected) {
-                        this.setPointTypes(type, null, true);
-                    } else if (numSelected === 1) {//only this one selected, select all
-                        this.setPointTypes(null);
-                    } else {
-                        this.setPointTypes(type, null, true);
-                    }
-                };
-
-                this.bindings.modalText = ko.pureComputed(function getModalText() {
-                    var mode = self.bindings.mode(),
-                        ret;
-
-                    switch (mode) {
-                        case self.modes.CREATE:
-                            ret = 'Create Point';
-                            break;
-                        case self.modes.FILTER:
-                            ret = 'Choose Filter';
-                            break;
-                        case self.modes.DEFAULT:
-                            ret = 'Choose Point';
-                            break;
-                    }
-
-                    return ret;
-                });
-
-                this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
-                    let count = 0;
-
-                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                        if (type.selected()) {
-                            count++;
-                        }
-                    });
-
-                    return count;
-                });
-
-                this.bindings.flatPointTypeList = ko.pureComputed(() => {
-                    let ret = [];
-
-                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                        if (type.selected() && type.visible()) {
-                            ret.push(type.name());
-                        }
-                    });
-
-                    return ret;
-                });
-
-                this.bindings.pointTypeText = ko.pureComputed(() => {
-                    let numTypes = this.bindings.numberOfPointTypesSelected();
-                    let ret = numTypes + ' Point Type';
-
-                    if (numTypes !== 1) {
-                        ret += 's';
-                    }
-
-                    return ret;
-                });
-
-                dti.events.bodyClick(this.handleBodyClick.bind(this));
-
-                this.bindings.searchInput = ko.pureComputed(this.bindings.searchString).extend({
-                    throttle: 400
-                });
-
-                this.bindings.searchInput.subscribe((val) => {
-                    this.search();
-                }, this);
-
-                dti.bindings.pointSelector = this.bindings;
-            }
-
-            getFlatPointTypes(list) {
-                let ret = [];
-
-                if (list && list.length > 0) {
-                    dti.forEachArray(list, (type) => {
-                        if (typeof type === 'object') {
-                            ret.push(type.key);
-                        } else if (typeof type === 'string') {
-                            ret.push(type);
-                        } else {
-                            dti.log('incorrect point type');
-                        }
-                    });
-                } else {
-                    let defaultPointTypeList = this.bindings.pointTypes();
-
-                    dti.forEachArray(defaultPointTypeList, (pointType) => {
-                        ret.push(pointType.name());
-                    });
-                }
-
-                return ret;
-            }
-
-            handleBodyClick(event, $target) {
-                let cls = this.pointTypeListClass;
-                let isInsidePointTypeList = function () {
-                    let el = $target[0];
-                    let matches = () => {
-                        return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
-                    };
-
-                    if (!matches()) {
-                        while ((el = el.parentElement) && !matches()) {
-
-                        }
-                    }
-
-                    return el;
-                };
-
-                if (this.modalOpen) {
-                    if (this.bindings.pointTypesShown()) {
-                        if (!isInsidePointTypeList()) {
-                            this.bindings.togglePointTypeList();
-                            this.search();
-                        }
-                    }
-                }
-            }
-
-            search(skipSearch = false) {
-                //allows a one-time skip if true is passed in
-                if (this._skipSearch) {
-                    this._skipSearch = false;
-                    return false;
-                }
-
-                this.bindings.busy(true);
-
-                dti.post({
-                    url: '/api/points/getFilteredPoints',
-                    data: {
-                        terms: dtiCommon.buildSearchTerms(this.bindings.searchString().trim()),
-                        pointTypes: this.bindings.flatPointTypeList(),
-                        remoteUnitId: this.bindings.remoteUnitId(),
-                        deviceId: this.bindings.deviceId()
-                    }
-                }).done((results) => {
-                    this.handleSearchResults(results);
-                });
-            }
-
-            normalizeSearchResults(results) {
-                let getPointName = (path) => {
-                    return dti.utility.getConfig('Utility.getPointName', [path]);
-                };
-
-                dti.forEachArray(results, (result) => {
-                    result.path = getPointName(result.path);
-                });
-            }
-
-            handleRowClick(e) {
-                let mode = this.bindings.mode();
-                if (mode !== this.modes.FILTER) {
-                    let target = e.target;
-                    let data = ko.dataFor(target);
-
-                    this.$modal.closeModal();
-
-                    this.callback(data);
-                    this.callback = this.defaultCallback;
-
-                    // dti.log(arguments);
-                }
-            }
-
-            handleAcceptFilterClick(e) {
-                let target = e.target;
-                let data = ko.dataFor(target);
-
-                this.$modal.closeModal();
-
-                this.callback({
-                    terms: data.searchString(),
-                    pointTypes: this.selectedPointTypes()
-                });
-                this.callback = this.defaultCallback;
-            }
-
-            handleSearchResults(results) {
-                let ret = this.normalizeSearchResults(results);
-
-                results.sort((a, b) => {
-                    return a.path > b.path ? 1 : -1;
-                });
-
-                this.bindings.results(results);
-                this.bindings.busy(false);
-            }
-
-            //exposed methods
-            handleChoosePoint(data) {
-                dti.log(data);
-                this.callback(data);
-                this.callback = this.defaultCallback;
-            }
-
-            setPointTypes(config, save, stayShown) {
-                let pointTypes = null;
-                let showAll = true;
-                //if not object, just point types
-                if (config) {
-                    pointTypes = config.pointTypes || config;
-                    showAll = config.restrictPointTypes === false;
-                }
-
-                if (save) {
-                    this.showAll = showAll;
-                } else {
-                    showAll = this.showAll;
-                }
-
-                if (pointTypes && !Array.isArray(pointTypes)) {
-                    pointTypes = [pointTypes];
-                }
-
-                dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                    if (!pointTypes || pointTypes.indexOf(type.name()) !== -1) {
-                        type.visible(true);
-                        type.selected(true);
-                    } else {
-                        type.visible(showAll || stayShown);
-                        type.selected(false);
-                    }
-                });
-            }
-
-            selectedPointTypes() {
-                let answer = [];
-
-                dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                    if (type.selected()) {
-                        answer.push(type.name());
-                    }
-                });
-
-                return answer;
-            }
-
-            show(config) {
-                let pointTypes = this.getFlatPointTypes([]);
-                if (typeof config === 'object') {
-                    this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
-                    this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
-                    this.bindings.searchString(config.terms || '');
-                    this.bindings.mode(config.mode ? config.mode : this.modes.DEFAULT);
-                    this.bindings.deviceId(config.deviceId);
-                    this.bindings.remoteUnitId(config.remoteUnitId);
-
-                    this.setPointTypes(config, true);
-                } else {
-                    this.callback = this.defaultCallback;
-                    this.bindings.searchString('');
-                    this.bindings.mode(this.modes.DEFAULT);
-
-                    if (config && typeof config === 'string') {
-                        this.pointTypes = [config];
-                    } else {
-                        this.pointTypes = null;
-                    }
-
-                    this.setPointTypes(this.pointTypes, true);
-                }
-
-
-
-                this.$modal.openModal({
-                    ready: () => {
-                        this.modalOpen = true;
-                        this.bindings.focus(true);
-                        this.search();
-                    },
-                    complete: () => {
-                        this.modalOpen = false;
-                        this.bindings.focus(false);
-                        this.callback = this.defaultCallback;
-                    }
-                });
-            }
-        },
-
-
         init() {
-            dti.pointSelector.selector = new dti.pointSelector.Selector();
+            // dti.pointSelector.selector = new PointSelector();
+
+            // dti.pointSelector.show = dti.pointSelector.selector.show;
         }
     },
     messaging: {
@@ -6735,30 +6345,30 @@ var dti = {
 
             store.set('sessionId', dti.settings.sessionId);
 
-            $('#testLink').on('click', function clickTestLink(event) {
-                store.set('startupCommands', true);
-            });
+            // $('#testLink').on('click', function clickTestLink(event) {
+            //     store.set('startupCommands', true);
+            // });
 
-            dti.on('loaded', function checkStartupCommands() {
-                var commands = store.get('startupCommands');
+            // dti.on('loaded', function checkStartupCommands() {
+            //     var commands = store.get('startupCommands');
 
-                if (commands) {
-                    dti.windows.create({
-                        url: '/displays/view/44215',
-                        title: 'Test Open',
-                        type: 'Display',
-                        upi: 44215,
-                        left: 0,
-                        // right: 0,
-                        top: 0,
-                        // bottom: 0,
-                        width: '100%',
-                        height: '100%'
-                    });
+            //     if (commands) {
+            //         dti.windows.create({
+            //             url: '/displays/view/44215',
+            //             title: 'Test Open',
+            //             type: 'Display',
+            //             upi: 44215,
+            //             left: 0,
+            //             // right: 0,
+            //             top: 0,
+            //             // bottom: 0,
+            //             width: '100%',
+            //             height: '100%'
+            //         });
 
-                    store.set('startupCommands', null);
-                }
-            });
+            //         store.set('startupCommands', null);
+            //     }
+            // });
 
             dti.messaging.onMessage(dti.messaging.processMessage);
         },
@@ -6793,7 +6403,11 @@ var dti = {
                             });
                         }, 1000);
                     } else {
-                        dti.fire('returnMessage', ret);
+                        if (e.cb) {
+                            e.cb(ret);
+                        } else {
+                            dti.fire('returnMessage', ret);
+                        }
                     }
                 },
                 callbacks = {
@@ -6879,7 +6493,11 @@ var dti = {
                                         }
                                     });
                                 } else {
-                                    dti.fire('returnMessage', data);
+                                    if (e.cb) {
+                                        e.cb(data);
+                                    } else {
+                                        dti.fire('returnMessage', data);
+                                    }
                                 }
                             };
 
@@ -6951,7 +6569,11 @@ var dti = {
                                 } 
                             }); 
                         } else {
-                            dti.fire('returnMessage', ret);
+                            if (e.cb) {
+                                e.cb(ret);
+                            } else {
+                                dti.fire('returnMessage', ret);
+                            }
                         }
                         // }, 1000); 
                     }, 
@@ -6971,7 +6593,11 @@ var dti = {
                                 });
                             }, 1000);
                         } else {
-                            dti.fire('returnMessage', user);
+                            if (e.cb) {
+                                e.cb(user);
+                            } else {
+                                dti.fire('returnMessage', user);
+                            }
                         }
                     },
                     pointSelected: function () {
@@ -7030,7 +6656,7 @@ var dti = {
                 dti.messaging.doProcessMessage(message);
 
                 dti.trace('home removing', e.key);
-                store.remove(e.key); //memory cleanup
+                // store.remove(e.key); //memory cleanup
                 // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
                 //     cb(message);
                 // });
@@ -7048,7 +6674,7 @@ var dti = {
 
             dti.trace('home sending message', config.key, config.value);
 
-            store.set([config.key, ';', config.messageID].join(''), config.value);
+            // store.set([config.key, ';', config.messageID].join(''), config.value);
         },
         onMessage: function (cb) {
             dti.messaging._messageCallbacks.push(cb);
@@ -7704,18 +7330,18 @@ var dti = {
             };
 
             ko.bindingHandlers.delegate = {
-                init: (element, valueAccessor) => {
+                init: (element, valueAccessor, allBindings) => {
                     var $element = $(element),
                         delegations = ko.utils.unwrapObservable(valueAccessor()),
-                        makeHandler = (fn) => {
+                        makeHandler = (fn, scope = null) => {
                             return (e) => {
-                                fn(e);
+                                fn.call(scope, e);
                                 e.preventDefault();
                             };
                         };
 
                     dti.forEachArray(delegations, (cfg) => {
-                        $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler));
+                        $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler, cfg.scope));
                     });
 
                     ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
@@ -8870,7 +8496,7 @@ var dti = {
 
         dti.animations.fadeOut($('#login'), showLoading);
     }
-};
+});
 
 $(function initWorkspaceV2() {
     // if window.top !== window, is a window and needs login
@@ -9003,7 +8629,7 @@ dti.workspaceManager = window.workspaceManager = {
         return dti.socket;
     },
     sessionId: function () {
-        return store.get('sessionId');
+        // return store.get('sessionId');
     },
     user: function () {
         return JSON.parse(JSON.stringify(dti.bindings.user()));

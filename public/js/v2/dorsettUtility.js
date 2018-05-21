@@ -225,6 +225,12 @@ var dtiUtility = {
     windowIdCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
+
+        dti.on('pointSelected', (data) => {
+            if (dtiUtility._pointSelectCb) {
+                dtiUtility._pointSelectCb(data);
+            }
+        });
     },
 
     init: function () {
@@ -461,7 +467,8 @@ var dtiUtility = {
     // },
 
     showPointSelector: function (parameters) {
-        dtiUtility.sendMessage('showPointSelector', parameters);
+        // dtiUtility.sendMessage('showPointSelector', parameters);
+        dti.fire('showPointSelector', parameters);
     },
 
     showPointFilter: function (parameters) {
@@ -501,17 +508,12 @@ var dtiUtility = {
 
         dtiUtility.trace('dtiUtility sending message', title , data);
 
-        // if (window.dtiMessage) {
-        //     window.dtiMessage(title, data);
-        // } else {
-            (window.opener || window.top).dtiMessage(target, data, function () {
-                if (cfg.cb) {
-                    cfg.cb.apply(null, arguments);
-                }
-                dtiUtility.trace(target, 'return', arguments);
-            });
-        // }
-
+        (window.opener || window.top).dtiMessage(target, data, function () {
+            if (cfg.cb) {
+                cfg.cb.apply(null, arguments);
+            }
+            dtiUtility.trace(target, 'return', arguments);
+        });
         // store.set(title, data); 
     },
 
@@ -602,7 +604,7 @@ var dtiUtility = {
     getConfig: function (path, parameters, cb) {
         var getCfgID = dtiUtility.makeId();
 
-        dtiUtility.getConfigCallbacks[getCfgID] = cb;
+        // dtiUtility.getConfigCallbacks[getCfgID] = cb;
 
         dtiUtility.sendMessage('getConfig', {
             messageID: getCfgID,

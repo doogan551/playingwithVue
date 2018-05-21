@@ -695,13 +695,16 @@ html.direports
                 .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
             // /ko
 
-    script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
-    script(type="text/javascript" src="/js/lib/jquery-ui.js")
-    script(type="text/javascript" src='/js/lib/moment.js')
-    script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
+    include /baseui/dti.pug
+
+    //- script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
+    //- script(type="text/javascript" src="/js/lib/jquery-ui.js")
+    //- script(type="text/javascript" src='/js/lib/moment.js')
+    //- script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
+    //- script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
     script(type="text/javascript" src='/js/lib/ko.validation.js')
-    script(type="text/javascript" src='/js/lib/socket.io.js')
-    script(type="text/javascript" src='/js/lib/store.min.js')
+    //- script(type="text/javascript" src='/js/lib/socket.io.js')
+    //- script(type="text/javascript" src='/js/lib/store.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/jquery.dataTables.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/dataTables.material.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/ColReorder/js/dataTables.colReorder.min.js')
@@ -722,12 +725,10 @@ html.direports
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.html5.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.print.min.js')
     script(type="text/javascript" src='/js/lib/DataTables-1.10.16/Buttons/js/buttons.colVis.min.js')
-    script(type="text/javascript" src='/js/lib/materialize.js')
+    //- script(type="text/javascript" src='/js/lib/materialize.js')
     script(type="text/javascript" src='/js/lib/materialize.clockpicker.js')
 
-    script(type='text/javascript', src='/js/v2/dtiCommon.js')
-    script(type='text/javascript', src='/js/v2/dorsettUtility.js')
-    script(type='text/javascript', src='/js/lib/config.js')
+    //- script(type='text/javascript', src='/js/lib/config.js')
     script.
         var delayLoad = true;
 

@@ -29,8 +29,13 @@ var dtiCommon = {
         let path = target && (target.path || target);
         let result = '';
 
-        if (Array.isArray(path)) {
-            result = path.slice(1).join(dtiCommon._private.pointNameSeparator);
+        if (path) {
+            if (Array.isArray(path)) {
+                result = path.slice(1).join(dtiCommon._private.pointNameSeparator);
+            } else if (path.indexOf(dtiCommon._private.pointNameSeparator) !== -1) {
+                // already formatted/in path format
+                result = path;
+            }
         }
 
         return result;

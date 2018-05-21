@@ -1,4 +1,680 @@
 "use strict";
+let __el = function (el) {
+    return el instanceof $ ? el[0] : el instanceof HTMLElement ? el : null;
+};
+let kodt = function (obj = window.$0) {
+    return ko.dataFor(__el(obj));
+};
+let kojs = function (obj = window.$0, depth = 0) {
+    let el = __el(obj);
+
+    let data = el ? kodt(obj) : obj;
+
+    let cycle = function (item) {
+        let ret = {};
+
+        dti.forEach(item, (val, prop) => {
+            let kval = koUnwrap(val);
+
+            if (kval === null || kval === undefined) {
+                ret[prop] = kval;
+            } else {
+                if (kval instanceof $) {
+                    ret[prop] = kval;
+                } else {
+                    if (Array.isArray(kval)) {
+                        let tmpArr = [];
+                        ret[prop] = tmpArr;
+                        dti.forEachArray(kval, (innerVal) => {
+                            let kinnerVal = koUnwrap(innerVal);
+                            tmpArr.push(kojs(kinnerVal, depth + 1));
+                        });
+                    } else if (typeof kval === 'object') {
+                        let tmpObj = {};
+                        ret[prop] = tmpObj;
+                        dti.forEach(kval, (innerVal, innerProp) => {
+                            let kinnerVal = koUnwrap(innerVal);
+                            tmpObj[innerProp] = kojs(kinnerVal, depth + 1);
+                        });
+                    } else {
+                        ret[prop] = koUnwrap(kval);
+                    }
+                }
+            }
+        });
+
+        return ret;
+    };
+
+    // skip nested element references (maximum call stack exceeded error)
+    if (!!el && depth > 0) {
+        return obj;
+    }
+
+    let kdata = koUnwrap(data);
+
+    if (Array.isArray(kdata)) {
+        let tempArr = [];
+        dti.forEachArray(kdata, (obj, idx) => {
+            let kobj = koUnwrap(obj);
+            tempArr.push(kojs(kobj, depth + 1));
+        });
+        return tempArr;
+    }
+
+    if (typeof kdata === 'object') {
+        return cycle(kdata);
+    }
+
+    return kdata;
+};
+let koct = function (obj = window.$0) {
+    return ko.contextFor(__el(obj));
+};
+let koUnwrap = function (value) {
+    return ko.utils.unwrapObservable(value);
+};
+$.extend(dti, {
+    itemIdx: 0,
+    settings: {
+        isNew: false,
+        pauseDatePick: false,
+        delayLoad: true,
+        logLinePrefix: true,
+        logLevel: 'trace',
+        webEndpoint: window.location.origin,
+        socketEndPoint: window.location.origin,
+        apiEndpoint: window.location.origin + '/api/',
+        idxPrefix: 'dti_',
+        sessionId: btoa(new Date().getTime().toString().split('').reverse().join(''))
+    },
+    placeholder: (() => {
+        let text = "";
+        let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; 
+
+        for (let c = 0; c < 8; c++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+
+        return text;
+    })(),
+    emptyFn() {return;},
+    //per window
+    onLoadFn (cb = () => {return;}) {
+        if (window.onLoadFn) {
+            dti.onLoadFnCalled = true;
+            window.onLoadFn();
+            setTimeout(() => {
+                cb();
+            });
+        } else {
+            let interval = setInterval(() => {
+                if (window.onLoadFn) {
+                    dti.onLoadFnCalled = true;
+                    window.onLoadFn();
+                    setTimeout(() => {
+                        cb();
+                    });
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+    },
+    updateModel (vm, model) {
+        dti.forEach(vm, (obs, name) => {
+            let prop = koUnwrap(model[name]);
+
+            if (prop !== undefined) {
+                obs(prop);
+            }
+        });
+    },
+    makeId () {
+        dti.itemIdx++;
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
+    destroyObject (o, recursive) {
+        var keys = Object.keys(o),
+            val,
+            c;
+
+        for (c = 0; c < keys.length; c++) {
+            val = o[keys[c]];
+
+            if (val && typeof val === 'object' && recursive) {
+                dti.destroyObject(val, true);
+                delete o[keys[c]];
+            } else {
+                delete o[keys[c]];
+            }
+        }
+    },
+    uniqueArray (arr) {
+        let unique = [];
+
+        dti.forEachArray(arr, (item) => {
+            if (unique.indexOf(item) === -1) {
+                unique.push(item);
+            }
+        });
+
+        return unique;
+    },    
+    arrayEquals (a, b) {
+        var c;
+        if (a === b) {
+            return true;
+        }
+
+        if (a === null || b === null) {
+            return false;
+        }
+
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+
+        for (c = 0; c < a.length; ++c) {
+            if (a[c] !== b[c]) {
+                return false;
+            }
+        }
+
+        return true;
+    },
+    forEach (obj, fn, isClass) {
+        let keys = obj && Object.keys(obj) || [];
+        let errorFree = true;
+
+        if (isClass) {
+            let classKeys = Object.getOwnPropertyNames(obj.constructor.prototype);
+            keys = keys.concat(classKeys);
+        }
+        
+        let len = keys.length;
+
+        for (let c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArray (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArrayRev (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    clone (toCopy) {
+        var ret,
+            copyArray = function () {
+                ret = $.extend(true, [], toCopy);
+            },
+            copyObject = function () {
+                if (Array.isArray(toCopy)) {
+                    copyArray();
+                } else {
+                    ret = $.extend(true, {}, toCopy);
+                }
+            },
+            basic = function () {
+                ret = toCopy;
+            },
+            copyFunction = function () {
+                if (ko.isObservable(toCopy)) {
+                    ret = ko.observable(koUnwrap(toCopy));
+                } else {
+                    ret = toCopy;
+                }
+            };
+
+        switch (typeof toCopy) {
+            case 'object':
+                copyObject();
+                break;
+            case 'function':
+                copyFunction();
+                break;
+            default:
+                basic();
+                break;
+        }
+
+        return ret;
+    },
+    // shamelessly stolen from underscore
+    debounce (func, wait, immediate) {
+        var timeout, args, context, timestamp, result;
+
+        var later = function () {
+            var last = Date.now() - timestamp;
+
+            if (last < wait && last > 0) {
+                timeout = setTimeout(later, wait - last);
+            } else {
+                timeout = null;
+                if (!immediate) {
+                    result = func.apply(context, args);
+                    if (!timeout) context = args = null;
+                }
+            }
+        };
+
+        return function () {
+            context = this;
+            args = arguments;
+            timestamp = Date.now();
+            var callNow = immediate && !timeout;
+            if (!timeout) timeout = setTimeout(later, wait);
+            if (callNow) {
+                result = func.apply(context, args);
+                context = args = null;
+            }
+
+            return result;
+        };
+    },
+    throttle (func, wait, options) {
+        var context, args, result;
+        var timeout = null;
+        var previous = 0;
+        if (!options) options = {};
+        var later = function () {
+            previous = options.leading === false ? 0 : Date.now();
+            timeout = null;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        };
+        return function () {
+            var now = Date.now();
+            if (!previous && options.leading === false) previous = now;
+            var remaining = wait - (now - previous);
+            context = this;
+            args = arguments;
+            if (remaining <= 0 || remaining > wait) {
+                clearTimeout(timeout);
+                timeout = null;
+                previous = now;
+                result = func.apply(context, args);
+                if (!timeout) context = args = null;
+            } else if (!timeout && options.trailing !== false) {
+                timeout = setTimeout(later, remaining);
+            }
+            return result;
+        };
+    },
+    updateFromModel(viewModel, model) {
+        //assumes only one level
+        let input = kojs(model);
+        let unpause = [];
+
+        dti.forEach(input, (val, prop) => {
+            if (typeof val === 'function') {
+                viewModel[prop] = val;
+            } else if (val instanceof $) {
+                viewModel[prop] = val;
+            } else {
+                let target = viewModel[prop];    
+                if (target) {
+                    if (ko.isObservable(target)) {
+                        // target.withPausing();
+                        // unpause.push(target);
+                        // target.silentUpdate(val);
+                        target(val);
+                    } else {
+                        // dti.log('found non-observable property: ', prop);
+
+                        // is plain object
+                        if (val.constructor === Object.constructor) {
+                            viewModel[prop] = dti.clone(val);
+                        } else {
+                            //is other object.  class?
+                            viewModel[prop] = val;
+                        }
+                    }
+                } else {
+                    viewModel[prop] = ko.observable(val);    
+                }
+            }
+        });
+
+        // dti.forEachArray(unpause, (obs) => {
+        //     obs.valueHasMutated();
+        // });
+    },
+    merge(dest, src, clone) {
+        dti.forEach(src, (val, prop) => {
+            if (dest[prop] === undefined) {
+                if (!clone) {
+                    dest[prop] = val;
+                } else {
+                    dest[prop] = dti.clone(prop);
+                }
+            }
+        });
+    },
+    formatDate (date, addSuffix) {
+        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+            lengths = [2, 2, 2, 3],
+            separators = [':', ':', ':', ''],
+            suffix = ' --',
+            fn,
+            out = '';
+
+        if (addSuffix) {
+            separators.push(suffix);
+        }
+
+        if (typeof date === 'number') {
+            date = new Date(date);
+        }
+
+        for (fn in functions) {
+            if (functions.hasOwnProperty(fn)) {
+                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+            }
+        }
+
+        return out;
+    },
+    _gapTimers: {},
+    _gapTimerSteps: {},
+    // used when you want to time one or more functions.  
+    // just pass the name when you want to start
+    // call timeGapPause with that name to 'pause' it
+    // call timegapend to end that timer, clear it out, and optionally log the gap
+    timeGap: (name) => {
+        let start = new Date();
+
+        //just started
+        if (dti._gapTimers[name] === undefined) {
+            dti._gapTimers[name] = 0;
+        }
+
+        if (dti._gapTimerSteps[name] === undefined) {
+            dti._gapTimerSteps[name] = start;
+        }
+    },
+    timeGapPause: (name) => {
+        let start = new Date();
+        let step = start - dti._gapTimerSteps[name];
+
+        dti._gapTimers[name] += step;  
+
+        delete dti._gapTimerSteps[name];
+    },
+    timeGapEnd: (name, skipLog) => {
+        let end = new Date();
+        let gap = dti._gapTimers[name];
+
+        if (!skipLog) {
+            dti.log(name + ':', gap);
+        }
+
+        delete dti._gapTimers[name];
+
+        return gap;
+    },
+    timeGapEndAll: () => {
+        dti.forEach(dti._gapTimers, (time, name) => {
+            dti.timeGapEnd(name);
+        });
+    },
+    // a dti version of console.time to get specific one-off timers
+    _timers: {},
+    time: (name) => {
+        let start = new Date();
+
+        dti._timers[name] = start;
+    },
+    timeEnd: (name, skipLog) => {
+        let end = new Date();
+        let gap = end - dti._timers[name];
+
+        if (!skipLog) {
+            dti.log(name + ':', gap);
+        }
+
+        delete dti._timers[name];
+
+        return gap;
+    },
+    logging: {
+        logHistory: [],
+        logLevels: {
+            none: 0,
+            debug: 1,
+            trace: 2
+        },
+        addLog(message, level) {
+            let safe = true;
+            let output = [];
+            dti.forEachArray(message, (entry) => {
+                if (typeof entry === 'object') {
+                    if (dti.settings.logObjects === true) {
+                        let clean = dti.deCycleObject(entry);
+                        output.push(clean);
+                    }
+                } else {
+                    output.push(entry);
+                }
+            });
+
+            let stringMessage = JSON.stringify(output);
+            dti.logging.logHistory.push({
+                message: stringMessage,
+                level
+            });
+        },
+        showLogs(level) {
+            let pad = (num) => {
+                return ('     ' + num).slice(-5);
+            };
+            dti.forEachArray(dti.logging.logHistory, (log) => {
+                if (!!level) {
+                    if (log.level !== level) {
+                        return;
+                    }
+                }
+
+                let logLevel = '(' + pad(log.level) + ')';
+                let args = [logLevel].concat(log.message);
+
+                console.log.apply(console, args);
+            });
+        },
+        getLogMessage(args) {
+            var stack,
+                steps,
+                lineNumber,
+                err,
+                now = new Date(),
+                message = [].splice.call(args, 0),
+                pad = function (num) {
+                    return ('    ' + num).slice(-4);
+                },
+                formattedtime = dti.formatDate(new Date(), true);
+
+            if (dti.settings.logLinePrefix === true) {
+                err = new Error();
+                if (Error.captureStackTrace) {
+                    Error.captureStackTrace(err);
+
+                    //entry 5 in the stack
+                    stack = err.stack.split('\n')[4];
+
+                    steps = stack.split(':');
+
+                    lineNumber = steps[2];
+
+                    // args.unshift('gap:' + pad(now - dti._lastLog));
+
+                    message.unshift('line:' + pad(lineNumber), formattedtime);
+                }
+            }
+
+            return message;
+        },
+        isValidLog(level) {
+            let logLevel = dti.logging.logLevels[level.toLowerCase()] || 1;
+            let appLogLevel = dti.logging.logLevels[dti.settings.logLevel.toLowerCase()] || 1;
+
+            if (logLevel <= appLogLevel) {
+                return true;
+            }
+
+            return false;
+        },
+        log (args, level) {
+            let message = dti.logging.getLogMessage(args);
+
+            if (dti.logging.isValidLog(level)) {
+                console.log.apply(console, message);
+            }
+
+            dti.logging.addLog(message, level);
+
+            dti.logging._lastLog = new Date().getTime();
+        }
+    },
+    trace() {
+        dti.logging.log(arguments, 'trace');
+    },
+    log() {
+        dti.logging.log(arguments, 'debug');
+    },
+    events: {
+        init: function () {
+            // Setup listener for body clicks
+            $('body').mousedown(function handleBodyMouseDown(event) {
+                let start = new Date();
+                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
+                    var $target = $(event.target);
+
+                    handler(event, $target);
+                });
+                dti.events._bodyClickCount++;
+                dti.events._bodyClickTime += new Date() - start;
+            });
+        },
+        _bodyClickHandlers: [],
+        _bodyClickCount: 0,
+        _bodyClickTime: 0,
+        bodyClick: function (fn) {
+            dti.events._bodyClickHandlers.push(fn);
+        },
+        offBodyClick: function (offFn) {
+            dti.forEachArray(dti.events._bodyClickHandlers, (fn, i) => {
+                if (fn === offFn) {
+                    dti.events._bodyClickHandlers.splice(i, 1);
+                    return false; // Stop iterating
+                }
+            });
+        }
+    },
+    $ (fn) {
+        $(function delayLoadFn () {
+            setTimeout(function runInit () {
+                fn();
+            }, 100);
+        });
+    },
+    post(config) {
+        return $.ajax({
+            url: config.url,
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify(config.data)
+        });
+    },
+    animations: {
+        tempinit () {
+            $(window).focus(function () {
+                console.log('Focus');
+            });
+
+            $(window).blur(function () {
+                console.log('Blur');
+            });
+        },
+        _fade ($el, opacity, cb) {
+            $el.velocity('stop');
+            $el.velocity({
+                opacity: opacity
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: cb
+            });
+        },
+        fadeIn ($el, cb) {
+            $el[0].style.willChange = 'opacity, display';
+            $el.css('display', 'block');
+            dti.animations._fade($el, 1, cb);
+        },
+        fadeOut ($el, cb) {
+            dti.animations._fade($el, 0, function finishFadeOut () {
+                $el.css('display', 'none');
+                $el[0].style.willChange = '';
+                if (cb) {
+                    cb();
+                }
+            });
+        },
+        slideUp ($el, cb) {
+            $el[0].style.willChange = 'height, padding-top, padding-bottom';
+            $el.css('overflow', 'hidden');
+            $el.velocity('stop');
+            $el.velocity({
+                height: 0,
+                'padding-top': 0,
+                'padding-bottom': 0
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: function finishSlideUp () {
+                    $el.css('display', 'none');
+                    $el[0].style.willChange = '';
+                    if (cb) {
+                        cb();
+                    }
+                }
+            });
+        }
+    }
+});
 
 var dtiReporting = {
     settings: {
@@ -7331,7 +8007,7 @@ let reportsViewModel = function () {
 
                             initializeForMaterialize();
 
-                            window.onLoadFn();
+                            dti.onLoadFn();
                         };
 
                     self.parentID(reportPoint.parentNode);

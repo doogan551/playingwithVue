@@ -1,0 +1,217 @@
+
+
+
+
+
+@import '../materialize/components/_color';
+// Utility variables for Materialize colors.  map-get is annoying
+//....put base last.  trust me
+$blue-grey-lighten-1: map-get($blue-grey, lighten-1);
+$blue-grey-lighten-2: map-get($blue-grey, lighten-2);
+$blue-grey-lighten-3: map-get($blue-grey, lighten-3);
+$blue-grey-lighten-4: map-get($blue-grey, lighten-4);
+$blue-grey-lighten-5: map-get($blue-grey, lighten-5);
+$blue-grey-darken-1: map-get($blue-grey, darken-1);
+$blue-grey-darken-2: map-get($blue-grey, darken-2);
+$blue-grey-darken-3: map-get($blue-grey, darken-3);
+$blue-grey-darken-4: map-get($blue-grey, darken-4);
+$blue-grey: map-get($blue-grey, base);
+
+// globals
+.modal-header {
+    padding: 5px 10px;
+    font-size: 1.4em;
+    color: #fff;
+}
+
+.busy .fetching {
+    visibility: visible;
+}
+
+.fetching {
+    position: absolute;
+    visibility: hidden;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    min-height: 4px !important;
+
+    .progress {
+        margin: 0;
+        background-color: #fff;
+    }
+
+    .indeterminate {
+        background-color: $blue-grey;
+    }
+}
+
+.fixedHeader {
+    // height: 420px;
+    // overflow-y: hidden;
+    display: flex;
+    flex-flow: column;
+
+    th,
+    td {
+        padding: 5px;
+    }
+
+    thead {
+        display: block;
+        border-bottom: none;
+        tr {
+            display: flex;
+        }
+
+        th {
+            flex: 1;
+        }
+    }
+
+    tbody {
+        overflow-y: auto;
+        width: 100%;
+        display: block;
+        tr {
+            display: flex;
+            transition: background-color .1s ease, color .1s ease;
+            cursor: pointer;
+            align-items: center;
+        }
+
+        tr:hover {
+            background-color: $blue-grey !important;
+            color: white !important;
+        }
+
+        td {
+            flex: 1;
+        }
+    }
+}
+
+// end globals
+
+.pointSelectorModal {
+    z-index: 20000 !important;
+    .modal-header {
+        background-color: $blue-grey-darken-2;
+    }
+
+    .modal-content {
+        position: relative;
+    }
+
+    .content-header {
+        position: relative;
+    }
+
+    .pointSearch {
+        width: 80%;
+        display: inline-block;
+        input {
+            background-color: initial;
+            padding-left: 0;
+        }
+    }
+
+    .pointTypeButton {
+        width: 20%;
+        display: inline-block;
+        position: absolute;
+        bottom: 1em;
+
+        .active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            display: flex;
+            padding: 0;
+        }
+
+        i {
+            // position: absolute;
+            // right: 10px;
+        }
+
+        span {
+            margin-left: 10px;
+        }
+    }
+
+    .pointTypeList {
+        position: absolute;
+        background-color: white;
+        // opacity: 0;
+        right: 0;
+        max-width: 100%;
+        top: 65px;
+
+        &.active {
+            width: 100%;
+        }
+
+        span {
+            padding: 5px;
+            width: 148px;
+            float: left;
+        }
+    }
+
+    .pointList {
+        // height: 420px;
+        // overflow-y: hidden;
+        height: 470px;
+
+        thead {
+            th:last-child {
+                flex-grow: 3;
+            }
+        }
+
+        tbody {
+            td:last-child {
+                flex-grow: 3;
+            }
+        }
+    }
+
+    .pointHeaders {
+        padding: 5px;
+        font-weight: bold;
+        background-color: $blue-grey-lighten-5;
+    }
+
+    .pointResults {
+        overflow-y: auto;
+        // height: 100%;
+
+        .pointRow {
+            cursor: pointer;
+
+            td {
+                padding: 5px;
+                border-radius: 0;
+            }
+        }
+
+        .pointRow:hover {
+            background-color: $blue-grey;
+            color: white;
+            transition: background-color .1s ease, color .1s ease;
+        }
+    }
+}
+
+.filterMode {
+    .fixedHeader {
+        tbody {
+            tr {
+                cursor: default !important;
+            }
+        }
+    }
+}
