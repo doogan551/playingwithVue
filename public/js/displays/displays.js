@@ -1933,7 +1933,7 @@ var widgets = {
             handlePoint(data) {
                 super.handlePoint(data);
 
-                let pointType = data['Point Type'].Value;
+                let pointType = data.pointType;
 
                 // if (pointType.match(/(Binary|MultiState)/)) {
                 //     let options = [];
