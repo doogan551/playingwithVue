@@ -1486,6 +1486,8 @@ define([
                         // apply logic to enforce precision for floats
                         if (valueType === 1) {
                             //newValue = new Big(newValue).toPrecision(36);
+                        } else {
+                            newValue = parseFloat(newValue);
                         }
                         // and min and max
                         // don't check for key enter
