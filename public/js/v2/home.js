@@ -6727,7 +6727,8 @@ $.extend(dti, {
             if (object.standalone()) {
                 dti.bindings.startMenuClick(object);
             } else {
-                dti.pointSelector.show(object.group());
+                dti.fire('showPointSelector', object.group());
+                // dti.pointSelector.show(object.group());
                 // dti.bindings.showNavigator(object.group());
             }
         },

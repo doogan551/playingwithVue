@@ -2321,6 +2321,8 @@ var displays = {
     widgets: {},
     settings: {
         scrollZoomStep: 5,
+        minZoom: 5,
+        maxZoom: 400,
         bindingsLoaded: false,
         widgets: {
             tooltipWidthSmall: '285px',
@@ -2756,7 +2758,9 @@ var displays = {
             let zoom = displays.bindings.zoom;
             let newZoom = parseFloat(zoom()) + gap;
 
-            zoom(newZoom);
+            if (newZoom >= displays.settings.minZoom && newZoom <= displays.settings.maxZoom) {
+                zoom(newZoom);
+            }
             dti.timeGapPause('mousewheel');
         },
         handleMouseDown (e) {
