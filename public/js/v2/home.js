@@ -1078,12 +1078,22 @@ $.extend(dti, {
             },
             popout = function (e) {
                 let upi = this.upi();
+                let winId = this.windowId();
+                let win = dti.windows.getWindowById(winId);
+                let args;
 
-                setTimeout(() => {
-                    dti.windows.openWindow({
+                if (!!upi) {
+                    args = {
                         upi,
                         popout: true
-                    });
+                    };
+                } else {
+                    args = $.extend(true, {}, win._config);
+                    args.popout = true;
+                }
+                
+                setTimeout(() => {
+                    dti.windows.openWindow(args);
                 });
 
                 this.close();
@@ -6822,7 +6832,8 @@ $.extend(dti, {
             return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
         },
         showPointSelector: () => {
-            dti.pointSelector.show();
+            dti.fire('showPointSelector');
+            // dti.pointSelector.show();
         },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
