@@ -18,7 +18,7 @@ let PointSelector = class PointSelector {
 
     defaultCallback(data, isMiddleClick) {
         dtiUtility.openWindow({
-            url: data._id,
+            upi: data._id,
             popout: isMiddleClick
         });
     }
@@ -205,14 +205,16 @@ let PointSelector = class PointSelector {
 
         this.busy(true);
 
-        dti.post({
+        $.ajax({
+            type: 'post',
+            contentType: 'application/json',
             url: '/api/points/getFilteredPoints',
-            data: {
+            data: JSON.stringify({
                 terms: dtiCommon.buildSearchTerms(this.searchString().trim()),
                 pointTypes: this.flatPointTypeList(),
                 remoteUnitId: this.remoteUnitId(),
                 deviceId: this.deviceId()
-            }
+            })  
         }).done((results) => {
             this.handleSearchResults(results);
         });
