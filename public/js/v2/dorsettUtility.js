@@ -490,6 +490,7 @@ var dtiUtility = {
     },
 
     onPointSelect: function (cb) {
+        dti.on('pointSelected', cb);
         dtiUtility._pointSelectCb = cb;
     },
 
