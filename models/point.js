@@ -2121,6 +2121,8 @@ const Point = class Point extends Common {
                                 }, null);
                             }
                             let error = null;
+                            // REMOVE AFTER NEW PERMISSIONS
+                            result._pAccess = newPoint._pAccess;
                             updatePointRefProperties(result);
                             this.updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, (err) => {
                                 if (err) {
