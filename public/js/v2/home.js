@@ -1166,7 +1166,7 @@ $.extend(dti, {
                     if (config.popout) {
                         if (!self.winLoaded) {
                             self.win.onload = () => {
-                                dti.log('win onload gettitle', pointName);
+                                // dti.log('win onload gettitle', pointName);
                                 if (self.win.document.title !== pointName) {
                                     self.win.document.title = pointName;
                                 }
@@ -1379,14 +1379,14 @@ $.extend(dti, {
         } else {
             let win = self.win = window.open(config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
             win.addEventListener('load', () => {
-                dti.log('window loaded');
+                // dti.log('window loaded');
                 win.onunload = () => {
                     dti.log('closing window');
                     self.bindings.close();
                 };
             });
 
-            dti.log('getPopupID', dti.settings.webEndpoint + '/' + config.url);
+            // dti.log('getPopupID', dti.settings.webEndpoint + '/' + config.url);
             let id = dti.windows.getPopupID(dti.settings.webEndpoint + config.url);
 
             self.popupID = id;
@@ -1493,7 +1493,7 @@ $.extend(dti, {
             return window.getPopupID(url);
         },
         closePopup (id, url) {
-            dti.log('close popup', id, url);
+            // dti.log('close popup', id, url);
             window.closePopup(id, url);
         },
         getWindowByPopupID (id) {

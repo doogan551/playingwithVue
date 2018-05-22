@@ -785,7 +785,7 @@ let BaseWidget = class Widget {
 
     handleClick(isMiddleClick) {
         let upi = this.upi();
-        dti.log('handleclick', isMiddleClick);
+        // dti.log('handleclick', isMiddleClick);
 
         if (!!upi) {
             dtiUtility.openWindow({
