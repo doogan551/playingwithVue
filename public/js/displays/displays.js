@@ -1823,6 +1823,10 @@ var widgets = {
 
                 super.initConfig();
 
+                if (this.config.isNew) {
+                    this.config.text = this.placeholder;
+                }
+
                 this._origColor = this.config.color;
             }
 

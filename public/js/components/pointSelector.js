@@ -241,9 +241,14 @@ let PointSelector = class PointSelector {
         this.$modal.closeModal();
         dti.log('handleRowClick', data);
 
-        this.callback(data, popout);
-        this.callback = this.defaultCallback;
-        dti.fire('pointSelected', data);
+        // this.callback(data, popout);
+        // this.callback = this.defaultCallback;
+        if (this.callback) {
+            this.callback(data, popout);
+            this.callback = null;
+        } else {
+            dti.fire('pointSelected', data);
+        }
     }
 
     handleRowMouseDown(e) {
@@ -338,7 +343,7 @@ let PointSelector = class PointSelector {
         config = config || {};
         let pointTypes = this.getFlatPointTypes([]);
         if (typeof config === 'object') {
-            this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
+            this.callback = config.callback; //guard shouldn't be necessary
             pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
             this.searchString(config.terms || '');
             this.mode(config.mode ? config.mode : this.modes.DEFAULT);
