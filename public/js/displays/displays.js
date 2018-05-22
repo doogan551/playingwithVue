@@ -3516,7 +3516,10 @@ var displays = {
 
         //todo update structure, translate first
         displays.setBackgroundUrl(displays.point['Background Picture']);
-        displays.bindings.backgroundColor = '#' + displays.point['Background Color'];
+        displays.bindings.backgroundColor = displays.point['Background Color'];
+        if (!displays.bindings.backgroundColor.match('#')) {
+            displays.bindings.backgroundColor = '#' + displays.bindings.backgroundColor;
+        }
         displays.bindings.bgHeight = displays.bindings.height = displays.point.Height;
         displays.bindings.bgWidth = displays.bindings.width = displays.point.Width;
 

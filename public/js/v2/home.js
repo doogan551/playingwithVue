@@ -1377,7 +1377,7 @@ $.extend(dti, {
 
             ko.applyBindings(self.bindings, self.$windowEl[0]);
         } else {
-            let win = self.win = window.open(window.location.origin + config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
+            let win = self.win = window.open(config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
             win.addEventListener('load', () => {
                 // dti.log('window loaded');
                 win.onunload = () => {
