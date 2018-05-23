@@ -24,6 +24,19 @@ const Calendar = class Calendar extends Common {
         this.getOne(criteria, cb);
     }
 
+    getYearsWithData(cb) {
+        let query = {
+            dates: {
+                $ne: []
+            }
+        };
+        let fields = {
+            year: 1,
+            _id: 0
+        };
+        this.getAll({query, fields}, cb);
+    }
+
     newDate(data, cb) {
         const activityLog = new ActivityLog();
         const pointModel = new Point();
