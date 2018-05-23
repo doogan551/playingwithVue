@@ -29,8 +29,13 @@ var dtiCommon = {
         let path = target && (target.path || target);
         let result = '';
 
-        if (Array.isArray(path)) {
-            result = path.slice(1).join(dtiCommon._private.pointNameSeparator);
+        if (path) {
+            if (Array.isArray(path)) {
+                result = path.slice(1).join(dtiCommon._private.pointNameSeparator);
+            } else if (path.indexOf(dtiCommon._private.pointNameSeparator) !== -1) {
+                // already formatted/in path format
+                result = path;
+            }
         }
 
         return result;
@@ -369,6 +374,48 @@ var dtiCommon = {
                                 }, keypressTimer);
                             }
                         });
+                }
+            };
+
+            ko.bindingHandlers.fadeVisible = {
+                init: function (element, valueAccessor) {
+                    // Initially set the element to be instantly visible/hidden depending on the value
+                    var value = valueAccessor();
+                    $(element).toggle(ko.unwrap(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+                },
+                update: function (element, valueAccessor) {
+                    // Whenever the value subsequently changes, slowly fade the element in or out
+                    var value = valueAccessor(),
+                        $element = $(element);
+
+                    if (ko.unwrap(value)) {
+                        dti.animations.fadeIn($element);
+                    } else {
+                        dti.animations.fadeOut($element);
+                    }
+                }
+            };
+
+            ko.bindingHandlers.delegate = {
+                init: (element, valueAccessor, allBindings) => {
+                    var $element = $(element),
+                        delegations = ko.utils.unwrapObservable(valueAccessor()),
+                        makeHandler = (fn, scope = null) => {
+                            return (e) => {
+                                fn.call(scope, e);
+                                e.preventDefault();
+                            };
+                        };
+
+                    dti.forEachArray(delegations, (cfg) => {
+                        $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler, cfg.scope));
+                    });
+
+                    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                        dti.forEachArray(delegations, (cfg) => {
+                            $element.off(cfg.event, cfg.selector, makeHandler(cfg.handler));
+                        });
+                    });
                 }
             };
         }

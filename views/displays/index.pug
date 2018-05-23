@@ -12,7 +12,7 @@ html
         link(rel='stylesheet', href='/css/lib/mbox-0.0.1.min.css')
         link(rel='stylesheet', href='/sass/displays/displays')
 
-    body(data-bind="style: {'background-color': !editMode() ? backgroundColor : '#cccccc' }, css: { editMode: editMode, viewMode: !editMode(), editingPreviewWidget: editingPreviewWidget, editingComplexWidget: editingComplexWidget }, delegate: [{event: 'click', selector: '.dti-widget', handler: widgetClickHandler }]")
+    body(data-bind="style: {'background-color': !editMode() ? backgroundColor : '#cccccc' }, css: { editMode: editMode, viewMode: !editMode(), editingPreviewWidget: editingPreviewWidget, editingComplexWidget: editingComplexWidget, loaded: loaded }, delegate: [{event: 'click', selector: '.dti-widget', handler: widgetClickHandler}, {event: 'mousedown', selector: '.dti-widget', handler: widgetClickHandler }]")
 
         //- #mask(data-bind="visible: editingWidget")
         .widgetToolbarMask(data-bind="visible: editingPreviewWidget")
@@ -398,7 +398,7 @@ html
                         //- // /ko
 
                     .row
-                        // ko if: !isPreview()
+                        // ko if: !isPreview() && type() !== 'Text'
                         // if 0, it requires one
                         //- .row
                             .col.s12
@@ -580,8 +580,8 @@ html
             points: !{points}
         };
 
-    script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
-    script(type='text/javascript', src='/js/lib/jquery-ui.js')
+    include /baseui/dti.pug
+
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
     script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
     script(type='text/javascript', src='/js/lib/jquery.mousewheel.js')
@@ -589,17 +589,13 @@ html
     //- script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
     //- script(type='text/javascript', src='/js/lib/lodash.min.js')
     //- script(type='text/javascript', src='/js/lib/config.js')
-    script(type='text/javascript', src='/js/lib/moment.js')
-    script(type='text/javascript', src='/js/lib/store.min.js')
-    script(type='text/javascript', src='/js/lib/knockout-3.5.0rc.js')
-    script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
+    //- script(type='text/javascript', src='/js/lib/knockout-3.5.0rc.debug.js')
     //- script(type='text/javascript', src='/js/lib/knockout-postbox.js')
-    script(type='text/javascript', src='/js/lib/socket.io.js')
-    script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/lib/materialize.clockpicker.js')
     script(type='text/javascript', src='/js/lib/spectrum.js')
     script(type='text/javascript', src='/js/lib/jquery.qtip.js')
     //- script(type='text/javascript', src='/js/lib/mbox-0.0.1.min.js')
-    script(type='text/javascript', src='/js/v2/dtiCommon.js')
-    script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+
+
+
     script(type='text/javascript', src='/js/displays/displays.js')

@@ -45,7 +45,22 @@ let koct = function (obj = window.$0) {
 let koUnwrap = function (value) {
     return ko.utils.unwrapObservable(value);
 };
-var dti = {
+
+window.dtiMessage = (title, data, cb) => {
+    let ret;
+    // dti.once('returnMessage', (data) => {
+    //     cb(data);
+    // });
+
+    dti.messaging.doProcessMessage({
+        key: title,
+        newValue: data,
+        sync: true,
+        cb
+    });
+};
+
+$.extend(dti, {
     $loginBtn: $('#loginBtn'),
     $resetPasswordBtn: $('#resetPasswordBtn'),
     loggingOut: false,
@@ -364,168 +379,6 @@ var dti = {
 
         return errorFree;
     },
-    formatDate: function (date, addSuffix) {
-        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
-            lengths = [2, 2, 2, 3],
-            separators = [':', ':', ':', ''],
-            suffix = ' --',
-            fn,
-            out = '';
-
-        if (addSuffix) {
-            separators.push(suffix);
-        }
-
-        if (typeof date === 'number') {
-            date = new Date(date);
-        }
-
-        for (fn in functions) {
-            if (functions.hasOwnProperty(fn)) {
-                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
-            }
-        }
-
-        return out;
-    },
-    logging: {
-        logHistory: [],
-        logLevels: {
-            none: 0,
-            debug: 1,
-            trace: 2
-        },
-        addLog(message, level) {
-            let safe = true;
-            let output = [];
-            dti.forEachArray(message, (entry) => {
-                if (typeof entry === 'object') {
-                    if (dti.settings.logObjects === true) {
-                        let clean = dti.deCycleObject(entry);
-                        output.push(clean);
-                    }
-                } else {
-                    output.push(entry);
-                }
-            });
-
-            let stringMessage = JSON.stringify(output);
-            dti.logging.logHistory.push({
-                message: stringMessage,
-                level
-            });
-        },
-        showLogs(level) {
-            let pad = (num) => {
-                return ('     ' + num).slice(-5);
-            };
-            dti.forEachArray(dti.logging.logHistory, (log) => {
-                if (!!level) {
-                    if (log.level !== level) {
-                        return;
-                    }
-                }
-
-                let logLevel = '(' + pad(log.level) + ')';
-                let args = [logLevel].concat(log.message);
-
-                console.log.apply(console, args);
-            });
-        },
-        getLogMessage(args) {
-            var stack,
-                steps,
-                lineNumber,
-                err,
-                now = new Date(),
-                message = [].splice.call(args, 0),
-                pad = function (num) {
-                    return ('    ' + num).slice(-4);
-                },
-                formattedtime = dti.formatDate(new Date(), true);
-
-            if (dti.settings.logLinePrefix === true) {
-                err = new Error();
-                if (Error.captureStackTrace) {
-                    Error.captureStackTrace(err);
-
-                    //entry 5 in the stack
-                    stack = err.stack.split('\n')[4];
-
-                    steps = stack.split(':');
-
-                    lineNumber = steps[2];
-
-                    // args.unshift('gap:' + pad(now - dti._lastLog));
-
-                    message.unshift('line:' + pad(lineNumber), formattedtime);
-                }
-            }
-
-            return message;
-        },
-        isValidLog(level) {
-            let logLevel = dti.logging.logLevels[level.toLowerCase()] || 1;
-            let appLogLevel = dti.logging.logLevels[dti.settings.logLevel.toLowerCase()] || 1;
-
-            if (logLevel <= appLogLevel) {
-                return true;
-            }
-
-            return false;
-        },
-        log (args, level) {
-            let message = dti.logging.getLogMessage(args);
-
-            if (dti.logging.isValidLog(level)) {
-                console.log.apply(console, message);
-            }
-
-            dti.logging.addLog(message, level);
-
-            dti.logging._lastLog = new Date().getTime();
-        }
-    },
-    trace() {
-        dti.logging.log(arguments, 'trace');
-    },
-    log() {
-        dti.logging.log(arguments, 'debug');
-    },
-    _events: {},
-    _onceEvents: {},
-    on: function (event, handler) {
-        dti._events[event] = dti._events[event] || [];
-        dti._events[event].push(handler);
-    },
-    once: function (event, handler) {
-        dti._onceEvents[event] = dti._onceEvents[event] || [];
-        dti._onceEvents[event].push(handler);
-    },
-    off: function (event, handler) {
-        var handlers = dti._events[event] || [];
-
-        dti.forEachArray(handlers, function processOffHandler(fn, idx) {
-            if (fn === handler) {
-                dti._events[event].splice(idx, 1);
-                return false;
-            }
-        });
-    },
-    fire: function (event, obj1, obj2) {
-        var handlers = dti._events[event] || [],
-            onceHandlers = dti._onceEvents[event] || [];
-
-        dti.forEachArray(handlers, function fireEventHandlers (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti.forEachArray(onceHandlers, function fireOnceEvent (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti._onceEvents[event] = [];
-    },
     thumbs: {},
     thumbnails: {
         $window: $('#thumbnailGen'),
@@ -581,185 +434,12 @@ var dti = {
             }
         }
     },
-    animations: {
-        tempinit: function () {
-            $(window).focus(function () {
-                console.log('Focus');
-            });
-
-            $(window).blur(function () {
-                console.log('Blur');
-            });
-        },
-        _fade: function ($el, opacity, cb) {
-            $el.velocity('stop');
-            $el.velocity({
-                opacity: opacity
-            }, {
-                queue: false,
-                duration: 300,
-                easing: 'easeOutSine',
-                complete: cb
-            });
-        },
-        fadeIn: function ($el, cb) {
-            if (!!$el[0]) {
-                $el[0].style.willChange = 'opacity, display';
-            }
-            $el.css('display', 'block');
-            dti.animations._fade($el, 1, cb);
-        },
-        fadeOut: function ($el, cb) {
-            dti.animations._fade($el, 0, function finishFadeOut() {
-                $el.css('display', 'none');
-                $el[0].style.willChange = '';
-                if (cb) {
-                    cb();
-                }
-            });
-        },
-        _scaleOld: ($el, type, cb) => {
-            let animType;
-            let destScale;
-            let startScale;
-
-            $el.velocity('stop');
-
-            if (type === 'in') {
-                animType = 'easeOut';
-                destScale = 1;
-                startScale = 0;
-                $el.addClass('active');
-            } else {
-                animType = 'easeIn';
-                destScale = 0;
-                startScale = 1;
-                $el.removeClass('active');
-            }
-
-            let opts = [{
-                scale: [destScale, startScale]
-            }, {
-                queue: false,
-                easing: animType,
-                duration: 200,
-                complete: () => {
-                    if (cb) {
-                        cb();
-                    }
-                }
-            }];
-
-            // if (startScale === 0) {
-            //     opts[0].display = 'block';
-            // }
-
-            $el.velocity.apply($el, opts);
-
-            $el[0].style.display = 'block';
-        },
-        _scale: ($el, $container, type, cb) => {
-            let animType;
-            let destHeight;
-            let destWidth;
-            let startHeight;
-            let startWidth;
-            let duration = 150;
-            let smallDuration = 100;
-
-            $el.velocity('stop');
-
-            if (type === 'in') {
-                animType = 'easeOut';
-                destHeight = $container && parseInt($container.css('height'));
-                destWidth = $container && parseInt($container.css('width'));
-                startWidth = startHeight = 0;
-                $el.addClass('active');
-            } else {
-                animType = 'easeIn';
-                startHeight = $container && parseInt($container.css('height'));
-                startWidth = $container && parseInt($container.css('width'));
-                destWidth = destHeight = 0;
-                $el.removeClass('active');
-            }
-
-            let max = Math.max(Math.max(destWidth, startWidth), Math.max(destHeight, startHeight));
-
-            // dti.log('duration', max < duration ? smallDuration: duration);
-
-            let opts = [{
-                width: [destWidth, startWidth],
-                height: [destHeight, startHeight]
-            }, {
-                queue: false,
-                easing: animType,
-                duration: max < duration ? smallDuration: duration,
-                complete: () => {
-                    if (cb) {
-                        cb();
-                    }
-                }
-            }];
-
-            // if (startScale === 0) {
-            //     opts[0].display = 'block';
-            // }
-
-            $el.velocity.apply($el, opts);
-
-            $el[0].style.display = 'block';
-        },
-        scaleIn: ($el, $container, cb) => {
-            dti.animations._scale($el, $container, 'in', cb);
-        },
-        scaleOut: ($el, $container, cb) => {
-            dti.animations._scale($el, $container, 'out', cb);
-        },
-        slideUp: function($el, cb) {
-            $el[0].style.willChange = 'height, padding-top, padding-bottom';
-            $el.css('overflow', 'hidden');
-            $el.velocity('stop');
-            $el.velocity({
-                height: 0,
-                'padding-top': 0,
-                'padding-bottom': 0
-            }, {
-                queue: false,
-                duration: 150,
-                easing: 'easeIn',
-                complete: function finishSlideUp() {
-                    $el.css('display', 'none');
-                    $el[0].style.willChange = '';
-                    if (cb) {
-                        cb();
-                    }
-                }
-            });
-        }
-    },
     events: {
         init: function () {
             dti.on('hideMenus', function hideMenu() {
                 $('.modal.open').closeModal();
             });
 
-            // Setup listener for body clicks
-            $('body').mousedown(function handleBodyMouseDown(event) {
-                let start = new Date();
-                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
-                    var $target = $(event.target);
-
-                    handler(event, $target);
-                });
-                dti.events._bodyClickCount++;
-                dti.events._bodyClickTime += new Date() - start;
-            });
-        },
-        _bodyClickHandlers: [],
-        _bodyClickCount: 0,
-        _bodyClickTime: 0,
-        bodyClick: function (fn) {
-            dti.events._bodyClickHandlers.push(fn);
         },
         clickMenu: function (clickEl, menuEl, callbacks) {
             var isOpen = false,
@@ -776,7 +456,7 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function checkOpenMenu(event, $target) {
+            dti.bodyClick(function checkOpenMenu(event, $target) {
                 if (isOpen && $target.parents(menuEl).length === 0) {
                     isOpen = false;
                     dti.animations.fadeOut($menuEl);
@@ -902,7 +582,7 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function closeHoverMenus(event, $target) {
+            dti.bodyClick(function closeHoverMenus(event, $target) {
                 var notMenuClick = !$target.closest('#' + menuID).length,
                     notButtonClick = !$target.closest(button).length;
 
@@ -1065,13 +745,38 @@ var dti = {
             },
             close = function (event) {
                 dti.off('thumbnailCaptured', self.handleThumbnail);
-                self.bindings.minimize();
+                
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
-                self.$windowEl.draggable('destroy');
+                if (!config.popout){
+                    self.bindings.minimize();
+                    self.$windowEl.draggable('destroy');
 
-                if (!config.desktop) {
-                    self.$windowEl.resizable('destroy');
+                    if (!config.desktop) {
+                        self.$windowEl.resizable('destroy');
+                    }
+
+                    if (self.$iframe && self.$iframe[0].contentWindow) {
+                        if (self.$iframe[0].contentWindow.destroy) {
+                            self.$iframe[0].contentWindow.destroy();
+                        }
+                    }
+
+                    setTimeout(function closeWindow() {
+                        if (self.$iframe) {
+                            self.$iframe.attr('src', 'about:blank');
+                            ko.cleanNode(self.$windowEl[0]);
+                            $(self.$iframe[0].contentDocument).off('mousedown');
+                        }
+                        self.$windowEl.remove();
+                        // dti.destroyObject(self.bindings);
+                        dti.destroyObject(self, true);
+                    }, 1000);
+                } else {
+                    dti.windows.closePopup(self.popupID, dti.settings.webEndpoint + self.bindings.url());
+                    setTimeout(() => {
+                        dti.destroyObject(self, true);
+                    }, 1000);
                 }
 
                 dti.fire('closeWindow', self);
@@ -1079,23 +784,6 @@ var dti = {
                 if (self.onCloseFn) {
                     self.onCloseFn();
                 }
-
-                if (self.$iframe && self.$iframe[0].contentWindow) {
-                    if (self.$iframe[0].contentWindow.destroy) {
-                        self.$iframe[0].contentWindow.destroy();
-                    }
-                }
-
-                setTimeout(function closeWindow() {
-                    if (self.$iframe) {
-                        self.$iframe.attr('src', 'about:blank');
-                        ko.cleanNode(self.$windowEl[0]);
-                        $(self.$iframe[0].contentDocument).off('mousedown');
-                    }
-                    self.$windowEl.remove();
-                    // dti.destroyObject(self.bindings);
-                    dti.destroyObject(self, true);
-                }, 1000);
             },
             minimize = function (event, skipActivate) {
                 active = false;
@@ -1104,25 +792,49 @@ var dti = {
                     dti.windows.activate(null);
                 }
             },
+            popout = function (e) {
+                let upi = this.upi();
+                let winId = this.windowId();
+                let win = dti.windows.getWindowById(winId);
+                let args;
+
+                if (!!upi) {
+                    args = {
+                        upi,
+                        popout: true
+                    };
+                } else {
+                    args = $.extend(true, {}, win._config);
+                    args.popout = true;
+                }
+                
+                setTimeout(() => {
+                    dti.windows.openWindow(args);
+                });
+
+                this.close();
+            },
             // the below added to fix jqueryUI's draggable stack and tie into activate
             // draggable doesn't stack on init, only on drag.  so we manually stack on creation and activation
             stackWindows = function () {
-                let min;
-                let instance = self.$windowEl.draggable('instance');
-                let o = instance.options;
-                let group = $.makeArray($(o.stack)).sort(function (a, b) {
-                    return (parseInt($(a).css("zIndex"), 10) || 0) - (parseInt($(b).css("zIndex"), 10) || 0);
-                });
+                if (!config.popout) {
+                    let min;
+                    let instance = self.$windowEl.draggable('instance');
+                    let o = instance.options;
+                    let group = $.makeArray($(o.stack)).sort(function (a, b) {
+                        return (parseInt($(a).css("zIndex"), 10) || 0) - (parseInt($(b).css("zIndex"), 10) || 0);
+                    });
 
-                if (!group.length) {
-                    return;
+                    if (!group.length) {
+                        return;
+                    }
+
+                    min = parseInt($(group[0]).css("zIndex"), 10) || 0;
+                    $(group).each(function (i) {
+                        $(this).css("zIndex", min + i);
+                    });
+                    self.$windowEl.css("zIndex", (min + group.length));
                 }
-
-                min = parseInt($(group[0]).css("zIndex"), 10) || 0;
-                $(group).each(function (i) {
-                    $(this).css("zIndex", min + i);
-                });
-                self.$windowEl.css("zIndex", (min + group.length));
             },
             deactivate = function (event) {
                 active = false;
@@ -1141,6 +853,10 @@ var dti = {
                     self.bindings.active(true);
 
                     stackWindows();
+                }
+
+                if (!!self.popupID) {
+                    dti.windows.focusPopup(self.popupID);
                 }
 
                 return true;
@@ -1162,6 +878,27 @@ var dti = {
                     let pointName = dti.utility.getConfig('Utility.getPointName', [pt.path]);
 
                     self.bindings.title(pointName);
+
+                    if (config.popout) {
+                        if (!self.winLoaded) {
+                            self.win.onload = () => {
+                                // dti.log('win onload gettitle', pointName);
+                                if (self.win.document.title !== pointName) {
+                                    self.win.document.title = pointName;
+                                }
+
+                                self.win.window.onunload = () => {
+                                    dti.log('closing window');
+                                    self.bindings.close();
+                                };
+                            };
+                        } else {
+                            setTimeout(() => {
+                                dti.log('gettitle', pointName);
+                                self.win.document.title = pointName;
+                            }, 100);
+                        }
+                    }
                 };
 
                 $.getJSON('/api/points/' + upi).done(handlePointData);
@@ -1183,6 +920,7 @@ var dti = {
                     refresh: refresh,
                     activate: activate,
                     minimize: minimize,
+                    popout: popout,
                     minimized: ko.observable(false),
                     loading: ko.observable(true),
                     windowsHidden: dti.bindings.windowsHidden,
@@ -1209,8 +947,13 @@ var dti = {
                         },
                         callbacks = {
                             updateTitle: function () { 
-                                self.bindings.title(message.parameters); 
-                                finish(true); 
+                                if (config.popout) {
+                                    dti.log('updatetitle', message.parameters);
+                                    self.win.document.title = message.parameters;
+                                } else {
+                                    self.bindings.title(message.parameters); 
+                                    finish(true); 
+                                }
                             }, 
                             updateWindowUPI: function () {
                                 let oldUPI = self.bindings.upi();
@@ -1227,19 +970,27 @@ var dti = {
                                 }
                             },
                             resize: function () {
-                                var measurements = prepMeasurements(message.parameters, self.bindings);
-
-                                if (self.bindings.isDesktop() === false) {
-                                    measurements = prepMeasurements(message.parameters, self.bindings, true);
-
-                                    ko.viewmodel.updateFromModel(self.bindings, measurements);
-
-                                    //timeout for animation to complete
-                                    setTimeout(() => {
-                                        finish(true);
-                                    }, 300);
+                                if (config.popout) {
+                                    let width = message.parameters.width || self.win.outerWidth;
+                                    let height = (message.parameters.height && message.parameters.height + 50) || self.win.outerHeight;
+                                    dti.log('home resizing to:', width, 'x', height);
+                                    self.win.resizeTo(width, height);
+                                    finish(true);
                                 } else {
-                                    finish(false);
+                                    var measurements = prepMeasurements(message.parameters, self.bindings);
+
+                                    if (self.bindings.isDesktop() === false) {
+                                        measurements = prepMeasurements(message.parameters, self.bindings, true);
+
+                                        ko.viewmodel.updateFromModel(self.bindings, measurements);
+
+                                        //timeout for animation to complete
+                                        setTimeout(() => {
+                                            finish(true);
+                                        }, 300);
+                                    } else {
+                                        finish(false);
+                                    }
                                 }
                             }
                         };
@@ -1307,16 +1058,6 @@ var dti = {
 
         self.bindings = $.extend(self.bindings, finishedMeasurements);
 
-        $('main').append(self.$windowEl);
-        self.$windowEl.attr('id', windowId);
-
-        if (config.url) {
-            self.$iframe = self.$windowEl.children('iframe');
-            self.$iframe.attr('id', iframeId);
-
-            dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
-        }
-
         dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
@@ -1332,23 +1073,54 @@ var dti = {
         self.bindings.iconText(group.iconText);
         self.bindings.thumbnail(group.thumbnail || false);
 
-        self.$windowEl.draggable(dti.windows.draggableConfig);
+        if (!config.popout) {
+            $('main').append(self.$windowEl);
+            self.$windowEl.attr('id', windowId);
 
-        if (!config.desktop) {
-            self.$windowEl.resizable(dti.windows.resizableConfig);
+            if (config.url) {
+                self.$iframe = self.$windowEl.children('iframe');
+                self.$iframe.attr('id', iframeId);
+
+                dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+            }
+            self.$windowEl.draggable(dti.windows.draggableConfig);
+
+            if (!config.desktop) {
+                self.$windowEl.resizable(dti.windows.resizableConfig);
+            }
+
+            stackWindows();
+
+            ko.applyBindings(self.bindings, self.$windowEl[0]);
+        } else {
+            let win = self.win = window.open(config.url, null, 'width=' + config.options.width + ',height=' + config.options.height + ',menubar=no');
+            win.addEventListener('load', () => {
+                // dti.log('window loaded');
+                win.onunload = () => {
+                    dti.log('closing window');
+                    self.bindings.close();
+                };
+            });
+
+            // dti.log('getPopupID', dti.settings.webEndpoint + '/' + config.url);
+            let id = dti.windows.getPopupID(dti.settings.webEndpoint + config.url);
+
+            self.popupID = id;
+            dti.trace('window id: ', id);
+
+           
+
+            win.getConfig = dti.utility.getConfig;
+
+            win.windowId = windowId;
+
+            win.getWindowParameters = function () {
+                return $.extend(true, {}, config);
+            };
+            // self.win.onload = () => {
+            //     self.win.windowId = windowId;
+            // };
         }
-
-        stackWindows();
-
-        //detect clicks inside iframe
-        // setInterval(function detectIframeClick () {
-        //     var elem = document.activeElement;
-        //     if (elem && elem.id === iframeId) {
-        //         self.bindings.activate();
-        //     }
-        // }, 100);
-
-        ko.applyBindings(self.bindings, self.$windowEl[0]);
 
         if (!config.url) {
             self.initFn = dti.utility.getPathFromObject(config.initFn, dti);
@@ -1385,6 +1157,9 @@ var dti = {
             bindings: self.bindings,
             handleMessage: self.handleMessage,
             settings: self.settings,
+            win: self.win,
+            popupID: self.popupID,
+            _config: config,
             getWindowParameters () {
                 return $.extend(true, {}, config);
             }
@@ -1426,6 +1201,28 @@ var dti = {
             } else {
                 $('body').removeClass('interacting');
             }
+        },
+        focusPopup (id) {
+            window.focusWindow(id);
+        },
+        getPopupID (url) {
+            return window.getPopupID(url);
+        },
+        closePopup (id, url) {
+            // dti.log('close popup', id, url);
+            window.closePopup(id, url);
+        },
+        getWindowByPopupID (id) {
+            var targetWindow;
+
+            dti.forEachArray(dti.windows.windowList, function checkForTargetWindow(win) {
+                if (win.popupID === id) {
+                    targetWindow = win;
+                    return false;
+                }
+            });
+
+            return targetWindow;
         },
         getWindowById: function (id) {
             var targetWindow;
@@ -1505,6 +1302,13 @@ var dti = {
             dti.windows._setInteractingFlag(false);
         },
         init: function () {
+            window.onBlur = (id) => {
+                let win = dti.windows.getWindowByPopupID(id);
+
+                if (win) {
+                    win.deactivate();
+                }
+            };
 
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var windowId = win.bindings.windowId();
@@ -1544,11 +1348,17 @@ var dti = {
             // TFS #549; search this file for #549 for more info
             if (e) {
                 winId = e.winId || e._windowId;
-                targetWindow = dti.windows.getWindowById(winId);
+                if (winId) {
+                    targetWindow = dti.windows.getWindowById(winId);
+                }
             }
 
             if (targetWindow) {
-                targetWindow.handleMessage(e, cb);
+                if (targetWindow.dtiUtility) {
+                    return;
+                } else {
+                    targetWindow.handleMessage(e, cb);
+                }
             }
         },
         create: function (config) {
@@ -1560,7 +1370,7 @@ var dti = {
             } else {
                 newWindow = dti.windows.getWindowByUpi(config.upi);
 
-                if (newWindow) {
+                if (newWindow && newWindow._config.desktop !== true) {
                     dti.windows.activate(newWindow.windowId);
                 } else {
                     $.extend(config, config.options);
@@ -1583,7 +1393,7 @@ var dti = {
 
                         dti.windows.windowList.push(newWindow);
 
-                        if (!config.isHidden) {
+                        if (!config.isHidden && !config.popout) {
                             dti.windows.activate(newWindow.windowId);
                         }
                     } else {
@@ -1646,11 +1456,73 @@ var dti = {
                 finishProcessingParameters();
             }
         },
+        injectWindow (win, config) {
+            if (win) {
+                win.getConfig = dti.utility.getConfig;
+
+                win.windowId = config.id || dti.makeId();
+
+                win.getWindowParameters = function () {
+                    return $.extend(true, {}, config);
+                };
+            }
+
+            // win.onWindowResize = function (fn) {
+            //     self.settings.onWindowResize = fn;
+            // };
+
+            // if (config.onLoad) {
+            //     dti.log('calling config.onload');
+            //     config.onLoad.call(self);
+            // }
+
+            // if (win.point) {
+            //     if (self.bindings.upi() === undefined) {
+            //         self.bindings.upi(win.point._id);
+            //     }
+            // }
+
+            // $(this.contentDocument).on('mousedown', handleIframeClick);
+
+            // win.windowId = self.bindings.windowId();
+            // win.close = function () {
+            //     self.bindings.close();
+            // };
+
+            //if (win.onLoad) {
+            // if (win.delayLoad) {
+            //     win.onLoadFn = function customCloseLoading() {
+            //         self.bindings.loading(false);
+            //     };
+            // } else {
+            //     self.bindings.loading(false);
+            // }
+        },
         openWindow: function (url, title, type, target, upi, options) {
             var config,
                 doCreateWindow = function (cfg) {
                     dti.navigator.hideNavigator();
+
+                    if (!cfg.options || cfg.options.desktop !== true && !!cfg.url) {
+                        // cfg.popout = true;
+                    }
+
                     dti.windows.create(cfg);
+                        
+                    // } else {
+                    //     let win = window.open(cfg.url, null, 'width=' + cfg.options.width + ',height=' + cfg.options.height + ',menubar=no');
+                    //     dti.windows.windowList.push(win);
+                    //     dti.windows.injectWindow(win, cfg);
+
+                        // setTimeout(() => {
+                        //     win.document.addEventListener("keydown", function (e) {
+                        //         if (e.which === 123) {
+                        //             require('electron').remote.getCurrentWindow().toggleDevTools();
+                        //         }
+                        //     });
+                        // }, 3000);
+                    // }
+                    // dti.windows.create(cfg);
                 };
 
             if (typeof url === 'object') {
@@ -1869,19 +1741,32 @@ var dti = {
             var obj = ko.toJS(koIconObj),
                 id = dti.makeId(),
                 openWindows,
-                doOpenWindow = function () {
+                doOpenWindow = function (data, popout) {
                     if (obj.url) {
                         obj.url += '?' + id;
                     }
 
                     obj.pointType = obj.group;
 
-                    dti.windows.openWindow(obj);
+                    obj.popout = !!popout;
+
+                    if (data && data._id) {
+                        dti.windows.openWindow({
+                            upi: data._id,
+                            popout
+                        });
+                    } else {
+                        dti.windows.openWindow(obj);
+                    }
                 };
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.pointSelector.show(obj.group);
+                dti.fire('showPointSelector', {
+                    pointTypes: [obj.group],
+                    callback: doOpenWindow
+                });
+                // dti.pointSelector.show(obj.group);
                 // dti.bindings.showNavigator({
                 //     pointType: obj.group
                 // });
@@ -4471,7 +4356,7 @@ var dti = {
                 });
             };
 
-            dti.events.bodyClick(function checkNavigatorOpenMenu(event, $target) {
+            dti.bodyClick(function checkNavigatorOpenMenu(event, $target) {
                 var buttonClass = 'pointTypeDropdownButton';
 
                 if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.closest('.' + buttonClass).length === 0) {
@@ -6102,10 +5987,10 @@ var dti = {
 
             dti.utility.systemEnums[enumType] = _array;
             dti.utility.systemEnumObjects[enumType] = _object;
-            store.set('dti-systemenum-' + enumType, {
-                arr: _array,
-                obj: _object
-            });
+            // store.set('dti-systemenum-' + enumType, {
+            //     arr: _array,
+            //     obj: _object
+            // });
             if (cb) {
                 cb(_array);
             }
@@ -6170,403 +6055,46 @@ var dti = {
         }
     },
     pointSelector: {
-        Selector: class PointSelector {
-            constructor(config) {
-                this.exposedMethods = ['handleChoosePoint', 'show'];
-
-                dti.forEachArray(this.exposedMethods, (method) => {
-                    dti.pointSelector[method] = this[method].bind(this);
-                    // function callMethod() {
-                    //     this[method].apply(this, arguments);
-                    // };
-                });
-
-                this.$modal = $('#pointSelectorModal');
-
-                this.modes = {
-                    CREATE: 'create',
-                    FILTER: 'filter',
-                    DEFAULT: 'default'
-                };
-
-                this.initPointTypes();
-                this.initBindings();
-            }
-
-            defaultCallback(data) {
-                dti.windows.openWindow(data._id);
-            }
-
-            initPointTypes() {
-                let pointTypes = [];
-                dti.forEachArray(dti.utility.pointTypes, (type) => {
-                    pointTypes.push({
-                        name: type.key,
-                        enum: type.enum,
-                        selected: false,
-                        visible: false
-                    });
-                });
-
-                this.pointTypes = pointTypes;
-                this.pointTypeListClass = 'pointTypeList';
-            }
-
-            initBindings() {
-                let self = this;
-                this.bindings = ko.viewmodel.fromModel({
-                    searchString: '',
-                    results: [],
-                    busy: false,
-                    focus: false,
-                    mode: this.modes.DEFAULT,
-                    pointTypesShown: false,
-                    pointTypes: this.pointTypes,
-                    remoteUnitId: null,
-                    deviceId: null
-                });
-
-                this.bindings.handleChoosePoint = this.handleChoosePoint.bind(this);
-                this.bindings.handleRowClick = this.handleRowClick.bind(this);
-                this.bindings.handleAcceptFilterClick = this.handleAcceptFilterClick.bind(this);
-                this.bindings.togglePointTypeList = () => {
-                    this.bindings.pointTypesShown(!this.bindings.pointTypesShown());
-                };
-
-                this.bindings.handleRightClick = (obj, event) => {
-                    let pointType = ko.dataFor(obj.target);
-                    let type = pointType.name();
-                    let selected = pointType.selected();
-                    let numSelected = this.bindings.numberOfPointTypesSelected();
-
-                    if (!selected) {
-                        this.setPointTypes(type, null, true);
-                    } else if (numSelected === 1) {//only this one selected, select all
-                        this.setPointTypes(null);
-                    } else {
-                        this.setPointTypes(type, null, true);
-                    }
-                };
-
-                this.bindings.modalText = ko.pureComputed(function getModalText() {
-                    var mode = self.bindings.mode(),
-                        ret;
-
-                    switch (mode) {
-                        case self.modes.CREATE:
-                            ret = 'Create Point';
-                            break;
-                        case self.modes.FILTER:
-                            ret = 'Choose Filter';
-                            break;
-                        case self.modes.DEFAULT:
-                            ret = 'Choose Point';
-                            break;
-                    }
-
-                    return ret;
-                });
-
-                this.bindings.numberOfPointTypesSelected = ko.pureComputed(() => {
-                    let count = 0;
-
-                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                        if (type.selected()) {
-                            count++;
-                        }
-                    });
-
-                    return count;
-                });
-
-                this.bindings.flatPointTypeList = ko.pureComputed(() => {
-                    let ret = [];
-
-                    dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                        if (type.selected() && type.visible()) {
-                            ret.push(type.name());
-                        }
-                    });
-
-                    return ret;
-                });
-
-                this.bindings.pointTypeText = ko.pureComputed(() => {
-                    let numTypes = this.bindings.numberOfPointTypesSelected();
-                    let ret = numTypes + ' Point Type';
-
-                    if (numTypes !== 1) {
-                        ret += 's';
-                    }
-
-                    return ret;
-                });
-
-                dti.events.bodyClick(this.handleBodyClick.bind(this));
-
-                this.bindings.searchInput = ko.pureComputed(this.bindings.searchString).extend({
-                    throttle: 400
-                });
-
-                this.bindings.searchInput.subscribe((val) => {
-                    this.search();
-                }, this);
-
-                dti.bindings.pointSelector = this.bindings;
-            }
-
-            getFlatPointTypes(list) {
-                let ret = [];
-
-                if (list && list.length > 0) {
-                    dti.forEachArray(list, (type) => {
-                        if (typeof type === 'object') {
-                            ret.push(type.key);
-                        } else if (typeof type === 'string') {
-                            ret.push(type);
-                        } else {
-                            dti.log('incorrect point type');
-                        }
-                    });
-                } else {
-                    let defaultPointTypeList = this.bindings.pointTypes();
-
-                    dti.forEachArray(defaultPointTypeList, (pointType) => {
-                        ret.push(pointType.name());
-                    });
-                }
-
-                return ret;
-            }
-
-            handleBodyClick(event, $target) {
-                let cls = this.pointTypeListClass;
-                let isInsidePointTypeList = function () {
-                    let el = $target[0];
-                    let matches = () => {
-                        return el.classList.contains(cls) || el.classList.contains('pointTypeDropdownButton');
-                    };
-
-                    if (!matches()) {
-                        while ((el = el.parentElement) && !matches()) {
-
-                        }
-                    }
-
-                    return el;
-                };
-
-                if (this.modalOpen) {
-                    if (this.bindings.pointTypesShown()) {
-                        if (!isInsidePointTypeList()) {
-                            this.bindings.togglePointTypeList();
-                            this.search();
-                        }
-                    }
-                }
-            }
-
-            search(skipSearch = false) {
-                //allows a one-time skip if true is passed in
-                if (this._skipSearch) {
-                    this._skipSearch = false;
-                    return false;
-                }
-
-                this.bindings.busy(true);
-
-                dti.post({
-                    url: '/api/points/getFilteredPoints',
-                    data: {
-                        terms: dtiCommon.buildSearchTerms(this.bindings.searchString().trim()),
-                        pointTypes: this.bindings.flatPointTypeList(),
-                        remoteUnitId: this.bindings.remoteUnitId(),
-                        deviceId: this.bindings.deviceId()
-                    }
-                }).done((results) => {
-                    this.handleSearchResults(results);
-                });
-            }
-
-            normalizeSearchResults(results) {
-                let getPointName = (path) => {
-                    return dti.utility.getConfig('Utility.getPointName', [path]);
-                };
-
-                dti.forEachArray(results, (result) => {
-                    result.path = getPointName(result.path);
-                });
-            }
-
-            handleRowClick(e) {
-                let mode = this.bindings.mode();
-                if (mode !== this.modes.FILTER) {
-                    let target = e.target;
-                    let data = ko.dataFor(target);
-
-                    this.$modal.closeModal();
-
-                    this.callback(data);
-                    this.callback = this.defaultCallback;
-
-                    // dti.log(arguments);
-                }
-            }
-
-            handleAcceptFilterClick(e) {
-                let target = e.target;
-                let data = ko.dataFor(target);
-
-                this.$modal.closeModal();
-
-                this.callback({
-                    terms: data.searchString(),
-                    pointTypes: this.selectedPointTypes()
-                });
-                this.callback = this.defaultCallback;
-            }
-
-            handleSearchResults(results) {
-                let ret = this.normalizeSearchResults(results);
-
-                results.sort((a, b) => {
-                    return a.path > b.path ? 1 : -1;
-                });
-
-                this.bindings.results(results);
-                this.bindings.busy(false);
-            }
-
-            //exposed methods
-            handleChoosePoint(data) {
-                dti.log(data);
-                this.callback(data);
-                this.callback = this.defaultCallback;
-            }
-
-            setPointTypes(config, save, stayShown) {
-                let pointTypes = null;
-                let showAll = true;
-                //if not object, just point types
-                if (config) {
-                    pointTypes = config.pointTypes || config;
-                    showAll = config.restrictPointTypes === false;
-                }
-
-                if (save) {
-                    this.showAll = showAll;
-                } else {
-                    showAll = this.showAll;
-                }
-
-                if (pointTypes && !Array.isArray(pointTypes)) {
-                    pointTypes = [pointTypes];
-                }
-
-                dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                    if (!pointTypes || pointTypes.indexOf(type.name()) !== -1) {
-                        type.visible(true);
-                        type.selected(true);
-                    } else {
-                        type.visible(showAll || stayShown);
-                        type.selected(false);
-                    }
-                });
-            }
-
-            selectedPointTypes() {
-                let answer = [];
-
-                dti.forEachArray(this.bindings.pointTypes(), (type) => {
-                    if (type.selected()) {
-                        answer.push(type.name());
-                    }
-                });
-
-                return answer;
-            }
-
-            show(config) {
-                let pointTypes = this.getFlatPointTypes([]);
-                if (typeof config === 'object') {
-                    this.callback = config.callback || this.defaultCallback; //guard shouldn't be necessary
-                    this.pointTypes = config.pointTypes = this.getFlatPointTypes(config.pointTypes || []);
-                    this.bindings.searchString(config.terms || '');
-                    this.bindings.mode(config.mode ? config.mode : this.modes.DEFAULT);
-                    this.bindings.deviceId(config.deviceId);
-                    this.bindings.remoteUnitId(config.remoteUnitId);
-
-                    this.setPointTypes(config, true);
-                } else {
-                    this.callback = this.defaultCallback;
-                    this.bindings.searchString('');
-                    this.bindings.mode(this.modes.DEFAULT);
-
-                    if (config && typeof config === 'string') {
-                        this.pointTypes = [config];
-                    } else {
-                        this.pointTypes = null;
-                    }
-
-                    this.setPointTypes(this.pointTypes, true);
-                }
-
-
-
-                this.$modal.openModal({
-                    ready: () => {
-                        this.modalOpen = true;
-                        this.bindings.focus(true);
-                        this.search();
-                    },
-                    complete: () => {
-                        this.modalOpen = false;
-                        this.bindings.focus(false);
-                        this.callback = this.defaultCallback;
-                    }
-                });
-            }
-        },
-
-
         init() {
-            dti.pointSelector.selector = new dti.pointSelector.Selector();
+            // dti.pointSelector.selector = new PointSelector();
+
+            // dti.pointSelector.show = dti.pointSelector.selector.show;
         }
     },
     messaging: {
         _messageCallbacks: [],
-        logMessages: false,
         init: function () {
             window.addEventListener('storage', function (e) {
+                // console.log(e);
                 dti.messaging.processMessage(e);
             });
 
             store.set('sessionId', dti.settings.sessionId);
 
-            $('#testLink').on('click', function clickTestLink(event) {
-                store.set('startupCommands', true);
-            });
+            // $('#testLink').on('click', function clickTestLink(event) {
+            //     store.set('startupCommands', true);
+            // });
 
-            dti.on('loaded', function checkStartupCommands() {
-                var commands = store.get('startupCommands');
+            // dti.on('loaded', function checkStartupCommands() {
+            //     var commands = store.get('startupCommands');
 
-                if (commands) {
-                    dti.windows.create({
-                        url: '/displays/view/44215',
-                        title: 'Test Open',
-                        type: 'Display',
-                        upi: 44215,
-                        left: 0,
-                        // right: 0,
-                        top: 0,
-                        // bottom: 0,
-                        width: '100%',
-                        height: '100%'
-                    });
+            //     if (commands) {
+            //         dti.windows.create({
+            //             url: '/displays/view/44215',
+            //             title: 'Test Open',
+            //             type: 'Display',
+            //             upi: 44215,
+            //             left: 0,
+            //             // right: 0,
+            //             top: 0,
+            //             // bottom: 0,
+            //             width: '100%',
+            //             height: '100%'
+            //         });
 
-                    store.remove('startupCommands');
-                }
-            });
+            //         store.set('startupCommands', null);
+            //     }
+            // });
 
             dti.messaging.onMessage(dti.messaging.processMessage);
         },
@@ -6588,66 +6116,30 @@ var dti = {
 
                     ret = dti.utility[utilityFn](path, parameters);
 
-                    setTimeout(function sendConfigInfo() {
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                _getCfgID: id,
-                                message: utilityFn,
-                                value: ret
-                            }
-                        });
-                    }, 1000);
+                    if (!e.sync) {
+                        setTimeout(function sendConfigInfo() {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: utilityFn,
+                                    value: ret
+                                }
+                            });
+                        }, 1000);
+                    } else {
+                        if (e.cb) {
+                            e.cb(ret);
+                        } else {
+                            dti.fire('returnMessage', ret);
+                        }
+                    }
                 },
                 callbacks = {
-                    getTemplate: function () {
-                        var sourceWindowId = config._windowId,
-                            callback = function (data) {
-                                setTimeout(function doSendTemplate () {
-                                    dti.log('sending template', sourceWindowId, data, config.id);
-                                    dti.messaging.sendMessage({
-                                        key: sourceWindowId, 
-                                        message: 'gotTemplate',
-                                        value: {
-                                            template: data,
-                                            id: config.id
-                                        }
-                                    });
-                                }, 1000);
-                            },
-                            template = dti.utility.getTemplate(config.id);
-
-                        callback(template[0].outerHTML);
-                    },
-                    getTemplates: function () {
-                        var sourceWindowId = config._windowId,
-                            callback = function (data) {
-                                setTimeout(function doSendTemplate () {
-                                    dti.log('sending template', sourceWindowId, data, config.id);
-                                    dti.messaging.sendMessage({
-                                        key: sourceWindowId, 
-                                        message: 'gotTemplates',
-                                        value: {
-                                            templates: data
-                                        }
-                                    });
-                                }, 1000);
-                            },
-                            templates = [];
-
-                        dti.forEachArray(config.ids.ids, function getTemplateById (id) {
-                            templates.push({
-                                id: id,
-                                template: dti.utility.getTemplate(id)[0].outerHTML
-                            });
-                        });
-
-                        callback(templates);
-                    },
                     showPointSelectorOld: function () {
                         var sourceWindowId = config._windowId,
-                            callback = function(data) {
+                            callback = function (data) {
                                 dti.messaging.sendMessage({
                                     messageID: messageID,
                                     key: sourceWindowId,
@@ -6666,6 +6158,7 @@ var dti = {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
                                 dti.messaging.sendMessage({
+                    
                                     messageID: messageID,
                                     key: sourceWindowId,
                                     message: 'pointSelected',
@@ -6715,15 +6208,23 @@ var dti = {
                     windowMessage: function () {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
-                                dti.messaging.sendMessage({
-                                    messageID: messageID,
-                                    key: sourceWindowId,
-                                    message: 'windowUpdated',
-                                    value: {
-                                        _updateWindowID: messageID,
-                                        result: data
+                                if (!e.sync) {
+                                    dti.messaging.sendMessage({
+                                        messageID: messageID,
+                                        key: sourceWindowId,
+                                        message: 'windowUpdated',
+                                        value: {
+                                            _updateWindowID: messageID,
+                                            result: data
+                                        }
+                                    });
+                                } else {
+                                    if (e.cb) {
+                                        e.cb(data);
+                                    } else {
+                                        dti.fire('returnMessage', data);
                                     }
-                                });
+                                }
                             };
 
                         dti.windows.sendMessage(config, callback);
@@ -6751,27 +6252,24 @@ var dti = {
                         dti.workspaceManager.openWindow(config);
                     },
                     closeWindow: function () {
+                        if (config) {
                             var windowId = config._windowId;
 
                             dti.windows.closeWindow(windowId);
+                        }
                     },
-                    getSystemEnum() {
-                        let enumType = config.enumType;
-                        let getEnumID = config.getEnumID;
-                        let winId = config._windowId;
-                        let ret = dti.utility.systemEnums[enumType];
+                    getNewWindowId() {
+                        let ret = dti.makeId();
 
-                        setTimeout(function sendSystemConfig() {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    getEnumID,
-                                    message: 'getSystemEnum',
-                                    value: ret
-                                }
-                            });
-                        }, 1000);
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: config._windowId,
+                            value: {
+                                message: 'getNewWindowId',
+                                getWinID: config.getWinID,
+                                value: ret
+                            }
+                        });
                     },
                     getConfig: function () {
                         doGetConfig('getConfig');
@@ -6785,7 +6283,8 @@ var dti = {
                         let winId = config._windowId; 
                         let ret = dti.utility.systemEnums[enumType];
 
-                        setTimeout(function sendSystemConfig() { 
+                        // setTimeout(function sendSystemConfig() { 
+                        if (!e.sync) {
                             dti.messaging.sendMessage({ 
                                 messageID: messageID, 
                                 key: winId, 
@@ -6795,22 +6294,37 @@ var dti = {
                                     value: ret 
                                 } 
                             }); 
-                        }, 1000); 
+                        } else {
+                            if (e.cb) {
+                                e.cb(ret);
+                            } else {
+                                dti.fire('returnMessage', ret);
+                            }
+                        }
+                        // }, 1000); 
                     }, 
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
 
-                        setTimeout(function sendUserInfo() {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    user: user,
-                                    message: 'getUser'
-                                }
-                            });
-                        }, 1000);
+                        if (!e.sync) {                            
+                            setTimeout(function sendUserInfo() {
+                                dti.messaging.sendMessage({
+                                    messageID: messageID,
+                                    key: winId,
+                                    value: {
+                                        user: user,
+                                        message: 'getUser'
+                                    }
+                                });
+                            }, 1000);
+                        } else {
+                            if (e.cb) {
+                                e.cb(user);
+                            } else {
+                                dti.fire('returnMessage', user);
+                            }
+                        }
                     },
                     pointSelected: function () {
 
@@ -6836,16 +6350,11 @@ var dti = {
                         // store previous call
                         messageID = config.messageID;
                         dti.navigator._prevMessage = config;
+                    }
 
-                        // TFS #549; storage re-fires events when the storage element is removed, causing a storage event
-                        // to fire with null data ("config" in this case).
-                        // We've moved the callbacks function call to inside this conditional. If we ever have a callback
-                        // that accepts a null argument, we'll have to move this outside our "if" and check for a valid
-                        // config in each callback function
-                        if (dti.messaging.logMessages) {
-                            dti.log('home doProcessMessage', e.key, config);
-                        }
+                    dti.trace('home got', e.key, config);
 
+                    if(config){
                         callbacks[e.key]();
                     }
                 }
@@ -6872,7 +6381,8 @@ var dti = {
 
                 dti.messaging.doProcessMessage(message);
 
-                store.remove(e.key); //memory cleanup
+                dti.trace('home removing', e.key);
+                // store.remove(e.key); //memory cleanup
                 // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
                 //     cb(message);
                 // });
@@ -6890,7 +6400,7 @@ var dti = {
 
             dti.trace('home sending message', config.key, config.value);
 
-            store.set([config.key, ';', config.messageID].join(''), config.value);
+            // store.set([config.key, ';', config.messageID].join(''), config.value);
         },
         onMessage: function (cb) {
             dti.messaging._messageCallbacks.push(cb);
@@ -7038,7 +6548,8 @@ var dti = {
             return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
         },
         showPointSelector: () => {
-            dti.pointSelector.show();
+            dti.fire('showPointSelector');
+            // dti.pointSelector.show();
         },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
@@ -7216,7 +6727,8 @@ var dti = {
             if (object.standalone()) {
                 dti.bindings.startMenuClick(object);
             } else {
-                dti.pointSelector.show(object.group());
+                dti.fire('showPointSelector', object.group());
+                // dti.pointSelector.show(object.group());
                 // dti.bindings.showNavigator(object.group());
             }
         },
@@ -7542,29 +7054,6 @@ var dti = {
                     } else {
                         dti.animations.fadeOut($element);
                     }
-                }
-            };
-
-            ko.bindingHandlers.delegate = {
-                init: (element, valueAccessor) => {
-                    var $element = $(element),
-                        delegations = ko.utils.unwrapObservable(valueAccessor()),
-                        makeHandler = (fn) => {
-                            return (e) => {
-                                fn(e);
-                                e.preventDefault();
-                            };
-                        };
-
-                    dti.forEachArray(delegations, (cfg) => {
-                        $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler));
-                    });
-
-                    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
-                        dti.forEachArray(delegations, (cfg) => {
-                            $element.off(cfg.event, cfg.selector, makeHandler(cfg.handler));
-                        });
-                    });
                 }
             };
 
@@ -8712,7 +8201,7 @@ var dti = {
 
         dti.animations.fadeOut($('#login'), showLoading);
     }
-};
+});
 
 $(function initWorkspaceV2() {
     // if window.top !== window, is a window and needs login
@@ -8845,7 +8334,7 @@ dti.workspaceManager = window.workspaceManager = {
         return dti.socket;
     },
     sessionId: function () {
-        return store.get('sessionId');
+        // return store.get('sessionId');
     },
     user: function () {
         return JSON.parse(JSON.stringify(dti.bindings.user()));

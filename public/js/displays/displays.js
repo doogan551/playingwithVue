@@ -73,7 +73,7 @@ let koct = function (obj = window.$0) {
 let koUnwrap = function (value) {
     return ko.utils.unwrapObservable(value);
 };
-let dti = {
+$.extend(dti, {
     itemIdx: 0,
     settings: {
         isNew: false,
@@ -619,40 +619,6 @@ let dti = {
             });
         }
     },
-    _events: {},
-    _onceEvents: {},
-    on (event, handler) {
-        dti._events[event] = dti._events[event] || [];
-        dti._events[event].push(handler);
-    },
-    once (event, handler) {
-        dti._onceEvents[event] = dti._onceEvents[event] || [];
-        dti._onceEvents[event].push(handler);
-    },
-    off (event, handler) {
-        var handlers = dti._events[event] || [];
-
-        dti.forEachArray(handlers, function processOffHandler (fn, idx) {
-            if (fn === handler) {
-                dti._events[event].splice(idx, 1);
-                return false;
-            }
-        });
-    },
-    fire (event, obj1, obj2) {
-        var handlers = dti._events[event] || [],
-            onceHandlers = dti._onceEvents[event] || [];
-
-        dti.forEachArray(handlers, function fireEventHandlers (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti.forEachArray(onceHandlers, function fireOnceEvent (handler) {
-            handler(obj1 || null, obj2 || null);
-        });
-
-        dti._onceEvents[event] = [];
-    },
     $ (fn) {
         $(function delayLoadFn () {
             setTimeout(function runInit () {
@@ -725,31 +691,31 @@ let dti = {
             });
         }
     }
-};
+});
 
 let BaseWidget = class Widget {
     constructor(cfg) {
-        // dti.timeGap('widget');
+        dti.timeGap('widget: ' + this.constructor.name);
         this.cfg = cfg;
 
-        // dti.timeGap('widget config');
+        dti.timeGap('widget config');
         this.initConfig();
-        // dti.timeGapPause('widget config');
+        dti.timeGapPause('widget config');
 
-        // dti.timeGap('widget bindings');
+        dti.timeGap('widget bindings');
         this.initBindings();
-        // dti.timeGapPause('widget bindings');
+        dti.timeGapPause('widget bindings');
 
-        // dti.timeGap('widget postinit');
+        dti.timeGap('widget postinit');
         this.postInit();
-        // dti.timeGapPause('widget postinit');
+        dti.timeGapPause('widget postinit');
 
-        // dti.timeGap('widget template');
+        dti.timeGap('widget template');
         this.updateWidgetTemplate();
-        // dti.timeGapPause('widget template');
+        dti.timeGapPause('widget template');
 
         delete this.cfg;
-        // dti.timeGapPause('widget');
+        dti.timeGapPause('widget: ' + this.constructor.name);
     }
 
     getClassProperties() {
@@ -819,7 +785,7 @@ let BaseWidget = class Widget {
 
     handleClick(isMiddleClick) {
         let upi = this.upi();
-        dti.log('handleclick', isMiddleClick);
+        // dti.log('handleclick', isMiddleClick);
 
         if (!!upi) {
             dtiUtility.openWindow({
@@ -922,7 +888,9 @@ let BaseWidget = class Widget {
         }
 
         if (!this.isPreview()) {
+            dti.timeGap('widget Draggable');
             this.$widgetEl.draggable(this.draggableConfig);
+            dti.timeGapPause('widget Draggable');
         }
 
         dti.on('viewMode', () => {
@@ -1855,6 +1823,10 @@ var widgets = {
 
                 super.initConfig();
 
+                if (this.config.isNew) {
+                    this.config.text = this.placeholder;
+                }
+
                 this._origColor = this.config.color;
             }
 
@@ -1933,7 +1905,7 @@ var widgets = {
             handlePoint(data) {
                 super.handlePoint(data);
 
-                let pointType = data['Point Type'].Value;
+                let pointType = data.pointType;
 
                 // if (pointType.match(/(Binary|MultiState)/)) {
                 //     let options = [];
@@ -2349,6 +2321,8 @@ var displays = {
     widgets: {},
     settings: {
         scrollZoomStep: 5,
+        minZoom: 5,
+        maxZoom: 400,
         bindingsLoaded: false,
         widgets: {
             tooltipWidthSmall: '285px',
@@ -2421,6 +2395,7 @@ var displays = {
         widgetsReady: false,
         editingPreviewWidget: false,
         editingComplexWidget: false,
+        loaded: false,
         backgroundImage: '',
         backgroundImageData: '',
         backgroundPath: '/display_assets/assets/',
@@ -2438,7 +2413,12 @@ var displays = {
         screenObjects: {},
         tooltipBindings: dti.clone(widgets.tooltipMenuBindings),
         controlPriorities: [],
-        currWidget: {},
+        testArray: [{
+            a: 1
+        }, {
+            b: 2
+        }],
+        currWidget: null,
         selection: {
             active: false,
             dragging: false,
@@ -2778,7 +2758,9 @@ var displays = {
             let zoom = displays.bindings.zoom;
             let newZoom = parseFloat(zoom()) + gap;
 
-            zoom(newZoom);
+            if (newZoom >= displays.settings.minZoom && newZoom <= displays.settings.maxZoom) {
+                zoom(newZoom);
+            }
             dti.timeGapPause('mousewheel');
         },
         handleMouseDown (e) {
@@ -2786,7 +2768,7 @@ var displays = {
             let isRightClick = e.which === 3;
             let isMiddleClick = e.which === 2;
 
-            if (!isMiddleClick && e.type === 'mousedown') {
+            if (!isMiddleClick && !isRightClick && e.type === 'mousedown') {
                 return;
             }
 
@@ -2865,11 +2847,18 @@ var displays = {
         }
     },
     qualityCodes: {
+        lookup: {},
         init () {
-            var ret = store.get('dti-systemenum-qualityCodes');
+            // var ret = store.get('dti-systemenum-qualityCodes');
+            dtiUtility.getSystemEnum('qualityCodes', (codes) => {
+                dti.forEachArray(codes, (code) => {
+                    displays.qualityCodes.lookup[code.label] = code;
+                });
+                // displays.qualityCodes.lookup = codes;                
+            });
 
-            displays.qualityCodes.codes = ret.arr;
-            displays.qualityCodes.lookup = ret.obj;
+            // displays.qualityCodes.codes = ret.arr;
+            // displays.qualityCodes.lookup = ret.obj;
         },
         processQualityCodes (data) {
             var codes = {},
@@ -2913,7 +2902,7 @@ var displays = {
                 socket.disconnect();
             });
 
-            dti.on('loaded', () => {
+            dti.on('postLoad', () => {
                 socket.emit('dynamics', dti.clone(displays.point));
             });
         },
@@ -2986,6 +2975,7 @@ var displays = {
 
     //widget functions
     createWidget (config, type) {
+        dti.timeGap('createWidget');
         if (!type) {
             type = config.type;
         }
@@ -3000,6 +2990,7 @@ var displays = {
             displaysID,
             type: type
         });
+        dti.timeGapPause('createWidget');
     },
     adjustBindings (bindings, skipScale) {
         let adjustProperties = ['top', 'left', 'width', 'height', 'fontSize'];
@@ -3405,6 +3396,7 @@ var displays = {
                     displays.bindings.desktop(true);
                     displays.zoomToFitWindow();
                     displays.centerDisplay();
+                    dti.fire('postLoad');
                 } else {
                     let width = displays.point.Width;
                     let height = displays.point.Height;
@@ -3426,7 +3418,8 @@ var displays = {
                                 if (!displays.settings.isNew) {
                                     displays.centerDisplay();
                                 }
-                            }, 10000);
+                                dti.fire('postLoad');
+                            }, 500);
                         });
                     } else {
                         dtiUtility.updateWindow('resize', {
@@ -3437,18 +3430,22 @@ var displays = {
                             if (!displays.settings.isNew) {
                                 displays.centerDisplay();
                             }
+                            dti.fire('postLoad');
                         });
                     }
 
                     
                 }
             // });
-            setTimeout(() => {
-                dti.onLoadFn();
-            });
 
             // dti.log('windowid', window.windowId);
             // dtiUtility.getWindowParameters(displays.point._id, displays.loadComplete);
+        });
+
+        dti.on('postLoad', () => {
+            displays.bindings.loaded(true);
+            dti.onLoadFn();
+            dti.log('Display load time:', (new Date() - displays._startLoad)/1000, 'seconds');
         });
 
         dtiUtility.getSystemEnum('controlpriorities', (priorities) => {
@@ -3457,33 +3454,35 @@ var displays = {
             if (displays.settings.bindingsLoaded === true) {
                 ko.viewmodel.updateFromModel(displays.bindings.controlPriorities, priorities);
             } else {
-                displays.bindings.controlPriorities = priorities;
+                // if you don't copy, it skips the 'instanceof Array' check in ko.viewmodel
+                // it doesn't use Array.isArray, so it fails and skips it
+                displays.bindings.controlPriorities = $.extend(true, [], priorities);
             }
         });
 
-        //// dti.time('events');
+        // dti.time('events');
         dti.events.init();
-        //// dti.timeEnd('events');
+        // dti.timeEnd('events');
 
-        //// dti.time('display events');
+        // dti.time('display events');
         displays.events.init();
-        //// dti.timeEnd('display events');
+        // dti.timeEnd('display events');
 
-        //// dti.time('quality code');
+        // dti.time('quality code');
         displays.qualityCodes.init();
-        //// dti.timeEnd('quality code');
+        // dti.timeEnd('quality code');
 
-        //// dti.time('socket');
+        // dti.time('socket');
         displays.socket.init();
-        //// dti.timeEnd('socket');
+        // dti.timeEnd('socket');
 
-        //// dti.time('point');
+        // dti.time('point');
         displays.initDisplayPoint();
-        //// dti.timeEnd('point');
+        // dti.timeEnd('point');
 
-        //// dti.time('bindings');
+        // dti.time('bindings');
         displays.initBindings();
-        //// dti.timeEnd('bindings');
+        // dti.timeEnd('bindings');
 
         // set delay due to getWindowParameters not always showing up
         let interval = setInterval(() => {
@@ -3496,7 +3495,7 @@ var displays = {
         //     displays.postInit();
         // });
 
-        dti.log('Display load time:', (new Date() - displays._startLoad)/1000, 'seconds');
+        // dti.log('Display load time:', (new Date() - displays._startLoad)/1000, 'seconds');
     },
     initDisplayPoint () {
         if (Object.keys(window.point).length === 0) {
@@ -3525,7 +3524,10 @@ var displays = {
 
         //todo update structure, translate first
         displays.setBackgroundUrl(displays.point['Background Picture']);
-        displays.bindings.backgroundColor = '#' + displays.point['Background Color'];
+        displays.bindings.backgroundColor = displays.point['Background Color'];
+        if (!displays.bindings.backgroundColor.match('#')) {
+            displays.bindings.backgroundColor = '#' + displays.bindings.backgroundColor;
+        }
         displays.bindings.bgHeight = displays.bindings.height = displays.point.Height;
         displays.bindings.bgWidth = displays.bindings.width = displays.point.Width;
 
@@ -4385,8 +4387,9 @@ var displays = {
                         //     displays.bindings.left(displays.editModeOffset);
                         // }// else it's already over enough by being centered
                     } else {
+                        dti.log('resizing to:', displayWidth);
                         dtiUtility.updateWindow('resize', {
-                            width: (displayWidth + editModeOffset) + 'px'
+                            width: (displayWidth + editModeOffset)
                         });
                     }
                 } else {
@@ -4422,7 +4425,7 @@ var displays = {
                     // widgets.revertChanges();
                     // displays.bindings.editMode(isEdit);
                     dtiUtility.updateWindow('resize', {
-                        width: (displayWidth) + 'px'
+                        width: (displayWidth)
                     }, (ret) => {
                         if (ret) {
                             displays.bindings.left(0);
@@ -4464,9 +4467,9 @@ var displays = {
                 }
 
                 if (displays.bindings.editMode()) {
-                    //// dti.time('clone');
+                    // dti.time('clone');
                     let $clone = $('.menuContainer > .tooltipMenu').clone().addClass('activeTooltip');
-                    //// dti.timeEnd('clone');
+                    // dti.timeEnd('clone');
                     let subscriptions = [];
 
                     widget.saveConfig();
@@ -4487,7 +4490,7 @@ var displays = {
                     let xOffset = widget.type() === 'Animation' ? zoom * width : 0;
                     let yOffset = widget.type() === 'Animation' ? zoom * height : 0;
 
-                    //// dti.time('qtip');
+                    // dti.time('qtip');
 
                     $el.qtip({
                         style: {
@@ -4518,12 +4521,12 @@ var displays = {
                         events: {
                             render(event, api) {
                                 displays.tooltipAPI = api;
-                                //// dti.time('render');
+                                // dti.time('render');
                                 let el = api.elements.content[0];
                                 // ko.cleanNode(el);
-                                //// dti.time('bindings');
+                                // dti.time('bindings');
                                 ko.applyBindings(displays.currWidget, el);
-                                //// dti.timeEnd('bindings');
+                                // dti.timeEnd('bindings');
 
                                 widget.getTooltipElement = function () {
                                     return el;
@@ -4549,30 +4552,34 @@ var displays = {
                                     }));
                                 }
                                 widget.refreshDOM($(el));
-                                //// dti.timeEnd('render');
+                                // dti.timeEnd('render');
                             },
                             hide(event, api) {
-                                displays.tooltipAPI = {};
-                                let el = api.elements.content[0];
-                                ko.cleanNode(el);
-                                api.destroy();
-                                dti.forEachArray(subscriptions, (sub) => {
-                                    sub.dispose();
-                                });
+                                if ($(event.originalEvent.target).closest('main').length > 0) {
+                                    displays.tooltipAPI = {};
+                                    let el = api.elements.content[0];
+                                    ko.cleanNode(el);
+                                    api.destroy();
+                                    dti.forEachArray(subscriptions, (sub) => {
+                                        sub.dispose();
+                                    });
 
-                                widget.editing(false);
+                                    widget.editing(false);
 
-                                widget.getTooltipElement = function () {
-                                    return;
-                                };
-                                displays.bindings.editingWidget(false);
-                                displays.bindings.editingPreviewWidget(false);
-                                displays.bindings.editingComplexWidget(false);
+                                    widget.getTooltipElement = function () {
+                                        return;
+                                    };
+                                    displays.bindings.editingWidget(false);
+                                    displays.bindings.editingPreviewWidget(false);
+                                    displays.bindings.editingComplexWidget(false);
+                                } else {
+                                    event.preventDefault();
+                                }
 
                             }
                         }
                     }, event);
-                    //// dti.timeEnd('qtip');
+                    // dti.timeEnd('qtip');
                 } else {
                     widget.handleClick(isMiddleClick);
                 }
@@ -4718,6 +4725,7 @@ var displays = {
             synchronous: true,
             viewModel: {
                 createViewModel(params, componentInfo) {
+                    dti.timeGap('createViewModel button');
                     params.$element = $(componentInfo.element);
                     let widget = new widgets.classes.Button(params);
 
@@ -4726,6 +4734,8 @@ var displays = {
 
                         displays.widgets.Button[koUnwrap(params.config.displaysID)] = widget;
                     }
+
+                    dti.timeGapPause('createViewModel button');
 
                     return widget;
                 }
@@ -4739,6 +4749,7 @@ var displays = {
             synchronous: true,
             viewModel: {
                 createViewModel(params, componentInfo) {
+                    dti.timeGap('createViewModel text');
                     params.$element = $(componentInfo.element);
                     let widget = new widgets.classes.Text(params);
 
@@ -4747,6 +4758,8 @@ var displays = {
 
                         displays.widgets.Text[koUnwrap(params.config.displaysID)] = widget;
                     }
+
+                    dti.timeGapPause('createViewModel text');
                     
                     return widget;
                 }
@@ -4760,6 +4773,7 @@ var displays = {
             synchronous: true,
             viewModel: {
                 createViewModel(params, componentInfo) {
+                    dti.timeGap('createViewModel dynamic');
                     params.$element = $(componentInfo.element);
                     let widget = new widgets.classes.Dynamic(params);
 
@@ -4769,6 +4783,7 @@ var displays = {
                         displays.widgets.Dynamic[koUnwrap(params.config.displaysID)] = widget;
                     }
                     
+                    dti.timeGapPause('createViewModel dynamic');
                     return widget;
                 }
             },
@@ -4781,6 +4796,7 @@ var displays = {
             synchronous: true,
             viewModel: {
                 createViewModel(params, componentInfo) {
+                    dti.timeGap('createViewModel animation');
                     params.$element = $(componentInfo.element);
                     let widget = new widgets.classes.Animation(params);
 
@@ -4790,6 +4806,7 @@ var displays = {
                         displays.widgets.Animation[koUnwrap(params.config.displaysID)] = widget;
                     }
                     
+                    dti.timeGapPause('createViewModel animation');
                     return widget;
                 }
             },

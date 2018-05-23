@@ -10840,32 +10840,6 @@ gpl.Manager = function () {
                 });
             }
         };
-
-        ko.bindingHandlers.delegate = {
-            init: (element, valueAccessor) => {
-                let $element = $(element);
-                let delegations = ko.utils.unwrapObservable(valueAccessor());
-                let handlers = [];
-                let makeHandler = (fn, cfg) => {
-                        return (e) => {
-                            fn(e, ko.dataFor(e[cfg.eventTargetKey] || e.target));
-                            // e.preventDefault(); temporary comment
-                        };
-                    };
-
-                gpl.forEachArray(delegations, (cfg) => {
-                    let handler = makeHandler(cfg.handler, cfg);
-                    handlers.push(handler);
-                    $element.on(cfg.event, cfg.selector, handler);
-                });
-
-                ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
-                    gpl.forEachArray(delegations, (cfg, idx) => {
-                        $element.off(cfg.event, cfg.selector, handlers[idx]);
-                    });
-                });
-            }
-        };
     };
 
     managerSelf.initCanvas = function () {

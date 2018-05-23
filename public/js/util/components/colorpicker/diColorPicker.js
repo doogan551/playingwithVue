@@ -151,7 +151,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
             $colorpicker.append($unorderedList);
             for (i = 0; i < colorArray.length; i++) {
                 customColorDivID = "customColor_" + i;
-                $listItem = $("\n<li>\n");
+                $listItem = $("<li>");
                 $unorderedList.append($listItem);
                 $customColorDiv = $("<div>", {class: customColorClass, id: customColorDivID});
                 $listItem.append($customColorDiv);
