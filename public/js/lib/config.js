@@ -544,7 +544,7 @@ var Config = (function (obj) {
 
                     switch (property) {
                         case 'Control Priority':
-                            return workspace && workspace.systemEnums.controlpriorities;
+                            return workspace && (['Program'].includes(pointType))? workspace.systemEnums.controlpriorities.slice(1) : workspace.systemEnums.controlpriorities;
                         case 'Controller':
                         case 'Setback Controller':
                             return workspace && workspace.systemEnums.controllers;
