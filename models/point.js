@@ -153,6 +153,27 @@ const Point = class Point extends Common {
         });
     }
 
+    extendPointRefProperties(refs, cb) {
+        async.forEachSeries(refs, (ref, nextRef) => {
+            if (ref.Value === 0) {
+                return nextRef();
+            }
+            this.getOne({
+                _id: ref.Value
+            }, (err, refPoint) => {
+                if(!!err || !refPoint){
+                    return nextRef(err);
+                }
+                ref.PointName = Config.Utility.getPointName(refPoint.path);
+                ref.PointType = refPoint['Point Type'].eValue;
+                ref.PointPath = refPoint.path;
+                return nextRef();
+            });
+        }, (err) => {
+            return cb(err, refs);
+        })
+    }
+
     getAllPointsById(data, cb) {
         let results = [];
         async.eachSeries(data.upis, (upi, nextUpi) => {
@@ -1073,7 +1094,9 @@ const Point = class Point extends Common {
                             template['Point Refs'][i].isReadOnly = false;
                         }
                     }
-                    addTemplateToDB(template, callback);
+                    this.extendPointRefProperties(template['Point Refs'], (err, refs) => {
+                        addTemplateToDB(template, callback);
+                    });
                     // does this even get called? is it suppose to?
                     if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
                         template['Control Array'] = [];
