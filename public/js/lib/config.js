@@ -544,10 +544,10 @@ var Config = (function (obj) {
 
                     switch (property) {
                         case 'Control Priority':
-                            return workspace && (['Program'].includes(pointType))? workspace.systemEnums.controlpriorities.slice(1) : workspace.systemEnums.controlpriorities;
+                            return workspace && (!['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].includes(pointType))? workspace.systemEnums.controlpriorities.slice(1) : workspace.systemEnums.controlpriorities;
                         case 'Controller':
                         case 'Setback Controller':
-                            return workspace && workspace.systemEnums.controllers;
+                        return workspace && (!['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].includes(pointType))? workspace.systemEnums.controllers.slice(1) : workspace.systemEnums.controllers;
                         case 'Model Type':
                             if (pointType === 'Device') {
                                 return _getEnumFromTemplate('Device Model Types');
