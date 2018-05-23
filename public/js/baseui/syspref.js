@@ -376,6 +376,10 @@ var calendarViewModel = function() {
         updateSeasonData: function(mdl) {
             var ajopts, callbacks, vm, data;
             vm = viewModel;
+            
+            if (viewModel.season() === viewModel.originalSeason) {
+                return;
+            }
             data = {
                 'Current Season': vm.season()
             };

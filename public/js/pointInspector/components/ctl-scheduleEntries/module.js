@@ -151,8 +151,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         this.SaturdayActive = ko.observable('');
         this.HolidayActive = ko.observable('');
         this.activeday = ko.observable('activeday');
-        this.priorities = ko.observableArray(self.utility.workspace.systemEnums.controlpriorities);
-        this.controllers = ko.observableArray(self.utility.workspace.systemEnums.controllers);
+        this.priorities = ko.observableArray(self.utility.workspace.systemEnums.controlpriorities.slice(1));
+        this.controllers = ko.observableArray(self.utility.workspace.systemEnums.controllers.slice(1));
         self.oldPoints = [];
         self.updateScheds = [];
         self.hardScheds = [];
