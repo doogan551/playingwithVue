@@ -193,9 +193,11 @@ const History = class History extends Common {
                             }).then((result) => {
                                 updatedCount++;
                                 callback();
+                                return null;
                             }).catch((err) => {
                                 updatedCount++;
                                 callback(err);
+                                return null;
                             });
                         } else if (((updateOptions & 2) !== 0 && sPoint.USEREDITED === 1) || ((updateOptions & 4) !== 0 && sPoint.USEREDITED === 0 && sPoint.VALUE !== value.Value)) {
                             // updating only existing user edited data
@@ -217,9 +219,11 @@ const History = class History extends Common {
                             }).then((result) => {
                                 updatedCount++;
                                 callback();
+                                return null;
                             }).catch((err) => {
                                 updatedCount++;
                                 callback(err);
+                                return null;
                             });
                         } else {
                             //ignored
@@ -983,8 +987,10 @@ const History = class History extends Common {
         query.where = where;
         this.HistoryRecord.findAll(query).then((rows) => {
             callback(null, rows);
+            return null;
         }).catch((err) => {
             callback(err);
+            return null;
         });
     }
     fixResults(sResults, mResults, callback) {
@@ -1059,8 +1065,10 @@ const History = class History extends Common {
             raw: true
         }).then((count) => {
             callback(null, count);
+            return null;
         }).catch((err) => {
-            return callback((err));
+            callback((err));
+            return null;
         });
     }
     findMissing(counts, options, callback) {
@@ -1246,6 +1254,7 @@ const History = class History extends Common {
     addToSQLite(points, cb) {
         this.HistoryRecord.bulkCreate(points).then(() => {
             cb();
+            return null;
         }).catch(cb);
     }
     removeFromHistorydata(ranges, cb) {
@@ -1320,9 +1329,11 @@ const History = class History extends Common {
                 if (editedCount > 0) {
                     missingMeters.push(meter);
                 }
-                return callback(null);
+                callback(null);
+                return null;
             }).catch((err) => {
-                return callback(err);
+                callback(err);
+                return null;
             });
         }, (err) => {
             cb(err, missingMeters);
@@ -1642,10 +1653,12 @@ const History = class History extends Common {
         this.HistoryRecord.update(updateObj, {
             where
         }).then((result) => {
-            return cb(null, result);
+            cb(null, result);
+            return null;
         }).catch((err) => {
             console.log(JSON.stringify(updateObj), JSON.stringify(where));
-            return cb(err);
+            cb(err);
+            return null;
         });
     }
 };
