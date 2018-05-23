@@ -1562,6 +1562,9 @@ const Point = class Point extends Common {
                                 case 'Alarm Deadband':
                                 case 'APDU Timeout':
                                 case 'APDU Retries':
+                                case 'Auxiliary Control Point':
+                                case 'Auxiliary Output Configuration':
+                                case 'Boolean Registers':
                                 case 'Broadcast Enable':
                                 case 'Broadcast Period':
                                 case 'Calculation Type':
@@ -1599,6 +1602,8 @@ const Point = class Point extends Common {
                                 case 'Demand Interval':
                                 case 'Disable Limit Fault':
                                 case 'Downlink Broadcast':
+                                case 'Downlink Network':
+                                case 'Emergency Pump Down Time':
                                 case 'Enable Network COV':
                                 case 'Enable Warning Alarms':
                                 case 'Fail Action':
@@ -1621,8 +1626,12 @@ const Point = class Point extends Common {
                                 case 'Heating Setpoint':
                                 case 'High Alarm Limit':
                                 case 'High Deadband':
+                                case 'High Level Float Point':
+                                case 'High Level Setpoint':
                                 case 'High Setpoint':
                                 case 'High Warning Limit':
+                                case 'Horn Control Point':
+                                case 'Horn Output Configuration':
                                 case 'If Compare 1':
                                 case 'If Compare 2':
                                 case 'If Compare 3':
@@ -1644,6 +1653,7 @@ const Point = class Point extends Common {
                                 case 'Inactive Control':
                                 case 'Inactive Release':
                                 case 'Inactive Value':
+                                case 'Integer Registers':
                                 case 'Interlock State':
                                 case 'Input 1 Constant':
                                 case 'Input 2 Constant':
@@ -1652,11 +1662,22 @@ const Point = class Point extends Common {
                                 case 'Input Low Limit':
                                 case 'Input Range':
                                 case 'Input Rate':
+                                case 'Lag Level Float Point':
+                                case 'Lag Level Setpoint':
+                                case 'Lead Level Float Point':
+                                case 'Lead Level Setpoint':
                                 case 'Lead Time':
+                                case 'Level Sensor Point':
+                                case 'Light Control Point':
+                                case 'Light Output Configuration':
                                 case 'Low Alarm Limit':
                                 case 'Low Deadband':
+                                case 'Low Level Float Point':
+                                case 'Low Level Setpoint':
                                 case 'Low Setpoint':
                                 case 'Low Warning Limit':
+                                case 'Max Pump Off Time':
+                                case 'Max Pump Run Time':
                                 case 'Maximum Change':
                                 case 'Maximum Value':
                                 case 'Minimum Value':
@@ -1671,15 +1692,22 @@ const Point = class Point extends Common {
                                 case 'Occupied Max Heat CFM':
                                 case 'Occupied Min Cool CFM':
                                 case 'Occupied Min Heat CFM':
+                                case 'Off Level Float Point':
+                                case 'Off Level Setpoint':
                                 case 'Open Polarity':
                                 case 'Outside Air Gain':
                                 case 'Override Time':
+                                case 'Point Registers':
                                 case 'Polarity':
                                 case 'Program Change Request':
                                 case 'Proportional Band':
                                 case 'Pulse Weight':
+                                case 'Pump Control Mode':
+                                case 'Pump Select Mode':
+                                case 'Pump Sequence Delay':
                                 case 'Rate':
                                 case 'Rate Period':
+                                case 'Real Registers':
                                 case 'Reset Gain':
                                 case 'Reset Interval':
                                 case 'Reset Time':
@@ -1717,33 +1745,6 @@ const Point = class Point extends Common {
                                 case 'Verify Delay':
                                 case 'Warmup Deadband':
                                 case 'Warning Adjust Band':
-                                case 'Boolean Registers':
-                                case 'Integer Registers':
-                                case 'Real Registers':
-                                case 'Point Registers':
-                                case 'Pump Control Mode': // Lift station point props
-                                case 'Pump Select Mode':
-                                case 'Pump Sequence Delay':
-                                case 'Max Pump Off Time':
-                                case 'Max Pump Run Time':
-                                case 'Light Control Point':
-                                case 'Light Output Configuration':
-                                case 'Horn Control Point':
-                                case 'Horn Output Configuration':
-                                case 'Auxiliary Control Point':
-                                case 'Auxiliary Output Configuration':
-                                case 'High Level Float Point':
-                                case 'Lag Level Float Point':
-                                case 'Lead Level Float Point':
-                                case 'Off Level Float Point':
-                                case 'Low Level Float Point':
-                                case 'Level Sensor Point':
-                                case 'High Level Setpoint':
-                                case 'Lag Level Setpoint':
-                                case 'Lead Level Setpoint':
-                                case 'Off Level Setpoint':
-                                case 'Low Level Setpoint':
-                                case 'Emergency Pump Down Time':
                                     downloadPoint = true;
                                     break;
 
@@ -1892,9 +1893,7 @@ const Point = class Point extends Common {
                                         updateDownlinkNetwk = true;
                                     }
                                     break;
-                                case 'Downlink Network':
-                                    downloadPoint = true;
-                                    break;
+
                                 default:
                                     break;
                             }
