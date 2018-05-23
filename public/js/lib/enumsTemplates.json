@@ -1942,442 +1942,614 @@
             "Active Control": {
                 "enum": 1,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Active Release": {
                 "enum": 2,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Active Text": {
                 "enum": 3,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Active Value": {
                 "enum": 4,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Adjust Band": {
                 "enum": 67,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Adjust Point": {
                 "enum": 136,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Class": {
                 "enum": 33,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Alarm Classes"
             },
             "Alarm Deadband": {
                 "enum": 68,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Delay Time": {
                 "enum": 108,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Display Point": {
                 "enum": 137,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarm Messages": {
                 "enum": 250,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Alarm Repeat Enable": {
                 "enum": 8,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Alarm Repeat Time": {
                 "enum": 105,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Alarm State": {
                 "enum": 34,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Alarm States"
             },
             "Alarm Value": {
                 "enum": 35,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Alarms Off": {
                 "enum": 9,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "APDU Retries": {
                 "enum": 158,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "APDU Timeout": {
                 "enum": 160,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Authorized Value": {
                 "enum": 231,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Auxiliary Control Point": {
                 "enum": 423,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Auxiliary Output Configuration": {
                 "enum": 426,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Background Color": {
                 "enum": 312,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Background Picture": {
                 "enum": 313,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Begin Day": {
                 "enum": 22,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Begin Month": {
                 "enum": 239,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Begin Year": {
                 "enum": 240,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Boolean Registers": {
                 "enum": 328,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Boolean Register Count": {
                 "enum": 329,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Boolean Register Names": {
                 "enum": 330,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Broadcast Enable": {
                 "enum": 11,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Broadcast Period": {
                 "enum": 356,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Calculation Type": {
                 "enum": 36,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Calculation Types"
             },
             "Calibration Factor": {
                 "enum": 284,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "CFM Deadband": {
                 "enum": 285,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "CFM Input Point": {
                 "enum": 286,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Channel": {
                 "enum": 161,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Channels"
             },
             "Close Channel": {
                 "enum": 162,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Close Channels"
             },
             "Close On Complete": {
                 "enum": 251,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Close Polarity": {
                 "enum": 230,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
             "Column Point": {
                 "enum": 131,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Compiled Code": {
                 "enum": 269,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Compiled Code Size": {
                 "enum": 268,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Configure Device": {
                 "enum": 12,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Configure Required": {
                 "enum": 446,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "intLink": "_cfgRequired"
             },
             "Continuous Show": {
                 "enum": 254,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Control Array": {
                 "enum": 407,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Control Band Value": {
                 "enum": 296,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Control Data Type": {
                 "enum": 37,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Data Types"
             },
             "Control Function": {
                 "enum": 38,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Control Functions"
             },
             "Control Pending": {
                 "enum": 13,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Control Point": {
                 "enum": 138,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Control Priority": {
                 "enum": 39,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Default Control Priorities"
             },
             "Control Property": {
                 "enum": 241,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Control Register": {
                 "enum": 163,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Control Time": {
                 "enum": 242,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Control Value": {
                 "enum": 249,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Controller": {
                 "enum": 40,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Adjustment": {
                 "enum": 69,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Coefficient 1": {
                 "enum": 70,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Coefficient 2": {
                 "enum": 71,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Coefficient 3": {
                 "enum": 72,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Coefficient 4": {
                 "enum": 73,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Conversion Type": {
                 "enum": 41,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Conversion Types"
             },
             "Cooling Equipment": {
                 "enum": 256,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Cooling Gain": {
                 "enum": 258,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Cooling Season": {
                 "enum": 243,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Cooling Setpoint": {
                 "enum": 74,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "COV Enable": {
                 "enum": 14,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "COV Increment": {
                 "enum": 75,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "COV Period": {
                 "enum": 109,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Control Point": {
                 "enum": 288,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Max Output": {
                 "enum": 289,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Min Output": {
                 "enum": 290,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Proportional Band": {
                 "enum": 291,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Reset Gain": {
                 "enum": 292,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Reverse Action": {
                 "enum": 287,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Run Unoccupied": {
                 "enum": 293,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Damper Unoccupied Output": {
                 "enum": 294,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Days Active": {
                 "enum": 244,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Default Value": {
                 "enum": 119,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Delay Time": {
                 "enum": 110,
                 "valueType": "HourMinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Demand Enable": {
                 "enum": 15,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Demand Interval": {
                 "enum": 111,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Description": {
                 "enum": 123,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Device Address": {
                 "enum": 124,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Device Model": {
                 "enum": 447,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Device Model Types",
                 "intLink": "_devModel"
@@ -2385,1322 +2557,1836 @@
             "Device Point": {
                 "enum": 139,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Device Port": {
                 "enum": 42,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Device Ports"
             },
             "Device Status": {
                 "enum": 43,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Device Statuses"
             },
             "Digital Heat 1 Control Point": {
                 "enum": 297,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 1 Run Unoccupied": {
                 "enum": 298,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 1 Start Load": {
                 "enum": 299,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 1 Stop Load": {
                 "enum": 300,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 2 Control Point": {
                 "enum": 301,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 2 Run Unoccupied": {
                 "enum": 302,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 2 Start Load": {
                 "enum": 303,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 2 Stop Load": {
                 "enum": 304,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 3 Control Point": {
                 "enum": 341,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 3 Run Unoccupied": {
                 "enum": 342,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 3 Start Load": {
                 "enum": 343,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Digital Heat 3 Stop Load": {
                 "enum": 344,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Disable Limit Fault": {
                 "enum": 16,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Display Dynamic": {
                 "enum": 279,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Display Button": {
                 "enum": 280,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Display Animation": {
                 "enum": 281,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Display Trend": {
                 "enum": 282,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Downlink Broadcast Delay": {
                 "enum": 283,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Downlink IP Port": {
                 "enum": 295,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Downlink Network": {
                 "enum": 164,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Downlink Protocol": {
                 "enum": 444,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Ethernet Protocols"
             },
             "Dry Bulb Point": {
                 "enum": 140,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Duct Area": {
                 "enum": 396,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "eDate": {
                 "enum": 314,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Emergency Pump Down Time": {
                 "enum": 418,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Enable Network COV": {
                 "enum": 276,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Enable Schedule": {
                 "enum": 235,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Enable Warning Alarms": {
                 "enum": 17,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "End Day": {
                 "enum": 246,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "End Month": {
                 "enum": 247,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "End Year": {
                 "enum": 248,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Engineering Units": {
                 "enum": 125,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Ethernet Address": {
                 "enum": 126,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Ethernet Gateway": {
                 "enum": 346,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Ethernet IP Port": {
                 "enum": 345,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Ethernet Network": {
                 "enum": 165,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Ethernet Protocol": {
                 "enum": 44,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Ethernet Protocols"
             },
             "Ethernet Subnet": {
                 "enum": 347,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Execute Now": {
                 "enum": 237,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fan Control Point": {
                 "enum": 384,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fan Control Strategy": {
                 "enum": 389,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Fan Control Strategies"
             },
             "Fan Off CFM Setpoint": {
                 "enum": 305,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fan Off Temp Deadband": {
                 "enum": 388,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fan On CFM Setpoint": {
                 "enum": 306,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fail Action": {
                 "enum": 45,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Fail Actions"
             },
             "Fall Time": {
                 "enum": 76,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Fast Pulse": {
                 "enum": 18,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Feedback Channel": {
                 "enum": 228,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Feedback Channels"
             },
             "Feedback Instance": {
                 "enum": 66,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Feedback Point": {
                 "enum": 141,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Feedback Polarity": {
                 "enum": 46,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
             "Feedback Type": {
                 "enum": 238,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Feedback Types"
             },
             "Filter": {
                 "enum": 19,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Filter Weight": {
                 "enum": 77,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Firmware Version": {
                 "enum": 127,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Firmware 2 Version": {
                 "enum": 133,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Float Alarm Point": {
                 "enum": 408,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Flow Rate Point": {
                 "enum": 411,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Flow Total Point": {
                 "enum": 412,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Bold": {
                 "enum": 315,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Color": {
                 "enum": 316,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Italic": {
                 "enum": 317,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Name": {
                 "enum": 318,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Size": {
                 "enum": 319,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Strikethru": {
                 "enum": 320,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Font Underline": {
                 "enum": 321,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Gateway": {
                 "enum": 442,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "GPLBlock": {
                 "enum": 439,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "GPLDynamic": {
                 "enum": 440,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Grid X": {
                 "enum": 322,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Grid Y": {
                 "enum": 323,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Heat 1 Control Point": {
                 "enum": 349,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Max Output": {
                 "enum": 350,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Min Output": {
                 "enum": 351,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Proportional Band": {
                 "enum": 352,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Reset Gain": {
                 "enum": 353,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Reverse Action": {
                 "enum": 348,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Run Unoccupied": {
                 "enum": 354,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heat 1 Unoccupied Output": {
                 "enum": 355,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heating Equipment": {
                 "enum": 257,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heating Gain": {
                 "enum": 260,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heating Season": {
                 "enum": 245,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Heating Setpoint": {
                 "enum": 78,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Height": {
                 "enum": 324,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "High Alarm Limit": {
                 "enum": 79,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "High Deadband": {
                 "enum": 80,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "High Level Float Point": {
                 "enum": 428,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "High Level Setpoint": {
                 "enum": 433,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "High Setpoint": {
                 "enum": 81,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "High Warning Limit": {
                 "enum": 82,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Horn Control Point": {
                 "enum": 422,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Horn Output Configuration": {
                 "enum": 425,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Host Schedule": {
                 "enum": 234,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Humidity Point": {
                 "enum": 142,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "If Compare 1": {
                 "enum": 183,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Compare 2": {
                 "enum": 184,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Compare 3": {
                 "enum": 185,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Compare 4": {
                 "enum": 186,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Compare 5": {
                 "enum": 187,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Result 2": {
                 "enum": 188,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Result 3": {
                 "enum": 189,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Result 4": {
                 "enum": 190,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Result 5": {
                 "enum": 191,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Value 1": {
                 "enum": 192,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Value 2": {
                 "enum": 193,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Value 3": {
                 "enum": 194,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Value 4": {
                 "enum": 195,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "If Value 5": {
                 "enum": 196,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "In Alarm": {
                 "enum": 197,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "In Fault": {
                 "enum": 198,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "In Out of Service": {
                 "enum": 199,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "In Override": {
                 "enum": 200,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Inactive Control": {
                 "enum": 20,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Inactive Release": {
                 "enum": 21,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Inactive Text": {
                 "enum": 128,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Inactive Value": {
                 "enum": 120,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input 1 Constant": {
                 "enum": 202,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input 2 Constant": {
                 "enum": 201,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Deadband": {
                 "enum": 83,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input High Limit": {
                 "enum": 84,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Low Limit": {
                 "enum": 85,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Point 1": {
                 "enum": 143,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Point 2": {
                 "enum": 144,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Point 3": {
                 "enum": 145,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Point 4": {
                 "enum": 146,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Point 5": {
                 "enum": 147,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Input Range": {
                 "enum": 47,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Input Ranges"
             },
             "Input Rate": {
                 "enum": 210,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Input Rates"
             },
             "Input Type": {
                 "enum": 48,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Input Types"
             },
             "Instance": {
                 "enum": 166,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Integer Registers": {
                 "enum": 331,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Integer Register Count": {
                 "enum": 332,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Integer Register Names": {
                 "enum": 333,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Interlock Point": {
                 "enum": 148,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Interlock State": {
                 "enum": 49,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Lag Level Float Point": {
                 "enum": 429,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Lag Level Setpoint": {
                 "enum": 434,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Last Report Time": {
                 "enum": 135,
                 "valueType": "Timet",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Last Start Reset Time": {
                 "enum": 216,
                 "valueType": "Timet",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Last Start Time": {
                 "enum": 217,
                 "valueType": "Timet",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Lead Level Float Point": {
                 "enum": 430,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Lead Level Setpoint": {
                 "enum": 435,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Lead Time": {
                 "enum": 263,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Level Sensor Point": {
                 "enum": 427,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Light Control Point": {
                 "enum": 421,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Light Output Configuration": {
                 "enum": 424,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Lights Control Point": {
                 "enum": 364,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Low Alarm Limit": {
                 "enum": 86,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Low Deadband": {
                 "enum": 87,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Low Level Float Point": {
                 "enum": 432,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Low Level Setpoint": {
                 "enum": 437,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Low Setpoint": {
                 "enum": 88,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Low Warning Limit": {
                 "enum": 89,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Max Pump Off Time": {
                 "enum": 416,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Max Pump Run Time": {
                 "enum": 417,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Maximize Displays": {
                 "enum": 252,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Maximum Change": {
                 "enum": 90,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Maximum Sensor Value": {
                 "enum": 397,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Maximum Value": {
                 "enum": 91,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Minimum Off Time": {
                 "enum": 106,
                 "valueType": "HourMinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Minimum On Time": {
                 "enum": 107,
                 "valueType": "HourMinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Minimum Sensor Value": {
                 "enum": 398,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Minimum Value": {
                 "enum": 92,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Mixed Air Point": {
                 "enum": 149,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Modbus Order": {
                 "enum": 357,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Orders"
             },
             "Modbus Unit Id": {
                 "enum": 445,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Model Number": {
                 "enum": 129,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Momentary Delay": {
                 "enum": 112,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Monitor Point": {
                 "enum": 150,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Network Segment": {
                 "enum": 167,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Network Type": {
                 "enum": 10,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Network Types"
             },
             "Notify Policies": {
                 "enum": 438,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Number of Starts": {
                 "enum": 214,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupancy Schedule": {
                 "enum": 267,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Occupied Cool Setpoint": {
                 "enum": 365,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Cool Setpoint Value": {
                 "enum": 366,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Heat Setpoint": {
                 "enum": 367,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Heat Setpoint Value": {
                 "enum": 368,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Input": {
                 "enum": 373,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Max Cool CFM": {
                 "enum": 369,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Max Heat CFM": {
                 "enum": 370,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Min Cool CFM": {
                 "enum": 371,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Min Heat CFM": {
                 "enum": 372,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Occupied Point": {
                 "enum": 259,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Off Channel": {
                 "enum": 218,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Off Channels"
             },
             "Off Control Data Type": {
                 "enum": 219,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Data Types"
             },
             "Off Control Function": {
                 "enum": 220,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Control Functions"
             },
             "Off Control Register": {
                 "enum": 221,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Off Control Value": {
                 "enum": 222,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Off Level Float Point": {
                 "enum": 431,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Off Level Setpoint": {
                 "enum": 436,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "On Channel": {
                 "enum": 223,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "On Channels"
             },
             "On Control Data Type": {
                 "enum": 224,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Data Types"
             },
             "On Control Function": {
                 "enum": 225,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Control Functions"
             },
             "On Control Register": {
                 "enum": 226,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "On Control Value": {
                 "enum": 227,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Open Channel": {
                 "enum": 168,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Open Channels"
             },
             "Open Polarity": {
                 "enum": 229,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
             "Out of Service": {
                 "enum": 23,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Output Type": {
                 "enum": 51,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Output Types"
             },
             "Outside Air Gain": {
                 "enum": 262,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Outside Air Point": {
                 "enum": 151,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Override Time": {
                 "enum": 374,
                 "valueType": "HourMin",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "path": {
                 "enum": 159,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Point Instance": {
                 "enum": 449,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "intLink": "_id"
             },
             "Point Refs": {
                 "enum": 277,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Point Type": {
                 "enum": 52,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Point Types"
             },
             "Point Register Count": {
                 "enum": 335,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Point Register Names": {
                 "enum": 336,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Point Register": {
                 "enum": 275,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Point Registers": {
                 "enum": 334,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Polarity": {
                 "enum": 53,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
             "Poll Data Type": {
                 "enum": 54,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Data Types"
             },
             "Poll Function": {
                 "enum": 55,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Modbus Poll Functions"
             },
             "Poll Register": {
                 "enum": 169,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 1 Address": {
                 "enum": 170,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 1 Maximum Address": {
                 "enum": 171,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 1 Network": {
                 "enum": 172,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 1 Protocol": {
                 "enum": 56,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
             "Port 2 Address": {
                 "enum": 173,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 2 Maximum Address": {
                 "enum": 174,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 2 Network": {
                 "enum": 175,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 2 Protocol": {
                 "enum": 57,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
             "Port 3 Address": {
                 "enum": 176,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 3 Maximum Address": {
                 "enum": 177,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 3 Network": {
                 "enum": 178,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 3 Protocol": {
                 "enum": 58,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
             "Port 4 Address": {
                 "enum": 179,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 4 Maximum Address": {
                 "enum": 180,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 4 Network": {
                 "enum": 181,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Port 4 Protocol": {
                 "enum": 59,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
             "Power Fail Point": {
                 "enum": 414,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Program Change Request": {
                 "enum": 273,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Program Change Requests"
             },
             "Program Error": {
                 "enum": 272,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Program Error"
             },
             "Program State": {
                 "enum": 271,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Program States"
             },
             "Proportional Band": {
                 "enum": 94,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Pulse Weight": {
                 "enum": 95,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Pump 1 Control Point": {
                 "enum": 409,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Pump 2 Control Point": {
                 "enum": 410,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Pump Control Mode": {
                 "enum": 419,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Pump Select Mode": {
                 "enum": 420,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Pump Sequence Delay": {
                 "enum": 415,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Qualifier Point": {
                 "enum": 130,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Quality Code Enable": {
                 "enum": 5,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Rate": {
                 "enum": 204,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Rate Period": {
                 "enum": 113,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Read Only": {
                 "enum": 441,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Real Registers": {
                 "enum": 337,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Real Register Count": {
                 "enum": 338,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Real Register Names": {
                 "enum": 339,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Reliability": {
                 "enum": 60,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Reliabilities"
             },
             "Remarks": {
                 "enum": 134,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Remote Unit Model": {
                 "enum": 448,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Remote Unit Model Types",
                 "intLink": "_rmuModel"
@@ -3708,456 +4394,637 @@
             "Remote Unit Point": {
                 "enum": 152,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Report Config": {
                 "enum": 7,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Report Types"
             },
             "Repeat Count": {
                 "enum": 253,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Reset Gain": {
                 "enum": 96,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Reset Interval": {
                 "enum": 209,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Reset Intervals"
             },
             "Reset State": {
                 "enum": 274,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Reset States"
             },
             "Reset Time": {
                 "enum": 208,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Return Air Point": {
                 "enum": 153,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Reverse Action": {
                 "enum": 24,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Rise Time": {
                 "enum": 97,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Router Address": {
                 "enum": 443,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Run Total": {
                 "enum": 98,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Run Total Alarm Enable": {
                 "enum": 213,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Run Total Limit": {
                 "enum": 99,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Run Total Reset Enable": {
                 "enum": 212,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Run Total Reset Time": {
                 "enum": 211,
                 "valueType": "Timet",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Runtime Alarm Point": {
                 "enum": 413,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Same State Test": {
                 "enum": 233,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Scale Factor": {
                 "enum": 100,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Screen Objects": {
                 "enum": 325,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Script Filename": {
                 "enum": 340,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Script Point": {
                 "enum": 270,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Script Source File": {
                 "enum": 394,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Security": {
                 "enum": 117,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Select Input": {
                 "enum": 206,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Select State": {
                 "enum": 207,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Sensor IO Device": {
                 "enum": 399,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Sensor IO Type": {
                 "enum": 400,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Sensor Point": {
                 "enum": 154,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Sensor RTD Type": {
                 "enum": 401,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Sensor Type": {
                 "enum": 61,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Sensor Types"
             },
             "Serial Number": {
                 "enum": 93,
                 "valueType": "String",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Setback Controller": {
                 "enum": 261,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Setback Deadband": {
                 "enum": 264,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Setback Enable": {
                 "enum": 265,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Setpoint Input": {
                 "enum": 155,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Setpoint Value": {
                 "enum": 101,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "SequenceData": {
                 "enum": 405,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Sequence Details": {
                 "enum": 327,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Show Label": {
                 "enum": 25,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Show Value": {
                 "enum": 26,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown Control": {
                 "enum": 27,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown Enable": {
                 "enum": 28,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown Point": {
                 "enum": 156,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown Release": {
                 "enum": 29,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown State": {
                 "enum": 62,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Shutdown Value": {
                 "enum": 121,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Square Root": {
                 "enum": 203,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Slide Display": {
                 "enum": 278,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Slides": {
                 "enum": 255,
                 "valueType": "Array",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Source Air Temp Point": {
                 "enum": 376,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Starts Alarm Limit": {
                 "enum": 215,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Startup Delay": {
                 "enum": 114,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "States": {
                 "enum": 63,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Status Flags": {
                 "enum": 6,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Stop Gain": {
                 "enum": 266,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Stop Scan": {
                 "enum": 30,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Supervised Input": {
                 "enum": 31,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Time Zone": {
                 "enum": 406,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Time Zones"
             },
             "Total": {
                 "enum": 205,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trend COV Increment": {
                 "enum": 102,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trend Enable": {
                 "enum": 32,
                 "valueType": "Bool",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trend Interval": {
                 "enum": 115,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trend Last Status": {
                 "enum": 236,
                 "valueType": "BitString",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Trend Last Value": {
                 "enum": 118,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Trend Samples": {
                 "enum": 182,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trigger Constant": {
                 "enum": 64,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Trigger Point": {
                 "enum": 157,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Cool Setpoint": {
                 "enum": 377,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Cool Setpoint Value": {
                 "enum": 378,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Heat Setpoint": {
                 "enum": 379,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Heat Setpoint Value": {
                 "enum": 380,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Max Cool CFM": {
                 "enum": 381,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Max Heat CFM": {
                 "enum": 382,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Min Cool CFM": {
                 "enum": 383,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Unoccupied Min Heat CFM": {
                 "enum": 395,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Update Interval": {
                 "enum": 116,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Uplink Port": {
                 "enum": 65,
                 "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true,
                 "enumsSet": "Device Ports"
             },
             "Value": {
                 "enum": 122,
                 "valueType": "None",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Value Deadband": {
                 "enum": 103,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Velocity Flow": {
                 "enum": 402,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Velocity Type": {
                 "enum": 403,
-                "valueType": "Enum"
+                "valueType": "Enum",
+                "downloadPoint": false,
+                "configRequired": false,
+                "reportEnable": true
             },
             "Velocity Pressure": {
                 "enum": 404,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Verify Delay": {
                 "enum": 232,
                 "valueType": "MinSec",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Warmup Deadband": {
                 "enum": 385,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Warning Adjust Band": {
                 "enum": 104,
                 "valueType": "Float",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Width": {
                 "enum": 326,
                 "valueType": "Unsigned",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": false
             },
             "Zone Offset Point": {
                 "enum": 387,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             },
             "Zone Temp Point": {
                 "enum": 386,
                 "valueType": "UniquePID",
+                "downloadPoint": false,
+                "configRequired": false,
                 "reportEnable": true
             }
         },
