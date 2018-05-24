@@ -112,9 +112,10 @@ html
                                         img(src='/img/icon_delete.png')
 
                     div(data-bind="visible: holidays().length == 0")
-                        |No holidays have been defined for this year. Click&nbsp;
-                        a(href='#',data-bind='click: copyPreviousYear') here
-                        |&nbsp;to copy the previous year's data.
+                        |No holidays have been defined for this year. Copy calendar from year:&nbsp;
+                        select(data-bind="options:yearsWithData, value:selectedYearToCopy")
+                        | 
+                        button.btn.btn-info.btn-sm(data-bind='click: copyYear') Copy
 
                     div(style='position:relative')
                         br

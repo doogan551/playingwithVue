@@ -52,7 +52,7 @@ router.post('/updateseason', function (req, res) {
         });
     });
 });
-// POSTMAN - Shouldn't be called if season changes in year that doesn't have dates
+// POSTMAN
 router.post('/newdate', function (req, res) {
     let data = _.merge(req.params, req.body);
     data.user = req.user;
@@ -65,6 +65,20 @@ router.post('/newdate', function (req, res) {
         }
 
         return utils.sendResponse(res, yearResult);
+    });
+});
+router.post('/getyearswithdata', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Calendar.getYearsWithData(function (err, years) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, years);
     });
 });
 

@@ -151,8 +151,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
         this.SaturdayActive = ko.observable('');
         this.HolidayActive = ko.observable('');
         this.activeday = ko.observable('activeday');
-        this.priorities = ko.observableArray(self.utility.workspace.systemEnums.controlpriorities);
-        this.controllers = ko.observableArray(self.utility.workspace.systemEnums.controllers);
+        this.priorities = ko.observableArray(self.utility.workspace.systemEnums.controlpriorities.slice(1));
+        this.controllers = ko.observableArray(self.utility.workspace.systemEnums.controllers.slice(1));
         self.oldPoints = [];
         self.updateScheds = [];
         self.hardScheds = [];
@@ -1072,13 +1072,16 @@ define(['knockout', 'text!./view.html', 'lodash'], function (ko, view, _) {
                 defaultWidth = '175px';
                 $searchInput.css('width', defaultWidth);
             };
-        self.gettingData(true);
+        if (this.id !== 0) {
+            self.gettingData(true);
 
-        socket.emit('getScheduleEntries', {
-            isSchedule: (this.pointType === 'Schedule'),
-            upi: this.id
-        });
-
+            socket.emit('getScheduleEntries', {
+                isSchedule: (this.pointType === 'Schedule'),
+                upi: this.id
+            });
+        }else{
+            self.gettingData(false);
+        }
         initDOM();
     };
 

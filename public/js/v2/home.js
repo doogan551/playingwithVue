@@ -6469,7 +6469,7 @@ $.extend(dti, {
 
             dti.socket.on('maintenance', function handleStatusUpdate(data) {
                 let msg = data;
-                dti.toast(data.msg);
+                dti.toast(data.event);
                 dti.bindings.serverProcessesStatus('maintenance');
             });
         },
