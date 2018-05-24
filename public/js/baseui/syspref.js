@@ -383,6 +383,7 @@ var calendarViewModel = function () {
             vm = viewModel;
 
             if (viewModel.season() === viewModel.originalSeason) {
+                vm.dirty(false);
                 return;
             }
             data = {
