@@ -161,7 +161,7 @@ const Point = class Point extends Common {
             this.getOne({
                 _id: ref.Value
             }, (err, refPoint) => {
-                if(!!err || !refPoint){
+                if (!!err || !refPoint) {
                     return nextRef(err);
                 }
                 ref.PointName = Config.Utility.getPointName(refPoint.path);
@@ -171,7 +171,7 @@ const Point = class Point extends Common {
             });
         }, (err) => {
             return cb(err, refs);
-        })
+        });
     }
 
     getAllPointsById(data, cb) {
@@ -1904,7 +1904,7 @@ const Point = class Point extends Common {
                                                     break;
 
                                                 default:
-                                                    if(Config.Utility.getPropertyObject('Device Point', newPoint) !== null && newPoint['Point Type'].Value !== 'Sequence') {
+                                                    if (Config.Utility.getPropertyObject('Device Point', newPoint) !== null && newPoint['Point Type'].Value !== 'Sequence') {
                                                         downloadPoint = true;
                                                     }
                                                     break;
