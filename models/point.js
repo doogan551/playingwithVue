@@ -1916,9 +1916,6 @@ const Point = class Point extends Common {
                                                     break;
 
                                                 default:
-                                                    if (Config.Utility.getPropertyObject('Device Point', newPoint) !== null && newPoint['Point Type'].Value !== 'Sequence') {
-                                                        downloadPoint = true;
-                                                    }
                                                     break;
                                             }
                                         }
