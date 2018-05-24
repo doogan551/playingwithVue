@@ -1849,6 +1849,18 @@ const Point = class Point extends Common {
                                     break;
 
                                 case 'Point Refs':
+                                    if (newPoint['Point Type'].Value === 'Program') {
+                                        if (newPoint['Point Refs'].length !== oldPoint['Point Refs'].length) {
+                                            downloadPoint = true;
+                                        } else {
+                                            for (var p = 0; p < newPoint['Point Refs'].length; p++) {
+                                                // the first Point
+                                                if (!_.isEqual(newPoint['Point Refs'][p], oldPoint['Point Refs'][p])) {
+                                                    downloadPoint = true;
+                                                }
+                                            }
+                                        }
+                                    }
                                     let pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                                     for (let r = 0; r < pointRefProps.length; r++) {
                                         if (!_.isEqual(Config.Utility.getPropertyObject(pointRefProps[r], newPoint), Config.Utility.getPropertyObject(pointRefProps[r], oldPoint))) {
