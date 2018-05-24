@@ -1474,10 +1474,6 @@ const Point = class Point extends Common {
                         // this will compare Slides and Point Refs arrays.
                         if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
                             logger.info(newPoint._id, prop);
-                            if (prop === 'Broadcast Enable' && user['System Admin'].Value !== true) {
-                                continue;
-                            }
-
                             logData.activity = 'Point Property Edit';
                             logData.prop = prop;
                             logData.oldValue = {
@@ -1541,7 +1537,6 @@ const Point = class Point extends Common {
                                     if (newPoint[prop].Value === true && newPoint.Value.oosValue !== undefined) {
                                         updateObject['Value.oosValue'] = (newPoint.Value.eValue !== undefined) ? newPoint.Value.eValue : newPoint.Value.Value;
                                     }
-
                                     downloadPoint = true;
                                     break;
 
@@ -1812,7 +1807,6 @@ const Point = class Point extends Common {
                                     configRequired = true;
                                     break;
 
-
                                 case 'Boolean Register Names':
                                 case 'Integer Register Names':
                                 case 'Point Register Names':
@@ -1848,62 +1842,18 @@ const Point = class Point extends Common {
                                     }
                                     break;
 
-                                case 'Point Refs':
-                                    if (newPoint['Point Type'].Value === 'Program') {
-                                        if (newPoint['Point Refs'].length !== oldPoint['Point Refs'].length) {
-                                            downloadPoint = true;
-                                        } else {
-                                            for (var p = 0; p < newPoint['Point Refs'].length; p++) {
-                                                // the first Point
-                                                if (!_.isEqual(newPoint['Point Refs'][p], oldPoint['Point Refs'][p])) {
-                                                    downloadPoint = true;
-                                                }
-                                            }
-                                        }
+                                case 'Ethernet Network':
+                                    if (newPoint['Point Type'].Value === 'Device') {
+                                        updateDownlinkNetwk = true;
                                     }
+                                    break;
+
+                                case 'Point Refs':
+                                    downloadPoint = true;
                                     let pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                                     for (let r = 0; r < pointRefProps.length; r++) {
                                         if (!_.isEqual(Config.Utility.getPropertyObject(pointRefProps[r], newPoint), Config.Utility.getPropertyObject(pointRefProps[r], oldPoint))) {
                                             switch (pointRefProps[r]) {
-                                                case 'Alarm Adjust Point':
-                                                case 'CFM Input Point':
-                                                case 'Control Point':
-                                                case 'Damper Control Point':
-                                                case 'Digital Heat 1 Control Point':
-                                                case 'Digital Heat 2 Control Point':
-                                                case 'Digital Heat 3 Control Point':
-                                                case 'Dry Bulb Point':
-                                                case 'Fan Control Point':
-                                                case 'Feedback Point':
-                                                case 'Heat 1 Control Point':
-                                                case 'Humidity Point':
-                                                case 'Input Point 1':
-                                                case 'Input Point 2':
-                                                case 'Input Point 3':
-                                                case 'Input Point 4':
-                                                case 'Input Point 5':
-                                                case 'Interlock Point':
-                                                case 'Lights Control Point':
-                                                case 'Mixed Air Point':
-                                                case 'Monitor Point':
-                                                case 'Occupied Cool Setpoint':
-                                                case 'Occupied Heat Setpoint':
-                                                case 'Occupied Input':
-                                                case 'Occupied Point':
-                                                case 'Outside Air Point':
-                                                case 'Return Air Point':
-                                                case 'Select Input':
-                                                case 'Setpoint Input':
-                                                case 'Shutdown Point':
-                                                case 'Source Air Temp Point':
-                                                case 'Trigger Point':
-                                                case 'Unoccupied Cool Setpoint':
-                                                case 'Unoccupied Heat Setpoint':
-                                                case 'Zone Temp Point':
-                                                case 'Zone Offset Point':
-                                                    downloadPoint = true;
-                                                    break;
-
                                                 case 'Device Point':
                                                     updateReferences = true;
                                                     configRequired = true;
@@ -1920,13 +1870,6 @@ const Point = class Point extends Common {
                                             }
                                         }
                                     }
-
-                                    break;
-
-                                case 'Ethernet Network':
-                                    if (newPoint['Point Type'].Value === 'Device') {
-                                        updateDownlinkNetwk = true;
-                                    }
                                     break;
 
                                 default:
@@ -1934,9 +1877,6 @@ const Point = class Point extends Common {
                             }
 
                             if (prop !== 'Configure Device' && prop !== 'Value') {
-                                if (downloadPoint === false && false) {
-                                    downloadPoint = true;
-                                }
                                 updateObject[prop] = newPoint[prop];
                             }
 
