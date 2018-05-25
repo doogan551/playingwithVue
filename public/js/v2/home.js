@@ -6548,7 +6548,14 @@ $.extend(dti, {
             return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
         },
         showPointSelector: () => {
-            dti.fire('showPointSelector');
+            dti.fire('showPointSelector', {
+                callback: (data, popout) => {
+                    dti.windows.openWindow({
+                        upi: data._id,
+                        popout
+                    });
+                }
+            });
             // dti.pointSelector.show();
         },
         // showNavigator: function () {
