@@ -111,13 +111,17 @@ let PointSelector = class PointSelector {
             let type = pointType.name();
             let selected = pointType.selected();
             let numSelected = this.numberOfPointTypesSelected();
+            let showAll = this.showAll;
 
             if (!selected) {
-                this.setPointTypes(type, null, true);
-            } else if (numSelected === 1) { //only this one selected, select all
-                this.setPointTypes(null);
+                // unchecked, only select this one
+                this.setPointTypes(type, null, true, true);
+            } else if (numSelected === 1) { 
+                // only this one selected, select all
+                this.setPointTypes(null, null, null, true);
             } else {
-                this.setPointTypes(type, null, true);
+                // checked but multiple selected
+                this.setPointTypes(type, null, true, true);
             }
         };
 
@@ -358,7 +362,7 @@ let PointSelector = class PointSelector {
         this.callback = this.defaultCallback;
     }
 
-    setPointTypes (config, save, stayShown) {
+    setPointTypes (config, save, stayShown, rightClick = false) {
         let pointTypes = null;
         let showAll = true;
         //if not object, just point types
@@ -379,10 +383,14 @@ let PointSelector = class PointSelector {
 
         dti.forEachArray(this.pointTypes(), (type) => {
             if (!pointTypes || pointTypes.indexOf(type.name()) !== -1) {
-                type.visible(true);
+                if (!rightClick) {
+                    type.visible(true);
+                }
                 type.selected(true);
             } else {
-                type.visible(showAll || stayShown);
+                if (!rightClick) {
+                    type.visible(!rightClick && (showAll || stayShown));
+                }
                 type.selected(false);
             }
         });
