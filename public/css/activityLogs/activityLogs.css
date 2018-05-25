@@ -1,29 +1,21 @@
-/* OVERRIDES */
-/* bootstrap-datepicker.css */
-.datepicker.dropdown-menu {
-    max-width: 275px;
+/* Globals */
+:root {
+    --dtiBaseBlueGrey: #607d8b;
+    --dtiHeaderBlueGrey: #455a64;
 }
 
-/* bootstrap modal*/
-#pointFilterModal .modal-dialog {
-    min-width: 1000px;
+html {
+    overflow: hidden;
 }
 
 /* Global page styles */
 body {
     color: #333;
-    font-family: "Segoe UI", Segoe, Tahoma, Geneva, sans-serif;
-    font-size: 13px;
-    background-color: #ccc;
-    margin: 0;
-    height: 100%;
+    /*background-color: #ccc;*/
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
     table-layout: fixed;
-    line-height: 1.55;
 }
 
 tr {
@@ -32,8 +24,6 @@ tr {
 }
 
 td {
-    height: 28px;
-    padding-left: 5px;
     vertical-align: middle;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -55,34 +45,7 @@ a.span.selectable.colPointName:hover {
 /* General purpose syles */
 .scrollable {
     overflow-y: scroll;
-    overflow-x: hidden;
-}
-
-.noScroll {
-    overflow: hidden;
-}
-
-.clearBoth {
-    clear: both;
-}
-
-.cursorPointer {
-    cursor: pointer;
-}
-
-.cursorDefault {
-    cursor: default;
-}
-
-.noSelect {
-    -webkit-user-select: none; /* Chrome all / Safari all */
-    -moz-user-select: none; /* Firefox all */
-    -ms-user-select: none; /* IE 10+ */
-
-    -o-user-select: none;
-    user-select: none;
-
-    cursor: default;
+    overflow-x: scroll;
 }
 
 .selectable {
@@ -92,22 +55,6 @@ a.span.selectable.colPointName:hover {
 
     -o-user-select: text;
     user-select: text;
-}
-
-.truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.hidden {
-    display: none;
-}
-
-.subTitle {
-    display: inline-block;
-    font-size: 20px;
-    color: #666;
 }
 
 .thinScroll::-webkit-scrollbar {
@@ -123,109 +70,40 @@ a.span.selectable.colPointName:hover {
     background-color: #CCC;
 }
 
-/* Title bar */
-.titleBar {
-    position: absolute;
-    top: 5px;
-    left: 20px;
+.filterInfo {
+    margin-left: 5%;
 }
 
-.titleBar .title {
-    display: inline-block;
-    margin-right: 40px;
-}
-
-.titleBar .title > span {
-    text-transform: uppercase;
+.filterInfo .filterIcon {
     color: #666;
-    font-size: 30px;
-}
-
-.titleBar .filterIcon {
-    color: #666;
-    position: relative;
     display: inline-block;
     font-size: 30px;
     margin-right: 15px;
 }
 
-.titleBar .ack {
-    position: relative;
-    top: -4px;
-    padding: 0 5px;
-
-    border: 2px solid #666;
-    border-radius: 3px;
-
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.titleBar .timeout {
-    color: red;
-    cursor: pointer;
-}
-
-.titleBar .resetFilter {
+#filters .resetFilter {
     margin-right: 20px;
     cursor: pointer;
     font-size: 15px;
 }
 
-.resetFilter .x {
-    position: absolute;
-    right: -5px;
-    top: -4px;
-    border-radius: 6px;
-    font-size: 15px;
-    color: #000;
-    background-color: #CCC;
-}
-
-.nav {
-    background-color: #313131;
-    box-shadow: 0 0 7px 0 rgba(50, 50, 50, .45);
-    border-radius: 3px;
-}
-
-.nav ul {
-    margin: 0;
-    padding: 0;
-    width: 225px;
-}
-
-.nav li {
-    list-style-type: none;
-    cursor: pointer;
-    padding: 5px 5px 5px 20px;
-    color: #808080;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, .4);
-    font-size: 14px;
-}
-
-.nav li:not(:first-child) {
-    border-top: 1px solid #3C3C3C;
-}
-
-.nav li:not(:last-child) {
-    border-bottom: 1px solid #282828;
-}
-
-.nav li:hover {
-    color: #4FC8EC;
-}
-
-.nav .active {
-    color: #ccc;
-    font-weight: bold;
-    cursor: default;
-}
-
-/* Filters */
 #filters {
+    display: flex;
     color: #333;
-    min-width: 925px;
+    min-width: 400px;
+}
+
+[class*="flex-container"] {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+[class*="flex-container"] > div:nth-of-type(5) {
+    margin-left: auto;
 }
 
 .filterContainer {
@@ -249,7 +127,6 @@ a.span.selectable.colPointName:hover {
 
 .filterContainer .filterIcon i {
     font-size: 18px;
-    position: relative;
     top: -7px;
 }
 
@@ -273,106 +150,13 @@ a.span.selectable.colPointName:hover {
     color: red;
 }
 
-.filterIcon.fa-pause {
-    font-size: 18px;
-    position: relative;
-    top: 7px;
-}
-
-.filterSet {
-    color: #666;
-    display: inline-block;
-    border-radius: 3px;
-}
-
-.filterSetTitle {
-    color: #333;
-    display: inline-block;
-    border-right: 1px solid #CCC;
-    padding: 0 5px;
-    font-weight: bold;
-}
-
-.filterSet a {
-    color: #666;
-    text-decoration: none;
-    margin: 0 5px;
-    cursor: pointer;
-}
-
-.filterSet a:hover {
-    color: #000;
-}
-
-.filterSet .fa {
-    margin-right: 3px;
-}
-
-.filterText {
-    text-transform: uppercase;
-}
-
-.dropdown-menu .title {
-    margin-bottom: 10px;
-}
-
-.dropdown-menu .title span {
-    font-weight: bold;
-}
-
-.dropdown-menu .title i {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    color: #CCC;
-}
-
-.dropdown-menu .title i:hover {
-    color: #888;
-}
-
-.dropdown-menu a.cancel {
-    position: relative;
-    top: 2px;
-    margin-left: 20px;
-}
-
-#filters .dropdown-menu {
-    top: auto;
-    padding: 10px 15px 15px 15px;
-    margin-top: 5px;
-}
-
-.dropdown-menu .closeIt {
-    cursor: pointer;
-}
-
-.dropdown-menu .okCancel {
-    padding-top: 20px;
-}
-
-.dropdown-menu .fromTo {
-    float: left;
-    padding: 10px 20px 0 0;
-    width: 50px;
-    color: #666;
-}
-
-.dropdown-menu .dateTime {
-    float: left;
+.filled-in[type="checkbox"].filled-in:checked + label:after {
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
 }
 
 input.date, input.time {
     margin: 10px 0;
-}
-
-#timeDateFilters .dropdown-menu {
-    margin-left: 105px;
-}
-
-#userFilters .dropdown-menu {
-    margin-left: 50px;
-    width: 300px;
 }
 
 .dropdown-toggle {
@@ -387,105 +171,11 @@ input.date, input.time {
     cursor: pointer;
 }
 
-/* ActivityLog Details Panel */
-.detailContainer {
-    position: absolute;
-    top: 60px;
-    right: -292px;
-    bottom: 20px;
-    width: 290px;
-    background-color: #FFF;
-    border-radius: 3px;
-}
-
-.detailContainer .fa-times {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    cursor: pointer;
-    padding-bottom: 10px;
-    color: #CCC;
-}
-
-.detailContainer .fa-times:hover {
-    color: #888;
-}
-
-.detailContainer .subTitle {
-    position: absolute;
-    top: 10px;
-    left: 20px;
-}
-
-.detailContent {
-    margin-top: 15px;
-    position: absolute;
-    top: 40px;
-    bottom: 20px;
-    left: 20px;
-    right: 10px;
-}
-
-.detailContent .name {
-    position: absolute;
-    top: 0;
-}
-
-.detailContent .name i {
-    color: #888;
-}
-
-.detailContent .name .text {
-    position: absolute;
-    top: 0;
-    left: 20px;
-    width: 230px;
-}
-
-.detailContent .notifications {
-    position: absolute;
-    top: 40px;
-}
-
-.notifications i {
-    color: #888;
-    font-size: 25px;
-}
-
-.notifications .errorTxt {
-    color: red;
-    margin-bottom: 10px;
-}
-
-.detailContent .displays {
-    position: absolute;
-    top: 40px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding-right: 10px;
-    max-width: 100%;
-}
-
-.thumb {
-    border-radius: 4px;
-    -webkit-transition: all 0.2s ease-in-out;
-    transition: all 0.2s ease-in-out;
-    max-width: 100%;
-    margin-bottom: 20px;
-}
-
-/* activitylog Content */
 #activitylogContainer {
-    position: absolute;
-    top: 70px;
-    right: 20px;
-    bottom: 20px;
-    left: 20px;
+    margin-top: 15px;
 }
 
 #activitylogContainer .mask {
-    position: absolute;
     top: 20px;
     right: 0;
     left: 0;
@@ -495,43 +185,32 @@ input.date, input.time {
     opacity: 0.75;
 }
 
+#activitylogContainer .pages {
+    /*position: absolute;*/
+    /*bottom: -13px;*/
+    /*width: 100%;*/
+}
+
 .header > div {
     float: left;
     background-color: #eee;
     color: #999;
     border: 1px solid #ccc;
     padding-left: 5px;
-    height: 20px;
+    height: 25px;
 }
 
 .header .colSelect {
     cursor: pointer;
 }
 
-.colSelect {
-    min-width: 25px;
-    width: 25px;
-    text-align: left;
-}
-
-.colSelect input {
-    position: relative;
-    top: -1px;
-}
-
-.colSelect > i {
-    position: relative;
-    left: 5px;
-    top: -6px;
-}
-
-.colSelect .dropdown-menu {
-    top: auto;
+.header .colSelect label {
+    top: 4px;
 }
 
 .colPhoto {
     padding-top: 7px;
-    width: 30px;
+    width: 10px;
 }
 
 .colUserName {
@@ -539,7 +218,6 @@ input.date, input.time {
     width: 75px;
     min-width: 65px;
     padding-right: 5px;
-
 }
 
 .colPointName {
@@ -548,42 +226,9 @@ input.date, input.time {
     padding-right: 5px;
 }
 
-.colLog2 {
+.colTime {
     width: 150px;
     min-width: 150px;
-    padding-right: 5px;
-}
-
-.colClass {
-    width: 95px;
-    min-width: 95px;
-}
-
-.colTime {
-    width: 140px;
-    min-width: 140px;
-}
-
-.colTime > i {
-    position: relative;
-    top: 3px;
-    right: 5px;
-}
-
-.colDisp {
-    width: 45px;
-    text-align: center;
-}
-
-.colDisp > i {
-    position: relative;
-    left: -2px;
-}
-
-td.colDisp > i {
-    color: #428bca;
-    top: 2px;
-    font-size: 16px;
 }
 
 .header .colTime {
@@ -592,7 +237,7 @@ td.colDisp > i {
 
 .header .colPhoto {
     padding-top: 0px;
-    width: 50px;
+    width: 55px;
 }
 
 .header .colLog {
@@ -609,12 +254,6 @@ td.colDisp > i {
 }
 
 .activityLogs {
-    position: absolute;
-    top: 20px;
-    right: 0;
-    left: 0;
-    bottom: 20px;
-    min-height: 27px;
     overflow: auto;
 }
 
@@ -623,166 +262,19 @@ td.colDisp > i {
 }
 
 .activitylogs::-webkit-scrollbar-track {
-    /*-webkit-box-shadow: inset 0 0 0px rgba(0,0,0,0.3); */
     background-color: #FFF;
-    /*width: 12px;*/
 }
 
 .activitylogs::-webkit-scrollbar-thumb {
     border-radius: 5px;
     background-color: #CCC;
-    /*-webkit-box-shadow: inset 0 0 6px rgba(204,204,204,1); */
 }
 
-.activitylogs .selectedRow {
-    background: #FFC;
+.activityLogs tbody td {
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
-
-.activitylogsGradient {
-    position: absolute;
-    left: 0;
-    right: 10px;
-    bottom: 20px;
-    height: 10px;
-    background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Safari 5.1-6*/
-    background: -o-linear-gradient(bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Opera 11.1-12*/
-    background: -moz-linear-gradient(bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Fx 3.6-15*/
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Standard*/
-}
-
-.tableButton {
-    background-color: #428bca;
-    color: #FFF;
-    padding: 0 5px;
-    margin: 0 2px;
-    border-radius: 3px;
-    display: inline-block;
-    text-transform: uppercase;
-}
-
-.ackError {
-    background-color: red;
-}
-
-.acked {
-    background-color: #888;
-    color: #FFF;
-    cursor: default;
-    max-width: 85px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;
-    top: 2px;
-}
-
-#activitylogContainer p#noActivityLogs {
-    padding: 10px;
-}
-
-.pages {
-    position: absolute;
-    bottom: -10px;
-    left: 5px;
-    right: 5px;
-}
-
-.pop {
-    display: inline-block;
-    margin-right: 20px;
-}
-
-.pop .fa {
-    margin-right: 5px;
-}
-
-.pop .fa-arrow-circle-up {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-}
-
-.pop .fa-arrow-circle-down {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-}
-
-.newActivityLog {
-    position: absolute;
-    left: 0;
-    right: 10px;
-    z-index: 10;
-    display: none;
-    background-color: #FFC;
-    text-align: center;
-    text-decoration: none;
-    cursor: default;
-}
-
-.newActivityLog span:hover {
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.newActivityLogTop {
-    top: 20px;
-}
-
-.newActivityLogBottom {
-    bottom: 20px;
-}
-
-/* Point Filter Modal */
-.modalContainer {
-    margin: 30px auto;
-    width: 1000px;
-    background-color: #FFF;
-    border-radius: 5px;
-    padding: 10px;
-}
-
-.modalContainer .fa-times {
-    cursor: pointer;
-    padding-bottom: 10px;
-    color: #CCC;
-}
-
-.modalContainer .fa-times:hover {
-    color: #888;
-}
-
-.modalContainer iframe {
-    width: 980px;
-    height: 500px;
-    border: none;
-    border-radius: 5px;
-}
-
-.modalContainer button {
-    margin: 10px 0 0;
-    width: 100px;
-}
-
-/* Other */
-#Emergency, .Emergency {
-    color: red;
-}
-
-#Critical, .Critical {
-    color: #F90;
-}
-
-#Urgent, .Urgent {
-    color: #90F;
-}
-
-#Default, .Default {
-    color: #666;
-}
-
 .bodyMask {
-    position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
@@ -792,14 +284,17 @@ td.colDisp > i {
 }
 
 .content {
-    position: absolute;
-    top: 60px;
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    /*min-width: 400px;*/
     overflow: hidden;
     background-color: #FFF;
     padding: 20px;
-    border-radius: 3px;
+    height: calc(100% - 42px) !important;
+}
+
+.resizer {
+    /*position: absolute;*/
+    top: 0;
+    right: -8px;
+    bottom: 0;
+    width: 16px;
+    cursor: col-resize;
 }

@@ -16,7 +16,7 @@ var defaults = {
             'port': 80,
             'siteTitle': 'Info Scan',
             'appname': 'infoscan',
-            'inboundId': 'moclx0qr65a3' // Must update 3rd party services utilizing our inbound if we change this
+            'inboundId': 'moclx0qr65a3'// Must update 3rd party services utilizing our inbound if we change this
         },
         'socketConfig': {
             'ioPort': 8085,
@@ -57,7 +57,7 @@ var defaults = {
         'authToken': '7318295319a25ce15b05c57d13909d0c',
         'phoneNumbers': ['+13362213360'],
         'voice': {
-            'alarms': {                                         // Alarms application 
+            'alarms': {                                         // Alarms application
                 'Url': '/twilio/voiceAlarmsAnswer',             // All urls prefixed with the domain & inboundId by notifierUtility.js
                 'StatusCallback': '/twilio/voiceAlarmsStatus',  // A relative path keeps these urls valid for all customers
                 'StatusCallbackEvent': ['ringing', 'answered', 'completed'],
@@ -72,8 +72,8 @@ var defaults = {
         'phoneNumber': '16623384486'
     },
     'SparkPost': {
-        "smtpAuth": {
-            'user': "SMTP_Injection",
+        'smtpAuth': {
+            'user': 'SMTP_Injection',
             'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
         }
     },
@@ -81,9 +81,9 @@ var defaults = {
     minifyFiles: true
 };
 
-defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";
-defaults.Infoscan.processes.zmqProcess = defaults.Infoscan.files.driveLetter + ":/InfoScan/Server/zmqServer.exe";
-defaults.Infoscan.processes.smProcess = defaults.Infoscan.files.driveLetter + ":/InfoScan/Server/ServerMonitor.exe";
+defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ':/InfoScan/Firmware/';
+defaults.Infoscan.processes.zmqProcess = defaults.Infoscan.files.driveLetter + ':/InfoScan/Server/zmqServer.exe';
+defaults.Infoscan.processes.smProcess = defaults.Infoscan.files.driveLetter + ':/InfoScan/Server/ServerMonitor.exe';
 
 defaults.redisConfig = {
     host: defaults.Infoscan.dbConfig.host,

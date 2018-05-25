@@ -1,110 +1,147 @@
-var db = require('../helpers/db');
-var Utility = require('../models/utility');
-var config = require('../public/js/lib/config.js');
-var logger = require('../helpers/logger')(module);
-var utils = require('../helpers/utils');
-var activityLogCollection = utils.CONSTANTS('activityLogCollection');
+const Config = require('../public/js/lib/config.js');
+const async = require('async');
 
-module.exports = {
-  get: function(data, cb) {
-    var currentPage = parseInt(data.currentPage, 10);
-    var itemsPerPage = parseInt(data.itemsPerPage, 10);
-    var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
-    var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
-    var usernames = data.usernames;
-    var sort = {};
+const Common = require('./common');
+const Enums = require('../public/js/lib/config').Enums;
+const utils = require('../helpers/utils');
 
-    if (!itemsPerPage) {
-      itemsPerPage = 200;
-    }
-    if (!currentPage || currentPage < 1) {
-      currentPage = 1;
+const activityLogCollection = utils.CONSTANTS('activityLogCollection');
+
+const ActivityLog = class ActivityLog extends Common {
+    constructor() {
+        super(activityLogCollection);
     }
 
-    var numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-    var query = {
-      $and: [{
-        timestamp: {
-          $gte: startDate
-        }
-      }, {
-        timestamp: {
-          $lte: endDate
-        }
-      }]
-    };
-
-    if (data.name1 !== undefined) {
-      if (data.name1 !== null) {
-        query.name1 = new RegExp("^" + data.name1, 'i');
-      } else {
-        query.name1 = "";
-      }
-    } else {
-      query.name1 = "";
-    }
-
-    if (data.name2 !== undefined) {
-      if (data.name2 !== null) {
-        query.name2 = new RegExp("^" + data.name2, 'i');
-      } else {
-        query.name2 = "";
-      }
-    } else {
-      query.name2 = "";
-    }
-
-    if (data.name3 !== undefined) {
-      if (data.name3 !== null) {
-        query.name3 = new RegExp("^" + data.name3, 'i');
-      } else {
-        query.name3 = "";
-      }
-    } else {
-      query.name3 = "";
-    }
-
-    if (data.name4 !== undefined) {
-      if (data.name4 !== null) {
-        query.name4 = new RegExp("^" + data.name4, 'i');
-      } else {
-        query.name4 = "";
-      }
-    } else {
-      query.name4 = "";
-    }
-
-    if (data.pointTypes) {
-      if (data.pointTypes.length > 0) {
-        query.pointType = {
-          $in: data.pointTypes
+    create(logData, cb) {
+        let criteria = {
+            insertObj: this.buildActivityLog(logData)
         };
-      }
+        this.insert(criteria, cb);
     }
 
-    if (!!usernames && usernames.length > 0) {
-      query.username = {
-        $in: usernames
-      };
+    getLogs(data, cb) {
+        let currentPage = this.getDefault(data.currentPage, 1);
+        let itemsPerPage = this.getDefault(data.itemsPerPage, 200);
+        let startDate = this.getDefault(data.startDate, 0);
+        let endDate = (this.getNumber(data.endDate) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
+        let usernames = data.usernames;
+
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        let numberItems = this.getDefault(data.numberItems, itemsPerPage);
+
+        let query = {
+            $and: [{
+                timestamp: {
+                    $gte: startDate
+                }
+            }, {
+                timestamp: {
+                    $lte: endDate
+                }
+            }]
+        };
+
+        if (!!data.terms.length) {
+            query._path = {
+                $all: this.buildSearchTerms(data.terms)
+            };
+        }
+
+        /** @type {Array} Point Type enums */
+        if (data.pointTypes) {
+            if (data.pointTypes.length > 0) {
+                query.pointType = {
+                    $in: data.pointTypes
+                };
+            }
+        }
+
+        if (!!usernames && usernames.length > 0) {
+            query.username = {
+                $in: usernames
+            };
+        }
+
+        let sort = {
+            timestamp: this.getSort(data.sort)
+        };
+        let skip = (currentPage - 1) * itemsPerPage;
+        let criteria = {
+            query: query,
+            sort: sort,
+            _skip: skip,
+            _limit: numberItems,
+            data: data
+        };
+        this.getWithSecurity(criteria, cb);
     }
 
-    sort.timestamp = (data.sort !== 'desc') ? -1 : 1;
-    var skip = (currentPage - 1) * itemsPerPage;
-    var criteria = {
-      query: query,
-      collection: activityLogCollection,
-      sort: sort,
-      _skip: skip,
-      _limit: numberItems,
-      data: data
-    };
-    Utility.getWithSecurity(criteria, cb);
-  },
-  create: function(logData, cb) {
-    Utility.insert({
-      collection: activityLogCollection,
-      insertObj: logData
-    }, cb);
-  }
+    // newupdate
+    doActivityLogs(generateActivityLog, logs, callback) {
+        if (generateActivityLog) {
+            async.each(logs, (log, cb) => {
+                this.create(log, cb);
+            }, callback);
+        } else {
+            return callback(null);
+        }
+    }
+
+    buildActivityLog(data) {
+        let log = {
+            userId: data.user._id,
+            username: data.user.username,
+            upi: 0,
+            path: [],
+            _path: [],
+            pointType: null,
+            activity: Enums['Activity Logs'][data.activity].enum,
+            timestamp: data.timestamp || Date.now(),
+            Security: [],
+            log: data.log
+        };
+        let propertyChange = {
+            property: '',
+            valueType: 0,
+            oldValue: {
+                Value: 0,
+                eValue: 0
+            },
+            newValue: {
+                Value: 0,
+                eValue: 0
+            }
+        };
+
+        if (!!data.point) {
+            log.upi = (data.point._id !== undefined) ? data.point._id : '';
+            log.pointType = (data.point['Point Type'].eValue !== undefined) ? data.point['Point Type'].eValue : null;
+            if (data.point.path !== undefined && data.point.path !== null) {
+                log.path = data.point.path;
+                this.toLowerCasePath(log);
+            }
+        }
+
+        if ((log.activity === 1 || log.activity === 2)) {
+            if (data.oldValue !== undefined) {
+                propertyChange.oldValue = data.oldValue;
+            } else {
+                delete propertyChange.oldValue;
+            }
+            propertyChange.property = data.prop;
+            propertyChange.newValue = data.newValue;
+            if (!!data.point[data.prop] && !!data.point[data.prop].ValueType) {
+                propertyChange.valueType = data.point[data.prop].ValueType;
+            }
+
+            log.propertyChanges = propertyChange;
+        }
+
+        return log;
+    }
 };
+
+module.exports = ActivityLog;

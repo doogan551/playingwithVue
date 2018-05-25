@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   width="72px"
+   height="72px"
+   viewBox="0 0 72 72"
+   enable-background="new 0 0 72 72"
+   xml:space="preserve"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="MonitorExternalPoint.svg"><metadata
+   id="metadata27"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+   id="defs25" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="1280"
+   inkscape:window-height="670"
+   id="namedview23"
+   showgrid="false"
+   inkscape:zoom="3.2777778"
+   inkscape:cx="36"
+   inkscape:cy="36"
+   inkscape:window-x="-8"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Layer_1" />
+<g
+   id="g3"
+   transform="matrix(1.0001305,0,0,1.0771509,-0.39131195,0.919348)">
+	<polygon
+   points="25.388,46.951 25.388,25.61 25.388,25.141 25.857,25.141 39.246,25.141 39.469,25.141 39.61,25.318 48.152,35.989 48.385,36.281 48.152,36.572 39.61,47.244 39.469,47.422 39.246,47.422 25.857,47.422 25.388,47.422 "
+   id="polygon5"
+   style="fill:#2f2f82" />
+	<linearGradient
+   id="SVGID_1_"
+   gradientUnits="userSpaceOnUse"
+   x1="38.9277"
+   y1="26.305201"
+   x2="30.6257"
+   y2="44.951801">
+		<stop
+   offset="0"
+   style="stop-color:#AAA7D3"
+   id="stop8" />
+		<stop
+   offset="0.46"
+   style="stop-color:#9290C6"
+   id="stop10" />
+		<stop
+   offset="1"
+   style="stop-color:#8286C1"
+   id="stop12" />
+	</linearGradient>
+	<polygon
+   points="26.327,26.079 26.327,46.482 39.022,46.482 47.188,36.281 39.022,26.079 "
+   id="polygon14"
+   style="fill:url(#SVGID_1_)" />
+	<linearGradient
+   id="SVGID_2_"
+   gradientUnits="userSpaceOnUse"
+   x1="36.559101"
+   y1="34.5396"
+   x2="36.559101"
+   y2="27.248699">
+		<stop
+   offset="0"
+   style="stop-color:#9290C6"
+   id="stop17" />
+		<stop
+   offset="1"
+   style="stop-color:#7778B9"
+   id="stop19" />
+	</linearGradient>
+	<polygon
+   points="27.5,45.354 27.5,27.208 38.354,27.208 45.617,36.281 38.354,45.354 "
+   id="polygon21"
+   style="fill:url(#SVGID_2_)" />
+</g>
+</svg>

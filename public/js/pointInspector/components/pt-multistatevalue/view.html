@@ -10,8 +10,10 @@
         <li><span>Configuration <i class="fa fa-angle-right"></i></span>
             <ul>
                 <li class="header"><span>Configuration</span>
+                <li><span>Alarms</span></li>
                 <li><span>Hardware</span></li>
                 <li><span>Value</span></li>
+                <li><span>Notifications</span></li>
                 <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
             </ul>
         </li>
@@ -78,11 +80,44 @@
         <div data-bind="component: { name: 'ctl-scheduleEntries', params: { id: data._id(), point: data, pointType: data['Point Type'].Value(),isTabLoaded: tabTriggers.entries, rootContext: $root } }"></div>
     </div>
 
+    <div id="alarms" class="content">
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Alarm Display Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarms Off', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarm Repeat Enable', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <div class="clearfix visible-xs"></div>
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Alarm Class', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Alarm Classes', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Repeat Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Delay Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Interlock Point', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Interlock State', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
     <div id="hardware" class="content">
         <div class="row">
             <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Device Point', rootContext: $root } } -->
             <!-- /ko -->
             <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Remote Unit Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Feedback Point', rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <hr>
@@ -139,7 +174,24 @@
         </div>
         <hr>
         <div class="row">
-            <!--  ko component: { name: 'ctl-states', params: { propertyName: 'States', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!--  ko component: { name: 'ctl-states', params: { propertyName: 'States', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root, showAlarmChoice: true } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Default Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Monitor Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Fail Action', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Fail Actions', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Demand Enable', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Demand Interval', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
         </div>
     </div>

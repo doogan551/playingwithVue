@@ -38,7 +38,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
                 half = parseInt(len / 2, 10),
                 columnOne = listOfCustomColorCodes.slice(0, half),
                 columnTwo = listOfCustomColorCodes.slice(half),
-                ret = []
+                ret = [];
 
             while ((i < columnOne.length) || (i < columnTwo.length)) {
                 col1 = (columnOne[i]) ? columnOne[i] : [];
@@ -151,7 +151,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
             $colorpicker.append($unorderedList);
             for (i = 0; i < colorArray.length; i++) {
                 customColorDivID = "customColor_" + i;
-                $listItem = $("\n<li>\n");
+                $listItem = $("<li>");
                 $unorderedList.append($listItem);
                 $customColorDiv = $("<div>", {class: customColorClass, id: customColorDivID});
                 $listItem.append($customColorDiv);

@@ -87,8 +87,8 @@ html
         // ko if: ($parent.networkSegment && $parent.networkSegment() == networkSegment()) || ($data.networkSegment && $data.networkSegment() == $parent)
         li
           i.fa.fa-building.noselect(data-bind="style:{color:$root.statusColor($data)}") &nbsp;
-          span.hoverCursor.noselect(data-bind=" click:$root.openDevice, event:{mouseover:$root.showDevice, mouseout:$root.hideDevice}, attr:{'id':$data.text().split(' ').join('_')}")
-            span.searchable(data-bind="text:$data.text()")
+          span.hoverCursor.noselect(data-bind=" click:$root.toggleDevice, event:{dblclick:$root.openDevice}, attr:{'id':$root.buildNameFromPath($data.path())}")
+            span.searchable(data-bind="text:$root.buildNameFromPath($data.path())")
             | 
             span.inlineDevAddr(data-bind="text:$root.devAddress($data)")
           //ko if:networks().length >0
@@ -101,14 +101,15 @@ html
           // /ko
         // /ko
           
-
-    script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+    include /baseui/dti.pug
+    
+    //- script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
     script(type='text/javascript', src='/js/lib/lodash.min.js')
     script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
     script(type='text/javascript', src='/js/lib/bootstrap3-hover-dropdown.min.js')
-    script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
-    script(type='text/javascript', src="/js/lib/knockout.viewModel.js")
-    script(type='text/javascript', src="/js/lib/moment.js")
-    script(type='text/javascript', src="/js/v2/dorsettUtility.js")
+    //- script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+    //- script(type='text/javascript', src="/js/lib/knockout.viewModel.js")
+    //- script(type='text/javascript', src="/js/lib/moment.js")
+    //- script(type='text/javascript', src="/js/v2/dorsettUtility.js")
     script(type='text/javascript', src="/js/lib/treeview.js")
     script(type='text/javascript', src="/js/devicetree/devicetree.js")

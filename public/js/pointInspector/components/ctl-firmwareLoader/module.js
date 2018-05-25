@@ -1,4 +1,4 @@
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'text!./view.html'], function (ko, view) {
     function ViewModel(params) {
         var self = this;
         self.root = params.rootContext;
@@ -6,7 +6,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.data = self.point.data;
         self.socket = self.root.socket;
         self.utility = self.root.utility;
-        self.model = self.data["Model Type"].Value();
+        self.model = self.data['Model Type'].Value();
 
         self.modal = {
             error: ko.observable(''),
@@ -17,19 +17,19 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             title: ko.observable(''),
             value: ko.observable(''),
             isDownloading: ko.observable(false),
-            cancel: function() {
+            cancel: function () {
                 $('.progress-bar').removeClass('progress-bar-danger');
                 $('.progress-bar').removeClass('progress-bar-success');
                 $('.progress-bar').css('width', '0%');
                 $('.progress-bar').text('0%');
                 $('.modal').modal('hide');
             },
-            submit: function() {}
+            submit: function () {}
         };
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.firmwareLoader = function() {
+    ViewModel.prototype.firmwareLoader = function () {
         var self = this,
             $btn = $(event.target),
             $btnIcon = $btn.find('i.fa'),
@@ -52,8 +52,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         $('.afterLoad').hide();
         $('.beforeLoad').show();
 
-        self.uploadFile = function(file) {
-            console.log("file", file);
+        self.uploadFile = function (file) {
+            console.log('file', file);
             uploadFile = file;
             if (file !== undefined && file !== null) {
                 //self.showCheck(true);
@@ -62,7 +62,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             }
         };
 
-        self.start = function() {
+        self.start = function () {
             var firmwareObject = {
                     model: self.model,
                     devices: [],
@@ -73,20 +73,16 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         point: {
                             _id: self.data._id(),
                             Security: self.data.Security(),
-                            Name: self.data.Name(),
-                            name1: self.data.name1(),
-                            name2: self.data.name2(),
-                            name3: self.data.name3(),
-                            name4: self.data.name4(),
-                            "Point Type": {
-                                eValue: self.data["Point Type"].eValue()
+                            path: self.data.path(),
+                            'Point Type': {
+                                eValue: self.data['Point Type'].eValue()
                             },
-                            "Firmware Version": self.data["Firmware Version"].Value()
+                            'Firmware Version': self.data['Firmware Version'].Value()
                         }
                     }
                 },
                 fileReader = new FileReader(),
-                callback = function(response) {
+                callback = function (response) {
                     // console.log("inside callback", response);
                     console.log('response', self.selectedFile());
                     self.selectedFile(self.firmwareFiles()[0]);
@@ -98,7 +94,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         $('.progress-bar').removeClass('progress-bar-danger');
                         $('.progress-bar').removeClass('progress-bar-success');
                         $('.progress-bar').css('width', self.progressPercent() + '%');
-                        $('.progress-bar').text(self.progressPercent() + "%");
+                        $('.progress-bar').text(self.progressPercent() + '%');
                     } else if (response.err !== undefined) {
                         $('.progress-bar').addClass('progress-bar-danger');
                         $('.progress-bar').css('width', '100%');
@@ -118,15 +114,15 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     }
                 };
 
-            if (self.data["Point Type"].eValue() === 8) {
+            if (self.data['Point Type'].eValue() === 8) {
                 firmwareObject.devices = [self.data._id()];
-            } else if (self.data["Point Type"].eValue() === 144) {
-                firmwareObject.devices = [this.root.utility.getPointRefProperty("Device Point").data.Value()];
+            } else if (self.data['Point Type'].eValue() === 144) {
+                firmwareObject.devices = [this.root.utility.getPointRefProperty('Device Point').data.Value()];
                 firmwareObject.remotes = [self.data._id()];
             }
 
             if (uploadFile !== undefined) {
-                fileReader.onload = function() {
+                fileReader.onload = function () {
                     firmwareObject.uploadFile = fileReader.result;
                     firmwareObject.fileName = uploadFile.name;
                     firmwareObject.saveFile = self.saveCheck();
@@ -137,49 +133,43 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             }
 
             self.sendToFirmwareLoader(firmwareObject, callback);
-
         };
 
-        self.sendToFirmwareLoader = function(data, callback) {
+        self.sendToFirmwareLoader = function (data, callback) {
             self.socket.emit('firmwareLoader', data);
-            self.socket.on('returnFromLoader', function(response) {
+            self.socket.on('returnFromLoader', function (response) {
                 //response = $.parseJSON(response);
-                if (typeof callback == 'function') {
+                if (typeof callback === 'function') {
                     callback.call(undefined, response);
                 }
             });
         };
 
-        $modal.one('hide.bs.modal', function(e) {
+        $modal.one('hide.bs.modal', function (e) {
             $modalScene.hide();
             self.progressMessage('');
         });
-        $modal.one('shown.bs.modal', function(e) {
+        $modal.one('shown.bs.modal', function (e) {
             console.log('shown', self.modal.isDownloading());
             if (self.modal.isDownloading()) {
-
                 $modalProgress.show();
                 $modalWait.show();
             } else {
                 $modalLoad.show();
             }
-            $.getJSON('/api/firmwareLoader/get/' + self.model, function(data) {
+            $.getJSON('/api/firmwareLoader/get/' + self.model, function (data) {
                 if (data.err) {
                     console.log(data.err);
                     $btnSubmit.prop('disabled', true);
                     self.firmwareFiles(['No files found']);
+                } else if (!!data.files.length) {
+                    self.selectedFile(data.files[0]);
+                    console.log('selected', self.selectedFile());
+                    $btnSubmit.prop('disabled', false);
+                    self.firmwareFiles(data.files);
                 } else {
-                    if (!!data.files.length) {
-                        self.selectedFile(data.files[0]);
-                        console.log('selected', self.selectedFile());
-                        $btnSubmit.prop('disabled', false);
-                        self.firmwareFiles(data.files);
-                    } else {
-
-                        self.firmwareFiles(['No files found']);
-                        $btnSubmit.prop('disabled', true);
-                    }
-
+                    self.firmwareFiles(['No files found']);
+                    $btnSubmit.prop('disabled', true);
                 }
             });
         });
@@ -197,7 +187,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         $modalProgress = $modal.find('.modalProgress');
 
 
-        modal.submit = function() {
+        modal.submit = function () {
             self.modal.isDownloading(true);
             $modalScene.hide();
             $modalProgress.show();
@@ -211,7 +201,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {};
+    ViewModel.prototype.dispose = function () {};
 
     // Return component definition
     return {

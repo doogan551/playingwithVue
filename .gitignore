@@ -1,4 +1,5 @@
 public/img/
+!public/img/dti/*
 public/display_assets/
 logs/
 tmp/
@@ -17,3 +18,8 @@ apps/backup.log
 *.DS_Store
 !*.exe
 !*.dll
+debug.log
+*.bak
+
+format\.js
+electron-dist/

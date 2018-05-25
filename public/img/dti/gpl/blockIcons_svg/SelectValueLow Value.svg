@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   width="72px"
+   height="72px"
+   viewBox="0 0 72 72"
+   enable-background="new 0 0 72 72"
+   xml:space="preserve"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="ArrowUp.svg"><metadata
+   id="metadata24"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+   id="defs22">
+ <linearGradient
+   y2="103.058"
+   x2="47.2474"
+   y1="55.8197"
+   x1="136.465"
+   gradientUnits="userSpaceOnUse"
+   id="id0">
+   <stop
+   id="stop9"
+   style="stop-color:#4CCCCA"
+   offset="0" />
+   <stop
+   id="stop11"
+   style="stop-color:#199A9D"
+   offset="0.458824" />
+   <stop
+   id="stop13"
+   style="stop-color:#4CCCCA"
+   offset="1" />
+  </linearGradient>
+  <style
+   id="style6"
+   type="text/css">
+   
+    .fil0 {fill:#008185}
+    .fil2 {fill:#1A9A98}
+    .fil1 {fill:#5DDDDB}
+    .fil3 {fill:url(#id0)}
+   
+  </style>
+  </defs><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="640"
+   inkscape:window-height="480"
+   id="namedview20"
+   showgrid="false"
+   inkscape:zoom="3.2777778"
+   inkscape:cx="36"
+   inkscape:cy="36"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="Layer_1" />
+
+<g
+   style="fill-rule:evenodd"
+   id="g3022"
+   transform="matrix(0.30485969,0,0,0.26361294,9.9481625,13.209452)"><g
+     transform="matrix(0.44011102,0,0,0.44915254,46.225031,48.863535)"
+     id="Layer_x0020_1">
+  <metadata
+   id="CorelCorpID_0Corel-Layer" />
+  <g
+   id="_221687040">
+   <polygon
+   style="fill:#008185"
+   id="polygon18-1"
+   points="109,141 127,118 151,88 164,72 176,56 156,56 136,56 135,56 135,19 135,10 135,0 126,0 116,0 60,0 50,0 41,0 41,10 41,19 41,56 40,56 20,56 0,56 12,72 25,88 49,118 67,141 3,141 3,188 172,188 172,141 "
+   class="fil0" />
+   <polygon
+   style="fill:#5ddddb"
+   id="polygon20"
+   points="144,82 156,66 136,66 126,66 126,19 126,10 116,10 60,10 50,10 50,19 50,66 40,66 20,66 32,82 56,112 80,143 86,150 12,150 12,178 163,178 163,150 90,150 96,143 120,112 "
+   class="fil1" />
+   <rect
+   style="fill:#1a9a98"
+   id="rect22"
+   height="9"
+   width="132"
+   y="160"
+   x="22"
+   class="fil2" />
+   <polygon
+   style="fill:url(#id0)"
+   id="polygon24"
+   points="116,19 60,19 60,76 40,76 64,106 88,137 112,106 136,76 116,76 "
+   class="fil3" />
+  </g>
+ </g></g></svg>

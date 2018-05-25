@@ -1,5 +1,58 @@
+/* eslint-disable linebreak-style */
+/* globals dtiCommon:false */ // Prevent JSLint from complaining about the dtiCommon variable not defined (it's global)
+
+'use strict';
+let __el = function (el) { // ch928 (added)
+    return el instanceof $ ? el[0] : el instanceof HTMLElement ? el : null;
+};
+let kodt = function (obj = window.$0) { // ch928 (added)
+    return ko.dataFor(__el(obj));
+};
+let koct = function (obj = window.$0) { // ch928 (added)
+    return ko.contextFor(__el(obj));
+};
+let kojs = function (obj = window.$0) { // ch928 (added)
+    let el = __el(obj);
+
+    let data = el ? kodt(obj) : obj;
+
+    let cycle = function (item) {
+        let ret = {};
+
+        gpl.forEach(item, (val, prop) => {
+            if (val instanceof $) {
+                ret[prop] = val;
+            } else {
+                if (Array.isArray(val)) {
+                    let tmpArr = [];
+                    ret[prop] = tmpArr;
+                    gpl.forEachArray(val, (innerVal) => {
+                        tmpArr.push(cycle(innerVal));
+                    });
+                } else if (typeof val === 'object') {
+                    let tmpObj = {};
+                    ret[prop] = tmpObj;
+                    gpl.forEach(val, (innerVal, innerProp) => {
+                        tmpObj[innerProp] = cycle(innerVal);
+                    });
+                } else {
+                    ret[prop] = koUnwrap(val);
+                }
+            }
+        });
+
+        return ret;
+    };
+
+    return cycle(data);
+};
+let koUnwrap = function (value) { // ch928 (added)
+    return ko.utils.unwrapObservable(value);
+};
+
 var gpl = {
     texts: {},
+    actionButtons: {}, // ch473
     blocks: {},
     shapes: {},
     anchors: {},
@@ -7,6 +60,7 @@ var gpl = {
     eventLog: [],
     actionLog: [],
     json: {},
+    originalSequenceData: {},
     originalSequence: {},
     eventHandlers: {},
     destroyFns: [],
@@ -14,6 +68,7 @@ var gpl = {
     MAXZOOM: 4,
     MINZOOM: 0.1,
     editModeOffset: 77,
+    bottomBarHeight: $('.bottomBar').height(),
     scaleValue: 1,
     defaultLoopDelay: 10,
     resizeDelay: 250,
@@ -25,14 +80,13 @@ var gpl = {
     deviceId: 0,
     logLinePrefix: true,
     rendered: false,
-    poppedIn: false,//window.top.location.href !== window.location.href,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
-    iconPath: '/img/icons/',
+    iconPath: '/img/dti/gpl/blockIcons/', // ch1365 (change icon path)
     pointApiPath: '/api/points/',
     defaultBackground: 'C8BEAA',
     jqxTheme: 'flat',
-    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value'],
+    convertProperties: ['blockType', 'left', 'name', 'top', 'pointRefIndex', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value'], // ch1083; don't save constant block valueOptions
     $body: $('body'),
     $tooltip: $('.gplTooltip'),
     $fontColorPicker: $('#fontColorPicker'),
@@ -55,6 +109,8 @@ var gpl = {
     point: window.gplData.point,
     references: window.gplData.references,
     upi: window.gplData.upi,
+    currentUser: '',
+    modalIsOpen: false,
     DELETEKEY: 46,
     ESCAPEKEY: 27,
     ARROWKEYS: {
@@ -63,6 +119,11 @@ var gpl = {
         39: 'right',
         40: 'down'
     },
+    collator: new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base'
+    }),
+    // selectedGroup: new fabric.Group(),
     destroyObject: function (o) {
         var keys = Object.keys(o),
             c;
@@ -86,26 +147,26 @@ var gpl = {
     waitForSocketMessage: function (fn) {
         gpl.socketWaitFn = fn;
     },
-    saveSequence: function () {
-        gpl.point._parentUpi = 0;
-        gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
+    saveSequence: function (saveObj, cb) { // ch918; simplify this function's logic & add callback option
+        let data = $.extend({
+                updates: [],
+                deletes: []
+            }, saveObj);
 
-        gpl.socket.emit('updateSequence', {
-            sequenceName: gpl.point.Name,
-            sequenceData: {
-                sequence: gpl.json
-            },
-            pointRefs: gpl.point['Point Refs'],
-            point: {
-                name1: gpl.point.name1,
-                name2: gpl.point.name2,
-                name3: gpl.point.name3,
-                name4: gpl.point.name4,
-                Name: gpl.point.Name,
-                "Point Type": gpl.point["Point Type"],
-                upi: gpl.upi
-            }
+        cb = cb || gpl.emptyFn;
+
+        gpl.point._parentUpi = 0;
+        gpl.point.SequenceData.sequence = gpl.json;
+
+        data.updates.push({
+            oldPoint: gpl.originalSequence,
+            newPoint: gpl.point
         });
+
+        gpl.log('doPointPackage', data);
+        gpl.socket.emit('doPointPackage', data);
+
+        cb();
     },
     isCyclic: function (obj) {
         var seenObjects = [];
@@ -146,8 +207,7 @@ var gpl = {
                     ret = false;
                 } else if (prop.toLowerCase() === 'true') {
                     ret = true;
-                } else {
-                    if (!onlyTrueFalse) {
+                } else if (!onlyTrueFalse) {
                         if (prop.indexOf('.') > -1) {
                             tmp = parseFloat(prop);
                             if (!isNaN(tmp)) {
@@ -160,7 +220,6 @@ var gpl = {
                             }
                         }
                     }
-                }
                 if (ret !== null) {
                     obj[keys[c]] = ret;
                 }
@@ -189,31 +248,52 @@ var gpl = {
         gpl.log('Unblocking UI');
         $.unblockUI();
     },
-    openPointSelector: function (callback, pointType, property, nameFilter) {
-        var parameters = nameFilter ? {} : {
-                name1: gpl.point.name1,
-                name2: gpl.point.name2,
-                name3: gpl.point.name3,
-                name4: gpl.point.name4,
-                pointType: pointType,
-                property: property
+    openModal: (modalElement) => {
+        gpl.Manager.modalOpen = true;
+        modalElement.openModal({
+            ready: () => {
+                gpl.modalIsOpen = true;
             },
-            pointSelectedCallback = function (pointInfo) {
+            complete: () => {
+                gpl.modalIsOpen = false;
+            }
+        });
+    },
+    closeModal: (modalElement) => {
+        gpl.Manager.modalOpen = false;
+        modalElement.closeModal();
+        // ch295 Apparently calling .closeModal doesn't trigger the 'complete' callback. Manually clear the 'modalIsOpen' flag
+        gpl.modalIsOpen = false;
+    },
+    openPointSelector: function (callback, pointType, property, deviceId) { // ch974 & ch1017; cleaned up this function a bit and added support for deviceId
+        //  callback: fn    <required>
+        //  pointType: str, <required>
+        //  property: str,  <required>
+        //  deviceId: int   <optional>
+        var pointSelectedCallback = function (pointInfo) {
                 if (!!pointInfo) {
                     $.ajax({
-                        url: '/api/points/' + pointInfo._id
+                        url: gpl.pointApiPath + pointInfo._id
                     }).done(function (selectedPoint) {
                         callback(selectedPoint);
                     });
                 }
+            },
+            parameters = {
+                terms: '',
+                path: gpl.point.path,
+                pointType: pointType,
+                pointTypes: [],
+                restrictPointTypes: false,
+                property: property,
+                deviceId: deviceId
             };
 
-        if (parameters.pointTypes === undefined) {
-            parameters.pointTypes = [];
-        }
-
         if (pointType) {
-            if (parameters.pointTypes.indexOf(pointType) === -1) {
+            if (property) {
+                parameters.pointTypes = gpl.getPointTypes(property, pointType);
+                parameters.restrictPointTypes = true;
+            } else {
                 parameters.pointTypes.push(pointType);
             }
         }
@@ -240,11 +320,34 @@ var gpl = {
         gpl.point = gpl.convertBooleanStrings(gpl.point);
         window.point = gpl.point;
         window.pointType = gpl.point['Point Type'].Value;
-        gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
+
+        // ch1043
+        // This object will hold all working sequence property values; if settings are changed, they are saved to this
+        // object instead of gpl.point; if the sequence is saved for later, this object is pushed into the editVersion object.
+        // If the sequence is Saved (really, activated), values are manually pushed back to gpl.point before the save.
+        // These are our default values; in a sec, we'll update from editVersion.seqProps if we're in edit mode.
+        gpl.seqProps = {
+            backgroundColor: gpl.point.SequenceData.sequence.backgroundColor,
+            showValue: gpl.point['Show Value'].Value,
+            showLabel: gpl.point['Show Label'].Value,
+            controller: gpl.point.Controller.eValue,
+            description: gpl.point.Description.Value,
+            updateInterval: gpl.point['Update Interval'].Value,
+            deviceId: gpl.point['Point Refs'][0].PointInst
+        };
+
+        if (gpl.isEdit) {
+            if (!gpl.point.SequenceData.sequence.editVersion) {
+                gpl.point.SequenceData.sequence.editVersion = {};
+            }
+
+            $.extend(true, gpl.seqProps, gpl.point.SequenceData.sequence.editVersion.seqProps);
+        }
+        // end ch1043
 
         addFn(function (cb) {
             $.ajax({
-                url: '/api/points/' + gpl.devicePointRef.PointInst
+                url: gpl.pointApiPath + gpl.seqProps.deviceId
             }).done(function (data) {
                 gpl.devicePoint = data;
                 cb();
@@ -265,23 +368,40 @@ var gpl = {
     getBlock: function (arg) {
         return gpl.blockManager.getBlock(arg);
     },
-    getLabel: function (type, increment) {
-        var currCount,
-            ret;
+    labelIsUnique: function (label, editBlock) { // ch927; add 'editBlock' argument
+        // Returns true if label is unique to all blocks; false otherwise
+        let result = gpl.forEach(gpl.blockManager.blocks, function isUnique (block) {
+            if (!block.isToolbar && block.label === label) { // ch1038; add check if toolbar block
+                if (editBlock && (editBlock.type !== 'Constant') && (editBlock.upi === block.upi)) { // ch927; duplicate labels allowed if they point to the same upi
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        });
+        return result;
+    },
+    getLabel: function (block, increment) {
+        var blockType = block.type,
+            pointType = block.pointType,
+            count = gpl.labelCounters[blockType],
+            label = pointType + ' ' + count;
 
         if (increment) {
-            gpl.labelCounters[type]++;
+            do {
+                count++;
+                label = pointType + ' ' + count;
+            } while (!gpl.labelIsUnique(label));
+
+            gpl.labelCounters[blockType] = count;
         }
 
-        currCount = gpl.labelCounters[type];
-
-        ret = type + currCount;
-        // gpl.log('returning label', ret);
-
-        return ret;
+        return label;
     },
     formatValue: function (block, value) {
-        var precision = (!!block.precision ? (String(block.precision).split(".")[1] || 0) : 0),
+        var numDecimals = parseInt(block.precision.decimals, 10),
             ret,
             val = value;
 
@@ -292,8 +412,8 @@ var gpl = {
         if (isNaN(val)) {
             ret = value;
         } else {
-            if (precision > 0) {
-                ret = parseFloat(val.toFixed(precision));
+            if (numDecimals > 0) {
+                ret = parseFloat(val.toFixed(numDecimals));
             } else {
                 ret = parseInt(val, 10);
             }
@@ -305,24 +425,22 @@ var gpl = {
     },
     addReferencePoint: function (upi, callback) {
         $.ajax({
-            url: '/api/points/' + upi
+            url: gpl.pointApiPath + upi
         }).done(function (data) {
             var map;
             if (data.err) {
                 gpl.showMessage('error getting point data');
-            } else {
-                if (data.message) {
+            } else if (data.message) {
                     gpl.log('AddReferencePoint error- upi:', upi, '--', data.message);
                 } else {
                     map = gpl.pointUpiMap[upi] = {
-                        Name: data.Name,
+                        Name: dtiCommon.getPointName(data.path),
                         pointType: data['Point Type'].Value,
                         valueType: (data.Value.ValueType === 5) ? 'enum' : 'float'
                     };
                     gpl.pointData[upi] = data;
                     callback(map, data);
                 }
-            }
         });
     },
     onRender: function (fn) {
@@ -364,6 +482,21 @@ var gpl = {
 
         return errorFree;
     },
+    forEachArrayRev: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
     timedEach: function (config) {
         var idx = 0,
             iterateFn = config.iteratorFn,
@@ -376,11 +509,9 @@ var gpl = {
                     idx++;
                     if (idx < list.length) {
                         doNext();
-                    } else {
-                        if (cb) {
+                    } else if (cb) {
                             cb();
                         }
-                    }
                 }, delay);
             };
 
@@ -392,18 +523,32 @@ var gpl = {
         } else {
             gpl.$messageModalBody.html(message);
         }
-        gpl.$messageModal.modal('show');
+        gpl.openModal(gpl.$messageModal);
         if (gpl.socketWaitFn) {
             gpl.socketWaitFn();
             gpl.socketWaitFn = null;
         }
     },
     hideMessage: function () {
-        gpl.$messageModal.modal('hide');
+        gpl.closeModal(gpl.$messageModal);
     },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
         gpl.eventHandlers[event].push(handler);
+    },
+    off: function (event, handler) {
+        var handlers = gpl.eventHandlers[event] || [];
+
+        if (handlers.length && !handler) {
+            return delete gpl.eventHandlers[event];
+        }
+
+        gpl.forEachArray(handlers, function processOffHandler (fn, idx) {
+            if (fn === handler) {
+                gpl.eventHandlers[event].splice(idx, 1);
+                return false;
+            }
+        });
     },
     fire: function (event, obj1, obj2) {
         var c,
@@ -444,12 +589,12 @@ var gpl = {
 
                 return answer;
             };
-        for (i = 1; i < gpl.point["Point Refs"].length; i++) {
-            pointRef = gpl.point["Point Refs"][i];
+        for (i = 1; i < gpl.point['Point Refs'].length; i++) {
+            pointRef = gpl.point['Point Refs'][i];
             if (!!pointRef) {
-                if (!pointRefUsed(pointRef, "GPLBlock")) {
-                    console.log("remove item at index = " + i + "  pointRef.PointName = " + pointRef.PointName);
-                    gpl.point["Point Refs"].splice(i--, 1);
+                if (!pointRefUsed(pointRef, 'GPLBlock')) {
+                    console.log('remove item at index = ' + i + '  pointRef.PointName = ' + pointRef.PointName);
+                    gpl.point['Point Refs'].splice(i--, 1);
                 }
             }
         }
@@ -457,7 +602,7 @@ var gpl = {
     getPointRefByAppindex: function (pointRefIndex, referenceType) {
         var answer;
         if (pointRefIndex > -1) {
-            answer = gpl.point["Point Refs"].filter(function (pointRef) {
+            answer = gpl.point['Point Refs'].filter(function (pointRef) {
                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
             });
 
@@ -468,7 +613,7 @@ var gpl = {
     getPointRefByUpi: function (upi, referenceType) {
         var answer;
         if (!!upi && !isNaN(upi)) {
-            answer = gpl.point["Point Refs"].filter(function (pointRef) {
+            answer = gpl.point['Point Refs'].filter(function (pointRef) {
                 return pointRef.Value === upi && pointRef.PropertyName === referenceType;
             });
             answer = (!!answer && answer.length > 0 ? answer[0] : null);
@@ -482,11 +627,11 @@ var gpl = {
                 dynamic.pointRefIndex = pRef.AppIndex;
             }
 
-            pRef.DevInst = gpl.deviceId;
+            pRef.DevInst = gpl.seqProps.deviceId;
         }
     },
     getDynamicPointRef: function (dynamic) {
-        return gpl.getPointRef(dynamic, "GPLDynamic", 440);
+        return gpl.getPointRef(dynamic, 'GPLDynamic', 440);
     },
     setBlockPointRef: function (block) {
         var pRef = gpl.getBlockPointRef(block);
@@ -495,15 +640,15 @@ var gpl = {
                 block.pointRefIndex = pRef.AppIndex;
             }
 
-            if (block.type === 'MonitorBlock') {
+            if (block.type === 'Input') {
                 // pRef.DevInst = refs[this._pointRefs['Device Point']].DevInst;
             } else {
-                pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
+                pRef.DevInst = gpl.seqProps.deviceId;  // just in case the "Device Point" changed
             }
         }
     },
     getBlockPointRef: function (block) {
-        return gpl.getPointRef(block, "GPLBlock", 439);
+        return gpl.getPointRef(block, 'GPLBlock', 439);
     },
     getPointRef: function (gplObject, referenceType, referenceEnum) {
         var getPointReference = function (gplobject, refType) {
@@ -529,14 +674,13 @@ var gpl = {
                 if (!!referencedObj && gplobject.blockType === 'Input') {
                     devInst = referencedObj['Point Refs'][0].DevInst;
                 } else {
-                    devInst = gpl.deviceId;
+                    devInst = gpl.seqProps.deviceId;
                 }
 
                 if (!!referencedObj) {
                     objRef = {
-                        upi: referencedObj._id,
-                        name: referencedObj.Name,
-                        pointType: referencedObj['Point Type'].Value
+                        upi: referencedObj._id || referencedObj.id,
+                        name: referencedObj.Name
                     };
                     answer = gpl.makePointRef(objRef, devInst, refType, refEnum);
                 }
@@ -559,21 +703,45 @@ var gpl = {
     },
     makePointRef: function (referencedPoint, devInst, referenceType, referenceEnum) {
         var pointRef = {
-            "PropertyName": referenceType,
-            "PropertyEnum": referenceEnum,
-            "Value": referencedPoint.upi,
-            "AppIndex": gpl.getNextAppIndex(),
-            "isDisplayable": true,
-            "isReadOnly": true,
-            "PointName": referencedPoint.name,
-            "PointInst": referencedPoint.upi,
-            "DevInst": devInst,   // TODO   what about external references?
-            "PointType": gpl.pointTypes[referencedPoint.pointType].enum
+            'PropertyName': referenceType,
+            'PropertyEnum': referenceEnum,
+            'Value': referencedPoint.upi,
+            'AppIndex': gpl.getNextAppIndex(),
+            'isDisplayable': true,
+            'isReadOnly': true,
+            'PointName': referencedPoint.name,
+            'PointInst': referencedPoint.upi,
+            'DevInst': devInst,   // TODO   what about external references?
         };
 
         gpl.point['Point Refs'].push(pointRef);
 
         return pointRef;
+    },
+    getNameBasedOnValue: function (array, value) {
+        var answer;
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].value === value) {
+                answer = array[i].name;
+                break;
+            }
+        }
+        return answer;
+    },
+    getArrayFromJSON: function (obj) {
+        let answer;
+        if (!!obj) {
+            answer = [];
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    answer.push({
+                        name: key,
+                        value: obj[key]
+                    });
+                }
+            }
+        }
+        return answer;
     },
     isEdit: document.location.href.match('/edit/') !== null,
     noSocket: document.location.href.match('nosocket') !== null,
@@ -609,7 +777,6 @@ var gpl = {
             steps,
             lineNumber,
             err,
-            now = new Date(),
             args = [].splice.call(arguments, 0),
             pad = function (num) {
                 return ('    ' + num).slice(-4);
@@ -651,7 +818,7 @@ var gpl = {
     },
     validationMessage: [],
     validate: {
-        connection: function (anchor1, anchor2, skipErrorPrint) {
+        connection: function (anchor1, anchor2, skipErrorPrint, connectionAttempt) {
             //get order as obj1 -> obj2
             var obj1 = (anchor2.anchorType === 'Control Point') ? anchor2 : anchor1,
                 obj2 = (anchor2.anchorType === 'Control Point') ? anchor1 : anchor2,
@@ -663,6 +830,57 @@ var gpl = {
                 pointType2,
                 allowedPoints2,
                 property2,
+                sameAnchor = function () {
+                    return obj1._anchorID === obj2._anchorID;
+                },
+                inputAnchorLineCount = function () {
+                    var length = 0,
+                        myObject = obj2.attachedLines;
+                    for (var key in myObject) {
+                        if (myObject.hasOwnProperty(key)) {
+                            ++length;
+                        }
+                    }
+                    return length;
+                },
+                duplicateLineAlreadyExists = function () {
+                    var answer = false,
+                        line;
+
+                    if (connectionAttempt) {
+                        for (var key in obj1.attachedLines) {
+                            if (obj1.attachedLines.hasOwnProperty(key)) {
+                                line = obj1.attachedLines[key];
+                                if ((line.endAnchor._anchorID === obj1._anchorID ||
+                                    line.endAnchor._anchorID === obj2._anchorID) &&
+                                    (line.startAnchor._anchorID === obj1._anchorID ||
+                                    line.startAnchor._anchorID === obj2._anchorID)) {
+                                    answer = true;
+                                }
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
+                inputHasOnlyOneLineConnected = function () {
+                    let answer = true,
+                        isInputAnchor;
+
+                    if (connectionAttempt) {
+                        if (!!block2.inputAnchors) {
+                            isInputAnchor = block2.inputAnchors.filter(function (anchor) {
+                                return anchor._anchorID === obj2._anchorID;
+                            });
+
+                            if (isInputAnchor.length > 0 && inputAnchorLineCount() > 0) {
+                                answer = false;
+                            }
+                        }
+                    }
+
+                    return answer;
+                },
                 isPointValid = function (pointType, allowedPoints) {
                     var c,
                         ret = false;
@@ -674,7 +892,7 @@ var gpl = {
                     }
 
                     if (!ret) {
-                        // gpl.validationMessage = 'Invalid connection for point type ' + pointType;
+                        gpl.validationMessage.push('Invalid connection for point type ' + pointType); // ch975
                         if (!skipErrorPrint) {
                             gpl.log('invalid', pointType, allowedPoints);
                         }
@@ -703,25 +921,30 @@ var gpl = {
             setVars();
 
             if (pointType1 && pointType2) {
-                if (block2.type === 'ControlBlock') {
+                if (block2.type === 'Output' || block2.type === 'Input' || block2.type === 'Constant') { // ch991; also swap if block2 is an Input; ch1083; also if block2 is a Constant
                     // gpl.log('swapped vars');
                     swapAnchors();
                     setVars();
                 }
 
-                if (pointType1 === 'Constant' && obj2.takesConstant === true) {
-                    isValid = true;
-                } else {
-                    property2 = anchorType2;
-                    allowedPoints2 = gpl.getPointTypes(property2, pointType2);
-
-                    if (allowedPoints2.error) {
-                        // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
-                        if (!skipErrorPrint) {
-                            gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
-                        }
+                if (inputHasOnlyOneLineConnected() && !duplicateLineAlreadyExists() && !sameAnchor()) {
+                    if ((obj2.anchorType === 'Shutdown Point' && obj1.anchorType !== 'InputBlockOutputAnchor') || (obj1.anchorType === 'Shutdown Point' && obj2.anchorType !== 'InputBlockOutputAnchor')){ // ch1379 (add this if)
+                        // isValid already false; nothing to do
+                    } else if (pointType1 === 'Constant' && obj2.takesConstant === true) {
+                        isValid = block1.validateSelf({ // ch1083
+                            proposedAnchor: obj2,
+                            connectionAttempt: connectionAttempt
+                        });
                     } else {
-                        if (isPointValid(pointType1, allowedPoints2)) {
+                        property2 = anchorType2;
+                        allowedPoints2 = gpl.getPointTypes(property2, pointType2);
+
+                        if (allowedPoints2.error) {
+                            gpl.validationMessage.push(['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ')); // ch975
+                            if (!skipErrorPrint) {
+                                gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
+                            }
+                        } else if (isPointValid(pointType1, allowedPoints2)) {
                             isValid = true;
                         }
                     }
@@ -823,6 +1046,20 @@ var gpl = {
         }
         gpl.manager.canvas.renderAll();
         gpl.log('Intersections:', intersections.length, 'in', new Date() - start, 'ms');
+    },
+    toast: function () {
+        var $closeMarkup = $('<i class="material-icons" style="padding-left:10px; cursor:pointer;">close</i>');
+
+        $closeMarkup.click(function (e) {
+            var $toast = $(e.target).parent();
+            $toast.fadeOut(100, function () {
+                $toast.remove();
+            });
+        });
+
+        Materialize.toast.apply(window, arguments);
+
+        $('#toast-container').find('.toast').last().append($closeMarkup);
     }
 };
 
@@ -876,7 +1113,7 @@ fabric.ExternalMonitorPointShape = fabric.util.createClass(fabric.Object, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     },
@@ -944,7 +1181,7 @@ fabric.InternalMonitorPointShape = fabric.util.createClass(fabric.Object, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     },
@@ -1004,7 +1241,7 @@ fabric.ConstantPointShape = fabric.util.createClass(fabric.Rect, {
     toObject: function (propertiesToInclude) {
         var object = $.extend(this.callSuper('toObject', propertiesToInclude), {
             selectable: true,
-            hasControls: false,
+            hasControls: false
         });
         return object;
     }
@@ -1015,7 +1252,6 @@ fabric.ConstantPointShape.fromObject = function (object) {
 };
 
 
-
 /* ------------ Blocks ------------------------ */
 
 gpl.Anchor = fabric.util.createClass(fabric.Circle, {
@@ -1024,7 +1260,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     lockMovementY: true,
     anchorRadius: 2.5,
     hoverRadius: 5,
-    hoverCursor: gpl.isEdit ? 'url("/img/pencil.cur") 0 0, pointer' : 'default',
+    hoverCursor: gpl.isEdit ? 'url("/img/dti/gpl/pencil.cur") 0 0, pointer' : 'default', // ch1365 (change path to pencil.cur)
 
 
     initialize: function (config) {
@@ -1069,7 +1305,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         this.config.top = this.config._originalTop = this.config.topFn(this.anchorRadius);
     },
 
-    hover: function () {
+    hover: function (invalidAction) {
         var gap = this.hoverRadius - this.anchorRadius;
 
         if (!this._oFill) {
@@ -1083,8 +1319,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             this.hoverTop = this.top;
             this.hovered = true;
             this.set({
-                fill: 'green',
-                stroke: 'green',
+                fill: (invalidAction ? 'red' : 'green'),
+                stroke: (invalidAction ? 'red' : 'green'),
                 radius: this.hoverRadius,
                 left: this.left - gap / 2 - 1,
                 top: this.top - gap / 2 - 1
@@ -1098,8 +1334,8 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
             radius: this.anchorRadius,
             left: this._originalLeft,
             top: this._originalTop,
-            fill: this._oFill,
-            stroke: this._oStroke
+            fill: (this._oFill ? this._oFill : this.fill),
+            stroke: (this._oStroke ? this._oStroke : this.stroke)
         });
     },
 
@@ -1113,6 +1349,21 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         return ret;
     },
 
+    // ch 1083; added fn
+    getLine: function (otherAnchor) {
+        var self = this;
+        var ret;
+
+        gpl.forEachArray(this.getLines(), function (line) {
+            if (line.startAnchor === otherAnchor || line.endAnchor === otherAnchor) {
+                ret = line;
+                return false; // Break the forEachArray
+            }
+        });
+
+        return ret;
+    },
+
     redrawLine: function () {
         var self = this;
         gpl.forEach(self.attachedLines, function (line) {
@@ -1121,6 +1372,55 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
                 y: self.top + (self.radius / 2)
             });
         });
+    },
+
+    myBlock: function () {
+        return gpl.blockManager.getBlock(this.gplId);
+    },
+
+    // ch 1083; added fn
+    getConnectedAnchor: function () {
+        var self = this,
+            ret,
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret = anchor;
+                return false; // Break the forEach
+            }
+        });
+
+        return ret;
+    },
+
+    // ch 1083; added fn
+    getConnectedAnchors: function () {
+        var self = this,
+            ret = [],
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            anchor = null;
+
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret.push(anchor);
+            }
+        });
+
+        return ret;
     },
 
     getConnectedBlock: function () {
@@ -1142,6 +1442,27 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         if (ret) {
             ret = gpl.blockManager.getBlock(ret.gplId);
         }
+
+        return ret;
+    },
+
+    // ch 1083; added fn
+    getConnectedBlocks: function () {
+        var self = this,
+            ret = [],
+            anchor;
+
+        gpl.forEach(self.attachedLines, function (line) {
+            if (line.endAnchor === self) {
+                anchor = line.startAnchor;
+            } else {
+                anchor = line.endAnchor;
+            }
+
+            if (anchor) {
+                ret.push(gpl.blockManager.getBlock(anchor.gplId));
+            }
+        });
 
         return ret;
     },
@@ -1204,7 +1525,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         offsetX: 1.5,
         offsetY: 1.5
     },
-    defaultPrecision: 3.1,
+    defaultPrecision: {
+        characters: 3,
+        decimals: 1
+    },
     labelFontFamily: 'Arial',
     hasOutput: true,
     hasShutdownBlock: true,
@@ -1258,10 +1582,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if (self.outputAnchor) {
             fn(self.outputAnchor);
-        }
-
-        if (self.inputAnchor) {
-            fn(self.inputAnchor);
         }
 
         if (self.shutdownAnchor) {
@@ -1365,7 +1685,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
-            name,
+            found = false,
+            otherPointData,
+            prop,
+            path,
             upi,
             idx;
 
@@ -1378,29 +1701,87 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     self.processValue.apply(self, arguments);
                 });
                 idx = self._pointRefs[anchor.anchorType];
+                if (idx) {
+                    path = [];
+                    if (upi) {
+                        // TFS #569 - get path instead of name
+                        path = gpl.pointData[upi];
+                        path = path && path.path;
+                    } else {
+                        // TFS #569 - get path instead of name
+                        path = otherBlock.path;
+                    }
+
+                    if (upi && !(anchor.anchorType === 'Control Point' && otherBlock.blockType.toLowerCase() !== 'output')) {
+                        // TFS #569 - send path instead of name
+                        self.setPointRef(anchor.anchorType, upi, path);
+                    }
+                    if (otherBlock.blockType === 'Constant') {
+                        self.syncAnchorValue(anchor, otherBlock.value);
+                    }
+                }
                 self.formatPoint(anchor, line, otherBlock);
+                if (gpl.rendered) {
+                    self.validate(line, anchor); // ch991; send line and anchor
+                    otherBlock.validate(line, otherAnchor); // ch991; send line and anchor
+                }
             }
 
             if (idx) {
-                if (otherBlock.upi) {
-                    name = gpl.pointData[otherBlock.upi];
-                    name = name && name.Name;
-                } else {
-                    name = otherBlock.name;
-                }
-
-                if (name && gpl.rendered) {
-                    self.setPointRef(anchor.anchorType, otherBlock.upi, name, otherBlock.pointType);
+                // TFS #569 - check path instead of name
+                // ch922; remove check for gpl.rendered - it was added to gpl.on('editedBlock')
+                if (path && path.length) {
                     gpl.fire('editedblock', self);
+                }
+            }
+        } else if (self.blockType === 'Constant') { // ch1083; add branch
+            // We'll just make sure we're connected to a block's anchor that supports a constant (this is pure CYB)
+            if (otherAnchor.constantProp) {
+                otherPointData = otherBlock.getPointData();
+                prop = otherPointData && otherPointData[otherAnchor.constantProp];
+
+                // The block's value takes on the connected block anchor's property
+                if (prop) {
+                    if (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                        gpl.forEach(prop.ValueOptions, function (val, key) {
+                            if (self.hasOwnProperty('value')) {
+                                if (val === self.value) {
+                                    self.valueText.setText(key);
+                                    found = true;
+                                    return false;
+                                }
+                            } else {
+                                self.value = val;
+                                self.valueText.setText(key);
+                                found = true;
+                                return false;
+                            }
+                        });
+
+                        if (!found) {
+                            self.valueText.setText(Object.keys(prop.ValueOptions)[0]);
+                            self.value = prop.ValueOptions[self.valueText.text];
+                        }
+                    } else { // It must be a float or integer type
+                        if (!self.hasOwnProperty('value')) {
+                            self.value = prop.Value;
+                            self.valueText.setText(prop.Value.toString());
+                        } else {
+                            // Update the other block's point data with the constant value
+                            otherBlock.syncAnchorValue(otherAnchor, self.value);
+                            self.valueText.setText(self.value.toString());
+                        }
+                    }
                 }
             }
         }
     },
 
     handleAnchorDetach: function (anchor, line) {
-        this.setPointRef(anchor.anchorType, 0, '');
+        // TFS #569 - send path instead of name
+        this.setPointRef(anchor.anchorType, 0, []);
 
-        if (this.targetCanvas !== 'toolbar') {
+        if (this.targetCanvas !== 'toolbar' && this.blockType.toLowerCase() !== 'input') {
             this.formatPoint(anchor, line);
         }
 
@@ -1409,7 +1790,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     _doFormatPoint: function (args, cb) {
-        if (args.point) {
+        if (args.point && !!args.property) {
             var tmpData = gpl.formatPoint(args),
                 self = this;
 
@@ -1433,16 +1814,36 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     formatPoint: function (anchor, line, block, newData) {
         if (gpl.rendered && !window.destroyed) {
-            var otherEnd = line && line.getOtherAnchor(),
+            var self = this,
+                otherEnd = line && line.getOtherAnchor(),
                 otherBlock = block || gpl.blockManager.getBlock(otherEnd && otherEnd.gplId),
-                args = {
-                    point: newData || this.getPointData(),
-                    oldPoint: this._origPointData,
-                    property: this.blockType === 'output' ? otherEnd.anchorType : anchor.anchorType,
-                    refPoint: (this.blockType !== 'output' && anchor.anchorType === 'Control Point') ? undefined : otherBlock && otherBlock.upi
+                property,
+                args,
+                getRefPoint = function () {
+                    var answer;
+                    if (!!otherBlock) {
+                        if (!(self.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point') ||
+                            !(otherBlock.blockType.toLowerCase() !== 'output' && anchor.anchorType === 'Control Point')) {
+                            answer = otherBlock.getPointData();
+                        }
+                    }
+                    return answer;
                 };
 
-            this._doFormatPoint(args, function (data) {
+            if (self.blockType.toLowerCase() === 'output') {
+                property = !!otherEnd ? otherEnd.anchorType : undefined;
+            } else {
+                property = anchor.anchorType;
+            }
+
+            args = {
+                point: newData || self.getPointData(),
+                oldPoint: self._origPointData,
+                property: property,
+                refPoint: getRefPoint()
+            };
+
+            self._doFormatPoint(args, function (data) {
                 newData = data;
             });
         }
@@ -1480,30 +1881,37 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     cc,
                     gplId,
                     upi,
+                    property,
                     setDataVars = function () {
                         var args;
                         if (!upi) {
                             gpl.emptyFn();
                             // gpl.log('no upi');
-                        } else {
-                            if (gpl.pointData[upi]) {
-                                // if(newData && data) {
+                        } else if (block.upi === anchor.myBlock().upi && block.valueType === anchor.inputType) {
+                                console.log(' - - - - - anchor.inputType = ' + anchor.inputType + "  anchor.myBlock().upi = " + anchor.myBlock().upi);
+                        } else if (gpl.pointData[upi]) {
+                            // if(newData && data) {
+                            property = (type === 'input') ? anchor.anchorType : otherEnd.anchorType;
+
                                 try {
                                     args = {
                                         point: newData,
                                         oldPoint: data,
-                                        property: type === 'input' ? anchor.anchorType : otherEnd.anchorType,
+                                        property: property,
                                         refPoint: gpl.pointData[upi]
                                     };
 
                                     tmpData = formatPoint(args);
                                 } catch (ex) {
                                     gpl.log('error formatting point', ex.message);
+                                    tmpData = {
+                                        err: ex.message
+                                    };
                                 }
                                 if (tmpData.err) {
                                     gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
                                     gpl.isValid = false;
-                                    gpl.validationMessage.push('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
+                                    gpl.validationMessage.push('Error with block "' + self.pointType + ' - \'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + property + ')');
                                     self.setInvalid();
                                 } else {
                                     self._origPointData = newData;
@@ -1514,7 +1922,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             } else {
                                 gpl.log('no upi data found for', upi, block);
                             }
-                        }
                         // } else {
                         //     gpl.log(self.gplId, self.type, 'data vars error:', newData, data);
                         // }
@@ -1533,7 +1940,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                             if (block) {
                                 if (block.blockType !== 'Constant') {
-                                    if (type !== 'output' || block.blockType === 'ControlBlock') {
+                                    if (type !== 'output' || block.blockType === 'Output') {
                                         setDataVars();
                                     // } else {
                                     //     gpl.log('skipping', self.label, block.label, type === 'input' ? anchor.anchorType : otherEnd.anchorType);
@@ -1550,7 +1957,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     }
                 } else {
                     //detached
-                    self.setPointRef(anchor.anchorType, 0, '');
+                    // TFS #569 - send path instead of name
+                    self.setPointRef(anchor.anchorType, 0, []);
                     // gpl.log('no lines attached, blanking out', anchor.anchorType);
                     setDataVars();
                 }
@@ -1586,6 +1994,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.left = left;
         this.top = top;
+        this.setCoords(); // ch1330
 
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
@@ -1699,8 +2108,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     nudge: function (offset) {
-        this.left += offset.left;
-        this.top += offset.top;
+        var target = {
+                left: this.left + offset.left,
+                top: this.top + offset.top
+            };
+
+        // ch351 Limit the block's position to the on-screen area
+        gpl.manager.limitTargetPosition(this, target);
+        this.left = target.left;
+        this.top = target.top;
 
         this.syncObjects(this);
         this.redrawLines();
@@ -1717,7 +2133,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     getLabel: function () {
-        var label = gpl.getLabel(this.type, true);
+        var label = gpl.getLabel(this, true);
 
         this.setLabel(label);
     },
@@ -1742,14 +2158,27 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     processValue: gpl.emptyFn,
 
-    syncAnchorValue: function (anchor, val) {
-        var type = anchor.anchorType;
+    syncAnchorValue: function (anchor, value) {
+        var ret = value;
+        var parsedValue = parseInt(value, 10);
+        var prop = this._pointData[anchor.constantProp];
 
-        if (anchor.constantProp) {
-            this._pointData[anchor.constantProp].Value = val;
-            gpl.fire('editedblock', this);
+        if (prop && value !== undefined) {
+            if (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) { // ch997; make sure ValueType is enum (previously just relied on presence of ValueOptions key)
+                gpl.forEach(prop.ValueOptions, function (val, key) {
+                    if (val === parsedValue) {
+                        prop.eValue = val;
+                        prop.Value = key;
+                        ret = key;
+                        return false; // Break the forEach
+                    }
+                });
+            } else {
+                prop.Value = value;
+            }
         }
-        // this._pointData[type].Value = val;
+        gpl.fire('editedblock', this);
+        return ret; // ch1083; return sync'd value
     },
 
     getReferencePoint: function (isNew) {
@@ -1787,6 +2216,14 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     setReferenceType: function (type) {
         this.referenceType = type;
         this.setVisibleShape(type);
+        this.processPointRef(); // ch287; show/hide the '*' character, depending if reference point has the same device as the sequence
+    },
+
+    resetReference: function () { // ch1044; added fn to clean up references
+        delete this.pointName;
+        delete this.valueType;
+        delete this._pointData;
+        this.upi = NaN;
     },
 
     setVisibleShape: function (type) {
@@ -1814,14 +2251,27 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         for (c = 0; c < len; c++) {
             refs[c].isReadOnly = true;
+            
+            // ch379 Some point types require the 'PointName' property be defined on the point references, else the
+            // point inspector throws an error on load. See ch story for more info
+            if (!refs[c].hasOwnProperty('PointName')) {
+                refs[c].PointName = '';
+            }
         }
 
         pointData._parentUpi = gpl.upi;
     },
 
     setPointData: function (point, processChanges) {
+        if (!point) { // ch1029
+            console.log('setPointData cannot process point because "point" is undefined.');
+            return;
+        }
+
         var newPoint = point.newPoint || point,
-            oldPoint = point.oldPoint || point;
+            oldPoint = point.oldPoint || point,
+            obj = {};
+
 
         if (!this._origPointData) {
             this._origPointData = $.extend(true, {}, oldPoint);
@@ -1839,12 +2289,22 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             // if (this.setIconName) {
             //     this.setIconName();
             // }
-            this.setLabel(this._pointData.name4);
+            // TFS #549 (added "- 1")
+            this.setLabel(this._pointData.path[this._pointData.path.length - 1]);
         }
 
-        this.pointName = this._pointData.Name;
+        this.pointName = dtiCommon.getPointName(this._pointData.path);
 
         this.mapPointRefs();
+
+        if (!gpl.pointUpiMap[this.upi]) { // ch1029
+            if (this._pointData) {
+                obj.Name = dtiCommon.getPointName(this._pointData.path);
+                obj.pointType = this._pointData['Point Type'].Value;
+                obj.valueType = (this._pointData.Value && this._pointData.Value.ValueType === 5) ? 'enum' : 'float';
+            }
+            gpl.pointUpiMap[this.upi] = obj;
+        }
     },
 
     getPointData: function () {
@@ -1863,7 +2323,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this._pointRefs = obj;
     },
 
-    setPointRef: function (prop, upi, name, refPointType) {
+    // TFS #569 - accept 'path' argument instead of 'name' argument, and build PointName from given path
+    setPointRef: function (prop, upi, path) {
         var data = this._pointData,
             refs,
             ref,
@@ -1876,39 +2337,78 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref = refs[idx];
                 ref.PointInst = upi;
                 ref.Value = upi;
-                ref.PointName = name;
+                ref.PointName = window.getConfig('Utility.getPointName', [path]);
 
-                if (this.type === 'MonitorBlock') {
+                // console.log("  this.type = " + this.type);
+                // console.log("      prop = " + prop + "    idx = " + idx + "    name = " + PointName);
+                if (this.type === 'Input') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
-                    ref.DevInst = (ref.DevInst === 0 ? gpl.deviceId : ref.DevInst);
+                    ref.DevInst = (ref.DevInst === 0 ? gpl.seqProps.deviceId : ref.DevInst);
                 }
-
-                if (!!refPointType && !!gpl.pointTypes[refPointType]) {
-                    ref.PointType = gpl.pointTypes[refPointType].enum;
-                }
-
-            } else {
-                gpl.log('setPointRef()  idx is undefined for property "', prop, '"');
+            // } else {
+            //     gpl.log("setPointRef()  idx is undefined for property '" + prop + "'");
             }
         // } else {
         //     gpl.log('no point data', this.type, this.gplId);
         }
     },
 
+    // ch287 (added); show/hide the '*' character, depending if reference point has the same device as the sequence
+    processPointRef: function () {
+        var self = this;
+        var _pointData = self.getPointData();
+        var blockDevId = _pointData && _pointData['Point Refs'][0].PointInst;
+        var gplDevId = gpl.seqProps.deviceId;
+        var visible = false;
+        var leftAdjust = 0;
+
+        if (self.backgroundImage) {
+            if ((self.targetCanvas === 'main') && gplDevId && blockDevId && (gplDevId !== blockDevId)) {
+                visible = true;
+
+                if (self.referenceType === 'External') {
+                    if (self.blockType === 'Input') {
+                        leftAdjust = -2;
+                    } else { // Output
+                        leftAdjust = +2;
+                    }
+                }
+
+                if (self.backgroundImage.leftAdjust !== leftAdjust) {
+                    self.backgroundImage.set({
+                        left: self.backgroundImage._originalLeft + leftAdjust
+                    });
+                    
+                    self.backgroundImage.leftAdjust = leftAdjust;
+                }
+            }
+
+            self.backgroundImage.setVisible(visible);
+            self.renderAll();
+        }
+    },
+
     processPointData: function (point) {
         var self = this,
-            bindings = ko.toJS(gpl.manager.bindings),
+            bindings = kojs(gpl.manager.bindings), // ch928
             calcType = point['Calculation Type'] || {},
-            reverseAction = point['Reverse Action'] || {};
+            reverseAction = point['Reverse Action'] || {},
+            ptUpdateInterval = point['Update Interval'],
+            ptShowLabel = point['Show Label'],
+            ptShowValue = point['Show Value'],
+            ptController = point.Controller;
 
         self.setIconType(calcType, reverseAction);
 
-        point['Update Interval'].Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
-        point['Show Label'].Value = bindings.deviceShowLabel;
-        point['Show Value'].Value = bindings.deviceShowValue;
-        point.Controller.Value = bindings.deviceControllerName;
-        point.Controller.eValue = bindings.deviceControllerValue;
+        // TFS #587 Check existance of props before updating values
+        if (ptUpdateInterval) {
+            ptUpdateInterval.Value = gpl.point['Update Interval'].Value; // ch1026; get the value from the sequence prop
+        }
+        if (ptController) {
+            ptController.Value = gpl.point.Controller.Value;    // ch1026; get the value from the sequence prop
+            ptController.eValue = gpl.point.Controller.eValue;  // ch1026; get the value from the sequence prop
+        }
         point._parentUpi = gpl.point._id;
     },
 
@@ -1930,16 +2430,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         shape.strokeWidth = 1;
     },
 
-    validate: function () {
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
         var self = this,
             c,
             list = self.inputAnchors || [],
             len = list.length,
-            anchor,
             valid = true,
             isValid = function (anchor) {
                 var ret = true,
-                    lines = anchor.getLines(),
+                    lines = line ? [line] : anchor.getLines(),
                     cc;
 
                 if (lines.length > 0) {
@@ -1948,28 +2447,31 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             ret = false;
                         }
                     }
-                } else {
-                    if (anchor.required === true) {
+                } else if (anchor.required === true) {
                         ret = false;
-                        gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
-                        gpl.log('no lines associated', anchor.anchorType, 'on', self.type);
+                        gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block, ' + self.label);
+                        gpl.log('no lines associated', anchor.anchorType, 'on', self.label + ' ' + self.type);
                     }
-                }
 
                 valid = ret;
             };
 
-        if (self.shutdownAnchor) {
-            isValid(self.shutdownAnchor);
-        }
-
-        if (self.outputAnchor && valid) {
-            isValid(self.outputAnchor);
-        }
-
-        for (c = 0; c < len && valid; c++) {
-            anchor = list[c];
+        if (line && anchor) {
             isValid(anchor);
+        } else {
+            if (self.shutdownAnchor) {
+                isValid(self.shutdownAnchor);
+            }
+
+            if (self.outputAnchor && valid) {
+                isValid(self.outputAnchor);
+            }
+
+            for (c = 0; c < len && valid; c++) {
+                anchor = list[c];
+                isValid(anchor);
+            }
+
         }
 
         if (!valid) {
@@ -2019,7 +2521,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         // gpl.log('Deleted block', this.gplId);
-
+        canvas.remove(this); // ch993 (thanks Stephen!)
         this.renderAll();
     },
 
@@ -2054,20 +2556,19 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     getPlaceholderText: function () {
-        var precision = this.precision,
-            ints = Math.floor(precision),
-            decs = parseInt(String(precision).split('.')[1], 10),
+        var chars = parseInt(this.precision.characters, 10),
+            numDecimals = parseInt(this.precision.decimals, 10),
             c,
             ret = '';
 
         if (this.valueType === 'enum') {
             ret = '###';
         } else {
-            for (c = 0; c < ints; c++) {
+            for (c = 0; c < chars; c++) {
                 ret += '#';
             }
             ret += '.';
-            for (c = 0; c < decs; c++) {
+            for (c = 0; c < numDecimals; c++) {
                 ret += '#';
             }
         }
@@ -2076,16 +2577,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setPlaceholderText: function () {
-        var text;
+        var text,
+            value;
 
-        if (this.valueText) {
-            if (this.blockType === "Constant") {
-                this.valueText.setText(gpl.formatValue(this, this.value + ""));
-            } else {
-                text = this.getPlaceholderText();
-                this.valueText.setText(text);
-            }
-
+        if (this.valueText && this.blockType !== 'Constant') {
+            text = this.getPlaceholderText();
+            this.valueText.setText(text);
             this.renderAll();
         }
     },
@@ -2110,6 +2607,9 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.y = this.config.y || 0;
 
         this.initShapes();
+        if (this.targetCanvas !== 'toolbar') {
+            this.valueText.visible = (this.config.presentValueVisible !== undefined ? this.config.presentValueVisible : true);
+        }
 
         gpl.blockManager.registerBlock(this, this.valueText, this.targetCanvas);
 
@@ -2229,18 +2729,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             gplId: this.gplId
         };
 
-        // if(this.labelVisible === undefined) {
-        //     this.labelVisible = gpl.json.Show_Label;
-        // } else {
-        if (this.labelVisible === 0) { //take sequence option?
-            this.labelVisible = gpl.json.Show_Label;
-        } else {
-            if (this.labelVisible === undefined) {
-                this.labelVisible = false;
-            }
+        // ch#311 Remove this part of the if statement: || this.labelVisible === false
+        if (this.labelVisible === 0 || this.labelVisible === undefined) {
+            this.labelVisible = gpl.seqProps.showLabel;  // use global sequence option for Show Label
         }
-        // }
-
 
         if (this.labelVisible === false) {
             // this.labelVisible = false;
@@ -2249,7 +2741,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config._wasHidden = true;
         }
 
-        this.label = this.label || (!this.config.inactive ? gpl.getLabel(this.type) : '');
+        this.label = this.label || (!this.config.inactive ? gpl.getLabel(this) : '');
 
         if (typeof this.label === 'number') {
             this.label = this.label.toString();
@@ -2260,10 +2752,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         this.labelText = new fabric.Text(this.label || '', config);
-
-        // if(this.labelVisible === 0) {//legacy
-        //     this.labelText._wasHidden = true;
-        // }
 
         if (this.labelText.width < this.minLabelWidth) {
             this.labelText.set('width', this.minLabelWidth);
@@ -2295,16 +2783,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config.originX = 'right';
         }
 
-        if (this.presentValueVisible === 0) { //take sequence option?
-            this.presentValueVisible = gpl.json.Show_Value;
-        } else {
-            if (this.presentValueVisible === undefined) {
-                this.presentValueVisible = false;
-            }
+        // ch#311 Remove this part of it statement: || this.presentValueVisible === false
+        if (this.presentValueVisible === 0 || this.presentValueVisible === undefined) {
+            this.presentValueVisible = gpl.seqProps.showValue;
         }
 
         if (this.presentValueVisible === false || this.config.showValue === false) {
             config.visible = false;
+        } else {
+            config.visible = true;
         }
 
         this.valueText = new fabric.Text(this.getPlaceholderText(), config);
@@ -2429,7 +2916,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setActive: function () {
         // this.targetCanvas = 'main';
-        this.labelVisible = gpl.point['Show Label'].Value;
+        this.labelVisible = gpl.seqProps.showLabel;
 
         this.bypassSave = false;
         this.showShapes();
@@ -2459,7 +2946,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             currIconName = self.icon.split('.')[0],
             key,
-            answer = "";
+            answer = '';
 
         if (self.iconMatrix) {
             for (key in self.iconMatrix) {
@@ -2467,7 +2954,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     answer = key;
                 }
             }
-        } else if (self.icons) {
+        } else if (self.icons && currIconName) { // ch946; add "&& currIconName" so PI block doesn't throw an error when it is dropped on canvas
             for (key in self.icons) {
                 if (self.icons[key] === currIconName) {
                     answer = key;
@@ -2481,24 +2968,21 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setIconType: function (calcType, revAction) {
-        "use strict";
         let self = this,
-            calculationType = calcType.Value,
-            reverseAction = revAction.Value;
+            calculationType = calcType.Value;
+            // reverseAction = revAction.Value;
 
         if (self.setIconName) {
             self.setIconName();
-        } else {
-            if (calculationType) {
-                self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
+        } else if (calculationType && !self.hasReferenceType) { // ch1023; add "&& !self.hasReferenceType"
+            self.config.iconType = (self.icons && self.icons[calculationType] ? self.icons[calculationType] : calculationType);
 
-                if (self.iconPrefix) {
-                    self.config.iconType = self.iconPrefix + calculationType;
-                }
-
-                self.icon = self.config.iconType + self.iconExtension;
-                self.iconType = self.config.iconType
+            if (self.iconPrefix) {
+                self.config.iconType = self.iconPrefix + calculationType;
             }
+
+            self.icon = self.config.iconType + self.iconExtension;
+            self.iconType = self.config.iconType;
         }
 
         self.setIcon();
@@ -2510,6 +2994,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     setIcon: function (icon) {
         var self = this;
+        var finish = function () { // ch287 (added)
+            if (self.setIconCallback) {
+                self.setIconCallback();
+            }
+        };
 
         if (icon) {
             self.icon = icon;
@@ -2553,6 +3042,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                     self.add(img, true);
                     self.renderAll();
+
+                    finish();
                 });
             } else {
                 if (self.backgroundImage) {
@@ -2561,6 +3052,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 self.backgroundImage = self._icons[self.icon];
                 self.backgroundImage.setVisible(true);
                 self.renderAll();
+
+                finish();
             }
         } else {
             gpl.log('no icon for', self.config.iconType);
@@ -2620,7 +3113,7 @@ gpl.Block.fromObject = function (object) {
     return new gpl.Block(object);
 };
 
-gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Input = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -2628,13 +3121,12 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
     toolbarOffsetLeft: 5,
     proxyOffsetLeft: -5,
     hasShutdownBlock: false,
-    noIcon: true,
     numInputs: 0,
     isNonPoint: true,
     hasReferenceType: true,
 
-    type: 'MonitorBlock',
-    pointType: 'Monitor Point',
+    type: 'Input',
+    pointType: 'Input',
 
     shapes: {
         'External': {
@@ -2661,6 +3153,15 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
 
     syncAnchorPoints: gpl.emptyFn,
 
+    rightAnchor: { // ch354 require anchor wired up
+        anchorType: 'InputBlockOutputAnchor', // ch1379 (name it 'InputBlockOutputAnchor')
+        required: true
+    },
+
+    setIconCallback: function () { // ch287 (added)
+        this.processPointRef();
+    },
+
     postInit: function () {
         this.callSuper('postInit');
 
@@ -2673,7 +3174,7 @@ gpl.blocks.MonitorBlock = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Constant = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -2685,7 +3186,7 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
     numInputs: 0,
     isNonPoint: true,
 
-    type: 'ConstantBlock',
+    type: 'Constant',
     pointType: 'Constant',
 
     shapes: {
@@ -2700,35 +3201,261 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
 
     syncAnchorPoints: gpl.emptyFn,
 
+    rightAnchor: { // ch354 require anchor wired up
+        anchorType: '',
+        required: true
+    },
+
     postInit: function () {
-        if (this.value !== undefined) {
+        var self = this;
+        var valueOptions;
+
+        if (this.value) {
             this.valueText.setText(gpl.formatValue(this, this.value.toString()));
         }
+
+        // This function updates the constant block's value shown on screen for all enum type constants
+        // We only save the constant's eValue, so that's why we need to look it up on load
+        gpl.on('rendered', function updateValueText() {
+            var found = false;
+
+            if (!self.isToolbar) {
+                valueOptions = self.getValueOptions();
+
+                if (valueOptions) {
+                    gpl.forEach(valueOptions, function (val, key) {
+                        if (val === self.value) {
+                            self.valueText.setText(key);
+                            found = true;
+                            return false;
+                        }
+                    });
+
+                    if (!found) {
+                        // TODO toast a message about this condition. Most likely, the connected block Input Point 1 was a multi-state value, and the states 
+                        // were changed
+                    }
+                }
+            }
+        });
 
         this.callSuper('postInit');
     },
 
-    setValue: function (val) { // for constant block
-        var lines,
-            anchor,
-            block,
-            c,
-            len,
-            numericValue = parseFloat(val);
+    getValueOptions: function () {
+        let ret;
+        let connAnchor = this.outputAnchor.getConnectedAnchor();
+        let connBlock = this.outputAnchor.getConnectedBlock();
 
-        this.valueText.setText(gpl.formatValue(this, numericValue));
+        if (connBlock) {
+            let pointData = connBlock.getPointData();
+            let prop = pointData && pointData[connAnchor.constantProp];
 
-        if (!isNaN(numericValue) && this.value !== numericValue) {
-            this.value = numericValue;
-
-            lines = this.outputAnchor.getLines();
-            len = lines.length;
-
-            for (c = 0; c < len; c++) {
-                anchor = lines[c].getOtherAnchor(this.outputAnchor);
-                block = gpl.blockManager.getBlock(anchor.gplId);
-                block.syncAnchorValue(anchor, numericValue);
+            if (prop && (prop.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum)) {
+                ret = prop.ValueOptions;
             }
+        }
+
+        return ret;
+    },
+
+    validate: function (line, anchor) { // ch991; add optional line and anchor arguments
+        var isValid = this.validateSelf({
+            invalidateBlock: true
+        });
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1083; added fn
+    validateSelf: function (_options) {
+        // options = {
+        //     connectionAttempt: boolean,      <optional - indicates the user is in the process of wiring the block up>
+        //     proposedAnchor: anchor object,   <optional - this is the proposed connection anchor that the user wants to make; it's not wired up yet>
+        // }
+        var self = this;
+        var isValid = true;
+        var defaultOptions = {
+                proposedAnchor: null,
+                connectionAttempt: false
+            };
+        var options = $.extend(defaultOptions, _options);
+        var pointData = this.getPointData();
+        var connectedAnchors = this.outputAnchor.getConnectedAnchors();
+        var isError = {
+                ValueType: false,
+                ValueOptions: false
+            };
+        var isBlockValid;
+        var block;
+        var prop;
+        var ValueOptions;
+        var ValueType;
+        var setInvalid = function (block, anchor) {
+                isBlockValid = false;
+                isValid = false;
+
+                if (!options.connectionAttempt) {
+                    block.setInvalid();
+                    self.outputAnchor.getLine(anchor).setInvalid();
+                }
+
+                return true;
+            };
+        var setValid = function (block, anchor) {
+                var line;
+
+                if (!options.connectionAttempt) {
+                    block.setValid();
+                    // ch991; make sure line exists before operating on it
+                    line = self.outputAnchor.getLine(anchor);
+                    if (line) {
+                        line.setValid();
+                    }
+                }
+            };
+
+        // Allow constants to be wired up before their value is set
+        if (!options.connectionAttempt && isNaN(parseInt(self.value))) { // This passes for decimal values as well
+            // This would be a really abnormal thing to happen because the constant's value is initially set when it is connected to a block,
+            // and validity checks are performed on the value before it is updated. Soooo, this is really just CYB
+            isValid = false;
+            gpl.validationMessage.push(self.label + " has an invalid value (" + self.value + ")");
+        }
+
+        if (options.proposedAnchor) {
+            connectedAnchors.push(options.proposedAnchor);
+        }
+
+        // Constant blocks can represent an enum or a float value, but they can't be both at the same time. Also, if representing an enum,
+        // then every block the constant is connected to must have the same enum set (ValueOptions); otherwise, how would you know what list 
+        // of values to show the user when they are selecting the constant's value?
+        gpl.forEachArray(connectedAnchors, function (anchor) {
+            isBlockValid = true;
+
+            block = anchor.myBlock();
+            prop = block.getPointData()[anchor.constantProp];
+
+            // The property not existing would be a really abnormal case, and probably won't happen unless/until we allow the user to wire up whatever they want
+            // despite errors (sometimes this is preferred for someone who knows what they're doing)
+            if (!prop) {
+                gpl.validationMessage.push(['Block', block.label, anchor.anchorType, 'does not accept constant inputs']);
+                return setInvalid(block, anchor);
+            }
+
+            // We need a base ValueType and ValueOptions to test everything else against. The first one is as good as any, don't you think?
+            if (ValueType === undefined) {
+                ValueType = prop.ValueType;
+                ValueOptions = prop.ValueOptions || {}; // The "|| {}" part is just CYB so "Object.keys(ValueOptions)", a few statements later, can't throw an error
+            }
+
+            // Make sure the value types are the same
+            if (prop.ValueType !== ValueType) {
+                isError.ValueType = true;
+                return setInvalid(block, anchor);
+            }
+            
+            // Make sure the enum sets are the same
+            if (ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                if (Object.keys(prop.ValueOptions).length !== Object.keys(ValueOptions).length) {
+                    isError.ValueOptions = true;
+                    return setInvalid(block, anchor);
+                }
+
+                gpl.forEachArray(Object.keys(ValueOptions), function (key) {
+                    if (!prop.ValueOptions.hasOwnProperty(key) || (prop.ValueOptions[key] !== ValueOptions[key])) {
+                        isError.ValueOptions = true;
+                        setInvalid(block, anchor);
+                        return false; // Break this forEach
+                    }
+                });
+            }
+
+            if (isBlockValid) {
+                setValid(block, anchor);
+            }
+        });
+
+        if (isError.ValueType) {
+            gpl.validationMessage.push([self.label, 'is connected to blocks that do not accept the same constant value type'].join(' '));
+        }
+        if (isError.ValueOptions) {
+            gpl.validationMessage.push([self.label, 'is connected to blocks that have different value options'].join(' '));
+        }
+
+        if (!options.connectionAttempt) {
+            if (isValid) {
+                self.setValid();
+            } else {
+                self.setInvalid();
+            }
+        }
+
+        return isValid;
+    },
+
+    // ch1083; added fn
+    // This function sets the constant's value by pulling from the block it is connected to
+    pullValue: function (connectedAnchor) {
+        var self = this;
+        var connectedBlock;
+        var connectedData;
+        var connectedProp;
+        var text;
+
+        // Normally, the connected anchor is supplied by the caller, mainly because this block could be connected to multiple things
+        // Get the first connected anchor if caller did not supply it
+        if (!connectedAnchor) {
+            connectedAnchor = self.outputAnchor.getConnectedAnchor();
+        }
+
+        // Gets the constant block's value from an anchor it's connected to
+        if (connectedAnchor && connectedAnchor.constantProp) {
+            connectedBlock = connectedAnchor.myBlock();
+            connectedData = connectedBlock.getPointData();
+            connectedProp = connectedData[connectedAnchor.constantProp];
+
+            if (connectedProp.ValueType === gpl.workspaceManager.config.Enums['Value Types'].Enum.enum) {
+                if (self.value !== connectedProp.eValue) {
+                    gpl.forEach(connectedProp.ValueOptions, function (val, key) {
+                        if (self.value === val) {
+                            connectedProp.Value = key;
+                            connectedProp.eValue = val;
+                            return false; // Break the forEach
+                        }
+                    });
+                }
+                self.value = connectedProp.eValue;
+            } else {
+                self.value = connectedProp.Value;
+            }
+
+            self.valueText.setText(connectedProp.Value.toString());
+            self.renderAll();
+        }
+    },
+
+    setValue: function (value) { // for constant block
+        var self = this,
+            numericValue = parseFloat(value),
+            block;
+
+        if (!isNaN(numericValue)) {
+            if (this.value !== numericValue) {
+                self.value = numericValue;
+
+                gpl.forEachArray(self.outputAnchor.getConnectedAnchors(), function (anchor) {
+                    block = anchor.myBlock();
+                    value = block.syncAnchorValue(anchor, numericValue); // ch1083; save returned value; this may come back as a number or string
+                });
+            }
+
+            // ch1053; always update the text in case the precision was changed
+            this.valueText.setText(gpl.formatValue(this, value));
 
             this.renderAll();
             gpl.manager.bindings.hasEdits(true);
@@ -2736,7 +3463,7 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
+gpl.blocks.Output = fabric.util.createClass(gpl.Block, {
     height: 20,
     width: 20,
     toolbarHeight: 30,
@@ -2745,15 +3472,14 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
     proxyOffsetLeft: -5,
     hasShutdownBlock: false,
     valueAnchor: 'input',
-    noIcon: true,
     isNonPoint: true,
     hasReferenceType: true,
 
     numInputs: 1,
     hasOutput: false,
 
-    type: 'ControlBlock',
-    pointType: 'Control Point',
+    type: 'Output',
+    pointType: 'Output',
 
     shapes: {
         'External': {
@@ -2772,12 +3498,21 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    leftAnchors: [{ // ch354 require anchor wired up
+        anchorType: 'Control Point',
+        required: true
+    }],
+
     syncAnchorPoints: gpl.emptyFn,
 
     initialize: function (config) {
         this.callSuper('initialize', config);
 
         this.getReferencePoint();
+    },
+
+    setIconCallback: function () { // ch287 (added)
+        this.processPointRef();
     },
 
     postInit: function () {
@@ -2789,6 +3524,32 @@ gpl.blocks.ControlBlock = fabric.util.createClass(gpl.Block, {
             this.referenceType = 'External';
         }
         this.setReferenceType(this.referenceType);
+    },
+
+    validate: function (line, anchor) { // ch1012 & ch1017 (added fn); ch991; add optional line and anchor arguments
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    validateSelf: function () { // ch1012 & ch1017 (added fn)
+        // This function only validates this block
+        var pointData = this.getPointData();
+        var isValid = true;
+
+        if (pointData && (pointData['Point Refs'][0].PointInst !== gpl.seqProps.deviceId)) {
+            this.setInvalid();
+            gpl.validationMessage.push('Output block "' + this.label + '" is invalid because its associated point is assigned to a different device. All outputs must reside on the same device as this sequence (' + dtiCommon.getPointName(gpl.devicePoint.path) + ')');
+            isValid = false;
+        } else {
+            this.setValid();
+        }
+
+        return isValid;
     }
 });
 
@@ -2831,6 +3592,18 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
         this.callSuper('postInit');
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
+    },
+
     setIconName: function () {
         var data = this._pointData,
             reverseActing,
@@ -2860,6 +3633,11 @@ gpl.blocks.Delay = fabric.util.createClass(gpl.Block, {
     pointType: 'Delay',
     valueType: 'enum',
 
+    icons: { // ch988
+        'Delay': 'Delay',
+        'Pulsed': 'OneShot'
+    },
+
     iconScale: 0.9,
     iconOffsetLeft: 2,
 
@@ -2887,21 +3665,36 @@ gpl.blocks.Delay = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    setIconName: function () { // ch988
+        var data = this._pointData,
+            calcType,
+            icon;
+
+        if (data) {
+            calcType = data['Calculation Type'].Value;
+
+            icon = this.icons[calcType];
+
+            this.icon = icon + this.iconExtension;
+            this.setIcon();
+        }
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
 });
 
-gpl.blocks.BinarySetPoint = fabric.util.createClass(gpl.Block, {
+// ch981 rename this block
+gpl.blocks.BinarySingleSetPoint = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
 
     icons: {
-        'Single Setpoint': 'BINMSingleSP',
-        'Dual Setpoint': 'BINMDualSP'
+        'Single Setpoint': 'BINMSingleSP'
     },
 
-    type: 'BinarySetPoint',
+    type: 'BinarySingleSetPoint',
     pointType: 'Binary Selector',
     valueType: 'enum',
 
@@ -2947,27 +3740,23 @@ gpl.blocks.BinarySetPoint = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.AnalogSetPoint = fabric.util.createClass(gpl.Block, {
+// ch981 rename block
+gpl.blocks.BinaryDualSetPoint = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
 
     icons: {
-        'Single Setpoint': 'AnalogSingleSetPoint',
-        'Dual Setpoint': 'AnalogDualSetPoint'
+        'Setback': 'BINMDualSP', // ch995
+        'Dual Setpoint': 'BINMDualSP'
     },
 
-    type: 'AnalogSetPoint',
-    pointType: 'Analog Selector',
-    valueType: 'float',
+    type: 'BinaryDualSetPoint',
+    pointType: 'Binary Selector',
+    valueType: 'enum',
 
-    leftAnchors: [{
+    leftAnchors: [{ // ch984 (dual setpoint has only one left anchor)
         anchorType: 'Monitor Point',
         required: true
-    }, {
-        anchorType: 'Setpoint Input',
-        required: true,
-        takesConstant: true,
-        constantProp: 'Setpoint Value'
     }],
 
     shapes: {
@@ -3002,6 +3791,96 @@ gpl.blocks.AnalogSetPoint = fabric.util.createClass(gpl.Block, {
     }
 });
 
+// ch981 add this block
+gpl.blocks.AnalogSingleSetPoint = fabric.util.createClass(gpl.Block, {
+    width: 30,
+    height: 40,
+
+    type: 'AnalogSingleSetPoint',
+    pointType: 'Analog Selector',
+    valueType: 'float',
+
+    icons: {
+        'Single Setpoint': 'AnalogSingleSetPoint'
+    },
+
+    leftAnchors: [{
+        anchorType: 'Monitor Point',
+        required: true
+    }, {
+        anchorType: 'Setpoint Input',
+        required: true,
+        takesConstant: true,
+        constantProp: 'Setpoint Value'
+    }],
+
+    shapes: {
+        'Rect': {
+            cls: fabric.Rect,
+            cfg: {
+                fill: '#fffcb8',
+                stroke: 'black',
+                width: 30,
+                height: 40
+            }
+        }
+    },
+
+    initialize: function (config) {
+        this.callSuper('initialize', config);
+    },
+
+    setIconName: function () {
+        this.icon = this.type + this.iconExtension;
+        this.setIcon();
+    }
+});
+
+// ch981 renmae this block
+gpl.blocks.AnalogDualSetPoint = fabric.util.createClass(gpl.Block, {
+    width: 30,
+    height: 40,
+
+    icons: {
+        'Setback': 'AnalogDualSetPoint', // ch995
+        'Dual Setpoint': 'AnalogDualSetPoint'
+    },
+
+    type: 'AnalogDualSetPoint',
+    pointType: 'Analog Selector',
+    valueType: 'float',
+
+    leftAnchors: [{ // ch984 (dual setpoint has only one left anchor)
+        anchorType: 'Monitor Point',
+        required: true
+    }],
+
+    shapes: {
+        'Rect': {
+            cls: fabric.Rect,
+            cfg: {
+                fill: '#fffcb8',
+                stroke: 'black',
+                width: 30,
+                height: 40
+            }
+        }
+    },
+
+    initialize: function (config) {
+        this.callSuper('initialize', config);
+    },
+
+    setIconName: function () {
+        var data = this._pointData,
+            calcType = data['Calculation Type'].Value,
+            icon = this.icons[calcType]; // ch992
+
+        this.icon = icon + this.iconExtension;
+        this.setIcon();
+    }
+});
+
 gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     width: 30,
     height: 40,
@@ -3010,8 +3889,12 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
     pointType: 'Proportional',
     valueType: 'float',
 
-    _icon: 'PI',
-    icon: 'PI.png',
+    icons: { // ch992
+        'P Only': 'PI',
+        'PI': 'PID',
+        'PID': 'PID',
+    },
+
     iconOffsetTop: 0,
     iconOffsetLeft: 1,
 
@@ -3044,10 +3927,23 @@ gpl.blocks.PI = fabric.util.createClass(gpl.Block, {
         this.callSuper('initialize', config);
     },
 
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
+    },
+
     setIconName: function () {
         var data = this._pointData,
             reverseActing = data['Reverse Action'].Value,
-            icon = data['Calculation Type'].Value;
+            calcType = data['Calculation Type'].Value,
+            icon = this.icons[calcType]; // ch992
         // icon = this._icon;
 
         if (reverseActing) {
@@ -3072,24 +3968,7 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
     pointType: 'Average',
     valueType: 'float',
 
-    leftAnchors: [{
-        anchorType: 'Input Point 1',
-        required: true,
-        takesConstant: false
-    },{
-        anchorType: 'Input Point 2',
-        required: true,
-        takesConstant: false
-    },{
-        anchorType: 'Input Point 3',
-        takesConstant: false
-    },{
-        anchorType: 'Input Point 4',
-        takesConstant: false
-    },{
-        anchorType: 'Input Point 5',
-        takesConstant: false
-    }],
+    // ch1323; remove leftAnchors array (it's not needed since Input Point 1 and Input Point 2 are not required inputs)
 
     shapes: {
         'Rect': {
@@ -3101,6 +3980,39 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -3153,6 +4065,12 @@ gpl.blocks.Enthalpy = fabric.util.createClass(gpl.Block, {
     type: 'Enthalpy',
     pointType: 'Enthalpy',
     valueType: 'float',
+
+    icons: { // ch996 (add object)
+        'Enthalpy': 'Enthalpy',
+        'Dew Point': 'DewPoint',
+        'Wet Bulb': 'WetBulb',
+    },
 
     leftAnchors: [{
         anchorType: 'Humidity Point',
@@ -3207,6 +4125,39 @@ gpl.blocks.SelectValue = fabric.util.createClass(gpl.Block, {
         }
     },
 
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
+    },
+
     initialize: function (config) {
         this.callSuper('initialize', config);
     }
@@ -3223,6 +4174,9 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
     pointType: 'Logic',
     valueType: 'enum',
 
+    // ch998; disallow constant block as inputs in leftAnchors array
+    // ch1375; realized we can remove the leftAnchors array altogether now
+
     shapes: {
         'Rect': {
             cls: fabric.Rect,
@@ -3233,6 +4187,39 @@ gpl.blocks.Logic = fabric.util.createClass(gpl.Block, {
                 height: 100
             }
         }
+    },
+
+    // ch1375; added fn
+    validate: function (line, anchor) {
+        var isValid = this.validateSelf();
+
+        if (isValid) {
+            isValid = this.callSuper('validate', line, anchor);
+        }
+
+        return isValid;
+    },
+
+    // ch1375; added fn
+    validateSelf: function () {
+        var self = this;
+        var isValid = false;
+
+        gpl.forEachArray(self.inputAnchors, function (inputAnchor) {
+            if (inputAnchor.getConnectedAnchor()) {
+                isValid = true;
+                return false; // Break the foreach (we only need one input connected to be valid)
+            }
+        });
+        
+        if (isValid) {
+            self.setValid();
+        } else {
+            gpl.validationMessage.push('GPL block, ' + this.label + ', requires at least one input be connected.');
+            self.setInvalid();
+        }
+
+        return isValid;
     },
 
     initialize: function (config) {
@@ -3270,6 +4257,37 @@ gpl.blocks.Math = fabric.util.createClass(gpl.Block, {
                 height: 40
             }
         }
+    },
+
+    setIconName: function () { // ch968 (added function)
+        var data = this._pointData,
+            calcType,
+            icon;
+
+        if (data) {
+            calcType = data['Calculation Type'].Value;
+
+            icon = calcType;
+
+            if (data['Square Root'].Value === true) {
+                icon += 'Sqrt';
+            }
+
+            this.icon = icon + this.iconExtension;
+            this.setIcon();
+        }
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
     },
 
     initialize: function (config) {
@@ -3446,13 +4464,27 @@ gpl.blocks.AlarmStatus = fabric.util.createClass(gpl.Block, {
     },
 
     initialize: function (config) {
-        this.setAlarmIcon('1111');
+        if (config.isToolbar) { // ch946; only set the icon if the block is in the toolbar
+            this.setAlarmIcon('1111');
+        }
         this.callSuper('initialize', config);
     },
 
     postInit: function () {
         this.setIconName();
         this.callSuper('postInit');
+    },
+
+    // ch946; add this function; it is called by the base class initIcon function
+    getIcon: function () {
+        var self = this;
+        var icon = '';
+
+        // Don't get the default icon if this block is on the main canvas
+        if (self.isToolbar) {
+            icon = self.iconType + self.iconExtension;
+        }
+        return icon;
     },
 
     setAlarmIcon: function (total) {
@@ -3509,7 +4541,7 @@ gpl.blocks.Comparator = fabric.util.createClass(gpl.Block, {
         '<=': 'LTEqual',
         '>=': 'GTEqual',
         '=': 'Equal',
-        '<>': 'NEqual'
+        '<>': 'NotEqual'
     },
 
     leftAnchors: [{
@@ -3587,6 +4619,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
     hasRotatingPoint: false,
 
     type: 'TextBlock',
+    pointType: 'Text',
     gplType: 'text',
 
     initialize: function (config) {
@@ -3630,13 +4663,11 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
             cfg.fontSize = parseInt(fontConfig.size, 10) || this.defaultFontSize;
             cfg.textDecoration = fontConfig.underline ? 'underline' : '';
             cfg.fontFamily = fontConfig.name || 'Arial';
-        } else {
-            if (config._v2 !== true) {
+        } else if (config._v2 !== true) {
                 cfg.fontWeight = this.defaultWeight;
                 cfg.fill = this.defaultFill;
                 cfg.fontSize = this.defaultFontSize;
             }
-        }
 
         // cfg.lockUniScaling = true;
         cfg.originX = 'left';
@@ -3684,7 +4715,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return wrapped;
     },
-    /**
+    /* *
      * Wraps a line of text using the width of the Textbox and a context.
      * @param {CanvasRenderingContext2D} ctx Context to use for measurements
      * @param {String} text The string of text to split into lines
@@ -3695,7 +4726,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
         var maxWidth = this.width,
             words = text.split(' '),
             lines = [],
-            line = "",
+            line = '',
             tmp;
 
         if (ctx.measureText(text).width < maxWidth) {
@@ -3725,10 +4756,10 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
                 }
 
                 if (Math.ceil(ctx.measureText(line + words[0]).width) < maxWidth) {
-                    line += words.shift() + " ";
+                    line += words.shift() + ' ';
                 } else {
                     lines.push(line);
-                    line = "";
+                    line = '';
                 }
                 if (words.length === 0) {
                     lines.push(line.substring(0, line.length - 1));
@@ -3738,7 +4769,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return lines;
     },
-    /**
+    /* *
      * Gets lines of text to render in the Textbox. This function calculates
      * text wrapping on the fly everytime it is called.
      * @param {CanvasRenderingContext2D} ctx The context to use for measurements
@@ -3758,7 +4789,7 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
 
         return l;
     },
-    /**
+    /* *
      * Overrides the superclass version of this function. The only change is
      * that this function does not change the width of the Textbox. That is
      * done manually by the user.
@@ -3795,7 +4826,226 @@ fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fab
     }
 });
 
-/**
+// ch473 (added)
+fabric.ActionButton = gpl.blocks.ActionButton = fabric.util.createClass(fabric.Rect, {
+    // TODO this fabric element isn't 100% correct; when moving the button, the shapes do not move with it
+    // because fabric is indicating the active element is the shape, not the fabric button (see canvas.getActiveObject)
+    opacity: 0,
+    selectable: false,
+
+    fill: '#888',
+    borderColor: '#000000',
+    cornerColor: '#000000',
+    width: 100,
+    height: 30,
+
+    label: 'Action',
+    fontSize: 12,
+    fontFamily: 'Arial',
+    fontWeight: 'normal',
+
+    isNonPoint: true,
+    type: 'ActionButton',
+    pointType: 'Action',
+    gplType: 'action',
+
+    syncObjects: function (target) {
+        var left = target.left,
+            top = target.top,
+            shape,
+            c;
+
+        this.left = left;
+        this.top = top;
+        this.setCoords(); // ch1330
+
+        for (c = 0; c < this._shapes.length; c++) {
+            shape = this._shapes[c];
+            shape.left = left + (shape.offsetLeft); //left + shape.offsetLeft * gpl.scaleValue;// - this.width/2;
+            shape._originalLeft = shape.left;
+            shape.top = top + (shape.offsetTop); //top + shape.offsetTop * gpl.scaleValue;// - this.height/2;
+            shape._originalTop = shape.top;
+            if (shape.setCoords) {
+                shape.setCoords();
+            }
+        }
+    },
+
+    redrawLines: gpl.emptyFn,
+
+    add: function (object, render) {
+        object.gplId = this.gplId;
+        object.offsetLeft = object.left - this.left;
+        object.offsetTop = object.top - this.top;
+        this._shapes.push(object);
+        if (this.initialized || this.isNonPoint) {
+            gpl.blockManager.add(object, this.targetCanvas, render);
+        }
+    },
+
+    delete: function () {
+        var canvas = gpl.canvases[this.targetCanvas || 'main'];
+
+        gpl.forEachArray(this._shapes, canvas.remove.bind(canvas));
+        canvas.remove.call(canvas, this);
+
+        delete gpl.actionButtons[this.gplId];
+    },
+
+    initialize: function (config) {
+        this.gplId = gpl.makeId();
+        gpl.actionButtons[this.gplId] = this;
+
+        this._shapes = [];
+
+        this.convertConfig(config);
+
+        this.callSuper('initialize', this.config);
+
+        this.initShapes();
+
+        gpl.blockManager.registerBlock(this);
+
+        gpl.manager.bindings.hasEdits(true);
+    },
+
+    convertConfig: function (config) {
+        var cfg = config,
+            fontConfig = cfg.font,
+            alignments = {
+                1: 'right',
+                0: 'left'
+            };
+
+        this.config = config;
+
+        // cfg.lockUniScaling = true;
+        cfg.originX = 'left';
+        cfg.originY = 'top';
+
+        if (!cfg._v2) {
+            this.config.left += 10;
+            this.config.top += 5;
+        }
+
+        this.config.selectable = !!gpl.isEdit;
+
+        this.config.textAlign = alignments[cfg.alignment] || 'center';
+
+        $.extend(this, this.config);
+    },
+
+    setActive: function () {
+        this.inactive = false;
+        this.setCoords();
+    },
+
+    initShapes: function () {
+        this.initBackground();
+        this.initLabel();
+        this.initMovable(); // This has to be the last shape added otherwise we can't move the button
+    },
+
+    initBackground: function () {
+        var config = {
+            top: this.top,
+            left: this.left,
+            originX: 'left',
+            originY: 'top',
+            width: this.width,
+            height: this.height,
+            fill: this.fill,
+            selectable: false
+        };
+
+        this.background = new fabric.Rect(config);
+        this.background._originalTop = this.background.top;
+        this.background._originalLeft = this.background.left;
+        this.add(this.background);
+    },
+    
+    initLabel: function () {
+        var config = {
+            top: this.top + (this.height / 2),
+            left: this.left + (this.width / 2),
+            textAlign: 'center',
+            originX: 'center',
+            originY: 'center',
+            fontSize: parseInt(this.fontSize, 10),
+            fontFamily: this.fontFamily,
+            gplType: 'label',
+            readOnly: true,
+            opacity: 1,
+            selectable: false
+        };
+
+        if (this.config.inactive) {
+            config.visible = false;
+        }
+
+        this.labelText = new fabric.Text(this.text, config);
+
+        this.labelText._originalTop = this.labelText.top;
+        this.labelText._originalLeft = this.labelText.left;
+        this.add(this.labelText);
+    },
+
+    initMovable: function () {
+        var movable = new fabric.Rect({
+                top: this.top,
+                left: this.left,
+                originX: 'left',
+                originY: 'top',
+                width: this.width,
+                height: this.height,
+                opacity: 0,
+                selectable: true,
+                hasRotatingPoint: false,
+                hasControls: true,
+                lockScalingX: false
+            }),
+            handleScaling = function () {
+                // Update the block and all shapes to the new width; "this" is the movable shape
+                console.log('scaling', arguments, this);
+                var block = gpl.blockManager.blocks[this.gplId],
+                    left = this.left,
+                    width = parseInt(this.width * this.zoomX, 10);
+
+                gpl.forEachArray(block._shapes, function (shape, i) {
+                    shape.left = left;
+                    shape.width = width;
+                    shape.zoomX = 1;
+                    shape.scaleX = 1;
+                });
+
+                block.left = left;
+                block.width = width;
+            },
+            handleSelected = function () {
+                console.log('selected', arguments, this);
+            };
+        
+        movable.setControlsVisibility({
+            tl: false, // top left
+            tr: false, // top right
+            br: false, // bottom right
+            bl: false, // etc. etc.
+            ml: true,
+            mt: false,
+            mr: true,
+            mb: false,
+            mtr: false // middle-top rotate
+        });
+
+        movable.on('scaling', handleScaling);
+        movable.on('selected', handleSelected);
+        
+        this.add(movable);
+        this.movable = movable;
+    }
+});
+
+/* *
  * Returns fabric.Textbox instance from an object representation
  * @static
  * @memberOf fabric.Textbox
@@ -3806,7 +5056,7 @@ fabric.Textbox.fromObject = function (object) {
     return new fabric.Textbox(object.text, fabric.util.object.clone(object));
 };
 
-/**
+/* *
  * Contains all fabric.Textbox objects that have been created
  * @static
  * @memberof fabric.Textbox
@@ -3815,12 +5065,11 @@ fabric.Textbox.fromObject = function (object) {
 fabric.Textbox.instances = [];
 fabric.Textbox.__setObjectScaleOverridden = fabric.Canvas.prototype._setObjectScale;
 
-/**
+/* *
  * Override _setObjectScale and add Textbox specific resizing behavior. Resizing
  * a Textbox doesn't scale text, it only changes width and makes text wrap automatically.
  */
-fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip) {
-
+fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip, dim) {
     var t = transform.target,
         setObjectScaleOverridden = fabric.Textbox.__setObjectScaleOverridden,
         w;
@@ -3831,12 +5080,12 @@ fabric.Canvas.prototype._setObjectScale = function (localMouse, transform, lockS
             t.set('width', w);
         }
     } else {
-        setObjectScaleOverridden.call(fabric.Canvas.prototype, localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip);
+        return setObjectScaleOverridden.call(fabric.Canvas.prototype, localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip, dim);
     }
 };
 
 fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.prototype */ {
-    /**
+    /* *
      * Overrides superclass function and adjusts cursor offset value because
      * lines do not necessarily end with a newline in Textbox.
      * @param {Event} e
@@ -3846,7 +5095,7 @@ fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.pr
     getDownCursorOffset: function (e, isRight) {
         return this.callSuper('getDownCursorOffset', e, isRight) - 1;
     },
-    /**
+    /* *
      * Overrides superclass function and adjusts cursor offset value because
      * lines do not necessarily end with a newline in Textbox.
      * @param {Event} e
@@ -3861,7 +5110,7 @@ fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.pr
 /* ------------- Misc Classes ------------ */
 
 gpl.ActionButton = function (config) {
-    var codes = [{
+    let codes = [{
             text: 'No Action (useless)'
         }, {
             text: 'History Log Plot – No longer supported'
@@ -3960,12 +5209,12 @@ gpl.ActionButton = function (config) {
         $el,
         x = config.left,
         y = config.top,
-        height = config.Height,
-        width = config.Width,
+        // height = config.Height,
+        // width = config.Width,
         type = config.type || ((config.actionCode !== undefined) ? 'control' : 'link'),
 
         _addButton = function () {
-            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn btn-sm btn-default actionBtn">' + _local.text + '</button>')
+            $el = $('<button data-actionButtonID="' + _local.id + '" class="hideLoading btn btn-small waves-effect waves-light blue-grey actionBtn">' + _local.text + '</button>')
                 .data({
                     'origLeft': x,
                     'origTop': y
@@ -3989,9 +5238,13 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
+            let setLocalPointName = (pointName) => {
+                _local.pointName = pointName;
+            };
+
             if (response.message !== 'No Point Found') {
                 _local.pointData = response;
-                _local.pointName = _local.pointData.Name;
+                _local.pointName = dtiCommon.getPointName(_local.pointData.path);
                 _local.pointType = response['Point Type'].Value;
 
                 _commandArguments.logData = {
@@ -3999,13 +5252,10 @@ gpl.ActionButton = function (config) {
                     point: {
                         _id: response._id,
                         Security: response.Security,
-                        Name: response.Name,
-                        name1: response.name1,
-                        name2: response.name2,
-                        name3: response.name3,
-                        name4: response.name4,
-                        "Point Type": {
-                            eValue: response["Point Type"].eValue
+                        Name: _local.pointName,
+                        path: _local.pointData.path,
+                        'Point Type': {
+                            eValue: response['Point Type'].eValue
                         }
                     },
                     newValue: {
@@ -4019,7 +5269,7 @@ gpl.ActionButton = function (config) {
         _getPointData = function (upi) {
             if (upi !== undefined) {
                 $.ajax({
-                    url: '/api/points/' + upi
+                    url: gpl.pointApiPath + upi
                 }).done(function (response) {
                     _processPointData(response);
                 });
@@ -4044,7 +5294,7 @@ gpl.ActionButton = function (config) {
                     min: _local.pointData['Minimum Value'].Value,
                     max: _local.pointData['Maximum Value'].Value
                 });
-                gpl.$editActionButtonValueModal.modal('show');
+                gpl.openModal(gpl.$editActionButtonValueModal);
             } else {
                 _sendCommand();
             }
@@ -4054,9 +5304,9 @@ gpl.ActionButton = function (config) {
             _sendCommand();
         },
         openWindow = function (queryString, cb) {  // TODO openwindow() URL needs addressing  (openReport calls)
-            var pointType = _local.pointType,
-                endPoint,
-                url;
+            // var pointType = _local.pointType,
+            //     endPoint,
+            //     url;
 
             // endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
             //
@@ -4075,15 +5325,13 @@ gpl.ActionButton = function (config) {
         click = function () {
             if (_local.type === 'control') {
                 sendCommand();
-            } else {
-                if (_local.pointData && _local.pointData.message !== 'No Point Found') {
+            } else if (_local.pointData && _local.pointData.message !== 'No Point Found') {
                     if (_local.type === 'report') {
-                        gpl.$actionButtonReportParameterModal.modal('show');
+                        gpl.openModal(gpl.$actionButtonReportParameterModal);
                     } else {
                         openWindow();
                     }
                 }
-            }
         },
         openReport = function (config) {  // TODO openwindow() URL needs addressing
             var reportType = config.reportType,
@@ -4125,7 +5373,7 @@ gpl.ActionButton = function (config) {
                 this.applyBindings(reportConfig);
             });
 
-            gpl.$actionButtonReportParameterModal.modal('hide');
+            gpl.closeModal(gpl.$actionButtonReportParameterModal);
         },
         setCommand = function (idx) {
             _local.code = codes[idx];
@@ -4139,7 +5387,7 @@ gpl.ActionButton = function (config) {
         },
         getExportData = function () {
             var pointRef,
-                offset = gpl.isEdit?gpl.editModeOffset:0,
+                offset = gpl.isEdit ? gpl.editModeOffset:0,
                 ret = {
                     left: _local.left - offset,
                     top: _local.top,
@@ -4200,7 +5448,6 @@ gpl.ActionButton = function (config) {
             gpl.destroyObject(_local);
         },
 
-
         setUPI = function (upi) {
             _local.upi = config.upi;
             _getPointData(upi);
@@ -4237,6 +5484,7 @@ gpl.ActionButton = function (config) {
 gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     var slSelf = this,
         VALIDCOLOR = 'green',
+        INVALIDCOLOR = 'red',
         canvas = manager.canvas,
         segments = [],
         coords = [{
@@ -4244,7 +5492,6 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
             y: oy
         }],
         block = gpl.blockManager.getBlock(otarget.gplId),
-        startAnchor = otarget,
         spaceSegment,
         target,
         solidLine,
@@ -4296,6 +5543,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     block.lock(true);
 
+    slSelf.startAnchor = otarget;
+
+    slSelf.moveTarget = '';
+
     slSelf.setColor = function (color) {
         forEachLine(function (line) {
             line.setStroke(color || '#000000');
@@ -4308,7 +5559,9 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.completeLine = function (target) {
         var newCoords,
-            event;
+            event,
+            currentLine,
+            otherAnchor;
 
         if (target) {
             event = {
@@ -4331,7 +5584,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
         slSelf.detachEvents();
         newCoords = $.extend(true, [], coords);
         // gpl.log('creating new line', newCoords);
-        manager.shapes.push(new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true));
+        currentLine = new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true);
+        otherAnchor = currentLine.getOtherAnchor(target);
+        otherAnchor.clearHover();
+        manager.shapes.push(currentLine);
         slSelf.clearSegments();
         gpl.manager.renderAll();
     };
@@ -4426,29 +5682,36 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     };
 
     slSelf.handleMouseMove = function (event) {
-        var pointer = event.e ? canvas.getPointer(event.e) : event,
+        let pointer = event.e ? canvas.getPointer(event.e) : event,
             x = pointer.x, // - pointer.x % gpl.gridSize,
-            y = pointer.y, // - pointer.y % gpl.gridSize,
-            moveTarget = gpl.manager.getObject({
-                left: x,
-                top: y,
-                gplType: 'anchor'
-            });
+            y = pointer.y; // - pointer.y % gpl.gridSize,
+
+        slSelf.moveTarget = gpl.manager.getObject({
+            left: x,
+            top: y,
+            gplType: 'anchor'
+        });
 
         if (manager.isEditingLine) {
-            if (moveTarget) {
-                slSelf.valid = gpl.validate.connection(startAnchor, moveTarget, true);
-                if (slSelf.valid && moveTarget !== startAnchor) {
-                    moveTarget.hover();
+            if (slSelf.moveTarget) {
+                slSelf.valid = gpl.validate.connection(slSelf.startAnchor, slSelf.moveTarget, true, true);
+                if (slSelf.valid) {
+                    slSelf.moveTarget.hover();
+                    slSelf.startAnchor.hover();
                     slSelf.setColor(VALIDCOLOR);
-                    target = moveTarget;
+                } else {
+                    slSelf.setColor(INVALIDCOLOR);
+                    slSelf.moveTarget.hover(true);
+                    slSelf.startAnchor.hover(true);
                 }
-            } else {
-                if (target) {
+                gpl.manager.bringToFront(slSelf.moveTarget);
+                gpl.manager.bringToFront(slSelf.startAnchor);
+                target = slSelf.moveTarget;
+            } else if (target) {
                     target.clearHover();
+                    slSelf.startAnchor.clearHover();
                     slSelf.setColor();
                 }
-            }
 
             if (horiz) {
                 solidLine.set({
@@ -4478,6 +5741,12 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
     slSelf.handleMouseUp = function (event) {
         slSelf.mouseDown = false;
         if (event.e.which === 3) {
+            // ch938; clear anchor hovers when line draw operation is cancelled via right-click
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
+
             slSelf.delete();
         }
     };
@@ -4538,6 +5807,10 @@ gpl.SchematicLine = function (ox, oy, otarget, manager, isVertical) {
 
     slSelf.handleKeyUp = function (event) {
         if (event.which === gpl.ESCAPEKEY) {
+            slSelf.startAnchor.clearHover();
+            if (slSelf.moveTarget) {
+                slSelf.moveTarget.clearHover();
+            }
             slSelf.delete();
         }
     };
@@ -4612,7 +5885,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
         invalidWidth = 2,
         selectedWidth = 2,
         proxyWidth = 3,
-        validWidth = 1,
+        validWidth = 1.2,
         bufferWidth = 10,
         invalidColor = '#ff0000',
         validColor = '#000000',
@@ -4720,8 +5993,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p1.y - bufferWidth
                         };
                     }
-                } else {
-                    if (dx > 0) { //next point is to the right
+                } else if (dx > 0) { //next point is to the right
                         tmpPoint = {
                             x: p1.x + bufferWidth,
                             y: p1.y
@@ -4732,7 +6004,6 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p1.y
                         };
                     }
-                }
                 newPoints.push(tmpPoint);
 
                 if (eVert) {
@@ -4747,8 +6018,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p2.y + bufferWidth
                         };
                     }
-                } else {
-                    if (dx > 0) { //prev point was to the left
+                } else if (dx > 0) { //prev point was to the left
                         tmpPoint = {
                             x: p2.x - bufferWidth,
                             y: p2.y
@@ -4759,7 +6029,6 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                             y: p2.y
                         };
                     }
-                }
                 newPoints.push(tmpPoint);
 
                 calcDifferences(newPoints[0], newPoints[1]);
@@ -4775,6 +6044,9 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
             return ret;
         },
         selectAllSegments = function () {
+            if (gpl.blockManager.highlightedObject) { // ch1011
+                gpl.blockManager.deselect();
+            }
             // gpl.log(clSelf);
             gpl.lineManager.setSelected(clSelf);
             clSelf.setSelected();
@@ -4792,8 +6064,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                 xoffset,
                 yoffset,
                 line,
-                wideLine,
-                _coords = [];
+                wideLine;
 
             for (cc = 0; cc < calculatedSegments.length - 1; cc++) {
                 point1 = calculatedSegments[cc];
@@ -4972,12 +6243,10 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
     };
 
     clSelf.detach = function (anchor) {
-        var block,
-            property;
+        let block;
 
         if (anchor) {
             block = gpl.blockManager.getBlock(anchor.gplId);
-            property = anchor.anchorType;
 
             if (clSelf.startAnchor === anchor) {
                 clSelf.startAnchor = null;
@@ -4990,7 +6259,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
     };
 
     clSelf.getOtherAnchor = function (anchor) {
-        var ret;
+        let ret;
 
         if (clSelf.startAnchor === anchor) {
             ret = clSelf.endAnchor;
@@ -5217,32 +6486,36 @@ gpl.Toolbar = function (manager) {
                 Cls = newShape.constructor,
                 clone,
                 x = event.e.x,
-                y = event.e.y,
-                isOverCanvas = function () {
-                    var $canvasEl = gpl.manager.$mainCanvasEl,
-                        left = gpl.manager.panLeft,
-                        top = gpl.manager.panTop,
-                        currCanvasWidth = parseInt($canvasEl.css('width'), 10),
-                        currCanvasHeight = parseInt($canvasEl.css('height'), 10);
+                y = event.e.y;
+                // isOverCanvas = function () {
+                //     var $canvasEl = gpl.manager.$mainCanvasEl,
+                //         left = gpl.manager.panLeft,
+                //         top = gpl.manager.panTop,
+                //         currCanvasWidth = parseInt($canvasEl.css('width'), 10),
+                //         currCanvasHeight = parseInt($canvasEl.css('height'), 10);
+                //
+                //     return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
+                // };
 
-                    return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
-                };
-
-            if (x >= gpl.editModeOffset) { //} && isOverCanvas()) {
+            // ch351 make sure the block is in the canvas area before adding
+            if (newConfig.left >= gpl.editModeOffset) { //} && isOverCanvas()) {
                 newConfig.isToolbar = false;
                 newConfig.targetCanvas = 'main';
                 newConfig.bypassSave = false;
                 newConfig.left = newShape.left - gpl.manager.panLeft;
-                newConfig.left = newConfig.left / gpl.scaleValue;
+                newConfig.left /= gpl.scaleValue;
                 newConfig.top = newShape.top - gpl.manager.panTop;
-                newConfig.top = newConfig.top / gpl.scaleValue;
+                newConfig.top /= gpl.scaleValue;
                 newConfig.calcType = newShape.calcType;
-                newConfig.labelVisible = gpl.json.Show_Label;
+                newConfig.labelVisible = gpl.seqProps.showLabel; // ch1036; pull setting from sequence property
+                newConfig.presentValueVisible = gpl.seqProps.showValue; // ch1036; pull setting from sequence property
                 delete newConfig.inactive;
 
                 clone = new Cls(newConfig);
 
                 manager.addNewPoint(clone);
+            } else {
+                gpl.toast('Operation cancelled', 1500);
             }
 
             newShape.delete();
@@ -5293,6 +6566,7 @@ gpl.Toolbar = function (manager) {
             cloneConfig.gplId = id;
             cloneConfig.isToolbar = true;
             cloneConfig.targetCanvas = 'toolbar';
+            cloneConfig.toolbarText = gplItem.toolbarText; // ch1000
             // cloneConfig.scaleValue = gpl.scaleValue;
 
             if (gplItem.setActive) {
@@ -5306,6 +6580,13 @@ gpl.Toolbar = function (manager) {
             activeProxy.nextShape = clone;
 
             shapes[id] = clone;
+
+            // ch287; hide background image and extra shapes for input/output block types
+            if (gplItem.blockType === 'Input' || gplItem.blockType === 'Output') {
+                item.gplShape.backgroundImage.setVisible(false);
+                item.gplShape.fabricShapes.Internal.setVisible(false);
+            }
+
             item.on('mouseup', handleDrop);
 
             bringProxiesToFront();
@@ -5327,6 +6608,7 @@ gpl.Toolbar = function (manager) {
                     top: currY,
                     isToolbar: true,
                     targetCanvas: 'toolbar',
+                    toolbarText: cfg.toolbarText, // ch1000
                     // hasControls: false,
                     gplId: id,
                     inactive: true,
@@ -5405,6 +6687,9 @@ gpl.Toolbar = function (manager) {
                     proxyShape.on('moving', function () {
                         var syncShape = proxyShape.gplShape; //shapes[proxyCfg.gplId];
 
+                        // ch351 Limit the block's position to the on-screen area
+                        gpl.manager.limitTargetPosition(syncShape, proxyShape);
+
                         if (syncShape.syncObjects) {
                             syncShape.syncObjects(proxyShape, {
                                 top: shapeOffsetTop
@@ -5442,11 +6727,11 @@ gpl.Toolbar = function (manager) {
         canvas: canvas,
         event: 'object:selected',
         handler: function (event) {
-                var tgt = event.target;
-                if (tgt.isToolbarProxy) { // if(tgt.master !== true && tgt.isClone !== true) {
+            var tgt = event.target;
+            if (tgt.isToolbarProxy) { // if(tgt.master !== true && tgt.isClone !== true) {
                     handleClick(tgt);
                 }
-            }
+        }
             // }, {
             //     event: 'mouse:up',
             //     handler: function(event) {
@@ -5528,15 +6813,14 @@ gpl.LineManager = function (manager) {
 
     lmSelf.convertLine = function (line) {
         var ret = {
-            handle: line.coords,
+            handle: line.coords
         };
 
         return ret;
     };
 
-    lmSelf.prepSaveData = function (saveObject, isForLater) {
-        var ret = [],
-            laterRet = [];
+    lmSelf.prepSaveData = function (saveObject) {
+        var ret = [];
 
         gpl.forEach(lmSelf.lines, function (obj) {
             var rawLine = lmSelf.convertLine(obj);
@@ -5615,12 +6899,19 @@ gpl.BlockManager = function (manager) {
         upiListeners: {},
         bindings: {
             blockTitle: ko.observable(),
-            editPointType: ko.observable(),
+            editBlockType: ko.observable(),
             editPointName: ko.observable(),
             editPointCharacters: ko.observable(),
             editPointDecimals: ko.observable(),
             editPointValue: ko.observable(),
+            editPointValueOptions: ko.observableArray([]),
             editPointLabel: ko.observable(),
+            editPointLabelLocked: ko.observable(), // ch900
+            editPointReferenceType: ko.observable(), // ch900
+            editInputReferences: ko.observableArray([]), // ch900
+            editOutputReferences: ko.observableArray([]), // ch900
+            editFnBlkReferences: ko.observableArray([]), // ch900 (functional block references, i.e. Add block, PI block, etc.)
+            editSelectedReference: ko.observable(), //ch900
             editPointShowValue: ko.observable(),
             editPointShowLabel: ko.observable(),
             editText: ko.observable(),
@@ -5641,9 +6932,10 @@ gpl.BlockManager = function (manager) {
             reportToDate: ko.observable(''),
             reportToTime: ko.observable(''),
             actionButtonReportDuration: ko.observable(),
-            selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
+            labelIsValid: ko.observable(true), // ch485
+            labelError: ko.observable(''), // ch506
             updateText: function () {
                 var text = bmSelf.bindings.editText(),
                     fontSize = bmSelf.bindings.editTextFontSize(),
@@ -5661,7 +6953,7 @@ gpl.BlockManager = function (manager) {
 
                 bmSelf.renderAll();
 
-                gpl.$editTextModal.modal('hide');
+                gpl.closeModal(gpl.$editTextModal);
             },
             deleteBlock: function () {
                 if (manager.contextObject) {
@@ -5671,55 +6963,59 @@ gpl.BlockManager = function (manager) {
             showDevicePoint: function () {
                 bmSelf.openPointEditor(true);
             },
-            editBlockPrecision: function () {
-                var block = manager.contextObject,
-                    precision = block.precision.toString().split('.'),
-                    numChars = parseInt(precision[0], 10),
-                    numDecimals = parseInt(precision[1], 10);
+            editBlock: function () {
+                var block = manager.contextObject;
 
-                bmSelf.bindings.editPointCharacters(numChars);
-                bmSelf.bindings.editPointDecimals(numDecimals);
-
-                bmSelf.editBlock = block;
-                bmSelf.openPrecisionEditor();
-            },
-            editBlockLabel: function () {
-                var block = manager.contextObject,
-                    label = block.label,
-                    showLabel = block.labelVisible;
-
-                bmSelf.bindings.editPointLabel(label);
-                bmSelf.bindings.editPointShowLabel(showLabel);
-
-                bmSelf.editBlock = block;
-                bmSelf.openLabelEditor();
+                gpl.blockManager.openBlockEditor(block);
             },
             showPointEditor: function () {
                 var block = manager.contextObject;
 
                 gpl.blockManager.openPointEditor(block, true);
             },
-            updateBlockPrecision: function () {
-                bmSelf.editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
-                bmSelf.editBlock.setPlaceholderText();
-                gpl.fire('editedblock', bmSelf.editBlock);
-                bmSelf.closePrecisionEditor();
-            },
-            updateBlockLabel: function () {
-                bmSelf.editBlock.setLabel(bmSelf.bindings.editPointLabel());
-                bmSelf.editBlock.setShowLabel(bmSelf.bindings.editPointShowLabel());
-                gpl.fire('editedblock', bmSelf.editBlock);
-                bmSelf.closeLabelEditor();
-            },
-            editPointReference: function () {
+            editPointReference: function () { // ch974 & ch1017; reworked this function significantly
                 var editBlock = bmSelf.editBlock,
-                    isControl = editBlock.type === 'ControlBlock',
-                    property = isControl ? 'Control Point' : 'Monitor Point';
+                    anchor,
+                    line,
+                    block,
+                    pointType,
+                    property,
+                    deviceId;
 
-                bmSelf.doOpenPointSelector(property);
+                if (editBlock.type === 'Output') {
+                    anchor = editBlock.inputAnchors[0]; // This could be connected to multiple blocks, but we'll only use one for simplicity sake
+                    property = 'Control Point';
+                    deviceId = gpl.seqProps.deviceId;
+                } else {
+                    anchor = editBlock.outputAnchor;
+                    property = 'Monitor Point';
+                }
+
+                // If this Monitor/Control block is attached to a GPL block, we need to get the block type and update our 'property' with the 
+                // connected point on that block so we limit the point types to the supported types
+                if (anchor.attachedLineCount > 0) {
+                    line = anchor.attachedLines[Object.keys(anchor.attachedLines)[0]];
+                    anchor = line.getOtherAnchor(anchor); // Get the anchor attached to the other end of the line
+                    
+                    if (anchor) { // ch1045; move this conditional block - it was previously outside our parent conditional "if (anchor.attachedLineCount > 0)"
+                        block = bmSelf.getBlock(anchor.gplId);
+
+                        if (block && block._pointData) {
+                            pointType = block._pointData['Point Type'].Value;
+                            property = anchor.anchorType; // ex: 'Input Point 1'
+                        }
+                    }
+                }
+
+                bmSelf.doOpenPointSelector(property, pointType, deviceId);
             },
             updatePoint: function () {
-                var label = bmSelf.bindings.editPointLabel(),
+                // ch485 Do not allow save operation if the save is disabled (user needs to fix a problem)
+                if (bmSelf.bindings.editBlock_saveDisabled()) {
+                    return;
+                }
+
+                var label = bmSelf.bindings.editPointLabel().toString(),
                     showValue = bmSelf.bindings.editPointShowValue(),
                     showLabel = bmSelf.bindings.editPointShowLabel(),
                     props = {
@@ -5730,14 +7026,55 @@ gpl.BlockManager = function (manager) {
                     tmpBlock,
                     editBlock = bmSelf.editBlock,
                     currReferences = bmSelf.upis[editBlock.upi] || [],
-                    newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
-                    otherBlock,
+                    newReferences = bmSelf.upis[bmSelf.editBlockUpi],
                     anchor,
-                    anchorType,
-                    pointName,
-                    prop;
+                    prop,
+                    // bringing a modified form of this function back from old commit, https://github.com/Dorsett-Tech/infoscanjs/blame/ba2e4cbb9b5ba2fb5945beb1fbdc292147b65674/public/js/gpl/gpl.js
+                    adjustAnchoredPoints = function () {
+                        gpl.forEachArray(anchor.getConnectedAnchors(), function (otherAnchor) {
+                            var otherBlock = otherAnchor.myBlock();
+                            var otherData = otherBlock.getPointData();
+                            var inputAnchor1;
+                            var otherBlock2;
 
-                editBlock.precision = parseInt(bmSelf.bindings.editPointCharacters(), 10) + '.' + parseInt(bmSelf.bindings.editPointDecimals(), 10);
+                            if (otherBlock) {
+                                otherBlock.setPointRef(otherAnchor.anchorType, bmSelf.editBlockUpi, editBlock._pointData.path);
+
+                                if (otherData) {
+                                    gpl.formatPoint({
+                                        point: otherData,
+                                        oldPoint: otherData,
+                                        property: otherAnchor.anchorType,
+                                        refPoint: editBlock.getPointData()
+                                    });
+                                }
+
+                                inputAnchor1 = otherBlock.inputAnchors[1];
+
+                                if (inputAnchor1 && (otherAnchor !== inputAnchor1)) {
+                                    gpl.forEachArray(inputAnchor1.getConnectedAnchors(), function (otherAnchor2) {
+                                        otherBlock2 = otherAnchor2.myBlock();
+
+                                        if (otherBlock2 && (otherBlock2.blockType === 'Constant')) {
+                                            otherBlock2.pullValue(inputAnchor1);
+                                        }
+                                    });
+                                }
+
+                                gpl.fire('editedblock', otherBlock);
+                            }
+                        });
+                    };
+
+                // ch937; if undefined, create a upis entry for this block
+                if (!newReferences) {
+                    bmSelf.upis[bmSelf.editBlockUpi] = [];
+                    newReferences = bmSelf.upis[bmSelf.editBlockUpi];
+                }
+
+                editBlock.precision.characters = parseInt(bmSelf.bindings.editPointCharacters(), 10);
+                editBlock.precision.decimals = parseInt(bmSelf.bindings.editPointDecimals(), 10);
+
                 if (editBlock.hasReferenceType) { //is monitor/control block
                     if (bmSelf.editBlockUpi !== editBlock.upi) { //reference to point has changed
                         gpl.forEachArray(currReferences, function (ref, c) {
@@ -5747,7 +7084,6 @@ gpl.BlockManager = function (manager) {
                                 idx = c;
                                 return false;
                             }
-                            //remove
                         });
 
                         if (idx !== undefined) {
@@ -5756,42 +7092,19 @@ gpl.BlockManager = function (manager) {
 
                         if (currReferences.length === 1) {
                             tmpBlock = currReferences[0];
-                            if (tmpBlock.block.setReferenceType) {
+                            // Check for "tmpBlock.block.hasReferenceType" (this should only target input/output blocks; was seeing gpl blocks w/ hasReferenceType incorrectly set true)
+                            if (tmpBlock.block.hasReferenceType && tmpBlock.block.setReferenceType) {
                                 tmpBlock.block.setReferenceType('External');
                             }
                         }
 
                         prop = props[editBlock.blockType.toLowerCase()];
 
-                        if (prop === 'Monitor Point') {
-                            anchor = editBlock.outputAnchor;
-                            if (!!anchor.getLines()[0] && anchor.getLines()[0].endAnchor) {
-                                anchorType = anchor.getLines()[0].endAnchor.anchorType;
-                            }
-                        } else {
-                            anchor = !!editBlock.inputAnchor ? editBlock.inputAnchor : editBlock.inputAnchors[0];
-                            if (!!anchor.getLines()[0] && anchor.getLines()[0].startAnchor) {
-                                anchorType = anchor.getLines()[0].startAnchor.anchorType;
-                            }
-                        }
-
-                        pointName = bmSelf.bindings.editPointName();
-
-                        otherBlock = anchor.getConnectedBlock();
-                        if (otherBlock) {
-                            if (anchorType) {
-                                otherBlock.setPointRef(anchorType, bmSelf.editBlockUpi, pointName, editBlock.pointType);
-                            }
-                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, otherBlock.pointType);
-                            gpl.fire('editedblock', otherBlock);
-                        } else {
-                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
-                        }
-
-                        editBlock.pointName = pointName;
+                        editBlock.pointName = bmSelf.bindings.editPointName();
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
                         editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
+                        editBlock.setPointData(gpl.pointData[editBlock.upi]); // ch287; this must be executed before we setReferenceType or processPointRef otherwise the '*' in the block isn't correctly shown or hidden
 
                         newReferences.push({
                             block: editBlock,
@@ -5805,15 +7118,37 @@ gpl.BlockManager = function (manager) {
                                     refBlock.setReferenceType('Internal');
                                 }
                             });
-                        } else {
+                        } else if (editBlock.referenceType === 'Internal') {
                             editBlock.setReferenceType('External');
+                        } else {
+                            editBlock.processPointRef(); // ch287; show/hide the '*' character, depending if reference point has the same device as the sequence
                         }
-                    }
-                } else { //constant
-                    editBlock.setValue(bmSelf.bindings.editPointValue());
-                }
 
-                editBlock.setPlaceholderText();
+                        // configure references (all connected lines)
+                        if (prop === 'Monitor Point') {
+                            anchor = editBlock.outputAnchor;
+                            adjustAnchoredPoints();
+                        } else {
+                            anchor = editBlock.inputAnchors[0];
+                            adjustAnchoredPoints();
+                        }
+
+                        editBlock.setPointRef(prop, editBlock.upi, editBlock._pointData.path);
+                    }
+                    editBlock.setPlaceholderText();
+                } else if (editBlock.type === 'Constant') { //constant
+                    // TODO - if choosing from value options update the connected block
+                    editBlock.setValue(bmSelf.bindings.editPointValue());
+                    // Otherwise
+                } else if (!editBlock.isNonPoint) { // ch917; update reference labels if edit block label changes
+                    if (editBlock.label !== label) {
+                        gpl.forEachArray(currReferences, function (ref, c) {
+                            if (ref.block.hasReferenceType) {
+                                ref.block.setLabel(label);
+                            }
+                        });
+                    }
+                }
 
                 if (!!props[editBlock.blockType.toLowerCase()]) {
                     gpl.forEachArray(newReferences, function (ref, c) {
@@ -5824,46 +7159,112 @@ gpl.BlockManager = function (manager) {
 
                 if (editBlock.label !== label) {
                     editBlock.setLabel(label);
-                    gpl.manager.bindings.hasEdits(true);
+
+                    // ch334 Update point name
+                    if (!editBlock.isNonPoint) {
+                        editBlock._pointData.path.splice(-1, 1, label);
+                        editBlock._pointData._path = dtiCommon.toLowerCasePath(editBlock._pointData.path); // ch952
+                        editBlock._pointData.display = label;
+                        gpl.pointUpiMap[editBlock.upi].Name = dtiCommon.getPointName(editBlock._pointData.path);
+                    }
                 }
 
-                if (editBlock.setShowLabel() !== showLabel) {
+                if (editBlock.labelVisible !== showLabel) {
                     editBlock.setShowLabel(showLabel);
-                    gpl.manager.bindings.hasEdits(true);
                 }
 
-                if (editBlock.setShowValue() !== showValue) {
+                if (editBlock.presentValueVisible !== showValue) {
                     editBlock.setShowValue(showValue);
-                    gpl.manager.bindings.hasEdits(true);
                 }
 
-                gpl.$editInputOutputModal.modal('hide');
+                gpl.unblockUI();
+                gpl.closeModal(gpl.$editInputOutputModal);
 
-                gpl.fire('editedblock', bmSelf.editBlock);
+                gpl.fire('editedblock', editBlock);
+            },
+            validateLabel: function (data, e) { // ch485 (added function)
+                var label = bmSelf.bindings.editPointLabel().toString(),
+                    originalLabel = bmSelf.editBlock.label,
+                    isValid = true;
+
+                if (label === '') {
+                    isValid = false;
+                    bmSelf.bindings.labelError('Label must not be blank');
+                } else if (label !== originalLabel) {
+                    isValid = gpl.labelIsUnique(label, bmSelf.editBlock);
+                    
+                    if (!isValid) {
+                        bmSelf.bindings.labelError('Label already in use');
+                    } else {
+                        // Check if label contains invalid characters (ch506)
+                        isValid = dtiCommon.isPointDisplayStringValid(label);
+                        // isValid = {
+                        //     valid: boolean,
+                        //     errorMessage: string
+                        // }
+                        if (!isValid.valid) {
+                            bmSelf.bindings.labelError(isValid.errorMessage);
+                        }
+
+                        isValid = isValid.valid;
+                    }
+                }
+
+                bmSelf.bindings.labelIsValid(isValid);
+
+                gpl.log('isValid', isValid);
+
+                return true;
+            },
+            selectInternalReference: function (event, block) { // ch900; added function
+                var devinst = block._pointData['Point Refs'][0].Value,
+                    pRef = gpl.makePointRef({upi: block.upi, name: block.name}, devinst, 'GPLBlock', 439),
+                    rootBlock = gpl.blockManager.getBlockByUpi(block.upi);
+
+                bmSelf.handleSelectedPoint({
+                    name: block.pointName,
+                    label: block.label,
+                    upi: block.upi,
+                    pointType: block.pointType,
+                    block: rootBlock,
+                    pRefAppIndex: pRef.AppIndex
+                });
             }
         },
 
         forEachBlock: function (cb) {
-            gpl.forEach(bmSelf.blocks, function eachBlockFn (block) {
+            gpl.forEach(bmSelf.blocks, function eachBlockFn(block) {
                 cb(block);
             });
         },
 
-        rebuildPointRefArray: function () { // clear any unused references
-            var pointRefs = gpl.point['Point Refs'],
+        rebuildPointRefArray: function (saveForLater) { // clear any unused references
+            let pointRefs = gpl.point['Point Refs'],
                 i,
                 pointRefUsed = function (pRef) {
-                    var answer = false;
+                    let answer = false,
+                        currentBlock,
+                        j;
                     gpl.forEach(bmSelf.blocks, function (block) {
                         if (!!block.pointRefIndex && pRef.AppIndex === block.pointRefIndex) {
                             answer = true;
                         }
                     });
+
+                    if (saveForLater) { // keep track of any deleted blocks in a saveforlater data
+                        for (j = 0; j < gpl.json.block.length; j++) {
+                            currentBlock = gpl.json.block[j];
+                            if (!!currentBlock.pointRefIndex && pRef.AppIndex === currentBlock.pointRefIndex) {
+                                answer = true;
+                            }
+                        }
+                    }
+
                     return answer;
                 };
 
             for (i = 0; i < pointRefs.length; i++) {  // index 0 hold ref to "Device Point"
-                if (!!pointRefs[i] && pointRefs[i].PropertyName === "GPLBlock") {
+                if (!!pointRefs[i] && pointRefs[i].PropertyName === 'GPLBlock') {
                     if (!pointRefUsed(pointRefs[i])) {
                         pointRefs.splice(i--, 1);
                     }
@@ -5884,90 +7285,74 @@ gpl.BlockManager = function (manager) {
             };
         },
 
-        getSaveObject: function (isCancel) {
+        getSaveObject: function () { // Removed 'isCancel' argument because it's not used by callers; optimized as part of ch918
             var saveObj = {
-                    adds: [],
-                    updates: [],
-                    deletes: []
-                };
+                updates: [],
+                deletes: []
+            };
 
             gpl.forEach(bmSelf.newBlocks, function (block) {
-                var data;
                 if (!block.isNonPoint) {
-                    data = block.getPointData();
-                    if (isCancel) {
-                        saveObj.deletes.push(block.upi);
-                    } else {
-                        saveObj.adds.push(data);
-                    }
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
                 }
             });
 
-            if (!isCancel) {
-                gpl.forEach(bmSelf.editedBlocks, function (block) {
-                    var data;
+            gpl.forEach(bmSelf.editedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.updates.push({
+                        oldPoint: block._origPointData,
+                        newPoint: block.getPointData()
+                    });
+                }
+            });
 
-                    if (!block.isNonPoint) {
-                        data = {
-                            oldPoint: block._origPointData,
-                            newPoint: block.getPointData()
-                        };
-                        saveObj.updates.push(data);
-                    }
-                });
-
-                gpl.forEach(bmSelf.deletedBlocks, function (block) {
-                    if (!block.isNonPoint) {
-                        saveObj.deletes.push(block.upi);
-                    }
-                });
-            }
+            gpl.forEach(bmSelf.deletedBlocks, function (block) {
+                if (!block.isNonPoint) {
+                    saveObj.deletes.push(block.upi);
+                }
+            });
 
             return saveObj;
         },
 
         useEditVersion: function () {
-            // gpl.on('rendered', function () {
-                var changes = gpl.pointChanges;
+            // console.log(" * * * * * *       gpl.BlockManager.useEditVersion()           * * * * * * ");
+            var changes = gpl.pointChanges;
 
-                gpl.forEachArray(changes.adds, function (block) {
-                    var upi = block._id,
-                        gplBlock;
+            gpl.forEachArray(changes.updates, function (block) {
+                var upi = block.newPoint && block.newPoint._id,
+                    newBlockUpi = block.newPoint && block.newPoint.id,
+                    gplBlock;
 
+                if (upi) {
                     gplBlock = bmSelf.getBlockByUpi(upi);
+
+                    // gplBlock._origPointData = block.oldPoint;
 
                     gplBlock.setPointData(block);
 
-                    bmSelf.newBlocks[upi] = gplBlock;
-                });
+                    bmSelf.editedBlocks[upi] = gplBlock;
+                } else if (newBlockUpi) {
+                    gplBlock = bmSelf.getBlockByUpi(newBlockUpi);
 
-                gpl.forEachArray(changes.updates, function (block) {
-                    var upi = block.newPoint && block.newPoint._id,
-                        gplBlock;
+                    gplBlock.setPointData(block);
 
-                    if (upi) {
-                        gplBlock = bmSelf.getBlockByUpi(upi);
+                    bmSelf.newBlocks[newBlockUpi] = gplBlock;
+                }
+            });
 
-                        gplBlock._origPointData = block.oldPoint;
+            bmSelf.deletedBlocks = {};
 
-                        gplBlock.setPointData(block);
+            gpl.forEachArray(changes.deletes, function (upi) {
+                bmSelf.deletedBlocks[upi] = {
+                    upi: upi
+                };
+            });
 
-                        bmSelf.editedBlocks[upi] = gplBlock;
-                    }
-                });
-
-                bmSelf.deletedBlocks = {};
-
-                gpl.forEachArray(changes.deletes, function (upi) {
-                    bmSelf.deletedBlocks[upi] = {
-                        upi: upi
-                    };
-                });
-
-                // bmSelf.newBlocks = changes.newBlocks;
-                // bmSelf.editedBlocks = changes.editedBlocks;
-                // bmSelf.deletedBlocks = changes.deletedBlocks;
-            // });
+            bmSelf.manager.bindings.hasEdits(true);
         },
 
         resetChanges: function () {
@@ -5976,66 +7361,161 @@ gpl.BlockManager = function (manager) {
             bmSelf.deletedBlocks = {};
         },
 
-        doOpenPointSelector: function (property) {
+        doOpenPointSelector: function (property, pointType, deviceId) {
+            if (!pointType) { // ch974
+                pointType = 'Sequence';
+            }
+
             gpl.openPointSelector(function (selectedPoint) {
                 var pRef,
                     upi = selectedPoint._id,
-                    name = selectedPoint.Name,
-                    pointType = selectedPoint["Point Type"].Value,
-                    devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
+                    name = dtiCommon.getPointName(selectedPoint.path),
+                    pointType = selectedPoint['Point Type'].Value,
+                    devinst = (property === 'Monitor Point' ? selectedPoint['Point Refs'][0].Value : gpl.seqProps.deviceId),
+                    rootBlock = gpl.blockManager.getGplBlockByUpi(upi);
 
-                bmSelf.bindings.editPointName(name);
-                bmSelf.bindings.editPointLabel(name.split('_').pop());
-                bmSelf.editBlockUpi = upi;
-                bmSelf.editBlockPointType = pointType;
-                pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
-                bmSelf.editBlock.pointRefIndex = pRef.AppIndex;
+                gpl.pointData[selectedPoint._id] = selectedPoint;
+                pRef = gpl.makePointRef({upi: upi, name: name}, devinst, 'GPLBlock', 439);
+
+                bmSelf.handleSelectedPoint({
+                    name: name,
+                    label: selectedPoint.path[selectedPoint.path.length - 1],
+                    upi: upi,
+                    pointType: pointType,
+                    block: rootBlock,
+                    pRefAppIndex: pRef.AppIndex
+                });
+
                 gpl.log(upi, name);
-            }, "Sequence", property);
+            }, pointType, property, deviceId); // ch974 & ch1017
         },
 
-        openPrecisionEditor: function (block) {
-            gpl.$editPrecisionModal.modal('show');
-        },
+        handleSelectedPoint: function (data) { // ch900; added function
+            // data = {
+            //     name: string,
+            //     label: string,
+            //     upi: int,
+            //     pointType: string,
+            //     block: gpl block on the sequence or undefined,
+            //     pRefAppIndex: integer
+            // }
 
-        closePrecisionEditor: function () {
-            gpl.$editPrecisionModal.modal('hide');
+            bmSelf.bindings.editSelectedReference(data.block);
+            bmSelf.bindings.editPointName(data.name);
+            bmSelf.bindings.editPointLabel(data.label);
+            bmSelf.bindings.editPointLabelLocked(data.block && !data.block.hasReferenceType && !data.block.isNonPoint && bmSelf.editBlock.isNonPoint);
+
+            bmSelf.editBlockUpi = data.upi;
+            bmSelf.editBlockPointType = data.pointType;
+            bmSelf.editBlock.pointRefIndex = data.pRefAppIndex;
         },
 
         openLabelEditor: function (block) {
-            gpl.$editLabelModal.modal('show');
+            gpl.openModal(gpl.$editLabelModal);
         },
 
         closeLabelEditor: function () {
-            gpl.$editLabelModal.modal('hide');
+            gpl.closeModal(gpl.$editLabelModal);
         },
 
         openBlockEditor: function (block) {
-            var precision = block.precision.toString().split('.'),
-                numChars = parseInt(precision[0], 10),
-                numDecimals = parseInt(precision[1], 10),
+            var chars = parseInt(block.precision.characters, 10),
+                numDecimals = parseInt(block.precision.decimals, 10),
                 value = block.value,
+                valueOptions = (!!block.valueOptions ? block.valueOptions : []),
                 label = block.label,
-                editableTypes = {
-                    'ControlBlock': true,
-                    'MonitorBlock': true,
-                    'ConstantBlock': true
-                };
+                allRefs = [],
+                inputRefsMap = {}, // ch927
+                rootBlock = gpl.blockManager.getGplBlockByUpi(block.upi);
+                // editableTypes = {
+                //     'ControlBlock': true,
+                //     'MonitorBlock': true,
+                //     'ConstantBlock': true
+                // };
 
             // if(editableTypes[block.type]) {
             bmSelf.editBlock = block;
             bmSelf.editBlockUpi = block.upi;
             bmSelf.bindings.blockTitle(block.label);
-            bmSelf.bindings.editPointType(block.type);
+            bmSelf.bindings.editBlockType(block.type);
             bmSelf.bindings.editPointName(block.pointName);
-            bmSelf.bindings.editPointCharacters(numChars);
+            bmSelf.bindings.editPointCharacters(chars);
             bmSelf.bindings.editPointDecimals(numDecimals);
             bmSelf.bindings.editPointValue(value);
+            bmSelf.bindings.editPointValueOptions.removeAll();
             bmSelf.bindings.editPointLabel(label);
             bmSelf.bindings.editPointShowValue(block.presentValueVisible);
             bmSelf.bindings.editPointShowLabel(block.labelVisible);
+            bmSelf.bindings.editPointReferenceType(block.referenceType); // ch900
+            bmSelf.bindings.editPointLabelLocked(rootBlock && !rootBlock.isNonPoint && !rootBlock.hasReferenceType && block.isNonPoint); // ch900
+            bmSelf.bindings.labelIsValid(true); // ch485
+            
+            // ch900 Build available references lists (we rebuild every time because the block list may have changed)
+            bmSelf.bindings.editSelectedReference(null); // ch927; clear selected reference
+            bmSelf.bindings.editInputReferences([]);
+            bmSelf.bindings.editOutputReferences([]);
+            bmSelf.bindings.editFnBlkReferences([]);
 
-            gpl.$editInputOutputModal.modal('show');
+            if (block.hasReferenceType) {
+                bmSelf.forEachBlock((_block) => {
+                    if (_block.targetCanvas === "main") { // Filter out the toolbar blocks
+                        allRefs.push(_block);
+                    }
+                });
+                allRefs.sort(function(a,b) {
+                    return gpl.collator.compare(a.label.toLowerCase(), b.label.toLowerCase());
+                });
+                gpl.forEachArray(allRefs, function (_block) {
+                    if (_block.hasReferenceType && _block.upi) {
+                        if (_block.blockType === 'Input') { // ch927; this if-block reworked
+                            let addRef = true;
+
+                            if (_block.referenceType === 'Internal') {          // If input is linked to another input, gpl, or output block on this sequence
+                                if (bmSelf.getOutputBlockByUpi(_block.upi)) {   // If we're linked to an output block
+                                    addRef = false;                             // Don't show it here because it's shown in the output blocks list
+                                } else if (_block === block) {                  // If this block is ourself
+                                    addRef = false;                             // Don't show it; this keeps the block from appearing twice
+                                } else if (bmSelf.getGplBlockByUpi(_block.upi)) { // Don't show it because it's in the gpl block list
+                                    addRef = false;
+                                }
+                            } else if (!_block.upi) {   // If this is an unassigned input block
+                                addRef = false;         // Don't show unassigned input blocks - main reason is because they can't actually be selected
+                            }
+
+                            if (addRef && !inputRefsMap[_block.upi]) {
+                                bmSelf.bindings.editInputReferences.push(_block);
+                                inputRefsMap[_block.upi] = true;
+                            }
+                        } else {
+                            bmSelf.bindings.editOutputReferences.push(_block);
+                        }
+                    } else if (!_block.isNonPoint) { // make sure it's not a constant or static text _block
+                        bmSelf.bindings.editFnBlkReferences.push(_block);
+                    }
+                });
+
+                if (block.referenceType === 'Internal') { // ch927; update selected ref if it's internal
+                    bmSelf.bindings.editSelectedReference(block);
+                }
+            } else if (block.blockType === 'Constant') { // Get value options if wired to an input point 2 with value options; this check for constant type may not be necessary but jic
+                let valueOptions = block.getValueOptions();
+
+                if (valueOptions) {
+                    gpl.forEach(valueOptions, function (val, key) {
+                        bmSelf.bindings.editPointValueOptions.push({
+                            value: key,
+                            eValue: val
+                        });
+                    });
+
+                    // For some reason this observable was getting reset to 0 after the above forEach call. I think it has to do
+                    // with the view's select element bindings
+                    bmSelf.bindings.editPointValue(value);
+                }
+            }
+
+            // gpl.blockUI();
+            gpl.openModal(gpl.$editInputOutputModal);
             // }
         },
 
@@ -6050,7 +7530,7 @@ gpl.BlockManager = function (manager) {
             bmSelf.bindings.editTextColor(newColor);
             // bmSelf.fontColorPicker.render();
             bmSelf.fontColorPicker.updateColor(newColor);
-            gpl.$editTextModal.modal('show');
+            gpl.openModal(gpl.$editTextModal);
         },
 
         convertBlock: function (block) {
@@ -6095,6 +7575,18 @@ gpl.BlockManager = function (manager) {
             return ret;
         },
 
+        getMainBlocks: function () { // just a helper function I use from the console
+            var mainBlocks = [];
+
+            bmSelf.forEachBlock(function (block) {
+                if (!block.isToolbar) {
+                    mainBlocks.push(block);
+                }
+            });
+
+            return mainBlocks;
+        },
+
         getBlock: function (gplId) {
             var ret = null,
                 id = gplId;
@@ -6117,8 +7609,40 @@ gpl.BlockManager = function (manager) {
 
             gpl.forEach(bmSelf.blocks, function (block) {
                 var data = block.getPointData && block.getPointData();
-                if (data && data._id === upi) {
+                if (data && (data._id === upi || data.id === upi)) {
                     ret = block;
+                }
+            });
+
+            return ret;
+        },
+
+        getGplBlockByUpi: function (upi) { // ch900; added function
+            var ret = null;
+
+            gpl.forEach(bmSelf.blocks, function (block) {
+                if (!block.isNonPoint) {
+                    var data = block.getPointData && block.getPointData();
+                    if (data && (data._id === upi || data.id === upi)) {
+                        ret = block;
+                        return false; // Break the forEach
+                    }
+                }
+            });
+
+            return ret;
+        },
+
+        getOutputBlockByUpi: function (upi) { // ch900; added function
+            var ret = null;
+
+            gpl.forEach(bmSelf.blocks, function (block) {
+                if (block.blockType === 'Output') {
+                    var data = block.getPointData && block.getPointData();
+                    if (data && (data._id === upi || data.id === upi)) {
+                        ret = block;
+                        return false; // Break the forEach
+                    }
                 }
             });
 
@@ -6146,28 +7670,33 @@ gpl.BlockManager = function (manager) {
             gpl.log('type change', arguments);
         },
 
-        prepSaveData: function (saveObject, isForLater) {
-            var ret = [],
-                lines = [];
+        prepSaveData: function (saveObject, saveForLater) {
+            let ret = [],
+                processBlock = (blockObject) => {
+                    if (!blockObject.isToolbar) {
+                        if (blockObject.upi !== 0 && blockObject.upi !== undefined) {
+                            gpl.setBlockPointRef(blockObject);
+                        }
+                    }
+
+                    if (!blockObject.bypassSave && blockObject.targetCanvas !== 'toolbar') {
+                        if (blockObject.syncAnchorPoints) {
+                            blockObject.syncAnchorPoints();
+                        }
+                        ret.push(bmSelf.convertBlock(blockObject));
+                    }
+                };
 
             gpl.forEach(bmSelf.blocks, function (obj) {
-                if (obj.upi !== 0 && !isNaN(obj.upi)) {
-                    gpl.setBlockPointRef(obj);
-                }
-
-                if (!obj.bypassSave && obj.targetCanvas !== 'toolbar') {
-                    if (obj.syncAnchorPoints) {
-                        obj.syncAnchorPoints();
-                    }
-                    ret.push(bmSelf.convertBlock(obj));
-                }
+                processBlock(obj);
             });
 
             // gpl.forEach(gpl.texts, function(obj) {
             //     ret.push(bmSelf.convertBlock(obj));
             // });
 
-            gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray();
+            // ch1052; comment out line below; the 'rebuildPointRefArray' was causing the problem as described in the ch story
+            // gpl.point['Point Refs'] = bmSelf.rebuildPointRefArray(saveForLater);
 
             saveObject.block = ret;
         },
@@ -6181,7 +7710,7 @@ gpl.BlockManager = function (manager) {
                 cleanup = function (ref, idx) {
                     pointData[ref._id] = ref;
                     return {
-                        Name: ref.Name,
+                        Name: dtiCommon.getPointName(ref.path),
                         pointType: ref['Point Type'].Value,
                         valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
@@ -6190,8 +7719,13 @@ gpl.BlockManager = function (manager) {
                 };
 
             for (c = 0; c < references.length; c++) {
-                upi = references[c]._id;
-                upiMap[upi] = cleanup(references[c], c);
+                // ch918; use a try catch; this shouldn't happen any longer but leaving JIC
+                try {
+                    upi = references[c]._id;
+                    upiMap[upi] = cleanup(references[c], c);
+                } catch (ex) {
+                    console.log('references[c]._id undefined', 'c', c, 'references[c]', references[c], 'error', ex);
+                }
             }
 
             gpl.pointUpiMap = upiMap;
@@ -6239,6 +7773,22 @@ gpl.BlockManager = function (manager) {
             bmSelf.prepReferences();
         }
     };
+
+    // ch485 (added binding)
+    bmSelf.bindings.editBlock_saveDisabled = ko.pureComputed(function () {
+        var editPointValue = bmSelf.bindings.editPointValue(),
+            labelIsValid = bmSelf.bindings.labelIsValid(),
+            editBlockType = bmSelf.bindings.editBlockType(),
+            isDisabled = false;
+
+        if (!labelIsValid) {
+            isDisabled = true;
+        } else if ((editBlockType === 'Constant') && !$.isNumeric(editPointValue)) {
+            isDisabled = true;
+        }
+
+        return isDisabled;
+    });
 
     bmSelf.bindings.gridSize.subscribe(function (val) {
         var newVal = parseInt(val, 10);
@@ -6288,19 +7838,44 @@ gpl.BlockManager = function (manager) {
                 bmSelf.deselect();
             }
 
-            bmSelf.highlightedObject = shape;
-            if (!shape._origFill) {
-                shape._origFill = shape.fill;
+            if (gpl.lineManager.selectedLine) { // ch1011
+                gpl.lineManager.selectedLine.deselect();
+                gpl.lineManager.selectedLine = null;
             }
-            shape.set('fill', bmSelf.highlightFill);
+
+            bmSelf.highlightedObject = shape;
+
+            if (!shape._deselectedState) {
+                shape._deselectedState = {
+                    // origFill: shape.fill,
+                    origStroke: shape.stroke,
+                    origStrokeWidth: shape.strokeWidth,
+                    shadowOffsetX: shape.shadow.offsetX,
+                    shadowOffsetY: shape.shadow.offsetY
+                };
+            }
+
+            shape.set({
+                // fill: bmSelf.highlightFill,
+                stroke: '#BDFF00',
+                strokeWidth: 2,
+                shadow: {
+                    offsetX: 0,
+                    offsetY: 0
+                }
+            });
         }
     };
 
     bmSelf.deselect = function () {
         var obj = bmSelf.highlightedObject;
 
-        if (obj) {
-            obj.set('fill', obj._origFill);
+        if (obj && obj._deselectedState) {
+            // obj.set('fill', obj._deselectedState.origFill);
+            obj.set('stroke', obj._deselectedState.origStroke);
+            obj.set('strokeWidth', obj._deselectedState.origStrokeWidth);
+            obj.shadow.offsetX = obj._deselectedState.shadowOffsetX;
+            obj.shadow.offsetY = obj._deselectedState.shadowOffsetY;
         }
         bmSelf.highlightedObject = null;
     };
@@ -6315,10 +7890,11 @@ gpl.BlockManager = function (manager) {
     gpl.on('editedblock', function (block) {
         if (gpl.rendered) {
             bmSelf.manager.bindings.hasEdits(true);
-            // gpl.hasEdits = true;
-        }
-        if (!!block.upi && !isNaN(block.upi)) {
-            bmSelf.editedBlocks[block.upi] = block;
+
+            // ch922; moved this conditional block inside if(gpl.rendered) because sometimes existing block(s) were getting added to editBlocks on load
+            if (!!block.upi && !isNaN(block.upi)) {
+                bmSelf.editedBlocks[block.upi] = block;
+            }
         }
     });
 
@@ -6352,10 +7928,19 @@ gpl.BlockManager = function (manager) {
             });
         }
 
+        if (!oldBlock.isNonPoint) { // ch1044; clean up references
+            delete gpl.pointUpiMap[oldBlock.upi];
+
+            gpl.forEachArray(references, function (ref) {
+                ref.block.resetReference();
+            });
+        }
+
         delete bmSelf.blocks[oldBlock.gplId];
         oldBlock.delete();
 
         delete bmSelf.editedBlocks[oldBlock.upi];
+        delete bmSelf.newBlocks[oldBlock.upi]; // added as part of ch921
 
         bmSelf.renderAll();
         gpl.log('block deleted');
@@ -6398,10 +7983,15 @@ gpl.BlockManager = function (manager) {
 
     bmSelf.applyController = function (name, value) {
         gpl.forEach(bmSelf.blocks, function (obj) {
-            if (obj._pointData) {
-                gpl.fire('editedblock', obj);
-                obj._pointData.Controller.Value = name;
-                obj._pointData.Controller.eValue = value;
+            // ch939; make sure this block has a Controller property
+            if (obj._pointData && obj._pointData.Controller) {
+                var controller = obj._pointData.Controller;
+
+                if ((controller.Value !== name) || (controller.eValue !== value)) {
+                    gpl.fire('editedblock', obj);
+                    controller.Value  = name;
+                    controller.eValue = value;
+                }
             }
         });
     };
@@ -6437,6 +8027,8 @@ gpl.BlockManager = function (manager) {
         var items = block._shapes || [],
             item,
             c,
+            unpersistedPoint,
+            pointRef,
             canvas = gpl.canvases[targetCanvas || 'main'],
             handleBlockMove = function (event) {
                 var data = bmSelf.getActiveBlock(),
@@ -6450,6 +8042,9 @@ gpl.BlockManager = function (manager) {
                     bmSelf.movingBlock = true;
 
                     if (movingBlock && movingBlock.syncObjects && target.gplType !== 'anchor') {
+                        // ch351 Limit the block's position to the on-screen area
+                        gpl.manager.limitTargetPosition(movingBlock, target);
+
                         // gpl.log('moving block', movingBlock);
                         movingBlock.syncObjects(target);
                     }
@@ -6469,14 +8064,24 @@ gpl.BlockManager = function (manager) {
         //     gpl.log('not setup', block.type, block);
         // }
         if (!block.config.inactive) {
-            gpl.labelCounters[block.type]++;
+            // ch279 Increment label only if we're registering existing blocks as part of GPL initialization. After the
+            // sequence is initialized, the label is incremented before this function is called.
+            if (!gpl.manager.initDone()) {
+                // ch1213; try to get the largest label count out of the block's label before blindly incrementing 
+                let count = +(block.label.split(' ').pop());
+                if (!isNaN(count) && count > gpl.labelCounters[block.type]) {
+                    gpl.labelCounters[block.type] = count;
+                }
+            }
         }
 
         // gpl.log('labeling', block.type, gpl.labelCounters[block.type]);
 
         canvas.add(block);
 
-        if (block.upi && !isNaN(block.upi)) {
+
+        if (block.upi) {
+            // console.log("   bmSelf.registerBlock() -------------------------  " + block.upi);
             bmSelf.upis[block.upi] = bmSelf.upis[block.upi] || [];
 
             bmSelf.upis[block.upi].push({
@@ -6510,13 +8115,27 @@ gpl.BlockManager = function (manager) {
                 item.canvas.remove(item);
             }
             // if (!item.canvas) { //double adds nonpoint shapes
-                canvas.add(item);
-                item.on('moving', handleBlockMove);
+            canvas.add(item);
+            item.on('moving', handleBlockMove);
             // }
         }
 
         if (!block.isToolbar) {
             bmSelf.updateBlockReferences(block);
+            if (block.upi && isNaN(block.upi) && !!gpl.pointChanges) { // a point that was not persisted
+                unpersistedPoint = gpl.pointChanges.updates.filter(function (updatedPoint) {
+                    return updatedPoint.newPoint.id === block.upi;
+                });
+
+                if (unpersistedPoint.length > 0) {
+                    gpl.log('    - - - - - - - - -   unpersistedPoint  - - - - - - - - - - ' + block.upi);
+                    block.setPointData(unpersistedPoint[0], true);
+                }
+            } else if (block.upi && !isNaN(block.upi)) {
+                pointRef = gpl.getBlockPointRef(block);
+                // console.log("    - - - - - - - - -   bmSelf.registerBlock()  - - - - - - - - - - " + block.upi);
+                // block.setPointData(unpersistedPoint[0], true);
+            }
         }
 
         bmSelf.renderAll();
@@ -6572,19 +8191,42 @@ gpl.BlockManager = function (manager) {
             pointData,
             saveCallback = function (results) {
                 if (JSON.stringify(results.oldPoint) !== JSON.stringify(results.newPoint)) {
-                    block.setPointData(results, true);
-                    // bmSelf.canvas.setActiveObject(block, null);  // is this causing multiple updates??
-                    gpl.pointUpiMap[upi].Name = results.newPoint.Name;  // in case name changed
-                    gpl.fire('editedblock', block);
+                    if (block.setPointData) { // ch947
+                        block.setPointData(results, true);
+                    }
+                    
+                    gpl.pointUpiMap[upi] = {
+                        Name: dtiCommon.getPointName(results.newPoint.path),
+                        pointType: results.newPoint['Point Type'].Value,
+                        valueType: (results.newPoint.Value && results.newPoint.Value.ValueType === 5) ? 'enum' : 'float'
+                    };
+                    if (gpl.isEdit) {
+                        gpl.fire('editedblock', block);
+                    } else {
+                        gpl.manager.renderAll();
+                    }
                 }
             },
             doOpenWindow = function () {
+                let overrideIsEdit = false;
+
+                // TFS #550; in view mode, always get fresh data when opening a point
+                // TFS #573; do the same thing in edit mode if the block is a monitor or control block
+                if (!gpl.isEdit || (gpl.isEdit && block.isNonPoint)) {
+                    pointData = null;
+                    // TFS #573; set this to force the point editor to save changes to the db (changes activated immediately, as 
+                    // opposed to being activated when the sequence is activated)
+                    overrideIsEdit = true;
+                }
+                
                 gpl.openWindow({
                     pointType: pointType,
                     upi: upi,
+                    title: (!!pointData && !!pointData.path ? dtiCommon.getPointName(pointData.path) : undefined),
                     options: {
-                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        pointData: (gpl.isEdit ? pointData : null) || null
+                        isGplEdit: gpl.isEdit && !overrideIsEdit,
+                        callback: saveCallback,
+                        pointData: pointData || null
                     }
                 });
             };
@@ -6599,12 +8241,13 @@ gpl.BlockManager = function (manager) {
                     doOpenWindow();
                 } else {
                     //is constant/monitor/etc
-                    if (block.type === 'ConstantBlock') {
+                    if (block.type === 'Constant') {
                         bmSelf.openBlockEditor(block);
                     }
                 }
-            } else { //open device point
-                // pointData = ?????  // TODO
+            } else if (block.blockType !== 'TextBlock') { // ch533
+                // Open device point
+                // FYI this was called with block=true
                 upi = gpl.devicePoint._id;
                 pointType = 'Device';
                 doOpenWindow();
@@ -6630,7 +8273,7 @@ gpl.BlockManager = function (manager) {
                     movingBlock = bmSelf.getBlock(target.gplId);
                 }
             }
-            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.ConstantBlock) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
+            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.Constant) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
                 bmSelf.openPointEditor(movingBlock);
                 bmSelf.deselect();
             }
@@ -6643,6 +8286,7 @@ gpl.BlockManager = function (manager) {
         var target = event.target,
             gplId,
             targetBlock,
+            isInputOrOutputBlock,
             now = new Date().getTime();
 
         if (target && gpl.isEdit) {
@@ -6652,15 +8296,16 @@ gpl.BlockManager = function (manager) {
             if (now - bmSelf.lastSelectedTime < bmSelf.doubleClickDelay && targetBlock) { //doubleclick
                 bmSelf.handlingDoubleClick = true;
                 bmSelf.deselect();
-                // gpl.log('processing double click');
-                if (!targetBlock.isNonPoint) {
-                    bmSelf.openPointEditor(targetBlock);
-                } else if (!targetBlock.useNativeEdit && gpl.isEdit) {
-                    if (targetBlock instanceof gpl.Block) {
-                        bmSelf.openBlockEditor(targetBlock);
-                    } else {
-                        bmSelf.openTextEditor(targetBlock);
-                    }
+
+                isInputOrOutputBlock = !!~['Input','Output'].indexOf(targetBlock.blockType);
+
+                // ch492 Double-click opens the block editor unless the shift key is pressed
+                if (event.e.shiftKey && (!targetBlock.isNonPoint || isInputOrOutputBlock)) {
+                    bmSelf.openPointEditor(targetBlock, isInputOrOutputBlock);
+                } else if (targetBlock instanceof gpl.Block) {
+                    bmSelf.openBlockEditor(targetBlock);
+                } else {
+                    bmSelf.openTextEditor(targetBlock);
                 }
             } else {
                 // gpl.log('too much time');
@@ -6701,11 +8346,11 @@ gpl.BlockManager = function (manager) {
     };
 
     bmSelf.handleUnload = function (cb) {
-        var ret = {
-            updates: [],
-            adds: [],
-            deletes: []
-        };
+        // var ret = {
+        //     updates: [],
+        //     adds: [],
+        //     deletes: []
+        // };
 
         // if (bmSelf.manager.bindings.hasEdits()) {
         //     gpl.forEach(bmSelf.newBlocks, function (block, upi) {
@@ -6778,19 +8423,30 @@ gpl.Manager = function () {
         configuredEvents = {},
         log = gpl.log,
         initDelay = 1,
+        initDone = false,
         currInitStep = 0,
         // renderDelay = 100,
 
-        sequenceEditProperties = ['Width', 'Height', 'Show Label', 'Show Value'],
+        // sequenceEditProperties = ['Width', 'Height', 'Show Label', 'Show Value'],
         mergeProperties = ['Show Label', 'Show Value'],
         initFlow = ['initBindings', 'initCanvas', 'initManagers', 'initQualityCodes', 'initShapes', 'initEvents', 'initKnockout', 'initToolbar', 'initSocket'],
+
+        setCurrentUser = function (theUser) {
+            gpl.currentUser = theUser;
+        },
 
         initLabels = function () {
             var type,
                 types = managerSelf.blockTypes;
-            for (type in types) {
-                if (types.hasOwnProperty(type)) {
-                    gpl.labelCounters[types[type].blockType] = 0;
+
+            // ch1314; get labelCounters from editVersion if available
+            if (gpl.json.editVersion && gpl.json.editVersion.labelCounters) {
+                gpl.labelCounters = gpl.json.editVersion.labelCounters;
+            } else {
+                for (type in types) {
+                    if (types.hasOwnProperty(type)) {
+                        gpl.labelCounters[types[type].blockType] = 0;
+                    }
                 }
             }
         },
@@ -6824,24 +8480,25 @@ gpl.Manager = function () {
             var list = seq.line,
                 len = list.length,
                 handles,
+                offset = (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset)),
                 cc,
                 ccc;
 
             for (cc = 0; cc < len; cc++) {
                 handles = list[cc].handle;
                 for (ccc = 0; ccc < handles.length; ccc++) {
-                    handles[ccc].x = +handles[ccc].x + (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset));
+                    handles[ccc].x = +handles[ccc].x + offset;
                 }
-
             }
         },
         offsetBlockPositions = function (reset, seq) {
             var list = seq.block,
                 len = list.length,
+                offset = (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset)),
                 cc;
 
             for (cc = 0; cc < len; cc++) {
-                list[cc].left = +list[cc].left + (!reset ? gpl.editModeOffset : (-1 * gpl.editModeOffset));
+                list[cc].left = +list[cc].left + offset;
             }
         },
         offsetPositions = function (reset, seq) {
@@ -6850,7 +8507,7 @@ gpl.Manager = function () {
         },
         init = function () {
             // var lastInit,
-            var now = new Date().getTime(),
+            let now = new Date().getTime(),
                 doNextInit = function () {
                     var initFn = initFlow[currInitStep];
                     // now = new Date();
@@ -6878,6 +8535,7 @@ gpl.Manager = function () {
                             $('body').addClass('viewMode');
                         }
 
+                        initDone = true;
                         log('Finished initializing GPL Manager in', ((new Date().getTime() - started) / 1000).toFixed(3), 'seconds');
 
                         managerSelf.resizeWindow(true);
@@ -6904,14 +8562,35 @@ gpl.Manager = function () {
                 c;
 
             managerSelf.useEditVersion = function () {
-                var i,
+                let i,
                     block,
                     dynamic,
-                    pointRef;
+                    pointRef,
+                    updateReferences = () => {
+                        let changesIndex,
+                            refsIndex;
+
+                        // update references with changed pointdata stored in savedforlater logic and insert new points (not yet persisted)
+                        for (changesIndex = 0; changesIndex < gpl.pointChanges.updates.length; changesIndex++) {
+                            if (gpl.pointChanges.updates[changesIndex].newPoint.id) {
+                                gpl.references.push(gpl.pointChanges.updates[changesIndex].newPoint);
+                            } else {
+                                for (refsIndex = 0; refsIndex < gpl.references.length; refsIndex++) {
+                                    if (gpl.pointChanges.updates[changesIndex].newPoint._id > 0) {
+                                        if (gpl.references[refsIndex]._id === gpl.pointChanges.updates[changesIndex].newPoint._id) {
+                                            gpl.references[refsIndex] = gpl.pointChanges.updates[changesIndex].newPoint;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
 
                 gpl.json.block = gpl.json.editVersion.block;
                 gpl.json.line = gpl.json.editVersion.line;
                 gpl.json.dynamic = gpl.json.editVersion.dynamic;
+                gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
+                updateReferences();
 
                 if (!!gpl.json.block) {
                     for (i = 0; i < gpl.json.block.length; i++) {
@@ -6935,8 +8614,6 @@ gpl.Manager = function () {
                     }
                 }
 
-                gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
-
                 gpl.on('rendered', function () {
                     // managerSelf.bindings.hasEdits(true);
                     managerSelf.bindings.hasEditVersion(true);
@@ -6946,51 +8623,47 @@ gpl.Manager = function () {
                 managerSelf.confirmEditVersion(false);
             };
 
-            managerSelf.discardEditVersion = function () {
-                managerSelf.confirmEditVersion(true);
-            };
+            // managerSelf.discardEditVersion = function () {
+            //     managerSelf.confirmEditVersion(true);
+            // };
 
             managerSelf.confirmEditVersion = function (discardAnyUpdates) {
                 managerSelf.hideEditVersionModal();
                 if (discardAnyUpdates) {
-                    if (!!gpl.originalSequence.editVersion) {
-                        delete gpl.originalSequence.editVersion;
+                    if (!!gpl.originalSequenceData.editVersion) {
+                        delete gpl.originalSequenceData.editVersion;
                     }
-                    gpl.json = gpl.originalSequence;
+                    gpl.json = gpl.originalSequenceData;
                 }
                 doNextInit();
             };
 
             //fix for IE not showing window.top when first loaded
             gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl.workspaceManager = window.top && window.top.workspaceManager || window.opener && window.opener.workspaceManager;
             gpl._openWindow = dtiUtility.openWindow;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;
 
-
             if (!gpl.point.SequenceData) {
                 gpl.showMessage('Sequence data not found');
             } else {
                 gpl.json = gpl.point.SequenceData.sequence;
-                gpl.originalSequence = $.extend(true, {}, gpl.point.SequenceData.sequence);
+                gpl.originalSequenceData = $.extend(true, {}, gpl.point.SequenceData.sequence);
+                gpl.originalSequence = $.extend(true, {}, gpl.point);
 
                 //forces new (hex) format, if flag exists it's already been converted/defaulted
                 if (!gpl.json._convertedBG) {
                     //if existing, it's old system and needs converting
                     if (gpl.json.backgroundColor) {
-                        gpl.json.backgroundColor = gpl.convertColor(gpl.json.backgroundColor);
+                        gpl.seqProps.backgroundColor = gpl.convertColor(gpl.json.backgroundColor);
                     } else { //doesn't exist, assign default
-                        gpl.json.backgroundColor = gpl.defaultBackground;
+                        gpl.seqProps.backgroundColor = gpl.defaultBackground;
                     }
 
                     gpl.json._convertedBG = true;
                 }
-
-                gpl.deviceId = gpl.point['Point Refs'][0].DevInst;
-
-                managerSelf.backgroundColor = gpl.json.backgroundColor;
 
                 managerSelf.state = null;
                 managerSelf.editMode = false;
@@ -7036,52 +8709,63 @@ gpl.Manager = function () {
                 managerSelf.blockTypes = {
                     //icon: cls
                     Constant: {
-                        blockType: 'ConstantBlock'
+                        blockType: 'Constant'
                     },
                     Output: {
-                        blockType: 'ControlBlock'
+                        blockType: 'Output'
                     },
                     Input: {
-                        blockType: 'MonitorBlock'
+                        blockType: 'Input'
                     },
                     AlarmStat: {
                         blockType: 'AlarmStatus'
                     },
                     BINMDualSP: {
-                        blockType: 'BinarySetPoint'
+                        blockType: 'BinaryDualSetPoint', // ch981
+                        toolbarText: 'Dual Setpoint Binary Selector' // ch1000, typical
                     },
                     BINMSingleSP: {
-                        blockType: 'BinarySetPoint'
+                        blockType: 'BinarySingleSetPoint', // ch981
+                        toolbarText: 'Single Setpoint Binary Selector'
                     },
                     Delay: {
                         blockType: 'Delay'
                     },
                     OneShot: {
-                        blockType: 'Delay'
+                        blockType: 'Delay',
+                        toolbarText: 'Pulsed' // This matches the Calculation Type Value
                     },
                     FindLargest: {
-                        blockType: 'SelectValue'
+                        blockType: 'SelectValue',
+                        toolbarText: 'Find Largest'
                     },
                     FindSmallest: {
-                        blockType: 'SelectValue'
+                        blockType: 'SelectValue',
+                        toolbarText: 'Find Smallest'
                     },
                     Average: {
-                        blockType: 'Average'
+                        blockType: 'Average',
+                        toolbarText: 'Average'
                     },
                     Sum: {
-                        blockType: 'Average'
+                        blockType: 'Average',
+                        toolbarText: 'Summation'
                     },
                     Add: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Add'
                     },
                     Divide: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Divide'
                     },
                     Multiply: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Multiply'
                     },
                     Subtract: {
-                        blockType: 'Math'
+                        blockType: 'Math',
+                        toolbarText: 'Subtract'
                     },
                     AddSqrt: {
                         blockType: 'Math',
@@ -7103,7 +8787,8 @@ gpl.Manager = function () {
                         blockType: 'MUX'
                     },
                     PI: {
-                        blockType: 'PI'
+                        blockType: 'PI',
+                        toolbarText: 'Proportional/Integral'
                     },
                     Proportional: {
                         blockType: 'PI',
@@ -7127,17 +8812,19 @@ gpl.Manager = function () {
                         skipToolbar: true
                     },
                     AnalogDualSetPoint: {
-                        blockType: 'AnalogSetPoint'
+                        blockType: 'AnalogDualSetPoint', // ch981
+                        toolbarText: 'Dual Setpoint Analog Selector'
                     },
                     AnalogSingleSetPoint: {
-                        blockType: 'AnalogSetPoint'
+                        blockType: 'AnalogSingleSetPoint', // ch981
+                        toolbarText: 'Single Setpoint Analog Selector'
                     },
                     SUMWSingleSP: {
-                        blockType: 'AnalogSetPoint',
+                        blockType: 'AnalogSingleSetPoint', // ch981
                         skipToolbar: true
                     },
                     SUMWDualSP: {
-                        blockType: 'AnalogSetPoint',
+                        blockType: 'AnalogDualSetPoint', // ch981
                         skipToolbar: true
                     },
                     Econ: {
@@ -7147,40 +8834,51 @@ gpl.Manager = function () {
                         blockType: 'Enthalpy'
                     },
                     DewPoint: {
-                        blockType: 'Enthalpy'
+                        blockType: 'Enthalpy',
+                        toolbarText: 'Dew Point',
                     },
                     WetBulb: {
-                        blockType: 'Enthalpy'
+                        blockType: 'Enthalpy',
+                        toolbarText: 'Web Bulb'
                     },
                     GT: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Greater Than'
                     },
                     GTEqual: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Greater Than or Equal'
                     },
                     LT: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Less Than'
                     },
                     LTEqual: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Less Than or Equal'
                     },
                     Equal: {
-                        blockType: 'Comparator'
+                        blockType: 'Comparator',
+                        toolbarText: 'Equal'
                     },
-                    NEqual: {
-                        blockType: 'Comparator'
+                    NotEqual: {
+                        blockType: 'Comparator',
+                        toolbarText: 'Not Equal'
                     },
                     Logic: {
                         blockType: 'Logic'
                     },
                     DigLogicAnd: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'And'
                     },
                     DigLogicOr: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'Or'
                     },
                     DigLogicXOr: {
-                        blockType: 'DigLogic'
+                        blockType: 'DigLogic',
+                        toolbarText: 'XOr'
                     }
                 };
 
@@ -7196,7 +8894,7 @@ gpl.Manager = function () {
                     managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
-                document.title = gpl.point.Name;
+                document.title = dtiCommon.getPointName(gpl.point.path);
 
                 initPointNamePrefix();
 
@@ -7224,8 +8922,14 @@ gpl.Manager = function () {
 
     gpl.skipEventLog = true;
 
+    // ch279 Added function helper as part of this bug story
+    managerSelf.initDone = function () {
+        return initDone;
+    };
+
     managerSelf.postInit = function () {
         managerSelf.postInitActionButtons();
+        dtiUtility.getUser(setCurrentUser);
     };
 
     managerSelf.offsetEverything = function (num, line, block) {
@@ -7256,7 +8960,6 @@ gpl.Manager = function () {
         //         sequence: gpl.json
         //     }
         // });
-
     };
 
     managerSelf.addToBindings = function (props) {
@@ -7272,6 +8975,93 @@ gpl.Manager = function () {
         gpl.blockManager.forEachBlock(function (block) {
             managerSelf.addToBoundingRect(block);
         });
+    };
+
+    // This function calculates the overall rectangular footprint of a block inclusive of all its items (anchors, 
+    // label text, etc.) so we can know the left-most, top-most, bottom-most, right-most coordinates of the block
+    // Padding between the block and the its items outer edge (anchors, text, etc.) is also calculated.
+    // FYI: Origin coordinates are 0,0; negative coordinates are left and above the origin
+    //  0,0           #,0
+    // (x,y)--------------
+    //     |
+    //     |
+    //     |
+    // 0,# |
+    // This function added as part of ch351
+    managerSelf.getFootprint = function (block) {
+        var rect = block.getBoundingRect(),
+            footprint = {
+                top: block.top,
+                left: block.left,
+                bottom: block.top + rect.height,
+                right: block.left + rect.width,
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                }
+            },
+            // greaterThanLessThan
+            gtlt = function (prop, val, doGreaterThan) {
+                if (footprint[prop] === undefined) {
+                    footprint[prop] = val;
+                } else if (doGreaterThan) {
+                    if (val > footprint[prop]) {
+                        footprint[prop] = val;
+                    }
+                } else if (val < footprint[prop]) {
+                    footprint[prop] = val;
+                }
+            },
+            calcPadding = function () {
+                gpl.forEachArray(['top', 'right', 'bottom', 'left'], function (prop) {
+                    footprint.padding[prop] = Math.abs(block[prop] - footprint[prop]);
+                });
+            };
+
+        gpl.forEachArray(block._shapes || [], function (shape) {
+            rect = shape.getBoundingRect();
+            // Top and left coordinates available; must calculate bottom and right
+            gtlt('top', rect.top);
+            gtlt('left', rect.left);
+            gtlt('bottom', rect.top + rect.height, true);
+            gtlt('right', rect.left + rect.width, true);
+        });
+
+        calcPadding();
+
+        return footprint;
+    };
+
+    // This function limits a block's target position so that it cannot be placed or moved off screen or behind the toolbar
+    // This function added as part of ch351
+    managerSelf.limitTargetPosition = function (block, target) {
+        // Block is the gpl block; target contains the requested block location
+        var footprint = managerSelf.getFootprint(block),
+            footprintWidth = footprint.right - footprint.left,
+            footprintHeight = footprint.bottom - footprint.top,
+            minLeft = gpl.editModeOffset + footprint.padding.left,
+            minTop = 0 + footprint.padding.top,
+            maxLeft = window.innerWidth - footprintWidth,
+            maxTop = window.innerHeight - gpl.bottomBarHeight - footprintHeight,
+            top = target.top,
+            left = target.left;
+
+        if (target.top < minTop) {
+            top = minTop;
+        } else if (target.top > maxTop) {
+            top = maxTop;
+        }
+
+        if (target.left < minLeft) {
+            left = minLeft;
+        } else if (target.left > maxLeft) {
+            left = maxLeft;
+        }
+
+        target.left = left;
+        target.top = top;
     };
 
     managerSelf.addToBoundingRect = function (block) {
@@ -7402,8 +9192,7 @@ gpl.Manager = function () {
             bottom = box.bottom,
             verticalBuffer = 50,
             horizontalBuffer = 50,
-            minHeight = 750,
-            minHeightView = 550,
+            minHeight = (gpl.isEdit ? 750 : 550),
             minWidth = 900,
             width = right + horizontalBuffer,
             height,
@@ -7413,26 +9202,30 @@ gpl.Manager = function () {
             width = minWidth;
         }
 
-        if (!gpl.poppedIn) {
-            if (gpl.isEdit) {
-                height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
-            } else {
-                height = (bottom + verticalBuffer > minHeightView) ? bottom + verticalBuffer : minHeightView;
+        height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
+        height += heightOffset;
+        
+        // ch479 Set height/width to window if it's bigger so canvas covers entire window area
+        if (gpl.isEdit) {
+            if (width < window.innerWidth) {
+                width = window.innerWidth;
             }
-
-            height += heightOffset;
-            managerSelf.currWidth = width;
-            managerSelf.currHeight = height;
-
-            dtiUtility.updateWindow('resize', {
-                width: width,
-                height: height
-            });
-            // window.resizeTo(width, height);
-
-            if (initial) {
-                managerSelf.resizeCanvas(width, height);
+            if (height < window.innerHeight) {
+                height = window.innerHeight;
             }
+        }
+
+        managerSelf.currWidth = width;
+        managerSelf.currHeight = height;
+
+        dtiUtility.updateWindow('resize', {
+            width: width,
+            height: height
+        });
+        // window.resizeTo(width, height);
+
+        if (initial) {
+            managerSelf.resizeCanvas(width, height);
         }
     };
 
@@ -7448,10 +9241,6 @@ gpl.Manager = function () {
         if (value !== gpl.scaleValue) {
             managerSelf.pauseRender();
             gpl.scaleValue = value;
-
-            managerSelf.canvas.setZoom(value);
-            managerSelf.canvas.setWidth(currentCanvasWidth * value);
-            managerSelf.canvas.setHeight(currentCanvasHeight * value);
 
             $('.dynamicBtn').each(function () {
                 var $el = $(this),
@@ -7469,6 +9258,11 @@ gpl.Manager = function () {
             if (!fromBinding) {
                 managerSelf.bindings.currentZoom(Math.round(value * 100));
             }
+
+            managerSelf.canvas.setZoom(value);
+            managerSelf.canvas.setWidth(currentCanvasWidth * value);
+            managerSelf.canvas.setHeight(currentCanvasHeight * value);
+            // managerSelf.canvas.setDimensions({width: currentCanvasWidth * value, height: currentCanvasHeight * value});
 
             managerSelf.resumeRender();
         }
@@ -7491,87 +9285,112 @@ gpl.Manager = function () {
             left: managerSelf.panLeft,
             top: managerSelf.panTop
         });
-
     };
 
     managerSelf.addNewPoint = function (block) {
-        var parameters = {},
-            pointType = window.encodeURI(block.pointType),
-            names = (gpl.pointNamePrefix + block.label).split('_'),
-            called = false,
-            name1 = names[0],
-            name2 = names[1],
-            name3 = names[2],
-            name4 = names[3] || '',
-            handler = function (obj) {
-                var calcType;
-                if (obj === false) {
-                    log('New Point canceled, deleting block');
-                    gpl.fire('deleteblock', block, true);
-                    gpl.labelCounters[block.type]--;
-                    return;
-                }
-
-                var oldPoint = $.extend(true, {}, obj);
-
-                // gpl.unblockUI();
-
-                if (obj && obj.target) { //is event
-                    if (!called) {
-                        log('New Point canceled, deleting block');
-                        gpl.fire('deleteblock', block, true);
-                        gpl.labelCounters[block.type]--;
-                    }
-                    return;
-                }
-
-                block.upi = obj._id;
-                // obj['Point Instance'].Value = obj._id;
-
-                // if (obj['Reverse Action'])
-
-
-                obj['Point Refs'][0].Value = gpl.deviceId;
-
-                block.formatPointFromData(obj, obj, 'Device Point', gpl.devicePoint);
-                obj = block.getPointData();
-
-                if (obj['Calculation Type']) {
-                    calcType = block.getIconKey();
-                    obj['Calculation Type'].Value = calcType;
-                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[calcType];
-                }
-
-                block.setPointData(obj, true);
-
-                log(block.gplId, 'save callback', obj);
-                gpl.fire('newblock', block);
-                called = true;
-
-                managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': obj,
-                    'oldPoint': oldPoint
-                }));
+        let parameters = {
+                pointType: block.pointType,
+                parentUpi: gpl.point._id,
+                parentNode: gpl.point._id, // ch1031; added this property
+                display: block.label // added this with ch900; recent server changes causes this call to error out w/-out this property present
             };
+        let handleError = function (err) {
+            window.alert('An unexpected error occurred: ' + err);
+            gpl.fire('deleteblock', block, true);
+            gpl.labelCounters[block.type]; // ch1213 - don't decrement the label counter if an error was encountered
+        };
+
+        gpl.log(parameters.display);
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
-            // gpl.blockUI();
-            parameters.name1 = name1;
-            parameters.name2 = name2;
-            parameters.name3 = name3;
-            parameters.name4 = name4;
-            parameters.pointType = block.pointType;
+            // ch355 Create point workflow change
+            gpl.blockUI();
+            $.ajax({
+                type: 'post',
+                url: gpl.pointApiPath + 'initPoint',
+                data: parameters
+            }).done(function (data) {
+                let point = data;
+                let calcType;
 
-            dtiUtility.showCreatePoint(parameters);
-            dtiUtility.onCreatePoint(handler);
-        } else {
-            gpl.fire('newblock', block);
+                if (data.err) {
+                    return handleError(data.err);
+                }
+
+                // ch918; Add a dependable prefix to the fake id - this is the hacky method of allowing the server to know 
+                // that the Point Refs array entry with this upi is referencing a temporary point (i.e. the referenced point
+                // will not be found in the points collection)
+                block.upi = dtiUtility.generateFauxPointID('tempId_' + gpl.currentUser.username); 
+
+                point.id = block.upi;
+                point.path = $.extend([], gpl.point.path);
+                point.path.push(block.label);
+                point._path = dtiCommon.toLowerCasePath(point.path); // ch952
+
+                // Setup the device point
+                point['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                point['Point Refs'][0].PointName = gpl.manager.bindings.deviceName(); // ch989
+
+                gpl.formatPoint({ // ch971; call formatPoint to update other props based on the device point
+                    point: point,
+                    oldPoint: point,
+                    property: 'Device Point',
+                    refPoint: gpl.devicePoint
+                });
+
+                if (point['Calculation Type']) {
+                    calcType = block.getIconKey();
+                    point['Calculation Type'].Value = calcType;
+                    point['Calculation Type'].eValue = point['Calculation Type'].ValueOptions[calcType];
+
+                    gpl.formatPoint({ // ch978; call formatPoint to update other props based on the calc type
+                        point: point,
+                        oldPoint: point,
+                        property: 'Calculation Type'
+                    });
+                }
+
+                // ch981 start
+                if (block.type === 'AnalogSingleSetPoint' || block.type === 'BinarySingleSetPoint') {
+                    point['Calculation Type'].isReadOnly = true;
+                } else if (block.type === 'AnalogDualSetPoint' || block.type === 'BinaryDualSetPoint') {
+                    delete point['Calculation Type'].ValueOptions['Single Setpoint'];
+                }
+                // ch981 end
+
+                // ch970, ch977 start
+                if (point['Input 1 Constant']) {
+                    point['Input 1 Constant'].isReadOnly = true;
+                }
+                if (point['Input 2 Constant']) {
+                    point['Input 2 Constant'].isReadOnly = true;
+                }
+                if (point['Setpoint Value']) {
+                    point['Setpoint Value'].isReadOnly = true;
+                }
+                // ch970, ch977 end
+
+                // ch1016
+                gpl.blockManager.upis[block.upi] = [{
+                    block: block,
+                    valueText: block.valueText
+                }];
+
+                block.setPointData(point, true);
+
+                gpl.fire('newblock', block);
+            }).fail(function (xhr, stat, error) {
+                handleError(error);
+            }).always(function () {
+                gpl.unblockUI();
+            });
+        }
+        else {
+            // gpl.fire('newblock', block); // ch990 commented out this line
         }
     };
 
     managerSelf.afterSave = function () {
-        offsetPositions(false);
-
         managerSelf.resumeRender();
 
         managerSelf.bindings.hasEdits(false);
@@ -7588,26 +9407,7 @@ gpl.Manager = function () {
 
     managerSelf.doSave = function () {
         var saveObj,
-            isValid,
-            finish = function () {
-                delete gpl.json.editVersion;
-
-                gpl.saveSequence();
-
-                if (gpl.point._pStatus === 1) {
-                    managerSelf.socket.emit('addPoint', {
-                        oldPoint: gpl._origPoint,
-                        newPoint: gpl.point
-                    });
-                } else {
-                    managerSelf.socket.emit('updatePoint', {
-                        oldPoint: gpl._origPoint,
-                        newPoint: gpl.point
-                    });
-                }
-
-
-            };
+            isValid;
 
         gpl.isValid = true;
         gpl.validationMessage = [];
@@ -7627,19 +9427,57 @@ gpl.Manager = function () {
 
             gpl.fire('save');
 
-            managerSelf.socket.emit('updateSequencePoints', saveObj);
-
-            managerSelf.embedActionButtons();
-
-            offsetPositions(true); //resets/removes offset
-
             if (gpl.isValid) {
-                finish();
+                offsetPositions(true); //resets/removes offset
+
+                if (!!gpl.json.editVersion) {
+                    delete gpl.json.editVersion;
+                }
+
+                // ch1043
+                if (gpl.point['Point Refs'][0].Value !== gpl.seqProps.deviceId) { // If the device point changed
+                    // Update the sequence's device point
+                    gpl.point['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                    gpl.formatPoint({
+                        point: gpl.point,
+                        oldPoint: gpl.point,
+                        property: 'Device Point',
+                        refPoint: gpl.devicePoint
+                    });
+                }
+                gpl.point['Show Value'].Value = gpl.seqProps.showValue;
+                gpl.point['Show Label'].Value = gpl.seqProps.showLabel;
+                gpl.point.Controller.eValue = gpl.seqProps.controller;
+                gpl.point.Controller.Value = gpl.controllers[gpl.seqProps.controller].name;
+                gpl.point.Description.Value = gpl.seqProps.description;
+                gpl.point['Update Interval'].Value = gpl.seqProps.updateInterval;
+                gpl.json.backgroundColor = gpl.seqProps.backgroundColor;
+                // end ch1043
+
+                // ch1052; added gpl.forEachArrayRev below
+                gpl.forEachArrayRev(saveObj.deletes, function (upi, i) {
+                    let removeRef = false;
+
+                    // ch921 and ch987 were moved here, combined, and updated
+                    if (typeof(upi) === 'string') {     // If this point hasn't actually been created yet
+                        saveObj.deletes.splice(i, 1);   // Remove this from the deletes array because there's no db point to delete
+                    }
+
+                    gpl.forEachArray(gpl.point['Point Refs'], function (pointRef, i) {
+                        if (pointRef.PointInst === upi) {
+                            gpl.point['Point Refs'].splice(i, 1);
+                            return false; // break the loop
+                        }
+                    });
+                });
+
+                gpl.saveSequence(saveObj);
+
+                managerSelf.embedActionButtons();
             } else {
                 gpl.showMessage(gpl.validationMessage);
                 managerSelf.resumeRender();
             }
-
         } else {
             gpl.showMessage(gpl.validationMessage);
         }
@@ -7648,10 +9486,13 @@ gpl.Manager = function () {
     managerSelf.doSaveForLater = function () {
         var currentChanges,
             continueEditingCb = function () {
-            gpl.hideMessage();
-            gpl.unblockUI();
-            gpl.$saveForLaterConfirmModal.modal('show');
-        };
+                gpl.hideMessage();
+                gpl.unblockUI();
+
+                // ch919; skip the modal and call doCancel directly since the modal wouldn't let you cancel out anyway
+                // gpl.openModal(gpl.$saveForLaterConfirmModal);
+                managerSelf.doCancel();
+            };
 
         gpl.blockUI();
         gpl.waitForSocketMessage(continueEditingCb);
@@ -7663,13 +9504,16 @@ gpl.Manager = function () {
         offsetPositions(true);
 
         currentChanges = $.extend(true, {}, gpl.json.editVersion);
-        gpl.json = $.extend(true, {}, gpl.originalSequence);
+        currentChanges.seqProps = gpl.seqProps; // ch1043
+        currentChanges.labelCounters = gpl.labelCounters; // ch1314
+
+        gpl.json = $.extend(true, {}, gpl.originalSequenceData);
         gpl.json.editVersion = currentChanges;
 
         gpl.saveSequence();
 
-        offsetPositions(false, gpl.json.editVersion);
-        offsetPositions(false);
+        // offsetPositions(false, gpl.json.editVersion);
+        // offsetPositions(false);
 
         managerSelf.bindings.hasEdits(false);
         // gpl.hasEdits = false;
@@ -7743,10 +9587,9 @@ gpl.Manager = function () {
             c,
             len = objects.length,
             obj,
-            ret = [],
-            found = false;
+            ret = [];
 
-        for (c = 0; c < len && !found; c++) {
+        for (c = 0; c < len; c++) {
             obj = objects[c];
             if (!gplType || (gplType === obj.gplType)) {
                 if (obj.gplType === 'line') {
@@ -7764,17 +9607,19 @@ gpl.Manager = function () {
                         }
                     }
                     if ((left >= x1 && left <= x2) && (top >= y1 && top <= y2)) {
-                        ret.push(obj);
+                        // ch999; always search through all objects for matches to make sure we pick the one on the top
                         if (!multiple) {
-                            found = true;
+                            ret = [obj];
+                        } else {
+                            ret.push(obj);
                         }
                     }
-                } else {
-                    if (left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft <= (obj.left + obj.width) && top - managerSelf.panTop >= obj.top && top - managerSelf.panTop <= (obj.top + obj.height)) {
+                } else if (left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft <= (obj.left + obj.width) && top - managerSelf.panTop >= obj.top && top - managerSelf.panTop <= (obj.top + obj.height)) {
+                    // ch999; always search through all objects for matches to make sure we pick the one on the top
+                    if (!multiple) {
+                        ret = [obj];
+                    } else {
                         ret.push(obj);
-                        if (!multiple) {
-                            found = true;
-                        }
                     }
                 }
             }
@@ -7835,7 +9680,7 @@ gpl.Manager = function () {
 
     managerSelf.renderAll = function () {
         var renderTime = new Date().getTime(),
-            doRender = function() {
+            doRender = function () {
                 managerSelf.queuingRender = false;
                 managerSelf.lastRender = new Date().getTime();
                 gpl.renderCount = gpl.renderCount || 0;
@@ -7852,8 +9697,7 @@ gpl.Manager = function () {
             if (renderTime - managerSelf.lastRender >= managerSelf.renderStep) {
                 // gpl.log('render immediate');
                 doRender();
-            } else {
-                if (!managerSelf.queuingRender) {
+            } else if (!managerSelf.queuingRender) {
                     // gpl.log('queueing render');
                     managerSelf.queuingRender = true;
                     setTimeout(function() {
@@ -7862,7 +9706,6 @@ gpl.Manager = function () {
                 // } else {
                 //     gpl.log('render already queued');
                 }
-            }
         }
         // var now = new Date().getTime();
 
@@ -8012,7 +9855,7 @@ gpl.Manager = function () {
     // };
 
     managerSelf.doAddNewButton = function (config) {
-        var offset = gpl.isEdit?gpl.editModeOffset:0,
+        var offset = gpl.isEdit ? gpl.editModeOffset:0,
             actionButton;
 
         if (config.caption !== undefined) {
@@ -8064,22 +9907,26 @@ gpl.Manager = function () {
             getter,
             gplObj;
 
-        if (gpl.isEdit && managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
+        if (managerSelf.state !== 'DrawingLine' && !gpl.modalIsOpen && !managerSelf.hasPanned) { // ch899; allow openContextMneu in gpl view mode
             managerSelf.$contextMenuList.removeClass('block line default nonPoint text');
 
-            if (obj) {
-                getter = getters[obj.gplType];
-                if (getter) {
-                    managerSelf.$contextMenuList.addClass(obj.gplType);
+            if (gpl.isEdit) {
+                if (obj) {
+                    getter = getters[obj.gplType];
+                    if (getter) {
+                        managerSelf.$contextMenuList.addClass(obj.gplType);
+                    } else {
+                        managerSelf.$contextMenuList.addClass('block');
+                        getter = getters.block;
+                    }
+                    if (obj.blockType === 'Constant') {
+                        managerSelf.$contextMenuList.addClass('nonPoint');
+                    }
+                    gplObj = getter(obj.gplId);
                 } else {
-                    managerSelf.$contextMenuList.addClass('block');
-                    getter = getters.block;
+                    managerSelf.$contextMenuList.addClass('default');
                 }
-                if (obj.blockType === 'Constant') {
-                    managerSelf.$contextMenuList.addClass('nonPoint');
-                }
-                gplObj = getter(obj.gplId);
-            } else {
+            } else { // ch899 - show context menu in view mode
                 managerSelf.$contextMenuList.addClass('default');
             }
 
@@ -8122,7 +9969,7 @@ gpl.Manager = function () {
             delete window.gplData.point;
             delete window.gplData.references;
             // delete window.gplData.controllers;
-            delete window.gplData;
+            // delete window.gplData;  // strict mode
             gpl.destroyObject(gpl);
             gpl = {};
             $(document).off();
@@ -8139,7 +9986,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.updateTooltip = function (text, x, y) {
-        if (!managerSelf.modalOpen && text !== undefined) {
+        if (!gpl.modalIsOpen && text !== undefined) {
             gpl.$tooltip.html(text);
 
             gpl.$tooltip.css({
@@ -8179,64 +10026,31 @@ gpl.Manager = function () {
     };
 
     managerSelf.showEditVersionModal = function () {
-        gpl.$editVersionModal.modal({
-            keyboard: false,
-            backdrop: 'static'
-        });
-        gpl.$editVersionModal.modal('show');
+        gpl.openModal(gpl.$editVersionModal);
     };
 
     managerSelf.hideEditVersionModal = function () {
-        gpl.$editVersionModal.modal('hide');
+        gpl.closeModal(gpl.$editVersionModal);
     };
 
     managerSelf.initBindings = function () {
-        var formatSequencePoint = function (property, value) {
-                var newPoint = $.extend(true, {}, gpl.point),
-                    tmpData;
+        var updateUpdateInterval = function (newValue) {
+                // This function is called anytime the update interval (mins or secs) is updated via the sequence properties modal
+                let mins = +managerSelf.bindings.deviceUpdateIntervalMinutes() || 0;
+                let secs = +managerSelf.bindings.deviceUpdateIntervalSeconds() || 0;
+                let val = (mins*60) + secs;
 
-                newPoint[property].Value = value;
-                tmpData = gpl.formatPoint({
-                    point: newPoint,
-                    oldPoint: gpl.point,
-                    property: property
-                });
+                gpl.seqProps.updateInterval = val;
 
-                if (tmpData.err) {
-                    gpl.log('Error with sequence point data:', property, 'error:', tmpData.err);
-                } else {
-                    gpl.log('Successfully updated sequence point property', property);
-                    gpl.point = tmpData;
-                }
-            },
-            updateUpdateInterval = function (newValue) {
-                var val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
-
-                formatSequencePoint('Update Interval', val);
-            },
-            handlers = {
-                deviceDescription: function (val) {
-                    gpl.point.Description.Value = val; //validate?
-                }
-            },
-            syncDeviceProperties = function () {
-                var props = ko.toJS(managerSelf.bindings),
-                    devicePoint = gpl.devicePointRef;
-
-                gpl.point.Description.Value = props.deviceDescription;
-                devicePoint.pointName = props.deviceName;
-                devicePoint.DevInst = devicePoint.PointInst = devicePoint.Value = props.deviceUpi;
+                gpl.manager.bindings.hasEdits(true);
             };
 
         managerSelf.addToBindings({
             isEdit: gpl.isEdit,
             hasEdits: ko.observable(false),
-            hasEditVersion:  ko.observable(false),
+            hasEditVersion: ko.observable(false),
             loaded: managerSelf.sequenceLoaded,
             editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
-
-            backgroundColor: ko.observable(managerSelf.backgroundColor),
-            deviceBackgroundColor: ko.observable(managerSelf.backgroundColor),
 
             controllers: gpl.controllers,
 
@@ -8256,7 +10070,7 @@ gpl.Manager = function () {
                     pointName = editBlock.pointName,
                     parameter = editBlock.parameter,
                     type = editBlock.type,
-                    upi = editBlock.upi,
+                    // upi = editBlock.upi,
                     text = editBlock.text;
 
                 managerSelf.bindings.actionButtonPointName(pointName);
@@ -8266,7 +10080,7 @@ gpl.Manager = function () {
                 managerSelf.bindings.actionButtonPointType(editBlock.pointType);
 
 
-                gpl.$editActionButtonModal.modal('show');
+                gpl.openModal(gpl.$editActionButtonModal);
             },
 
             sendActionButtonValue: function () {
@@ -8274,7 +10088,7 @@ gpl.Manager = function () {
 
                 managerSelf.editBlock.sendValue(value);
 
-                gpl.$editActionButtonValueModal.modal('hide');
+                gpl.closeModal(gpl.$editActionButtonValueModal);
             },
 
             openReport: function () {
@@ -8310,140 +10124,76 @@ gpl.Manager = function () {
                     type: type
                 });
 
-                gpl.$editActionButtonModal.modal('hide');
+                gpl.closeModal(gpl.$editActionButtonModal);
             },
 
             deleteActionButton: function () {
                 managerSelf.deleteButton(managerSelf.editBlock);
-                gpl.$editActionButtonModal.modal('hide');
+                gpl.closeModal(gpl.$editActionButtonModal);
             },
 
             selectActionButtonPoint: function () {
-                gpl.openPointSelector(function (upi, name, pointType) {
-                    managerSelf.bindings.actionButtonPointName(name);
+                gpl.openPointSelector(function (selectedPoint) {
+                    let upi = selectedPoint._id,
+                        pointName = dtiCommon.getPointName(selectedPoint.path),
+                        pointType = window.getConfig('Utility.getPointTypeNameFromId', upi);
+                    managerSelf.bindings.actionButtonPointName(pointName);
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
-                    gpl.makePointRef({upi: upi, name: name, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
-                }, null, null, true);
-            },
-
-            showBackgroundColorModal: function () {
-                gpl.$colorpickerModal.modal('show');
-            },
-
-            hideBackgroundColorModal: function () {
-                managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
-                gpl.$colorpickerModal.modal('hide');
-            },
-
-            updateBackgroundColor: function () {
-                var val = managerSelf.bindings.deviceBackgroundColor();
-                managerSelf.bindings.backgroundColor(val);
-                managerSelf.canvas.backgroundColor = '#' + val;
-                // managerSelf.bindings.hideBackgroundColorModal();
-                gpl.json.backgroundColor = val;
-                managerSelf.renderAll();
+                    gpl.makePointRef({upi: upi, name: pointName}, gpl.seqProps.deviceId, 'GPLDynamic', 440);
+                });
             },
 
             applyShowLabel: function () {
-                var bool = managerSelf.bindings.deviceShowLabel();
                 managerSelf.pauseRender();
-                gpl.blockManager.applyShowLabel(bool);
+                gpl.blockManager.applyShowLabel(gpl.seqProps.showLabel);
                 managerSelf.resumeRender();
+
+                gpl.toast('New setting applied to all blocks', 1000);
             },
 
             applyShowValue: function () {
-                var bool = managerSelf.bindings.deviceShowValue();
                 managerSelf.pauseRender();
-                gpl.blockManager.applyShowValue(bool);
+                gpl.blockManager.applyShowValue(gpl.seqProps.showValue);
                 managerSelf.resumeRender();
+
+                gpl.toast('New setting applied to all blocks', 1000);
             },
 
             applyUpdateInterval: function () {
                 var interval = managerSelf.bindings.deviceUpdateIntervalMinutes() * 60 + managerSelf.bindings.deviceUpdateIntervalSeconds();
 
                 gpl.blockManager.applyUpdateInterval(interval);
+
+                gpl.toast('New update interval applied to all blocks', 1000);
             },
 
             applyController: function () {
-                var controllerValue = managerSelf.bindings.deviceControllerValue(),
+                var controllerValue = gpl.seqProps.controller,
                     controllerName = gpl.controllers[controllerValue].name;
 
                 gpl.blockManager.applyController(controllerName, controllerValue);
+
+                gpl.toast('New controller applied to all blocks', 1000);
             },
 
-            sequenceName: gpl.point.Name,
-            deviceName: ko.observable(gpl.devicePoint.Name),
-            deviceUpi: ko.observable(gpl.devicePointRef.PointInst),
-            deviceDescription: ko.observable(gpl.point.Description.Value),
+            sequenceName: ko.observable(dtiCommon.getPointName(gpl.point.path)),
+            deviceName: ko.observable(dtiCommon.getPointName(gpl.devicePoint.path)),
+            deviceDescription: ko.observable(gpl.seqProps.description),
 
-            deviceControllerName: ko.observable(gpl.point.Controller.Value),
-            deviceControllerValue: ko.observable(gpl.point.Controller.eValue),
+            deviceControllerName: ko.observable(gpl.controllers[gpl.seqProps.controller].name),
+            deviceControllerValue: ko.observable(gpl.seqProps.controller),
 
-            deviceShowLabel: ko.observable(gpl.point['Show Label'].Value),
-            deviceShowValue: ko.observable(gpl.point['Show Value'].Value),
+            deviceShowLabel: ko.observable(gpl.seqProps.showLabel),
+            deviceShowValue: ko.observable(gpl.seqProps.showValue),
 
-            deviceUpdateIntervalSeconds: ko.observable(+gpl.point['Update Interval'].Value % 60),
-            deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
+            deviceUpdateIntervalSeconds: ko.observable(+gpl.seqProps.updateInterval % 60),
+            deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.seqProps.updateInterval / 60)),
 
-            updateSequenceProperties: function () {
-                var oldDevicePointID = gpl.devicePoint._id,
-                    props = ko.toJS(managerSelf.bindings),
-                    setBlockDevicePointRef = function (block) {
-                        var idx = block._pointRefs["Control Point"],
-                            dataPoint = block.getPointData(),
-                            blockDeviceID;
-
-                        if (!!dataPoint) {
-                            blockDeviceID = dataPoint["Point Refs"][0].Value;
-                            // if (blockDeviceID === 0 || blockDeviceID === oldDevicePointID) {
-                            if (blockDeviceID === 0) {
-                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
-                            }
-
-                            if (idx !== undefined && dataPoint["Point Refs"][idx].DevInst === 0) {
-                                dataPoint["Point Refs"][idx].DevInst = gpl.point['Point Refs'][0].DevInst;
-                            }
-                        }
-                    };
-
-                gpl.point['Update Interval'].Value = (+props.deviceUpdateIntervalMinutes || 0) * 60 + (+props.deviceUpdateIntervalSeconds || 0);
-                gpl.point['Show Label'].Value = props.deviceShowLabel;
-                gpl.point['Show Value'].Value = props.deviceShowValue;
-                gpl.point.Description.Value = props.deviceDescription;
-                gpl.point.Controller.Value = props.deviceControllerName;
-                gpl.point.Controller.eValue = props.deviceControllerValue;
-                managerSelf.bindings.updateBackgroundColor();
-
-                if (gpl._newDevicePoint && gpl.devicePoint._id !== gpl._newDevicePoint._id) {
-                    gpl.devicePoint = gpl._newDevicePoint;
-                    gpl.deviceId = gpl._newDevicePoint._id;
-
-                    gpl.point['Point Refs'][0].Value = gpl.deviceId;
-                    gpl.point['Point Refs'][0].PointInst = gpl.deviceId;
-                    gpl.point['Point Refs'][0].DevInst = gpl.deviceId;
-                    gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
-                    gpl.point['Point Refs'][0].PointType = gpl.devicePoint['Point Type'].eValue;
-
-                    gpl.blockManager.forEachBlock(function (block) {
-                        gpl.log('processing block', block.gplId);
-                        setBlockDevicePointRef(block);
-                        if (block.isNonPoint !== true) {
-                            block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
-                        }
-                        gpl.fire('editedblock', block);
-                    });
-                }
-
-                delete gpl._newDevicePoint;
-
-                // console.log('update', props);
-                gpl.$sequencePropertiesModal.modal('hide');
-            },
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
-                    delete gpl._newDevicePoint;
-                    gpl.$sequencePropertiesModal.modal('show');
+                    gpl.openModal(gpl.$sequencePropertiesModal);
+                    gpl.$sequencePropertiesModal.find('select').material_select();
                 }
             },
             selectDevicePoint: function () {
@@ -8463,21 +10213,57 @@ gpl.Manager = function () {
                         gpl.log('Error setting device point:', tmpData.err);
                         gpl.showMessage('Error setting device point: ' + tmpData.err);
                     } else {
-                        managerSelf.bindings.deviceName(name);
-                        managerSelf.bindings.deviceUpi(upi);
+                        // ch1026; cleaned up this logic and moved from the old function which was deleted w/ ch1026 (updateSequenceProperties)
+                        if (gpl.devicePoint._id !== selectedPoint._id) {
+                            gpl.log('Set device point Successfully');
 
-                        gpl.log('Set device point Successfully');
-                        gpl._newDevicePoint = selectedPoint;
+                            managerSelf.bindings.deviceName(dtiCommon.getPointName(selectedPoint.path));
+
+                            gpl.devicePoint = selectedPoint;
+                            gpl.seqProps.deviceId = selectedPoint._id;
+
+                            // Update all blocks' device point; modifying this heavily as part of ch1012
+                            gpl.blockManager.forEachBlock(function (block) {
+                                gpl.log('processing block', block.gplId);
+
+                                if (!block.isToolbar) {
+                                    if (block.isNonPoint !== true) {
+                                        block._pointData['Point Refs'][0].Value = gpl.seqProps.deviceId;
+                                        block._pointData['Point Refs'][0].PointName = managerSelf.bindings.deviceName();
+                                        gpl.formatPoint({
+                                            point: block._pointData,
+                                            oldPoint: block._pointData,
+                                            property: 'Device Point',
+                                            refPoint: gpl.devicePoint
+                                        });
+
+                                        gpl.fire('editedblock', block);
+                                    } else if (block.hasReferenceType) {
+                                        block.processPointRef(); // ch1012; Show/hide star icon based on if input block is on a different device
+
+                                        // ch1012 & ch1017; Check if output block on a different device (outputs must reside on the same device)
+                                        if (block.blockType === 'Output') {
+                                            if (block._pointData && (block._pointData['Point Refs'][0].PointInst !== gpl.seqProps.deviceId)) {
+                                                block.setInvalid();
+                                            } else {
+                                                block.setValid();
+                                            }
+                                        }
+                                        
+                                        gpl.fire('editedblock', block);
+                                    }
+                                }
+                            });
+                        }                    
                     }
-                }, 'Device', 'Device Point', {});
+                }, 'Device', 'Device Point');
             },
 
             addNewButton: function () {
-                var id = gpl.makeId(),
-                    config = {
-                        left: managerSelf.contextX,
-                        top: managerSelf.contextY
-                    };
+                let config = {
+                    left: managerSelf.contextX,
+                    top: managerSelf.contextY
+                };
 
                 managerSelf.doAddNewButton(config);
             },
@@ -8496,6 +10282,19 @@ gpl.Manager = function () {
                     }
                 });
                 gpl.blockManager.openTextEditor(newBlock);
+                gpl.manager.bindings.hasEdits(true); // ch511
+            },
+
+            // ch473 (added)
+            addNewActionButton: function () {
+                var newBlock = gpl.blockManager.create({
+                    cls: gpl.blocks.ActionButton,
+                    cfg: {
+                        left: (managerSelf.contextX - 15) / gpl.scaleValue, //10 in textblock
+                        top: (managerSelf.contextY - 10) / gpl.scaleValue, //5 in textblock
+                        text: 'Action'
+                    }
+                });
             }
         });
 
@@ -8505,22 +10304,25 @@ gpl.Manager = function () {
 
         managerSelf.bindings.deviceUpdateIntervalMinutes.subscribe(updateUpdateInterval);
         managerSelf.bindings.deviceUpdateIntervalSeconds.subscribe(updateUpdateInterval);
+
         managerSelf.bindings.deviceShowValue.subscribe(function (newValue) {
-            formatSequencePoint('Show Value', newValue);
+            gpl.seqProps.showValue = newValue;
+            managerSelf.bindings.hasEdits(true);
+        });
+
+        managerSelf.bindings.deviceDescription.subscribe(function (newDescription) {
+            gpl.seqProps.description = newDescription;
+            managerSelf.bindings.hasEdits(true);
+        });
+
+        managerSelf.bindings.deviceControllerValue.subscribe(function (eValue) {
+            gpl.seqProps.controller = eValue;
+            managerSelf.bindings.hasEdits(true);
         });
 
         managerSelf.bindings.deviceShowLabel.subscribe(function (newValue) {
-            formatSequencePoint('Show Label', newValue);
-        });
-
-        managerSelf.bindings.backgroundColorHex = ko.computed(function () {
-            var color = '#' + managerSelf.bindings.backgroundColor();
-
-            if (!gpl.isEdit) {
-                gpl.$body.css('background-color', color);
-            }
-
-            return color;
+            gpl.seqProps.showLabel = newValue;
+            managerSelf.bindings.hasEdits(true);
         });
 
         managerSelf.$saveButton.click(function () {
@@ -8540,7 +10342,7 @@ gpl.Manager = function () {
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
 
-            gpl.json = $.extend(true, {}, gpl.originalSequence);
+            gpl.json = $.extend(true, {}, gpl.originalSequenceData);
 
             setTimeout(function () {
                 managerSelf.doCancel();
@@ -8548,23 +10350,22 @@ gpl.Manager = function () {
         });
 
         managerSelf.$discardChangesButton.click(function () {
-            var deleteNewBlocksObj,
-                timeOutLength;
+            var timeOutLength;
 
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             managerSelf.bindings.hasEditVersion(false);
             gpl.blockManager.handleUnload();
+            gpl.json = $.extend(true, {}, gpl.originalSequenceData);
 
-            deleteNewBlocksObj = gpl.blockManager.getSaveObject(gpl.isCancel);
-            managerSelf.socket.emit('updateSequencePoints', deleteNewBlocksObj);  // delete any created points
-
-            gpl.json = $.extend(true, {}, gpl.originalSequence);
             if (!!gpl.json.editVersion) { // handle a saveForLater dataset
                 delete gpl.json.editVersion;
                 if (!!gpl.point.SequenceData.sequence.editVersion) {
                     delete gpl.point.SequenceData.sequence.editVersion;
                 }
+
+                gpl.point.SequenceData = {};
+                gpl.point.SequenceData.sequence = gpl.json;
 
                 gpl.saveSequence();
 
@@ -8586,30 +10387,13 @@ gpl.Manager = function () {
             managerSelf.validate();
         });
 
-        gpl.$messageModal.modal({
-            show: false
-        });
+        gpl.closeModal(gpl.$messageModal);
 
         ko.bindingHandlers.colorpicker = {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var value = valueAccessor(),
                     hexColor = ko.unwrap(value),
-                    getTextElementByColor = function (color) {
-                        if (color === 'transparent' || color.hex === "") {
-                            return $("<div style='text-shadow: none; position: relative; padding-bottom: 2px; margin-top: 2px;'>transparent</div>");
-                        }
-                        var newEl = $("<div style='text-shadow: none; position: relative; padding-bottom: 2px; margin-top: 2px;'>#" + color.hex + "</div>"),
-                            nThreshold = 105,
-                            bgDelta = (color.r * 0.299) + (color.g * 0.587) + (color.b * 0.114),
-                            foreColor = (255 - bgDelta < nThreshold) ? 'Black' : 'White';
-
-                        newEl.css('color', foreColor);
-                        newEl.css('background', "#" + color.hex);
-                        newEl.addClass('jqx-rc-all');
-                        return newEl;
-                    },
-                    el = $(element),
-                    parent = el.parent();
+                    el = $(element);
 
                 value.subscribe(function (newVal) {
                     el.jqxColorPicker('setColor', newVal);
@@ -8623,26 +10407,15 @@ gpl.Manager = function () {
 
                 el.jqxColorPicker('setColor', hexColor);
 
-                // parent.jqxDropDownButton({
-                //     width: 150,
-                //     height: 22
-                // });
-
-                // parent.jqxDropDownButton('setContent', getTextElementByColor(new $.jqx.color({
-                //     hex: hexColor
-                // })));
-
                 el.on('colorchange', function (event) {
                     value(event.args.color.hex);
-                    // parent.jqxDropDownButton('setContent', getTextElementByColor(event.args.color));
                 });
-
             }
         };
 
         ko.bindingHandlers.numeric = {
             init: function (element, valueAccessor) {
-                $(element).on("keydown", function (event) {
+                $(element).on('keydown', function (event) {
                     // Allow: backspace, delete, tab, escape, and enter
                     if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
                         // Allow: Ctrl+A
@@ -8652,9 +10425,8 @@ gpl.Manager = function () {
                         // Allow: home, end, left, right
                         (event.keyCode >= 35 && event.keyCode <= 40)) {
                         // let it happen, don't do anything
-                        return;
-                    }
-                    else {
+                        // return;
+                    } else {
                         // Ensure that it is a number and stop the keypress
                         if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
                             event.preventDefault();
@@ -8677,7 +10449,7 @@ gpl.Manager = function () {
             },
             update: function (element, valueAccessor) {
                 var value = ko.utils.unwrapObservable(valueAccessor());
-                $(element).datepicker("setDate", value);
+                $(element).datepicker('setDate', value);
             }
         };
 
@@ -8714,28 +10486,389 @@ gpl.Manager = function () {
                 }
             }
         };
+
+        ko.bindingHandlers.dropdown = { // ch900; added binding
+            // :: DROPDOWN USE & NOTES ::
+            // (1)  The actual dropdown is expected to be a child of 'element', or the next immediate sibling, and it must contain the '.dtiDropdown' class
+            // (2)  The dropdown respects CSS max and min width/height rules if present.
+            // (3)  This dropdown can be used as-is without any values, i.e. <div data-bind="dropdown"> for the default behavior (see defaults below). Options can be
+            //      provided through the valueAccessor, data-* attributes on the DOM element, or both. data-* attributes take priority over valueAccessor attributes.
+            //      data-* DOM attributes translate to JS attributes as follows:
+            //      <div data-drop-up="true"> translates to { dropUp: true }
+            //      <div data-keep-in-viewport="true"> translates to { keepInViewport: true }, etc. etc.
+            init(element, valueAccessor, allBindingsAccessor, viewModel) {
+                let $element = $(element);      // Source element
+                let $parent = $element.parent();// Source element's parent
+                let $posParent = $(window);     // This is the parent element the drop down is referenced to for positioning purposes
+                let offsetFn = 'offset';        // This is the dropdown function to use to get the dropdown's coordinates relative to posParent
+                let defaults = {
+                    dropUp: false,              // <optional - boolean - set true to drop up; drops down otherwise>
+                    alignment: 'left',          // <optional - string - drop position: 'left', 'center', or 'right'
+                    width: 'auto',              // <optional - string - drop width 'auto' or 'element' (if element, dropdown width matches width of the source element)
+                    keepInViewport: false,      // <optional - boolean - sacrifice alignment to keep the the dropdown in the viewport (applies to left/right & top/bottom)>
+                    openOnClick: true,          // <optional - boolean - open the dropdown when the user clicks on the source element>
+                    closeOnClick: true,         // <optional - boolean - close the dropdown when the user clicks on the source element>
+                    closeOnDropdownClick: true, // <optional - boolean - close the dropdown when the user clicks anywhere inside the dropdown>
+                    closeOnBodyClick: true,     // <optional - boolean - close the dropdown when the user clicks anywhere outside the dropdown>
+                    origin: 'element',          // <optional - string - dropdown x,y origin is based on the 'element' (i.e. source element), 'cursor' (x,y cursor coords), or 'target'
+                    offsetOrigin: true,         // <optional - boolean - position dropdown above or below the origin, depending on if dropping up or down, respectively (versus cover the origin); ignored if origin='click'>
+                    animationSpeed: 200,        // <optional - integer - dropdown open/close animation speed; this must match the '.dtiDropdown' CSS transition setting>
+                    vOffset: 0,                 // <optional - integer - vertical offset from the origin by this amount>
+                    hOffset: 0,                 // <optional - integer - horizontal offset from the origin by this amount>
+                    activeClass: 'active'       // <optional - string - class applied to the source element when the dropdown is active>
+                };
+                let options = ko.utils.unwrapObservable(valueAccessor()) || {};
+                let config = $.extend(true, defaults, kojs(options), $element.data()); // data-* attributes in the view take priority; ch928
+                let $dropdown = $element.find('.dtiDropdown').first();
+                let constraints = {                                             // These are contraining widths/heights the user has set. Save these before we touch the css values in showing/hiding the dropdown
+                    maxWidth: parseInt($dropdown.css('maxWidth'), 10) || 9999,  // Maximums yield 'none' if unset; if unset we push the max out to an unrealistic value
+                    maxHeight: parseInt($dropdown.css('maxHeight'), 10) || 9999,
+                    minWidth: parseInt($dropdown.css('minWidth'), 10),          // Minimums yield '0px' if unset
+                    minHeight: parseInt($dropdown.css('minHeight'), 10)
+                };
+                let id = gpl.makeId();
+                let timerId = 0;
+                let isShown = false;
+                let getOrigin = (event) => {
+                    if (config.origin === 'element') {
+                        return $element;
+                    } else if (config.origin === 'cursor') {
+                        return {
+                            offset() {
+                                return {
+                                    left: event.pageX,
+                                    top: event.pageY
+                                };
+                            },
+                            position() {
+                                return {
+                                    left: event.pageX,
+                                    top: event.pageY
+                                };
+                            },
+                            outerHeight() {
+                                return 0;
+                            },
+                            outerWidth() {
+                                return 0;
+                            }
+                        };
+                    } else { // 'target'
+                        return $(event.target);
+                    }
+                };
+                let positionDropdown = (action, event = {}) => {
+                    let $origin = getOrigin(event);
+                    let originOffset = $origin && $origin[offsetFn]();
+
+                    if (!originOffset) {
+                        return gpl.log("Cannot", action, "dropdown because the origin is not on screen. Event data is", event);
+                    }
+
+                    let hideDropdown = (setDisplayNone) => {
+                        let cssCfg = {
+                            minWidth: '0px',
+                            minHeight: '0px',
+                            height: '0px',
+                            width: '0px',
+                            opacity: 0
+                        };
+
+                        // If we're center aligned
+                        if (config.alignment === 'center') {
+                            // Do a vertical-only collapse
+                            delete cssCfg.width;
+                        }
+
+                        $dropdown.css(cssCfg);
+                        $element.removeClass(config.activeClass);
+
+                        if (setDisplayNone) {
+                            timerId = setTimeout(() => {
+                                $dropdown.css('display', 'none');
+                            }, config.animationSpeed);
+                        }
+                    };
+                    let showDropdown = (requestConfig) => {
+                        let cfg = {
+                            transition: '',
+                            display: 'flex',
+                            opacity: 1,
+                            minWidth: '',
+                            minHeight: ''
+                        };
+
+                        // For some reason the dropdown wouldn't animate open after just previously updating the css without a small delay (it was instantly opening)
+                        timerId = setTimeout(() => {
+                            $dropdown.css($.extend(cfg, requestConfig));
+                            $dropdown.scrollTop(0);
+                            $element.addClass(config.activeClass);
+                        }, 50);
+                    };
+                    let getPositioning = () => {
+                        let parentWidth = $posParent.width();
+                        let parentHeight = $posParent.height();
+
+                        // Source size and position (save before we mess with it - we'll get positioning just below)
+                        let source = {
+                            width: $dropdown.css('width'),
+                            height: $dropdown.css('height'),
+                        };
+                        // Target size & position
+                        let target = {};
+
+                        // Get source positioning
+                        if (config.dropUp) {
+                            source.bottom = $dropdown.css('bottom');
+                        } else {
+                            source.top = $dropdown.css('top');
+                        }
+                        if (config.alignment === 'right') {
+                            source.right = $dropdown.css('right');
+                        } else { // alignment is 'left' or 'center'
+                            source.left = $dropdown.css('left');
+                        }
+
+                        // Make the dropdown visible so we can get positioning & sizing
+                        $dropdown.css({
+                            transition: 'inherit',
+                            display: 'flex',
+                            opacity: 1,
+                            width: 'auto',
+                            height: 'auto'
+                        });
+
+                        // Get the dropdown sizing & positioning; its initial position is the origin's position
+                        let width = config.width === 'auto' ? $dropdown.outerWidth() : $element.outerWidth();
+                        let height = $dropdown.outerHeight();
+
+                        // Get the origin sizing & positioning
+                        let originWidth = $origin.outerWidth();
+                        let originHeight = $origin.outerHeight();
+                        let originLeft = originOffset.left;
+                        let originTop = originOffset.top;
+
+                        // Check constraints
+                        if (height > constraints.maxHeight) {
+                            height = constraints.maxHeight;
+                        } else if (height < constraints.minHeight) {
+                            height = constraints.minHeight;
+                        }
+                        if (width > constraints.maxWidth) {
+                            width = constraints.maxWidth;
+                        } else if (width < constraints.minWidth) {
+                            width = constraints.minWidth;
+                        }
+                        target.height = height;
+                        target.width = width;
+
+                        // Get target positioning
+                        if (config.alignment === 'right') {
+                            target.right = parentWidth - originLeft - originWidth + config.hOffset;
+                        } else if (config.alignment === 'center') {
+                            target.left = originLeft - (width/2) + (originWidth/2) + config.hOffset;
+                        } else { // 'left'
+                            target.left = originLeft + config.hOffset;
+                        }
+
+                        if (config.dropUp) {
+                            target.bottom = parentHeight - originTop + config.vOffset;
+
+                            if (!config.offsetOrigin) {
+                                target.bottom -= originHeight;
+                            }
+                        } else {
+                            target.top = originTop + config.vOffset;
+
+                            if (config.offsetOrigin) {
+                                target.top += originHeight;
+                            }
+                        }
+
+                        // Relocate dropdown if it's overflowing the viewport - this overrides dropdown alignment
+                        if (config.keepInViewport) {
+                            // Check left/right
+                            let hOverflow = ((target.right || target.left) + width) - parentWidth;
+                            if (hOverflow > 0) {
+                                if (target.right) {
+                                    target.right -= hOverflow;
+                                } else {
+                                    target.left -= hOverflow;
+                                }
+                            }
+                            // Check top/bottom
+                            let vOverflow = ((target.top || target.bottom) + height) - parentHeight;
+                            if (vOverflow > 0) {
+                                if (target.top) {
+                                    target.top -= vOverflow;
+                                } else {
+                                    target.bottom -= vOverflow;
+                                }
+                            }
+                        }
+
+                        // Append 'px' to all target key values
+                        gpl.forEach(target, (val, key) => {
+                            target[key] = val + 'px';
+                        });
+
+                        return {
+                            source: source,
+                            target: target
+                        };
+                    };
+
+                    if (action === 'hide') {
+                        hideDropdown(true);
+                    } else if (action === 'show') {
+                        // Get the target positioning
+                        let cfg = getPositioning();
+                        // Position the dropdown where it will be shown
+                        $dropdown.css(cfg.target);
+                        // Hide the dropdown
+                        hideDropdown();
+                        // Animate to the target position
+                        showDropdown(cfg.target);
+                    } else { // update
+                        // Get positioning
+                        let cfg = getPositioning();
+                        // Reset the positioning
+                        $dropdown.css(cfg.source);
+                        // Animate to the target position
+                        showDropdown(cfg.target);
+                    }
+                };
+                let handlers = {
+                    show(event) {
+                        positionDropdown('show', event);
+                        isShown = true;
+                    },
+                    hide(event) {
+                        positionDropdown('hide', event);
+                        isShown = false;
+                    },
+                    update(event) {
+                        if (!isShown) {
+                            handlers.show(event);
+                        } else {
+                            positionDropdown('update', event);
+                        }
+                    }
+                };
+                let handleEventMessage = (data) => {
+                    // data = {
+                    //     id: int,             // <required - target dropdown instance id>
+                    //     method: function,    // <required - target dropdown function>
+                    //     data: *              // <optional - object, int, string, whatever>
+                    // }
+                    if (data && (data.id === id)) {
+                        if (handlers[data.method]) {
+                            handlers[data.method](data.data);
+                        } else {
+                            gpl.log('Dropdown binding', id, 'has no method', data.method);
+                        }
+                    }
+                };
+                let handleBodyClick = (event) => {
+                    let $target = $(event.target);
+
+                    if (!isShown) {
+                        if (config.openOnClick && $target.closest($element).length) {
+                            handlers.show(event);
+                        }
+                    } else {
+                        if ($target.closest($dropdown).length) {
+                            if (config.closeOnDropdownClick) {
+                                handlers.hide(event);
+                            }
+                        } else if ($target.closest($element).length) {
+                            if (config.closeOnClick) {
+                                handlers.hide(event);
+                            }
+                        } else if (config.closeOnBodyClick) {
+                            handlers.hide(event);
+                        }
+                    }
+                };
+
+                // If the dropdown wasn't found inside our binding element
+                if (!$dropdown.length) {
+                    // See if it's the next sibling
+                    $dropdown = $element.next();
+
+                    if (!$dropdown.length || ($dropdown[0].className.indexOf('dtiDropdown') < 0)) {
+                        return gpl.log('ko.bindingHandlers.dropdown:', '.dtiDropdown not found within or after $element', $element);
+                    }
+                }
+
+                // See if the parent element should be something besides the default (window). The dropdown uses 'fixed'
+                // positioning, so if we have a parent with 'fixed' position, we have to reference that element when
+                // positioning the dropdown
+                gpl.forEachArray($element.parents(), function (el) {
+                    let $el = $(el);
+                    
+                    if ($el.css('position') === 'fixed') { // If the parent is fixed position
+                        $posParent = $el;
+                        offsetFn = 'position';
+                        return false;
+                    }
+                });
+
+                // This is the only modification to the received options object! Install our unique id on the options object.
+                // The author needs this id to call one of our handler methods via dti event messaging
+                options.id = id;
+
+                // Setup event listeners
+                if (config.openOnClick || config.closeOnClick || config.closeOnDropdownClick || config.closeOnBodyClick) {
+                    gpl.manager.registerHandler({
+                        event: 'click',
+                        handler: handleBodyClick,
+                        type: 'DOM',
+                        window: true
+                    });
+                }
+                gpl.on('callDropdownMethod', handleEventMessage);
+
+                // Cleanup
+                ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                    clearTimeout(timerId);
+                    gpl.off('callDropdownMethod', handleEventMessage);
+                    // TODO unregister body click handler
+                    $element = null;
+                    $dropdown = null;
+                    options = null;
+                });
+            }
+        };
     };
 
     managerSelf.initCanvas = function () {
         var editConfig = {
                 renderOnAddRemove: false,
+                imageSmoothingEnabled: false,
                 selection: false, //group selection
-                backgroundColor: '#' + managerSelf.backgroundColor,
+                // selection: true, //group selection
+                backgroundColor: '#' + gpl.seqProps.backgroundColor,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             toolbarConfig = {
                 renderOnAddRemove: false,
+                imageSmoothingEnabled: false,
                 selection: false,
                 hasControls: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             },
             viewConfig = {
                 renderOnAddRemove: false,
-                backgroundColor: '#' + managerSelf.backgroundColor,
+                imageSmoothingEnabled: false,
+                backgroundColor: '#' + gpl.seqProps.backgroundColor,
                 hasControls: false,
                 selection: false,
                 draggable: false,
+                preserveObjectStacking: true,
                 hoverCursor: 'default'
             };
 
@@ -8785,6 +10918,11 @@ gpl.Manager = function () {
             gpl.canvases.main = managerSelf.canvas;
             managerSelf.toolbarCanvas = new fabric.Canvas('toolbarCanvas', toolbarConfig);
             gpl.canvases.toolbar = managerSelf.toolbarCanvas;
+
+            // gpl.canvases.main.setActiveGroup(gpl.selectedGroup);
+            // setTimeout(function() {
+            //     gpl.canvases.main.discardActiveGroup();
+            // }, 5000);
         } else {
             if (gpl.nobg) {
                 delete viewConfig.backgroundColor;
@@ -8793,7 +10931,7 @@ gpl.Manager = function () {
             gpl.canvases.main = managerSelf.canvas;
         }
 
-        managerSelf.$mainUpperCanvas = $('#' + managerSelf.mainCanvasElId + ' + .upper-canvas');
+        managerSelf.$mainUpperCanvas = $('#' + managerSelf.mainCanvasElId + '.upper-canvas');
         managerSelf.$mainCanvasContainer = $('#' + managerSelf.mainCanvasElId).parent();
 
         managerSelf._getObjectCount = 0;
@@ -8918,7 +11056,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.initShapes = function () {
-        var sequence = gpl.json,
+        let sequence = gpl.json,
             lines = sequence.line || [],
             blocks = sequence.block || [],
             dynamics = sequence.dynamic || [],
@@ -8938,7 +11076,6 @@ gpl.Manager = function () {
             config,
             newLine,
             newBlock,
-            $btn,
             c,
             cc;
 
@@ -8997,7 +11134,7 @@ gpl.Manager = function () {
                             cfg: config
                         });
 
-                        if (referencedPoint && newBlock.type !== 'ControlBlock' && newBlock.type !== 'MonitorBlock') {
+                        if (referencedPoint && newBlock.type !== 'Output' && newBlock.type !== 'Input') {
                             newBlock.setIconType(calcType, reverseAction);  // this handles 'calculation type' changes outside GPL
                         }
                         block.gplId = newBlock.gplId;
@@ -9025,9 +11162,10 @@ gpl.Manager = function () {
                 });
             }
 
+            // TODO - Found this commented out. Verify it should still be so
             // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
-                newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
-                managerSelf.shapes.push(newLine);
+            newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
+            managerSelf.shapes.push(newLine);
             // }
         }
 
@@ -9067,17 +11205,13 @@ gpl.Manager = function () {
                 gpl.blockManager.processValue(dynamic);
             });
 
-            socket.on('sequenceUpdateMessage', function (message) {
+            socket.on('pointPackage', function (message, points) {
                 gpl.showMessage('Sequence Saved');
                 if (managerSelf.doCompleteSave) {
                     managerSelf.doCompleteSave = false;
                     managerSelf.afterSave();
                 }
-            });
-
-            socket.on('sequencePointsUpdated', function (data) {
                 gpl.blockManager.resetChanges();
-                // gpl.showMessage(JSON.stringify(data, null, 3));
             });
 
             managerSelf.registerHandler({
@@ -9106,6 +11240,8 @@ gpl.Manager = function () {
     };
 
     managerSelf.initEvents = function () {
+        var timerId = 0;
+
         window.onbeforeunload = managerSelf.handleNavigateAway;
 
         managerSelf.registerHandlers([{
@@ -9140,7 +11276,6 @@ gpl.Manager = function () {
                     dx = event.originalEvent.movementX,
                     dy = event.originalEvent.movementY,
                     zoomStep = -0.01,
-                    movementStep = 1,
                     newZoom,
                     text,
                     obj,
@@ -9164,24 +11299,30 @@ gpl.Manager = function () {
                         gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
 
                         if (gplObj && !gplObj.isToolbar && gplObj.blockType !== 'Constant') {
-                            text = (gpl.pointUpiMap[gplObj.upi] || {}).Name;
+                            if (!gplObj.hasReferenceType) { // If it's a block, show the block label (no point in full point name because it's on the sequence)
+                                text = gplObj.label;
+                            } else { // It's an input/output block - show the referenced point name
+                                text = ((gpl.pointUpiMap[gplObj.upi] || {}).Name) || 'No point assigned';
+                            }
+                            managerSelf.updateTooltip(text, x, y);
+                        } else {
+                            managerSelf.clearTooltip();
+                        }
+                    } else if (gpl.isEdit) {
+                        obj = managerSelf.toolbarCanvas.findTarget(event);
+                        gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
+                        if (gplObj) {
+                            if (gplObj.toolbarText) { // ch1000
+                                text = gplObj.toolbarText;
+                            } else {
+                                text = gplObj.pointType;
+                            }
                             managerSelf.updateTooltip(text, x, y);
                         } else {
                             managerSelf.clearTooltip();
                         }
                     } else {
-                        if (gpl.isEdit) {
-                            obj = managerSelf.toolbarCanvas.findTarget(event);
-                            gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
-                            if (gplObj) {
-                                text = gplObj.blockType;
-                                managerSelf.updateTooltip(text, x, y);
-                            } else {
-                                managerSelf.clearTooltip();
-                            }
-                        } else {
-                            managerSelf.clearTooltip();
-                        }
+                        managerSelf.clearTooltip();
                     }
                 }
             }
@@ -9227,16 +11368,15 @@ gpl.Manager = function () {
                         if (button) {
                             managerSelf.bindings.editActionButton();
                         }
-                    } else {
-                        if (button) {
+                    } else if (button) {
                             button.click();
                         }
-                    }
                 }
             }
         }, {
             event: 'object:moving',
             handler: function (e) {
+                // This function handles group moves
                 var c,
                     objects,
                     object,
@@ -9247,11 +11387,13 @@ gpl.Manager = function () {
                         top: e.target.top - e.target._originalTop
                     };
 
+                // Enforce the grid
                 e.target.set({
                     left: Math.round(e.target.left / gpl.gridSize) * gpl.gridSize,
                     top: Math.round(e.target.top / gpl.gridSize) * gpl.gridSize
                 });
 
+                // If a group of objects is selected
                 if (e.target instanceof fabric.Group) {
                     objects = e.target._objects;
                     for (c = 0; c < objects.length; c++) {
@@ -9353,8 +11495,11 @@ gpl.Manager = function () {
             event: 'resize',
             type: 'DOM',
             window: true,
-            handler: function() {
-                managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+            handler: function () {
+                window.clearTimeout(timerId);
+                timerId = window.setTimeout(function () {
+                    managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+                }, 50);
             }
         }, {
             event: 'keydown',
@@ -9367,7 +11512,7 @@ gpl.Manager = function () {
                     evt;
 
                 if (gpl.isEdit) {
-                    if (event.which === gpl.DELETEKEY && !managerSelf.modalOpen) {
+                    if (event.which === gpl.DELETEKEY && !gpl.modalIsOpen) {
                         objects = managerSelf.canvas.getActiveGroup();
                         object = managerSelf.canvas.getActiveObject();
 
@@ -9417,14 +11562,6 @@ gpl.Manager = function () {
             type: 'DOM'
         }]);
 
-        $('body').on('hide.bs.modal', '.modal', function () {
-            managerSelf.modalOpen = false;
-        });
-
-        $('body').on('show.bs.modal', '.modal', function () {
-            managerSelf.modalOpen = true;
-        });
-
         gpl.on('newblock', function (block) {
             managerSelf.addToBoundingRect(block);
         });
@@ -9434,22 +11571,35 @@ gpl.Manager = function () {
             managerSelf.contextMenu.jqxMenu('close');
         });
 
-        managerSelf.handleColorChange = function (newColor) {
-            managerSelf.bindings.deviceBackgroundColor(newColor);
+        managerSelf.handleColorChange = function (color) {
+            gpl.seqProps.backgroundColor = color;
+
+            managerSelf.canvas.backgroundColor = '#' + color;
+            
+            managerSelf.renderAll();
+
+            managerSelf.bindings.hasEdits(true);
         };
 
-        managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, managerSelf.backgroundColor);
+        managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, gpl.seqProps.backgroundColor);
         managerSelf.bgColorPicker.render();
-
     };
 
     init();
 };
 
+function doInit () {
+    if (window.dtiCommon && dtiCommon.init.isComplete) {
+        gpl.initGpl();
+    } else {
+        window.setTimeout(doInit, 100);
+    }
+}
+
 //initialization -------------------------------------
 $(function () {
     if (!gpl.skipInit) {
-        gpl.initGpl();
+        doInit();
     }
 });
 

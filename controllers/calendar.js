@@ -1,69 +1,85 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var Calendar = require('../models/calendar');
-// Checked
-router.post('/getyear', function (req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let Calendar = new(require('../models/calendar'))();
+let System = new(require('../models/system'))();
 
-  Calendar.getYear(data, function (err, years) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+// POSTMAN
+router.post('/getyear', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-    return utils.sendResponse(res, years[0]);
-  });
-});
-// Checked
-router.post('/getseason', function (req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+    Calendar.getYear(data, function (err, year) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-  Calendar.getSeason(data, function (err, seasons) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, seasons[0]);
-  });
-});
-// Checked
-router.post('/updateseason', function (req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Calendar.updateSeason(data, function (err, result) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, {
-      message: 'success'
+        return utils.sendResponse(res, year);
     });
-  });
 });
-// Checked - Shouldn't be called if season changes in year that doesn't have dates
-router.post('/newdate', function (req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+// POSTMAN
+router.post('/getseason', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Calendar.newDate(data, function (err, yearResult) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+    System.getSeason(data, function (err, season) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-    return utils.sendResponse(res, yearResult);
-  });
+        return utils.sendResponse(res, season);
+    });
+});
+// POSTMAN
+router.post('/updateseason', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    System.updateSeason(data, function (err) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, {
+            message: 'success'
+        });
+    });
+});
+// POSTMAN
+router.post('/newdate', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Calendar.newDate(data, function (err, yearResult) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, yearResult);
+    });
+});
+router.post('/getyearswithdata', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    Calendar.getYearsWithData(function (err, years) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, years);
+    });
 });
 
 module.exports = router;

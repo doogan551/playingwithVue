@@ -1,24 +1,24 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-var ObjectID = require('mongodb').ObjectID;
-var _ = require('lodash');
-var moment = require('moment');
-var logger = require('../helpers/logger')(module);
-var notifications = require('../models/notifications');
+const ObjectID = require('mongodb').ObjectID;
+const _ = require('lodash');
+const moment = require('moment');
 
-var Policies = function () {
-    this.get = function (data, cb) {
-        var criteria = {
-            collection: 'NotifyPolicies',
+const logger = require('../helpers/logger')(module);
+
+const Policies = class Policies {
+    getPolicies(data, cb) {
+        const notifyPolicies = new NotifyPolicies();
+        let criteria = {
             query: data.data || {}
         };
-        Utility.get(criteria, cb);
-    };
-    this.save = function (rawData, cb) {
-        var data;
-        var newID;
-        var callback = function (err, points) {
-            var complete = function (removeErr) {
+        notifyPolicies.get(criteria, cb);
+    }
+
+    save(rawData, cb) {
+        // const notifications = new Notifications();
+        let data;
+        let newID;
+        let callback = (err) => {
+            let complete = (removeErr) => {
                 if (removeErr) {
                     logger.debug('Error removing threads for policy:', newID, removeErr);
                 }
@@ -29,26 +29,22 @@ var Policies = function () {
             };
 
             if (data.enabled === false) {
-                notifications.removeThreads(data._id, complete);
+                Notifications.removeThreads(data._id, complete);
             } else {
                 complete();
             }
-
         };
-        var convertStrings = function (obj) {
-            var key,
+        let convertStrings = (obj) => {
+            let key,
                 prop,
                 type,
                 c,
-                propsToRemove = {
-                    // 'xp:Value': true
-                },
                 matrix = {
-                    object: function (o) {
+                    object: (o) => {
                         return convertStrings(o);
                     },
-                    string: function (o) {
-                        var ret;
+                    string: (o) => {
+                        let ret;
 
                         if (!o.match(/[^\d.]/g)) { //no characters, must be number
                             if (o.indexOf('.') > -1) {
@@ -62,8 +58,8 @@ var Policies = function () {
 
                         return ret;
                     },
-                    array: function (o) {
-                        var arr = [];
+                    array: (o) => {
+                        let arr = [];
                         for (c = 0; c < o.length; c++) {
                             arr[c] = convertStrings(o[c]);
                         }
@@ -87,9 +83,9 @@ var Policies = function () {
             }
             return obj;
         };
-        var doUpdate = function () {
-            var criteria = {
-                collection: 'NotifyPolicies',
+        let doUpdate = () => {
+            const notifyPolicies = new NotifyPolicies();
+            let criteria = {
                 query: {
                     _id: data._id
                 },
@@ -101,7 +97,7 @@ var Policies = function () {
                 }
             };
 
-            Utility.update(criteria, callback);
+            notifyPolicies.update(criteria, callback);
         };
 
         data = convertStrings(rawData);
@@ -123,21 +119,21 @@ var Policies = function () {
         }
 
         this.processScheduledTasks(data, doUpdate);
-    };
+    }
 
-    this.delete = function (data, cb) {
-        var criteria = {
-            collection: 'NotifyPolicies',
+    delete(data, cb) {
+        const notifyPolicies = new NotifyPolicies();
+        const point = new Point();
+        let criteria = {
             query: {
                 _id: data._id
             }
         };
-        var updatePoints = function (err) {
+        let updatePoints = (err) => {
             if (err) {
                 return cb(err);
             }
-            var criteria = {
-                collection: 'points',
+            let criteria = {
                 query: {
                     'Notify Policies': data._id.toString()
                 },
@@ -147,14 +143,14 @@ var Policies = function () {
                     }
                 }
             };
-            Utility.update(criteria, cb);
+            point.updateOne(criteria, cb);
         };
-        Utility.remove(criteria, updatePoints);
-    };
+        notifyPolicies.remove(criteria, updatePoints);
+    }
 
-    this.processRotateConfig = function (data, config, task, cb) {
-        var criteria = {
-                collection: 'NotifyScheduledTasks',
+    processRotateConfig(data, config, task, cb) {
+        const notifyScheduledTasks = new NotifyScheduledTasks();
+        let criteria = {
                 query: {
                     policyID: data.policyID.toString(),
                     'config.alertConfigID': data.alertConfigID,
@@ -163,45 +159,31 @@ var Policies = function () {
                 }
             },
             taskTemplate = {
-                type : 'RECURRING',
-                action : task,
-                policyID : data.policyID.toString(),
-                nextAction : null,
-                interval : config.scale * 7,
-                config : {
-                    alertConfigID : data.alertConfigID,
-                    groupID : data.groupID,
-                    escalationID : data.escalationID
+                type: 'RECURRING',
+                action: task,
+                policyID: data.policyID.toString(),
+                nextAction: null,
+                interval: config.scale * 7,
+                config: {
+                    alertConfigID: data.alertConfigID,
+                    groupID: data.groupID,
+                    escalationID: data.escalationID
                 },
-                lastAction : null
-            },
-            cfg = {
-                day: 'Friday',
-                enabled: true,
-                scale: 1,
-                time: 1700
+                lastAction: null
             };
 
-        Utility.get(criteria, function (err, docs) {
-            var nextAction,
+        notifyScheduledTasks.getAll(criteria, (err, docs) => {
+            let nextAction,
                 now = moment(),
                 taskList = [],
-                insertTask = function (task) {
-
-                },
-                setLastAction = function (last) {
-                    var nextMinute;
-
-                    // console.log();
-
+                setLastAction = (last) => {
                     if (last) {
-                        nextMinute = moment().seconds(0).milliseconds(0).add(1, 'm');
                         nextAction = moment(last);
                         nextAction.seconds(0).milliseconds(0);
                         // console.log('Previous Action', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
                         // console.log();
                         nextAction.add(config.scale, 'w');
-                        while(nextAction.isBefore(now)) {
+                        while (nextAction.isBefore(now)) {
                             //do rotate
                             taskTemplate.nextAction = nextAction.valueOf();
                             taskTemplate.type = 'ONETIME';
@@ -247,11 +229,11 @@ var Policies = function () {
                 //no updates
                 setLastAction();
             } else {
-                _.each(docs, function (doc) {
+                _.each(docs, (doc) => {
                     // if (doc) {
-                        setLastAction(doc.lastAction);
-                        // taskTemplate.nextAction = nextAction.add(config.scale, 'w');
-                        // console.log('found', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+                    setLastAction(doc.lastAction);
+                    // taskTemplate.nextAction = nextAction.add(config.scale, 'w');
+                    // console.log('found', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
                     // } else {
                     //     setLastAction();
                     //     console.log('new', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
@@ -268,24 +250,21 @@ var Policies = function () {
             //     console.log('new', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
             // }
         });
-    };
+    }
 
-
-
-    this.processScheduledTasks = function (policy, cb) {
-        var self = this,
-            policyID = policy._id.toString(),
+    processScheduledTasks(policy, cb) {
+        const notifyScheduledTasks = new NotifyScheduledTasks();
+        let policyID = policy._id.toString(),
             count = 0,
             newTasks = [],
             found = false,
-            insertTasks = function () {
-                var criteria = {
-                    collection: 'NotifyScheduledTasks',
+            insertTasks = () => {
+                let criteria = {
                     insertObj: newTasks
                 };
 
                 // console.log('Inserting for policy', policyID);
-                Utility.insert(criteria, function (err, points) {
+                notifyScheduledTasks.insert(criteria, (err) => {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
@@ -295,16 +274,15 @@ var Policies = function () {
                     // console.log('Done with policy', policyID);
                 });
             },
-            deleteTasks = function (callback) {
-                var criteria = {
-                    collection: 'NotifyScheduledTasks',
+            deleteTasks = (callback) => {
+                let criteria = {
                     query: {
                         policyID: policyID
                     }
                 };
 
                 // console.log('Deleting from policy', typeof policyID, policyID);
-                Utility.remove(criteria, function (err) {
+                notifyScheduledTasks.remove(criteria, (err) => {
                     if (err) {
                         logger.debug('Remove err', JSON.stringify(err));
                     }
@@ -317,7 +295,7 @@ var Policies = function () {
                     }
                 });
             },
-            handleTaskList = function (tasks) {
+            handleTaskList = (tasks) => {
                 // console.log('handling tasks');
                 newTasks = newTasks.concat(tasks);
                 count--;
@@ -327,13 +305,13 @@ var Policies = function () {
                 }
             };
 
-        _.each(policy.alertConfigs, function (alertConfig) {
-            var data = {
-                    policyID: policyID,
-                    alertConfigID: alertConfig.id,
-                    groupID: null,
-                    escalationID: null
-                };
+        _.each(policy.alertConfigs, (alertConfig) => {
+            let data = {
+                policyID: policyID,
+                alertConfigID: alertConfig.id,
+                groupID: null,
+                escalationID: null
+            };
 
             if (alertConfig.groups.length > 1) {
                 count++;
@@ -341,9 +319,9 @@ var Policies = function () {
                 self.processRotateConfig(data, alertConfig.rotateConfig, 'rotateGroup', handleTaskList);
             }
 
-            _.each(alertConfig.groups, function (group) {
-                _.each(group.escalations, function (escalation) {
-                    var rotateConfig = escalation.rotateConfig,
+            _.each(alertConfig.groups, (group) => {
+                _.each(group.escalations, (escalation) => {
+                    let rotateConfig = escalation.rotateConfig,
                         data = {
                             policyID: policyID,
                             alertConfigID: alertConfig.id,
@@ -363,7 +341,11 @@ var Policies = function () {
         if (!found) {
             deleteTasks(cb);
         }
-    };
+    }
 };
 
-module.exports = new Policies();
+module.exports = Policies;
+const Notifications = require('./notifications');
+const NotifyPolicies = require('./notifypolicies');
+const NotifyScheduledTasks = require('./notifyscheduledtasks');
+const Point = require('./point');

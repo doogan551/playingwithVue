@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   width="72px"
+   height="72px"
+   viewBox="0 0 72 72"
+   enable-background="new 0 0 72 72"
+   xml:space="preserve"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="ConstantForInternalRef.svg"><metadata
+   id="metadata31"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs29">
+	
+	<linearGradient
+   y2="26.1147"
+   x2="36.950699"
+   y1="46.517601"
+   x1="36.950699"
+   gradientUnits="userSpaceOnUse"
+   id="SVGID_1_">
+		<stop
+   id="stop8"
+   style="stop-color:#E89024"
+   offset="0" />
+		<stop
+   id="stop10"
+   style="stop-color:#F99E1F"
+   offset="0.21" />
+		<stop
+   id="stop12"
+   style="stop-color:#FCB244"
+   offset="0.9" />
+		<stop
+   id="stop14"
+   style="stop-color:#FECE88"
+   offset="1" />
+	</linearGradient>
+	
+	<linearGradient
+   y2="27.052799"
+   x2="27.9956"
+   y1="45.5098"
+   x1="45.819302"
+   gradientUnits="userSpaceOnUse"
+   id="SVGID_2_">
+		<stop
+   id="stop19"
+   style="stop-color:#F99E1F"
+   offset="0" />
+		<stop
+   id="stop21"
+   style="stop-color:#FCB244"
+   offset="0.5" />
+		<stop
+   id="stop23"
+   style="stop-color:#F99E1F"
+   offset="1" />
+	</linearGradient>
+	
+<linearGradient
+   inkscape:collect="always"
+   xlink:href="#SVGID_2_"
+   id="linearGradient3004"
+   gradientUnits="userSpaceOnUse"
+   x1="45.819302"
+   y1="45.5098"
+   x2="27.9956"
+   y2="27.052799"
+   gradientTransform="matrix(1.1272853,0,0,1.1762976,-5.1537535,-8.6766649)" /><linearGradient
+   inkscape:collect="always"
+   xlink:href="#SVGID_1_"
+   id="linearGradient3007"
+   gradientUnits="userSpaceOnUse"
+   x1="36.950699"
+   y1="46.517601"
+   x2="36.950699"
+   y2="26.1147"
+   gradientTransform="matrix(1.1272853,0,0,1.1762976,-5.1537535,-8.6766649)" /></defs><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="1600"
+   inkscape:window-height="837"
+   id="namedview27"
+   showgrid="false"
+   inkscape:zoom="3.2777778"
+   inkscape:cx="-19.372881"
+   inkscape:cy="36"
+   inkscape:window-x="-9"
+   inkscape:window-y="-9"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Layer_1" />
+<rect
+   style="fill:url(#linearGradient3007)"
+   id="rect16"
+   height="24"
+   width="23"
+   y="22"
+   x="25"
+   ry="12"
+   rx="10.530698" /><rect
+   style="fill:url(#linearGradient3004)"
+   id="rect25"
+   height="21.345097"
+   width="20.455717"
+   y="23.328041"
+   x="26.223104"
+   ry="10.672548"
+   rx="9.3657818" />
+</svg>

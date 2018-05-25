@@ -4,8 +4,11 @@
     "jquery": true,
     "node": true,
     "mocha": true,
+    "esversion": 6,
     "globals": {
+        "dti": true,
         "moment": true,
+        "alert": true,
         "ko": true,
         "store": true,
         "Materialize": true,
@@ -17,6 +20,14 @@
         "fabric": true,
         "define": true,
         "CustomColorsPicker": true,
-        "checkValues": true
+        "checkValues": true,
+        "mbox": true,
+        "interact": true,
+        "dtiCommon": true,
+        "kojs": true,
+        "kodt": true,
+        "koUnwrap": true,
+        "Big": true,
+        "bannerJS": true
     }
 }

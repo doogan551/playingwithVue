@@ -30048,8 +30048,8 @@
             "isDisplayable": true,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Auto",
-            "eValue": 3,
+            "Value": "Idling",
+            "eValue": 8,
             "ValueOptions": {
                 "Initiate": 0,
                 "Pre-Crank": 1,
@@ -30072,8 +30072,8 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 5,
-            "Value": "Value",
-            "eValue": 19,
+            "Value": "",
+            "eValue": 0,
             "ValueOptions": {
                 "Input": 13,
                 "Output": 14,
@@ -30084,7 +30084,7 @@
             "isDisplayable": false,
             "isReadOnly": false,
             "ValueType": 4,
-            "Value": 0
+            "Value": 206
         },
         "Read Only": {
             "isDisplayable": false,
@@ -30210,6 +30210,1147 @@
                 "PointType": 144,
                 "PointInst": 901930,
                 "DevInst": 901571
+            }
+       ]
+    }, { 
+        "Name" : "4201_STEAM1_Total Reset", 
+        "name1" : "4201", 
+        "name2" : "STEAM1", 
+        "name3" : "Total Reset", 
+        "name4" : "", 
+        "_Name" : "4201_steam1_total reset", 
+        "_name1" : "4201", 
+        "_name2" : "steam1", 
+        "_name3" : "total reset", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 18, 
+        "_rmuModel" : 9, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "MultiState Value", 
+            "eValue" : 142, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Off",
+            "eValue": 0,
+            "ValueOptions": {
+                "Off": 0,
+                "Reset": 1
+            }
+        },
+        "States": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Reset",
+            "eValue": 1,
+            "ValueOptions": {
+                "Off": 0,
+                "Reset": 1
+            }
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Input Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "",
+            "eValue": 0,
+            "ValueOptions": {
+                "Input": 13,
+                "Output": 14,
+                "Value": 19
+            }
+        },
+        "Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 10
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 10
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Command Request",
+            "eValue": 24
+        },
+        "Control Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 10
+        },
+        "Control Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Control Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "",
+            "eValue": 24
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Trend Enable": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Trend Interval": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 60
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 68981,
+                "PointName": "4201_xTALK01",
+                "PointType": 8,
+                "PointInst": 68981,
+                "DevInst": 68981
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 68990,
+                "PointName": "4201_xTALK01_STM METER01",
+                "PointType": 144,
+                "PointInst": 68990,
+                "DevInst": 68981
+            }
+       ]
+    }, { 
+        "Name" : "4200_DXAC1_FanMode", 
+        "name1" : "4200", 
+        "name2" : "DXAC1", 
+        "name3" : "FanMode", 
+        "name4" : "", 
+        "_Name" : "4200_dxac1_fanmode", 
+        "_name1" : "4200", 
+        "_name2" : "dxac1", 
+        "_name3" : "fanmode", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 7, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "MultiState Value", 
+            "eValue" : 142, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "On",
+            "eValue": 0,
+            "ValueOptions": {
+                "On": 0,
+                "Auto": 1,
+                "Smart": 2
+            }
+        },
+        "States": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Smart",
+            "eValue": 2,
+            "ValueOptions": {
+                "On": 0,
+                "Auto": 1,
+                "Smart": 2
+            }
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Input Type": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Value",
+            "eValue": 19,
+            "ValueOptions": {
+                "Input": 13,
+                "Output": 14,
+                "Value": 19
+            }
+        },
+        "Instance": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 15
+        },
+        "Read Only": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 15
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Control Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 15
+        },
+        "Control Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Control Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 0
+        },
+        "Trend Enable": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Trend Interval": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 60
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "~Fan Mode:\r\nOn Fan Mode - Fan is ON Continuously, even when System Mode is OFF\r\nAuto Fan Mode - Fan Cycles on Call for Heating  or Cooling (Occ or Unoc)\r\nSmart Fan Mode - Fan is ON Continuously during Occ Mode, Fan Cycles in Unoc Mode~"
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 866758,
+                "PointName": "4200_UNV02",
+                "PointType": 8,
+                "PointInst": 866758,
+                "DevInst": 866758
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 866759,
+                "PointName": "4200_UNV02_Viconics01",
+                "PointType": 144,
+                "PointInst": 866759,
+                "DevInst": 866758
+            }
+       ]
+    }, { 
+        "Name" : "4760_STEAM1_LBS", 
+        "name1" : "4760", 
+        "name2" : "STEAM1", 
+        "name3" : "LBS", 
+        "name4" : "", 
+        "_Name" : "4760_steam1_lbs", 
+        "_name1" : "4760", 
+        "_name2" : "steam1", 
+        "_name3" : "lbs", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 13, 
+        "_rmuModel" : 9, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Accumulator", 
+            "eValue" : 128, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 1,
+            "Value": 603065.0
+        },
+        "Engineering Units": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "LBS "
+        },
+        "Pulse Weight": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Rate Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "Measures BLDG steam usage."
+        },
+        "Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "3",
+            "eValue": 3,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Fast Pulse": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 3
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Unsigned Double",
+            "eValue": 18
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 255
+        },
+        "Trend Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Trend Interval": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 3599
+        },
+        "Trend COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Maximum Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0e+10
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "~Measures BLDG. Steam usage~"
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 91469,
+                "PointName": "4760_UNV01",
+                "PointType": 8,
+                "PointInst": 91469,
+                "DevInst": 91469
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 58394,
+                "PointName": "4760_UNV01_STM METER01",
+                "PointType": 144,
+                "PointInst": 58394,
+                "DevInst": 91469
+            }
+       ]
+    }, { 
+        "Name" : "HSUBS3_KW1_KWH", 
+        "name1" : "HSUBS3", 
+        "name2" : "KW1", 
+        "name3" : "KWH", 
+        "name4" : "", 
+        "_Name" : "hsubs3_kw1_kwh", 
+        "_name1" : "hsubs3", 
+        "_name2" : "kw1", 
+        "_name3" : "kwh", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 19, 
+        "_rmuModel" : 3, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Accumulator", 
+            "eValue" : 128, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 1,
+            "Value": 0.0
+        },
+        "Engineering Units": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "KWH "
+        },
+        "Pulse Weight": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 200.0
+        },
+        "Rate Period": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Channel": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "1",
+            "eValue": 1,
+            "ValueOptions": {
+                "0": 0,
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7
+            }
+        },
+        "Fast Pulse": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Instance": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 1
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 1
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 50
+        },
+        "Trend Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Trend Interval": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 3599
+        },
+        "Trend COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 100.0
+        },
+        "Maximum Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0e+10
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 100.0
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": ""
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 53226,
+                "PointName": "4250_UNV01",
+                "PointType": 8,
+                "PointInst": 53226,
+                "DevInst": 53226
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 53342,
+                "PointName": "4250_UNV01_IFC06",
+                "PointType": 144,
+                "PointInst": 53342,
+                "DevInst": 53226
+            }
+       ]
+    }, { 
+        "Name" : "4203_KW1_KWH", 
+        "name1" : "4203", 
+        "name2" : "KW1", 
+        "name3" : "KWH", 
+        "name4" : "", 
+        "_Name" : "4203_kw1_kwh", 
+        "_name1" : "4203", 
+        "_name2" : "kw1", 
+        "_name3" : "kwh", 
+        "_name4" : "", 
+        "_cfgRequired" : true, 
+        "_cfgDevice" : false, 
+        "_relDevice" : 129, 
+        "_relRMU" : 0, 
+        "_relPoint" : 0, 
+        "_devModel" : 5, 
+        "_rmuModel" : 8, 
+        "_parentUpi" : 0, 
+        "Point Type" : {
+            "ValueType" : 5, 
+            "Value" : "Accumulator", 
+            "eValue" : 128, 
+            "isDisplayable" : true, 
+            "isReadOnly" : true
+        }, 
+        "Out of Service": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Alarm State": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Normal",
+            "eValue": 0
+        },
+        "Reliability": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 5,
+            "Value": "Stop Scan",
+            "eValue": 129
+        },
+        "Status Flags": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 18,
+            "Value": 0
+        },
+        "Value": {
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "ValueType": 1,
+            "Value": 4.10848e+6
+        },
+        "Engineering Units": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "KWH "
+        },
+        "Pulse Weight": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 10.0
+        },
+        "Rate Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 0
+        },
+        "Description": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "9330"
+        },
+        "Channel": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "6",
+            "eValue": 6,
+            "ValueOptions": {
+                "1": 1
+            }
+        },
+        "Fast Pulse": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Instance": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 6
+        },
+        "Read Only": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Modbus Order": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Swap Both",
+            "eValue": 3
+        },
+        "Poll Register": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 6
+        },
+        "Poll Function": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "None",
+            "eValue": 0
+        },
+        "Poll Data Type": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 5,
+            "Value": "Bit 0",
+            "eValue": 0
+        },
+        "Trend Samples": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 4,
+            "Value": 50
+        },
+        "Trend Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "Trend Interval": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 900
+        },
+        "Trend COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 50.0
+        },
+        "Maximum Value": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 1.0e+10
+        },
+        "COV Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": true
+        },
+        "COV Increment": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 1,
+            "Value": 50.0
+        },
+        "Broadcast Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 7,
+            "Value": false
+        },
+        "Broadcast Period": {
+            "isDisplayable": false,
+            "isReadOnly": false,
+            "ValueType": 13,
+            "Value": 15
+        },
+        "Quality Code Enable": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 18,
+            "Value": 255
+        },
+        "Remarks": {
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "ValueType": 2,
+            "Value": "~Replaced 6-9-05 with Siemens 9330~"
+        },
+        "Point Refs": [
+            {
+                "PropertyName": "Device Point",
+                "PropertyEnum": 139,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 53226,
+                "PointName": "4203_JID01",
+                "PointType": 8,
+                "PointInst": 53226,
+                "DevInst": 53226
+            }, {
+                "PropertyName": "Remote Unit Point",
+                "PropertyEnum": 152,
+                "AppIndex": 0,
+                "isDisplayable": true,
+                "isReadOnly": false,
+                "Value": 53342,
+                "PointName": "4203_JID01_IFC26",
+                "PointType": 144,
+                "PointInst": 53342,
+                "DevInst": 53226
             }
        ]
     }]

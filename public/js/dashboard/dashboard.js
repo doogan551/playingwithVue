@@ -3504,12 +3504,13 @@ tou.utilityPages.Electricity = function() {
             var self = this,
                 data = new FormData();
 
-            data.append(file.name, file);
+            data.append('image', file, file.name);
 
             $.ajax({
                 url: '/dashboard/uploadBackground',
                 processData: false,
                 type: 'POST',
+                dataType: 'json',
                 cache: false,
                 contentType: false,
                 data: data
@@ -11418,13 +11419,14 @@ tou.utilityPages.Electricity = function() {
 
                     self.inAjax(true);
                     data = new FormData();
-                    data.append('csv', file);
+                    data.append('csv', file, file.name);
 
                     $.ajax({
                         url: '/api/meters/uploadCSV',
                         processData: false,
                         type: 'POST',
                         cache: false,
+                        dataType: 'json',
                         contentType: false,
                         data: data
                     }).done(function (response) {

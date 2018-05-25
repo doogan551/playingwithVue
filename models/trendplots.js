@@ -1,18 +1,13 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
+const TrendPlots = class TrendPlots {
 
-module.exports = {
+    getPoints(data, cb) {
+        const point = new Point();
+        let DAY = 60 * 60 * 24;
+        let upi = +data.id;
+        let days = +data.numDays;
+        let start = Math.floor(new Date().getTime() / 1000 - (days * DAY));
 
-    getPoints: function(data, cb) {
-        var DAY = 60 * 60 * 24;
-        var upi = +data.id;
-        var rows = +data.rows || 1000;
-        var days = +data.numDays;
-        var start = Math.floor(new Date().getTime() / 1000 - (days * DAY));
-        var startReq = new Date();
-        var end = +data.end;
-
-        var criteria = {
+        let criteria = {
             query: {
                 upi: upi,
                 timestamp: {
@@ -20,7 +15,6 @@ module.exports = {
                     $lt: new Date().getTime() / 1000
                 }
             },
-            collection: 'historydata',
             fields: {
                 _id: 0,
                 Value: 1,
@@ -28,13 +22,12 @@ module.exports = {
             }
         };
 
-        Utility.get(criteria, function(err, results) {
-            var c = results.length;
-            var ret = [];
-            var row;
-            var ts;
-            var prevDay;
-            var started = new Date();
+        point.getAll(criteria, (err, results) => {
+            let c = results.length;
+            let ret = [];
+            let row;
+            let ts;
+            let prevDay;
 
             results.reverse();
 
@@ -54,13 +47,12 @@ module.exports = {
 
             return cb(err, ret);
         });
-    },
+    }
 
-    getData: function(list, cb) {
+    getData(list, cb) {
+        const point = new Point();
         if (list) {
-
-            var criteria = {
-                collection: 'historydata',
+            let criteria = {
                 query: {
                     _id: {
                         $in: list
@@ -75,9 +67,12 @@ module.exports = {
                 }
             };
 
-            Utility.get(criteria, cb);
+            point.getAll(criteria, cb);
         } else {
             cb(null, []);
         }
     }
 };
+
+module.exports = TrendPlots;
+const Point = require('./point');

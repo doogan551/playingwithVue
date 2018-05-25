@@ -1,39 +1,45 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var Firmware = require('../models/firmware');
+let express = require('express');
+let router = express.Router();
 
-// Checked
-router.get('/get/:model', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let Firmware = new(require('../models/firmware'))();
+let Point = require('../models/point');
 
-	Firmware.getModelFiles(data, function(err, files) {
-		if (err) return utils.sendResponse(res, {
-			err: err
-		});
+// POSTMAN
+router.get('/get/:model', function (req, res, next) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-		return utils.sendResponse(res, {
-			files: files
-		});
-	});
+    Firmware.getModelFiles(data, function (err, files) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
+        return utils.sendResponse(res, {
+            files: files
+        });
+    });
 });
-// NOT CHECKED - not used?
-router.get('/getRemoteUnits', function(req, res, next) {
-	var data = _.merge(req.params, req.body);
-	data.user = req.user;
+// POSTMAN
+router.get('/getRemoteUnits', function (req, res, next) {
+    const point = new Point();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-	Firmware.getRemoteUnits(data, function(err, remoteUnits) {
-		if (err) return utils.sendResponse(res, {
-			err: err
-		});
+    point.getRemoteUnits(data, function (err, remoteUnits) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-		return utils.sendResponse(res, {
-			remoteUnits: remoteUnits
-		});
-	});
+        return utils.sendResponse(res, {
+            remoteUnits: remoteUnits
+        });
+    });
 });
 
 module.exports = router;

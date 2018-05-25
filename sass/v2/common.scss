@@ -1,0 +1,116 @@
+$dtiBaseBlueGrey: #607d8b;
+$dtiHeaderBlueGrey: #455a64;
+$dtiGreyBackground: #e3e4e4;
+$dtiSelectedGreyBackground: #607d8b;
+
+.btn-small {
+  height: 24px;
+  line-height: 24px;
+  padding: 0 0.5rem;
+}
+
+.filled-in[type="checkbox"].filled-in:checked + label:after {
+  border: 2px solid $dtiBaseBlueGrey;
+  background-color: $dtiBaseBlueGrey;
+}
+
+.dropdown-content li > a, .dropdown-content li > span {
+  color: $dtiBaseBlueGrey !important;
+  font-family: "Roboto", sans-serif;
+  font-weight: normal;
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:after {
+  background-color: $dtiBaseBlueGrey !important;
+}
+
+[type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
+  border: 2px solid $dtiBaseBlueGrey !important;
+}
+
+.dtiModal {
+  line-height: 1.0;
+
+  span.pointName {
+    padding-left: 10px;
+  }
+
+  .modal-header {
+    color: whitesmoke;
+    background-color: $dtiHeaderBlueGrey;
+    height: 30px;
+
+    .modalTitle {
+      padding-top: 7px;
+      padding-left: 15px;
+    }
+  }
+
+  input:focus {
+    border-bottom: 1px solid $dtiBaseBlueGrey;
+    box-shadow: 0 1px 0 0 $dtiBaseBlueGrey;
+  }
+
+  .modal-content {
+    overflow: hidden !important;
+
+    .row .fromLabel,
+    .row .toLabel {
+      padding-top: 30px;
+    }
+  }
+
+  .row {
+    margin-bottom: 10px !important;
+  }
+  .row.tableHeader > .col {
+    float: left;
+    background-color: #eee;
+    color: #999;
+    border: 1px solid #ccc;
+    padding-top: 7px;
+    padding-left: 5px;
+    height: 30px;
+  }
+
+  .row.tableHeader > .checkName {
+    padding-top: 4px;
+    padding-left: 10px
+  }
+
+  .tablebody {
+    height: 80%;
+    overflow-y: auto;
+  }
+}
+
+.picker__date-display {
+  background-color: $dtiBaseBlueGrey;
+}
+
+.picker__weekday-display {
+  background-color: $dtiBaseBlueGrey;
+}
+
+.picker__close, .picker__today {
+  color: $dtiBaseBlueGrey;
+}
+
+.picker__day.picker__day--today {
+  color: $dtiBaseBlueGrey;
+  background-color: $dtiGreyBackground;
+}
+
+.picker__day--selected, .picker__day--selected:hover, .picker--focused .picker__day--selected {
+  background-color: $dtiSelectedGreyBackground;
+  color: #ffffff;
+}
+
+div.spinner-layer {
+  border-color: $dtiBaseBlueGrey !important;
+}
+
+input#pointDisplayField[type=text] + label:after {
+  width: 375px;
+}
+

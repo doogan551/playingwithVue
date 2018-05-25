@@ -1,659 +1,805 @@
-/* OVERRIDES */
-    /* bootstrap-datepicker.css */
-    .datepicker.dropdown-menu {
-        max-width: 275px;
-    }
-
-    /* bootstrap modal*/
-    #pointFilterModal .modal-dialog {
-        min-width: 1000px;
-    }
-
 /* Global page styles */
-    body {
-        color: #333;
-        font-family: "Segoe UI", Segoe, Tahoma, Geneva, sans-serif;
-        font-size: 13px;
-        background-color: #ccc;
-        margin: 0;
-        overflow: hidden;
-        height: 100%;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-        line-height: 1.55;
-    }
-    tr {
-        border-bottom: 1px solid #ccc;
-        cursor: default;
-    }
-    td {
-        height: 28px;
-        padding-left: 5px;
-        vertical-align: middle;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+body {
+    color: #333;
+    font-family: "Roboto", sans-serif;
+    font-size: 13px;
+    background-color: #ccc;
+    margin: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    line-height: 1.55;
+}
+
+tr {
+    border-bottom: 1px solid #ccc;
+    cursor: default;
+}
+
+td {
+    height: 28px;
+    padding: 0px 2px 0px 2px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* General purpose syles */
-    .scrollable {
-        overflow-y: scroll;
-        overflow-x: hidden;
-    }
-    .noScroll {
-        overflow: hidden;
-    }
-    .clearBoth {
-        clear: both;
-    }
-    .cursorPointer {
-        cursor: pointer;
-    }
-    .cursorDefault {
-        cursor: default;
-    }
-    .noSelect {
-        -webkit-user-select: none; /* Chrome all / Safari all */
-        -moz-user-select: none; /* Firefox all */
-        -ms-user-select: none; /* IE 10+ */
+.scrollable {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
 
-        -o-user-select: none;
-        user-select: none;
+.noScroll {
+    overflow: hidden;
+}
 
-        cursor: default;
-    }
-    .selectable {
-        -webkit-user-select: text; /* Chrome all / Safari all */
-        -moz-user-select: text; /* Firefox all */
-        -ms-user-select: text; /* IE 10+ */
+.clearBoth {
+    clear: both;
+}
 
-        -o-user-select: text;
-        user-select: text;
-    }
-    .truncate {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .hidden {
-        display: none;
-    }
-    .subTitle {
-        display: inline-block;
-        font-size: 20px;
-        color: #666;
-    }
-    .thinScroll::-webkit-scrollbar {
-        width: 7px;
-    }
-    .thinScroll::-webkit-scrollbar-track {
-        background-color: #FFF;
-    }
-    .thinScroll::-webkit-scrollbar-thumb {
-        border-radius: 5px;
-        background-color: #CCC;
-    }
+.cursorPointer {
+    cursor: pointer;
+}
+
+.cursorDefault {
+    cursor: default;
+}
+
+.displayDiv {
+    display: inline-block;
+}
+
+.hideDiv {
+    display: none !important;
+}
+
+.noSelect {
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
+
+    -o-user-select: none;
+    user-select: none;
+
+    cursor: default;
+}
+
+.selectable {
+    -webkit-user-select: text; /* Chrome all / Safari all */
+    -moz-user-select: text; /* Firefox all */
+    -ms-user-select: text; /* IE 10+ */
+
+    -o-user-select: text;
+    user-select: text;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hidden {
+    display: none;
+}
+
+.subTitle {
+    display: inline-block;
+    font-size: 20px;
+    color: #666;
+}
+
+.thinScroll::-webkit-scrollbar {
+    width: 7px;
+}
+
+.thinScroll::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+
+.thinScroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
 
 /* Title bar */
-    .titleBar {
-        position: absolute;
-        top: 5px;
-        left: 20px;
-    }
-    .titleBar .title {
-        display: inline-block;
-        margin-right: 40px;
-    }
-    .titleBar .title > span {
-        text-transform: uppercase;
-        color: #666;
-        font-size: 30px;
-    }
-    .titleBar .filterIcon {
-        color: #666;
-        position: relative;
-        display: inline-block;
-        font-size: 30px;
-        margin-right: 15px;    
-    }
-    .titleBar .ack {
-        position: relative;
-        top: -4px;
-        padding: 0 5px;
+.titleBar {
+    position: absolute;
+    display: flex;
+    top: 5px;
+    left: 20px;
+}
 
-        border: 2px solid #666;
-        border-radius: 3px;
+.titleBar .title {
+    display: inline-block;
+    margin-right: 40px;
+}
 
-        font-size: 15px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .titleBar .timeout {
-        color: red;
-        cursor: pointer;
-    }
-    .titleBar .resetFilter {
-        margin-right: 20px;
-        cursor: pointer;
-        font-size: 15px;
-    }
-    .resetFilter .x {
-        position: absolute; right:-5px; top:-4px;
-        border-radius: 6px;
-        font-size: 15px;
-        color:#000;
-        background-color:#CCC;
-    }
+.titleBar .title .dropdown-content{
+    width: 150px !important;
+}
 
-    .nav {
-        background-color: #313131;
-        box-shadow: 0 0 7px 0 rgba(50, 50, 50, .45);
-        border-radius: 3px;
-    }
-    .nav ul {
-        margin: 0;
-        padding: 0;
-        width: 225px;
-    }
-    .nav li {
-        list-style-type: none;
-        cursor: pointer;
-        padding: 5px 5px 5px 20px;
-        color: #808080;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, .4);
-        font-size: 14px;
-    }
-    .nav li:not(:first-child) {
-        border-top: 1px solid #3C3C3C;
-    }
-    .nav li:not(:last-child) {
-        border-bottom: 1px solid #282828;
-    }
-    .nav li:hover {
-        color: #4FC8EC;
-    }
-    .nav .active {
-        color: #ccc;
-        font-weight: bold;
-        cursor: default;
-    }
+.titleBar .title > span {
+    text-transform: uppercase;
+    color: #666;
+    font-size: 30px;
+}
+
+.titleBar .filterIcon {
+    color: #666;
+    position: relative;
+    display: inline-block;
+    font-size: 25px;
+    margin-right: 15px;
+}
+
+.titleBar .ack {
+    position: relative;
+    top: 0px;
+    padding: 0 5px;
+
+    border: 2px solid #666;
+    border-radius: 3px;
+
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.titleBar .timeout {
+    color: red;
+    cursor: pointer;
+}
+
+.titleBar .resetFilter {
+    margin-right: 20px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.resetFilter .x {
+    position: absolute;
+    right: -5px;
+    top: -4px;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #000;
+    background-color: #CCC;
+}
+
+.nav {
+    background-color: #313131;
+    box-shadow: 0 0 7px 0 rgba(50, 50, 50, .45);
+    border-radius: 3px;
+}
+
+.nav ul {
+    margin: 0;
+    padding: 0;
+    width: 225px;
+}
+
+.nav li {
+    list-style-type: none;
+    cursor: pointer;
+    padding: 5px 5px 5px 20px;
+    color: #808080;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, .4);
+    font-size: 14px;
+}
+
+.nav li:not(:first-child) {
+    border-top: 1px solid #3C3C3C;
+}
+
+.nav li:not(:last-child) {
+    border-bottom: 1px solid #282828;
+}
+
+.nav li:hover {
+    color: #4FC8EC;
+}
+
+.nav .active {
+    color: #ccc;
+    font-weight: bold;
+    cursor: default;
+}
 
 /* Filters */
-    #filters {
-        color: #333;
-    }
-    .filterContainer {
-        float: left;
-        margin-bottom: 5px;
-    }
-    .filterContainer:not(:last-child) {
-        margin-right: 20px;    
-    }
-    .filterContainer.withBorder {
-        line-height: 28px;
-        border: 1px solid #CCC;
-        border-radius: 3px;
-    }
-    .filterContainer.verticalMenu {
-        display: none;
-    }
-    .filterContainer .dropdown .title {
-        font-weight: bold;
-        color: #333;
-        font-size: 13px;
-    }
-    .filterContainer .dropdown a {
-        padding: 0;
-    }
-    .filterContainer .dropdown button {
-        height: 30px;
-        padding: 0 10px;
-    }
-    .filterContainer .filterIcon {
-        color: #666;
-        font-size: 28px;
-        cursor: pointer;
-        position: relative;
-        top: 1px;
-    }
-    .filterContainer .filterIcon i {
-        font-size: 18px;
-        position: relative;
-        top: -7px;
-    }
-    #timeDateFilters .filterIcon i {
-        margin-left: 5px;
-    }
-    .filterContainer .filterIcon:hover, .filterContainer .filterIcon.open, .filterContainer .filterActive {
-        color: #428bca;
-    }
-    .title > span:hover, .title.open > span {
-        color: #000;
-    }
-    .filterContainer .inputError {
-        border-color: red;
-    }
-    .filterContainer .filterError {
-        color: red;
-    }
-    .filterIcon.fa-pause {
-        font-size: 18px;
-        position: relative;
-        top: 7px;
-    }
+#filters {
+    color: #333;
+}
 
-    .filterSet {
-        color: #666;
-        display: inline-block;
-        border-radius: 3px;
-    }
-    .filterSetTitle {
-        color: #333;
-        display: inline-block;
-        border-right: 1px solid #CCC;
-        padding: 0 5px;
-        font-weight: bold;
-    }
-    .filterSet a {
-        color: #666;
-        text-decoration: none;
-        margin: 0 5px;
-        cursor: pointer;
-    }
-    .filterSet a:hover {
-        color: #000;
-    }
-    .filterSet .fa {
-        margin-right: 3px;
-    }
-    .filterText {
-        text-transform: uppercase;
-    }
+.filterContainer {
+    float: left;
+    margin-bottom: 5px;
+}
 
-    .dropdown-menu .title {
-        margin-bottom: 10px;
-    }
-    .dropdown-menu .title span {
-        font-weight: bold;
-    }
-    .dropdown-menu .title i {
-        position: absolute;
-        top: 5px;
-        right: 10px;
-        color: #CCC;
-    }
-    .dropdown-menu .title i:hover {
-        color: #888;
-    }
-    .dropdown-menu a.cancel {
-        position: relative; top: 2px;
-        margin-left: 20px;
-    }
-    #filters .dropdown-menu {
-        top: auto;
-        padding: 10px 15px 15px 15px;
-        margin-top: 5px;
-    }
-    .dropdown-menu .closeIt {
-        cursor: pointer;
-    }
-    .dropdown-menu .okCancel {
-        padding-top: 20px;
-    }
-    .dropdown-menu .fromTo {
-        float: left;
-        padding: 10px 20px 0 0;
-        width: 50px;
-        color: #666;
-    }
-    .dropdown-menu .dateTime {
-        float: left;
-    }
-    input.date, input.time {
-        margin: 10px 0;
-    }
-    
-    #timeDateFilters .dropdown-menu {
-        margin-left: 105px;
-    }
+.filterContainer:not(:last-child) {
+    margin-right: 15px;
+}
+
+.filterContainer.withBorder {
+    line-height: 28px;
+    border: 1px solid #CCC;
+    border-radius: 3px;
+}
+
+.filterContainer.verticalMenu {
+    display: none;
+}
+
+.filterContainer.verticalMenu .dropdown-button span {
+    color: #fff;
+    font-weight: normal;
+}
+
+.filterContainer.verticalMenu .dropdown-content {
+    width: 175px !important;
+}
+
+.filterContainer .dropdown .title {
+    font-weight: bold;
+    color: #333;
+    font-size: 13px;
+}
+
+.filterContainer .dropdown button {
+    height: 30px;
+    padding: 0 10px;
+}
+
+.filterContainer .filterIcon {
+    color: #666;
+    font-size: 28px;
+    cursor: pointer;
+    position: relative;
+    top: 1px;
+}
+
+.filterContainer .filterIcon i {
+    font-size: 18px;
+    position: relative;
+    top: -7px;
+}
+
+#timeDateFilters .filterIcon i {
+    margin-left: 5px;
+}
+
+.filterContainer .filterIcon:hover, .filterContainer .filterIcon.open, .filterContainer .filterActive {
+    color: #428bca;
+}
+
+.title > span:hover, .title.open > span {
+    color: #000;
+}
+
+.filterContainer .inputError {
+    border-color: red;
+}
+
+.filterContainer .filterError {
+    color: red;
+}
+
+.filterIcon.fa-pause {
+    font-size: 18px;
+    position: relative;
+    top: 7px;
+}
+
+.filterSet {
+    color: #666;
+    display: inline-block;
+    border-radius: 3px;
+}
+
+.filterSetTitle {
+    color: #333;
+    display: inline-block;
+    border-right: 1px solid #CCC;
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+.filterSet a {
+    color: #666;
+    text-decoration: none;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.filterSet a:hover {
+    color: #000;
+}
+
+.filterSet .fa {
+    margin-right: 3px;
+}
+
+.filterText {
+    text-transform: uppercase;
+}
+
+.dropdown-menu .title {
+    margin-bottom: 10px;
+}
+
+.dropdown-menu .title span {
+    font-weight: bold;
+}
+
+.dropdown-menu .title i {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    color: #CCC;
+}
+
+.dropdown-menu .title i:hover {
+    color: #888;
+}
+
+.dropdown-menu a.cancel {
+    position: relative;
+    top: 2px;
+    margin-left: 20px;
+}
+
+#filters .dropdown-menu {
+    top: auto;
+    padding: 10px 15px 15px 15px;
+    margin-top: 5px;
+}
+
+.dropdown-menu .closeIt {
+    cursor: pointer;
+}
+
+.dropdown-menu .okCancel {
+    padding-top: 20px;
+}
+
+.dropdown-menu .fromTo {
+    float: left;
+    padding: 10px 20px 0 0;
+    width: 50px;
+    color: #666;
+}
+
+.dropdown-menu .dateTime {
+    float: left;
+}
+
+input.date, input.time {
+    margin: 10px 0;
+}
+
+#timeDateFilters .dropdown-menu {
+    margin-left: 105px;
+}
 
 /* Alarm Details Panel */
-    .detailContainer {
-        position: absolute;
-        top: 60px;
-        right: -292px;
-        bottom: 20px;
-        width: 290px;
-        background-color: #FFF;
-        border-radius: 3px;
-    }
-    .detailContainer .fa-times {
-        position: absolute;
-        top: 10px;
-        right: 20px;
-        cursor: pointer;
-        padding-bottom: 10px;
-        color: #CCC;
-    }
-    .detailContainer .fa-times:hover {
-        color: #888;
-    }
-    .detailContainer .subTitle {
-        position:absolute; top: 10px; left: 20px;
-    }
-    .detailContent {
-        margin-top: 15px;
-        position: absolute; top: 40px; bottom: 20px; left: 20px; right: 10px;
-    }
-    .detailContent .name {
-        position: absolute; top: 0;
-    }
-    .detailContent .name i {
-        color: #888;
-    }
-    .detailContent .name .text {
-        position: absolute; top: 0; left: 20px;
-        width: 230px;
-    }
-    .detailContent .notifications {
-        position: absolute; top: 40px;
-    }
-    .notifications i {
-        color: #888; font-size: 25px;
-    }
-    .notifications .errorTxt {
-        color: red; margin-bottom: 10px;
-    }
-    .detailContent .displays {
-        position: absolute; top: 40px; bottom: 0; left: 0; right: 0;
-        padding-right: 10px;
-        max-width: 100%;
-    }
-    .thumb {
-        border-radius: 4px;
-        -webkit-transition: all 0.2s ease-in-out;
-        transition: all 0.2s ease-in-out;
-        max-width: 100%;
-        margin-bottom: 20px;
-    }
+.detailContainer {
+    position: absolute;
+    top: 36px;
+    right: -292px;
+    bottom: 20px;
+    width: 290px;
+    background-color: #FFF;
+    border-radius: 3px;
+}
+
+.detailContainer .fa-times {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+    padding-bottom: 10px;
+    color: #CCC;
+}
+
+.detailContainer .fa-times:hover {
+    color: #888;
+}
+
+.detailContainer .subTitle {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+}
+
+.detailContent {
+    margin-top: 15px;
+    position: absolute;
+    top: 40px;
+    bottom: 20px;
+    left: 20px;
+    right: 10px;
+}
+
+.detailContent .name {
+    position: absolute;
+    top: 0;
+}
+
+.detailContent .name i {
+    color: #888;
+}
+
+.detailContent .name .text {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 230px;
+}
+
+.detailContent .notifications {
+    position: absolute;
+    top: 40px;
+}
+
+.notifications i {
+    color: #888;
+    font-size: 25px;
+}
+
+.notifications .errorTxt {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.detailContent .displays {
+    position: absolute;
+    top: 40px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-right: 10px;
+    max-width: 100%;
+}
+
+.thumb {
+    border-radius: 4px;
+    -webkit-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    max-width: 100%;
+    margin-bottom: 20px;
+}
 
 /* Alarm Content */
-    #alarmContainer {
-        position: absolute;
-        top: 70px;
-        right: 20px;
-        bottom: 20px;
-        left: 20px;
-    }
-    #alarmContainer .mask {
-        position: absolute;
-        top: 20px;
-        right: 0;
-        left: 0;
-        bottom: 20px;
-        background-color: #FFF;
-        z-index: 500;
-        opacity: 0.75;
-    }
+#alarmContainer {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    bottom: 20px;
+    left: 20px;
+}
 
-    .header > div {
-        float: left;
-        background-color: #eee;
-        color: #999;
-        border: 1px solid #ccc;
-        padding-left: 5px;
-        height: 20px;
-    }
-    .header .colSelect {
-        cursor: pointer;
-    }
-    .colSelect {
-        min-width: 45px;
-        width: 45px;
-        text-align: left;
-    }
-    .colSelect input {
-        position:relative;
-        top:-1px;
-    }
-    .colSelect > i {
-        position:relative;
-        left: 5px;
-        top:-6px;
-    }
-    .colSelect .dropdown-menu {
-        top: auto;
-    }
-    .colAck {
-        width: 100px;
-        min-width: 100px;
-        padding-right: 5px;
-    }
-    .colClass {
-        width: 95px;
-        min-width: 95px;
-    }
-    .colTime {
-        width: 140px;
-        min-width: 140px;
-    }
-    .colTime > i {
-        position: relative; top: 3px; right: 5px;
-    }
-    .colDisp {
-        width: 45px;
-        text-align: center;
-    }
-    .colDisp > i {
-        position: relative;
-        left: -2px;
-    }
-    td.colDisp > i {
-        color: #428bca;
-        top: 2px;
-        font-size: 16px;
-    }
-    .header .colTime {
-        cursor: pointer;
-    }
-    .header .colMsg {
-        float: none;
-    }
-    .msgText {
-        cursor: pointer;
-        padding: 0 2px;
-    }
-    .msgText:hover {
-        text-decoration: underline;
-    }
+#alarmContainer .mask {
+    position: absolute;
+    top: 20px;
+    right: 0;
+    left: 0;
+    bottom: 20px;
+    background-color: #FFF;
+    z-index: 500;
+    opacity: 0.75;
+}
 
-    .alarms {
-        position: absolute;
-        top: 20px;
-        right: 0;
-        left: 0;
-        bottom: 20px;
-        overflow: auto;
-        min-height: 27px;
-    }
-    .alarms::-webkit-scrollbar {
-        width: 10px;
-    }
-    .alarms::-webkit-scrollbar-track {
-        /*-webkit-box-shadow: inset 0 0 0px rgba(0,0,0,0.3); */
-        background-color: #FFF;
-        /*width: 12px;*/
-    }
-    .alarms::-webkit-scrollbar-thumb {
-        border-radius: 5px;
-        background-color: #CCC;
-        /*-webkit-box-shadow: inset 0 0 6px rgba(204,204,204,1); */
-    }
-    .alarms .selectedRow {
-        background: #FFC;
-    }
-    .alarmsGradient {
-        position: absolute;
-        left: 0;
-        right: 10px;
-        bottom: 20px;
-        height: 10px;
-        background: -webkit-linear-gradient(top,rgba(255,255,255,0),rgba(255,255,255,1)); /*Safari 5.1-6*/
-        background: -o-linear-gradient(bottom,rgba(255,255,255,0),rgba(255,255,255,1)); /*Opera 11.1-12*/
-        background: -moz-linear-gradient(bottom,rgba(255,255,255,0),rgba(255,255,255,1)); /*Fx 3.6-15*/
-        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); /*Standard*/
-    }
+#alarmContainer .selectAlarmTypesDropdown ul {
+    width: auto !important;
+}
 
-    .tableButton {
-        background-color: #428bca;
-        color: #FFF;
-        padding: 0 5px;
-        margin: 0 2px;
-        border-radius:3px;
-        display: inline-block;
-        text-transform: uppercase;
-    }
-    .ackError {
-        background-color: red;
-    }
-    .acked {
-        background-color: #888;
-        color: #FFF;
-        cursor: default;
-        max-width: 85px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        position: relative; top: 2px;
-    }
+#alarmContainer .selectAlarmTypesDropdown .dropdown-button {
+    background-color: transparent;
+    color: #999;
+    box-shadow: none;
+    height: 20px;
+    margin-top: -14px;
+    margin-left: -4px;
+    padding: 0px;
+    width: 15px;
+    min-width: 0px;
+}
 
-    #alarmContainer p#noAlarms {
-        padding: 10px;
-    }
+#alarmContainer .selectAlarmTypesDropdown .dropdown-button::before {
+    content: "▼";
+}
 
-    .pages {
-        position: absolute;
-        bottom: -10px;
-        left: 5px;
-        right: 5px;
-    }
+.header > div {
+    float: left;
+    background-color: #eee;
+    color: #999;
+    border: 1px solid #ccc;
+    padding-left: 5px;
+    height: 25px;
+}
 
-    .pop {
-        display: inline-block;
-        margin-right: 20px;
-    }
-    .pop .fa {
-        margin-right: 5px;
-    }
-    .pop .fa-arrow-circle-up {
-        -ms-transform: rotate(45deg); /* IE 9 */
-        -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-        transform: rotate(45deg);
-    }
-    .pop .fa-arrow-circle-down {
-        -ms-transform: rotate(45deg); /* IE 9 */
-        -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-        transform: rotate(45deg);
-    }
+.header .colSelect {
+    cursor: pointer;
+}
 
-    .newAlarm {
-        position: absolute;
-        left: 0;
-        right: 10px;
-        z-index: 10;
-        display: none;
-        background-color: #FFC;
-        text-align: center;
-        text-decoration: none;
-        cursor: default;
-    }
-    .newAlarm span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    .newAlarmTop {
-        top: 20px;
-    }
-    .newAlarmBottom {
-        bottom: 20px;
-    }
+.header .colSelect.selectAll {
+    display: inline-flex;
+}
+
+.header .colSelect [type="checkbox"].filled-in + label {
+    margin-top: 4px;
+    margin-left: 0px !important;
+    padding-left: 20px;
+}
+
+.colSelect {
+    min-width: 35px;
+    width: 38px;
+    text-align: left;
+}
+
+.colSelect [type="checkbox"].filled-in + label {
+    vertical-align: -webkit-baseline-middle;
+    margin-left: 4px;
+}
+
+.colSelect [type="checkbox"].filled-in:checked + label:before {
+    top: -1px;
+    left: 0px;
+    width: 7px;
+    height: 12px;
+}
+
+.colSelect [type="checkbox"].filled-in:checked + label:after {
+    top: 0px;
+    left: 0px;
+    width: 15px;
+    height: 15px;
+}
+
+.colSelect [type="checkbox"].filled-in:not(:checked) + label:after {
+    height: 15px;
+    width: 15px;
+    background-color: transparent;
+    /*background-color: #eeeeee !important;*/
+    border: 1px solid #ccc;
+    top: 0px;
+    z-index: 0;
+}
+
+.colAck {
+    width: 100px;
+    min-width: 100px;
+    padding-right: 5px;
+}
+
+.colClass {
+    width: 95px;
+    min-width: 95px;
+}
+
+.colTime {
+    width: 140px;
+    min-width: 140px;
+}
+
+.colTime > i {
+    position: relative;
+    top: 3px;
+    right: 5px;
+}
+
+.colDisp {
+    width: 45px;
+    text-align: center;
+}
+
+.colDisp > i {
+    position: relative;
+    left: -2px;
+}
+
+td.colDisp > i {
+    color: #428bca;
+    top: 2px;
+    font-size: 16px;
+}
+
+.header .colTime {
+    cursor: pointer;
+}
+
+.header .colMsg {
+    float: none;
+}
+
+.msgText {
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.msgText:hover {
+    text-decoration: underline;
+}
+
+.alarms {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    left: 0;
+    bottom: 20px;
+    overflow: auto;
+    min-height: 27px;
+}
+
+.alarms::-webkit-scrollbar {
+    width: 10px;
+}
+
+.alarms::-webkit-scrollbar-track {
+    /*-webkit-box-shadow: inset 0 0 0px rgba(0,0,0,0.3); */
+    background-color: #FFF;
+    /*width: 12px;*/
+}
+
+.alarms::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+    /*-webkit-box-shadow: inset 0 0 6px rgba(204,204,204,1); */
+}
+
+.alarms .selectedRow {
+    background: #FFC;
+}
+
+.alarmsGradient {
+    position: absolute;
+    left: 0;
+    right: 10px;
+    bottom: 20px;
+    height: 10px;
+    background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Safari 5.1-6*/
+    background: -o-linear-gradient(bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Opera 11.1-12*/
+    background: -moz-linear-gradient(bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Fx 3.6-15*/
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)); /*Standard*/
+}
+
+.tableButton {
+    background-color: #428bca;
+    color: #FFF;
+    padding: 0 5px;
+    margin: 0 2px;
+    border-radius: 3px;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.ackError {
+    background-color: red;
+}
+
+.acked {
+    background-color: #888;
+    color: #FFF;
+    cursor: default;
+    max-width: 85px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    top: 2px;
+}
+
+#alarmContainer p#noAlarms {
+    padding: 10px;
+}
+
+.pages {
+    position: absolute;
+    bottom: -10px;
+    left: 5px;
+    right: 5px;
+}
+
+.newAlarm {
+    position: absolute;
+    left: 0;
+    right: 10px;
+    z-index: 10;
+    display: none;
+    background-color: #FFC;
+    text-align: center;
+    text-decoration: none;
+    cursor: default;
+}
+
+.newAlarm span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.newAlarmTop {
+    top: 20px;
+}
+
+.newAlarmBottom {
+    bottom: 20px;
+}
 
 /* Point Filter Modal */
-    .modalContainer {
-        margin: 30px auto;
-        width: 1000px;
-        background-color: #FFF;
-        border-radius: 5px;
-        padding: 10px;
-    }
-    .modalContainer .fa-times {
-        cursor: pointer;
-        padding-bottom: 10px;
-        color: #CCC;
-    }
-    .modalContainer .fa-times:hover {
-        color: #888;
-    }
-    .modalContainer iframe {
-        width: 980px;
-        height: 500px;
-        border: none;
-        border-radius: 5px;
-    }
-    .modalContainer button {
-        margin: 10px 0 0;
-        width: 100px;
-    }
+.modalContainer {
+    margin: 30px auto;
+    width: 1000px;
+    background-color: #FFF;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.modalContainer .fa-times {
+    cursor: pointer;
+    padding-bottom: 10px;
+    color: #CCC;
+}
+
+.modalContainer .fa-times:hover {
+    color: #888;
+}
+
+.modalContainer iframe {
+    width: 980px;
+    height: 500px;
+    border: none;
+    border-radius: 5px;
+}
+
+.modalContainer button {
+    margin: 10px 0 0;
+    width: 100px;
+}
 
 /* Other */
-    #Emergency, .Emergency {
-        color: red;
-    }
-    #Critical, .Critical {
-        color: #F90;
-    }
-    #Urgent, .Urgent {
-        color: #90F;
-    }
-    #Default, .Default {
-        color: #666;
-    }
+#Emergency, .Emergency {
+    color: red;
+}
 
-    .bodyMask {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: none;
-        z-index: 999;
-    }
-    .content {
-        position: absolute;
-        top: 60px;
-        bottom: 20px;
-        right: 20px;
-        left: 20px;
-        /*min-width: 400px;*/
-        overflow: hidden;
-        background-color: #FFF;
-        padding: 20px;
-        border-radius: 3px;
-    }
+#Critical, .Critical {
+    color: #F90;
+}
 
-/*@media print {
-  body{
-    visibility: hidden;
-  }
-  .alarms table {
-    visibility: visible;
-  }
-  .alarms table {
-    position: static;
-    left: 0;
+#Urgent, .Urgent {
+    color: #90F;
+}
+
+#Default, .Default {
+    color: #666;
+}
+
+.bodyMask {
+    position: absolute;
     top: 0;
-  }
-}*/
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+    z-index: 999;
+}
+
+.content {
+    position: absolute;
+    top: 36px;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    /*min-width: 400px;*/
+    overflow: hidden;
+    background-color: #FFF;
+    padding: 20px;
+    border-radius: 3px;
+}
