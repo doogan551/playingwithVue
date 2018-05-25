@@ -6549,7 +6549,7 @@ $.extend(dti, {
         },
         showPointSelector: () => {
             dti.fire('showPointSelector', {
-                callback: (data, popout) => {
+                callback (data, popout) {
                     dti.windows.openWindow({
                         upi: data._id,
                         popout
