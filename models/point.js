@@ -2331,6 +2331,7 @@ const Point = class Point extends Common {
             };
             let err;
             let code;
+            let updPoint = false;
             command = JSON.stringify(command);
 
             zmq.sendCommand(command, (error, msg) => {
@@ -2341,27 +2342,27 @@ const Point = class Point extends Common {
 
                 if (err) {
                     if (code >= 2300 && code < 2304) {
-                        this.update({
-                            query: {
-                                _id: newPoint._id
-                            },
-                            updateObj: {
-                                $set: {
-                                    _updPoint: true
-                                }
-                            }
-                        }, (dberr, result) => {
-                            if (dberr) {
-                                return callback(dberr, null);
-                            }
-                            return callback(err, 'success');
-                        });
+                        updPoint = true;
                     } else {
                         return callback(err, null);
                     }
-                } else {
-                    return callback(null, 'success');
                 }
+
+                this.update({
+                    query: {
+                        _id: newPoint._id
+                    },
+                    updateObj: {
+                        $set: {
+                            _updPoint: updPoint
+                        }
+                    }
+                }, (dberr, result) => {
+                    if (dberr) {
+                        return callback(dberr, null);
+                    }
+                    return callback(err, 'success');
+                });
             });
         } else {
             callback(null, 'success');
