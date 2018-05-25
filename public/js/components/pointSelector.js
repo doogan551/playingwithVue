@@ -1,6 +1,6 @@
 let PointSelector = class PointSelector {
-    constructor(config) {
-        this.$modal = config.$element.find('.modal');
+    constructor (config) {
+        this.config = $.extend(true, {}, config);
 
         this.modes = {
             CREATE: 'create',
@@ -11,19 +11,21 @@ let PointSelector = class PointSelector {
         this.initPointTypes();
         this.initBindings();
 
+        this.initDOM();
+
         dti.on('showPointSelector', (cfg) => {
             this.show(cfg);
         });
     }
 
-    defaultCallback(data, isMiddleClick) {
+    defaultCallback (data, isMiddleClick) {
         dtiUtility.openWindow({
             upi: data._id,
             popout: isMiddleClick
         });
     }
 
-    initPointTypes() {
+    initPointTypes () {
         let pointTypes;
         let ret = [];
         dtiUtility.getConfig('Utility.pointTypes.getAllowedPointTypes', [], (data) => {
@@ -42,15 +44,57 @@ let PointSelector = class PointSelector {
         this.pointTypeListClass = 'pointTypeList';
     }
 
-    initBindings() {
+    initBindings () {
+        ko.bindingHandlers.fadeVisible = {
+            init: function (element, valueAccessor) {
+                // Initially set the element to be instantly visible/hidden depending on the value
+                var value = valueAccessor();
+                $(element).toggle(ko.unwrap(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+            },
+            update: function (element, valueAccessor) {
+                // Whenever the value subsequently changes, slowly fade the element in or out
+                var value = valueAccessor(),
+                    $element = $(element);
+
+                if (ko.unwrap(value)) {
+                    dti.animations.fadeIn($element);
+                } else {
+                    dti.animations.fadeOut($element);
+                }
+            }
+        };
+
+        ko.bindingHandlers.delegate = {
+            init: (element, valueAccessor, allBindings) => {
+                var $element = $(element),
+                    delegations = ko.utils.unwrapObservable(valueAccessor()),
+                    makeHandler = (fn, scope = null) => {
+                        return (e) => {
+                            fn.call(scope, e);
+                            e.preventDefault();
+                        };
+                    };
+
+                dti.forEachArray(delegations, (cfg) => {
+                    $element.on(cfg.event, cfg.selector, makeHandler(cfg.handler, cfg.scope));
+                });
+
+                ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+                    dti.forEachArray(delegations, (cfg) => {
+                        $element.off(cfg.event, cfg.selector, makeHandler(cfg.handler));
+                    });
+                });
+            }
+        };
         let self = this;
         let bindings = ko.viewmodel.fromModel({
             searchString: '',
             results: [],
+            library: typeof Materialize !== 'undefined' ? 'materialize' : 'bootstrap',
             busy: false,
             focus: false,
-            mode: this.modes.DEFAULT,
             pointTypesShown: false,
+            mode: this.modes.DEFAULT,
             pointTypes: this.pointTypes,
             remoteUnitId: null,
             deviceId: null
@@ -145,7 +189,23 @@ let PointSelector = class PointSelector {
 
     }
 
-    getFlatPointTypes(list) {
+    initDOM () {
+        this.$modal = this.config.$element.find('.modal');
+
+        if (this.isLegacy()) {
+            this.$modal.modal({
+                show: false
+            });
+            this.$modal.on('shown.bs.modal', this.onModalOpen.bind(this));
+            this.$modal.on('hidden.bs.modal', this.onModalClose.bind(this));
+        }
+    }
+
+    isLegacy () {
+        return this.library() !== 'materialize';
+    }
+
+    getFlatPointTypes (list) {
         let ret = [];
 
         if (list && list.length > 0) {
@@ -169,7 +229,7 @@ let PointSelector = class PointSelector {
         return ret;
     }
 
-    handleBodyClick(event, $target) {
+    handleBodyClick (event, $target) {
         let cls = this.pointTypeListClass;
         let isInsidePointTypeList = function () {
             let el = $target[0];
@@ -196,7 +256,7 @@ let PointSelector = class PointSelector {
         }
     }
 
-    search(skipSearch = false) {
+    search (skipSearch = false) {
         //allows a one-time skip if true is passed in
         if (this._skipSearch) {
             this._skipSearch = false;
@@ -220,7 +280,7 @@ let PointSelector = class PointSelector {
         });
     }
 
-    normalizeSearchResults(results) {
+    normalizeSearchResults (results) {
         let getPointName = (path) => {
             let ret;
             dtiUtility.getConfig('Utility.getPointName', [path], (data) => {
@@ -234,11 +294,12 @@ let PointSelector = class PointSelector {
         });
     }
 
-    openRow(e, popout = false) {
+    openRow (e, popout = false) {
         let target = e.target;
         let data = ko.dataFor(target);
 
-        this.$modal.closeModal();
+        this.closeModal();
+
         dti.log('handleRowClick', data);
 
         // this.callback(data, popout);
@@ -251,13 +312,13 @@ let PointSelector = class PointSelector {
         }
     }
 
-    handleRowMouseDown(e) {
+    handleRowMouseDown (e) {
         let isMiddleClick = e.which === 2;
 
         this.openRow(e, isMiddleClick);
     }
 
-    handleRowClick(e) {
+    handleRowClick (e) {
         let mode = this.mode();
         if (mode !== this.modes.FILTER) {
             this.openRow(e);
@@ -265,11 +326,11 @@ let PointSelector = class PointSelector {
         }
     }
 
-    handleAcceptFilterClick(e) {
+    handleAcceptFilterClick (e) {
         let target = e.target;
         let data = ko.dataFor(target);
 
-        this.$modal.closeModal();
+        this.closeModal();
 
         this.callback({
             terms: data.searchString(),
@@ -278,7 +339,7 @@ let PointSelector = class PointSelector {
         this.callback = this.defaultCallback;
     }
 
-    handleSearchResults(results) {
+    handleSearchResults (results) {
         let ret = this.normalizeSearchResults(results);
 
         results.sort((a, b) => {
@@ -290,14 +351,14 @@ let PointSelector = class PointSelector {
     }
 
     //exposed methods
-    handleChoosePoint(data) {
+    handleChoosePoint (data) {
         dti.log(data);
         this.callback(data);
         dti.fire('pointSelected', data);
         this.callback = this.defaultCallback;
     }
 
-    setPointTypes(config, save, stayShown) {
+    setPointTypes (config, save, stayShown) {
         let pointTypes = null;
         let showAll = true;
         //if not object, just point types
@@ -327,7 +388,7 @@ let PointSelector = class PointSelector {
         });
     }
 
-    selectedPointTypes() {
+    selectedPointTypes () {
         let answer = [];
 
         dti.forEachArray(this.pointTypes(), (type) => {
@@ -339,7 +400,7 @@ let PointSelector = class PointSelector {
         return answer;
     }
 
-    show(config) {
+    show (config) {
         config = config || {};
         let pointTypes = this.getFlatPointTypes([]);
         if (typeof config === 'object') {
@@ -365,24 +426,42 @@ let PointSelector = class PointSelector {
             this.setPointTypes(pointTypes, true);
         }
 
+        this.openModal();
+    }
 
+    onModalOpen () {
+        // in case external apps want/need to tie into the modal visibility
+        dti.fire('pointSelectorOpen');
+        this.modalOpen = true;
+        this.focus(true);
+        this.search();
+    }
 
-        this.$modal.openModal({
-            ready: () => {
-                // in case external apps want/need to tie into the modal visibility
-                dti.fire('pointSelectorOpen');
-                this.modalOpen = true;
-                this.focus(true);
-                this.search();
-            },
-            complete: () => {
-                // in case external apps want/need to tie into the modal visibility
-                dti.fire('pointSelectorClose');
-                this.modalOpen = false;
-                this.focus(false);
-                this.callback = this.defaultCallback;
-            }
-        });
+    onModalClose () {
+        // in case external apps want/need to tie into the modal visibility
+        dti.fire('pointSelectorClose');
+        this.modalOpen = false;
+        this.focus(false);
+        this.callback = this.defaultCallback;
+    }
+
+    openModal () {
+        if (!this.isLegacy()) {
+            this.$modal.openModal({
+                ready: this.onModalOpen.bind(this),
+                complete: this.onModalClose.bind(this)
+            });
+        } else {
+            this.$modal.modal('show');
+        }
+    }
+
+    closeModal () {
+        if (!this.isLegacy()) {
+            this.$modal.closeModal();
+        } else {
+            this.$modal.modal('hide');
+        }
     }
 };
 
@@ -390,7 +469,7 @@ let PointSelector = class PointSelector {
 ko.components.register('point-selector', {
     synchronous: true,
     viewModel: {
-        createViewModel(params, componentInfo) {
+        createViewModel (params, componentInfo) {
             params.$element = $(componentInfo.element);
             let pointSelector = new PointSelector(params);
 

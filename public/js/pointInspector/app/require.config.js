@@ -8,6 +8,7 @@ var require = {
         'jquery-transit'        :'/js/lib/jquery.transit.min',
         'jquery-mousewheel'     :'/js/lib/jquery.mousewheel.min',
         'jquery-ui'             :'/js/lib/jquery-ui-1.10.3.custom.min',
+        'velocity'              :'/js/lib/velocity.min',
         'bootstrap'             :'/js/lib/bootstrap3.min',
         'bootstrap-3.3.4'       :'/js/lib/bootstrap-3.3.4.min',
         'bootstrap-switch'      :'/js/lib/bootstrap-switch.min',
@@ -28,7 +29,11 @@ var require = {
         'CMLang'                :'/js/lib/codeMirror/clike',
         'CMSearch'              :'/js/lib/codeMirror/search',
         'CMSearchCursor'        :'/js/lib/codeMirror/searchcursor',
-        'CMDialog'              :'/js/lib/codeMirror/dialog'
+        'CMDialog'              :'/js/lib/codeMirror/dialog',
+        'dti'                   :'/js/v2/dti',
+        'dtiCommon'             :'/js/v2/dtiCommon',
+        'dtiUtility'            :'/js/v2/dorsettUtility',
+        'pointSelector'         :'/js/components/pointSelector'
     },
     shim: {
         'socket'                : { exports: 'io' },
@@ -38,8 +43,13 @@ var require = {
         'jquery-mousewheel'     : { deps: ['jquery'] },
         'jquery-hilite'         : { deps: ['jquery', 'jquery-easing'] },
         'jquery-ui'             : { deps: ['jquery'] },
+        'velocity'              : { deps: ['jquery'] },
         'bootstrap'             : { deps: ['jquery'] },
         'bootstrap-switch'      : { deps: ['jquery', 'bootstrap'] },
-        'bannerJS'              : { deps: ['jquery', 'jquery-easing'] }
+        'bannerJS'              : { deps: ['jquery', 'jquery-easing'] },
+        'dti'                   : { deps: ['jquery'] },
+        'dtiCommon'             : { deps: ['jquery', 'dti', 'knockout.viewmodel'] },
+        'dtiUtility'            : { deps: ['jquery', 'dtiCommon'] },
+        'pointSelector'         : { deps: ['jquery', 'dtiUtility', 'velocity'] }
     }
 };

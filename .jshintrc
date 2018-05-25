@@ -26,6 +26,8 @@
         "dtiCommon": true,
         "kojs": true,
         "kodt": true,
-        "koUnwrap": true
+        "koUnwrap": true,
+        "Big": true,
+        "bannerJS": true
     }
 }

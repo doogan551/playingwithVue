@@ -1,4 +1,80 @@
 /*jslint white: true*/
+let __el = function (el) {
+    return el instanceof $ ? el[0] : el instanceof HTMLElement ? el : null;
+};
+let kodt = function (obj = window.$0) {
+    return ko.dataFor(__el(obj));
+};
+let kojs = function (obj = window.$0, depth = 0) {
+    let el = __el(obj);
+
+    let data = el ? kodt(obj) : obj;
+
+    let cycle = function (item) {
+        let ret = {};
+
+        dti.forEach(item, (val, prop) => {
+            let kval = koUnwrap(val);
+
+            if (kval === null || kval === undefined) {
+                ret[prop] = kval;
+            } else {
+                if (kval instanceof $) {
+                    ret[prop] = kval;
+                } else {
+                    if (Array.isArray(kval)) {
+                        let tmpArr = [];
+                        ret[prop] = tmpArr;
+                        dti.forEachArray(kval, (innerVal) => {
+                            let kinnerVal = koUnwrap(innerVal);
+                            tmpArr.push(kojs(kinnerVal, depth + 1));
+                        });
+                    } else if (typeof kval === 'object') {
+                        let tmpObj = {};
+                        ret[prop] = tmpObj;
+                        dti.forEach(kval, (innerVal, innerProp) => {
+                            let kinnerVal = koUnwrap(innerVal);
+                            tmpObj[innerProp] = kojs(kinnerVal, depth + 1);
+                        });
+                    } else {
+                        ret[prop] = koUnwrap(kval);
+                    }
+                }
+            }
+        });
+
+        return ret;
+    };
+
+    // skip nested element references (maximum call stack exceeded error)
+    if (!!el && depth > 0) {
+        return obj;
+    }
+
+    let kdata = koUnwrap(data);
+
+    if (Array.isArray(kdata)) {
+        let tempArr = [];
+        dti.forEachArray(kdata, (obj, idx) => {
+            let kobj = koUnwrap(obj);
+            tempArr.push(kojs(kobj, depth + 1));
+        });
+        return tempArr;
+    }
+
+    if (typeof kdata === 'object') {
+        return cycle(kdata);
+    }
+
+    return kdata;
+};
+let koct = function (obj = window.$0) {
+    return ko.contextFor(__el(obj));
+};
+let koUnwrap = function (value) {
+    return ko.utils.unwrapObservable(value);
+};
+
 
 //register ko components and binding handlers
 require(['knockout'], function (ko) {
@@ -220,7 +296,8 @@ define([
     'jquery-easing',
     'jquery-hilite',
     'bootstrap',
-    'bootstrap-switch'
+    'bootstrap-switch',
+    'pointSelector'
 ], function ($, ko, io, moment, Big, bannerJS) {
     var pointInspector = {},
         workspace = window.top.workspaceManager || window.opener.workspaceManager,

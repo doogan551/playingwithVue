@@ -1,7 +1,7 @@
 point-selector
 
 script#comp-point-selector-template(type="text/html")
-    .pointSelectorModal.modal.modal-fixed-header.blue-grey-form(data-bind="css: { 'modal-fixed-footer' : (mode() === 'filter'), 'filterMode' : (mode() === 'filter') }")
+    .pointSelectorModal.modal.modal-fixed-header.blue-grey-form.materialize(data-bind="css: { 'modal-fixed-footer' : (mode() === 'filter'), 'filterMode' : (mode() === 'filter') }")
         .modal-header
             .modalTitle(data-bind="text: modalText")
         .modal-content(data-bind="css: {busy: busy}, delegate: [{event: 'click', selector: 'tbody td', handler: handleRowClick, scope: $data}, {event: 'mousedown', handler: handleRowMouseDown, selector: 'tbody td', scope: $data}, {event: 'contextmenu', selector: '.pointTypeList span', handler: handleRightClick, scope: $data}]")
