@@ -603,6 +603,14 @@ $.extend(dti, {
                 dti.events._bodyClickCount++;
                 dti.events._bodyClickTime += new Date() - start;
             });
+
+            dti.on('pointSelectorOpen', () => {
+                displays.modalOpen = true;
+            });
+
+            dti.on('pointSelectorClose', () => {
+                displays.modalOpen = false;
+            });
         },
         _bodyClickHandlers: [],
         _bodyClickCount: 0,
@@ -2313,6 +2321,7 @@ var widgets = {
 };
 
 var displays = {
+    modalOpen: false,
     container: '.displayContainer',
     $container: $('.displayContainer'),
     tooltipAPI: {},
@@ -2753,15 +2762,17 @@ var displays = {
             }
         },
         handleMouseWheel (e) {
-            dti.timeGap('mousewheel');
-            let gap = e.deltaY * displays.settings.scrollZoomStep;
-            let zoom = displays.bindings.zoom;
-            let newZoom = parseFloat(zoom()) + gap;
+            if (!displays.modalOpen) {
+                dti.timeGap('mousewheel');
+                let gap = e.deltaY * displays.settings.scrollZoomStep;
+                let zoom = displays.bindings.zoom;
+                let newZoom = parseFloat(zoom()) + gap;
 
-            if (newZoom >= displays.settings.minZoom && newZoom <= displays.settings.maxZoom) {
-                zoom(newZoom);
+                if (newZoom >= displays.settings.minZoom && newZoom <= displays.settings.maxZoom) {
+                    zoom(newZoom);
+                }
+                dti.timeGapPause('mousewheel');
             }
-            dti.timeGapPause('mousewheel');
         },
         handleMouseDown (e) {
             let isWidget = $(e.target).closest('.dti-widget').length > 0;
