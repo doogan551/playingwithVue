@@ -382,16 +382,22 @@ let PointSelector = class PointSelector {
         }
 
         dti.forEachArray(this.pointTypes(), (type) => {
+            // found
             if (!pointTypes || pointTypes.indexOf(type.name()) !== -1) {
-                if (!rightClick) {
-                    type.visible(true);
+                if (!rightClick || type.visible()) {
+                    if (!rightClick) {
+                        type.visible(true);
+                    }
+                    type.selected(true);
                 }
-                type.selected(true);
             } else {
-                if (!rightClick) {
-                    type.visible(!rightClick && (showAll || stayShown));
+                // not found
+                if (!rightClick || type.visible()) {
+                    if (!rightClick) {
+                        type.visible(!rightClick && (showAll || stayShown));
+                    }
+                    type.selected(false);
                 }
-                type.selected(false);
             }
         });
     }
