@@ -2322,6 +2322,7 @@ var widgets = {
 
 var displays = {
     modalOpen: false,
+    tooltipOpen: false,
     container: '.displayContainer',
     $container: $('.displayContainer'),
     tooltipAPI: {},
@@ -2762,7 +2763,7 @@ var displays = {
             }
         },
         handleMouseWheel (e) {
-            if (!displays.modalOpen) {
+            if (!displays.modalOpen && !displays.tooltipOpen) {
                 dti.timeGap('mousewheel');
                 let gap = e.deltaY * displays.settings.scrollZoomStep;
                 let zoom = displays.bindings.zoom;
@@ -4503,6 +4504,8 @@ var displays = {
 
                     // dti.time('qtip');
 
+                    displays.tooltipOpen = true;
+
                     $el.qtip({
                         style: {
                             classes: 'qtip-light',
@@ -4587,6 +4590,7 @@ var displays = {
                                     event.preventDefault();
                                 }
 
+                                displays.tooltipOpen = false;
                             }
                         }
                     }, event);
