@@ -1,4 +1,4 @@
-let dti = {
+var dti = dti || {
     _bodyClickHandlers: [],
     _bodyClickCount: 0,
     _bodyClickTime: 0,

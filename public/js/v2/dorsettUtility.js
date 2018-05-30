@@ -24,7 +24,7 @@ dtiMessaging.openWindow(arguments);
 
 */
 
-var dtiUtility = {
+var dtiUtility = dtiUtility || {
     itemIdx: 0,
     lastIdNumber: 0,
     settings: {

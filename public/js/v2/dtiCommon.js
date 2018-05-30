@@ -7,7 +7,7 @@
     Config.js functions can be moved to this file, however, they should still be accessible as Config.whatever
     Search config.js for "getPointName" to see a very simple implementation example.
 */
-var dtiCommon = {
+var dtiCommon = dtiCommon || {
     // _private intended to only be used by dtiCommon API functions and not accessed outside of dtiCommon
     _private: {
         pointNameSeparator: '', // hex: e296ba   UTF8:  "\u25ba"   keyboard: Alt 16
@@ -88,8 +88,7 @@ var dtiCommon = {
             isTargetNodeProtectedApplication = () => {
                 let answer = false;
 
-                if (targetNode.nodeType === "Application"
-                    && protectedApplications.indexOf(targetNode.pointType) >= 0) {
+                if (targetNode.nodeType === "Application" && protectedApplications.indexOf(targetNode.pointType) >= 0) {
                     answer = true;
                 }
 
@@ -98,9 +97,7 @@ var dtiCommon = {
             isTargetNodeParentProtectedApplication = () => {
                 let answer = false;
 
-                if (targetNode.parentNode
-                    && targetNode.parentNode.nodeType === "Application"
-                    && protectedApplications.indexOf(targetNode.parentNode.pointType) >= 0) {
+                if (targetNode.parentNode && targetNode.parentNode.nodeType === "Application" && protectedApplications.indexOf(targetNode.parentNode.pointType) >= 0) {
                     answer = true;
                 }
 
@@ -150,9 +147,7 @@ var dtiCommon = {
                 return validPaste;
             },
             isValidAddAction = () => {
-                return (targetNode.nodeType !== "Reference"
-                    && !isTargetNodeProtectedApplication()
-                    && !isTargetNodeParentProtectedApplication());
+                return (targetNode.nodeType !== "Reference" && !isTargetNodeProtectedApplication() && !isTargetNodeParentProtectedApplication());
             },
             isValidAddLocationAction = () => {
                 return (targetNode.nodeType === "Location");
