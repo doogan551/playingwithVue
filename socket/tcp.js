@@ -27,7 +27,7 @@ module.exports = function (_common) {
 
                 runScheduleEntry(jbuf.point, function (err, point) {
                     err = (err) ? err : 'Success';
-                    let nameString = path.join(Config.Enums['Point Name Separator'].Value);
+                    let nameString = point.path.join(Config.Enums['Point Name Separator'].Value);
                     writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + '\n', function (err) {
                         // logger.info(err);
                     });
