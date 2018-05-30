@@ -2000,7 +2000,7 @@ const Point = class Point extends Common {
                                             activity: 'Program Edit'
                                         }));
                                     } else {
-                                        compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
+                                        compareArrays(newPoint[prop], oldPoint[prop], prop, activityLogObjects);
                                     }
                                 } else if (prop === 'Alarm Messages' || prop === 'Occupancy Schedule' || prop === 'Sequence Details' || prop === 'Security' || prop === 'Script Source File') {
                                     activityLogObjects.push(_.merge(_.cloneDeep(logData), {
@@ -2177,25 +2177,33 @@ const Point = class Point extends Common {
             }
         });
 
-        let compareArrays = (newArray, oldArray, activityLogObjects) => {
-            for (let i = 0; i < newArray.length; i++) {
-                if (newArray[i].Value !== oldArray[i].Value) {
-                    logData.prop = newArray[i].PropertyName;
-                    if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
-                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
-                            log: logData.prop + ' removed',
-                            activity: 'Point Property Edit'
-                        }));
-                    } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
-                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
-                            log: logData.prop + ' added',
-                            activity: 'Point Property Edit'
-                        }));
-                    } else {
-                        activityLogObjects.push(_.merge(_.cloneDeep(logData), {
-                            log: logData.prop + ' changed from ' + oldArray[i].PointName + ' to ' + newArray[i].PointName,
-                            activity: 'Point Property Edit'
-                        }));
+        let compareArrays = (newArray, oldArray, prop, activityLogObjects) => {
+            if (newArray.length !== oldArray.length) {
+                logData.prop = prop;
+                activityLogObjects.push(_.merge(_.cloneDeep(logData), {
+                    log: logData.prop + ' updated',
+                    activity: 'Point Property Edit'
+                }));
+            } else {
+                for (let i = 0; i < newArray.length; i++) {
+                    if (newArray[i].Value !== oldArray[i].Value) {
+                        logData.prop = newArray[i].PropertyName;
+                        if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
+                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
+                                log: logData.prop + ' removed',
+                                activity: 'Point Property Edit'
+                            }));
+                        } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
+                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
+                                log: logData.prop + ' added',
+                                activity: 'Point Property Edit'
+                            }));
+                        } else {
+                            activityLogObjects.push(_.merge(_.cloneDeep(logData), {
+                                log: logData.prop + ' changed from ' + oldArray[i].PointName + ' to ' + newArray[i].PointName,
+                                activity: 'Point Property Edit'
+                            }));
+                        }
                     }
                 }
             }
