@@ -340,7 +340,7 @@ let PointSelector = class PointSelector {
             terms: data.searchString(),
             pointTypes: this.selectedPointTypes()
         });
-        this.callback = this.defaultCallback;
+        this.callback = null;
     }
 
     handleSearchResults (results) {

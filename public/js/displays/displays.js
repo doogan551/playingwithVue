@@ -901,6 +901,10 @@ let BaseWidget = class Widget {
             dti.timeGapPause('widget Draggable');
         }
 
+        if (this.config.upi !== undefined) {
+            displays.socket.addUpiListener(this);
+        }
+
         dti.on('viewMode', () => {
             this.selected(false);
         });
@@ -938,10 +942,6 @@ let BaseWidget = class Widget {
         this.config = $.extend(true, defaults, config);
 
         this.id = dti.makeId();
-
-        if (this.config.upi !== undefined) {
-            displays.socket.addUpiListener(this);
-        }
 
         let me = this;
         this.draggableConfig = {
@@ -1023,7 +1023,7 @@ let BaseWidget = class Widget {
         let api = this.getTooltipAPI && this.getTooltipAPI();
 
         if (api) {
-            api.hide();
+            api.destroy(true);  
         }
     }
 
@@ -1928,21 +1928,11 @@ var widgets = {
 
                 this.upi(data._id);
                 this.name(data.path);
-
                 
-                if (pointType.match(/(Binary|MultiState|Analog)/)) {
-                    if (pointType.match(/(Binary|MultiState)/)) {
-                        let vOpt = this.setValueOptions(data, true);
+                if (pointType.match(/(Binary|MultiState)/)) {
+                    let vOpt = this.setValueOptions(data, true);
 
-                        this.valueOptions(vOpt.valueOptions);
-                        this.commandValue(vOpt.commandValue);
-                        this.commandName(vOpt.commandName);
-                    } else {
-                        this.commandValue(data.Value.Value);
-                    }
-                } else if (pointType === 'Report') {
-                    // for imported report action buttons
-                    this.reportType(data['Report Type'].Value);
+                    this.valueOptions(vOpt.valueOptions);
                 }
 
                 let el = this.getTooltipElement();
@@ -2944,7 +2934,7 @@ var displays = {
             dti.log('socket disconnect');
         },
         removeUpiListener (widget) {
-            var upi = widget.config.upi;
+            var upi = widget.upi();
 
             dti.forEachArray(displays.lookup.upiMatrix[upi], function removeListener(wdgt, idx) {
                 if (wdgt.id === widget.id) {
@@ -2955,7 +2945,7 @@ var displays = {
         },
 
         addUpiListener (widget) {
-            var upi = widget.config.upi;
+            var upi = widget.upi();
 
             if (!displays.lookup.upiMatrix[upi]) {
                 displays.lookup.upiMatrix[upi] = [];
@@ -2966,6 +2956,26 @@ var displays = {
     },
 
     //utilities
+    makePointRef (type, upi, idx) {
+        let pointRef = {
+            'AppIndex': displays.point['Point Refs'].length,
+            'DevInst': 0,
+            'isDisplayable': true,
+            'PropertyEnum': null,
+            'isReadOnly': false,
+            'PointInst': upi,
+            'PropertyName': 'Display ' + type,
+            'Value': upi
+        };
+
+        if (idx !== undefined) {
+            displays.point['Point Refs'][idx] = pointRef;
+        } else {
+            displays.point['Point Refs'].push(pointRef);
+        }
+
+        return pointRef;
+    },
     getDragOffsets () {
         var offset = displays.$container.offset();
 
@@ -3142,6 +3152,7 @@ var displays = {
             }
         } else {
             type = config.widgetType;
+            config.idx = idx;
         }
 
         let displaysID = dti.makeId();
@@ -4457,7 +4468,17 @@ var displays = {
                     displays.pointTypes[data._id] = data.pointType;
                     displays.upiNames[data._id] = data.path;
 
+                    let pointRef = displays.makePointRef(widget.type(), data._id, widget.idx());
+
+                    displays.socket.removeUpiListener(widget);
+
+                    displays.socket.socket.emit('dynamics', {
+                        'Point Refs': [pointRef]
+                    });
+
                     widget.handlePoint(data);
+
+                    displays.socket.addUpiListener(widget);
                 };
 
                 dtiUtility.showPointSelector();
