@@ -743,7 +743,7 @@ $.extend(dti, {
 
                 return groupName;
             },
-            close = function (event) {
+            close = function (skipClose = false) {
                 dti.off('thumbnailCaptured', self.handleThumbnail);
                 
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
@@ -773,7 +773,10 @@ $.extend(dti, {
                         dti.destroyObject(self, true);
                     }, 1000);
                 } else {
-                    dti.windows.closePopup(self.popupID, dti.settings.webEndpoint + self.bindings.url());
+                    if (!skipClose) {
+                        dti.trace('home closing window', self.popupID, self.bindings.url(), event);
+                        dti.windows.closePopup(self.popupID, dti.settings.webEndpoint + self.bindings.url());
+                    }
                     setTimeout(() => {
                         dti.destroyObject(self, true);
                     }, 1000);
@@ -888,8 +891,7 @@ $.extend(dti, {
                                 }
 
                                 self.win.window.onunload = () => {
-                                    dti.log('closing window');
-                                    self.bindings.close();
+                                    self.bindings.close(true);
                                 };
                             };
                         } else {
@@ -973,7 +975,7 @@ $.extend(dti, {
                                 if (config.popout) {
                                     let width = message.parameters.width || self.win.outerWidth;
                                     let height = (message.parameters.height && message.parameters.height + 50) || self.win.outerHeight;
-                                    dti.log('home resizing to:', width, 'x', height);
+                                    dti.trace('home resizing to:', width, 'x', height);
                                     self.win.resizeTo(width, height);
                                     finish(true);
                                 } else {
