@@ -101,57 +101,60 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                     $searchInput.css('width', 175);
                 });
             };
+        if (self.id !== 0) {
+            this.gettingData(true);
+            getData(self.id).done(function (data) {
+                var pointRefs = [],
+                    dependencies = [],
+                    cleanProperties = function (item) {
+                        item['Device Name'] = item.Device ? item.Device.pathString : '';
+                        item['Point Type'] = item['Point Type'] ? item['Point Type'] : '';
+                        item.Property = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
+                        item.pathString = item.pathString ? item.pathString : '';
+                    };
 
-        this.gettingData(true);
-        getData(self.id).done(function (data) {
-            var pointRefs = [],
-                dependencies = [],
-                cleanProperties = function (item) {
-                    item['Device Name'] = item.Device ? item.Device.pathString : '';
-                    item['Point Type'] = item['Point Type'] ? item['Point Type'] : '';
-                    item.Property = item.extendedProperty ? item.extendedProperty : (item.Property ? item.Property : '');
-                    item.pathString = item.pathString ? item.pathString : '';
+                var buildPathString = function (path) {
+                    return workspace.config.Utility.getPointName(path);
                 };
 
-            var buildPathString = function (path) {
-                return workspace.config.Utility.getPointName(path);
-            };
-
-            if (data.err) {
-                if (data.err === 'Point not found.') {
-                    console.log('  getData(' + (self.id || self.upi) + ') = ' + data.err);
+                if (data.err) {
+                    if (data.err === 'Point not found.') {
+                        console.log('  getData(' + (self.id || self.upi) + ') = ' + data.err);
+                    }
+                } else {
+                    pointRefs = data.Involvement['Point Refs'];
+                    pointRefs.forEach((pointRef) => {
+                        pointRef.pathString = buildPathString(pointRef.path);
+                        if (!!pointRef.Device) {
+                            pointRef.Device.pathString = buildPathString(pointRef.Device.path);
+                        }
+                        console.log(pointRef);
+                    });
+                    dependencies = data.Involvement.Dependencies;
+                    dependencies.forEach((dependency) => {
+                        dependency.pathString = buildPathString(dependency.path);
+                        if (!!dependency.Device) {
+                            dependency.Device.pathString = buildPathString(dependency.Device.path);
+                        }
+                        console.log(dependency);
+                    });
+                    pointRefs.forEach(cleanProperties);
+                    dependencies.forEach(cleanProperties);
                 }
-            } else {
-                pointRefs = data.Involvement['Point Refs'];
-                pointRefs.forEach((pointRef) => {
-                    pointRef.pathString = buildPathString(pointRef.path);
-                    if(!!pointRef.Device) {
-                        pointRef.Device.pathString = buildPathString(pointRef.Device.path);
-                    }
-                    console.log(pointRef);
-                });
-                dependencies = data.Involvement.Dependencies;
-                dependencies.forEach((dependency) => {
-                    dependency.pathString = buildPathString(dependency.path);
-                    if(!!dependency.Device) {
-                        dependency.Device.pathString = buildPathString(dependency.Device.path);
-                    }
-                    console.log(dependency);
-                });
-                pointRefs.forEach(cleanProperties);
-                dependencies.forEach(cleanProperties);
-            }
-            self.pointRefs = pointRefs;
-            self.dependencies = dependencies;
+                self.pointRefs = pointRefs;
+                self.dependencies = dependencies;
 
-            self.networkError(false);
-            self.searchTerm.valueHasMutated(); // Force our computed to run & populate DOM
-        }).fail(function (jqXHR, textStatus) {
-            console.log('Ajax requst failed.', textStatus, jqXHR);
-            self.networkError(true);
-        }).always(function () {
+                self.networkError(false);
+                self.searchTerm.valueHasMutated(); // Force our computed to run & populate DOM
+            }).fail(function (jqXHR, textStatus) {
+                console.log('Ajax requst failed.', textStatus, jqXHR);
+                self.networkError(true);
+            }).always(function () {
+                self.gettingData(false);
+            });
+        } else {
             self.gettingData(false);
-        });
+        }
         initDOM();
     };
     ViewModel.prototype.openPointReview = function (data, e) {
