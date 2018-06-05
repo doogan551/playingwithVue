@@ -34,7 +34,14 @@ const Calendar = class Calendar extends Common {
             year: 1,
             _id: 0
         };
-        this.getAll({query, fields}, cb);
+        let sort = {
+            year: 1
+        };
+        this.getAll({
+            query,
+            fields,
+            sort
+        }, cb);
     }
 
     newDate(data, cb) {

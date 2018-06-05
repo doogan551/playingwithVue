@@ -1540,7 +1540,7 @@ var backupViewModel = function () {
         if (data.err) {
             self.backupMsg('Error: ' + data.err);
         } else {
-            self.backupMsg(data);
+            self.backupMsg('Backup starting.');
         }
         self.showBackupMsg(true);
     });
