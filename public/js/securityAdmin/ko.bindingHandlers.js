@@ -95,7 +95,7 @@ $(function() {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
             var $imgElement = $(element),
                 allBindings = allBindingsAccessor(),
-                imageUrl = 'img/users/' + ko.utils.unwrapObservable(valueAccessor());
+                imageUrl = 'img/client/users/' + ko.utils.unwrapObservable(valueAccessor());
             // console.log(imageUrl);
             $("<img/>")
                 .load(function() { /*console.log('binding',imageUrl);*/$imgElement.css({backgroundImage: 'url(' + imageUrl + ')'}); })

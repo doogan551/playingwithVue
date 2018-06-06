@@ -368,7 +368,7 @@ var dorsett = (function() {
                         console.log('success', data.imageUrl);
                         //dorsett.editData.Photo.Value(data.imageUrl);
                         $('#singlePhoto').css({
-                            backgroundImage: 'url(img/users/' + data.imageUrl + ')'
+                            backgroundImage: 'url(img/client/users/' + data.imageUrl + ')'
                         });
                         dorsett.getUsers();
                         dorsett.getGroups();
