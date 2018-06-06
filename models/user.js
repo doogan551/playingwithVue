@@ -253,7 +253,7 @@ const User = class User extends Common {
         let filename = data.name;
         let imgData = image.replace(/^data:image\/\w+;base64,/, '');
 
-        fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', (err) => {
+        fs.writeFile(process.cwd() + '/public/img/client/users/' + filename, imgData, 'base64', (err) => {
             if (!err) {
                 let criteria = {
                     query: {
