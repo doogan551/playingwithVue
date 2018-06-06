@@ -16,7 +16,7 @@
                     input.medium.filled-in(data-bind="click: function () { return $root.userFilterClick($element, $index()) }, checked: $data.isSelected, attr: { id: 'userSelected_' + $index()}", type="checkbox")
                     label.blue-grey-text(data-bind="attr: { for: 'userSelected_' + $index()}")
                 .col.s1.photo
-                    img(data-bind='attr: { src: "/img/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
+                    img(data-bind='attr: { src: "/img/client/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
                 .col.s10.user
                     span.selectable(data-bind="text: username")
     .modal-footer

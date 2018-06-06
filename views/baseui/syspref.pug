@@ -96,12 +96,12 @@ html
                                 td.month(data-bind="text: $parent.getMonth($data)")
                                 td.icon
                                     a.showOnHover(href='#', data-bind="click: $parent.decrementDay", title='Click to subtract one day')
-                                        img(src='/img/icon_minus.png')
+                                        img(src='/img/dti/icon_minus.png')
                                 td.date
                                     span.dateText(data-bind="text: date")
                                 td.icon
                                     a.showOnHover(href='#', data-bind="click: $parent.incrementDay", title='Click to add one day')
-                                        img(src='/img/icon_plus.png')
+                                        img(src='/img/dti/icon_plus.png')
                                 td.spacer15
                                 td.clickToEdit(data-bind="clickEdit: comment")
                                     span(data-bind="text: comment")
@@ -109,7 +109,7 @@ html
                                 td &nbsp;
                                 td.icon
                                     a.showOnHover(href='#',data-role='none', data-bind='click: $parent.delete', title='Click to delete this entry')
-                                        img(src='/img/icon_delete.png')
+                                        img(src='/img/dti/icon_delete.png')
 
                     div(data-bind="visible: holidays().length == 0")
                         |No holidays have been defined for this year. Copy calendar from year:&nbsp;
@@ -123,7 +123,7 @@ html
                         //div#jqxDateTimeInput
                         div#jqxCalendar
                         span(onClick='javascript:$("#jqxCalendar").toggle()')
-                            img(src='/img/icon_calendarAdd.png')
+                            img(src='/img/dti/icon_calendarAdd.png')
                         span.italics &nbsp; Click the calendar to add a holiday.&nbsp;
 
             // ------ Controllers -----------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ html
                                         td.controllerDelete
                                             span(class="showOnHover valign pull-right" data-bind="visible: !$data.isUser")
                                                 a(href="#", title="Delete", data-bind="click: $parent.deleteController")
-                                                    img(src="/img/icon_delete.png")
+                                                    img(src="/img/dti/icon_delete.png")
 
                     //- div(style="width: 100%")
                     //-     #controllerGrid.di-grid
@@ -299,7 +299,7 @@ html
                                 td.networkDelete
                                     span(class="showOnHover valign pull-left" data-bind="visible: !$data.isDefault()")
                                         a(href="#", title="Delete", data-bind="click: $parent.removeNetwork")
-                                            img(src="/img/icon_delete.png")
+                                            img(src="/img/dti/icon_delete.png")
                                 td.clickToEdit(data-bind="clickEdit: $data['IP Network Segment'], event:{click:$parent.setSegment}")
                                     span(data-bind="text: $data['IP Network Segment']")
                                     input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Network Segment'], event:{blur:$parent.checkUniqueSegment}")

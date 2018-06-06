@@ -1,5 +1,4 @@
-public/img/
-!public/img/dti/*
+public/img/client
 public/display_assets/
 logs/
 tmp/

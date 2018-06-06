@@ -3,7 +3,7 @@ var tou = {
     itemIdx: 0,
     idxPrefix: 'tou_',
     dateFormat: 'M-D-YYYY',
-    backgroundFolder: '/img/dashboard/backgrounds/',
+    backgroundFolder: '/img/dti/dashboard/backgrounds/',
     HOUR: 1000 * 60 * 60,
     DAY: 1000 * 60 * 60 * 24,
     WEEK: 1000 * 60 * 60 * 24 * 7,
@@ -2703,7 +2703,7 @@ var tou = {
     },
 
     bindings: {
-        backgroundImage: ko.observable('/img/dashboard/backgrounds/singleleaf.jpg'),
+        backgroundImage: ko.observable('/img/dti/dashboard/backgrounds/singleleaf.jpg'),
 
         showMainBackground: ko.observable(false),
 

@@ -9,7 +9,7 @@ $(document).ready(function(){
 
         //console.log(bg);
 
-        $(this).find('img').attr('src','/display_assets/assets/' + bg);
+        $(this).find('img').attr('src','/img/client/display_assets/' + bg);
 
         $(this).click(function(){
             window.parent.setImage($(this).find('.fname').html());
