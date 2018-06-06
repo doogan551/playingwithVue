@@ -119,7 +119,7 @@ const Report = class Report {
                         cb(null, reportResults);
                     }
                 } else {
-                    cb("no columns configured");
+                    cb('no columns configured');
                 }
             },
             getScheduleConfig = () => {
@@ -600,7 +600,7 @@ const Report = class Report {
                 }
             }
             docs.forEach((doc) => {
-                let pointType = doc["Point Type"].Value,
+                let pointType = doc['Point Type'].Value,
                     pointTemplate = Config.Templates.getTemplate(pointType);
                 for (let prop in doc) {
                     let newPropertyName = utils.getHumanProperty(prop),
@@ -694,7 +694,7 @@ const Report = class Report {
                         case 'EqualTo':
                             searchQuery.$and = [];
                             if (!internalProperty) {
-                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                searchKeyIsDisplayable[key + '.isDisplayable'] = {
                                     $eq: true
                                 };
                                 searchQuery.$and.push(searchKeyIsDisplayable);
@@ -755,7 +755,7 @@ const Report = class Report {
                             searchQuery.$and = [];
                             searchQuery.$and.push(searchKeyExists);
                             if (!internalProperty) {
-                                searchKeyIsDisplayable[key + ".isDisplayable"] = {
+                                searchKeyIsDisplayable[key + '.isDisplayable'] = {
                                     $eq: true
                                 };
                                 searchQuery.$and.push(searchKeyIsDisplayable);
@@ -1185,7 +1185,7 @@ const Report = class Report {
                 _id: upi
             },
             fields: {
-                Name: 1
+                path: 1
             }
         }, (err, point) => {
             if (!!point) {
