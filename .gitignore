@@ -19,6 +19,7 @@ apps/backup.log
 !*.dll
 debug.log
 *.bak
+*.db
 
 format\.js
 electron-dist/
