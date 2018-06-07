@@ -21,7 +21,7 @@ html
                 // ko if:$parent.canRead(tou.rawUtilities[$index()].Security)
                 //will be observable array of utilities
                 .icon(data-bind="css: { active: active }, click: activate")
-                    img(data-bind="attr: { src: '/img/dashboard/utilityicon_' + type + '.png'}")
+                    img(data-bind="attr: { src: '/img/dti/dashboard/utilityicon_' + type + '.png'}")
                 .title(data-bind="text: obName, click: activate")
                 .editUtility(data-bind="if: tou.isSystemAdmin(), visible: active, click: $root.editUtility")
                     i.editIcon.fa.fa-pencil
@@ -67,7 +67,7 @@ html
                 .content.flexFill.flexcolumn.flexcenter
                     .configRequired(data-bind="visible: !loaded()")
                         .configText Not Configured
-                        img.itemBackground(data-bind="attr: { src: '/img/dashboard_' + type() + '.png' }")
+                        img.itemBackground(data-bind="attr: { src: '/img/dti/dashboard_' + type() + '.png' }")
                     span(data-bind="visible: loaded")
                         span(data-bind="if: type() === 'Statistic'")
                             .value(data-bind="text: value")

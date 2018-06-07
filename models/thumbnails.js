@@ -33,7 +33,7 @@ const Thumbnails = class Thumbnails {
                         'id': point._id,
                         'name': point.Name,
                         'type': point['Point Type'].Value.toLowerCase(),
-                        'tn': fs.existsSync(__dirname + '/../public/img/thumbs/' + point._id + '.txt')
+                        'tn': fs.existsSync(__dirname + '/../public/img/client/thumbs/' + point._id + '.txt')
                     };
                     pageData.push(record);
                 });
@@ -90,7 +90,7 @@ const Thumbnails = class Thumbnails {
         });
     }
     saveOld(data, cb) {
-        let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.png',
+        let thumbDir = __dirname + '/../public/img/client/thumbs/' + data.id + '.png',
             base64Data = data.thumb.replace(/^data:image\/png;base64,/, '');
 
         fs.writeFile(thumbDir, base64Data, 'base64', cb
@@ -109,7 +109,7 @@ const Thumbnails = class Thumbnails {
         );
     }
     save(data, cb) {
-        let thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.txt',
+        let thumbDir = __dirname + '/../public/img/client/thumbs/' + data.id + '.txt',
             _data = data.bgColorHex + '||' + data.thumb;
 
         fs.writeFile(thumbDir, _data, 'utf8', () => {

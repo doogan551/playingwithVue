@@ -2398,7 +2398,7 @@ var displays = {
         loaded: false,
         backgroundImage: '',
         backgroundImageData: '',
-        backgroundPath: '/display_assets/assets/',
+        backgroundPath: '/img/client/display_assets/',
         backgroundColor: '#ffffff',
         scale: 100,
         zoom: 100,

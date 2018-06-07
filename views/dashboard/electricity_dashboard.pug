@@ -1,4 +1,4 @@
-.bgImage(data-bind="style: { opacity: bgOpacity()/100, backgroundColor: '#' + bgColor(), backgroundImage: 'url(/img/dashboard/backgrounds/' + background() + ')' }")
+.bgImage(data-bind="style: { opacity: bgOpacity()/100, backgroundColor: '#' + bgColor(), backgroundImage: 'url(/img/dti/dashboard/backgrounds/' + background() + ')' }")
 .bgOverlay(data-bind="style: { opacity: (100 - bgBrightness())/100 }")
 .topBar.topBarDashboard(data-bind="css: {viewMode: !isEditMode(), editMode: isEditMode()}")
     // ko foreach: headerItems
@@ -31,18 +31,18 @@
     .addItemBar.showInEdit.flexrow(data-bind="visible: !configRequired(), dragAndDrop: $page.addNewItem.bind($page), dropTarget: '.dashboard .mainContent', targetClass: '.drag'")
         .drag(data-type="Trend")
             div Trend
-            img(src='/img/dashboard_Trend.png')
+            img(src='/img/dti/dashboard/dashboard_Trend.png')
         .drag(data-type="Statistic")
             div Statistic
-            img(src='/img/dashboard_Statistic.png')
+            img(src='/img/dti/dashboard/dashboard_Statistic.png')
         .drag(data-type="Gauge")
             div Gauge
-            img(src='/img/dashboard_Gauge.png')
+            img(src='/img/dti/dashboard/dashboard_Gauge.png')
         .flexrow.background
             .flexcolumn.rm20px
                 span Background
                 a(href="javascript://", data-bind="click: showBackgroundModal.bind($page.bindings)")
-                    .backgroundPreview.flexcenteritem(data-bind="style: {backgroundColor: '#' + bgColor(), backgroundImage: 'url(/img/dashboard/backgrounds/' + background() + ')' }")
+                    .backgroundPreview.flexcenteritem(data-bind="style: {backgroundColor: '#' + bgColor(), backgroundImage: 'url(/img/dti/dashboard/backgrounds/' + background() + ')' }")
             .sliders.flexrow
                 .bgSlider.flexcolumn
                     i.fa.fa-sun-o

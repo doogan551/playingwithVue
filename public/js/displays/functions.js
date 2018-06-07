@@ -1822,7 +1822,7 @@ displays = $.extend(displays, {
                                 bg = bg.replace('.BMP', '.png');
                                 bg = bg.replace('.bmp', '.png');
                                 bg = bg.replace(/ /g, '%20');
-                                bg = '/display_assets/assets/' + bg;
+                                bg = '/img/client/display_assets/' + bg;
                                 out = bg; //'url(' + bg + ')';
                             }
                         } else {

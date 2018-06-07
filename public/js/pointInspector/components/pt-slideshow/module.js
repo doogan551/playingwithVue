@@ -17,7 +17,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                 $icon       = $bg.find('.thumbIcon');
 
             $.ajax({
-                url     : '/img/thumbs/' + upi + '.txt',
+                url     : '/img/client/thumbs/' + upi + '.txt',
                 dataType: 'text',
                 type    : 'get'
             })

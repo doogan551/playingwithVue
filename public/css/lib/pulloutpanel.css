@@ -28,7 +28,7 @@ TABLE OF CONTENTS
 
 body {
   background: #fafafa;
-  background: url("/img/bg2.png");
+  background: url("/img/dti/bg2.png");
 }
 .page_wrapper {
     position: relative;
@@ -221,11 +221,11 @@ body {
 }
 .pocp #carousel_prev {
     right: 36px;
-    background: url('/img/previous.png') center center no-repeat;
+    background: url('/img/dti/previous.png') center center no-repeat;
 }
 .pocp #carousel_next {
     right: 6px;
-    background: url('/img/next.png') center center no-repeat;
+    background: url('/img/dti/next.png') center center no-repeat;
 }
 .pocp #carousel_prev:hover,
 .pocp #carousel_next:hover {

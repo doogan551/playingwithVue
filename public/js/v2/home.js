@@ -6860,7 +6860,7 @@ $.extend(dti, {
                         if (currThumb === undefined || currThumb === false) {
                             // dti.log('No thumb for upi', upi);
                             $.ajax({
-                                url: '/img/thumbs/' + upi + '.txt',
+                                url: '/img/client/thumbs/' + upi + '.txt',
                                 dataType: 'text',
                                 type: 'get'
                             })

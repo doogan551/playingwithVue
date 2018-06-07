@@ -198,6 +198,33 @@ let updateMSV = () => {
     });
 };
 
+const deleteFiles = (cb) => {
+    const fs = require('fs');
+    const rimraf = require('rimraf');
+    const dirs = ['./scripts/', './tmp/'];
+
+    async.each(dirs, (dir, nextDir) => {
+        fs.readdir(dir, (err, files) => {
+            async.eachSeries(files, (file, nextFile) => {
+                let filePath = dir + file;
+                fs.stat(filePath, (err, stat) => {
+                    if (stat.mtime.valueOf() < (Date.now() - (60 * 1000))) {
+                        rimraf(filePath, nextFile);
+                    } else {
+                        return nextFile();
+                    }
+                });
+            }, (err) => {
+                nextDir();
+            });
+        });
+    }, (err) => {
+        cb();
+    });
+};
+
 db.connect(connectionString.join(''), function (err) {
-    updateMSV();
+    deleteFiles((err) => {
+        console.log('done');
+    });
 });

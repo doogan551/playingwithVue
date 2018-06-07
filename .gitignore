@@ -1,5 +1,4 @@
-public/img/
-!public/img/dti/*
+public/img/client
 public/display_assets/
 logs/
 tmp/
@@ -20,6 +19,7 @@ apps/backup.log
 !*.dll
 debug.log
 *.bak
+*.db
 
 format\.js
 electron-dist/

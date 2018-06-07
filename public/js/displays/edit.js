@@ -950,7 +950,7 @@ displays = $.extend(displays, {
                             bg = bg.replace('.BMP', '.png');
                             bg = bg.replace('.bmp', '.png');
                             bg = bg.replace(/ /g, '%20');
-                            bg = '/display_assets/assets/' + bg;
+                            bg = '/img/client/display_assets/' + bg;
                             out = bg;//'url(' + bg + ')';
                         }
                     } else {
@@ -1184,7 +1184,7 @@ displays = $.extend(displays, {
                 if ($scope.serverImageBrowser.selectedFileName && $scope.serverImageBrowser.selectedFileName.length > 0) {
                     $scope[$scope.serverImageBrowser.displayObject][$scope.serverImageBrowser.displayField] = $scope.serverImageBrowser.selectedFileName;
                     if($scope.serverImageBrowser.displayField === "Background Picture") {
-                        $('#displayBg').attr('src', '/display_assets/assets/' +$scope.serverImageBrowser.selectedFileName);
+                        $('#displayBg').attr('src', '/img/client/display_assets/' +$scope.serverImageBrowser.selectedFileName);
                     }
                     displays.hasNewBackground = true;
                 }
