@@ -64,7 +64,14 @@ router.get('/edit/:upoint', function (req, res, next) {
         },
         processGpl = function (err, data) {
             if (!!err) {
-                completeWithError();
+                 if (err === 'sequenceNotFound') {
+                    res.locals.upi = false;
+                    res.locals.point = JSON.stringify({});
+                    res.locals.references = JSON.stringify([]);
+                    complete();
+                } else {
+                    completeWithError();
+                }
             } else {
                 res.locals.upi = upi;
                 res.locals.point = JSON.stringify(data.data || {
