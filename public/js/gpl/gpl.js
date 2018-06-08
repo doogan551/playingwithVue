@@ -163,10 +163,44 @@ var gpl = {
             newPoint: gpl.point
         });
 
-        gpl.log('doPointPackage', data);
-        gpl.socket.emit('doPointPackage', data);
+        let finishSave = () => {
+            gpl.log('doPointPackage', data);
+            gpl.socket.emit('doPointPackage', data);
 
-        cb();
+            cb();
+        };
+
+        if (!!gpl.isNew) {
+            gpl.socket.emit('addPoint', [{
+                newPoint: gpl.point
+            }]);
+
+            gpl.socket.once('pointUpdated', (data) => {
+                let msg;
+                let delay = 1000;
+                let point = data.points && data.points[0];
+
+                if (data.err) {
+                    msg = 'Save Error: ' + data.err;
+                    Materialize.toast(msg, delay);
+                } else {
+                    msg = 'Save Result: ' + data.message;
+                    gpl.point = point;
+                    gpl.upi = point._id;
+                    gpl.isNew = false;
+
+                    Materialize.toast(msg, delay);
+
+                    setTimeout(() => {
+                        finishSave();
+                    }, delay);
+                }
+            });
+        } else {
+            finishSave();
+        }
+
+        
     },
     isCyclic: function (obj) {
         var seenObjects = [];
@@ -314,6 +348,15 @@ var gpl = {
                 num++;
                 fn(complete);
             };
+
+        if (window.gplData.upi === false) {
+            let cfg = window.getWindowParameters();
+
+            //new display
+            gpl.point = window.gplData.point = cfg.pointData;
+
+            gpl.isNew = true;
+        }
 
         gpl._origPoint = $.extend(true, {}, window.gplData.point);
 
@@ -9297,7 +9340,7 @@ gpl.Manager = function () {
         let handleError = function (err) {
             window.alert('An unexpected error occurred: ' + err);
             gpl.fire('deleteblock', block, true);
-            gpl.labelCounters[block.type]; // ch1213 - don't decrement the label counter if an error was encountered
+            //gpl.labelCounters[block.type]; // ch1213 - don't decrement the label counter if an error was encountered
         };
 
         gpl.log(parameters.display);

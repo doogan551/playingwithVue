@@ -115,7 +115,7 @@ const Display = class Display {
         let filename = data.fname + '.gif';
         let frame = parseInt(data.frame, 10);
         let dirname = __dirname.replace(/\\/g, '/');
-        let assetPath = dirname + '/../public/display_assets/assets/';
+        let assetPath = dirname + '/../public/img/client/display_assets/';
         let frameDir = 'frames/';
         // retried = false,
         let filepath = assetPath + filename;
@@ -221,7 +221,7 @@ const Display = class Display {
             displayObject = JSON.parse(data.display),
             oldVersion,
             obj,
-            rootPath = __dirname + '/../public/display_assets/assets/',
+            rootPath = __dirname + '/../public/img/client/display_assets/',
             makeHandler = function (name) {
                 return function (err) {
                     if (err) {

@@ -26,7 +26,7 @@ const GPL = class GPL {
             if (!!seqData) {
                 getPointData();
             } else {
-                sendToJade('No sequence found!');
+                sendToJade('sequenceNotFound');
             }
         });
     }

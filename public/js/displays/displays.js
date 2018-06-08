@@ -3174,9 +3174,11 @@ var displays = {
         displays.bindings.backgroundImage = pic;
     },
     forEachWidget (fn) {
+        let c = 0;
         dti.forEach(displays.widgets, (widgets) => {
             dti.forEach(widgets, (widget) => {
-                fn(widget);
+                fn(widget, c);
+                c++;
             });
         });
     },
@@ -3194,11 +3196,15 @@ var displays = {
     save () {
         let data = new FormData();
         let widgetsToSave = [];
-        displays.forEachWidget((widget) => {
+        displays.point['Point Refs'] = [];
+        displays.forEachWidget((widget, idx) => {
             let config = widget.getConfig();
 
             if (!config.isPreview) {
                 widgetsToSave.push(config);
+                if (widget.upi && !!widget.upi()) {
+                    displays.makePointRef(widget.type(), widget.upi(), idx);
+                }
             }
         });
 
