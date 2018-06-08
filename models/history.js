@@ -1252,7 +1252,7 @@ const History = class History extends Common {
     }
 
     addToSQLite(points, cb) {
-        this.HistoryRecord.bulkCreate(points).then(() => {
+        this.HistoryRecord.bulkCreate(points, {ignoreDuplicates: true}).then(() => {
             cb();
             return null;
         }).catch(cb);
