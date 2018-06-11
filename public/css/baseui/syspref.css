@@ -53,8 +53,9 @@ img {
     top: 0px;
     bottom: 0px;
     height: 100%;
-    background-color: #333;
+    background-color: #fff;
     width: 180px;
+    border-right: 1px solid #607d8b;
 }
 
 #navbar ul {
@@ -67,22 +68,22 @@ img {
     display: block;
     font-size: 16px;
     padding:10px;
-    color: #CCC;
+    color: #000;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
     text-shadow:none;
     font-weight: normal;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid #607d8b;
 }
 
 #navbar li:hover {
-    color: #FFF;
-    background-color: #222;
+    color: #607d8b;
+    /*background-color: #222;*/
     cursor: pointer;
 }
 
 #navbar li.selected {
     color: #FFF;
-    background-color: #428C29;
+    background-color: #607d8b;
     cursor: pointer;
 }
 
@@ -474,12 +475,12 @@ tr:hover .showOnHover {
 /* control codes */
 
 /* Telemetry */
-tr th:first-child,
-tr td:first-child{
+#telemetry tr th:first-child,
+#telemetry tr td:first-child{
     width: 150px;
 }
-tr th:nth-child(3),
-tr td:nth-child(3){
+#telemetry tr th:nth-child(3),
+#telemetry tr td:nth-child(3){
     width: 250px;
 }
 #telemetryActionBar{
@@ -1120,6 +1121,12 @@ tr td:nth-child(3){
 .hideDiv {
     display: none;
 }
+.errorMessageRow {
+    border-bottom: none !important;
+}
+.errormessage {
+    color: red;
+}
 /*.policyList .policyTitle,
 .policyList .policyInfo {
     display: inline-block;
@@ -1132,5 +1139,3 @@ tr td:nth-child(3){
 .policyList .policyInfo {
     width: auto;
 }*/
-
-/* notifications 

@@ -1,46 +1,40 @@
-var Utility = require('../models/utility');
-var logger = require('../helpers/logger')(module);
-
-module.exports = {
-    getGplInfo: function(data, cb) {
-        var seqData,
-            sendToJade = function(err, pointdata) {
+const GPL = class GPL {
+    getGplInfo(data, cb) {
+        const point = new Point();
+        let seqData,
+            sendToJade = (err, pointdata) => {
                 // console.log('GPL:', 'got points');
-                cb(err,
-                    {
-                        data: seqData,
-                        pointdata: pointdata
-                    });
+                cb(err, {
+                    data: seqData,
+                    pointdata: pointdata
+                });
             },
-            getPointData = function() {
-                getGplPoints({
+            getPointData = () => {
+                this.getGplPoints({
                     seq: seqData,
                     user: data.user
                 }, sendToJade);
             };
 
-        Utility.getOne({
-            collection: 'points',
+        point.getOne({
             query: {
                 _id: data.upi
             }
-        }, function(err, result) {
+        }, (err, result) => {
             // console.log('GPL:', 'got point');
             seqData = result;
             if (!!seqData) {
                 getPointData();
             } else {
-                sendToJade("No sequence found!");
+                sendToJade('sequenceNotFound');
             }
-
         });
-    },
-    getReferences: function(data, cb) {
+    }
+    getReferences(data, cb) {
+        const point = new Point();
+        let upoint = parseInt(data.upoint, 10);
 
-        var upoint = parseInt(data.upoint, 10);
-
-        Utility.getOne({
-            collection: 'points',
+        point.getOne({
             query: {
                 _id: upoint
             },
@@ -49,68 +43,121 @@ module.exports = {
             }
         }, cb);
     }
-};
+    getGplPoints(data, cb) {
+        const point = new Point();
+        let c,
+            seq = data.seq,
+            list = seq.SequenceData,
+            editVersion = list.sequence.editVersion,
+            blocks,
+            dynamics,
+            pointRefs = seq['Point Refs'],
+            len,
+            block,
+            dynamic,
+            pointref,
+            tempData = [],
+            upis = [],
+            upisMap = {},
+            getTempPoint = (id) => { // ch918; added function
+                // "editVersion" : {
+                //      "block" : [...], 
+                //      "pointChanges" : {
+                //         "updates" : [
+                //             {
+                //                  "oldPoint" : {}, 
+                //                  "newPoint" : {
+                //                      _id: 0,
+                //                      id: "tempId_..." (where ... is some unique string)
+                //                  }
+                //             }
+                //         ], 
+                //         "deletes": []
+                //      }
 
-var getGplPoints = function(data, cb) {
-    var c,
-        seq = data.seq,
-        list = seq.SequenceData,
-        blocks,
-        dynamics,
-        pointRefs = seq["Point Refs"],
-        len,
-        block,
-        dynamic,
-        pointref,
-        upis = [],
-        getPointRef = function(pointRefIndex, referenceType) {
-            var answer;
-            if (pointRefIndex > -1) {
-                answer = pointRefs.filter(function(pointRef) {
-                    return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
-                });
-            }
-            return (!!answer ? answer[0] : null);
-        };
+                let arr = editVersion.pointChanges.updates || [];
+                let arrLen = arr.length;
+                let i = 0;
+                let point;
 
-    if (list && list.sequence) {
-        blocks = list.sequence.block || [];
-        len = blocks.length;
-        for (c = 0; c < len; c++) {
-            block = blocks[c];
-            pointref = getPointRef(block.pointRefIndex, "GPLBlock");
-            if (!!pointref) {
-                if (upis.indexOf(pointref.PointInst) === -1) {
-                    upis.push(pointref.PointInst);
+                for (i; i < arrLen ; i++) {
+                    point = arr[i].newPoint;
+                    if (point.id === id) {
+                        return point;
+                    }
                 }
-            }
-        }
 
-        dynamics = list.sequence.dynamic || [];
-        len = dynamics.length;
-        for (c = 0; c < len; c++) {
-            dynamic = dynamics[c];
-            pointref = getPointRef(dynamic.pointRefIndex, "GPLDynamic");
-            if (!!pointref) {
-                if (upis.indexOf(pointref.PointInst) === -1) {
-                    upis.push(pointref.PointInst);
-                }
-            }
-        }
-
-        Utility.getWithSecurity({
-            collection: 'points',
-            query: {
-                _id: {
-                    $in: upis
-                }
+                return null;
             },
-            data: {
-                user: data.user
-            }
-        }, cb);
-    } else {
-        cb(null, {});
-    }
+            getBlocksArray = (activeBlocks, editVersion) => {
+                let allBlocks = [];
 
+                if (!!activeBlocks) {
+                    allBlocks = allBlocks.concat(activeBlocks);
+                }
+
+                if (!!editVersion && !!editVersion.block) {
+                    allBlocks = allBlocks.concat(editVersion.block);
+                }
+
+                return allBlocks;
+            },
+            getPointRef = (pointRefIndex, referenceType) => {
+                let answer;
+                if (pointRefIndex > -1) {
+                    answer = pointRefs.filter((pointRef) => {
+                        return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
+                    });
+                }
+                return (!!answer ? answer[0] : null);
+            };
+
+        if (list && list.sequence) {
+            blocks = getBlocksArray(list.sequence.block, editVersion);
+            len = blocks.length;
+            for (c = 0; c < len; c++) {
+                block = blocks[c];
+                pointref = getPointRef(block.pointRefIndex, 'GPLBlock');
+                if (!!pointref) {
+                    let pointInst = pointref.PointInst;
+
+                    if (!upisMap[pointInst]) {
+                        // ch918; If the point ref refers to a temporary point, get the temporary point data
+                        if ((typeof pointInst === 'string') && (pointInst.indexOf('tempId') > -1) && editVersion) {
+                            tempData.push(getTempPoint(pointInst));
+                        } else {
+                            upis.push(pointInst);
+                        }
+                        upisMap[pointInst] = true;
+                    }
+                }
+            }
+
+            dynamics = list.sequence.dynamic || [];
+            len = dynamics.length;
+            for (c = 0; c < len; c++) {
+                dynamic = dynamics[c];
+                pointref = getPointRef(dynamic.pointRefIndex, 'GPLDynamic');
+                if (!!pointref) {
+                    if (upis.indexOf(pointref.PointInst) === -1) {
+                        upis.push(pointref.PointInst);
+                    }
+                }
+            }
+
+            point.getAllPointsById({
+                upis,
+                user: data.user,
+                resolvePointRefs: true
+            }, (err, data) => {
+                data = data || [];
+                cb(err, [...data, ...tempData]); // ch918; results are combination of database points and temporary points
+            });
+        } else {
+            cb(null, {});
+        }
+    }
 };
+
+module.exports = GPL;
+const Point = require('./point');

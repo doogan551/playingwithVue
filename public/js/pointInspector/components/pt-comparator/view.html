@@ -5,7 +5,7 @@
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
-        <li><span>Schedule</span></li>
+        <li data-bind="visible: data._pStatus() !== $root.utility.config.Enums['Point Statuses'].Inactive.enum"><span>Schedule</span></li>
         <li><span>Alarm History</span></li>
         <li><span>Configuration <i class="fa fa-angle-right"></i></span>
             <ul>
@@ -112,13 +112,6 @@
         </div>
         <hr>
         <div class="row">
-            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Show Label', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
-            <!-- /ko -->
-            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Show Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
-            <!-- /ko -->
-        </div>
-        <hr>
-        <div class="row">
             <!--  ko component: { name: 'ctl-states', params: { propertyName: 'States', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
         </div>
@@ -167,10 +160,13 @@
                     <!-- /ko -->
                     <!-- ko if: $parent.isInEditMode -->
                         <!-- ko if: ValueType() == 1 -->
+                        <!-- ko if: console.log($parent); -->
+                        <!-- /ko -->
                             <div class="col col-xs-3 col-sm-6">
                                 <div class="dataField">
                                     <label>Input 2 Constant</label>
-                                        <input type="text" data-bind="propertyName: 'Input 2 Constant', numeric: Value, valueType: ValueType, disable: $parent.data.isReadOnly" class="form-control input-sm">
+                                        <!-- ch1041; isReadOnly property was not correctly referenced -->
+                                        <input type="text" data-bind="propertyName: 'Input 2 Constant', numeric: Value, valueType: ValueType, disable: isReadOnly" class="form-control input-sm">
                                 </div>
                             </div>
                         <!-- /ko -->

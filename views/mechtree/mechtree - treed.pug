@@ -1,0 +1,96 @@
+doctype html
+html
+  head
+    title
+      | Infoscan by Dorsett Technologies
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
+    link(rel='stylesheet', href='/css/lib/font-awesome-4.3.0/css/font-awesome.min.css')
+    link(rel='stylesheet', href='/css/lib/treeview.css')
+    link(rel='stylesheet', href='/css/devicetree/style.css')
+
+  body
+    .container(style='margin-top:30px;')
+    .row
+      .col-md-4
+        .treePane.well.well-sm
+          ul#tree2(data-bind="foreach: tree()")
+            li
+              span(data-bind="text:networkSegment, attr:{'class':networkSegment}")
+              ul(data-bind="template:{name:'branchTemplate', foreach:branches}")
+
+      .col-md-6
+        .devicePane.well.well-lg
+          div
+            label Name&nbsp;
+            div
+              input.form-control(data-bind="value:name" readonly)
+          div
+            label Network&nbsp;
+            div
+              input.form-control(data-bind="value:network" readonly)
+          div
+            label Net Type&nbsp;
+            div
+              input.form-control(data-bind="value:netType" readonly)
+          div
+            label Device Address&nbsp;
+            div
+              input.form-control(data-bind="value:deviceAddress" readonly)
+          div
+            label Device Status&nbsp;
+            div
+              input.form-control.deviceStatus(data-bind="value:deviceStatus" readonly)
+          div
+            label Last Report Time&nbsp;
+            div
+              input.form-control(data-bind="value:lastReportTime" readonly)
+          div
+            label Model Type&nbsp;
+            div
+              input.form-control(data-bind="value:modelType" readonly)
+          div
+            label Firmware Revision&nbsp;
+            div
+              input.form-control(data-bind="value:firmwareRevision" readonly)
+
+      .col-md-2
+        .networksPane.well.well-sm
+          // ko if: badNetworks().length > 0
+          .badNetwork
+            span Bad Networks:
+            div(data-bind="foreach: badNetworks")
+              div
+                span.badNetwork(data-bind="text:$data")
+          p
+          // /ko
+          span Networks:
+          div(data-bind="foreach: networks")
+            div
+              span(data-bind="text:$data")
+
+
+    script(id="branchTemplate" type="text/html")
+        // ko if:$parent.networkSegment == networkSegment || $data.networkSegment == $parent
+        li
+          i.fa.fa-building.hoverCursor.noselect(data-bind="style:{color:$root.statusColor($data)}") &nbsp;
+          span.hoverCursor.noselect(data-bind="text:$data.text, click:$root.showDevice, event:{dblclick:$root.openDevice}, attr:{'class':$data.text}")
+          //ko if:networks.length >0
+          ul(data-bind="foreach: networks")
+            li
+              span(data-bind="text:$data, css:{badNetwork: $root.badNetworks.indexOf($data) > -1}, attr:{'class':$data}")
+              // ko if:$parent.branches.length >0
+              ul(data-bind="template:{name:'branchTemplate', foreach:$parent.branches}")
+              // /ko
+          // /ko
+        // /ko
+          
+
+    script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+    script(type='text/javascript', src='/js/lib/lodash.min.js')
+    script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
+    script(type='text/javascript', src='/js/lib/bootstrap3-hover-dropdown.min.js')
+    script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+    script(type='text/javascript', src="/js/lib/knockout.viewModel.js")
+    script(type='text/javascript', src="/js/lib/treeview.js")
+    script(type='text/javascript', src="/js/devicetree/devicetree.js")

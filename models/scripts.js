@@ -1,129 +1,122 @@
-var tmp = require('tmp');
-var fs = require('fs');
-var rimraf = require('rimraf');
+const fs = require('fs');
 
-var Utility = require('../models/utility');
-var compiler = require('../helpers/scriptCompiler.js');
-var logger = require('../helpers/logger')(module);
+const tmp = require('tmp');
+const rimraf = require('rimraf');
 
-module.exports = {
+const Script = class Script {
 
-    update: function(data, cb) {
-        var re = new RegExp("\"(.*), ");
-
-        var upi = data.upi;
-        var fileName = data.fileName.replace(/\.dsl$/i, "");
-        var script = data.script;
+    update(data, cb) {
+        const compiler = new Compiler();
+        let fileName = data.fileName.replace(/\.dsl$/i, '');
+        let script = data.script;
 
         tmp.dir({
-            dir: __dirname + "/../scripts/"
-        }, function _tempDirCreated(err, path, cleanupCallback) {
-
-            var filepath = path + '/' + fileName + '.dsl';
-            fs.writeFile(filepath, script, function(err) {
-
-                compiler.compile(filepath, path + '/' + fileName, function(err) {
-
+            dir: __dirname + '/../tmp/'
+        }, (err, path) => {
+            let filepath = path + '/' + fileName + '.dsl';
+            fs.writeFile(filepath, script, (err) => {
+                compiler.compile(filepath, path + '/' + fileName, (err) => {
                     fs.readFile(path + '/' + fileName + '.err', cb);
                 });
             });
         });
-    },
-    commit: function(data, cb) {
-        var upi = parseInt(data.upi, 10);
-        var fileName = data.fileName.replace(/\.dsl$/i, "");
-        var path = data.path;
-        var markObsolete = false;
+    }
+    commit(data, cb) {
+        let script = data.point;
+        let upi = parseInt(script._id, 10);
+        let fileName = upi.toString();
+        let path = data.path;
 
-        Utility.getOne({
-            collection: 'points',
-            query: {
-                _id: upi
+        fs.readFile(path + '/' + fileName + '.sym', (err, sym) => {
+            if (err) {
+                return cb(err);
             }
-        }, function(err, script) {
 
-            fs.readFile(path + '/' + fileName + '.sym', function(err, sym) {
+            sym = sym.toString();
+            let csv = sym.split(/[\r\n,]/);
+
+            script['Point Register Names'] = [];
+            script['Integer Register Names'] = [];
+            script['Real Register Names'] = [];
+            script['Boolean Register Names'] = [];
+
+            for (let i = 0; i < csv.length; i++) {
+                if (csv[i - 1] !== 'TOTAL') {
+                    if (csv[i] === 'POINT') {
+                        script['Point Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'INTEGER') {
+                        script['Integer Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'REAL') {
+                        script['Real Register Names'].push(csv[i + 2]);
+                    } else if (csv[i] === 'BOOLEAN') {
+                        script['Boolean Register Names'].push(csv[i + 2]);
+                    }
+                }
+            }
+
+            script['Point Register Count'] = script['Point Register Names'].length;
+            script['Integer Register Count'] = script['Integer Register Names'].length;
+            script['Real Register Count'] = script['Real Register Names'].length;
+            script['Boolean Register Count'] = script['Boolean Register Names'].length;
+
+            fs.readFile(path + '/' + fileName + '.dsl', (err, dsl) => {
                 if (err) {
                     return cb(err);
                 }
 
-                sym = sym.toString();
-                var csv = sym.split(/[\r\n,]/);
+                dsl = dsl.toString();
 
-                script = {
-                    "Point Register Names": [],
-                    "Integer Register Names": [],
-                    "Real Register Names": [],
-                    "Boolean Register Names": []
-                };
 
-                for (var i = 0; i < csv.length; i++) {
-                    if (csv[i - 1] !== 'TOTAL') {
-                        if (csv[i] === "POINT") {
-                            script["Point Register Names"].push(csv[i + 2]);
-                        } else if (csv[i] === "INTEGER") {
-                            script["Integer Register Names"].push(csv[i + 2]);
-                        } else if (csv[i] === "REAL") {
-                            script["Real Register Names"].push(csv[i + 2]);
-                        } else if (csv[i] === "BOOLEAN") {
-                            script["Boolean Register Names"].push(csv[i + 2]);
-                        }
-                    }
+                script['Script Source File'] = dsl;
+                //"Script Filename": fileName + '.dsl'
 
-                }
-
-                script["Point Register Count"] = script["Point Register Names"].length;
-                script["Integer Register Count"] = script["Integer Register Names"].length;
-                script["Real Register Count"] = script["Real Register Names"].length;
-                script["Boolean Register Count"] = script["Boolean Register Names"].length;
-
-                fs.readFile(path + '/' + fileName + '.dsl', function(err, dsl) {
+                fs.readFile(path + '/' + fileName + '.pcd', (err, pcd) => {
                     if (err) {
                         return cb(err);
                     }
 
-                    dsl = dsl.toString();
+                    //let buffer = new Buffer(pcd);
+
+                    script['Compiled Code'] = pcd;
+                    script['Compiled Code Size'] = pcd.length;
 
 
-                    script["Script Source File"] = dsl;
-                    //"Script Filename": fileName + '.dsl'
-
-                    fs.readFile(path + '/' + fileName + '.pcd', function(err, pcd) {
-                        if (err) {
-                            return cb(err);
-                        }
-
-                        //var buffer = new Buffer(pcd);
-
-                        script["Compiled Code"] = pcd;
-                        script["Compiled Code Size"] = pcd.length;
-
-
-                        rimraf(path, function(err) {
-                            if (err) {
-                                return cb(err);
-                            } else {
-                                return cb(null, script);
-                            }
-                        });
-
-
+                    rimraf(path, (err) => {
+                        return cb(err);
                     });
                 });
-
             });
-
         });
+    }
+    read(data, cb) {
+        const point = new Point();
+        let upi = data.upi;
 
-    },
-    read: function(data, cb) {
-        upi = data.upi;
-
-        Utility.getOne({
-            collection: 'points',
-            query: {
-                _id: upi
-            }
+        point.getPointById({
+            id: upi
         }, cb);
     }
+
+    commitScript(data, callback) {
+        let fileName, path;
+
+        let script = data.point;
+        fileName = script._id;
+        path = data.path;
+
+        fs.readFile(path + '/' + fileName + '.sym', (err) => {
+            if (err) {
+                return callback({
+                    err: err
+                });
+            }
+            return callback({
+                err: false
+            });
+        });
+    }
 };
+
+module.exports = Script;
+const Point = require('./point');
+const Compiler = require('../helpers/scriptCompiler.js');

@@ -163,6 +163,9 @@
             },
             "Report Edit": {
                 "enum": 43
+            },
+            "Site Name Edit": {
+                "enum": 44
             }
         },
         "Alarm Classes": {
@@ -309,79 +312,79 @@
         },
         "Calculation Types": {
             "Enthalpy": {
-                "enum" : 0
+                "enum": 0
             },
             "Dew Point": {
-                "enum" : 1
+                "enum": 1
             },
             "Wet Bulb": {
-                "enum" : 2
+                "enum": 2
             },
             "Low Value": {
-                "enum" : 0
+                "enum": 0
             },
             "High Value": {
-                "enum" : 1
+                "enum": 1
             },
             "Sum": {
-                "enum" : 0
+                "enum": 0
             },
             "Average": {
-                "enum" : 1
+                "enum": 1
             },
             "P Only": {
-                "enum" : 1
+                "enum": 1
             },
             "PI": {
-                "enum" : 2
+                "enum": 2
             },
             "PID": {
-                "enum" : 3
+                "enum": 3
             },
             "Add": {
-                "enum" : 0
+                "enum": 0
             },
             "Subtract": {
-                "enum" : 1
+                "enum": 1
             },
             "Multiply": {
-                "enum" : 2
+                "enum": 2
             },
             "Divide": {
-                "enum" : 3
+                "enum": 3
             },
             "Delay": {
-                "enum" : 0
+                "enum": 0
             },
             "Pulsed": {
-                "enum" : 1
+                "enum": 1
             },
             ">": {
-                "enum" : 0
+                "enum": 0
             },
             ">=": {
-                "enum" : 1
+                "enum": 1
             },
             "<": {
-                "enum" : 2
+                "enum": 2
             },
             "<=": {
-                "enum" : 3
+                "enum": 3
             },
             "<>": {
-                "enum" : 4
+                "enum": 4
             },
             "=": {
-                "enum" : 5
+                "enum": 5
             },
             "And": {
-                "enum" : 0
+                "enum": 0
             },
             "Or": {
-                "enum" : 1
+                "enum": 1
             },
             "XOr": {
-                "enum" : 2
+                "enum": 2
             }
         },
         "Channels": {
@@ -505,6 +508,39 @@
             },
             "Control Log": {
                 "enum": 8
+            },
+            "Signal Host TOD": {
+                "enum": 9
+            },
+            "Signal Exec TOD": {
+                "enum": 10
+            },
+            "Device Loader": {
+                "enum": 11
+            },
+            "Start Server": {
+                "enum": 12
+            },
+            "Stop Server": {
+                "enum": 13
+            },
+            "Do Backup": {
+                "enum": 14
+            },
+            "Read Device Net Info": {
+                "enum": 15
+            },
+            "Read System Info": {
+                "enum": 16
+            },
+            "Set Count Interval": {
+                "enum": 17
+            },
+            "Print Router Table": {
+                "enum": 18
+            },
+            "Get System Status": {
+                "enum": 19
             }
         },
         "Conversion Types": {
@@ -786,6 +822,26 @@
                 "enum": 8
             }
         },
+        "Hierarchy Types": {
+            "Location": {
+                "enum": 511
+            },
+            "Category": {
+                "enum": 510
+            },
+            "Equipment": {
+                "enum": 509
+            },
+            "Reference": {
+                "enum": 508
+            },
+            "System": {
+                "enum": 507
+            },
+            "Instrumentation": {
+                "enum": 506
+            }
+        },
         "Input Ranges": {
             "1": {
                 "enum": 0
@@ -933,6 +989,23 @@
             },
             "Power Fail": {
                 "enum": 6
+            }
+        },
+        "Location Types": {
+            "Site": {
+                "enum": 1
+            },
+            "Building": {
+                "enum": 2
+            },
+            "Floor": {
+                "enum": 3
+            },
+            "Room": {
+                "enum": 4
+            },
+            "Area": {
+                "enum": 5
             }
         },
         "Modbus Control Functions": {
@@ -1175,6 +1248,9 @@
                 "enum": 1
             }
         },
+        "Point Name Separator": {
+            "Value": " ► "
+        },
         "Point Statuses": {
             "Active": {
                 "enum": 0
@@ -1184,6 +1260,9 @@
             },
             "Deleted": {
                 "enum": 2
+            },
+            "NotInHierarchy": {
+                "enum": 3
             }
         },
         "Polarities": {
@@ -1560,7 +1639,7 @@
                     "target": "mainWindow"
                 },
                 "edit": {
-                    "url": "/displays/edit/{id}",
+                    "url": "/displays/view/{id}",
                     "target": "mainWindow"
                 }
             },
@@ -1744,7 +1823,7 @@
                 "enum": 142,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Optimum Start": {
@@ -2445,6 +2524,11 @@
                 "enum": 418,
                 "valueType": "MinSec",
                 "reportEnable": false
+            },
+            "Enable Network COV": {
+                "enum": 276,
+                "valueType": "Bool",
+                "reportEnable": true
             },
             "Enable Schedule": {
                 "enum": 235,
@@ -3156,6 +3240,11 @@
                 "valueType": "Unsigned",
                 "reportEnable": true
             },
+            "Model Number": {
+                "enum": 129,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
@@ -3170,31 +3259,6 @@
                 "enum": 150,
                 "valueType": "UniquePID",
                 "reportEnable": true
-            },
-            "Name": {
-                "enum": 129,
-                "valueType": "String",
-                "reportEnable": true
-            },
-            "name1": {
-                "enum": 307,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name2": {
-                "enum": 308,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name3": {
-                "enum": 309,
-                "valueType": "String",
-                "reportEnable": false
-            },
-            "name4": {
-                "enum": 310,
-                "valueType": "String",
-                "reportEnable": false
             },
             "Network Segment": {
                 "enum": 167,
@@ -3374,6 +3438,11 @@
             "Override Time": {
                 "enum": 374,
                 "valueType": "HourMin",
+                "reportEnable": true
+            },
+            "path": {
+                "enum": 159,
+                "valueType": "Array",
                 "reportEnable": true
             },
             "Point Instance": {
@@ -3649,7 +3718,7 @@
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": false,
+                "reportEnable": true,
                 "enumsSet": "Report Types"
             },
             "Repeat Count": {
@@ -3935,11 +4004,6 @@
                 "valueType": "Bool",
                 "reportEnable": true
             },
-            "taglist": {
-                "enum": 311,
-                "valueType": "Array",
-                "reportEnable": false
-            },
             "Time Zone": {
                 "enum": 406,
                 "valueType": "Enum",
@@ -4122,20 +4186,58 @@
             "Min": {
                 "enum": 8
             },
-            "PointName": {
-                "enum": 9
-            },
             "PointInst": {
                 "enum": 10
-            },
-            "PointType": {
-                "enum": 11
             },
             "DevInst": {
                 "enum": 12
             },
             "oosValue": {
                 "enum": 13
+            }
+        },
+        "Value Types": {
+            "None": {
+                "enum": 0
+            },
+            "Float": {
+                "enum": 1
+            },
+            "String": {
+                "enum": 2
+            },
+            "Integer": {
+                "enum": 3
+            },
+            "Unsigned": {
+                "enum": 4
+            },
+            "Enum": {
+                "enum": 5
+            },
+            "Bool": {
+                "enum": 7
+            },
+            "UniquePID": {
+                "enum": 8
+            },
+            "Timet": {
+                "enum": 11
+            },
+            "HourMinSec": {
+                "enum": 12
+            },
+            "MinSec": {
+                "enum": 13
+            },
+            "HourMin": {
+                "enum": 17
+            },
+            "BitString": {
+                "enum": 18
+            },
+            "ByteArray": {
+                "enum": 19
             }
         },
         "Internal Properties": {
@@ -4187,56 +4289,29 @@
             "_actvAlmId": {
                 "enum": 16
             }
-        },
-        "Value Types": {
-            "None": {
-                "enum": 0
-            },
-            "Float": {
-                "enum": 1
-            },
-            "String": {
-                "enum": 2
-            },
-            "Integer": {
-                "enum": 3
-            },
-            "Unsigned": {
-                "enum": 4
-            },
-            "Enum": {
-                "enum": 5
-            },
-            "Bool": {
-                "enum": 7
-            },
-            "UniquePID": {
-                "enum": 8
-            },
-            "Timet": {
-                "enum": 11
-            },
-            "HourMinSec": {
-                "enum": 12
-            },
-            "MinSec": {
-                "enum": 13
-            },
-            "HourMin": {
-                "enum": 17
-            },
-            "BitString": {
-                "enum": 18
-            },
-            "ByteArray": {
-                "enum": 19
-            }
         }
     },
+
     "Templates": {
-        "_common": {
+        "Hierarchy": {
             "_id": 0,
-            "_pStatus": 1,
+            "tags": [],
+            "meta": {},
+            "nodeType": "",
+            "nodeSubType": "",
+            "libraryId": 0,
+            "refNode": 0,
+            "_pStatus": 0,
+            "path": [],
+            "_path": [],
+            "parentNode": 0,
+            "display": "",
+            "locatedIn": 0,
+            "servedBy": [],
+            "descriptors": [],
+            "hierarchy": []
+        },
+        "_common": {
             "_relDevice": 0,
             "_relRMU": 0,
             "_relPoint": 0,
@@ -4251,16 +4326,7 @@
             "_updTOD": false,
             "_cfgRequired": true,
             "_actvAlmId": 0,
-            "name1": "",
-            "name2": "",
-            "name3": "",
-            "name4": "",
-            "Name": "",
-            "_name1": "",
-            "_name2": "",
-            "_name3": "",
-            "_name4": "",
-            "_Name": "",
+            "_oldUpi": 0,
             "Point Type": {
                 "isDisplayable": true,
                 "isReadOnly": true,
@@ -4268,8 +4334,7 @@
                 "Value": "",
                 "eValue": 0
             },
-            "Security": [],
-            "taglist": []
+            "Security": []
         },
         "Points": {
             "Report": {
@@ -4297,11 +4362,10 @@
                 "Font Underline": 0,
                 "Grid X": 0,
                 "Grid Y": 0,
-                "Height": 0,
+                "Height": 600,
                 "Point Refs": [],
                 "Screen Objects": [],
-                "Width": 0,
-                "vid": 0
+                "Width": 800
             },
 
             "Device": {
@@ -4390,14 +4454,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Normal",
                     "eValue": 1
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
@@ -4469,6 +4533,12 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
+                },
+                "Enable Network COV": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Ethernet Address": {
                     "isDisplayable": true,
@@ -4552,8 +4622,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -4816,14 +4884,14 @@
                     "eValue": 0
                 },
                 "Alarm Value": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Failed",
                     "eValue": 0
                 },
                 "Alarms Off": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
@@ -4911,6 +4979,12 @@
                     "ValueType": 4,
                     "Value": 255
                 },
+                "Model Number": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
+                },
                 "Model Type": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -4939,8 +5013,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -4950,8 +5022,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -5087,8 +5157,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -5283,8 +5351,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }]
@@ -5568,8 +5634,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -5579,8 +5643,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -5590,8 +5652,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -5601,8 +5661,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -5612,8 +5670,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -5623,8 +5679,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -6043,8 +6097,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6054,8 +6106,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6065,8 +6115,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6076,8 +6124,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6087,8 +6133,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6098,8 +6142,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -6454,8 +6496,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6465,8 +6505,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6476,8 +6514,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6487,8 +6523,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6498,8 +6532,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6509,8 +6541,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -6798,8 +6828,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6809,8 +6837,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6820,8 +6846,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6831,8 +6855,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -6842,8 +6864,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -7378,8 +7398,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7389,8 +7407,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7400,8 +7416,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7411,8 +7425,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7422,8 +7434,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -7784,8 +7794,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7795,8 +7803,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7806,8 +7812,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7817,8 +7821,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7828,8 +7830,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -7839,8 +7839,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8029,8 +8027,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8040,8 +8036,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8163,13 +8157,49 @@
                     "msgId": 0,
                     "ack": false,
                     "notify": false
+                }, {
+                    "msgType": 5,
+                    "msgId": 0,
+                    "ack": false,
+                    "notify": false
                 }],
-                "Alarm State": {
+                "Alarm Class": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Normal",
+                    "eValue": 0
+                },
+                "Alarm Delay Time": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 0
+                },
+                "Alarm Repeat Enable": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Alarm Repeat Time": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 17,
+                    "Value": 0
+                },
+               "Alarm State": {
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
                     "Value": "Normal",
                     "eValue": 0
+                },
+                "Alarms Off": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Broadcast Enable": {
                     "isDisplayable": true,
@@ -8209,11 +8239,37 @@
                     "ValueType": 7,
                     "Value": true
                 },
+                "Default Value": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0
+                },
+                "Demand Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Demand Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
+                },
                 "Description": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
+                },
+                "Fail Action": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Fail",
+                    "eValue": 2
                 },
                 "Input Type": {
                     "isDisplayable": false,
@@ -8232,6 +8288,17 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
+                },
+                "Interlock State": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Off": 0,
+                        "On": 1
+                    }
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
@@ -8260,8 +8327,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8271,8 +8336,42 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Alarm Display Point",
+                    "PropertyEnum": 137,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Interlock Point",
+                    "PropertyEnum": 148,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Monitor Point",
+                    "PropertyEnum": 150,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Feedback Point",
+                    "PropertyEnum": 141,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8330,7 +8429,8 @@
                     "ValueOptions": {
                         "Off": 0,
                         "On": 1
-                    }
+                    },
+                    "AlarmValues": [1]
                 },
                 "Status Flags": {
                     "isDisplayable": true,
@@ -8403,8 +8503,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8559,8 +8657,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8570,8 +8666,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8581,8 +8675,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8592,8 +8684,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8603,8 +8693,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8614,8 +8702,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8631,18 +8717,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -8843,8 +8917,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8854,8 +8926,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8865,8 +8935,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8876,8 +8944,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8887,8 +8953,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8898,8 +8962,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -8909,8 +8971,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -8932,18 +8992,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -9155,8 +9203,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9166,8 +9212,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9177,8 +9221,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9188,8 +9230,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9199,8 +9239,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9210,8 +9248,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9221,8 +9257,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9232,8 +9266,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9243,8 +9275,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -9266,18 +9296,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -9495,8 +9513,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9506,8 +9522,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9517,8 +9531,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9528,8 +9540,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9539,8 +9549,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9550,8 +9558,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9561,8 +9567,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9572,8 +9576,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9583,8 +9585,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -9612,18 +9612,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -9849,8 +9837,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9860,8 +9846,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9871,8 +9855,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9882,8 +9864,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9893,8 +9873,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -9904,8 +9882,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -10152,8 +10128,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10163,8 +10137,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10174,8 +10146,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10185,8 +10155,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10196,8 +10164,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10207,8 +10173,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -10260,18 +10224,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -10484,8 +10436,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10495,8 +10445,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10506,8 +10454,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10517,8 +10463,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10528,8 +10472,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -10557,18 +10499,6 @@
                     "isReadOnly": false,
                     "ValueType": 7,
                     "Value": false
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -10794,8 +10724,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10805,8 +10733,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10816,8 +10742,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10827,8 +10751,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10838,8 +10760,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -10849,8 +10769,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -10878,18 +10796,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -11114,8 +11020,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11125,8 +11029,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11136,8 +11038,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11147,8 +11047,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11158,8 +11056,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11169,8 +11065,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11180,8 +11074,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -11214,18 +11106,6 @@
                         "Off": 0,
                         "On": 1
                     }
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -11432,8 +11312,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11443,8 +11321,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11454,8 +11330,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11465,8 +11339,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11476,8 +11348,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -11499,18 +11369,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -11714,8 +11572,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -11725,8 +11581,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -11989,8 +11843,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12000,8 +11852,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12011,8 +11861,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12022,8 +11870,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12033,8 +11879,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12044,8 +11888,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12055,8 +11897,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12066,8 +11906,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12077,8 +11915,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12088,8 +11924,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12099,8 +11933,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12110,8 +11942,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12121,8 +11951,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12132,8 +11960,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12143,8 +11969,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12154,8 +11978,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12165,8 +11987,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12176,8 +11996,6 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -12345,8 +12163,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12356,8 +12172,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12367,8 +12181,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12378,8 +12190,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12389,8 +12199,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -12425,18 +12233,6 @@
                     "isReadOnly": false,
                     "ValueType": 17,
                     "Value": 0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -12703,8 +12499,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12714,8 +12508,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12725,8 +12517,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12736,8 +12526,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12747,8 +12535,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -12758,8 +12544,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -12787,18 +12571,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -13018,8 +12790,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13029,8 +12799,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13040,8 +12808,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13051,8 +12817,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13062,8 +12826,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13073,8 +12835,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -13096,18 +12856,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -13393,8 +13141,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13404,8 +13150,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13415,8 +13159,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13426,8 +13168,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13437,8 +13177,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13448,8 +13186,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -13477,18 +13213,6 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -13883,8 +13607,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13894,8 +13616,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13905,8 +13625,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13916,8 +13634,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13927,8 +13643,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13938,8 +13652,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13949,8 +13661,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13960,8 +13670,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -13971,8 +13679,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -13994,18 +13700,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -14250,8 +13944,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14261,8 +13953,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14272,8 +13962,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14283,8 +13971,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14294,8 +13980,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -14317,18 +14001,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -14575,8 +14247,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14586,8 +14256,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14597,8 +14265,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14608,8 +14274,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14619,8 +14283,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14630,8 +14292,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -14653,18 +14313,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -14897,8 +14545,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14908,8 +14554,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14919,8 +14563,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14930,8 +14572,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14941,8 +14581,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -14952,8 +14590,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],
@@ -14975,18 +14611,6 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
-                },
-                "Show Label": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Show Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
                 },
                 "Shutdown Control": {
                     "isDisplayable": true,
@@ -15215,8 +14839,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15226,8 +14848,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15237,8 +14857,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15248,8 +14866,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15259,8 +14875,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15270,8 +14884,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15281,8 +14893,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15292,8 +14902,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15303,8 +14911,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15314,8 +14920,6 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15325,8 +14929,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15336,8 +14938,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15347,8 +14947,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15358,8 +14956,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15369,8 +14965,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15380,8 +14974,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
@@ -15391,8 +14983,6 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
                     "PointInst": 0,
                     "DevInst": 0
                 }],

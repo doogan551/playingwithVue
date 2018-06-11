@@ -1,5 +1,5 @@
 /*jslint white: true*/
-define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko, moment, datetimepicker, view) {
+define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function (ko, moment, datetimepicker, view) {
     var ASC = -1,
         DESC = 1,
         $sortIcon,
@@ -11,21 +11,21 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
 
     function sortArray(prop, dir) { // This routine must be called using .call
         var opp = ~dir + 1; // Get opposite direction (-1 to 1 or 1 to -1)
-        return this.sort(function(obj1, obj2) {
-            return (obj1[prop] == obj2[prop]) ? 0 : (obj1[prop] < obj2[prop]) ? opp : dir;
+        return this.sort(function (obj1, obj2) {
+            return (obj1[prop] === obj2[prop]) ? 0 : (obj1[prop] < obj2[prop]) ? opp : dir;
         });
     }
 
     function ViewModel(params) {
         var self = this,
-            getContrast = function(hexcolor) { // http://24ways.org/2010/calculating-color-contrast/
+            getContrast = function (hexcolor) { // http://24ways.org/2010/calculating-color-contrast/
                 var r = parseInt(hexcolor.substr(0, 2), 16),
                     g = parseInt(hexcolor.substr(2, 2), 16),
                     b = parseInt(hexcolor.substr(4, 2), 16),
                     yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
                 return (yiq >= 128) ? 'black' : 'white';
             },
-            init = function() {
+            init = function () {
                 var prop,
                     qualityCodes = self.utility.workspace.systemEnumObjects.qualityCodes,
                     qcColors = {
@@ -69,7 +69,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         self.data = self.point.data;
         self.gettingData = false;
         self.readOnOpen = true;
-        self.isEnumValueType = self.data.Value.ValueType() === self.config.Enums['Value Types'].Enum['enum'];
+        self.isEnumValueType = self.data.Value.ValueType() === self.config.Enums['Value Types'].Enum.enum;
         self.revValueOptions = {};
         self.sfColors = {}; // Status flag colors
 
@@ -85,17 +85,17 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         self.minDate = ko.observable();
         self.maxDate = ko.observable();
         self.trendData = ko.observableArray([]);
-        self.trendDataSorted = ko.computed(function() {
+        self.trendDataSorted = ko.computed(function () {
             var trendData = self.trendData(),
                 sortOrder = self.sortOrder(),
                 _array = [];
             Array.prototype.push.apply(_array, trendData);
             return sortArray.call(_array, 'timestamp', sortOrder);
         }, self);
-        self.startTime.subscribe(function(val) {
+        self.startTime.subscribe(function (val) {
         });
 
-        self.reqType.subscribe(function(type) {
+        self.reqType.subscribe(function (type) {
             var $uploadBtn = $('.btnUpload'),
                 $historyBtn = $('.btnHistory');
 
@@ -105,8 +105,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
                 self.reButton('Refresh');
                 self.getUpload();
             } else if (type === 'history') {
-
-                $(function() {
+                $(function () {
                     $('#datetimepicker1').datetimepicker({
                         minDate: self.minDate(),
                         maxDate: self.maxDate(),
@@ -134,31 +133,32 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
             }
         });*/
 
-        self.showModal.subscribe(function(bool) {
+        self.showModal.subscribe(function (bool) {
             if (bool) {
                 self.reqType((self.reqType() !== '') ? self.reqType() : 'upload');
             }
         });
 
-        self.maxDateFormat = ko.computed(function() {
-            return moment(self.maxDate()).format("MM/DD/YYYY HH:mm:ss");
+        self.maxDateFormat = ko.computed(function () {
+            return moment(self.maxDate()).format('MM/DD/YYYY HH:mm:ss');
         });
-        self.minDateFormat = ko.computed(function() {
-            return moment(self.minDate()).format("MM/DD/YYYY HH:mm:ss");
+        self.minDateFormat = ko.computed(function () {
+            return moment(self.minDate()).format('MM/DD/YYYY HH:mm:ss');
         });
 
         self.getLimits();
         init();
         // Resize modal when the window is resized
-        $(window).resize(function() {
-            if (!self.showModal())
+        $(window).resize(function () {
+            if (!self.showModal()) {
                 return;
+            }
             clearTimeout(self.resizeId);
             self.resizeId = setTimeout(self.sizeModal, 100);
         });
     }
 
-    ViewModel.prototype.sizeModal = function() {
+    ViewModel.prototype.sizeModal = function () {
         var modalPadding,
             height;
 
@@ -171,13 +171,13 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
     };
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.toggleModal = function() {
+    ViewModel.prototype.toggleModal = function () {
         this.showModal(true);
         /*if (this.readOnOpen)
             this.getUpload();*/
     };
 
-    ViewModel.prototype.getLimits = function() {
+    ViewModel.prototype.getLimits = function () {
         var self = this,
             data = {
                 upi: self.data._id()
@@ -186,30 +186,28 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
             type: 'POST',
             url: self.apiEndpoint + 'trenddata/getTrendLimits',
             data: data
-        }).done(function(data) {
+        }).done(function (data) {
             self.minDate(moment.unix(data.min));
             self.maxDate(moment.unix(data.max));
         });
     };
 
-    ViewModel.prototype.doUpload = function(data, e) {
-
+    ViewModel.prototype.doUpload = function (data, e) {
         data.reqType('upload');
     };
 
-    ViewModel.prototype.doHistory = function(data, e) {
-
+    ViewModel.prototype.doHistory = function (data, e) {
         data.reqType('history');
     };
 
-    ViewModel.prototype.showTime = function() {
+    ViewModel.prototype.showTime = function () {
         var $modal = $('.modal.viewTrend'),
             $modalTime = $modal.find('.modalTime');
 
         $modalTime.toggle('fast');
     };
 
-    ViewModel.prototype.printHistory = function() {
+    ViewModel.prototype.printHistory = function () {
         var $modal = $('.modal.viewTrend'),
             $modalTime = $modal.find('.modalTime'),
             $modalValue = $modal.find('.modalValue');
@@ -220,7 +218,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         });*/
 
         var w = window.open();
-        var html = '<label>' + this.point.data.Name() + '</label>';
+        var html = '<label>' + this.point.data.path() + '</label>';
         html += $modalValue.html();
 
         $(w.document.body).html(html);
@@ -228,9 +226,10 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         w.close();
     };
 
-    ViewModel.prototype.getUpload = function() {
-        if (this.gettingData)
+    ViewModel.prototype.getUpload = function () {
+        if (this.gettingData) {
             return;
+        }
 
         var self = this,
             $btn = $('.btnViewTrend'),
@@ -241,7 +240,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
             $modalValue = $modal.find('.modalValue'),
             $modalError = $modal.find('.modalError'),
             $btnSubmit = $modal.find('.btnSubmit'),
-            callback = function(data) {
+            callback = function (data) {
                 self.loadView(data, 'upload');
             };
 
@@ -259,7 +258,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         }, callback);
     };
 
-    ViewModel.prototype.getHistory = function() {
+    ViewModel.prototype.getHistory = function () {
         var self = this,
             $btn = $('.btnViewTrend'),
             $btnIcon = $btn.find('i.fa'),
@@ -289,13 +288,13 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
             type: 'POST',
             url: self.apiEndpoint + 'trenddata/viewTrend',
             data: data
-        }).done(function(data) {
+        }).done(function (data) {
             if (!data.err && data.length !== 0) {
                 $('.nextBtn').removeAttr('disabled');
                 $('.prevBtn').removeAttr('disabled');
-            } else if (self.direction() === "next") {
+            } else if (self.direction() === 'next') {
                 $('.nextBtn').attr('disabled', 'disabled');
-            } else if (self.direction() === "previous") {
+            } else if (self.direction() === 'previous') {
                 $('.prevBtn').attr('disabled', 'disabled');
             }
 
@@ -310,7 +309,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         });
     };
 
-    ViewModel.prototype.loadView = function(data, type) {
+    ViewModel.prototype.loadView = function (data, type) {
         var self = this,
             $btn = $('.btnViewTrend'),
             $btnIcon = $btn.find('i.fa'),
@@ -320,7 +319,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
             $modalValue = $modal.find('.modalValue'),
             $modalError = $modal.find('.modalError'),
             $btnSubmit = $modal.find('.btnSubmit'),
-            styleBtn = function(error) {
+            styleBtn = function (error) {
                 // If our modal is not open
                 if (!self.showModal()) {
                     // Style the 'View Controls' button to provide the feedback result (without having to open the modal)
@@ -336,16 +335,15 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
                     $btnIcon.addClass('fa-signal');
                 }
             },
-            getValue = function(rawValue) {
+            getValue = function (rawValue) {
                 if (self.isEnumValueType) {
                     return self.revValueOptions[rawValue] || rawValue;
-                } else {
-                    return self.config.Utility.formatNumber({
-                        val: rawValue
-                    });
                 }
+                return self.config.Utility.formatNumber({
+                    val: rawValue
+                });
             },
-            callback = function(commandRX) {
+            callback = function (commandRX) {
 
             };
         var response = data.value(),
@@ -379,10 +377,10 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
                     sf = trendEntry['status flags'] | trendEntry.statusflags;
                 trendEntry.valueString = getValue((trendEntry.hasOwnProperty('value')) ? trendEntry.value : trendEntry.Value);
                 trendEntry.prettyTime = moment.unix(trendEntry.timestamp).format('MM/DD/YY - HH:mm:ss');
-                trendEntry.inAlarm = sf & sfEnums['In Alarm']['enum'];
-                trendEntry.inFault = sf & sfEnums['In Fault']['enum'];
-                trendEntry.oos = sf & sfEnums['Out of Service']['enum'];
-                trendEntry.overridden = sf & sfEnums['Override']['enum'];
+                trendEntry.inAlarm = sf & sfEnums['In Alarm'].enum;
+                trendEntry.inFault = sf & sfEnums['In Fault'].enum;
+                trendEntry.oos = sf & sfEnums['Out of Service'].enum;
+                trendEntry.overridden = sf & sfEnums.Override.enum;
 
                 self.trendData().push(trendEntry);
             }
@@ -391,7 +389,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         }
     };
 
-    ViewModel.prototype.refreshData = function() {
+    ViewModel.prototype.refreshData = function () {
         var self = this;
         self.getLimits();
         if (self.reqType() === 'upload') {
@@ -405,7 +403,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         }
     };
 
-    ViewModel.prototype.setDateTime = function() {
+    ViewModel.prototype.setDateTime = function () {
         var self = this,
             time = new Date($('#datetimepicker1').data('date')).getTime() / 1000;
 
@@ -415,14 +413,14 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         self.getHistory();
     };
 
-    ViewModel.prototype.reverseSort = function() {
+    ViewModel.prototype.reverseSort = function () {
         var self = this;
 
         if (!$sortIcon) {
             $sortIcon = $('thead th:first i');
         }
         $sortIcon.removeClass('fa-chevron-up fa-chevron-down');
-        if (self.sortOrder() == ASC) {
+        if (self.sortOrder() === ASC) {
             self.sortOrder(DESC);
             $sortIcon.addClass('fa-chevron-down');
         } else {
@@ -431,23 +429,25 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
         }
     };
 
-    ViewModel.prototype.previousPage = function() {
+    ViewModel.prototype.previousPage = function () {
         var self = this;
         self.lastPage(self.page());
         self.page(self.page() - 1);
-        if (self.page() === 0)
+        if (self.page() === 0) {
             self.page(self.page() - 1);
+        }
         self.direction('previous');
         self.startTime(!!self.trendData().length && self.trendData()[0].timestamp + 1 || self.startTime());
         self.getHistory();
     };
 
-    ViewModel.prototype.nextPage = function() {
+    ViewModel.prototype.nextPage = function () {
         var self = this;
         self.lastPage(self.page());
         self.page(self.page() + 1);
-        if (self.page() === 0)
+        if (self.page() === 0) {
             self.page(self.page() + 1);
+        }
         self.direction('next');
         self.startTime(!!self.trendData().length && self.trendData()[self.trendData().length - 1].timestamp - 1 || self.startTime());
         self.getHistory();
@@ -456,7 +456,7 @@ define(['knockout', 'moment', 'datetimepicker', 'text!./view.html'], function(ko
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {
+    ViewModel.prototype.dispose = function () {
         this.trendDataSorted.dispose();
     };
 

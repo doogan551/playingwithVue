@@ -1,5 +1,5 @@
 /*jslint white: true */
-define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(ko, view, bannerJS, datetimepicker) {
+define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function (ko, view, bannerJS, datetimepicker) {
     function ViewModel(params) {
         var self = this;
         self.root = params.rootContext;
@@ -7,7 +7,7 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         self.point = self.root.point;
         self.data = self.point.data;
         self.utility = self.root.utility;
-        self.isEnumValueType = self.data.Value.ValueType() === self.config.Enums["Value Types"].Enum.enum;
+        self.isEnumValueType = self.data.Value.ValueType() === self.config.Enums['Value Types'].Enum.enum;
         self.controllerId = self.utility.workspace.user().controllerId;
         self.disableControl = self.controllerId ? false : true; // Disable controls if user has invalid controller id
         self.revValueOptions = {};
@@ -18,11 +18,11 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         self.showValidation = ko.observable(false);
         self.controlFocus = ko.observable(true);
 
-        self.controlFocus.subscribe(function(focused) {
+        self.controlFocus.subscribe(function (focused) {
             self.showValidation(false);
             var val = self.controlValue();
             if (!focused) {
-                if (['Analog Input', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) {
+                if (['Analog Value', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) { // ch1297; change 'Analog Input' to 'Analog Value'
                     self.min = self.data['Minimum Value'].Value();
                     self.max = self.data['Maximum Value'].Value();
                     if (val > self.max) {
@@ -49,18 +49,21 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         } else {
             self.controlValue(self.data.Value.Value());
         }
-        if (self.controlPriority() === 0) // We can't issue controls @ level 0
-            self.controlPriority(16); // Select a good default
+        if (self.controlPriority() === 0) {
+            // We can't issue controls @ level 0
+            self.controlPriority(16);
+            // Select a good default
+        }
 
-        self.checkReleaseModel = function() {
+        self.checkReleaseModel = function () {
             switch (self.data._devModel()) {
-                case self.config.Enums["Device Model Types"]["MicroScan 5 xTalk"].enum:
-                case self.config.Enums["Device Model Types"]["MicroScan 5 UNV"].enum:
-                case self.config.Enums["Device Model Types"]["SCADA Vio"].enum:
+                case self.config.Enums['Device Model Types']['MicroScan 5 xTalk'].enum:
+                case self.config.Enums['Device Model Types']['MicroScan 5 UNV'].enum:
+                case self.config.Enums['Device Model Types']['SCADA Vio'].enum:
                     return true;
             }
             return false;
-        }
+        };
         self.override = {
             'Time to Override': {
                 Value: ko.observable(0),
@@ -69,21 +72,21 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
                 isDisplayable: ko.observable(true)
             }
         };
-        self.override['Time to Override'].Value.subscribe(function(newValue) {
+        self.override['Time to Override'].Value.subscribe(function (newValue) {
             var now = new Date();
             now.setSeconds(now.getSeconds() + newValue);
-            $('#datetimepicker').data("DateTimePicker").date(now);
+            $('#datetimepicker').data('DateTimePicker').date(now);
         });
-        $(function() {
+        $(function () {
             $('#datetimepicker').datetimepicker({
                 showClear: true,
                 showClose: true,
                 format: 'MM/DD/YY - HH:mm',
                 sideBySide: true
             });
-            $('#datetimepicker').data("DateTimePicker").defaultDate(new Date());
-            $('#datetimepicker').focusout(function() {
-                var newTime = $('#datetimepicker').data("DateTimePicker").date().unix() - Math.floor(Date.now() / 1000);
+            $('#datetimepicker').data('DateTimePicker').defaultDate(new Date());
+            $('#datetimepicker').focusout(function () {
+                var newTime = $('#datetimepicker').data('DateTimePicker').date().unix() - Math.floor(Date.now() / 1000);
                 if (newTime > 0) {
                     self.override['Time to Override'].Value(newTime);
                 } else {
@@ -91,64 +94,61 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
                 }
                 $('#rtBtn').click();
             });
-            $('.ttoInput').focusout(function() {
+            $('.ttoInput').focusout(function () {
                 $('#ttoBtn').click();
             });
             // $('#ttoBtn').click();
         });
     }
 
-    function getOverrideTime(self) {
+    function getOverrideTime(_this) {
         var activeId = $('#timeControl').find('.active').attr('id');
-        var time = self.override["Time to Override"].Value();;
+        var time = _this.override['Time to Override'].Value();
         var ret = 0;
 
         if (activeId === 'ttoLabel' && time !== 0) {
             ret = Math.floor(Date.now() / 1000) + time;
         } else if (activeId === 'rtLabel') {
-            ret = $('#datetimepicker').data("DateTimePicker").date().unix();
+            ret = $('#datetimepicker').data('DateTimePicker').date().unix();
         }
         return ret;
     }
 
-    function issueCommand(self, relinquish) {
-        if (!self.root.authorize(self.data, self.root.permissionLevels.CONTROL))
+    function issueCommand(_this, relinquish) {
+        if (!_this.root.authorize(_this.data, _this.root.permissionLevels.CONTROL)) {
             return;
+        }
         var $btn = $('.btnSendControl'),
             $btnIcon = $btn.find('i.fa'),
             $modal = $('.modal.sendControl'),
             $btnSubmit = $modal.find('.btnSubmit'),
             $btnSubmitIcon = $btnSubmit.find('.fa'),
             controlObject = {
-                upi: self.data._id(),
+                upi: _this.data._id(),
                 Relinquish: relinquish,
-                Priority: self.controlPriority(),
-                OvrTime: getOverrideTime(self),
+                Priority: _this.controlPriority(),
+                OvrTime: getOverrideTime(_this),
                 Wait: 1,
-                Value: self.controlValue(),
-                Controller: self.controllerId,
+                Value: _this.controlValue(),
+                Controller: _this.controllerId,
                 logData: {
-                    user: self.utility.workspace.user(),
+                    user: _this.utility.workspace.user(),
                     point: {
-                        _id: self.data._id(),
-                        Security: self.data.Security(),
-                        Name: self.data.Name(),
-                        name1: self.data.name1(),
-                        name2: self.data.name2(),
-                        name3: self.data.name3(),
-                        name4: self.data.name4(),
-                        "Point Type": {
-                            eValue: self.data["Point Type"].eValue()
+                        _id: _this.data._id(),
+                        Security: _this.data.Security(),
+                        path: _this.data.path(),
+                        'Point Type': {
+                            eValue: _this.data['Point Type'].eValue()
                         }
                     },
                     newValue: {
-                        Value: self.controlValue()
+                        Value: _this.controlValue()
                     }
                 }
             },
-            styleBtn = function(error) {
+            styleBtn = function (error) {
                 // If our modal is not open
-                if (!self.showModal()) {
+                if (!_this.showModal()) {
                     // Style the 'Send Control' button to provide the feedback result
                     if (error) {
                         $btn.addClass('btn-danger');
@@ -162,7 +162,7 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
                     $btnIcon.addClass('fa-bullseye');
                 }
             },
-            callback = function(commandRX) {
+            callback = function (commandRX) {
                 $btnSubmit.prop('disabled', false);
                 $btnSubmitIcon.removeClass('fa-refresh fa-spin');
                 $btn.removeClass('btn-warning');
@@ -180,48 +180,48 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         $btnIcon.removeClass('fa-bullseye fa-check fa-warning').addClass('fa-refresh fa-spin');
         $btnSubmitIcon.addClass('fa-refresh fa-spin');
 
-        if (self.isEnumValueType) {
+        if (_this.isEnumValueType) {
             controlObject.logData.newValue = {
                 eValue: controlObject.Value,
-                Value: self.revValueOptions[controlObject.Value]
+                Value: _this.revValueOptions[controlObject.Value]
             };
         }
-        self.showModal(false);
-        self.point.issueCommand('Command Point', controlObject, callback);
+        _this.showModal(false);
+        _this.point.issueCommand('Command Point', controlObject, callback);
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.toggleModal = function() {
+    ViewModel.prototype.toggleModal = function () {
         var self = this,
             $modal = $('.modal.sendControl');
 
         self.showModal(true);
 
-        $modal.on('shown.bs.modal', function(e) {
+        $modal.on('shown.bs.modal', function (e) {
             var $valueField = $modal.find('.val:first');
             $valueField.focus().select();
-            $('#datetimepicker').data("DateTimePicker").date(new Date());
+            $('#datetimepicker').data('DateTimePicker').date(new Date());
         });
 
-        $modal.on('hidden.bs.modal', function(e) {
+        $modal.on('hidden.bs.modal', function (e) {
             self.override['Time to Override'].Value(0);
             $('#ttoBtn').click();
             $('#ttoLabel').removeClass('active');
         });
     };
 
-    ViewModel.prototype.sendControl = function() {
+    ViewModel.prototype.sendControl = function () {
         issueCommand(this, 0);
     };
 
-    ViewModel.prototype.relinquish = function() {
+    ViewModel.prototype.relinquish = function () {
         issueCommand(this, 1);
     };
 
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
-    ViewModel.prototype.dispose = function() {};
+    ViewModel.prototype.dispose = function () {};
 
     // Return component definition
     return {

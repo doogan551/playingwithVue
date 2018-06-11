@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="72px" height="72px" viewBox="0 0 72 72" enable-background="new 0 0 72 72" xml:space="preserve">
+<g>
+	<polygon fill="#AD3938" points="32.786,48.415 39.47,48.415 40.623,48.415 41.777,48.415 41.777,47.261 41.777,46.105 
+		41.777,41.66 41.905,41.66 44.279,41.66 46.654,41.66 45.182,39.794 43.709,37.928 40.82,34.266 38.697,31.576 46.313,31.576 
+		46.313,25.982 26.084,25.982 26.084,31.576 33.559,31.576 31.435,34.266 28.546,37.928 27.074,39.794 25.602,41.66 27.976,41.66 
+		30.349,41.66 30.478,41.66 30.478,46.105 30.478,47.261 30.478,48.415 31.631,48.415 	"/>
+	<polygon fill="#F69799" points="32.786,47.261 39.47,47.261 40.623,47.261 40.623,46.105 40.623,40.506 41.905,40.506 
+		44.279,40.506 42.807,38.64 39.918,34.978 37.029,31.316 36.358,30.465 45.187,30.465 45.187,27.072 27.174,27.072 27.174,30.465 
+		35.898,30.465 35.226,31.316 32.337,34.978 29.448,38.64 27.976,40.506 30.349,40.506 31.631,40.506 31.631,46.105 31.631,47.261 	
+		"/>
+	<rect x="28.299" y="28.213" fill-rule="evenodd" clip-rule="evenodd" fill="#D25757" width="15.761" height="1.111"/>
+	<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="31.978" y1="38.0146" x2="43.9349" y2="43.09">
+		<stop  offset="0" style="stop-color:#F27173"/>
+		<stop  offset="0.43" style="stop-color:#D55051"/>
+		<stop  offset="1" style="stop-color:#F27173"/>
+	</linearGradient>
+	<polygon fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_1_)" points="32.786,46.105 39.47,46.105 39.47,39.352 
+		41.905,39.352 39.017,35.69 36.128,32.029 33.238,35.69 30.349,39.352 32.786,39.352 	"/>
+</g>
+</svg>

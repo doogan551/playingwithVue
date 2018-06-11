@@ -1,13 +1,13 @@
-var sysPrefsViewModel = (function() {
+var sysPrefsViewModel = (function () {
 
     var self = this,
         initFunctions = [],
-        getSectionRef = function(section) {
+        getSectionRef = function (section) {
             var name = section.charAt(0).toLowerCase() + section.substring(1).replace(/\s/g, '');
 
             return name + 'ViewModel';
         },
-        isDirty = function() {
+        isDirty = function () {
             var dirty = false,
                 c, len = self.sections.length,
                 vm;
@@ -22,11 +22,11 @@ var sysPrefsViewModel = (function() {
             self.dirty(dirty);
         };
 
-    self.registerSection = function(VM, init) {
+    self.registerSection = function (VM, init) {
         var vm = new VM(),
             name = getSectionRef(vm.displayName),
-            sortSections = function() {
-                self.sections.sort(function(a, b) {
+            sortSections = function () {
+                self.sections.sort(function (a, b) {
                     return a.displayName === b.displayName ? 0 : (a.displayName < b.displayName ? -1 : 1);
                 });
             };
@@ -36,7 +36,7 @@ var sysPrefsViewModel = (function() {
         self[name] = vm;
 
         if (vm.dirty) {
-            vm.dirty.subscribe(function(newValue) {
+            vm.dirty.subscribe(function (newValue) {
                 isDirty();
             });
         }
@@ -46,7 +46,7 @@ var sysPrefsViewModel = (function() {
         }
     };
 
-    self.runInitFunctions = function() {
+    self.runInitFunctions = function () {
         var c, len = initFunctions.length,
             fn;
 
@@ -59,13 +59,13 @@ var sysPrefsViewModel = (function() {
     };
 
     self.sections = [];
-    self.getSection = function(name) {
+    self.getSection = function (name) {
         var ref = getSectionRef(name);
 
         return self[ref];
     };
 
-    self.saveAll = function() {
+    self.saveAll = function () {
         var vm,
             c,
             len = self.sections.length;
@@ -78,7 +78,7 @@ var sysPrefsViewModel = (function() {
         }
     };
 
-    self.cancelAll = function() {
+    self.cancelAll = function () {
         var vm,
             c,
             len = self.sections.length;
@@ -92,7 +92,7 @@ var sysPrefsViewModel = (function() {
         self.dirty(false);
     };
 
-    self.goToSection = function(displayName) {
+    self.goToSection = function (displayName) {
         var hash = '#' + displayName;
 
         location.hash = hash;
@@ -102,8 +102,22 @@ var sysPrefsViewModel = (function() {
 
     self.section = ko.observable('');
 
-    $(window).on('hashchange', function() {
-        var displayName = location.hash.substring(1);
+    self.okToSave = ko.pureComputed(() => {
+        let i,
+            len = self.sections.length,
+            okToSave = true;
+        for (i = 0; i < len; i++) {
+            if (self.sections[i].hasError()) {
+                okToSave = false;
+                break;
+            }
+        }
+
+        return okToSave;
+    });
+
+    $(window).on('hashchange', function () {
+        var displayName = decodeURIComponent(location.hash.substring(1));
         self.section(displayName);
     });
 
@@ -113,7 +127,7 @@ var sysPrefsViewModel = (function() {
 
 // click-to-edit binding for prefs screens.  accepts enter key and escapes out of changes
 ko.bindingHandlers.clickEdit = {
-    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         var el = $(element),
             span = el.children('span'),
             inputEl = el.children('input'),
@@ -121,23 +135,23 @@ ko.bindingHandlers.clickEdit = {
             originalValue = ko.unwrap(valueAccessor());
 
         el.addClass('clickToEdit');
-        el.on('click', function(event) {
+        el.on('click', function (event) {
             span.addClass('hide');
             inputEl.removeClass('hide').focus();
             selectEl.removeClass('hide').focus();
             originalValue = inputEl.val() || selectEl.val();
         });
 
-        inputEl.on('blur', function(event) {
+        inputEl.on('blur', function (event) {
             inputEl.addClass('hide');
             span.removeClass('hide');
         });
-        selectEl.on('blur', function(event) {
+        selectEl.on('blur', function (event) {
             selectEl.addClass('hide');
             span.removeClass('hide');
         });
 
-        inputEl.on('keyup', function(event) {
+        inputEl.on('keyup', function (event) {
             var keyCode = event.which || event.keyCode;
 
             //escape
@@ -160,7 +174,7 @@ ko.bindingHandlers.clickEdit = {
 };
 
 ko.validation.rules.ipAddress = {
-    validator: function(value) {
+    validator: function (value) {
         var ranges,
             c, len,
             num;
@@ -199,7 +213,7 @@ ko.validation.rules.ipAddress = {
 ko.validation.registerExtenders();
 
 // Calendar screen ------------------------------------------------------------
-var calendarViewModel = function() {
+var calendarViewModel = function () {
     var viewModel = {
 
         $calendarData: "",
@@ -211,6 +225,10 @@ var calendarViewModel = function() {
         season: ko.observable(''),
 
         originalSeason: '',
+
+        yearsWithData: ko.observable([]),
+
+        selectedYearToCopy: ko.observable(),
 
         hasError: ko.observable(false),
 
@@ -226,19 +244,19 @@ var calendarViewModel = function() {
 
         originalHolidays: [],
 
-        updateDatePicker: function(year) {
+        updateDatePicker: function (year) {
             $('#jqxCalendar').off('change');
             $('#jqxCalendar').jqxCalendar('setMinDate', new Date(year, 0, 1));
             $('#jqxCalendar').jqxCalendar('setMaxDate', new Date(year, 11, 31));
             $('#jqxCalendar').jqxCalendar('setDate', new Date(year, 0, 1));
 
-            $('#jqxCalendar').on('change', function(event) {
+            $('#jqxCalendar').on('change', function (event) {
                 viewModel.add(event.args.date);
                 $('#jqxCalendar').css('display', 'none');
             });
         },
 
-        incrementYear: function() {
+        incrementYear: function () {
 
             var proceed = true,
                 year;
@@ -254,7 +272,7 @@ var calendarViewModel = function() {
             }
         },
 
-        decrementYear: function() {
+        decrementYear: function () {
 
             var proceed = true,
                 year;
@@ -270,7 +288,7 @@ var calendarViewModel = function() {
             }
         },
 
-        modifyDay: function(data, delta) {
+        modifyDay: function (data, delta) {
             var month, date,
                 h = Date.parse(data.month + "." + data.date() + "." + viewModel.year()).addDays(delta);
 
@@ -290,15 +308,15 @@ var calendarViewModel = function() {
             }
         },
 
-        incrementDay: function(data) {
+        incrementDay: function (data) {
             viewModel.modifyDay(data, +1);
         },
 
-        decrementDay: function(data) {
+        decrementDay: function (data) {
             viewModel.modifyDay(data, -1);
         },
 
-        getData: function(year) {
+        getData: function (year) {
 
             var i, len,
                 entry = [];
@@ -314,9 +332,9 @@ var calendarViewModel = function() {
                 },
                 dataType: 'json',
                 type: 'post'
-            }).done(function(data) {
+            }).done(function (data) {
                 var myObj,
-                    isDirty = function(value) {
+                    isDirty = function (value) {
                         viewModel.dirty(viewModel.different());
                     };
                 // Clear the non-editable array data in preparation for getting new data
@@ -354,20 +372,26 @@ var calendarViewModel = function() {
                 viewModel.holidays(entry);
                 //hydrate the season and originalSeason properties on viewmodel -- gettingData() changed after this function is completed successfully
                 viewModel.getSeasonData();
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+                viewModel.getYearsWithData();
+            }).fail(function (jqXHR, textStatus, errorThrown) {
                 alert(textStatus + ": " + errorThrown);
                 viewModel.gettingData(false);
             });
         },
-        updateSeasonData: function(mdl) {
+        updateSeasonData: function (mdl) {
             var ajopts, callbacks, vm, data;
             vm = viewModel;
+
+            if (viewModel.season() === viewModel.originalSeason) {
+                vm.dirty(false);
+                return;
+            }
             data = {
                 'Current Season': vm.season()
             };
             vm.gettingData(true);
             callbacks = {
-                success: function(sdata) {
+                success: function (sdata) {
                     vm.gettingData(false);
                     if (sdata.message !== 'success') {
                         vm.hasError(true);
@@ -376,7 +400,7 @@ var calendarViewModel = function() {
                         vm.dirty(false);
                     }
                 },
-                fail: function(jqXHR, status, error) {
+                fail: function (jqXHR, status, error) {
                     vm.gettingData(false);
                     vm.hasError(true);
                     return error;
@@ -390,19 +414,19 @@ var calendarViewModel = function() {
             };
             $.ajax(ajopts).done(callbacks.success).fail(callbacks.fail);
         },
-        getSeasonData: function() {
+        getSeasonData: function () {
             var ajopts, callbacks, vm;
             vm = viewModel;
             vm.gettingData(true);
             callbacks = {
-                success: function(data) {
+                success: function (data) {
                     vm.season(data['Current Season']);
                     vm.originalSeason = vm.season();
                     vm.gettingData(false);
                     viewModel.$calendarData.show();
                     return data;
                 },
-                fail: function(jqXHR, status, error) {
+                fail: function (jqXHR, status, error) {
                     vm.gettingData(false);
                     vm.hasError(true);
                     viewModel.$calendarData.show();
@@ -417,23 +441,47 @@ var calendarViewModel = function() {
             $.ajax(ajopts).done(callbacks.success).fail(callbacks.fail);
             return ajopts;
         },
-        changeSeason: function(mdl, ev) {
+        getYearsWithData: function () {
+            var ajopts, callbacks, vm;
+            vm = viewModel;
+            vm.gettingData(true);
+            callbacks = {
+                success: function (data) {
+                    vm.yearsWithData(data.map(year => year.year));
+                    vm.selectedYearToCopy(vm.yearsWithData[0]);
+                    vm.gettingData(false);
+                },
+                fail: function (jqXHR, status, error) {
+                    vm.gettingData(false);
+                    vm.hasError(true);
+                }
+            };
+            ajopts = {
+                url: 'api/calendar/getyearswithdata',
+                type: 'POST',
+                dataType: 'json'
+            };
+            $.ajax(ajopts).done(callbacks.success).fail(callbacks.fail);
+        },
+        changeSeason: function (mdl, ev) {
             viewModel.dirty(viewModel.different());
             return true;
         },
-        copyPreviousYear: function(data) {
+        copyPreviousYear: function (data) {
             viewModel.getData(viewModel.year() - 1);
         },
-
-        getDayOfWeek: function(dataObj) {
+        copyYear: function() {
+            viewModel.getData(viewModel.selectedYearToCopy);
+        },
+        getDayOfWeek: function (dataObj) {
             return Date.parse(dataObj.month + "." + dataObj.date() + "." + viewModel.year()).toString("dddd");
         },
 
-        getMonth: function(dataObj) {
+        getMonth: function (dataObj) {
             return Date.parse(dataObj.month + "." + dataObj.date() + "." + viewModel.year()).toString("MMMM");
         },
 
-        different: function() {
+        different: function () {
             var found,
                 i, j,
                 diff = false,
@@ -469,13 +517,13 @@ var calendarViewModel = function() {
             return diff;
         },
 
-        match: function(month, date) {
-            return ko.utils.arrayFirst(viewModel.holidays(), function(holiday) {
+        match: function (month, date) {
+            return ko.utils.arrayFirst(viewModel.holidays(), function (holiday) {
                 return ((holiday.month === month) && (holiday.date() === date));
             });
         },
 
-        add: function(date) {
+        add: function (date) {
 
             var myObj = {},
                 month = date.getMonth() + 1,
@@ -494,12 +542,12 @@ var calendarViewModel = function() {
             }
         },
 
-        delete: function(data) {
+        delete: function (data) {
             viewModel.holidays.remove(data);
             viewModel.dirty(viewModel.different());
         },
 
-        save: function(data) {
+        save: function (data) {
             $.ajax({
                 url: '/api/calendar/newdate',
                 data: {
@@ -508,7 +556,7 @@ var calendarViewModel = function() {
                 },
                 dataType: 'json',
                 type: 'post'
-            }).done(function(data) {
+            }).done(function (data) {
                 var i, len;
                 if (data.err === undefined) {
                     viewModel.originalHolidays.length = 0;
@@ -528,11 +576,11 @@ var calendarViewModel = function() {
             });
         },
 
-        cancel: function() {
+        cancel: function () {
             var i, len,
                 myObj,
                 entry = [],
-                isDirty = function(value) {
+                isDirty = function (value) {
                     viewModel.dirty(viewModel.different());
                 };
 
@@ -551,12 +599,12 @@ var calendarViewModel = function() {
             viewModel.dirty(false);
         },
 
-        alertTest: function(string) {
+        alertTest: function (string) {
             alert(string);
         }
     };
 
-    viewModel.year.subscribe(function(value) {
+    viewModel.year.subscribe(function (value) {
         viewModel.$calendarData = $("#calendar").find(".calendarData");
         viewModel.$calendarData.hide();
         viewModel.getData();
@@ -567,7 +615,7 @@ var calendarViewModel = function() {
 };
 
 // Controllers Screen ---------------------------------------------------------
-var controllerViewModel = function() {
+var controllerViewModel = function () {
     var self = this,
         originalData,
         $grid,
@@ -579,10 +627,10 @@ var controllerViewModel = function() {
         dataUrl = '/api/system/controllers',
         saveUrl = '/api/system/updateControllers',
         dirs = {},
-        setDirty = function() {
+        setDirty = function () {
             self.dirty(true);
         },
-        Controller = function(row, idx) {
+        Controller = function (row, idx) {
             // console.log('row', row);
             var id = row[ID],
                 name = row[NAME],
@@ -597,7 +645,7 @@ var controllerViewModel = function() {
             this.Description.subscribe(setDirty);
             this._idx = idx;
         },
-        setData = function(data) {
+        setData = function (data) {
             var c, len = data.length,
                 ret = [];
 
@@ -610,19 +658,19 @@ var controllerViewModel = function() {
             self.controllers(ret);
             self.dirty(false);
         },
-        getData = function() {
+        getData = function () {
             $.ajax({
                 url: dataUrl
-            }).done(function(data) {
+            }).done(function (data) {
                 originalData = data;
                 setData(data);
             });
         },
 
-        sortBy = function(field, numeric) {
+        sortBy = function (field, numeric) {
             var dir = dirs[field];
 
-            self.controllers.sort(function(a, b) {
+            self.controllers.sort(function (a, b) {
                 var aa = a[field](),
                     bb = b[field]();
 
@@ -649,7 +697,7 @@ var controllerViewModel = function() {
         },
 
         //display status message on saving
-        showMessage = function(text) {
+        showMessage = function (text) {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             $controllerMessage.stop(true)
                 .html(message)
@@ -671,7 +719,7 @@ var controllerViewModel = function() {
     dirs[ID] = -1;
     dirs.Description = -1;
 
-    self.init = function() {
+    self.init = function () {
         $grid = $('#controllerGrid');
         $controllerMessage = $('#controllerMessage');
         $addControllerForm = $('#newControllerForm');
@@ -695,27 +743,27 @@ var controllerViewModel = function() {
         getData();
     };
 
-    self.sortByID = function() {
+    self.sortByID = function () {
         sortBy(ID, true);
     };
 
-    self.sortByName = function() {
+    self.sortByName = function () {
         sortBy(NAME);
     };
 
-    self.sortByDescription = function() {
+    self.sortByDescription = function () {
         sortBy('Description');
     };
 
     //shows add controller form
 
-    self.showForm = function() {
+    self.showForm = function () {
         self.resetForm();
         self.showEntryForm(true);
         $newControllerName.focus();
     };
 
-    self.resetForm = function() {
+    self.resetForm = function () {
         $addControllerForm.jqxValidator('hide');
 
         //this clears out the form so subsequent visits to the same controller are properly updated
@@ -725,7 +773,7 @@ var controllerViewModel = function() {
     };
 
     //handles the add form submission
-    self.handleFormSubmit = function(form) {
+    self.handleFormSubmit = function (form) {
         var name = self.controllerName(),
             desc = self.controllerDesc(),
             records = self.controllers(),
@@ -738,12 +786,12 @@ var controllerViewModel = function() {
             tmpId,
             obj = {},
             ids = {},
-            finish = function() {
+            finish = function () {
                 self.dirty(true);
                 self.resetForm();
                 showMessage('Added controller "' + name + '" with ID ' + emptyIndex);
             },
-            findEmpty = function() {
+            findEmpty = function () {
                 var cc,
                     done = false,
                     emptyId;
@@ -801,7 +849,7 @@ var controllerViewModel = function() {
         }
     };
 
-    self.deleteController = function(controller, event) {
+    self.deleteController = function (controller, event) {
         var id = controller[ID](),
             name = controller[NAME](),
             idx = controller._idx,
@@ -815,10 +863,10 @@ var controllerViewModel = function() {
         self.dirty(true);
     };
 
-    self.save = function() {
+    self.save = function () {
         var controllers = ko.toJS(self.controllers()),
             sanitizedControllers = [],
-            sanitize = function() {
+            sanitize = function () {
                 var c,
                     row,
                     obj;
@@ -845,30 +893,30 @@ var controllerViewModel = function() {
             },
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             self.dirty(false);
             originalData = sanitizedControllers;
             showMessage('Save controllers: ' + response.message);
         });
     };
 
-    self.cancel = function() {
+    self.cancel = function () {
         setData(originalData);
     };
 };
 
 // Control Priority Text Screen ----------------------------------------------
-var controlPriorityTextViewModel = function() {
+var controlPriorityTextViewModel = function () {
     var self = this,
         fullData,
         dataUrl = '/api/system/controlpriorities',
         saveUrl = '/api/system/updateControlPriorities',
         LEVEL = 'Priority Level',
         TEXT = 'Priority Text',
-        makeDirty = function() {
+        makeDirty = function () {
             self.dirty(true);
         },
-        ControlPriority = function(row) {
+        ControlPriority = function (row) {
             var level = row[LEVEL],
                 text = row[TEXT];
 
@@ -878,7 +926,7 @@ var controlPriorityTextViewModel = function() {
             this[LEVEL].subscribe(makeDirty);
             this[TEXT].subscribe(makeDirty);
         },
-        setData = function(data) {
+        setData = function (data) {
             var c,
                 len = data.length,
                 ret = [];
@@ -896,16 +944,16 @@ var controlPriorityTextViewModel = function() {
     self.hasError = ko.observable(false);
     self.controlPriorities = ko.observableArray();
 
-    self.getData = function() {
+    self.getData = function () {
         $.ajax({
             url: dataUrl
-        }).done(function(data) {
+        }).done(function (data) {
             fullData = data;
             setData(data);
         });
     };
 
-    self.save = function() {
+    self.save = function () {
         var arr = ko.toJS(self.controlPriorities());
 
         $.ajax({
@@ -915,21 +963,21 @@ var controlPriorityTextViewModel = function() {
             },
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             self.dirty(false);
         });
 
         self.dirty(false);
     };
 
-    self.cancel = function() {
+    self.cancel = function () {
         setData(fullData);
         self.dirty(false);
     };
 };
 
 // Quality Codes Screen -------------------------------------------------------
-var qualityCodesViewModel = function() {
+var qualityCodesViewModel = function () {
     var self = this,
         CODELABEL = 'Quality Code Label',
         CODE = 'Quality Code',
@@ -937,10 +985,10 @@ var qualityCodesViewModel = function() {
         fullData,
         dataUrl = '/api/system/qualityCodes',
         saveUrl = '/api/system/updateQualityCodes',
-        makeDirty = function() {
+        makeDirty = function () {
             self.dirty(true);
         },
-        QualityCode = function(row) {
+        QualityCode = function (row) {
             var label = row[CODELABEL],
                 code = row[CODE],
                 color = row[CODECOLOR];
@@ -951,7 +999,7 @@ var qualityCodesViewModel = function() {
             this[CODECOLOR].subscribe(makeDirty);
             this[CODE].subscribe(makeDirty);
         },
-        setData = function(data) {
+        setData = function (data) {
             var c,
                 entries = data.Entries || [],
                 len = entries.length,
@@ -988,16 +1036,16 @@ var qualityCodesViewModel = function() {
     self.overriden.subscribe(makeDirty);
     self.commandPending.subscribe(makeDirty);
 
-    self.getData = function() {
+    self.getData = function () {
         $.ajax({
             url: dataUrl
-        }).done(function(data) {
+        }).done(function (data) {
             fullData = data;
             setData(data);
         });
     };
 
-    self.save = function() {
+    self.save = function () {
         var arr = ko.toJS(self.qualityCodes()),
             qualityCodesObject;
 
@@ -1016,29 +1064,29 @@ var qualityCodesViewModel = function() {
             },
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             self.dirty(false);
         });
     };
 
-    self.cancel = function() {
+    self.cancel = function () {
         setData(fullData);
         self.dirty(false);
     };
 };
 
 // Custom Color Codes Screen --------------------------------------------------
-var customColorCodesViewModel = function() {
+var customColorCodesViewModel = function () {
     var self = this,
         originalData,
-        makeDirty = function() {
+        makeDirty = function () {
             self.dirty(true);
         },
-        CustomColorCode = function(index, hexColor) {
+        CustomColorCode = function (index, hexColor) {
             this['hexColor'] = ko.observable(hexColor);
             this['hexColor'].subscribe(makeDirty);
         },
-        saveCustomColors = function(input, url) {
+        saveCustomColors = function (input, url) {
             var i,
                 len = input.length;
             rawHexColor = [];
@@ -1051,7 +1099,7 @@ var customColorCodesViewModel = function() {
                 url: url,
                 type: 'POST',
                 dataType: 'json',
-                success: function(returnData) {
+                success: function (returnData) {
                     //console.log(url, "input = " + JSON.stringify(input));
                     //console.log(url, "returnData = " + JSON.stringify(returnData));
                 },
@@ -1060,7 +1108,7 @@ var customColorCodesViewModel = function() {
                 }
             });
         },
-        setData = function(customColors) {
+        setData = function (customColors) {
             var i,
                 len = customColors.length,
                 ret = [];
@@ -1073,13 +1121,13 @@ var customColorCodesViewModel = function() {
             self.customColorCodes(ret);
             self.dirty(false);
         };
-    self.init = function() {
+    self.init = function () {
         $.getJSON('/api/system/getCustomColors', setData);
     };
-    self.cancel = function() {
+    self.cancel = function () {
         setData(originalData);
     };
-    self.save = function() {
+    self.save = function () {
         saveCustomColors(self.customColorCodes(), '/api/system/updateCustomColors');
         self.dirty(false);
     };
@@ -1090,7 +1138,7 @@ var customColorCodesViewModel = function() {
 };
 
 // Telemetry Screen -----------------------------------------------------------
-var telemetryViewModel = function() {
+var telemetryViewModel = function () {
     var self = this,
         fullData,
         errors,
@@ -1136,7 +1184,7 @@ var telemetryViewModel = function() {
             }, ipPortTemplate,
             ipNetSegTemplate
         ],
-        makeDirty = function() {
+        makeDirty = function () {
             if (!self.dirty() && !!self.initialized()) {
                 $.toast({
                     heading: 'Warning',
@@ -1150,11 +1198,11 @@ var telemetryViewModel = function() {
             }
             self.dirty(true);
         },
-        checkForErrors = function() {
+        checkForErrors = function () {
             makeDirty();
             // self.hasError(errors().length > 0);
         },
-        initObservables = function() {
+        initObservables = function () {
             var c, len = fieldList.length,
                 item,
                 name,
@@ -1177,13 +1225,13 @@ var telemetryViewModel = function() {
             self.networks.subscribe(makeDirty);
             errors = ko.validatedObservable(self);
         },
-        getDataToSave = function() {
+        getDataToSave = function () {
             var c, len = fieldList.length,
                 field,
                 ret = {},
                 networks = self.networks();
 
-            var fixLeadingZeros = function(value) {
+            var fixLeadingZeros = function (value) {
                 // var matched = value.match(/^0*/);
                 // if (!!matched) {
                 //     return value.substr(matched[0].length);
@@ -1218,7 +1266,7 @@ var telemetryViewModel = function() {
 
             return ret;
         },
-        setData = function() {
+        setData = function () {
             var c, len = fieldList.length,
                 networks = fullData['Network Configuration'],
                 item,
@@ -1253,7 +1301,7 @@ var telemetryViewModel = function() {
             self.initialized(true);
             // console.log("setdata originalValues", originalValues);
         },
-        updateData = function() {
+        updateData = function () {
             var c, len = fieldList.length,
                 item,
                 name,
@@ -1270,7 +1318,7 @@ var telemetryViewModel = function() {
             }
             console.log("updatedata originalValues", originalValues);
         },
-        getZoneFromEnum = function(eValue) {
+        getZoneFromEnum = function (eValue) {
             for (var prop in tzEnums) {
                 if (tzEnums[prop].enum === eValue) {
                     return prop;
@@ -1305,24 +1353,24 @@ var telemetryViewModel = function() {
 
     initObservables();
 
-    self.init = function() {
+    self.init = function () {
         self.getData();
     };
 
-    self.getData = function() {
+    self.getData = function () {
         $.ajax({
             url: dataUrl
-        }).done(function(data) {
+        }).done(function (data) {
             fullData = data;
             setData();
         });
     };
 
-    self.getTZText = function() {
+    self.getTZText = function () {
         return 'Central';
     };
 
-    self.timeZones = function() {
+    self.timeZones = function () {
         var timezones = [];
 
         for (var prop in tzEnums) {
@@ -1335,7 +1383,7 @@ var telemetryViewModel = function() {
         return timezones;
     };
 
-    self.save = function() {
+    self.save = function () {
         var valErrors = errors(),
             len = valErrors.length,
             saveObj;
@@ -1350,7 +1398,7 @@ var telemetryViewModel = function() {
             data: saveObj,
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             updateData();
         });
         // } else {
@@ -1359,10 +1407,10 @@ var telemetryViewModel = function() {
         // }
     };
 
-    self.cancel = function() {
+    self.cancel = function () {
         setData();
     };
-    self.changeTimezone = function(e) {
+    self.changeTimezone = function (e) {
         for (var prop in tzEnums) {
             if (tzEnums[prop].enum === self.selectedTimeZone()) {
                 self['Time Zone'](self.selectedTimeZone());
@@ -1371,7 +1419,7 @@ var telemetryViewModel = function() {
             }
         }
     };
-    self.addNetwork = function(vm, e, network) {
+    self.addNetwork = function (vm, e, network) {
         var newNetwork = {};
         if (!!network) {
             newNetwork = network;
@@ -1392,7 +1440,7 @@ var telemetryViewModel = function() {
             self.networks.push(newNetwork);
         }
     };
-    self.removeNetwork = function() {
+    self.removeNetwork = function () {
         var networks = self.networks();
         var toRemove = parseInt(this['IP Network Segment']());
         var portCheck = parseInt(this['IP Port']());
@@ -1408,10 +1456,10 @@ var telemetryViewModel = function() {
         self.networks.valueHasMutated();
         self.updateDefault();
     };
-    self.setSegment = function() {
+    self.setSegment = function () {
         self.originalSegment(this['IP Network Segment']());
     };
-    self.checkUniqueSegment = function(obj, e) {
+    self.checkUniqueSegment = function (obj, e) {
         var values = [];
         var networks = self.networks();
         $('.networkSegmentUnique').remove();
@@ -1430,24 +1478,24 @@ var telemetryViewModel = function() {
         }
         $('#uniqueSegmentError').hide();
     };
-    self.changeDefault = function() {
+    self.changeDefault = function () {
         console.log(this['IP Network Segment'](), this.isDefault());
         var networks = self.networks();
-        networks.forEach(function(net) {
+        networks.forEach(function (net) {
             net.isDefault(false);
         });
         this.isDefault(true);
         self.dirty(true);
         return true;
     };
-    self.allowDefault = function() {
+    self.allowDefault = function () {
         console.log(this);
         return true;
     };
-    self.updateDefault = function() {
+    self.updateDefault = function () {
         var hasDefault = false;
         var networks = self.networks();
-        networks.forEach(function(net) {
+        networks.forEach(function (net) {
             if (!!net.isDefault()) {
                 hasDefault = true;
             }
@@ -1463,10 +1511,10 @@ var telemetryViewModel = function() {
 };
 
 // Backup Screen --------------------------------------------------------------
-var backupViewModel = function() {
+var backupViewModel = function () {
     var self = this,
         socket = window.top && window.top.workspaceManager.socket(),
-        initObservables = function() {
+        initObservables = function () {
 
         };
 
@@ -1476,57 +1524,95 @@ var backupViewModel = function() {
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
 
-    self.init = function() {
+    self.init = function () {
 
     };
 
-    self.startBackup = function() {
+    self.startBackup = function () {
         socket.emit('fieldCommand', ko.toJSON({
             "Command Type": 14
         }));
     };
 
-    socket.on('returnFromField', function(data) {
+    socket.on('returnFromField', function (data) {
         // data = $.parseJSON(data);
 
         if (data.err) {
             self.backupMsg('Error: ' + data.err);
         } else {
-            self.backupMsg(data);
+            self.backupMsg('Backup starting.');
         }
         self.showBackupMsg(true);
     });
 };
 
 // About screen ---------------------------------------------------------------
-var versionsViewModel = function() {
-    var self = this;
-    self.displayName = 'Versions';
+var preferencesViewModel = function () {
+    var self = this,
+        originalData,
+        makeDirty = function () {
+            self.dirty(true);
+        },
+        setData = function (orgData) {
+            self.siteName(orgData);
+            self.dirty(false);
+        };
+    self.displayName = 'Preferences';
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
     self.processVer = ko.observable('');
     self.ijsVer = ko.observable('');
+    self.siteName = ko.observable('');
+    self.siteNameIsValid = ko.observable(true);
+    self.errorMessage = ko.observable('');
 
-    self.getData = function() {
+    self.getData = function () {
         $.ajax({
-            url: '/api/system/versions'
-        }).done(function(data) {
+            url: '/api/system/preferences'
+        }).done(function (data) {
             if (!!data.err) {
                 console.log(data);
-                alert('There was an error getting versions.');
+                alert('There was an error getting preferences.');
             } else {
                 self.ijsVer(data.infoscanjs);
                 self.processVer(data.Processes);
+                self.siteName(data.siteName);
+                originalData = self.siteName();
+                self.siteName.subscribe(makeDirty);
             }
         });
     };
-    self.init = function() {
+    self.init = function () {
         self.getData();
+    };
+    self.save = function () {
+        self.siteName(dtiCommon.cleanLabelField(self.siteName()));
+        if (self.siteNameIsValid()) {
+            $.ajax({
+                url: '/api/system/setpreferences',
+                data: {
+                    siteName: self.siteName()
+                },
+                dataType: 'json',
+                type: 'post'
+            }).done(function (response) {
+                self.dirty(false);
+            });
+
+            self.dirty(false);
+        }
+    };
+
+    self.cancel = function () {
+        setData(originalData);
+        self.dirty(false);
+        self.hasError(false);
+        self.errorMessage("");
     };
 };
 
 // Alarm Messages Screen ---------------------------------------------------------
-var alarmMessageViewModel = function() {
+var alarmMessageViewModel = function () {
     var self = this,
         alarmTemplateCategories = window.top.workspaceManager.config.Enums["Alarm Categories"],
         alarmTemplateTypes = window.top.workspaceManager.config.Enums["Alarm Types"],
@@ -1543,7 +1629,7 @@ var alarmMessageViewModel = function() {
         deleteUrl = '/api/system/deleteAlarmTemplate',
         alarmTemplateData,
         columnsArray,
-        blockUI = function($control, state) {
+        blockUI = function ($control, state) {
             if (state === true) {
                 $control.hide();
             } else {
@@ -1551,17 +1637,17 @@ var alarmMessageViewModel = function() {
             }
             $control.attr('disabled', state);
         },
-        getRawHexColor = function(theColor) {
+        getRawHexColor = function (theColor) {
             return theColor.replace(/#/g, "");
         },
-        getColumnByRenderIndex = function(index) {
+        getColumnByRenderIndex = function (index) {
             var result;
-            result = columnsArray.filter(function(col) {
+            result = columnsArray.filter(function (col) {
                 return (col.renderedIndex === index);
             });
             return result[0];
         },
-        getKeyBasedOnEnumValue = function(obj, value) {
+        getKeyBasedOnEnumValue = function (obj, value) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
                     if (obj[key].enum === parseInt(value, 10)) {
@@ -1571,7 +1657,7 @@ var alarmMessageViewModel = function() {
             }
             return "System Message";
         },
-        getColumns = function() {
+        getColumns = function () {
             var cols = [];
             cols.push({
                 columnKey: "_id",
@@ -1636,13 +1722,13 @@ var alarmMessageViewModel = function() {
             });
             return cols;
         },
-        configureDataTable = function(destroy, clearData, columns) {
+        configureDataTable = function (destroy, clearData, columns) {
             var $cloneButton = "<div class='btn-group' title='Clone'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
                 $deleteButton = "<div class='btn-group' title='Delete'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
                 aoColumns = [],
                 i,
                 renderedIndex = 0,
-                setTdAttribs = function(tdField, columnConfig, data, columnIndex) {
+                setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
                     switch (columnConfig.columnKey) {
                         case "msgFormat":
                             $(tdField).css('background-color', data.msgBackColor.Value);
@@ -1673,7 +1759,7 @@ var alarmMessageViewModel = function() {
                             break;
                     }
                 },
-                setColumnClasses = function(columnKey) {
+                setColumnClasses = function (columnKey) {
                     var result = "";
                     switch (columnKey) {
                         case "msgCat":
@@ -1697,7 +1783,7 @@ var alarmMessageViewModel = function() {
                     }
                     return result;
                 },
-                buildColumnObject = function(columnConfig, columnIndex) {
+                buildColumnObject = function (columnConfig, columnIndex) {
                     var result,
                         columnTitle = columnConfig.columnName,
                         sortAbleColumn = columnConfig.sortable;
@@ -1710,7 +1796,7 @@ var alarmMessageViewModel = function() {
                         render: {
                             _: "Value"
                         },
-                        fnCreatedCell: function(nTd, sData, oData, iRow, iCol) {
+                        fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
                             setTdAttribs(nTd, getColumnByRenderIndex(iCol), oData, iCol);
                         },
                         bSortable: sortAbleColumn
@@ -1731,7 +1817,7 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable({
                     data: alarmTemplateData,
                     columns: aoColumns,
-                    headerCallback: function(thead, data, start, end, display) {
+                    headerCallback: function (thead, data, start, end, display) {
                         for (i = 0; i < aoColumns.length; i++) {
                             $(thead).find('th').eq(i).css("background-color", "rgb(234, 234, 234)");
                             $(thead).find('th').eq(i).addClass("strong");
@@ -1754,7 +1840,7 @@ var alarmMessageViewModel = function() {
                 });
             }
         },
-        renderAlarmTemplates = function() {
+        renderAlarmTemplates = function () {
             self.activeDataRequest(false);
             if (alarmTemplateData) {
                 blockUI($alarmMessagesData, false);
@@ -1765,7 +1851,7 @@ var alarmMessageViewModel = function() {
                 // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             }
         },
-        buildAlarmTemplate = function(row, cloneRow) {
+        buildAlarmTemplate = function (row, cloneRow) {
             var editLevel = 0,
                 result;
 
@@ -1829,7 +1915,7 @@ var alarmMessageViewModel = function() {
             }
             return result;
         },
-        setData = function(data) {
+        setData = function (data) {
             var i;
 
             alarmTemplateData = [];
@@ -1844,19 +1930,19 @@ var alarmMessageViewModel = function() {
             self.alarmTemplates(alarmTemplateData);
             renderAlarmTemplates();
         },
-        getData = function() {
+        getData = function () {
             self.activeDataRequest(true);
             $.ajax({
                 url: dataUrl
-            }).done(function(data) {
+            }).done(function (data) {
                 setData(data);
             });
         },
-        showMessage = function(text) {
+        showMessage = function (text) {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             console.log("save message = " + message);
         },
-        promptDelete = function(row) {
+        promptDelete = function (row) {
             self.alarmTemplate(buildAlarmTemplate(row, false));
             $alarmTemplateDeleteConfirm.modal("show");
         };
@@ -1898,12 +1984,12 @@ var alarmMessageViewModel = function() {
     }]);
     self.showEntryForm = ko.observable(false);
     self.hasNameError = ko.observable(false);
-    self.init = function() {
+    self.init = function () {
         columnsArray = getColumns();
-        self.alarmTemplateBackgroundColor.subscribe(function(newValue) {
+        self.alarmTemplateBackgroundColor.subscribe(function (newValue) {
             $msgFormat.css('background-color', "#" + newValue);
         });
-        self.alarmTemplateTextColor.subscribe(function(newValue) {
+        self.alarmTemplateTextColor.subscribe(function (newValue) {
             $msgFormat.css('color', "#" + newValue);
         });
         $alarmTemplateContainer = $("#alarmTemplateContainer");
@@ -1918,24 +2004,24 @@ var alarmMessageViewModel = function() {
         blockUI($alarmMessagesData, true);
         configureDataTable(true, true, columnsArray);
 
-        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function(e) {
+        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
             self.alarmTemplate($alarmTemplateDataTable.DataTable().row(this).data());
             self.displayPopupEditor();
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function(e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function (e) {
             e.preventDefault();
             e.stopPropagation();
             self.clone($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function(e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function (e) {
             e.preventDefault();
             e.stopPropagation();
             promptDelete($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.on('draw.dt', function(e, settings) {
+        $alarmTemplateDataTable.on('draw.dt', function (e, settings) {
             var numberOfPages = $alarmTemplateDataTable.DataTable().page.info().pages,
                 $tablePagination,
                 $pagination,
@@ -1956,10 +2042,10 @@ var alarmMessageViewModel = function() {
 
         getData();
     };
-    self.save = function() {
+    self.save = function () {
         var alarmTemplate = $.extend(true, {}, self.alarmTemplate()),
             data = {},
-            sanitize = function() {
+            sanitize = function () {
                 var key;
 
                 alarmTemplate.msgTextColor.rawValue = getRawHexColor(self.alarmTemplateTextColor());
@@ -2007,13 +2093,13 @@ var alarmMessageViewModel = function() {
             data: data,
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             showMessage('Save alarmTemplate: ' + response.message);
             getData();
         });
         $alarmTemplateModal.modal("hide");
     };
-    self.displayPopupEditor = function() {
+    self.displayPopupEditor = function () {
         var draggedToken = {};
         self.alarmTemplateBackgroundColor(getRawHexColor(self.alarmTemplate().msgBackColor.Value));
         self.alarmTemplateTextColor(getRawHexColor(self.alarmTemplate().msgTextColor.Value));
@@ -2026,7 +2112,7 @@ var alarmMessageViewModel = function() {
         $alarmToken = $alarmTokens.find(".alarmToken");
 
         if (!self.alarmTemplate().isSystemMessage.rawValue) {
-            $($alarmToken).dblclick(function() {
+            $($alarmToken).dblclick(function () {
                 var alarmToken = $(this).find(".alarmTokenCode").text();
                 $($msgFormat).val($($msgFormat).val() + alarmToken);
             });
@@ -2034,21 +2120,21 @@ var alarmMessageViewModel = function() {
             $($alarmToken).draggable({
                 cursor: 'move',
                 helper: "clone",
-                start: function(event, ui) {
+                start: function (event, ui) {
                     draggedToken.tr = this;
                     draggedToken.helper = ui.helper;
                 }
             });
 
             $($msgFormat).droppable({
-                drop: function(event, ui) {
+                drop: function (event, ui) {
                     var alarmToken = ui.draggable.find(".alarmTokenCode").text();
                     $(this).val($(this).val() + alarmToken);
                 }
             });
         }
     };
-    self.deleteAlarmTemplate = function() {
+    self.deleteAlarmTemplate = function () {
         var data = {},
             alarmTemplate = $.extend(true, {}, self.alarmTemplate());
 
@@ -2062,29 +2148,29 @@ var alarmMessageViewModel = function() {
             data: data,
             dataType: 'json',
             type: 'post'
-        }).done(function(response) {
+        }).done(function (response) {
             showMessage('Delete alarmTemplate: ' + response.message);
             getData();
         });
         $alarmTemplateDeleteConfirm.modal("hide");
     };
-    self.clone = function(row) {
+    self.clone = function (row) {
         self.alarmTemplate(buildAlarmTemplate(row, true));
         self.displayPopupEditor();
     };
 };
 
 // Weather screen -------------------------------------------------------------
-var weatherViewModel = function() {
+var weatherViewModel = function () {
     var self = this,
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
         workspaceManager = window.top && window.top.workspaceManager,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
-        openPointSelector = function(callback) {
+        openPointSelector = function (callback) {
             var parameters,
-                pointSelectedCallback = function(pointInfo) {
+                pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
                         callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                     }
@@ -2092,11 +2178,11 @@ var weatherViewModel = function() {
             dtiUtility.showPointSelector(parameters);
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
-        setData = function(data) {
+        setData = function (data) {
             var newData = [];
 
             if (Array.isArray(data)) {
-                data.forEach(function(weatherPoint) {
+                data.forEach(function (weatherPoint) {
                     newData.push({
                         title: weatherPoint.title,
                         point: ko.observable(weatherPoint.point)
@@ -2113,24 +2199,24 @@ var weatherViewModel = function() {
             self.weatherPoints(newData);
             self.dirty(false);
         },
-        getData = function() {
+        getData = function () {
             $.ajax({
                 url: dataUrl
-            }).done(function(data) {
+            }).done(function (data) {
                 originalData = data;
                 setData(data);
             });
         },
-        getDataToSave = function() {
+        getDataToSave = function () {
             var data = {};
-            self.weatherPoints().forEach(function(weatherPoint) {
+            self.weatherPoints().forEach(function (weatherPoint) {
                 var point = weatherPoint.point(),
                     upi = (point && point._id) || null;
                 data[weatherPoint.title] = upi;
             });
             return data;
         },
-        saveData = function() {
+        saveData = function () {
             // Create a snapshot in case the user modifies the data before save is completed
             var snapshot = ko.toJS(self.weatherPoints);
             // Save the data
@@ -2139,7 +2225,7 @@ var weatherViewModel = function() {
                 data: getDataToSave(),
                 dataType: 'json',
                 type: 'post'
-            }).done(function(response) {
+            }).done(function (response) {
                 var err;
                 console.log(response);
                 if (response.message && response.message === 'success') {
@@ -2160,25 +2246,25 @@ var weatherViewModel = function() {
 
     self.weatherPoints = ko.observableArray([]);
 
-    self.init = function() {
+    self.init = function () {
         getData();
     };
 
-    self.save = function() {
+    self.save = function () {
         saveData();
     };
 
-    self.cancel = function() {
+    self.cancel = function () {
         setData(originalData);
     };
 
-    self.removePointRef = function(data) {
+    self.removePointRef = function (data) {
         data.point(null);
         self.dirty(true);
     };
 
-    self.editPointRef = function(data) {
-        openPointSelector(function(upi, name, pointType) {
+    self.editPointRef = function (data) {
+        openPointSelector(function (upi, name, pointType) {
             data.point({
                 _id: upi,
                 _pStatus: activePointStatus,
@@ -2191,7 +2277,7 @@ var weatherViewModel = function() {
         });
     };
 
-    self.openPointRef = function(data) {
+    self.openPointRef = function (data) {
         var point = data.point(),
             upi = point._id,
             pointType = point['Point Type'].Value,
@@ -2202,12 +2288,12 @@ var weatherViewModel = function() {
 };
 
 // Notifications screen -------------------------------------------------------
-var notificationsViewModel = function() {
+var notificationsViewModel = function () {
     var _webendpoint = window.location.protocol + '//' + window.location.host,
         _webendpointURI = _webendpoint + '/api/security/',
         _idCounter = 0,
         $scheduleCalendar = $('#scheduleCalendar'),
-        makeId = function() {
+        makeId = function () {
             _idCounter++;
             return 'nid_' + _idCounter;
         },
@@ -2306,7 +2392,7 @@ var notificationsViewModel = function() {
                 }
             },
 
-            forEachArray: function(arr, fn) {
+            forEachArray: function (arr, fn) {
                 var c,
                     list = arr || [],
                     len = list.length,
@@ -2322,7 +2408,7 @@ var notificationsViewModel = function() {
                 return errorFree;
             },
 
-            getTemplate: function(template) {
+            getTemplate: function (template) {
                 var tpl = $.extend(true, {}, _local.templates[template]),
                     copyProperties = ['repeatConfig', 'rotateConfig'],
                     idProperties = {
@@ -2333,7 +2419,7 @@ var notificationsViewModel = function() {
                     newID,
                     idProperty;
 
-                copyProperties.forEach(function(property) {
+                copyProperties.forEach(function (property) {
                     if (tpl.hasOwnProperty(property)) {
                         tpl[property] = _local.getTemplate(property);
                     }
@@ -2352,7 +2438,7 @@ var notificationsViewModel = function() {
             },
             policies: []
         },
-        createMember = function(data, dt) {
+        createMember = function (data, dt) {
             var ret = {
                     id: data._id,
                     firstName: data['First Name'].Value,
@@ -2363,7 +2449,7 @@ var notificationsViewModel = function() {
                     notificationsEnabled: data.notificationsEnabled,
                     notificationOptions: data.notificationOptions || _local.getTemplate('notificationOptions')
                 },
-                processAlert = function(alert, idx) {
+                processAlert = function (alert, idx) {
                     var contact;
 
                     if (alert.delay === undefined) {
@@ -2383,12 +2469,12 @@ var notificationsViewModel = function() {
             return ret;
         };
 
-    _local.init = function(reset) {
+    _local.init = function (reset) {
         var columns = [{
                 data: 'firstName()',
                 title: 'First Name',
                 className: 'firstName',
-                render: function(data, type, full, meta) {
+                render: function (data, type, full, meta) {
                     return '<a href="#">' + data + '</a>';
                 }
             }, {
@@ -2400,7 +2486,7 @@ var notificationsViewModel = function() {
                 title: 'Member By Way Of Security Group',
                 className: 'securityGroup'
             }],
-            initMemberDataTable = function() {
+            initMemberDataTable = function () {
                 var members = _local.bindings.currPolicy.members,
                     $memberList = $('#memberList');
 
@@ -2421,7 +2507,7 @@ var notificationsViewModel = function() {
                     });
                 }
 
-                $memberList.on('click', '.firstName', function(event) {
+                $memberList.on('click', '.firstName', function (event) {
                     var rowIdx = _local.memberDT.cell(this).index().row,
                         member = _local.memberDT.rows(rowIdx).data()[0];
 
@@ -2430,7 +2516,7 @@ var notificationsViewModel = function() {
                     event.preventDefault();
                 });
 
-                members.subscribe(function(members) {
+                members.subscribe(function (members) {
                     _local.memberDT.clear();
                     _local.memberDT.rows.add(members);
                     _local.memberDT.draw();
@@ -2439,7 +2525,7 @@ var notificationsViewModel = function() {
 
         initMemberDataTable();
 
-        _local.$tabs = $('.notificationsContent').on('click', '.nav a', function(e) {
+        _local.$tabs = $('.notificationsContent').on('click', '.nav a', function (e) {
             e.preventDefault();
 
             $(this).tab('show');
@@ -2452,7 +2538,7 @@ var notificationsViewModel = function() {
 
         $scheduleCalendar.fullCalendar({
             schedulerLicenseKey: '0890776600-fcs-1460400855',
-            eventClick: function(calEvent, jsEvent, view) {
+            eventClick: function (calEvent, jsEvent, view) {
                 console.log(calEvent);
                 jsEvent.preventDefault();
             },
@@ -2512,56 +2598,56 @@ var notificationsViewModel = function() {
             }],
             slotDuration: '01:00:00',
             slotLabelInterval: '02:00:00'
-                // events: [
-                //     // {
-                //     //     title: 'All Day Event',
-                //     //     start: '2016-01-01'
-                //     // },
-                //     // {
-                //     //     title: 'Long Event',
-                //     //     start: '2016-01-07',
-                //     //     end: '2016-01-10'
-                //     // },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-10T08:00:00',
-                //         end: '2016-01-10T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-11T08:00:00',
-                //         end: '2016-01-11T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-12T08:00:00',
-                //         end: '2016-01-12T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-13T08:00:00',
-                //         end: '2016-01-13T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-14T08:00:00',
-                //         end: '2016-01-14T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-15T08:00:00',
-                //         end: '2016-01-15T17:00:00'
-                //     },
-                //     {
-                //         id: 999,
-                //         start: '2016-01-16T08:00:00',
-                //         end: '2016-01-16T17:00:00'
-                //     }
-                // ]
+            // events: [
+            //     // {
+            //     //     title: 'All Day Event',
+            //     //     start: '2016-01-01'
+            //     // },
+            //     // {
+            //     //     title: 'Long Event',
+            //     //     start: '2016-01-07',
+            //     //     end: '2016-01-10'
+            //     // },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-10T08:00:00',
+            //         end: '2016-01-10T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-11T08:00:00',
+            //         end: '2016-01-11T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-12T08:00:00',
+            //         end: '2016-01-12T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-13T08:00:00',
+            //         end: '2016-01-13T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-14T08:00:00',
+            //         end: '2016-01-14T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-15T08:00:00',
+            //         end: '2016-01-15T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-16T08:00:00',
+            //         end: '2016-01-16T17:00:00'
+            //     }
+            // ]
         });
 
         if (!reset) {
-            $.getJSON('/api/policies/get').done(function(response) {
+            $.getJSON('/api/policies/get').done(function (response) {
                 _local._rawPolicies = response;
                 _local.buildPolicies(response);
             });
@@ -2570,18 +2656,18 @@ var notificationsViewModel = function() {
         }
     };
 
-    _local.updateScheduleEvents = function() {
+    _local.updateScheduleEvents = function () {
         var colors = ['#FDA46E', '#8666FB'], //, '#7DC551'],
             datePrefix = moment().format('YYYY-MM-DDT'),
             tomorrowPrefix = moment().add(1, 'd').format('YYYY-MM-DDT'),
             events = [],
-            convertTime = function(time) {
+            convertTime = function (time) {
                 var hr = time / 100,
                     min = time % 100;
 
                 return ('0' + hr).slice(-2) + ':' + ('0' + min).slice(-2) + ':00';
             },
-            createEvents = function(schedule, color, title) {
+            createEvents = function (schedule, color, title) {
                 var start = datePrefix + convertTime(schedule.startTime || 0),
                     end = convertTime(schedule.endTime || 0),
                     _events = [],
@@ -2602,7 +2688,7 @@ var notificationsViewModel = function() {
                     }
                 }
 
-                _local.forEachArray(schedule.days, function(day) {
+                _local.forEachArray(schedule.days, function (day) {
                     if (loops) {
                         if (schedule.endTime !== 0) {
                             _events.push({
@@ -2642,8 +2728,8 @@ var notificationsViewModel = function() {
                 return _events;
             };
 
-        _local.forEachArray(_local.bindings.currPolicy.scheduleLayers(), function(layer, idx) {
-            _local.forEachArray(ko.toJS(layer.schedules), function(schedule) {
+        _local.forEachArray(_local.bindings.currPolicy.scheduleLayers(), function (layer, idx) {
+            _local.forEachArray(ko.toJS(layer.schedules), function (schedule) {
                 events = events.concat(createEvents(schedule, colors[idx % 2], 'Layer ' + (idx + 1)));
             });
         });
@@ -2652,11 +2738,11 @@ var notificationsViewModel = function() {
         $scheduleCalendar.fullCalendar('addEventSource', events);
     };
 
-    _local.translateMember = function(id) {
+    _local.translateMember = function (id) {
         return _local.userLookup[id];
     };
 
-    _local.translateMembers = function(arr) {
+    _local.translateMembers = function (arr) {
         var c,
             len = arr.length,
             ret = [];
@@ -2668,25 +2754,25 @@ var notificationsViewModel = function() {
         return ret;
     };
 
-    _local.unTranslateMembers = function(policy) {
+    _local.unTranslateMembers = function (policy) {
         var rawPolicy = ko.toJS(policy);
-        _local.forEachArray(rawPolicy.members, function(member, idx) {
+        _local.forEachArray(rawPolicy.members, function (member, idx) {
             rawPolicy.members[idx] = member.id;
         });
 
         return rawPolicy;
     };
 
-    _local.buildPolicy = function(policy) {
+    _local.buildPolicy = function (policy) {
         policy.members = _local.translateMembers(policy.members);
 
 
-        _local.forEachArray(policy.alertConfigs, function(alertConfig) {
+        _local.forEachArray(policy.alertConfigs, function (alertConfig) {
             var newGroups = [];
             alertConfig.groups = alertConfig.groups || [];
-            _local.forEachArray(alertConfig.groups, function(group) {
+            _local.forEachArray(alertConfig.groups, function (group) {
                 group.escalations = group.escalations || [];
-                _local.forEachArray(group.escalations, function(escalation) {
+                _local.forEachArray(group.escalations, function (escalation) {
                     escalation.members = escalation.members || [];
                 });
                 if (group.active) {
@@ -2700,7 +2786,7 @@ var notificationsViewModel = function() {
 
     };
 
-    _local.buildPolicies = function(policies) {
+    _local.buildPolicies = function (policies) {
         var c,
             len = policies.length;
 
@@ -2712,11 +2798,11 @@ var notificationsViewModel = function() {
         }
     };
 
-    _local.prepPolicyForSave = function(policy) {
-        _local.forEachArray(policy.alertConfigs, function(config) {
+    _local.prepPolicyForSave = function (policy) {
+        _local.forEachArray(policy.alertConfigs, function (config) {
             var foundActive = false;
 
-            _local.forEachArray(config.groups, function(group, idx) {
+            _local.forEachArray(config.groups, function (group, idx) {
                 if (group.active) {
                     foundActive = true;
                 }
@@ -2728,14 +2814,14 @@ var notificationsViewModel = function() {
         });
     };
 
-    _local.cancel = function() {
+    _local.cancel = function () {
         _local.dirty(false);
         _local.bindings.home();
         _local.init(true);
     };
 
-    _local.save = function() {
-        _local.forEachArray(_local.bindings.policyList(), function(policy, idx) {
+    _local.save = function () {
+        _local.forEachArray(_local.bindings.policyList(), function (policy, idx) {
             var data = _local.unTranslateMembers(policy);
 
             _local.prepPolicyForSave(data);
@@ -2746,7 +2832,7 @@ var notificationsViewModel = function() {
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json'
-            }).done(function(response) {
+            }).done(function (response) {
                 if (policy._new && policy._new() === true) {
                     delete policy._new;
                     if (policy._id() === _local.bindings.currPolicy._id()) {
@@ -2761,7 +2847,7 @@ var notificationsViewModel = function() {
         _local.dirty(false);
     };
 
-    _local.clearEdits = function(resetAll) {
+    _local.clearEdits = function (resetAll) {
         var binding;
 
         for (binding in _local.bindings) {
@@ -2773,13 +2859,13 @@ var notificationsViewModel = function() {
         }
     };
 
-    _local.editMember = function(member) {
+    _local.editMember = function (member) {
         _local._originalMember = ko.toJS(member);
         _local.bindings.currMember(member);
         _local.bindings.isEditingMember(true);
     };
 
-    _local.editMembers = function(primary, secondary) {
+    _local.editMembers = function (primary, secondary) {
         var c,
             cc,
             len = secondary.length,
@@ -2803,11 +2889,11 @@ var notificationsViewModel = function() {
         _local.$modal.modal('show');
     };
 
-    _local.updateAlertConfigMembers = function() {
+    _local.updateAlertConfigMembers = function () {
         var arr = ko.toJS(_local.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function(member) {
+        arr.forEach(function (member) {
             if (member.selected) {
                 newMembers.push(member.id);
             }
@@ -2816,25 +2902,25 @@ var notificationsViewModel = function() {
         ko.viewmodel.updateFromModel(_local._currEscalation.members, newMembers);
     };
 
-    _local.updatePolicyMembers = function() {
+    _local.updatePolicyMembers = function () {
         var arr = ko.toJS(_local.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function(member) {
+        arr.forEach(function (member) {
             if (member.selected) {
                 newMembers.push(member);
             }
         });
 
         ko.viewmodel.updateFromModel(_local.bindings.currPolicy.members, newMembers);
-        _local.forEachArray(_local.bindings.policyList(), function(policy) {
+        _local.forEachArray(_local.bindings.policyList(), function (policy) {
             if (policy._id() === _local.bindings.currPolicy._id()) {
                 policy.members(newMembers);
             }
         });
     };
 
-    _local.getContact = function(alert, userContactInfo) {
+    _local.getContact = function (alert, userContactInfo) {
         var contact,
             secondContact,
             rawAlert = ko.toJS(alert),
@@ -2842,7 +2928,7 @@ var notificationsViewModel = function() {
             type = rawAlert.Type,
             name = rawAlert.Name;
 
-        _local.forEachArray(userContactInfo || _local.bindings.currMember().contactInfo(), function(koContactInfo) {
+        _local.forEachArray(userContactInfo || _local.bindings.currMember().contactInfo(), function (koContactInfo) {
             var contactInfo = ko.toJS(koContactInfo);
 
             if (name && contactInfo.Name === name) {
@@ -2858,8 +2944,8 @@ var notificationsViewModel = function() {
         return contact || secondContact;
     };
 
-    _local.savePolicy = function() {
-        _local.forEachArray(_local.bindings.policyList(), function(policy, idx) {
+    _local.savePolicy = function () {
+        _local.forEachArray(_local.bindings.policyList(), function (policy, idx) {
             if (policy._id() === _local.bindings.currPolicy._id()) {
                 ko.viewmodel.updateFromModel(_local.bindings.policyList()[idx], ko.toJS(_local.bindings.currPolicy));
             }
@@ -2868,7 +2954,7 @@ var notificationsViewModel = function() {
         _local.dirty(true);
     };
 
-    _local.saveUser = function(user) {
+    _local.saveUser = function (user) {
         var me = this,
             data = {
                 userid: user.id,
@@ -2878,7 +2964,7 @@ var notificationsViewModel = function() {
                     notificationsEnabled: user.notificationsEnabled
                 }
             },
-            processUser = function(alert, idx, list) {
+            processUser = function (alert, idx, list) {
                 list[idx] = ko.toJS(me.getContact(alert));
                 list[idx].delay = alert.delay;
             };
@@ -2893,7 +2979,7 @@ var notificationsViewModel = function() {
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(data),
-            success: function(returnData) {
+            success: function (returnData) {
                 if (returnData.err) {
                     console.log('Error saving user', returnData.err);
                 } else {
@@ -2903,10 +2989,10 @@ var notificationsViewModel = function() {
         });
     };
 
-    _local.checkAlertConfigNames = function(id, name, configs) {
+    _local.checkAlertConfigNames = function (id, name, configs) {
         var duplicate = false;
 
-        _local.forEachArray(configs, function(config) {
+        _local.forEachArray(configs, function (config) {
             if (config.name() === name && (id !== undefined && id !== config.id())) {
                 duplicate = true;
                 return false;
@@ -2971,22 +3057,22 @@ var notificationsViewModel = function() {
         daySunday: ko.observable(false),
         dayHolidays: ko.observable(false),
 
-        savePolicy: function() {
+        savePolicy: function () {
             _local.savePolicy();
         },
 
-        updateScheduleEvents: function() {
+        updateScheduleEvents: function () {
             _local.updateScheduleEvents();
 
             return true;
         },
 
-        editDays: function(schedule) {
-            _local.forEachArray(_local.bindings.days, function(day, idx) {
+        editDays: function (schedule) {
+            _local.forEachArray(_local.bindings.days, function (day, idx) {
                 _local.bindings['day' + day](false);
             });
 
-            _local.forEachArray(schedule.days(), function(day) {
+            _local.forEachArray(schedule.days(), function (day) {
                 var idx = _local.bindings.shortDays.indexOf(day);
 
                 if (idx !== -1) {
@@ -3001,9 +3087,9 @@ var notificationsViewModel = function() {
             $('#notificationsEditDaysModal').modal('show');
         },
 
-        updateDays: function() {
+        updateDays: function () {
             var ret = [];
-            _local.forEachArray(_local.bindings.days, function(day, idx) {
+            _local.forEachArray(_local.bindings.days, function (day, idx) {
                 if (_local.bindings['day' + day]()) {
                     ret.push(_local.bindings.shortDays[idx]);
                 }
@@ -3021,9 +3107,9 @@ var notificationsViewModel = function() {
             _local.updateScheduleEvents();
         },
 
-        getAlertStyleText: function(value) {
+        getAlertStyleText: function (value) {
             var ret;
-            _local.forEachArray(_local.bindings.alertStyles, function(style) {
+            _local.forEachArray(_local.bindings.alertStyles, function (style) {
                 if (style.value === value) {
                     ret = style.text;
                 }
@@ -3032,18 +3118,18 @@ var notificationsViewModel = function() {
             return ret;
         },
 
-        getUserName: function(id) {
+        getUserName: function (id) {
             var user = _local.translateMember(id);
 
             return user.firstName + ' ' + user.lastName;
         },
 
-        addAlertConfig: function(layer) {
+        addAlertConfig: function (layer) {
             layer.$parent.alertConfigs.push(layer.$data.id());
         },
 
-        deleteAlertConfig: function(config) {
-            _local.bindings.currPolicy.alertConfigs.remove(function(item) {
+        deleteAlertConfig: function (config) {
+            _local.bindings.currPolicy.alertConfigs.remove(function (item) {
                 return item.id() === config.id();
             });
             _local.savePolicy();
@@ -3051,7 +3137,7 @@ var notificationsViewModel = function() {
             //needs validation
         },
 
-        convertTime: function(scheduleTime) {
+        convertTime: function (scheduleTime) {
             var ret,
                 fullTime = scheduleTime(),
                 hr = fullTime / 100,
@@ -3068,7 +3154,7 @@ var notificationsViewModel = function() {
             return hr + ' ' + ampm;
         },
 
-        convertDate: function(scheduleDays) {
+        convertDate: function (scheduleDays) {
             var _days = scheduleDays().join(';'),
                 days = [],
                 weekdays = 'mon;tues;wed;thur;fri',
@@ -3098,18 +3184,18 @@ var notificationsViewModel = function() {
                 }
             }
 
-            days = days.filter(function(el, idx, arr) {
+            days = days.filter(function (el, idx, arr) {
                 return el !== '';
             });
 
-            days.forEach(function(day, idx, arr) {
+            days.forEach(function (day, idx, arr) {
                 arr[idx] = day.charAt(0).toUpperCase() + day.slice(1);
             });
 
             return days.join(',');
         },
 
-        deleteSchedule: function(context) {
+        deleteSchedule: function (context) {
             var scheduleIndex = context.$index(),
                 layerIndex = context.$parentContext.$index();
 
@@ -3118,51 +3204,51 @@ var notificationsViewModel = function() {
             _local.updateScheduleEvents();
         },
 
-        addSchedule: function(scheduleLayer) {
+        addSchedule: function (scheduleLayer) {
             scheduleLayer.schedules.push(ko.viewmodel.fromModel(_local.getTemplate('schedule')));
             _local.updateScheduleEvents();
         },
 
-        addScheduleLayer: function() {
+        addScheduleLayer: function () {
             _local.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(_local.getTemplate('scheduleLayer')));
             _local.updateScheduleEvents();
         },
 
-        deleteScheduleLayer: function(layer, idx) {
+        deleteScheduleLayer: function (layer, idx) {
             layer.scheduleLayers.splice(idx(), 1);
             _local.dirty(true);
             _local.updateScheduleEvents();
         },
 
-        editSchedule: function() {
+        editSchedule: function () {
             _local.bindings.isEditingSchedule(true);
         },
 
-        cancelEditSchedule: function() {
+        cancelEditSchedule: function () {
             ko.viewmodel.updateFromModel(_local.bindings.currPolicy.scheduleLayers, _local._currPolicy.scheduleLayers);
             _local.bindings.isEditingSchedule(false);
             _local.updateScheduleEvents();
         },
 
-        saveSchedule: function() {
+        saveSchedule: function () {
             _local._currPolicy = ko.toJS(_local.bindings.currPolicy);
             _local.bindings.isEditingSchedule(false);
 
             _local.savePolicy();
         },
 
-        editAlertConfigMembers: function(escalation) {
+        editAlertConfigMembers: function (escalation) {
             _local.memberCb = _local.updateAlertConfigMembers;
             _local._currEscalation = escalation;
             _local.editMembers(ko.toJS(_local.bindings.currPolicy.members()), _local.translateMembers(escalation.members()));
         },
 
-        editPolicyMembers: function() {
+        editPolicyMembers: function () {
             _local.memberCb = _local.updatePolicyMembers;
             _local.editMembers(_local.users, ko.toJS(_local.bindings.currPolicy.members()));
         },
 
-        getAlertIcon: function(alert) {
+        getAlertIcon: function (alert) {
             var contact;
 
             if (alert.Name) {
@@ -3176,7 +3262,7 @@ var notificationsViewModel = function() {
             return 'fa-' + _local.iconLookup[contact && contact.Type()];
         },
 
-        getAlertType: function(contactInfo, type, name) {
+        getAlertType: function (contactInfo, type, name) {
             var contact = _local.getContact({
                 Value: contactInfo(),
                 Name: name()
@@ -3185,7 +3271,7 @@ var notificationsViewModel = function() {
             return contact && contact.Type;
         },
 
-        addNewAlert: function(data) {
+        addNewAlert: function (data) {
             var alert = _local.getTemplate('alertNotification'),
                 firstContact = _local.bindings.currMember().contactInfo()[0],
                 alerts = _local.bindings.currMember().alerts[data.name];
@@ -3201,7 +3287,7 @@ var notificationsViewModel = function() {
             _local.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
-        deleteAlert: function(alertType, idx) {
+        deleteAlert: function (alertType, idx) {
             var _idx = idx(),
                 row;
 
@@ -3215,7 +3301,7 @@ var notificationsViewModel = function() {
             }
         },
 
-        getContactString: function(contact) {
+        getContactString: function (contact) {
             var type = _local.alertTypeLookup[contact.Type()],
                 val = contact.Value(),
                 name = contact.Name && contact.Name();
@@ -3223,30 +3309,30 @@ var notificationsViewModel = function() {
             return [type, name, 'at', val].join(' ');
         },
 
-        getContactAlertString: function(alert) {
+        getContactAlertString: function (alert) {
             var contact = _local.getContact(alert);
 
             return _local.bindings.getContactString(contact);
         },
 
-        editAlertNotifications: function() {
+        editAlertNotifications: function () {
             _local.bindings.isEditingAlertNotifications(true);
         },
 
-        cancelEditAlertNotifications: function() {
+        cancelEditAlertNotifications: function () {
             _local.bindings.currMember(ko.viewmodel.fromModel(_local._originalMember));
             _local.bindings.isEditingAlertNotifications(false);
             ko.viewmodel.updateFromModel(_local.bindings.currMember().alerts, _local._originalMember.alerts);
         },
 
-        saveAlertNotifications: function(user) {
+        saveAlertNotifications: function (user) {
             _local.bindings.isEditingAlertNotifications(false);
             _local.saveUser(ko.toJS(user));
 
             _local.savePolicy();
         },
 
-        updateMembers: function() {
+        updateMembers: function () {
             if (_local.memberCb) {
                 _local.memberCb();
                 _local.memberCb = null;
@@ -3255,7 +3341,7 @@ var notificationsViewModel = function() {
             _local.$modal.modal('hide');
         },
 
-        doDeletePolicy: function(id, cb) {
+        doDeletePolicy: function (id, cb) {
             $.ajax({
                 url: '/api/policies/delete',
                 data: {
@@ -3263,26 +3349,26 @@ var notificationsViewModel = function() {
                 },
                 type: 'POST',
                 dataType: 'json'
-            }).done(function(response) {
+            }).done(function (response) {
                 console.log('Deleted');
                 cb();
             });
         },
 
-        deletePolicy: function(policy) {
-            _local.forEachArray(_local.bindings.policyList(), function(boundPolicy, idx) {
+        deletePolicy: function (policy) {
+            _local.forEachArray(_local.bindings.policyList(), function (boundPolicy, idx) {
                 if (boundPolicy._id() === policy._id()) {
                     if (policy._new && policy._new()) {
                         _local.bindings.policyList.splice(idx, 1);
                     } else {
-                        _local.bindings.doDeletePolicy(policy._id(), function() {
+                        _local.bindings.doDeletePolicy(policy._id(), function () {
                             _local.bindings.policyList.splice(idx, 1);
                         });
                     }
                 }
             });
         },
-        selectPolicy: function(policy) {
+        selectPolicy: function (policy) {
             var rawPolicy = ko.toJS(policy);
             _local.bindings.currAlertConfig(null);
             _local.bindings.isEditingMember(false);
@@ -3290,11 +3376,11 @@ var notificationsViewModel = function() {
             ko.viewmodel.updateFromModel(_local.bindings.currPolicy, rawPolicy);
             _local.bindings.isEditingPolicy(true);
         },
-        addPolicy: function() {
+        addPolicy: function () {
             _local.bindings.newPolicyName('');
             _local.bindings.isEditingNewPolicy(true);
         },
-        doAddNewPolicy: function() {
+        doAddNewPolicy: function () {
             var newPolicy = _local.getTemplate('policy'),
                 name = _local.bindings.newPolicyName();
 
@@ -3306,42 +3392,42 @@ var notificationsViewModel = function() {
             _local.bindings.selectPolicy(newPolicy);
             _local.dirty(true);
         },
-        editPolicyName: function() {
+        editPolicyName: function () {
             _local.bindings.currPolicyName(_local.bindings.currPolicy.name());
             _local.bindings.isEditingPolicyName(true);
         },
-        savePolicyName: function() {
+        savePolicyName: function () {
             _local.bindings.currPolicy.name(_local.bindings.currPolicyName());
             _local.bindings.isEditingPolicyName(false);
             _local.savePolicy();
         },
-        cancelPolicyNameEdit: function() {
+        cancelPolicyNameEdit: function () {
             _local.bindings.isEditingPolicyName(false);
         },
 
-        cancelEditMember: function() {
+        cancelEditMember: function () {
             _local.bindings.currMember(null);
             _local.bindings.isEditingMember(false);
         },
 
-        editPolicyEnabled: function() {
+        editPolicyEnabled: function () {
             _local.bindings.currPolicyEnabled(_local.bindings.currPolicy.enabled());
             _local.bindings.isEditingPolicyEnabled(true);
         },
-        savePolicyEnabled: function() {
+        savePolicyEnabled: function () {
             _local.bindings.currPolicy.enabled(!_local.bindings.currPolicyEnabled());
             _local.bindings.isEditingPolicyEnabled(false);
             _local.savePolicy();
         },
-        cancelPolicyEnabledEdit: function() {
+        cancelPolicyEnabledEdit: function () {
             _local.bindings.isEditingPolicyEnabled(false);
         },
 
-        addConfiguration: function() {
+        addConfiguration: function () {
             _local.bindings.newConfigurationName('');
             _local.bindings.isEditingNewConfiguration(true);
         },
-        doAddNewConfiguration: function() {
+        doAddNewConfiguration: function () {
             var configurationTemplate = _local.getTemplate('alertConfig'),
                 duplicate;
 
@@ -3357,31 +3443,31 @@ var notificationsViewModel = function() {
             }
         },
 
-        editAlertConfig: function(alertConfig) {
+        editAlertConfig: function (alertConfig) {
             _local.bindings.currAlertConfig(alertConfig);
         },
-        cancelEditAlertConfig: function() {
+        cancelEditAlertConfig: function () {
             _local.bindings.cancelDoEditAlertConfig();
             _local.bindings.currAlertConfig(null);
         },
 
-        doEditAlertConfig: function() {
+        doEditAlertConfig: function () {
             _local._originalAlertConfig = ko.toJS(_local.bindings.currAlertConfig);
 
             _local.bindings.isEditingAlertConfig(true);
         },
-        cancelDoEditAlertConfig: function() {
+        cancelDoEditAlertConfig: function () {
             ko.viewmodel.updateFromModel(_local.bindings.currAlertConfig, _local._originalAlertConfig);
             _local.bindings.isEditingAlertConfig(false);
         },
-        saveEditAlertConfig: function() {
+        saveEditAlertConfig: function () {
             var id = _local.bindings.currAlertConfig().id(),
                 duplicate;
 
             duplicate = _local.checkAlertConfigNames(_local.bindings.currAlertConfig().id(), _local.bindings.currAlertConfig().name(), _local.bindings.currPolicy.alertConfigs());
 
             if (!duplicate) {
-                _local.forEachArray(_local.bindings.currPolicy.alertConfigs(), function(config) {
+                _local.forEachArray(_local.bindings.currPolicy.alertConfigs(), function (config) {
                     if (config.id() === id) {
                         ko.viewmodel.updateFromModel(config, ko.toJS(_local.bindings.currAlertConfig));
                         // ko.viewmodel.updateFromModel(_local.bindings.currPolicy.alertConfigs)
@@ -3397,24 +3483,24 @@ var notificationsViewModel = function() {
             }
         },
 
-        addAlertGroup: function() {
+        addAlertGroup: function () {
             _local.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(_local.getTemplate('group')));
         },
 
-        deleteAlertGroup: function(alertConfig, idx) {
+        deleteAlertGroup: function (alertConfig, idx) {
             alertConfig.groups.splice(idx(), 1);
             _local.dirty(true);
         },
 
-        addEscalation: function(group) {
+        addEscalation: function (group) {
             group.escalations.push(ko.viewmodel.fromModel(_local.getTemplate('escalation')));
         },
 
-        deleteEscalation: function(group, idx) {
+        deleteEscalation: function (group, idx) {
             group.escalations.splice(idx(), 1);
         },
 
-        home: function() {
+        home: function () {
             // _local.forEachArray(_local.bindings.policyList(), function (policy, idx) {
             //     if (policy._id === _local.bindings.currPolicy._id()) {
             //         ko.viewmodel.updateFromModel(_local.bindings.policyList()[idx], ko.toJS(_local.bindings.currPolicy));
@@ -3430,7 +3516,7 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function(data) {
+    }).done(function (data) {
         _local.groups = data;
     });
 
@@ -3439,7 +3525,7 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function(data) {
+    }).done(function (data) {
         var c,
             users = data.Users,
             len = users.length,
@@ -3455,12 +3541,12 @@ var notificationsViewModel = function() {
         }
     });
 
-    $('body').on('shown.bs.dropdown', '.daySelect input', function(e) {
+    $('body').on('shown.bs.dropdown', '.daySelect input', function (e) {
 
     });
 
     ko.bindingHandlers.alertConfigName = {
-        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
             var $element = $(element),
                 configID = valueAccessor(),
                 alertConfig,
@@ -3481,13 +3567,13 @@ var notificationsViewModel = function() {
     };
 
     ko.bindingHandlers.timepicker = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
             //initialize timepicker with some optional options
             var observable = valueAccessor(),
                 options = {
                     doneText: 'Done',
                     autoclose: true,
-                    afterDone: function() {
+                    afterDone: function () {
                         var time = $(element).val().split(':'),
                             hr = parseInt(time[0], 10),
                             min = parseInt(time[1], 10);
@@ -3499,12 +3585,12 @@ var notificationsViewModel = function() {
 
             $(element).clockpicker(options);
 
-            $(element).change(function(event) {
+            $(element).change(function (event) {
                 $(element).clockpicker('resetclock');
             });
         },
 
-        update: function(element, valueAccessor) {
+        update: function (element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()),
                 hr,
                 min;
@@ -3523,12 +3609,14 @@ var notificationsViewModel = function() {
     return _local;
 };
 // Shortcut for $(document).ready(function()...
-$(function() {
+$(function () {
 
     function postInit() {
         var year,
             calendarVM,
-            hash;
+            hash,
+            keypressTimer = 300,
+            keypressTimerID;
 
         // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
         // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
@@ -3545,7 +3633,7 @@ $(function() {
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
-            sysPrefsViewModel.registerSection(versionsViewModel, 'init');
+            sysPrefsViewModel.registerSection(preferencesViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');
@@ -3569,13 +3657,31 @@ $(function() {
             });
 
             // Hide the calendar pop-up when the user clicks outside the jqxCalendar div
-            $(document).mouseup(function(e) {
+            $(document).mouseup(function (e) {
                 var container = $('#jqxCalendar');
 
                 if (!container.is(e.target) && (container.has(e.target).length === 0)) {
                     container.css('display', 'none');
                 }
             });
+
+            $("#preferences").find(".siteName")
+                .on("keyup", function (event) {
+                    clearTimeout(keypressTimerID);
+                    keypressTimerID = setTimeout(function () {
+                        let $element = $(event.target),
+                            elementValue = $element.val().trim(),
+                            labelTest = dtiCommon.isPointDisplayStringValid(elementValue);
+
+                        if (!labelTest.valid) {
+                            preferencesViewModel.hasError(true);
+                            preferencesViewModel.errorMessage(labelTest.errorMessage);
+                        } else {
+                            preferencesViewModel.hasError(false);
+                            preferencesViewModel.errorMessage("");
+                        }
+                    }, keypressTimer);
+                });
 
             ko.applyBindings(sysPrefsViewModel);
             sysPrefsViewModel.runInitFunctions();

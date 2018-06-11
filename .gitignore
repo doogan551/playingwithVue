@@ -1,4 +1,4 @@
-public/img/
+public/img/client
 public/display_assets/
 logs/
 tmp/
@@ -17,3 +17,9 @@ apps/backup.log
 *.DS_Store
 !*.exe
 !*.dll
+debug.log
+*.bak
+*.db
+
+format\.js
+electron-dist/

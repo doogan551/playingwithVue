@@ -1,14 +1,8 @@
-var mongo = require('mongodb');
-var BSON = mongo.BSONPure;
 var async = require('async');
-var Config = require('../public/js/lib/config.js');
-var Utils = require('../helpers/utils.js');
 var db = require('../helpers/db');
-var numLong = mongo.Long;
 var fs = require('fs');
 var moment = require('moment');
 var config = require('config');
-var logger = require('../helpers/logger')(module);
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
@@ -16,12 +10,12 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
 var History = require('../models/history.js');
-var ArchiveUtility = require('../models/archiveutility.js');
-var Utility = require('../models/utility.js');
+var Utilities = require('../models/utilities');
+var Point = require('../models/point');
 
-var logFilePath = config.get('Infoscan.files').driveLetter + ":/InfoScanJS/apps/backup.log";
+var logFilePath = config.get('Infoscan.files').driveLetter + ':/InfoScanJS/apps/backup.log';
 
-var logToFile = function(msg) {
+var logToFile = (msg) => {
     var timestamp = moment().format();
     var data = '\n' + timestamp + ' ' + msg;
     fs.appendFileSync(logFilePath, data);
@@ -42,48 +36,22 @@ var upis = {
     wS: [lowTempUpi, hiTempUpi, hddUpi, cddUpi, oatUpi]
 };
 
-function getMeterUpis(cb) {
-    Utility.get({
-        collection: 'Utilities',
-        query: {},
-        fields: {
-            Meters: 1,
-            _id: 0
-        }
-    }, function(err, meters) {
-        for (var i = 0; i < meters.length; i++) {
-            for (var m = 0; m < meters[i].Meters.length; m++) {
-                var meter = meters[i].Meters[m];
-                for (var p = 0; p < meter.meterPoints.length; p++) {
-                    var point = meter.meterPoints[p];
-                    if (upis.all.indexOf(point.upi) < 0) {
-                        upis.all.push(point.upi);
-                    }
-                }
-            }
-        }
-        upis.all = upis.all.concat(upis.wS);
-        cb(err);
-    });
-}
-
-function calculateWeather(cb) {
+let calculateWeather = (cb) => {
+    let historyModel = new History();
     var removals = [lowTempUpi, hiTempUpi, hddUpi, cddUpi];
     var results = [];
 
-    Utility.remove({
-        collection: 'historydata',
+    historyModel.remove({
         query: {
             upi: {
                 $in: removals
             }
         }
-    }, function(err, _result) {
+    }, (err, _result) => {
         if (err) {
             return cb(err);
         }
-        Utility.get({
-            collection: 'historydata',
+        historyModel.get({
             query: {
                 upi: oatUpi
             },
@@ -93,7 +61,7 @@ function calculateWeather(cb) {
             sort: {
                 timestamp: 1
             }
-        }, function(err, data) {
+        }, (err, data) => {
             if (err) {
                 return cb(err);
             }
@@ -104,9 +72,9 @@ function calculateWeather(cb) {
             var endTime = moment().startOf('day').unix();
             var workingTime = moment.unix(data[0].timestamp).startOf('day').unix();
 
-            async.whilst(function() {
+            async.whilst(() => {
                 return workingTime < endTime;
-            }, function(callback) {
+            }, (callback) => {
                 var endOfDay = moment.unix(workingTime).add(1, 'day').unix();
                 var hdd = {
                     Value: 0,
@@ -154,130 +122,210 @@ function calculateWeather(cb) {
                     results.push(lowTemp);
                     results.push(hiTemp);
                 } else {
-                    logToFile("Value not entered: " + moment.unix(workingTime).format(), hiTemp.hasOwnProperty('Value'), lowTemp.hasOwnProperty('Value'));
+                    logToFile('Value not entered: ' + moment.unix(workingTime).format(), hiTemp.hasOwnProperty('Value'), lowTemp.hasOwnProperty('Value'));
                 }
                 workingTime = endOfDay;
                 callback();
-            }, function(err) {
+            }, (err) => {
                 console.log(results.length);
-                Utility.insert({
+                historyModel.insert({
                     collection: 'historydata',
                     insertObj: results
-                }, function(err, result) {
+                }, (err, result) => {
                     return cb(err);
                 });
             });
         });
     });
-}
+};
 
-function backUp() {
-    db.connect(connectionString.join(''), function(err) {
-        calculateWeather(function(err) {
-            if (err) {
-                logToFile('calculateWeather Error: ' + err);
+let loadUpis = (cb) => {
+    let utilitiesModel = new Utilities();
+    let pointModel = new Point();
+    let getNewTemp = (oldTemp, callback) => {
+        // necessary because we currently have no tracking of what the hi and low temp points are
+        pointModel.getOne({
+            query: {
+                _oldUpi: oldTemp
             }
-            getMeterUpis(function(err) {
-                if (err) {
-                    logToFile('getMeterUpis Error: ' + err);
+        }, (err, newTemp) => {
+            return callback(err, newTemp);
+        });
+    };
+
+    getNewTemp(lowTempUpi, (err, newLowTemp) => {
+        lowTempUpi = newLowTemp;
+        getNewTemp(hiTempUpi, (err, newHiTemp) => {
+            hiTempUpi = newHiTemp;
+
+            utilitiesModel.getOne({
+                query: {
+                    Name: 'Weather'
                 }
-                logToFile('Starting SQLite backup.');
-                History.doBackUp(upis.all, false, function(err) {
+            }, (err, weatherPoints) => {
+                hddUpi = weatherPoints['Heating Degree Days Point'];
+                cddUpi = weatherPoints['Cooling Degree Days Point'];
+                oatUpi = weatherPoints['Outside Air Temperature Point'];
+                cb();
+            });
+        });
+    });
+};
+
+let convertOldHistoryUpis = (cb) => {
+    let historyModel = new History();
+    let pointModel = new Point();
+    let currentUpi = 0;
+    let newUpi = 0;
+
+    let getNewUpi = (_currentUpi, callback) => {
+        pointModel.getOne({
+            query: {
+                _oldUpi: _currentUpi
+            }
+        }, (err, point) => {
+            callback(err, point._id);
+        });
+    };
+
+    let addWithNewUpi = (oldHistory, callback) => {
+        historyModel.insert({
+            insertObj: oldHistory
+        }, callback);
+    };
+
+    historyModel.iterateCursor({
+        collection: 'oldhistorydata',
+        sort: {
+            upi: 1
+        }
+    }, (err, oldHistory, nextHistory) => {
+        if (oldHistory.upi !== currentUpi) {
+            currentUpi = oldHistory.upi;
+            getNewUpi(currentUpi, (err, _newUpi) => {
+                newUpi = _newUpi;
+                oldHistory.upi = newUpi;
+                addWithNewUpi(oldHistory, (err, result) => {
+                    nextHistory(err);
+                });
+            });
+        } else {
+            oldHistory.upi = newUpi;
+            addWithNewUpi(oldHistory, (err, result) => {
+                nextHistory(err);
+            });
+        }
+    }, cb);
+};
+
+let backUp = () => {
+    db.connect(connectionString.join(''), (err) => {
+        convertOldHistoryUpis((err) => {
+            loadUpis((err) => {
+                console.log(upis);
+                if (err) {
+                    logToFile('loadUpis Error: ' + err);
+                }
+                calculateWeather((err) => {
                     if (err) {
-                        logToFile('doBackUp Error: ' + err);
+                        logToFile('calculateWeather Error: ' + err);
                     }
-                    logToFile('Finished with SQLite backup');
-                    /*setTimeout(function() {
-                        Utility.dropCollection({
-                            collection: 'historydata'
-                        }, function(err, result) {
-                            if (err) {
-                                logToFile('dropCollection Error: ' + err);
-                            }
-                            Utility.ensureIndex({
-                                    collection: 'historydata',
-                                    index: {
-                                        upi: 1,
-                                        timestamp: 1
-                                    },
-                                    options: {
-                                        unique: true
-                                    }
-                                },
-                                function(err, result) {
-                                    Utility.ensureIndex({
-                                            collection: 'historydata',
-                                            index: {
-                                                timestamp: -1
-                                            }
+
+                    logToFile('Starting SQLite backup.');
+                    History.doBackUp(upis.all, false, (err) => {
+                        if (err) {
+                            logToFile('doBackUp Error: ' + err);
+                        }
+                        logToFile('Finished with SQLite backup');
+                        /*setTimeout() => {
+                            Utility.dropCollection({
+                                collection: 'historydata'
+                            }, err, result) => {
+                                if (err) {
+                                    logToFile('dropCollection Error: ' + err);
+                                }
+                                Utility.ensureIndex({
+                                        collection: 'historydata',
+                                        index: {
+                                            upi: 1,
+                                            timestamp: 1
                                         },
-                                        function(err, result) {
-                                            if (err) {
-                                                logToFile('ensureIndex Error: ' + err);
-                                            }
-                                            logToFile('backupHistory completed. Exiting.');
-                                        });
-                                });
-                        });
-                    }, 2000);*/
-                    process.exit(0);
+                                        options: {
+                                            unique: true
+                                        }
+                                    },
+                                    err, result) => {
+                                        Utility.ensureIndex({
+                                                collection: 'historydata',
+                                                index: {
+                                                    timestamp: -1
+                                                }
+                                            },
+                                            err, result) => {
+                                                if (err) {
+                                                    logToFile('ensureIndex Error: ' + err);
+                                                }
+                                                logToFile('backupHistory completed. Exiting.');
+                                            });
+                                    });
+                            });
+                        }, 2000);*/
+                        process.exit(0);
+                    });
                 });
             });
         });
     });
-}
+};
 // backUp();
 
 
-function newBackup() {
-    db.connect(connectionString.join(''), function(err) {
-        History.doBackUp(upis.all, false, function(err) {
+let newBackup = () => {
+    let historyModel = new History();
+    db.connect(connectionString.join(''), (err) => {
+        console.time('test');
+        historyModel.doBackUp(upis.all, (err) => {
+            console.timeEnd('test');
             if (err) {
-                logToFile('doBackUp Error: ' + err);
+                console.log('doBackUp Error: ' + JSON.stringify(err));
             }
-            logToFile('Finished with SQLite backup');
-            setTimeout(function() {
-                Utility.dropCollection({
-                    collection: 'historydata'
-                }, function(err, result) {
-                    if (err) {
-                        logToFile('dropCollection Error: ' + err);
-                    }
-                    Utility.ensureIndex({
-                            collection: 'historydata',
-                            index: {
-                                upi: 1,
-                                timestamp: 1
-                            },
-                            options: {
-                                unique: true
-                            }
-                        },
-                        function(err, result) {
-                            Utility.ensureIndex({
-                                    collection: 'historydata',
-                                    index: {
-                                        timestamp: -1
-                                    }
-                                },
-                                function(err, result) {
-                                    if (err) {
-                                        logToFile('ensureIndex Error: ' + err);
-                                    }
-                                    logToFile('backupHistory completed. Exiting.');
-                                    process.exit(0);
-                                });
-                        });
-                });
-            }, 2000);
+            console.log('Finished with SQLite backup');
+            process.exit(0);
+            // setTimeout(() => {
+            //     historyModel.dropCollection({}, (err, result) => {
+            //         if (err) {
+            //             console.log('dropCollection Error: ' + err);
+            //         }
+            //         historyModel.ensureIndex({
+            //             index: {
+            //                 upi: 1,
+            //                 timestamp: 1
+            //             },
+            //             options: {
+            //                 unique: true
+            //             }
+            //         }, (err, result) => {
+            //             historyModel.ensureIndex({
+            //                 index: {
+            //                     timestamp: -1
+            //                 }
+            //             }, (err, result) => {
+            //                 if (err) {
+            //                     console.log('ensureIndex Error: ' + err);
+            //                 }
+            //                 console.log('backupHistory completed. Exiting.');
+            //                 process.exit(0);
+            //             });
+            //         });
+            //     });
+            // }, 2000);
         });
     });
-}
+};
 newBackup();
 
-function test() {
-    db.connect(connectionString.join(''), function(err) {
-        calculateWeather(function(err) {});
-    });
-}
-// test();
+// dont change power meters collection if c++ uses it
+// c++ puts data with old upis in separate coll
+// take data, change upis and put in historydata
+// clean collection
+// do normal (get upis from PowerMeters)

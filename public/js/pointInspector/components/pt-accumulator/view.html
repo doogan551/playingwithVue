@@ -5,7 +5,7 @@
         <li><span>Permissions</span></li>
         <!-- /ko -->
         <li><span>Involvement</span></li>
-        <li><span>Schedule</span></li>
+        <li data-bind="visible: data._pStatus() !== $root.utility.config.Enums['Point Statuses'].Inactive.enum"><span>Schedule</span></li>
         <li><span>Configuration <i class="fa fa-angle-right"></i></span>
             <ul>
                 <li class="header"><span>Configuration</span>

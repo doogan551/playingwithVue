@@ -1,14 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var utils = require('../helpers/utils.js');
-var _ = require('lodash');
-var schedule = require('../models/schedule');
+let express = require('express');
+let router = express.Router();
+let utils = require('../helpers/utils.js');
+let _ = require('lodash');
+let Schedule = new(require('../models/schedule'))();
 
 router.post('/getSchedules', function (req, res, next) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    schedule.getSchedules(data, function (err, schedules) {
+    Schedule.getSchedules(data, function (err, schedules) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -21,10 +21,10 @@ router.post('/getSchedules', function (req, res, next) {
 });
 
 router.post('/saveSchedules', function (req, res, next) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    schedule.saveSchedules(data, function (err) {
+    Schedule.saveSchedules(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err
@@ -35,10 +35,10 @@ router.post('/saveSchedules', function (req, res, next) {
 });
 
 router.post('/runSchedule', function (req, res, next) {
-    var data = _.merge(req.params, req.body);
+    let data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    schedule.runSchedule(data, function (err) {
+    Schedule.runSchedule(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

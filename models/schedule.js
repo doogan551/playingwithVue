@@ -1,13 +1,94 @@
-var async = require('async');
-var ObjectID = require('mongodb').ObjectID;
+const async = require('async');
+const ObjectID = require('mongodb').ObjectID;
 
-var Utility = require('../models/utility');
-var Reports = require('../models/reports');
+const Common = require('./common');
+const utils = require('../helpers/utils');
 
-var self;
+const schedulesCollection = utils.CONSTANTS('schedulesCollection');
 
-module.exports = self = {
-    getSchedules: function(data, callback) {
+const Schedule = class Schedule extends Common {
+    constructor() {
+        super(schedulesCollection);
+        this.criteria = {
+            query: {}
+        };
+
+        this.getOldSchedule = (idata, cb) => { // idata...'data' was already taken =/
+            if (idata.schedule._id) { // If this is an existing point
+                idata.schedule._id = ObjectID(idata.schedule._id);
+                this.criteria.query._id = idata.schedule._id;
+
+                if (!idata.schedule.deleteMe) {
+                    this.get(this.criteria, (err, oldSchedule) => {
+                        idata.oldSchedule = oldSchedule;
+                        cb(err, idata);
+                    });
+                    return;
+                }
+            }
+
+            cb(null, idata);
+        };
+
+        this.doSave = (idata, cb)=> {
+            let fn;
+
+            if (idata.schedule.deleteMe) {
+                fn = 'remove';
+            } else if (idata.oldSchedule) {
+                fn = 'updateOne';
+                this.criteria.updateObj = idata.schedule;
+            } else {
+                fn = 'insert';
+                this.criteria.insertObj = idata.schedule;
+            }
+            this[fn](this.criteria, (err) => {
+                cb(err, idata);
+            });
+        };
+
+        this.doCronMaintenance = (idata, cb) => {
+            let createCron = false,
+                deleteCron = false,
+                modifyCron = false;
+
+            if (idata.schedule.deleteMe) {
+                deleteCron = true;
+            } else if (!idata.oldSchedule) { // If this is a new schedule
+                createCron = true;
+            } else if (idata.oldSchedule.enable ^ idata.schedule.enable) { // If enable flag changed
+                if (idata.schedule.enable) {
+                    createCron = true;
+                } else {
+                    deleteCron = true;
+                }
+            } else if (idata.oldSchedule.runTime !== idata.schedule.runTime) { // If runtime changed
+                modifyCron = true;
+            }
+
+            if (createCron) {
+                // TODO Install CRON @ schedule.runTime
+            } else if (deleteCron) {
+                // TODO Delete CRON @ schedule.runTime
+            } else if (modifyCron) {
+                // TODO Reinstall CRON @ schedule.runTime
+            }
+
+            cb(null, idata);
+        };
+
+        this.processSchedule = (schedule, cb) => {
+            let start = (cb) => {
+                cb(null, {
+                    schedule: schedule
+                });
+            };
+
+            async.waterfall([start, this.getOldSchedule, this.doSave, this.doCronMaintenance], cb);
+        };
+    }
+
+    getSchedules(data, callback) {
         // data = {
         //     user: user,
         //     upi: int
@@ -28,111 +109,61 @@ module.exports = self = {
         //     enabled: boolean
         // }
 
-        var criteria = {
-            collection: 'Schedules',
+        let criteria = {
             query: {
                 upi: data.upi
             }
         };
 
-        Utility.get(criteria, callback);
-    },
-    saveSchedules: function(data, callback) {
+        this.getAll(criteria, callback);
+    }
+    saveSchedules(data, callback) {
         // data = {
         //     user: user,
         //     schedules: [] (array of schedule objects)
         // }
-        var criteria = {
-                collection: 'Schedules',
-                query: {}
-            },
-            getOldSchedule = function(idata, cb) { // idata...'data' was already taken =/
-                if (idata.schedule._id) { // If this is an existing point
-                    idata.schedule._id = ObjectID(idata.schedule._id);
-                    criteria.query._id = idata.schedule._id;
+        this.critera = {
+            query: {}
+        };
 
-                    if (!idata.schedule.deleteMe) {
-                        Utility.get(criteria, function(err, oldSchedule) {
-                            idata.oldSchedule = oldSchedule;
-                            cb(err, idata);
-                        });
-                        return;
-                    }
-                }
-
-                cb(null, idata);
-            },
-            doSave = function(idata, cb) {
-                var fn;
-
-                if (idata.schedule.deleteMe) {
-                    fn = 'remove';
-                } else if (idata.oldSchedule) {
-                    fn = 'update';
-                    criteria.updateObj = idata.schedule;
-                } else {
-                    fn = 'insert';
-                    criteria.insertObj = idata.schedule;
-                }
-                Utility[fn](criteria, function(err) {
-                    cb(err, idata);
-                });
-            },
-            doCronMaintenance = function(idata, cb) {
-                var createCron = false,
-                    deleteCron = false,
-                    modifyCron = false;
-
-                if (idata.schedule.deleteMe) {
-                    deleteCron = true;
-                } else if (!idata.oldSchedule) { // If this is a new shcedule
-                    createCron = true;
-                } else if (idata.oldSchedule.enable ^ idata.schedule.enable) { // If enable flag changed
-                    if (idata.schedule.enable) {
-                        createCron = true;
-                    } else {
-                        deleteCron = true;
-                    }
-                } else if (idata.oldSchedule.runTime !== idata.schedule.runTime) { // If runtime changed
-                    modifyCron = true;
-                }
-
-                if (createCron) {
-                    // TODO Install CRON @ schedule.runTime
-                } else if (deleteCron) {
-                    // TODO Delete CRON @ schedule.runTime
-                } else if (modifyCron) {
-                    // TODO Reinstall CRON @ schedule.runTime
-                }
-
-                cb(null, idata);
-            },
-            processSchedule = function(schedule, cb) {
-                var start = function(cb) {
-                    cb(null, {
-                        schedule: schedule
-                    });
-                };
-
-                async.waterfall([start, getOldSchedule, doSave, doCronMaintenance], cb);
-            };
-
-        async.eachSeries(data.schedules, processSchedule, callback);
-    },
-    runSchedule: function(data, callback) {
-        Utility.getOne({
-            collection: 'Schedules',
+        async.eachSeries(data.schedules, this.processSchedule, callback);
+    }
+    runSchedule(data, callback) {
+        const reports = new Reports();
+        this.getOne({
             query: {
                 _id: ObjectID(data._id)
             }
-        }, function(err, schedule) {
+        }, (err, schedule) => {
             data.schedule = schedule;
             switch (data.schedule.type) {
                 case 1:
-                    return Reports.scheduledReport(data, callback);
+                    return reports.scheduledReport(data, callback);
                 default:
                     return callback();
             }
         });
     }
+    remove(data, callback) {
+        super.remove({
+            query: {
+                upi: data.upi
+            }
+        }, callback);
+    }
+    disable(data, callback) {
+        this.findAndModify({
+            query: {
+                upi: data.upi
+            },
+            updateObj: {
+                $set: {
+                    enabled: false
+                }
+            }
+        }, callback);
+    }
 };
+
+module.exports = Schedule;
+const Reports = require('./reports');

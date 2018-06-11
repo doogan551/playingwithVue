@@ -1,29 +1,27 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var ActivityLog = require('../models/activitylog');
-var logger = require('../helpers/logger')(module);
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let ActivityLog = new(require('../models/activitylog'))();
 
+// POSTMAN
+router.post('/get', function (req, res) {
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-// Checked
-router.post('/get', function (req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+    ActivityLog.getLogs(data, function (err, logs, count) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-  ActivityLog.get(data, function (err, logs, count) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, {
-      err: err,
-      logs: logs,
-      count: count
+        return utils.sendResponse(res, {
+            err: err,
+            logs: logs,
+            count: count
+        });
     });
-  });
 });
 
 module.exports = router;

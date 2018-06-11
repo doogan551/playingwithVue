@@ -37,7 +37,7 @@
                             <table class="grid table table-condensed">
                                 <thead>
                                     <tr class="deviceheaders">
-                                        <th class="pointInstance" data-bind="click: sortDevices"><div>Point Instance<i class="fa"></i></div></th>
+                                        <th class="device" data-bind="click: sortDevices"><div>Device<i class="fa"></i></div></th>
                                         <th class="networkNumber" data-bind="click: sortDevices"><div>Network Number<i class="fa"></i></div></th>
                                         <th class="macAddress" data-bind="click: sortDevices"><div>MAC Address<i class="fa"></i></div></th>
                                         <th class="vendorID" data-bind="click: sortDevices"><div>Vendor ID<i class="fa"></i></div></th>
@@ -50,7 +50,7 @@
                                 </thead>
                                 <tbody data-bind="foreach: NetworkDevices.entries">
                                     <tr>
-                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
+                                        <td data-bind="text: $data['Device'].Value(), css: $data['Device'].style(), click:$parent.openPointRef.bind($data, 'Device')"></td>
                                         <td data-bind="text: $data['Network Number'].Value()"></td>
                                         <td data-bind="text: $data['MAC Address'].Value()"></td>
                                         <td data-bind="text: $data['Vendor ID'].Value()"></td>
@@ -72,17 +72,15 @@
                             <table class="grid table table-condensed">
                                 <thead>
                                     <tr class="pointheaders">
-                                        <th data-bind="click: sortPoints"><div>Point Type<i class="fa"></i></div></th>
-                                        <th data-bind="click: sortPoints"><div>Point Instance<i class="fa"></i></div></th>
-                                        <th data-bind="click: sortPoints"><div>Device Instance<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortPoints"><div>Point<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortPoints"><div>Device<i class="fa"></i></div></th>
                                         <th data-bind="click: sortPoints"><div>Poll Period<i class="fa"></i></div></th>
                                     </tr>
                                 </thead>
                                 <tbody data-bind="foreach: NetworkPoints.entries">
                                     <tr>
-                                        <td data-bind="text: $data['Point Type'].Value()"></td>
-                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
-                                        <td data-bind="text: $data['Device Instance'].Value(), css: $data['Device Instance'].style(), click:$parent.openPointRef.bind($data, 'Device Instance')"></td>
+                                        <td data-bind="text: $data['Point'].Value(), css: $data['Point'].style(), click:$parent.openPointRef.bind($data, 'Point')"></td>
+                                        <td data-bind="text: $data['Device'].Value(), css: $data['Device'].style(), click:$parent.openPointRef.bind($data, 'Device')"></td>
                                         <td data-bind="text: $data['Poll Period'].Value()"></td>
                                     </tr>
                                 </tbody>

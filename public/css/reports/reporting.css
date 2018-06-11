@@ -1,24 +1,30 @@
+@import "/css/lib/highcharts.css";
+
 .leftBar {
     z-index: 5;
     padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 86px;
+    width: 60px;
     height: 100%;
     color: #ffffff;
     border-right: 1px solid #ccc;
 }
-.leftBar a {
-    /*padding-top: 0px;*/
+.leftBar button {
+    margin-top: 2px;
+    margin-left: 7px;
+    padding-left: 14px;
+    width: 48px;
+}
+#slide-out.side-nav.fixed {
+    width: 60px;
 }
 .rightPanel {
     z-index: 0;
-    position: absolute;
-    left: 86px;
+    padding-left: 50px;
     right: 0px;
     top: 0px;
     bottom: 0px;
     background-color: #fff;
-    /*overflow-x: auto;*/
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -70,7 +76,7 @@ input.input.form-control.durationDateRangeTime {
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
 }
-.reportRangePicker {
+.reportRangeDropdown {
     width: 150px;
 }
 .leftBar .tabs li {
@@ -83,27 +89,8 @@ input.input.form-control.durationDateRangeTime {
     cursor: pointer;
     text-decoration: underline;
 }
-.material-icons {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    text-rendering: optimizeLegibility;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    font-feature-settings: 'liga';
-    -webkit-font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-}
 .viewReportNav {
     width: 400px !important;
-    /*height: 53px !important;*/
-    /*margin-left: 8px !important;*/
 }
 .viewReportNav li {
     margin-right: 5px;
@@ -132,6 +119,15 @@ input.input.form-control.durationDateRangeTime {
 .tableFooter {
     cursor: default;
     font-weight: bold;
+    background-color: #f9f5f5;
+}
+.tableFooter td {
+    padding-top: 3px !important;
+    vertical-align: top;
+}
+.tableFooter .clearAllSearchFilters {
+    margin-top: 19px;
+    cursor: pointer;
 }
 .pointInstance {
     cursor: pointer;
@@ -152,6 +148,7 @@ input.input.form-control.durationDateRangeTime {
     min-width: 50px;
 }
 .availableIntervalsContainer {
+    width: 110px;
     padding-left: 15px;
 }
 .availableIntervalsContainer .dropdown-content {
@@ -161,6 +158,17 @@ input.input.form-control.durationDateRangeTime {
 }
 .availableIntervalsContainer a.dropdown-button {
     margin-top: 26px;
+}
+.queryResultSize {
+    margin-top: 34px;
+    margin-left: 27px;
+    cursor: default;
+}
+.queryResultSize span {
+    color: rgba(96, 125, 139, 0.61)
+}
+.queryResultSize span.toolarge {
+    color: rgba(228, 36, 21, 0.71)
 }
 .availableDurationsContainer .dropdown-content {
     cursor: pointer;
@@ -247,7 +255,7 @@ input.intervalValue {
 .totalizerOperators.dropdown-content {
     width: 80px !important;
 }
-.calculations {
+ul.calculations {
     list-style-type: none;
     width: 115px;
     -webkit-appearance: none;
@@ -255,6 +263,10 @@ input.intervalValue {
 }
 .globalCalculations {
     list-style-type: none;
+}
+.globalCalculationsCell {
+    width: 87px;
+    padding-top: 15px;
 }
 .entries.dropdown-content {
     width: 130px;
@@ -269,16 +281,23 @@ input.intervalValue {
 .calculations.dropdown-content li {
     min-height: 10px;
 }
-.availableAxisGroupsContainer .dropdown-content li {
-    min-height: 10px;
-}
 .chartTypeSelection {
     padding-left: 100px;
+}
+.footerSettings {
+    padding-left: 100px;
+    color: #9e9e9e;
+    font-size: 0.8rem;
+}
+.footerSettings [type="checkbox"] + label {
+    font-size: 0.8rem;
+}
+.chartTab .chartTypes.dropdown-content {
+    text-indent: -6px;
 }
 .chartTypes.dropdown-content {
     width: 65px;
     min-width: 65px;
-    text-indent: -13px;
 }
 .childCondition > .dropdown > .operators.dropdown-content {
     min-width: 45px;
@@ -297,12 +316,20 @@ input.intervalValue {
 }
 .dropdown-content li>a, .dropdown-content li>span {
     color: #607d8b !important;
+    font-family: "Roboto", sans-serif;
+    font-weight: normal;
 }
 .operator {
     cursor: pointer;
 }
+.operatorValue {
+    margin-top: 16px;
+}
 .filterContainer {
     cursor: pointer;
+}
+.filterContainer.input {
+    cursor: default;
 }
 .condition {
     cursor: pointer;
@@ -353,7 +380,6 @@ td.filterName {
 .tabConfiguration .tab-content {
     background-color: #fff;
     border-radius: 0px 0px 7px 7px;
-    margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
     padding-left: 20px;
@@ -363,6 +389,7 @@ td.filterName {
     width: 100%;
     height: 100%;
     padding-top: 0px;
+    padding-left: 10px;
     min-width: 850px;
 }
 .tabViewReport ul.nav.nav-tabs {
@@ -388,12 +415,18 @@ td.filterName {
 }
 .tabViewReport div.dataTables_filter {
     float: right;
-    margin-top: -50px;
-    margin-right: 20px;
+    margin-top: -65px;
     height: 65px;
+    width: 94%;
+}
+.tabViewReport div.dataTables_filter input {
+    width: 30%;
 }
 .tabViewReport div.dataTables_paginate {
     margin-top: -21px;
+}
+.dataTables_empty {
+    padding-left: 333px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
@@ -494,6 +527,16 @@ span.caret.lm10px {
     color: #23527c;
     text-decoration: none;
 }
+#slide-out.side-nav li.active a.btn, #slide-out.side-nav li.active a.btn-large {
+    background-color: #91a5af !important;
+}
+#slide-out.side-nav a.btn i, #slide-out.side-nav a.btn-large i {
+    color: white;
+}
+#slide-out.side-nav a.btn i:hover, #slide-out.side-nav a.btn-large i:hover {
+    color: #23527c;
+    text-decoration: none;
+}
 a.tab {
     color: #ffffff;
 }
@@ -501,8 +544,7 @@ a.tab {
     padding-top: 12px;
 }
 .adjustPointTypesFilterButton {
-    margin-top: 30px;
-    margin-bottom: 50px;
+    margin-top: 12px;
     color: #fff !important;
 }
 .adjustPointTypesFilterButton:hover {
@@ -513,7 +555,6 @@ a.tab {
     flex-wrap: wrap;
     width: 80vw !important;
     right: 30px;
-    padding-top: 10px;
 }
 .pointTypesFilter ul li {
     clear: none;
@@ -565,13 +606,27 @@ html, body {
     position: absolute;
     font-size: 18px;
 }
-
+.saveReportSpinner {
+    left: 45%;
+    padding-top: 200px;
+    position: relative;
+    font-size: 18px;
+}
+.unpersistedReport {
+    border: #821616 2px solid;
+}
+.unSavedChange {
+    border: #f1a445 2px solid;
+}
 i.iconLink {
     vertical-align: middle;
 }
 i.iconLink:hover {
     cursor: hand;
     cursor: pointer;
+}
+.tabViewReport .dt-buttons {
+    display: inline-block !important;
 }
 div.dt-button-collection {
     width: 117px !important;
@@ -580,29 +635,151 @@ div.dt-button-collection a div:hover {
     background-color: #d5e1f2 !important;
 }
 .tabViewReport .dataTables_length {
-    margin-left: 260px;
-    margin-top: -30px;
+    margin-left: 20%;
+    margin-top: -47px;
     font-weight: bold;
+    display: inline-flex;
+}
+.tabViewReport .dataTables_length .material-icons {
+    cursor: pointer;
+    padding-left: 5px;
+    margin-top: 15px;
+}
+.tabViewReport .dataTables_length select {
+    cursor: pointer;
+}
+.tabViewReport .dataTables_length select:hover {
+    outline: 1px solid #607d8b !important;
+}
+.tabViewReport .dataTables_length label {
+    margin-top: 91px;
+    padding-left: 60px;
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
     padding: 3px 3px;
 }
-.firstColumn {
-    /*min-width: 200px;*/
+.tabViewReport .dataTables_length .lineDensity {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    margin-top: 6px;
+    padding-left: 60px;
 }
-th.firstColumn.datetime {
-    min-width: 60px;
-    /*width: 100px !important;*/
+div.dataTables_wrapper input[type=search] {
+    color: #607d8b !important;
 }
+.DTFC_LeftBodyLiner {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+.DTFC_ScrollWrapper tbody tr.small {
+    line-height: 10% !important;
+    height: 43px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.small {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+}
+.DTFC_ScrollWrapper tbody tr.smaller {
+    line-height: 10% !important;
+    height: 33px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.smaller {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    white-space: nowrap;
+}
+.DTFC_ScrollWrapper tbody tr.tiny {
+    line-height: 5% !important;
+    height: 23px !important;
+}
+.DTFC_ScrollWrapper tbody tr td.tiny {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    white-space: nowrap;
+}
+.columnFilter li span {
+    font-size: small;
+    white-space: nowrap;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+.dataTables_scrollBody tbody tr td:not(:first-child) {
+    cursor: pointer;
+}
+.dataTables_scrollBody tbody tr td:not(:first-child):hover {
+    background-color: rgba(207, 221, 228, 0.39);
+}
+.thinScroll::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+.thinScroll::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+.thinScroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
+ul.select-dropdown.active::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+ul.select-dropdown.active::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+ul.select-dropdown.active::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
+.columnFilter ul.dropdown-content.select-dropdown {
+    width: 100% !important;
+    max-height: 80px !important;
+}
+.columnFilter .select-wrapper {
+    width: 100% !important;
+}
+.columnFilter .select-wrapper input.select-dropdown {
+    width: 100% !important;
+    margin-right: 10px;
+    color: #607d8b !important;
+    /*max-width: 300px !important;*/
+}
+
+.columnFilter .dropdown-content li {
+    width: 100% !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.columnFilter .dropdown-content li>span:hover {
+    background-color: rgba(149, 198, 212, 0.12);
+}
+
+/*th.firstColumn.datetime {*/
+    /*min-width: 60px;*/
+    /*!*width: 100px !important;*!*/
+/*}*/
 td.firstColumn.datetime {
-    min-width: 60px;
-    /*width: 100px !important;*/
     font-size: small;
 }
-.firstColumn.pointLookupColumn {
+/*th.firstColumn.pointLookupColumn {*/
     /*min-width: 270px;*/
-}
+    /*width: 270px !important;*/
+/*}*/
+
+/*td.firstColumn.pointInstance {*/
+    /*min-width: 270px;*/
+    /*width: 270px !important;*/
+/*}*/
+
 .columnName {
     display: inline-block;
     padding-left: 5px;
@@ -632,24 +809,10 @@ td.firstColumn.datetime {
 }
 .availableTotalizerOperatorsContainer {
     height: 25px;
+    width: 90px;
 }
-.availableTotalizerOperatorsContainer a {
-    width: 80px;
-    padding: 0px;
-}
-.availableTotalizerOperatorsContainer li a {
-    width: 78px;
-}
-.availableTotalizerOperatorsContainer a .text {
-}
-.availableAxisGroupsContainer a {
-    width: 31px;
-    padding: 0px;
-    height: 25px;
-    line-height: 26px;
-}
-.availableAxisGroupsContainer a .text {
-    margin-left: 2px;
+.availableAxisGroupsContainer {
+    width: 35px;
 }
 .availableAxisGroupsContainer ul.dropdown-content {
     cursor: pointer;
@@ -671,23 +834,52 @@ td.firstColumn.datetime {
     margin-left: 11px;
     margin-top: -10px;
 }
-.availableGlobalAxisGroupsContainer {
+.gridColumnConfigTable .gridColumnNames:hover .card-reveal {
+    display: block;
+    transform: translateY(-100%);
 }
-.availableGlobalAxisGroupsContainer a.dropdown-button {
-    width: 30px;
-    padding-left: 10px;
-    border-radius: 8px;
+.gridColumnConfigTable .columnNames .card-reveal {
+    font-weight: normal;
+    font-size: small;
+    height: 270px !important;
+    border-radius: 4px !important;
+    color: #7babca !important;
+    box-shadow: 8px 8px 4px #888888;
+    overflow: hidden;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row {
+    padding: 0px;
+    margin-bottom: 0px !important;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row p {
+    height: 7px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row label {
+    margin-left: -20px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row label.includeInChartColumn {
+    margin-left: 35px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.multiplier {
+    margin-left: 50px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.operator {
+    margin-left: 20px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.precision {
+    margin-left: 48px;
+}
+.gridColumnConfigTable .columnNames .card-reveal .row span.yaxisGroup {
+    margin-left: 30px;
+}
+.availableGlobalAxisGroupsContainer {
+    width: 35px;
 }
 .availableGlobalAxisGroupsContainer ul.dropdown-content {
-    width: 33px;
-    min-width: 8px;
-    margin-left: 7px;
-    margin-top: -5px;
+    cursor: pointer;
+    width: 50px !important;
+    min-width: 30px !important;
 }
-.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
-    padding: 0px;
-}
-
 .filterPointName {
     display: inline-block;
     margin-left: 4px;
@@ -703,10 +895,6 @@ td.firstColumn.datetime {
 }
 .availablePropertiesContainer {
     display: inline-block;
-}
-.availableAxisGroupsContainer button.btn.btn-default.dropdown-button {
-    width: 35px;
-    padding: 6px 2px;
 }
 a.btn.dropdown-button {
     text-transform: none;
@@ -734,10 +922,6 @@ a.btn.dropdown-button.propertySelectForColumn {
 .inputMultiplier::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
-}
-input.form-control.inputPrecision {
-    width: 30px;
-    padding: 2px 2px 2px 5px;
 }
 .precisionColumn:hover {
     cursor: pointer;
@@ -789,7 +973,7 @@ th .includeInChartColumn {
 .yaxisChartGroup {
     width: 32px;
     min-width: 20px;
-    text-align: center;
+    /*text-align: center;*/
 }
 ul.yaxisGroups.dropdown-content li a {
     padding: 3px 1px 3px 1px;
@@ -806,6 +990,11 @@ input.form-control.globalIncludeInChart {
 .inputSearch {
     margin-left: 6px;
     width: 215px;
+}
+input.form-control.gridColumnDisplayName {
+    width: 281px;
+    padding-bottom: 4px;
+    height: 2rem;
 }
 input.form-control.columnDisplayName {
     width: 281px;
@@ -827,10 +1016,21 @@ input.form-control.inputMultiplier:focus {
     border-bottom: 1px solid #607d8b;
     box-shadow: 0 1px 0 0 #607d8b;
 }
+input.form-control.gridInputPrecision {
+    /*padding-top: 7px;*/
+    /*padding-bottom: 4px;*/
+    height: 2rem;
+    /*width: 30px;*/
+    padding: 2px 2px 2px 5px;
+}
+input.form-control.gridInputPrecision:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
 input.form-control.inputPrecision {
-    padding-top: 7px;
-    padding-bottom: 4px;
     height: 1rem;
+    width: 30px;
+    padding: 7px 2px 4px 5px;
 }
 input.form-control.inputPrecision:focus {
     border-bottom: 1px solid #607d8b;
@@ -938,15 +1138,65 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .gridColumnConfigTable .columnItem.globalConfigCell {
     display: block;
 }
+#editColumnModal .modal .modal-content {
+    /*padding-top: 4px;*/
+    /*padding-bottom: 4px;*/
+}
 #editColumnModal .headerInfo {
     background-color: #f1f1f1;
-    padding: 6px;
+    padding: 1px;
     border-radius: 4px;
+}
+#editColumnModal .row {
+    margin-bottom: 0px;
+}
+#editColumnModal .row .precision {
+    margin-top: 26px;
+    margin-left: 100px;
+}
+#editColumnModal .row .includeInChart {
+    margin-top: 14px;
+    margin-left: 12px;
+}
+#editColumnModal .row .includeInChart label {
+    margin-left: -10px;
+}
+#editColumnModal .row .yaxisChartGroup {
+    margin-top: 15px;
+    margin-left: 144px;
+}
+#editColumnModal .row [type="checkbox"]:not(:checked), [type="checkbox"]:checked {
+    margin-top: -15px;
 }
 #globalEditColumnModal .headerInfo {
     background-color: #f1f1f1;
     padding: 6px;
     border-radius: 4px;
+}
+#globalEditColumnModal .row {
+    margin-bottom: 0px;
+}
+
+#globalEditColumnModal .row .yaxisChartGroup {
+    margin-left: 30px;
+}
+#searchFilterModal .modal-footer a.btn .specialtiny {
+    height: 27px;
+    line-height: 29px;
+    outline: 0;
+    padding: 0 1rem;
+}
+.columnCardPanel.card-panel.blue-grey {
+    height: 26px;
+    line-height: 25px;
+    width: 90px;
+    text-indent: 8px;
+    z-index: 999999;
+    padding: 1px;
+    cursor: pointer;
+}
+.columnCardPanel:focus {
+    outline: none;
 }
 .gridColumnConfigTable > thead > tr > th {
     border-top: 1px solid #CCC !important;
@@ -1071,6 +1321,9 @@ tbody.sortablecolumns .select-wrapper span.caret {
 .filtersGrid tr.ui-sortable-helper {
     border: 2px solid #33B171 !important;
 }
+.filtersGrid tr.ui-sortable-helper.invalid {
+    border: 2px solid #b11b21 !important;
+}
 .filtersGrid tr.ui-sortable-helper input[type="text"] {
     width: 150px;
 }
@@ -1085,6 +1338,7 @@ tbody.sortablecolumns .select-wrapper span.caret {
     padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
     height: 36px;
+    width: 125px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
@@ -1186,6 +1440,26 @@ button {
 .reportButtons .btn.btn-primary {
     margin: 1px;
 }
+.dtExportButton ul li {
+    list-style-type: none;
+}
+div.dt-button-collection .dt-button.btn {
+    width: 100%;
+}
+div.dt-button-collection .dt-button.btn:hover {
+    background-color: #eee !important;
+}
+.dataTables_length .select-wrapper.form-control {
+    width: 50px !important;
+}
+.dataTables_length .dropdown-content.select-dropdown {
+    min-width: 60px !important;
+    width: 60px !important;
+}
+/*.dataTables_length .dropdown-content li {*/
+    /*min-width: 30px !important;*/
+    /*!*width: 40px !important;*!*/
+/*}*/
 .btn.btn-sm.btn-success {
     background-color: #08c;
 }
@@ -1249,7 +1523,7 @@ button {
     padding-left: 5px;
     padding-right: 10px;
 }
-        
+
 .autosuggestContainer .autosuggestContent .autosuggestSelected {
     /*background-color: $blue-grey-lighten-1;*/
     background-color: #78909c;
@@ -1297,6 +1571,13 @@ button {
     cursor: pointer;
     padding-left: 10px;
 }
+.toast.errorToast {
+    background-color: #f44336;
+}
+.toast.warningToast {
+    background-color: #ff5722;
+}
+
 .preloader-wrapper .spinner-layer {
     /*border-color: $blue-grey-lighten-1;*/
     border-color: #78909c;
@@ -1304,6 +1585,16 @@ button {
 .preloader-wrapper.tiny {
     width: 20px;
     height: 20px;
+}
+table.bordered > thead > tr, table.bordered > tbody > tr {
+    background-color: #f9f5f5;
+}
+table.dataTable,
+table.dataTable th,
+table.dataTable td {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
 }
 /*table, th, td {*/
     /*border: 1px solid !important;*/

@@ -1,0 +1,33 @@
+doctype html
+html
+    head
+        title
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/sass/v2/common')
+        link(rel='stylesheet', href='/css/electronDownload/style.css')
+    body
+        .container
+            .row.valign-wrapper
+                H3 InfoScan Desktop Application
+            .divider
+            .section
+                .row
+                    a.waves-effect.waves-light.btn(data-bind="click:downloadLatest")
+                        i.material-icons.left file_download
+                        | Download latest version (
+                        span(data-bind='text:latestVersion')
+                        | )
+                .row
+                    span(data-bind="text:releaseDate")
+                .row(data-bind='visible:infoVisibility')
+                    i.material-icons.left info
+                    span If your download does not begin after clicking the download button, make sure your browser's pop-up blocker isn't preventing the download.
+        script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.4.0.js')
+        script(type='text/javascript', src='/js/lib/materialize.min.js')
+        script(type='text/javascript', src='/js/lib/moment.js')
+        script(type='text/javascript', src='/js/electronDownload/electronDownload.js')

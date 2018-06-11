@@ -782,12 +782,6 @@ window.workspaceManager = (function($) {
             _local.openWindow('/dashboard', 'Dashboard', 'dashboard', 'mainWindow', 'dashboard');
             return;
         }
-        if (filter === 'Point Involvement') {
-            //Point Involvement won't use navigator so we'll do something different
-            uniqueId = _local.createUniqueId();
-            _local.openWindow('/report/cr/pointInvolvement?' + uniqueId, 'Point Involvement', 'pointInvolvement', 'mainWindow', 'pointInvolvement' + uniqueId);
-            return;
-        }
         if (filter === 'Device Tree') {
             //Device Tree won't use navigator so we'll do something different
             uniqueId = _local.createUniqueId();
@@ -2019,7 +2013,7 @@ ko.bindingHandlers.dataSrc = {
             $icon = $bg.find('.thumbIcon');
 
         $.ajax({
-                url: '/img/thumbs/' + upi + '.txt',
+                url: '/img/client/thumbs/' + upi + '.txt',
                 dataType: 'text',
                 type: 'get'
             })

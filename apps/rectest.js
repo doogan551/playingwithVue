@@ -1,1299 +1,230 @@
-var fs = require('fs');
-var async = require('async');
-var moment = require('moment');
-var db = require('../helpers/db');
-var Utility = require('../models/utility');
-var Config = require('../public/js/lib/config.js');
-var config = require('config');
-var logger = require('../helpers/logger')(module);
+process.setMaxListeners(0);
+const async = require('async');
+const db = require('../helpers/db');
+const Utility = require('../models/utility');
+const Config = require('../public/js/lib/config.js');
+const config = require('config');
+const Point = require('../models/point');
+const Hierarchy = require('../models/hierarchy');
+const System = require('../models/system');
 
-var dbConfig = config.get('Infoscan.dbConfig');
-var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+const dbConfig = config.get('Infoscan.dbConfig');
+const connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-var upis = {
-  'demand': [918918, 918919, 918920, 918921, 918922, 918923, 918924, 918925, 918926, 918927, 918928, 918929, 918930, 918931, 918932, 918933, 918934, 918935, 918936, 918937, 918938, 918939, 918940, 918941, 918942, 918943, 918944, 918945, 918947, 918949, 918950, 918951, 918952, 918953],
-  'consumption': [918990, 918991, 918992, 918993, 918994, 918995, 918996, 918997, 918998, 918999, 919000, 919001, 919002, 919003, 919004, 919005, 919006, 919007, 919008, 919009, 919010, 919011, 919012, 919013, 919014, 919015, 919016, 919017, 919018, 919019, 919020, 919021, 919022, 919023],
-  'reactive': [918956, 918957, 918958, 918959, 918960, 918961, 918962, 918963, 918964, 918965, 918966, 918967, 918968, 918969, 918970, 918971, 918972, 918973, 918974, 918975, 918976, 918977, 918978, 918979, 918980, 918981, 918982, 918983, 918984, 918985, 918986, 918987, 918988, 918989]
+let test = () => {
+    let hierarchyModel = new Hierarchy();
+    console.time('test');
+    hierarchyModel.createHierarchy((err) => {
+        console.log(err);
+        console.timeEnd('test');
+    });
+    // let pointModel = new Point();
+    // pointModel.iterateCursor({}, (err, node, nextNode)=>{
+    //     pointModel.toLowerCasePath(node);
+    //     pointModel.update({query: {_id: node._id}, updateObj: {$set: {_path: node._path}}}, (err, result)=>{
+    //         nextNode(err);
+    //     });
+    // }, (err, count)=>{
+    //     console.log(err, 'done');
+    // });
 };
 
-function newHistory() {
-  var history = require('../models/history.js');
-  var start = moment('10/01/15', 'MM/DD/YY').unix();
-  var end = moment.unix(start).add(1, 'month').unix();
-
-  var options = [{
-    "touid": "tou_64",
-    "utilityName": "Electricity",
-    "range": {
-      "start": 1443675600,
-      "end": 1446354000
-    },
-    "scale": "month",
-    "fx": "tempRange",
-    "upis": [
-      65696
-    ]
-  }];
-
-  // options  = [{"range":{"start":1417410000,"end":1420088400},"scale":"half-hour","fx":"missingData","upis":[919009,918929,918978]}];
-  // console.log('before range', options.length);
-  var newOptions = history.buildOps(options);
-  // console.log('after range', newOptions.length);
-  var startTime = new Date();
-  logger.debug(connectionString.join(''));
-  db.connect(connectionString.join(''), function(err) {
-    history.getUsageCall(newOptions, function(err, result) {
-      console.log('finished', new Date() - startTime, err);
-      /*history.addToCsv(result, newOptions[0], function(err){
-        console.log('doXne with csv', err);
-      });*/
-      result = history.unbuildOps(result);
-      // console.log(JSON.stringify(result));
-      console.log(result[0].results.tempRanges);
-      /*var peakSum = 0;
-      var totalSum = 0;
-      for (var r = 0; r < result.length; r++) {
-        for (var s = 0; s < result[r].results.sums.length; s++) {
-          if (['on', 'off'].indexOf(result[r].peak) >= 0) {
-            peakSum += result[r].results.sums[s].sum;
-          } else {
-            totalSum += result[r].results.sums[s].sum;
-          }
-        }
-      }
-      console.log(peakSum);
-      console.log(totalSum);*/
-      /*fs.appendFile('./logs.js', JSON.stringify(result), function(err) {
-        newOptions = [];
-        result = [];
-        console.log(err);
-      });*/
-    });
-  });
-}
-// newHistory();
-
-function fixDbDoubles() {
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'points',
-      query: {
-        'Point Type.Value': 'MultiState Value'
-      }
-    };
-    console.log(criteria);
-    Utility.get(criteria, function(err, points) {
-      console.log(err, points.length);
-      async.eachSeries(points, function(point, cb) {
-        for (var prop in point) {
-          if (point[prop].hasOwnProperty('ValueType')) {
-            point[prop].ValueType = parseInt(point[prop].ValueType, 10);
-            if (point[prop].hasOwnProperty('eValue')) {
-              point[prop].eValue = parseInt(point[prop].eValue, 10);
-              for (var option in point[prop].ValueOptions) {
-                point[prop].ValueOptions[option] = parseInt(point[prop].ValueOptions[option], 10);
-              }
+let checkHierarchy = () => {
+    let pointModel = new Point();
+    pointModel.iterateCursor({}, (err, point, nextPoint) => {
+        let newProps = Object.keys(Config.Templates.getTemplate('Location'));
+        for (var n = 0; n < newProps; n++) {
+            if (!point.hasOwnProperty(newProps[n])) {
+                console.log('missing property', newProps[n], point._id);
+                return nextPoint(null, true);
             }
-            if (!isNaN(parseInt(point[prop].Value, 10))) {
-              if (point[prop].ValueType !== 1) {
-                point[prop].Value = parseInt(point[prop].Value, 10);
-              } else {
-                point[prop].Value = parseFloat(point[prop].Value);
-              }
-            }
-          } else {
-            // point[prop] = parseInt(point[prop], 10);
-          }
         }
-        criteria.query = {
-          _id: point._id
-        };
-        criteria.updateObj = point;
-        Utility.update(criteria, function(err, result) {
-          cb(err);
+        if (!point.path.includes(point.display)) {
+            console.log('display not in path', point._id);
+            return nextPoint(null, true);
+        }
+        pointModel.getOne({
+            query: {
+                _id: point.parentNode
+            }
+        }, (err, parent) => {
+            if (!parent) {
+                console.log('no parent', point._id, point.display);
+                return nextPoint();
+            }
+            if (!!err) {
+                return nextPoint(err);
+            }
+            if (!point.path.includes(parent.display)) {
+                console.log('parent display not in path', point._id);
+                return nextPoint(null, true);
+            }
+            for (var p = 0; p < parent.path; p++) {
+                if (point.path[p] !== parent.path[p]) {
+                    console.log('parent path and point path don\'t match', point._id);
+                    return nextPoint(null, true);
+                }
+            }
+            return nextPoint(err);
         });
-      }, function(err) {
-        console.log('done', err);
-      });
+    }, (err, count) => {
+        console.log('done', err, count);
     });
-  });
-}
-// fixDbDoubles();
+};
 
-function testDBCursor() {
-  db.connect(connectionString.join(''), function(err) {
-    Utility.iterateCursor({
-      collection: 'points',
-      query: {},
-      limit: 10
-    }, function(err, doc, cb) {
-      console.log(err, doc._id);
-      cb(null);
-    }, function(err) {
-      console.log('done', err);
-    });
-  });
-}
-// testDBCursor();
-/*process.on('uncaughtException', function(err) {
-  throw Error(err);
-});*/
+let buildTags = () => {
+    let pointModel = new Point();
 
-function addProperties() {
-  var criteria = {
-    collection: 'points',
-    query: {
-      'Point Type.Value': 'Optimum Start'
-    },
-    updateObj: {
-      $set: {
-        "Trend Enable": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 7,
-          "Value": false
-        },
-        "Trend Interval": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 13,
-          "Value": 60
-        },
-        "Trend Last Status": {
-          "isDisplayable": false,
-          "isReadOnly": true,
-          "ValueType": 18,
-          "Value": 0
-        },
-        "Trend Last Value": {
-          "isDisplayable": false,
-          "isReadOnly": true,
-          "ValueType": 5,
-          "Value": "Off",
-          "eValue": 0
-        },
-        "Trend Samples": {
-          "isDisplayable": true,
-          "isReadOnly": false,
-          "ValueType": 4,
-          "Value": 0
+    pointModel.iterateCursor({}, (err, doc, nextDoc) => {
+        doc.tags = doc.path.map((item) => item.toLowerCase());
+        if (doc.hasOwnProperty('Point Type')) {
+            doc.bitType = Config.Enums['Point Types'][doc['Point Type'].Value].bit;
         }
-      }
-    },
-    options: {
-      multi: true
-    }
-  };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.update(criteria, function(err, result) {
-      console.log(err, result.result.nModified);
-    });
-  });
-}
-// addProperties();
-
-function updateGPL() {
-  var count = 0;
-  var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
-  var criteria = {
-    collection: 'points',
-    query: {
-      'Point Type.Value': {
-        $in: pointTypes
-      }
-    }
-  };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.iterateCursor(criteria, function(err, point, cb) {
-      count++;
-      if (count % 1000 === 0) {
-        console.log(count);
-      }
-      var parentUpi = point._parentUpi;
-
-      for (var prop in point) {
-        if (point[prop].ValueType == 8) {
-          if (parentUpi !== 0)
-            point[prop].isReadOnly = true;
-          else
-            point[prop].isReadOnly = false;
-        }
-      }
-
-      switch (point["Point Type"].Value) {
-        case 'Proportional':
-        case 'Binary Selector':
-        case 'Analog Selector':
-          point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Math':
-        case 'Multiplexer':
-          point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Delay':
-          point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-        case 'Comparator':
-          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-          break;
-      }
-
-      var crit = {
-        collection: 'points',
-        query: {
-          _id: point._id
-        },
-        updateObj: point
-      };
-      Utility.update(crit, cb);
-    }, function(err) {
-      console.log('done', err);
-    });
-  });
-
-}
-// updateGPL();
-
-function testTotalizerModel() {
-  var Reports = require('../models/reports');
-
-  var data = {
-    upis: [
-      /*{
-            'upi': 28366,
-            'op': 'starts'  // BI, BO, BV
-          },*/
-      {
-        'upi': 2813,
-        'op': 'total' // BI, BO, BV
-      }
-      /*, {
-            'upi': 2813,
-            'op': 'total' // All other types
-          }*/
-    ],
-    range: {
-      'start': 1453352400,
-      'end': 1453356000
-    },
-    "reportConfig": {
-      "returnLimit": 200,
-      "interval": 60
-    }
-  };
-  db.connect(connectionString.join(''), function(err) {
-    Reports.totalizerReport(data, function(err, result) {
-      console.log(err, JSON.stringify(result));
-    });
-  });
-}
-// testTotalizerModel();
-
-function testInheritance() {
-  var createInherit = function(superClass, subClass) {
-    subClass.prototype = Object.create(superClass.prototype);
-    subClass.prototype.constructor = subClass;
-  };
-
-  function Table() {
-    this.type = 'table';
-  }
-
-  Table.prototype.setType = function(type) {
-    console.log('before', this.type);
-    this.type = type;
-    console.log('after', this.type);
-  };
-
-  Table.prototype.print = function() {
-    console.log(this.type);
-  };
-
-  function Devices() {
-    console.log('Table.call');
-    Table.call(this);
-    this.setType('Rectangle');
-  }
-
-  createInherit(Table, Devices);
-
-  template = {
-    'Point Type': {
-      eValue: 1,
-      Value: function() {
-        console.log('eval', this.eValue);
-      }
-    }
-  };
-  template['Point Type'].Value();
-}
-// testInheritance();
-
-function setUpNotifications() {
-  var pointNames = ['Booster_Pump 1_Control', 'Booster_Pump 2_Control', 'Booster_Pump 2_VFD Speed', 'Booster_Pump Station_Pressure', 'Booster_Pumps_Not Running_Alarm', 'Booster Sta_Chem Pump 1_Status', 'Booster Sta_Chem Pump 2_Status', 'Booster Sta_Chem Pump 3_Status', 'Booster Sta_Chem Pump 4_Status', 'Booster Sta_Discharge_Pressure', 'Booster Sta_Intrusion_Switch_Alarm', 'Booster Sta_Low_Suction_Alarm', 'Booster Sta_PH', 'Booster Sta_Power_Fail_Alarm', 'Booster Sta_Pump 1_Fail_Alarm', 'Booster Sta_Pump 2_Fail_Alarm', 'Booster Sta_Res Disch_Flow', 'Booster Sta_Reservoir_Flow', 'Booster Sta_Suction_Pressure', 'Chlorine_Feed', 'Clear_Water_Level', 'Combined_Effluent_Turbidity', 'Filter1_Effluent_Flow', 'Filter1_Effluent_Turbidity', 'Filter1_Finish H2O_Loss of Head', 'Filter2_Effluent_Flow', 'Filter2_Effluent_Turbidity', 'Filter2_Finish H2O_Loss of Head', 'Filter3_Effluent_Flow', 'Filter3_Effluent_Turbidity', 'Filter3_Finish H2O_Loss of Head', 'Finish_Pump 1_100 HP_Control', 'Finish_Pump 2_75 HP_Control', 'Finish_Pump 3_200 HP_Control', 'Finished_Water_Flow', 'Finished_Water_Turbidity', 'Finished_Water_pH', 'High_Service_Pressure', 'Mixed_Water_pH', 'Post_Chlorine', 'Raw_Water_Flow', 'Raw_Water_Pump 1_Control', 'Raw_Water_Pump 2_Control', 'Raw_Water_Turbidity', 'Reservior_Water_Level', 'Reservoir_Power_Fail_Alarm', 'Settled_DefNameSeg2_Turbidity', 'Sulfur_Feed', 'Sweep_Flow', 'Water_Tank_AltValve_Control', 'Water_Tank1_Intrusion', 'Water_Tank1_Level', 'Water_Tank2_Level_psi', 'Yadkinville_xTalk01 1_MSC20_Water Tank'];
-  var policyId = '56e883c634fa375416c1c0ec';
-
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'points',
-      query: {
-        /*Name: {
-          $in: pointNames
-        }*/
-        'Notify Policies': {
-          $size: 1
-        }
-      }
-    };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
-      var msgs = doc['Alarm Messages'];
-      doc['Notify Policies'] = [policyId];
-      for (var i = 0; i < msgs.length; i++) {
-        msgs[i].ack = true;
-        msgs[i].notify = true;
-      }
-      Utility.update({
-        collection: 'points',
-        query: {
-          _id: parseInt(doc._id, 10)
-        },
-        updateObj: doc
-      }, function(err, result) {
-        cb(err);
-      });
-    }, function(err, count) {
-      console.log(err, count, 'done');
-    });
-  });
-}
-// setUpNotifications();
-
-function fixPointInst() {
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'points',
-      query: {
-        'Point Type.Value': {
-          $in: ['Display', 'Program']
-        }
-      }
-    };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
-        var refs = doc['Point Refs'];
-        var index = -1;
-        async.eachSeries(refs, function(ref, callback) {
-          index++;
-          if (ref.Value !== ref.PointInst) {
-            Utility.getOne({
-              collection: 'points',
-              query: {
-                _id: ref.Value
-              }
-            }, function(err, point) {
-
-              Config.EditChanges.applyUniquePIDLogic({
-                point: doc,
-                refPoint: point
-              }, index);
-              Utility.update({
-                collection: 'points',
-                query: {
-                  _id: parseInt(doc._id, 10)
-                },
-                updateObj: doc
-              }, callback);
-            });
-          } else {
-            callback();
-          }
-
-        }, cb);
-
-      },
-      function(err, count) {
+        pointModel.update({
+            query: {
+                _id: doc._id
+            },
+            updateObj: doc
+        }, (err, result) => {
+            nextDoc(err);
+        });
+    }, (err, count) => {
         console.log(err, count, 'done');
-      });
-  });
-}
-// fixPointInst();
-
-function fixUsers() {
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'Users',
-      query: {}
-    };
-    Utility.iterateCursor(criteria, function(err, doc, cb) {
-      var alerts = doc.alerts;
-
-      for (var prop in alerts) {
-        var cat = alerts[prop];
-        for (var i = 0; i < cat.length; i++) {
-          if (cat[i].hasOwnProperty('info')) {
-            cat[i].Value = cat[i].info;
-            cat[i].Type = cat[i].type;
-            delete cat[i].info;
-            delete cat[i].type;
-          }
-        }
-      }
-      if (!doc.hasOwnProperty('notificationOptions')) {
-        doc['notificationOptions'] = {
-          "Emergency": false,
-          "Critical": false,
-          "Urgent": false,
-          "notifyOnAck": false
-        };
-      }
-      if (!doc.hasOwnProperty('notificationsEnabled')) {
-        doc['notificationsEnabled'] = false;
-      }
-      if (!doc.hasOwnProperty('alerts')) {
-        doc['alerts'] = {
-          'Normal': [],
-          'Emergency': [],
-          'Critical': [],
-          'Urgent': []
-        };
-      }
-      Utility.update({
-        collection: 'Users',
-        query: {
-          _id: doc._id
-        },
-        updateObj: doc
-      }, cb);
-    }, function(err, count) {
-      console.log('done', err, count);
     });
-  });
-}
-// fixUsers();
+};
 
-function createMathBlocks() {
-  var Point = require('../models/point');
-  var socketCommon = require('../socket/common').common;
-  var criteria = {
-    collection: 'points',
-    query: {
-      _id: 81
-    }
-  };
-  db.connect(connectionString.join(''), function(err) {
-    Utility.getOne(criteria, function(err, report) {
-      async.eachSeries(report['Point Refs'], function(column, cb) {
-        // logger.info('working on', column.Value, column.PointName);
-        async.waterfall([function(wfcb) {
-          criteria.query._id = column.Value;
-          Utility.getOne(criteria, wfcb);
-        }, function(refPoint, wfcb) {
-          // logger.info(refPoint.Name);
-          Point.initPoint({
-            name1: refPoint.name1,
-            name2: refPoint.name2,
-            name3: refPoint.name3,
-            name4: 'Run Time',
-            pointType: 'Math',
-            targetUpi: 92
-          }, function(err, cloned) {
-            // logger.info(err, cloned);
-            cloned['Point Refs'][0] = refPoint['Point Refs'][0];
-            cloned['Point Refs'][4].Value = refPoint._id;
-            cloned['Point Refs'][4] = Config.EditChanges.applyUniquePIDLogic({
-              point: cloned,
-              refPoint: refPoint
-            }, 4)['Point Refs'][4];
-            // logger.info(cloned['Point Refs']);
-            socketCommon.addPoint(cloned, {}, {}, function(err, result) {
-              // logger.info('cloned added', err);
-              wfcb(null, refPoint);
+let fixToUUtil = () => {
+    let systemModel = new System();
+    let pointModel = new Point();
+
+    systemModel.getOne({
+        query: {
+            Name: 'Weather'
+        }
+    }, (err, weather) => {
+        async.eachOfSeries(weather, (value, prop, callback) => {
+            if (typeof value === 'number') {
+                pointModel.getOne({
+                    query: {
+                        _oldUpi: value
+                    }
+                }, (err, refPoint) => {
+                    weather[prop] = (!!refPoint) ? refPoint._id : 0;
+                    callback(err);
+                });
+            } else {
+                return callback();
+            }
+        }, (err) => {
+            systemModel.update({
+                query: {
+                    Name: 'Weather'
+                },
+                updateObj: weather
+            }, (err, results) => {
+                console.log('done', err, results);
             });
-          }, function(refPoint, wfcb) {
-            refPoint['Trend Interval'].Value = 1;
-            Utility.update({
-              collection: 'points',
-              query: {
-                _id: refPoint._id
-              },
-              updateObj: refPoint
-            }, wfcb);
-          });
-        }], cb);
-      }, function(err) {
-        logger.info('done', err);
-      });
+        });
     });
-  });
-}
-// createMathBlocks();
+};
 
-function renamePoints() {
-  var socketCommon = require('../socket/common').common;
-  db.connect(connectionString.join(''), function(err) {
-    var name1 = 'YDK Booster Sta';
-    var newName1 = 'YNC Booster Sta';
-    Utility.get({
-      collection: 'points',
-      query: {
-        name1: name1
-      }
-    }, function(err, points) {
-      async.eachSeries(points, function(point, cb) {
-        var oldPoint = _.cloneDeep(point);
-        point.name1 = newName1;
-        point = Config.Update.formatPoint({
-          point: point,
-          oldPoint: oldPoint,
-          property: 'name1'
+let compareDBs = () => {
+    let pointModel = new Point();
+    const mongo = require('mongodb');
+
+    mongo.connect('mongodb://localhost:27017', (err, conn) => {
+        conn.db('msfc').collection('points').findOne({
+            _id: 36700161
+        }, (err, result) => {
+            pointModel.getOne({
+                query: {
+                    _id: 36700161
+                }
+            }, (err, point) => {
+                for (var prop in point) {
+                    if (!result.hasOwnProperty(prop)) {
+                        console.log(1, prop);
+                    }
+                }
+                for (var key in result) {
+                    if (!point.hasOwnProperty(key)) {
+                        console.log(1, key);
+                    }
+                }
+                console.log('done');
+            });
         });
-        socketCommon.newUpdate(oldPoint, point, {
-          method: "update",
-          from: "ui"
-        }, {
-          username: 'SYSTEM'
-        }, function(response, point) {
-          console.log(response);
-          cb();
-        });
-      }, function(err) {
-        console.log(err, 'done');
-      });
     });
-  });
-}
-// renamePoints();
+};
 
+let updateMSV = () => {
+    let pointModel = new Point();
+    let pointType = 'MultiState Value';
+    let properties = ['Alarm Class', 'Alarm Delay Time', 'Alarm Repeat Enable', 'Alarm Repeat Time', 'Alarms Off', 'Default Value',
+        'Demand Enable', 'Demand Interval', 'Fail Action', 'Interlock State'
+    ];
+    let pointRefs = ['Alarm Display Point', 'Interlock Point', 'Monitor Point', 'Feedback Point'];
 
-/*"DemandInUpi" : NumberInt(643428),
-"DemandOutUpi" : NumberInt(643430),
-"UsageInUpi" : NumberInt(643432),
-"UsageOutUpi" : NumberInt(729442),
-"KVARInUpi" : NumberInt(643434),
-"KVAROutUpi" : NumberInt(643436)*/
-function test() {
-  process.setMaxListeners(0);
-  var objs = {
-    DemandInUpi: {
-      name3: 'W3P SUM',
-      newProp: 'DemandSumUpi'
-    },
-    UsageInUpi: {
-      name3: 'WH3P SUM',
-      newProp: 'UsageSumUpi'
-    },
-    KVARInUpi: {
-      name3: 'MVR3 SUM',
-      newProp: 'KVARSumUpi'
-    }
-  };
-
-  var splitName = function(meter) {
-    return meter.Name.split('_');
-  }
-  db.connect(connectionString.join(''), function(err) {
-    Utility.iterateCursor({
-      collection: 'PowerMeters',
-      query: {}
-    }, function(err, meter, cb) {
-      var names = {
-        name1: splitName(meter)[0],
-        name2: splitName(meter)[1],
-        name4: splitName(meter)[3]
-      };
-      async.waterfall([function(callback) {
-        Utility.getOne({
-          collection: 'points',
-          query: {
-            name1: names.name1,
-            name2: names.name2,
-            name4: names.name4,
-            name3: objs.DemandInUpi.name3
-          }
-        }, function(err, point) {
-          var updateObj = {
-            $set: {}
-          };
-          updateObj.$set[objs.DemandInUpi.newProp] = point._id;
-          Utility.update({
-            collection: 'PowerMeters',
-            query: {
-              _id: meter._id
-            },
-            updateObj: updateObj
-          }, function(err, result) {
-            callback();
-          });
-        });
-      }, function(callback) {
-        Utility.getOne({
-          collection: 'points',
-          query: {
-            name1: names.name1,
-            name2: names.name2,
-            name4: names.name4,
-            name3: objs.UsageInUpi.name3
-          }
-        }, function(err, point) {
-          var updateObj = {
-            $set: {}
-          };
-          updateObj.$set[objs.UsageInUpi.newProp] = point._id;
-          Utility.update({
-            collection: 'PowerMeters',
-            query: {
-              _id: meter._id
-            },
-            updateObj: updateObj
-          }, function(err, result) {
-            callback();
-          });
-        });
-      }, function(callback) {
-        Utility.getOne({
-          collection: 'points',
-          query: {
-            name1: names.name1,
-            name2: names.name2,
-            name4: names.name4,
-            name3: objs.KVARInUpi.name3
-          }
-        }, function(err, point) {
-          var updateObj = {
-            $set: {}
-          };
-          updateObj.$set[objs.KVARInUpi.newProp] = point._id;
-          Utility.update({
-            collection: 'PowerMeters',
-            query: {
-              _id: meter._id
-            },
-            updateObj: updateObj
-          }, function(err, result) {
-            callback();
-          });
-        });
-      }], cb)
-
-
-    }, function(err, count) {
-      console.log(err, count);
-    });
-  });
-}
-// test();
-
-function rearrangeProperties() {
-  var test = {
-    "_id": 20874,
-    "Name": "4201_FID01",
-    "name1": "4201",
-    "name2": "FID01",
-    "name3": "",
-    "name4": "",
-    "Security": [],
-    "_pStatus": 0,
-    "_cfgRequired": true,
-    "_cfgDevice": false,
-    "_forceAllCOV": false,
-    "_relDevice": 0,
-    "_relRMU": 0,
-    "_relPoint": 0,
-    "_updPoint": false,
-    "_updTOD": false,
-    "_pollTime": 0,
-    "_devModel": 2,
-    "_rmuModel": 0,
-    "_parentUpi": 0,
-    "_actvAlmId": {
-      "$oid": "000000000000000000000000"
-    },
-    "Alarm Messages": [{
-      "msgType": 17,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070e1"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 7,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d6"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 8,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d7"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 6,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d5"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 9,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d8"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 10,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070d9"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 11,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070da"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 12,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070db"
-      },
-      "ack": false,
-      "notify": false
-    }, {
-      "msgType": 45,
-      "msgId": {
-        "$oid": "574463492f1ead8b514070f4"
-      },
-      "ack": false,
-      "notify": false
-    }],
-    "APDU Retries": {
-      "ValueType": 4,
-      "Value": 2,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "APDU Timeout": {
-      "ValueType": 4,
-      "Value": 25,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Configure Device": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "COV Period": {
-      "ValueType": 13,
-      "Value": 10,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Device Status": {
-      "ValueType": 5,
-      "Value": "Stop Scan",
-      "eValue": 66,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Alarm Value": {
-      "ValueType": 5,
-      "Value": "Failed",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Downlink Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Firmware Version": {
-      "ValueType": 2,
-      "Value": "V3.20",
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Last Report Time": {
-      "ValueType": 11,
-      "Value": 1463589898,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Model Type": {
-      "ValueType": 5,
-      "Value": "Field Interface Device",
-      "eValue": 2,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Startup Delay": {
-      "ValueType": 13,
-      "Value": 120,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Time Zone": {
-      "ValueType": 5,
-      "Value": "Central Time Zone",
-      "eValue": 6,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Stop Scan": {
-      "ValueType": 7,
-      "Value": true,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Active Text": {
-      "ValueType": 2,
-      "Value": "Normal",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Class": {
-      "ValueType": 5,
-      "Value": "Critical",
-      "eValue": 1,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Delay Time": {
-      "ValueType": 13,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Display Point": {
-      "ValueType": 8,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false,
-      "PointName": "",
-      "PointType": 0,
-      "DevInst": 0,
-      "PointInst": 0
-    },
-    "Alarm Repeat Enable": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm Repeat Time": {
-      "ValueType": 17,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarms Off": {
-      "ValueType": 7,
-      "Value": false,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Alarm State": {
-      "ValueType": 5,
-      "Value": "Normal",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Inactive Text": {
-      "ValueType": 2,
-      "Value": "Failed",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Value": {
-      "ValueType": 5,
-      "Value": "Failed",
-      "eValue": 0,
-      "ValueOptions": {
-        "Failed": 0,
-        "Normal": 1
-      },
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Quality Code Enable": {
-      "ValueType": 18,
-      "Value": 255,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Reliability": {
-      "ValueType": 5,
-      "Value": "No Fault",
-      "eValue": 0,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "Trend Interval": {
-      "ValueType": 13,
-      "Value": 60,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Remarks": {
-      "ValueType": 2,
-      "Value": "",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Description": {
-      "ValueType": 2,
-      "Value": "",
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Point Type": {
-      "ValueType": 5,
-      "Value": "Device",
-      "eValue": 8,
-      "isDisplayable": true,
-      "isReadOnly": true
-    },
-    "taglist": ["4201", "FID01", "Device"],
-    "Ethernet Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Ethernet IP Port": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Ethernet Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Downlink IP Port": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Downlink Broadcast Delay": {
-      "ValueType": 4,
-      "Value": 64,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Ethernet Protocol": {
-      "ValueType": 5,
-      "Value": "None",
-      "eValue": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Uplink Port": {
-      "ValueType": 5,
-      "Value": "Port 1",
-      "eValue": 1,
-      "ValueOptions": {
-        "Port 1": 1,
-        "Port 2": 2
-      },
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Address": {
-      "ValueType": 4,
-      "Value": 12,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Maximum Address": {
-      "ValueType": 4,
-      "Value": 15,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Network": {
-      "ValueType": 4,
-      "Value": 15,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 1 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": true,
-      "isReadOnly": false
-    },
-    "Port 2 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 2 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 3 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Maximum Address": {
-      "ValueType": 4,
-      "Value": 0,
-      "Max": 127,
-      "Min": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Network": {
-      "ValueType": 4,
-      "Value": 0,
-      "isDisplayable": false,
-      "isReadOnly": false
-    },
-    "Port 4 Protocol": {
-      "ValueType": 5,
-      "Value": "MS/TP",
-      "eValue": 1,
-      "isDisplayable": false,
-      "isReadOnly": false
-    }
-  };
-  var compare = function(a, b) {
-    var _a = a.toLowerCase();
-    var _b = b.toLowerCase();
-    if (['name', 'name1'].indexOf(_a) >= 0) {
-      console.log(typeof test[a], a);
-    }
-    if (_a === '_id') {
-      return -1;
-    } else if (_b === '_id') {
-      return 1;
-    }
-    if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
-      if (_a > _b) {
-        return -1;
-      } else if (a < _b) {
-        return 1;
-      }
-    } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
-      if (_a > _b) {
-        return 1;
-      } else if (a < _b) {
-        return -1;
-      }
-    } else if (_a.match(/^name|^_/)) {
-      return -1;
-    } else if (_b.match(/^name|^_/)) {
-      return 1;
-    }
-    return 0;
-  }
-  var arr = [];
-  var o = {};
-  for (var prop in test) {
-    arr.push(prop);
-  }
-  arr.sort(compare);
-  // console.log(arr);
-  for (var i = 0; i < arr.length; i++) {
-    o[arr[i]] = test[arr[i]];
-  }
-  test = o;
-  console.log(test);
-}
-// rearrangeProperties();
-
-function countUpis() {
-  var uCount = 0;
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'points',
-      query: {},
-      fields: {
-        _id: 1
-      }
-    };
-    Utility.iterateCursor(criteria, function(err, doc, next) {
-      criteria = {
-        collection: 'upis',
+    pointModel.iterateCursor({
         query: {
-          _id: doc._id + 0
+            'Point Type.Value': pointType
         }
-      };
+    }, (err, doc, nextDoc) => {
+        properties.forEach((prop) => {
+            doc[prop] = Config.Templates.getTemplate(pointType)[prop];
+        });
+        doc['Point Refs'] = [doc['Point Refs'][0], doc['Point Refs'][1]];
+        pointRefs.forEach((ref) => {
+            doc['Point Refs'].push(Config.Utility.getPropertyObject(ref, Config.Templates.getTemplate(pointType)));
+        });
 
-      Utility.getOne(criteria, function(err, upi) {
-        if (err) {
-          console.log('err', err);
-        } else if (!upi) {
-          console.log('no upi', upi, doc._id);
-        } else if (upi._pStatus !== 0) {
-          ++uCount;
-          console.log('bad pstatus', upi._id);
+        for (var option in doc.States.ValueOptions) {
+            doc.States.AlarmValues = [doc.States.ValueOptions[option]];
+            break;
         }
-        next();
-      });
 
-    }, function(err, count) {
-      console.log('done', count, uCount);
+        doc['Alarm Messages'].push(Config.Templates.getTemplate(pointType)['Alarm Messages'][2]);
+
+        pointModel.update({
+            query: {
+                _id: doc._id
+            },
+            updateObj: doc
+        }, (err, result) => {
+            return nextDoc(err);
+        });
+    }, (err, count) => {
+        console.log('done', err, count);
     });
-  });
-}
-// countUpis();
+};
 
-function testCron() {
-  var _ = require('lodash');
-  var prettyCron = require('prettycron');
-  var CronJob = require('../models/cronjob');
+const deleteFiles = (cb) => {
+    const fs = require('fs');
+    const rimraf = require('rimraf');
+    const dirs = ['./scripts/', './tmp/'];
 
-  var seconds = new Date().getSeconds();
-  var time = '*/15 * * * * *';
-  var jobs = {};
-  var array = [];
-  for (var a = 0; a < 1; a++) {
-    array.push(a);
-  }
-  // console.log(time, prettyCron.toString(time), prettyCron.getNext(time));
-  async.eachSeries(array, function(item, cb) {
-    jobs[item] = new CronJob(time, function() {
-      logger.info('running', item, new Date());
-    }, function() {
-      logger.info('finished');
+    async.each(dirs, (dir, nextDir) => {
+        fs.readdir(dir, (err, files) => {
+            async.eachSeries(files, (file, nextFile) => {
+                let filePath = dir + file;
+                fs.stat(filePath, (err, stat) => {
+                    if (stat.mtime.valueOf() < (Date.now() - (60 * 1000))) {
+                        rimraf(filePath, nextFile);
+                    } else {
+                        return nextFile();
+                    }
+                });
+            }, (err) => {
+                nextDir();
+            });
+        });
+    }, (err) => {
+        cb();
     });
-    cb();
-  }, function(err) {
-    // jobs[2].stop();
-    logger.info('done');
-  });
-}
-// testCron();
+};
 
-function testobjects() {
-  function one(b) {
-    b(1);
-  }
-
-  function two(a, b) {
-    console.log(a, 2);
-    b();
-  }
-  async.waterfall([one, two], function(err) {
-    console.log(err);
-  });
-}
-// testobjects();
-
-function testConfg() {
-  var types = Object.keys(Config.Enums['Point Types']);
-  types.forEach(function(type) {
-    var fx = ["apply", type.split(' ').join(''), 'DevModel'].join('');
-    if (!Config.EditChanges.hasOwnProperty(fx)) {
-      console.log(type);
-    }
-  });
-}
-// testConfg()
-
-function fixComparators() {
-  var matrix = {
-    '<': 'LT',
-    '>': 'GT',
-    '<=': 'LTEqual',
-    '>=': 'GTEqual',
-    '=': 'Equal'
-  };
-  db.connect(connectionString.join(''), function(err) {
-    var criteria = {
-      collection: 'points',
-      query: {
-        'Point Type.Value': 'Comparator',
-        _id:2929
-      }
-    };
-    Utility.iterateCursor(criteria, function(err, doc, next) {
-      var ct = doc['Calculation Type'];
-      for (var prop in matrix) {
-        if (ct.Value === matrix[prop]) {
-          ct.eValue = ct.ValueOptions[prop];
-          ct.Value = prop;
-        }
-      }
-      Utility.update({
-        collection: 'points',
-        query: {
-          _id: doc._id
-        },
-        updateObj: {
-          $set: {
-            'Calculation Type': ct
-          }
-        }
-      }, next);
-    }, function(err, count) {
-      console.log(err, count, 'done');
+db.connect(connectionString.join(''), function (err) {
+    deleteFiles((err) => {
+        console.log('done');
     });
-  });
-}
-fixComparators();
+});

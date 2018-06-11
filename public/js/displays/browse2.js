@@ -4,7 +4,7 @@ $(document).ready(function(){
         fname = $(this).find('.fname').html();
 
 
-        $(this).find('img').attr('src','/display_assets/assets/' + bg);
+        $(this).find('img').attr('src','/img/client/display_assets/' + bg);
 
         $(this).click(function(){
             window.parent.setImg($(this).find('.fname').html());

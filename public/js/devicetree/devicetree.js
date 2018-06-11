@@ -1,4 +1,4 @@
-var workspace = window.top && window.top.workspaceManager
+var workspace = window.top && window.top.workspaceManager;
 var qualityCodes = workspace.systemEnums.qualityCodes;
 var socket = workspace.socket();
 
@@ -20,7 +20,7 @@ for (var i = 0; i < qualityCodes.length; i++) {
 var maxSpanLength = 0;
 var mouseX;
 var mouseY;
-$(document).mousemove(function(e) {
+$(document).mousemove(function (e) {
     mouseX = e.pageX;
     mouseY = e.pageY;
 });
@@ -34,12 +34,12 @@ function TreeViewModel() {
 
     var networkSearch = false;
 
-    self.loadTree = function() {
+    self.loadTree = function () {
         self.tree([]);
         self.networks([]);
         self.badNetworks([]);
         $('.loadingIcon').show();
-        $.getJSON('/api/devicetree/getTree', function(response) {
+        $.getJSON('/api/devicetree/getTree', function (response) {
             var responseModel = ko.viewmodel.fromModel(response);
             self.tree(responseModel.tree());
             // for (i = 0; i < response.tree.length; i++) {
@@ -86,7 +86,9 @@ function TreeViewModel() {
     self.modelType = ko.observable('');
     self.firmwareRevision = ko.observable('');
 
-    self.searchValue.subscribe(function(value) {
+    self.shownDeviceId = ko.observable('');
+
+    self.searchValue.subscribe(function (value) {
         searchIndex = 0;
         if (!!value) {
             self.deviceSearch();
@@ -95,25 +97,28 @@ function TreeViewModel() {
         }
     });
 
-    self.devAddress = function(data){
+    self.devAddress = function (data) {
         // if ethernet uplink
         // dev address : eth ip port #
         // else just dev add
-        if(data.uplinkPort()===0){
-            return ['(',data.deviceAddress(),':',data.ethIPPort(),')'].join('');
-        }else{
-            return ['(',data.deviceAddress(),')'].join('');
+        if (data.uplinkPort() === 0) {
+            return ['(', data.deviceAddress(), ':', data.ethIPPort(), ')'].join('');
         }
-        return 'test';
+        return ['(', data.deviceAddress(), ')'].join('');
     };
 
-    self.showDevice = function(item, e, t) {
+    self.toggleDevice = function (item, e, t) {
         var rightSide = $(e.target).offset().left + $(e.target).context.offsetWidth;
-
-        $.getJSON('/api/points/' + item.upi(), function(response) {
+        if (self.shownDeviceId() === item.upi()) {
+            $('.overlay').css('display', 'none');
+            self.shownDeviceId('')
+            return;
+        }
+        $.getJSON('/api/points/' + item.upi(), function (response) {
             if (response.err) {
-
+                console.log('api/points/:upi error', response.err);
             } else {
+                self.shownDeviceId(item.upi());
                 $('.overlay').css({
                     'top': mouseY,
                     'left': rightSide,
@@ -137,7 +142,7 @@ function TreeViewModel() {
                 var mom = moment.unix(time).format('dddd, MMMM Do YYYY, h:mm:ss a');
 
                 self.upi(response._id);
-                self.name(response.Name);
+                self.name(self.buildNameFromPath(response.path));
                 self.network(response['Network Segment'].Value);
                 self.netType(response['Uplink Port'].Value);
                 self.deviceAddress(response['Device Address'].Value);
@@ -171,21 +176,17 @@ function TreeViewModel() {
 
                     $('.deviceStatus').css('color', foreColor);
                 }
-
-
             }
-
         });
-    }
+    };
 
-    self.hideDevice = function() {
+    self.hideDevice = function () {
         $('.overlay').css('display', 'none');
-    }
+    };
 
-    self.statusColor = function(e) {
+    self.statusColor = function (e) {
         var hex;
         if (!e.badNetwork) {
-
             if (e.status() === 'Stop Scan') {
                 hex = stopScanColor;
             } else if (e.status() !== 'Normal') {
@@ -200,14 +201,14 @@ function TreeViewModel() {
         return (!!hex) ? '#' + hex : '';
     };
 
-    self.deviceSearch = function() {
+    self.deviceSearch = function () {
         if (!networkSearch) {
-            regex = new RegExp('.*' + self.searchValue().toString().split(' ').join('_') + '.*', 'i');
+            regex = new RegExp('.*' + self.searchValue().toString().split(' ').join(workspace.config.Enums['Point Name Separator'].Value) + '.*', 'i');
             self.scrollToElement(regex);
         }
     };
 
-    self.networkSearch = function(val) {
+    self.networkSearch = function (val) {
         // TODO: keep class, when searching for network, iterate over the matching network names when bad is clicked(multiple present)
         networkSearch = true;
         self.searchValue(val);
@@ -215,13 +216,13 @@ function TreeViewModel() {
         self.scrollToElement(regex);
     };
 
-    self.scrollToElement = function(elem, index) {
+    self.scrollToElement = function (elem, index) {
         searchIndex = (index !== undefined) ? index : searchIndex;
 
         matchedSpans = [];
         self.resetTree();
 
-        $('span.searchable').filter(function() {
+        $('span.searchable').filter(function () {
             if (!!this.textContent.match(elem)) {
                 matchedSpans.push(this);
             }
@@ -229,7 +230,7 @@ function TreeViewModel() {
         }).css('background-color', '#86E2D5');
 
         if (matchedSpans.length > searchIndex) {
-            $scrollTo = $(matchedSpans[searchIndex]);
+            var $scrollTo = $(matchedSpans[searchIndex]);
             $scrollTo.css('background-color', '#FDE3A7');
             self.exapandAll();
             $('.treePane').animate({
@@ -237,36 +238,36 @@ function TreeViewModel() {
                 scrollLeft: 0
             }, 0);
 
-            setTimeout(function() {
+            setTimeout(function () {
                 networkSearch = false;
             }, 250);
         }
     };
 
-    self.clearSearch = function() {
+    self.clearSearch = function () {
         self.searchValue('');
         self.resetTree();
     };
 
-    self.resetTree = function() {
+    self.resetTree = function () {
         $('.treePane').scrollTop(0);
         $('span').css('background-color', '');
     };
 
-    self.openDevice = function(t, e) {
-        var endPoint = workspace.config.Utility.pointTypes.getUIEndpoint("Device", t.upi());
-        dtiUtility.openWindow(endPoint.review.url, t.text(), 'Device', '', t.upi());
+    self.openDevice = function (t, e) {
+        var endPoint = workspace.config.Utility.pointTypes.getUIEndpoint('Device', t.upi());
+        dtiUtility.openWindow(endPoint.review.url, self.buildNameFromPath(t.path()), 'Device', '', t.upi());
     };
 
-    self.searchNext = function() {
+    self.searchNext = function () {
         self.search(1);
     };
 
-    self.searchPrev = function() {
+    self.searchPrev = function () {
         self.search(-1);
     };
 
-    self.search = function(direction) {
+    self.search = function (direction) {
         // var regex = new RegExp('.*' + self.searchValue() + '.*', 'i');
         var newIndex = searchIndex + direction;
 
@@ -280,9 +281,9 @@ function TreeViewModel() {
         }
     };
 
-    self.exapandAll = function() {
+    self.exapandAll = function () {
         var tree = $('.tree');
-        tree.find('li').has("ul").each(function() {
+        tree.find('li').has('ul').each(function () {
             var branch = $(this);
             var icon = $(this).children('i:first');
             icon.removeClass(closedClass);
@@ -291,9 +292,9 @@ function TreeViewModel() {
         });
     };
 
-    self.collapseAll = function() {
+    self.collapseAll = function () {
         var tree = $('.tree');
-        tree.find('li').has("ul").each(function() {
+        tree.find('li').has('ul').each(function () {
             var branch = $(this);
             var icon = $(this).children('i:first');
             icon.removeClass(openedClass);
@@ -302,12 +303,20 @@ function TreeViewModel() {
         });
     };
 
-    self.refresh = function() {
+    self.refresh = function () {
         $('.fa-refresh').addClass('fa-spin');
         self.loadTree();
     };
 
-    $('.searchArea').on('keydown', function(e) {
+    self.buildNameFromPath = function (path) {
+        return workspace.config.Utility.getPointName(path);
+    };
+
+    self.buildIdFromPath = function (path) {
+        return path.join(' ');
+    };
+
+    $('.searchArea').on('keydown', function (e) {
         if (e.keyCode === 13) {
             e.preventDefault();
             if (e.shiftKey) {
@@ -318,11 +327,11 @@ function TreeViewModel() {
         }
     });
 
-    socket.on('updateDeviceStatus', function(data) {
-        var status = data["Device Status"].Value;
+    socket.on('updateDeviceStatus', function (data) {
+        var status = data['Device Status'].Value;
         var upi = data.upi;
 
-        var findBranches = function(branch) {
+        var findBranches = function (branch) {
             for (var j = 0; j < branch.branches().length; j++) {
                 if (branch.branches()[j].upi() === upi) {
                     branch.branches()[j].status(status);
@@ -342,7 +351,6 @@ function TreeViewModel() {
     });
 
     self.loadTree();
-
 }
 
 ko.applyBindings(new TreeViewModel());

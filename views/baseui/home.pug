@@ -5,19 +5,21 @@ html
             | Infoscan by Dorsett Technologies
         //- link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/sass/v2/home')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
         //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
         link(rel='stylesheet', href='/css/lib/jstree.themes/default/style.min.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.css')
         link(rel='stylesheet', href='/css/lib/jquery.contextMenu.min.css')
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.icons.css')
-        link(rel='stylesheet', href='//cdn.bri.io/mbox/dist/mbox-0.0.1.min.css')
+        link(rel='stylesheet', href='/sass/v2/common')
+        link(rel='stylesheet', href='/css/lib/mbox.css')
 
     body.grey.lighten-3
 
         header.animates
             .navbar-fixed.taskbar(data-bind='visible: taskbarShown')
-                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                nav(data-bind='css: system.statusBarColor()')
                     .nav-wrapper
                         ul.left
                             li.taskbarItem
@@ -34,6 +36,10 @@ html
                             li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
                                     i.material-icons filter_none
+
+                            li.taskbarItem
+                                a#showPointSelector.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', data-position='bottom', data-tooltip='Point Selector', data-delay='10', data-bind="click: showPointSelector")
+                                    i.material-icons list
 
                             // ko foreach: windowGroups
                             span(data-bind="template: { name: 'taskbarButtonTemplate', data: $data }")
@@ -54,11 +60,11 @@ html
 
                             li.taskbarItem
                                 .userInfo.valign-wrapper.dropdown-button(data-activates='userDropdownMenu', data-beloworigin='true', data-hover='true', data-alignment='right')
-                                    img.userAvatar(data-bind='attr: { src: "img/users/" + (user().photo || "userLarge.png") } ')
+                                    img.userAvatar(data-bind='attr: { src: "img/client/users/" + (user().photo || "userLarge.png") } ')
                                     span.userName.valign #[span(data-bind='text: user().firstName')]&nbsp;#[span(data-bind='text: user().lastName')]
 
             #searchNavbar.navbar-fixed.taskbar.animates
-                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
+                nav(data-bind='css: system.status()')
                     .nav-wrapper
                         .taskbarItem
                             i.material-icons search
@@ -73,7 +79,7 @@ html
                         .taskbarItem
                             i.material-icons.tooltipped(data-bind='click: globalSearch.hide', data-position='left', data-tooltip='Close Search', data-delay='10') close
 
-        main.animates
+        main.animates(data-bind="css: {darkMode: darkMode()}")
             #globalSearchResults.animates
                 .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
                     .row.center
@@ -126,58 +132,61 @@ html
                     //- label(for='searchPopup') Search
                     //- i.material-icons close
 
-            #alarmDropdown.white.z-depth-1
-                .alarmHeader
-                    span Unacknowledged Alarms
-                    .right
-                        a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
-                            i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
-                            i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
-                        //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
-                            i.material-icons notifications_active
-                    .alarmBody
-                .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
-                    .alarmList
-                        .row
-                            .date Date
-                            .messageContainer Alarm
-                            .type Class
-                            .ackContainer
-                        // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
-                        .row
-                            .date(data-bind="text: dateTime")
-                            .messageContainer
-                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
-                            .type(data-bind='text: almClassText, css: cssClass')
-                            .ackContainer
-                                a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
-                                .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
-                                    .progress
-                                        .indeterminate
-                        // /ko
-                        // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
-                        .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
-                        // /ko
-                .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
+            #alarmDropdown.white.z-depth-1.scalesLeft(data-scale-origin="right", data-scale-reposition="false")
+                .menuContainer
+                    .alarmHeader
+                        span Unacknowledged Alarms
+                        .right
+                            a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
+                                i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
+                                i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
+                            //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
+                                i.material-icons notifications_active
+                        .alarmBody
+                    .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
+                        .alarmList
+                            .row
+                                .date Date
+                                .messageContainer Alarm
+                                .type Class
+                                .ackContainer
+                            // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
+                            .row
+                                .date(data-bind="text: dateTime")
+                                .messageContainer
+                                    .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }, click: $parent.alarms.openPoint')
+                                .type(data-bind='text: almClassText, css: cssClass')
+                                .ackContainer
+                                    a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
+                                    .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
+                                        .progress
+                                            .indeterminate
+                            // /ko
+                            // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
+                            .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
+                            // /ko
+                    .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
-            #systemErrorLogDropdown.white.z-depth-1
-                .errorLogHeader System Error Log
-                .errorLogBody(data-bind='foreach: system.eventLog.errors')
-                    .row
-                        .errorDate(data-bind='text: dateTime')
-                        .errorMessageContainer
-                            .errorMessage(data-bind='text: message')
+            #systemErrorLogDropdown.white.z-depth-1.scalesLeft(data-scale-origin="right", data-scale-reposition="false")
+                .menuContainer
+                    .errorLogHeader System Error Log
+                    .errorLogBody(data-bind='foreach: system.eventLog.errors')
+                        .row
+                            .errorDate(data-bind='text: dateTime')
+                            .errorMessageContainer
+                                .errorMessage(data-bind='text: message')
 
-            #startmenu.z-depth-3.white.lighten-3.white-text
-                .startmenuBody
-                    .tileList(data-bind="foreachprop: startMenuItems")
-                        // ko if: $root.hasAccess($data)
-                        // ko with: value
-                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
-                            i.center-align(data-bind="css: iconClass, text: iconText")
-                            span(data-bind="text: title")             
-                        // /ko
-                        // /ko
+            #startmenu.z-depth-3.white.lighten-3.white-text.scalesRight(data-scale-origin="left", data-scale-reposition="false")
+                .menuContainer
+                    .startmenuBody
+                        .tileList(data-bind="foreachprop: startMenuItems, sort: true")
+                            // ko if: $root.hasAccess($data)
+                            // ko with: value
+                            a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
+                                i.center-align(data-bind="css: iconClass, text: iconText")
+                                span(data-bind="text: title")
+                            // /ko
+                            // /ko
 
                     //- .recentItems
                         .col.s12.blue-grey-text Recent Items
@@ -206,64 +215,59 @@ html
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
 
-            //- #pointID.modal.modal-fixed-footer
+            
+            #configureNodeModal.modal.dtiModal.modal-fixed-footer.blue-grey-form.fade(data-bind="with: navigatorv2.configureNodeModal")
                 .modal-content
-                    h4.blue-grey-text Point Identification
-
-                    .row.sectionHeader
-                        .col.s3.blue-grey-text Attribute
-                        .col.s9.blue-grey-text Value
+                    .row.center
+                        .col.s12(data-bind='visible: activeSaveRequest()')
+                            .preloader-wrapper.active
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper.right
+                                        .circle
+                    h4(data-bind="text: modalAction()")
                     .row
-                        .col.s3 Address
-                        .col.s9.input-field
-                            input#inputAddress(type='text')
-                            label(for='inputAddress') Address
-
+                        .input-field.col.s8.pointDisplayField
+                            input#pointDisplayField(placeholder="Label", type="text", data-bind="hasFocus: modalOpen, value: modalNodeDisplay, dtiHierarchyLabel: modalNodeDisplay, valueUpdate: 'afterkeydown', enable: (modalAction() !== 'Open')")
+                            label(for="pointDisplayField") Label
+                    // ko if: (modalAction().indexOf("Paste") >= 0)
                     .row
-
-                    .row.sectionHeader
-                        .col.s3.blue-grey-text Class
-                        .col.s9.blue-grey-text Tag
                     .row
-                        .col.s3 Building
-                        .col.s9.input-field
-                            select(value='4194')
-                                option 4194
+                        .input-field.col.s12.nodePath
+                            label To
+                            span(data-bind="text: modalTargetNodePath")
+                        .input-field.col.s12.nodePath
+                            label(data-bind="text: (modalAction() === 'Paste as reference' ? 'Reference From' : 'From')")
+                            span(data-bind="text: modalSourceNodePath")
+                    // /ko
+                    // ko if: ((modalAction() === 'Add location' || modalAction() === 'Open') && modalNodeType() === 'Location')
                     .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Equipment
-                        .col.s9.input-field
-                            input#inputEquipment(type='text')
-                            label(for='inputEquipment') Equipment
+                        .input-field.col.s3
+                            select#nodeSubType(data-bind="options: locationSubTypes, value: modalNodeSubType")
+                            label(data-bind="attr: { for: 'nodeSubType' }, text: modalNodeType() + ' Type'")
+                    // /ko
+                    // ko if: (modalAction() === 'Add point' && typesNeedingPoint.indexOf(modalNodeType()) >= 0 )
                     .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Equipment Type
-                        .col.s9.input-field
-                            input#inputEquipmentType(type='text')
-                            label(for='inputEquipmentType') Equipment Type
+                        .col.s12.valign-wrapper
+                            .pointTypeList.z-depth-1(data-bind="foreach: pointTypes")
+                                span
+                                    input.filled-in(name="availablePointTypes", type="radio", data-bind="checked: $parent.selectedPointType, checkedValue: name, attr: {id: 'spt-' + $index() }")
+                                    label.label-tight(data-bind="text: name, attr: {for: 'spt-' + $index()}")
                     .row
-                        .col.s3.userDefined 
-                           a(href='javascript://')
-                                 i.material-icons highlight_off
-                            span Floor
-                        .col.s9.input-field
-                            input#inputFloor(type='text')
-                            label(for='inputFloor') Floor
+                        .col.s4.valign-wrapper
+                            .availablePointSubTypes(data-bind="visible: $parent.navigatorv2.activatePointSubType")
+                                label(data-bind="attr: { for: 'pointSubTypesDropdown' }, text: selectedPointType() + ' SubType'")
+                                select#pointSubTypesDropdown.pointSubTypes(data-bind="options: pointSubTypes, optionsValue: 'enum', optionsText: 'text', value: modalPointSubType")
+                    // /ko
                     .row
-                        .col.s3.userDefined 
-                            a(href='javascript://')
-                                i.material-icons highlight_off
-                            span Zone
-                        .col.s9.input-field
-                            input#inputZone(type='text')
-                            label(for='inputZone') Zone
+                        .col.s12.error.red-text(data-bind='html: error')
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
+                    button.btn.blue-grey.waves-effect.saveButton(data-bind="click: saveNode, enable: ($parent.navigatorv2.okToSave()), text: saveButtonText()")
+                    button.btn-flat.modal-action.modal-close.waves-effect(data-bind="click: closeModal") Cancel
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -277,7 +281,7 @@ html
                         // /ko
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
 
             //- #desktop
                 .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
@@ -328,11 +332,11 @@ html
                     .col.s12
                         .row
                             .col.s12
-                                img(src='/img/Dorsett_logo.png')
+                                img(src='/img/dti/Dorsett_logo.png')
                         form#loginForm
                             .row
                                 .input-field.col.s12
-                                    input#username(type='text', name='username', autocomplete='off')
+                                    input#username(type='text', name='username', autocomplete='off', autofocus)
                                     label(for='username') Username
                             .row
                                 .input-field.col.s12
@@ -360,13 +364,104 @@ html
                                 .row
                                     button#resetPasswordBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_resetPassword') Continue
 
-        #loading.animates
+        #loading.scalesTop(data-scale-origin="top", data-scale-reposition="false")
             .loadingMask
                 .absCenter
                     .cssload-container
                         .cssload-whirlpool
 
         iframe#thumbnailGen.hide
+
+    script#navigatorv2Template(type='text/html')
+        .hierarchy.blue-grey-form(data-bind="css: { busy: busy }")
+            .treeTop
+                .fetching
+                    .progress
+                        .indeterminate
+
+                .locSearch
+                    i.material-icons search
+                    input#locationsearch(type='search', data-bind="textInput: $root.searchString")
+
+            //- button.btn.btn-flat(data-bind="click: $root.expandAll") Expand All
+            //- button.btn.btn-flat(data-bind="click: $root.collapseAll") Collapse All
+
+
+            .treeTrunk
+
+
+                //- // ko if: children().length !== 0
+                #tree.pane.style3(data-bind="treeView: treeConfig, diResizable: true")
+
+
+                    //- .treeBar
+                        .card.blue-grey.darken-2
+                            .card-content.white-text
+                                span Dark Mode
+                                .switch
+                                    label.white-text
+                                        | Off
+                                        input(type='checkbox', data-bind="checked: dti.bindings.darkMode")
+                                        span.lever
+                                        |       On
+                //- // /ko
+
+
+                //- .treeOptions
+                    #tree.pane.style3(data-bind="treeView: {}")
+                .treeOptions
+                    // ko if: currNodeDisplay() !== ''
+                    .treeRow
+                        .cat Display:
+                        .val(data-bind="text: currNodeDisplay")
+                    .treeRow
+                        .cat Type:
+                        .val(data-bind="text: currNodeType")
+                    .treeRow
+                        .cat SubType:
+                        .val(data-bind="text: currNodeSubType")
+                    .treeRow
+                        .cat PointType:
+                        .val(data-bind="text: currNodePointType")
+                    .treeRow
+                        .cat Path:
+                        .val(data-bind="diPointName: currNodePath")
+                    .treeRow
+                        .cat Node Id:
+                        .val(data-bind="text: currNodeId")
+                    .treeRow
+                        .cat Located In:
+                        .val(data-bind="text: currNodeLocatedIn")
+                    .treeRow
+                        .cat ServedBy:
+                        .val(data-bind="text: currNodeServedBy")
+                    .treeRow
+                        .cat Descriptors:
+                        .val(data-bind="text: currNodeDescriptors")
+                    .treeRow
+                        .cat Reference Id:
+                        .val(data-bind="text: currRefNode")
+                    .treeRow
+                        .cat Old Name:
+                        .val(data-bind="text: currNodeName")
+                    // /ko
+
+    script#treeViewTemplate(type='text/html')
+        ul.root.dtcollapsible(data-bind="delegate: [{event: 'click', handler: $root.getBranch, selector: '.treeNode > .collapseToggle'}, {event: 'dblclick', handler: $root.openNode, selector: '.dtcollapsible-header .nodeName'}, {event: 'click', handler: $root.selectNode, selector: '.dtcollapsible-header .nodeName'}], template: { name: 'node', foreach: children}")
+
+    script#node(type='text/html')
+        //- .node
+        //-     ul.collapsible
+        li.treeNode(data-bind="css: {active: expanded}")
+            .collapseToggle(data-bind="css: {childless: hasChildren() === false}")
+                //- i.collapse.material-icons keyboard_arrow_down
+                i.expand.material-icons keyboard_arrow_right
+
+            .dtcollapsible-header(data-bind="css: {selected: selected, isCut: isCut, isCopy: isCopy}")
+                .nodeName(data-bind="text: display")
+            .dtcollapsible-body
+                ul.dtcollapsible.children(data-collapsible="expandable", data-bind="template: {name: 'node', foreach: children}")
+
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
@@ -384,10 +479,10 @@ html
         // /ko
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
-            .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { desktop: isDesktop, hide: minimized() || windowsHidden(), activeCard: active(), loading: loading(), darkMode: dti.bindings.darkMode }')
+            .card-toolbar.blue-grey(data-bind="visible: !isDesktop(), css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
-                    a.white-text(href="javascript://")
+                    a.white-text(href="javascript://", data-bind="click: popout, visible: !!url()")
                         i.material-icons.popInOutIcon call_made
                     | #[span(data-bind="text: title")]
                 a.white-text(href="javascript://", data-bind="click: refresh, visible: hasUrl")
@@ -417,12 +512,15 @@ html
 
     script#navigatorModalTemplate(type='text/html')
         .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
-            .modal-header(data-bind="text: modalText")
+            .modal-header
+                .modalTitle(data-bind="text: modalText")
+                a.modal-action.modal-close(href="#")
+                    i.material-icons.right-align close
             .modal-content.modal-content-no-padding
             .modal-footer(data-bind="css: mode")
                 span.modalControls.filterActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: doAcceptFilter") Accept Filter
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
                 span.modalControls.createActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
@@ -438,12 +536,14 @@ html
             // ko ifnot: loading
             .navigatorBody.flex.flex-column(data-bind="css: mode")
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
+                    // ko ifnot: hideOptions
                     p.pointType
                         input.filled-in(type='checkbox', data-bind="checked: showInactive, attr: { id: id() + '_showInactive' }")
                         label.label-tight(data-bind="attr: { for: id() + '_showInactive' }") Show Inactive
                     p.pointType
                         input.filled-in(type='checkbox', data-bind="checked: showDeleted, attr: { id: id() + '_showDeleted' }")
-                        label.label-tight(data-bind="attr: { for: id() + '_showDeleted' }") Show Deleted                                    
+                        label.label-tight(data-bind="attr: { for: id() + '_showDeleted' }") Show Deleted
+                    // /ko
                     a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
                         i.material-icons.left clear
                         | Clear Names
@@ -460,22 +560,19 @@ html
                         input(type='text', data-bind="textInput: name2, attr: { id: id() + '_name2' }")
                         label(data-bind="updateLabel: name2, attr: { for: id() + '_name2' }") Name 2
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }, visible: name2() !== '' ")
-                            i.material-icons.suffix clear                                    
+                            i.material-icons.suffix clear
                     .name3.input-field.col
                         input(type='text', data-bind="textInput: name3, attr: { id: id() + '_name3' }")
                         label(data-bind="updateLabel: name3, attr: { for: id() + '_name3' }") Name 3
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }, visible: name3() !== '' ")
-                            i.material-icons.suffix clear                                    
+                            i.material-icons.suffix clear
                     .name4.input-field.col
                         input(type='text', data-bind="textInput: name4, attr: { id: id() + '_name4' }")
                         label(data-bind="updateLabel: name4, attr: { for: id() + '_name4' }") Name 4
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }, visible: name4() !== '' ")
                             i.material-icons.suffix clear                                                                                                                                       
-                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
-
-                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }, css: { disabled: restrictCreate }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         .dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }, style: { 'column-count': dropdownColumnCount }")
@@ -503,11 +600,7 @@ html
                             // /ko
                             // /ko
                             // /ko
-                        //- select(data-beloworigin="true")
-                            //- // ko foreach: pointTypes
-                            //- option(data-bind="value: key, text: key")
-                            //- // /ko
-                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
+
 
                 .selectorList(data-bind="click: handleNavigatorRowClick")
                     .fetching(data-bind="visible: fetchingPoints")
@@ -533,44 +626,96 @@ html
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem(data-bind="taskbarMenu: $data, css: { active: $root.openWindows[group()]().length > 0 }")
-            //- div
             a.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-bind="click: $root.taskbarButtonClick")
                 i(data-bind="text: iconText, css: iconClass")
                 span(data-bind="text: title")
 
-    script#taskbarMenuTemplate(type='text/html')                    
+    script#taskbarMenuTemplate(type='text/html')
         // ko stopBindings: true
-        .slideDownMenu.white.z-depth-1
-            // ko if: singleton() === false
-            .actionList
-                .blue-grey-text Actions
-                // ko if: standalone() === false
-                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
-                    i.material-icons folder_open
-                    span Open
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
-                    i.material-icons add
-                    span New
-                // /ko
-                // ko if: standalone() === true
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
-                    i.material-icons add
-                    span New
-                // /ko
-                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
-                    i.material-icons close
-                    span Close All
-            // /ko
-
-            // ko if: singleton() === true && $root.openWindows[group()]().length === 0
-            .actionList
-                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
-            // /ko
-
-            .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
+        .slideDownMenu.white.z-depth-1.scalesTop(data-scale-origin="top")
+            .menuContainer
+                // ko if: $root.openWindows[group()]().length > 0
                 .itemsHeader.blue-grey-text Open Items
-                // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                 // /ko
+
+                table
+                    tr
+
+                        // ko if: singleton() === false
+                        td.actionList.blue-grey-text
+                            .flex.flex-column 
+                                span Actions
+                                // ko if: standalone() === false
+                                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                                    i.material-icons folder_open
+                                    span Open
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
+                                    i.material-icons add
+                                    span New
+                                // /ko
+                                // ko if: standalone() === true
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                                    i.material-icons add
+                                    span New
+                                // /ko
+                                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
+                                    i.material-icons close
+                                    span Close All
+                        // /ko
+
+
+                        // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+                        td
+                            .actionList
+                                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+                        // /ko
+
+                        // ko if: $root.openWindows[group()]().length > 0
+                        
+                        // ko foreach: $root.openWindows[group()]
+                        td.openItem
+                            // ko template: { name: 'miniWindowTemplate', data: $data }
+                            
+                            // /ko
+
+                        // /ko
+
+                        // /ko
+
+
+
+
+
+                //- // ko if: singleton() === false
+                //- .actionList
+                //-     .blue-grey-text Actions
+                //-     // ko if: standalone() === false
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
+                //-         i.material-icons folder_open
+                //-         span Open
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.showCreatePoint")
+                //-         i.material-icons add
+                //-         span New
+                //-     // /ko
+                //-     // ko if: standalone() === true
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick")
+                //-         i.material-icons add
+                //-         span New
+                //-     // /ko
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
+                //-         i.material-icons close
+                //-         span Close All
+                //- // /ko
+
+                //- // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+                //- .actionList
+                //-     a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+                //- // /ko
+
+                //- .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
+                //-     .itemsHeader.blue-grey-text Open Items
+                //-     // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                //-     // /ko                    
         // /ko
 
     script#autosuggestTemplate(type='text/html')
@@ -584,21 +729,15 @@ html
     script.
         var isAuthenticated = !{isAuthenticated};
         var userData = !{user};
-    script(type='text/javascript', src='/js/lib/jquery-1.9.1.js')
-    script(type='text/javascript', src='/js/lib/jquery-ui.js')
-    script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
-    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
-    script(type='text/javascript', src='/js/lib/lodash.min.js')
-    script(type='text/javascript', src='/js/lib/config.js')
-    script(type='text/javascript', src='/js/lib/moment.js')
+        var systemEnums = !{systemEnums};
+
+    include /baseui/dti.pug
+
     script(type='text/javascript', src='/js/lib/store2.min.js')
-    script(type='text/javascript', src='/js/lib/jstree.js')
     script(type='text/javascript', src='/js/lib/jquery.hotkeys.js')
     //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
-    script(type='text/javascript', src='/js/lib/knockout-3.2.0.debug.js')
-    script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
-    script(type='text/javascript', src='/js/lib/socket.io.js')
-    script(type='text/javascript', src='/js/lib/materialize.js')
-    script(type='text/javascript', src='//cdn.bri.io/mbox/dist/mbox-0.0.1.min.js')
+    
+    script(type='text/javascript', src='/js/lib/mbox.js')
+
+    script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/v2/home.js')
-    script(type='text/javascript', src='/js/v2/dorsettUtility.js')        

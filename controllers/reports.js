@@ -1,287 +1,200 @@
-var express = require('express');
-var router = express.Router();
-var _ = require('lodash');
-var utils = require('../helpers/utils.js');
-var Reports = require('../models/reports');
-var logger = require('../helpers/logger')(module);
+let express = require('express');
+let router = express.Router();
+let _ = require('lodash');
+let utils = require('../helpers/utils.js');
+let Reports = require('../models/reports');
 
-var reportMainCallback = function(res, err, locals, result) {
-  if (err) {
-    return utils.sendResponse(res, {
-      err: err
-    });
-  } else {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+let reportMainCallback = function (res, err, locals) {
+    if (err && locals.point) {  // only error out if can't find valid ID
+        return utils.sendResponse(res, {
+            err: err
+        });
+    }
+    let pointType = (locals.reportType ? locals.reportType : 'Property');
+
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With');
 
     if (!locals) {
-      res.render("reports/reportErrorNotFound");
+        res.render('reports/reportErrorNotFound');
     } else {
-      if (result["Report Type"]) {
-        res.locals = locals;
-        switch (result["Report Type"].Value) {
-          case "Property":
-          case "History":
-          case "Totalizer":
-            res.render('reports/index');
-            break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
-          default:
-            res.render("reports/reportErrorNotFound");
-            break;
+        res.locals.point = JSON.stringify(locals.point);
+        res.locals.scheduledConfig = JSON.stringify(locals.scheduledConfig);
+
+        if (pointType) {
+            switch (pointType) {
+                case 'Property':
+                case 'History':
+                case 'Totalizer':
+                    res.render('reports/index');
+                    break;
+                default:
+                    res.render('reports/reportErrorNotFound');
+                    break;
+            }
+        } else {
+            res.render('reports/reportErrorNotFound');
         }
-      }
     }
-  }
 };
 
-var scheduledReportCallback = function(res, err, locals, result) {
-  if (err) {
-    return utils.sendResponse(res, {
-      err: err
-    });
-  } else {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+let scheduledReportCallback = function (res, err, locals) {
+    if (err) {
+        return utils.sendResponse(res, {
+            err: err
+        });
+    }
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With');
+    let pointType = (locals.reportType ? locals.reportType : 'Property');
 
     if (!locals) {
-      res.render("reports/reportErrorNotFound");
-    } else {
-      if (result["Report Type"]) {
-        res.locals = locals;
-        res.locals.dataUrl = "/scheduleloader";
-        switch (result["Report Type"].Value) {
-          case "Property":
-          case "History":
-          case "Totalizer":
-            res.render('reports/scheduledReport');
-            break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
-          default:
-            res.render("reports/reportErrorNotFound");
-            break;
+        res.render('reports/reportErrorNotFound');
+    } else if (pointType) {
+        res.locals.point = JSON.stringify(locals.point);
+        res.locals.scheduledConfig = locals.scheduledConfig;
+        res.locals.dataUrl = '/scheduleloader';
+        switch (pointType) {
+            case 'Property':
+            case 'History':
+            case 'Totalizer':
+                res.render('reports/scheduledReport');
+                break;
+            default:
+                res.render('reports/reportErrorNotFound');
+                break;
         }
-      }
     }
-  }
 };
 
 // NOT CHECKED
-router.get('/getMRT/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.post('/saveSVG', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.getMRT(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+    reports.saveSVG(data, function (err, trends) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-    return utils.sendResponse(res, trends);
-  });
+        return utils.sendResponse(res, trends);
+    });
 });
 // NOT CHECKED
-router.get('/reportSearch', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.post('/saveReport', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.reportSearch(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+    reports.saveReport(data, function (err, trends) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-    return utils.sendResponse(res, trends);
-  });
+        return utils.sendResponse(res, trends);
+    });
 });
 // NOT CHECKED
-router.post('/saveMRT', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.get('/getSVG/:id', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.saveMRT(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+    reports.getSVG(data, function (err, trends) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-    return utils.sendResponse(res, trends);
-  });
+        return utils.sendResponse(res, trends);
+    });
+});
+// POSTMAN
+router.post('/reportSearch', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    reports.reportSearch(data, function (err, trends) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, trends);
+    });
+});
+// CHECKED 2017-03-10
+router.post('/historyDataSearch', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+
+    reports.historyDataSearch(data, function (err, results) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
+
+        return utils.sendResponse(res, results);
+    });
 });
 // NOT CHECKED
-router.post('/saveSVG', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.post('/totalizerReport', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.saveSVG(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
+    reports.totalizerReport(data, function (err, trends) {
+        if (err) {
+            return utils.sendResponse(res, {
+                err: err
+            });
+        }
 
-    return utils.sendResponse(res, trends);
-  });
+        return utils.sendResponse(res, trends);
+    });
 });
 // NOT CHECKED
-router.post('/saveReport', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.get('/:id', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.saveReport(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
+    reports.reportMain(data, function (err, locals) {
+        reportMainCallback(res, err, locals);
+    });
 });
 // NOT CHECKED
-router.get('/getSVG/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.get('/view/:id', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
 
-  Reports.getSVG(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
+    reports.reportMain(data, function (err, locals) {
+        reportMainCallback(res, err, locals);
+    });
 });
 // NOT CHECKED
-router.post('/reportSearch', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
+router.get('/scheduled/:id', function (req, res, next) {
+    const reports = new Reports();
+    let data = _.merge(req.params, req.body);
+    data.user = req.user;
+    data.scheduled = true;
+    data.scheduleID = req.query.scheduleID;
+    data.scheduledIncludeChart = true; // this could be a passed param from scheduler
 
-  Reports.reportSearch(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
-router.get('/getHistoryPoints', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.getHistoryPoints(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
-router.post('/historyDataSearch', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.historyDataSearch(data, function(err, results) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, results);
-  });
-});
-// NOT CHECKED
-router.post('/historySearch', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.historySearch(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
-router.post('/totalizerReport', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.totalizerReport(data, function(err, trends) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-
-    return utils.sendResponse(res, trends);
-  });
-});
-// NOT CHECKED
-router.get('/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.reportMain(data, function(err, locals, result) {
-    reportMainCallback(res, err, locals, result);
-  });
-});
-// NOT CHECKED
-router.get('/view/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.reportMain(data, function(err, locals, result) {
-    reportMainCallback(res, err, locals, result);
-  });
-});
-// NOT CHECKED
-router.get('/scheduled/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-  data.scheduled = true;
-  data.scheduleID = req.query.scheduleID;
-  data.scheduledIncludeChart = true;  // this could be a passed param from scheduler
-
-  Reports.reportMain(data, function(err, locals, result) {
-    scheduledReportCallback(res, err, locals, result);
-  });
-});
-// NOT CHECKED
-router.get('/cr/pointInvolvement', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Reports.pointInvolvement(data, function(err, locals) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    res.locals = locals;
-    res.render('reports/cannedReports/pointInvolvement');
-  });
+    reports.reportMain(data, function (err, locals) {
+        scheduledReportCallback(res, err, locals);
+    });
 });
 
 module.exports = router;

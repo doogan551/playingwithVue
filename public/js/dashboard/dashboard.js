@@ -3,7 +3,7 @@ var tou = {
     itemIdx: 0,
     idxPrefix: 'tou_',
     dateFormat: 'M-D-YYYY',
-    backgroundFolder: '/img/dashboard/backgrounds/',
+    backgroundFolder: '/img/dti/dashboard/backgrounds/',
     HOUR: 1000 * 60 * 60,
     DAY: 1000 * 60 * 60 * 24,
     WEEK: 1000 * 60 * 60 * 24 * 7,
@@ -2703,7 +2703,7 @@ var tou = {
     },
 
     bindings: {
-        backgroundImage: ko.observable('/img/dashboard/backgrounds/singleleaf.jpg'),
+        backgroundImage: ko.observable('/img/dti/dashboard/backgrounds/singleleaf.jpg'),
 
         showMainBackground: ko.observable(false),
 
@@ -3504,12 +3504,13 @@ tou.utilityPages.Electricity = function() {
             var self = this,
                 data = new FormData();
 
-            data.append(file.name, file);
+            data.append('image', file, file.name);
 
             $.ajax({
                 url: '/dashboard/uploadBackground',
                 processData: false,
                 type: 'POST',
+                dataType: 'json',
                 cache: false,
                 contentType: false,
                 data: data
@@ -11418,13 +11419,14 @@ tou.utilityPages.Electricity = function() {
 
                     self.inAjax(true);
                     data = new FormData();
-                    data.append('csv', file);
+                    data.append('csv', file, file.name);
 
                     $.ajax({
                         url: '/api/meters/uploadCSV',
                         processData: false,
                         type: 'POST',
                         cache: false,
+                        dataType: 'json',
                         contentType: false,
                         data: data
                     }).done(function (response) {
