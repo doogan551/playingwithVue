@@ -4596,7 +4596,7 @@ var displays = {
                                 // dti.timeEnd('render');
                             },
                             hide(event, api) {
-                                if ($(event.originalEvent.target).closest('main').length > 0) {
+                                if (widget.isPreview() || $(event.originalEvent.target).closest('main').length > 0) {
                                     displays.tooltipAPI = {};
                                     let el = api.elements.content[0];
                                     ko.cleanNode(el);
