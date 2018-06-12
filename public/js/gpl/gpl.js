@@ -8269,7 +8269,8 @@ gpl.BlockManager = function (manager) {
                     options: {
                         isGplEdit: gpl.isEdit && !overrideIsEdit,
                         callback: saveCallback,
-                        pointData: pointData || null
+                        pointData: pointData || null,
+                        skipCallback: gpl.isEdit && !overrideIsEdit
                     }
                 });
             };

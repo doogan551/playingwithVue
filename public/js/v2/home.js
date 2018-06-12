@@ -1402,7 +1402,7 @@ $.extend(dti, {
                         dti.windows.desktopWindow = newWindow;
                     }
 
-                    if (config.options && config.options.callback) {
+                    if (config.options && config.options.callback && !config.options.skipCallback) {
                         config.options.callback();
                     }
                 }
