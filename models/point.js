@@ -159,7 +159,9 @@ const Point = class Point extends Common {
                 return nextRef();
             }
             this.getOne({
-                _id: ref.Value
+                query: {
+                    _id: ref.Value
+                }
             }, (err, refPoint) => {
                 if (!!err || !refPoint) {
                     return nextRef(err);

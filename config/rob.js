@@ -1,11 +1,11 @@
 var rob = {
     'Infoscan': {
         'dbConfig': {
-            'host': 'info-int',
-            'dbName': 'infoscan'
+            'host': 'localhost',
+            'dbName': 'dti'
         },
         'zmqConfig': {
-            'server': 'info-int'
+            'server': 'localhost'
         },
         'files': {
             'driveLetter': 'C'
